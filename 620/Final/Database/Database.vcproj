@@ -32,7 +32,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				EnableFiberSafeOptimizations="TRUE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;Database_EXPORTS"
@@ -104,7 +104,8 @@ copy release\Database.pdb ..\release
 copy release\Database.lib ..\sdk
 copy Database.h ..\sdk
 copy release\Database.lib ..\Include
-copy Database.h ..\Include"/>
+copy Database.h ..\Include
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

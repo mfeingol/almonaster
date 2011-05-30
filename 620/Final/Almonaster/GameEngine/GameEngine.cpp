@@ -953,7 +953,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 620.3";
+    return "Almonaster Build 620.4";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

@@ -294,6 +294,11 @@ if (!m_bRedirection &&
                     AddMessage ("The given empire name is already in use");
                     break;
 
+                case ERROR_EMPIRE_DOES_NOT_EXIST:
+
+                    AddMessage ("The parent empire does not exist");
+                    break;
+
                 default:
 
                     AddMessage ("An unknown error occurred creating the empire: ");

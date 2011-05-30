@@ -2598,19 +2598,24 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
         GET_GAME_EMPIRE_DATA (pszGameData, iGameClass, iGameNumber, iEmpireKey);
 
-        Variant vNumUpdatesIdle;
-        iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-
         Variant vOptions;
         iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::Options, &vOptions);
         if (iErrCode != OK) {
             goto Cleanup;
         }
 
+        // Ignore games in which the empire has resigned
+        if (vOptions.GetInteger() & RESIGNED) {
+            continue;
+        }
+
         if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE)) {
+
+            Variant vNumUpdatesIdle;
+            iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
+            if (iErrCode != OK) {
+                goto Cleanup;
+            }
 
             Variant vNumUpdatesForIdle;
             iErrCode = GetGameClassProperty (iGameClass, SystemGameClassData::NumUpdatesForIdle, &vNumUpdatesForIdle);

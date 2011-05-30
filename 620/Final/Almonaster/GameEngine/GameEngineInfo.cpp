@@ -41,6 +41,7 @@
 //
 // Returns "Info" data about an empire
 
+// TODO: reconsider use of this function - call GetRatioInformation instead
 int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpData,
                                    int* piNumShips, int* piBattleRank, int* piMilVal, float* pfTechDev, 
                                    float* pfMaintRatio, float* pfFuelRatio, float* pfAgRatio, 
@@ -52,151 +53,43 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_SHIPS (strGameEmpireShips, iGameClass, iGameNumber, iEmpireKey);
 
-    // TODO: reconsider use of this function - call GetRatioInformation instead
-
-    // Get the extras
-    iErrCode = m_pGameData->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
     // Read the GameEmpireData
     Variant* pvEmpData = NULL, vTemp;
-    int iNextMin, iNextFuel, iNextMaint, iNextFuelUse;
 
     iErrCode = m_pGameData->ReadRow (strEmpireData, &pvEmpData);
     if (iErrCode != OK) {
-        return iErrCode;
+        goto Cleanup;
     }
-    
-    *piBattleRank = GetBattleRank (pvEmpData[GameEmpireData::TechLevel].GetFloat());
-    *piMilVal = GetMilitaryValue (pvEmpData[GameEmpireData::Mil].GetFloat());
 
-    Variant vMaxTechDev, vMaxAgRatio;
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxTechDev, 
-        &vMaxTechDev
-        );
+    // Get the extras
+    RatioInformation ratInfo;
+    iErrCode = GetRatioInformation (iGameClass, iGameNumber, iEmpireKey, &ratInfo);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxAgRatio, 
-        &vMaxAgRatio
-        );
+    iErrCode = m_pGameData->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    // Ship limit
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxNumShips, 
-        &vTemp
-        );
+    *piBattleRank = GetBattleRank (ratInfo.fTechLevel);
+    *piMilVal = GetMilitaryValue (pvEmpData [GameEmpireData::Mil].GetFloat());
+
+    *pfTechDev = ratInfo.fTechDev;
+    *pfMaintRatio = ratInfo.fMaintRatio;
+    *pfFuelRatio = ratInfo.fFuelRatio;
+    *pfAgRatio = ratInfo.fAgRatio;
+    *pfHypMaintRatio = ratInfo.fNextMaintRatio;
+    *pfHypFuelRatio = ratInfo.fNextFuelRatio;
+    *pfHypAgRatio = ratInfo.fNextAgRatio;
+    *pfNextTechIncrease = ratInfo.fNextTechDev;
+
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
-
     *piShipLimit = vTemp.GetInteger();
-    
-    // Tech dev
-    *pfTechDev = GetTechDevelopment (
-        pvEmpData[GameEmpireData::TotalFuel].GetInteger() + 
-        pvEmpData[GameEmpireData::BonusFuel].GetInteger(), 
-        
-        pvEmpData[GameEmpireData::TotalMin].GetInteger() + 
-        pvEmpData[GameEmpireData::BonusMin].GetInteger(), 
-        
-        pvEmpData[GameEmpireData::TotalMaintenance].GetInteger(), 
-
-        pvEmpData[GameEmpireData::TotalBuild].GetInteger(), 
-        
-        pvEmpData[GameEmpireData::TotalFuelUse].GetInteger(), 
-        
-        vMaxTechDev.GetFloat()
-        
-        );
-
-    // Maintenance ratio
-    *pfMaintRatio = GetMaintenanceRatio (
-        pvEmpData[GameEmpireData::TotalMin].GetInteger() + 
-        pvEmpData[GameEmpireData::BonusMin].GetInteger(), 
-
-        pvEmpData[GameEmpireData::TotalMaintenance].GetInteger(), 
-        
-        pvEmpData[GameEmpireData::TotalBuild].GetInteger()
-        
-        );
-    
-    // Fuel ratio
-    *pfFuelRatio = GetFuelRatio (
-        pvEmpData[GameEmpireData::TotalFuel].GetInteger() +
-        pvEmpData[GameEmpireData::BonusFuel].GetInteger(),
-        pvEmpData[GameEmpireData::TotalFuelUse].GetInteger()
-        );
-
-    // Ag ratio
-    *pfAgRatio = GetAgRatio (
-        pvEmpData[GameEmpireData::TotalAg].GetInteger() +
-        pvEmpData[GameEmpireData::BonusAg].GetInteger(),
-        pvEmpData[GameEmpireData::TotalPop].GetInteger(),
-        vMaxAgRatio.GetFloat()
-        );
-    
-    // Hypotheticals
-    iNextMin = 
-        pvEmpData[GameEmpireData::TotalMin].GetInteger() + 
-        pvEmpData[GameEmpireData::BonusMin].GetInteger() + 
-        pvEmpData[GameEmpireData::NextMin].GetInteger();
-
-    iNextFuel = 
-        pvEmpData[GameEmpireData::TotalFuel].GetInteger() + 
-        pvEmpData[GameEmpireData::BonusFuel].GetInteger() + 
-        pvEmpData[GameEmpireData::NextFuel].GetInteger();
-    
-    iNextMaint = 
-        pvEmpData[GameEmpireData::TotalMaintenance].GetInteger() + 
-        pvEmpData[GameEmpireData::NextMaintenance].GetInteger();
-
-    iNextFuelUse = 
-        pvEmpData[GameEmpireData::TotalFuelUse].GetInteger() + 
-        pvEmpData[GameEmpireData::NextFuelUse].GetInteger();
-
-    Assert (iNextMin >= 0 && iNextFuel >= 0 && iNextMaint >= 0 && iNextFuelUse >= 0);
-
-    *pfHypMaintRatio = GetMaintenanceRatio (
-        iNextMin, 
-        iNextMaint,
-        0
-        );
-
-    *pfHypFuelRatio = GetFuelRatio (
-        iNextFuel, 
-        iNextFuelUse
-        );
-
-    *pfHypAgRatio = GetAgRatio (
-        pvEmpData[GameEmpireData::TotalAg].GetInteger() + 
-        pvEmpData[GameEmpireData::BonusAg].GetInteger(), 
-        pvEmpData[GameEmpireData::NextTotalPop].GetInteger(),
-        vMaxAgRatio.GetFloat()
-        );
-
-    *pfNextTechIncrease = GetTechDevelopment (
-        iNextFuel, 
-        iNextMin, 
-        iNextMaint, 
-        0, 
-        iNextFuelUse, 
-        vMaxTechDev.GetFloat()
-        );
 
     *ppvEmpData = pvEmpData;
     pvEmpData = NULL;

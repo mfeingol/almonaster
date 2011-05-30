@@ -137,7 +137,7 @@ copy debug\Osal.lib ..\Include
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				EnableFiberSafeOptimizations="TRUE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
 				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
@@ -210,7 +210,8 @@ copy release\Osal.pdb ..\release
 copy release\Osal.lib ..\sdk
 copy *.h ..\sdk\Osal
 copy release\Osal.lib ..\Include
-copy *.h ..\Include\Osal"/>
+copy *.h ..\Include\Osal
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

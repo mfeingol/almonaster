@@ -947,6 +947,11 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                     pszPlanetName, iLocationX, iLocationY, strFleetName.GetCharPtr());
 
                 psoOrders[iNumOrders].iKey = pblLocations[i].iFleetKey;
+            
+            } else {
+
+                // Immobile ships don't build into fleets
+                continue;
             }
 
             psoOrders[iNumOrders].sotType = SHIP_ORDER_NORMAL;
@@ -1058,6 +1063,11 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
 
                 strcat (pszOrder, " in fleet ");
                 strcat (pszOrder, strFleetName.GetCharPtr());
+
+            } else {
+
+                // Immobile ships don't build into fleets
+                continue;
             }
 
             psoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
@@ -3998,7 +4008,7 @@ Cleanup:
 int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
                           unsigned int iShipKey, unsigned int iPlanetKey, unsigned int iFleetKey) {
     
-    int iErrCode, iBuiltThisUpdate;
+    int iErrCode, iBuiltThisUpdate, iType;
     bool bFlag;
     IReadTable* pShips = NULL;
 
@@ -4019,11 +4029,27 @@ int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int
         goto Cleanup;
     }
 
+    // Get type
+    iErrCode = pShips->ReadData (iShipKey, GameEmpireShips::Type, &iType);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Check for immobile ships being moved into fleets
+    if (iFleetKey != NO_KEY) {
+
+        if (!IsMobileShip (iType)) {
+            iErrCode = ERROR_SHIP_CANNOT_JOIN_FLEET;
+            goto Cleanup;
+        }
+    }
+
     if (iPlanetKey != NO_KEY) {
 
         Variant vName;
         float fBR;
-        int iType, iBuilt;
+        int iBuilt;
 
         // We're moving planets, so we must be a build ship
         // The checks in BuildNewShips will cover any other problems we might have
@@ -4041,13 +4067,6 @@ int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int
 
         // Get BR
         iErrCode = pShips->ReadData (iShipKey, GameEmpireShips::MaxBR, &fBR);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // Get type
-        iErrCode = pShips->ReadData (iShipKey, GameEmpireShips::Type, &iType);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;

@@ -1277,6 +1277,9 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 }
             }
 
+            iNumIdleEmpires -= iNumRuins;
+            Assert (iNumIdleEmpires >= 0);
+
         }   // End if ruins occurred
 
         // Newly idle empires request pause and draw

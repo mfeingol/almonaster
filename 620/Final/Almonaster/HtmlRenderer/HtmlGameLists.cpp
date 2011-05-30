@@ -746,7 +746,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
             OutputText ("s");
         }
 
-        OutputText ("</font>");
+        OutputText (" to close</font>");
     }
     
     OutputText ("</td><td align=\"center\"><font size=\"2\"><font color=\"");
@@ -909,19 +909,20 @@ void HtmlRenderer::AddEmpiresInGame (int iGameState, int iNumActiveEmpires, cons
         OutputText ("<p>");
     }
 
-    if ((iGameState & STILL_OPEN) && iNumActiveEmpires != iMaxEmpires) {
+    if (iGameState == 0) {
 
-        // Empires required
         if (iMinEmpires == iMaxEmpires) {
 
             OutputText ("<strong>");
             m_pHttpResponse->WriteText (iMinEmpires);
+            OutputText ("</strong> empires");
         }
 
         else if (iMaxEmpires == UNLIMITED_EMPIRES) {
 
-            OutputText (" At least <strong>");
+            OutputText ("<strong>");
             m_pHttpResponse->WriteText (iMinEmpires);
+            OutputText ("</strong> to <strong>unlimited</strong> empires");
         }
 
         else {
@@ -930,9 +931,43 @@ void HtmlRenderer::AddEmpiresInGame (int iGameState, int iNumActiveEmpires, cons
             m_pHttpResponse->WriteText (iMinEmpires);
             OutputText ("</strong> to <strong>");
             m_pHttpResponse->WriteText (iMaxEmpires);
+            OutputText ("</strong> empires");
+        }
+    }
+    else if ((iGameState & STILL_OPEN) && iNumActiveEmpires != iMaxEmpires) {
+
+        if (iMinEmpires == iMaxEmpires) {
+
+            OutputText ("<strong>");
+            m_pHttpResponse->WriteText (iMinEmpires);
+            OutputText ("</strong> required");
         }
 
-        OutputText ("</strong> required");
+        else if (iMaxEmpires == UNLIMITED_EMPIRES) {
+
+            if (iNumActiveEmpires < iMinEmpires) {
+
+                OutputText ("<strong>");
+                m_pHttpResponse->WriteText (iMinEmpires);
+                OutputText ("</strong> to start<br>");
+            }
+
+            OutputText ("Unlimited");
+        }
+
+        else {
+
+            if (iNumActiveEmpires < iMinEmpires) {
+
+                OutputText ("<strong>");
+                m_pHttpResponse->WriteText (iMinEmpires);
+                OutputText ("</strong> to start<br>");
+            }
+
+            OutputText ("<strong>");
+            m_pHttpResponse->WriteText (iMaxEmpires);
+            OutputText ("</strong> to close");
+        }
     }
 
     OutputText ("</font></td>");
