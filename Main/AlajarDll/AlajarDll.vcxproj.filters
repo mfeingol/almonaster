@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{93dcd400-5646-4d3f-9bf9-cd5692c26432}</UniqueIdentifier>
+      <Extensions>cpp</Extensions>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{10d201ab-24d7-4d7a-88fd-61486f82be03}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CachedFile.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Cookie.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FileCache.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpForm.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpRequest.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpResponse.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpServer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpThreadPool.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PageSource.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="PageSourceEnumerator.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Alajar.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="CachedFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Cookie.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FileCache.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpForm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpRequest.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpResponse.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpServer.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpThreadPool.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PageSource.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="PageSourceEnumerator.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>

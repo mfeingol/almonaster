@@ -1,0 +1,545 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="GameEngine Source">
+      <UniqueIdentifier>{c58b690d-718f-47ad-a404-ad51d705162d}</UniqueIdentifier>
+      <Extensions>cpp</Extensions>
+    </Filter>
+    <Filter Include="GameEngine Headers">
+      <UniqueIdentifier>{8f51e8cc-c7fc-47d0-8f52-66e957c88e8f}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+    <Filter Include="Page Source Files">
+      <UniqueIdentifier>{33b796f7-1e7c-4b31-935b-b2e510e0dc7c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Script Files">
+      <UniqueIdentifier>{e2afaec1-f888-40cd-a860-f7a02c45c2ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Almonaster">
+      <UniqueIdentifier>{b502b552-7a14-4a79-9782-da2ebaf00741}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scoring">
+      <UniqueIdentifier>{7f6049c0-0afc-4e63-9ce8-593fe5bf12ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="HtmlRenderer">
+      <UniqueIdentifier>{3c10ea63-62e1-495d-b47d-59e5750e4047}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="MapGen">
+      <UniqueIdentifier>{e00321df-9e0e-483a-a6eb-dc7718e35f92}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Chatroom">
+      <UniqueIdentifier>{5029e4ef-de51-471d-bd7e-3991d94db676}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GameEngine\GameEngine.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineAliens.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineAssociations.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineBuild.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineConstants.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineDatabase.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineDiplomacy.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineEmpires.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineFleets.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineGameClasses.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineGameEmpireData.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineGameObject.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineGames.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineInfo.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineLocks.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineMessages.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineOptions.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEnginePlanets.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineRules.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineScore.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineSearch.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineSecurity.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineSetup.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineShips.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineSuperClasses.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineSystemConfig.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineTech.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineThemes.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineTopLists.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineTournaments.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineUpdate.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineUpdateAlgorithm.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ActiveGameList.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Build.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Chatroom.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Diplomacy.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\EmpireAdministrator.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameAdministrator.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameContributions.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameCredits.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameFAQ.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameNews.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameProfileViewer.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameServerRules.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameTos.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Info.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\LatestGames.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\LatestNukes.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Login.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Map.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\NewEmpire.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\OpenGameList.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Options.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\PersonalGameClasses.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\PersonalTournaments.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Planets.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ProfileEditor.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ProfileViewer.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Quit.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ServerAdministrator.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Ships.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SpectatorGames.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemContributions.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemCredits.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemFAQ.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemGameList.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemNews.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemServerRules.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemTos.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Tech.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ThemeAdministrator.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\TopLists.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\TournamentAdministrator.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Tournaments.cpp">
+      <Filter>Page Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ActiveGameList.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Build.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Chatroom.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Diplomacy.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\EmpireAdministrator.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameAdministrator.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameContributions.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameCredits.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameFAQ.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameNews.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameProfileViewer.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameServerRules.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameTos.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Info.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\LatestGames.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\LatestNukes.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Login.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Map.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\NewEmpire.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\OpenGameList.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Options.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\PersonalGameClasses.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\PersonalTournaments.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Planets.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ProfileEditor.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ProfileViewer.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Quit.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ServerAdministrator.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Ships.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SpectatorGames.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemContributions.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemCredits.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemFAQ.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemGameList.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemNews.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemServerRules.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemTos.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Tech.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ThemeAdministrator.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\TopLists.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\TournamentAdministrator.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Tournaments.cxx">
+      <Filter>Script Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Almonaster.cpp">
+      <Filter>Almonaster</Filter>
+    </ClCompile>
+    <ClCompile Include="Scoring\AlmonasterScore.cpp">
+      <Filter>Scoring</Filter>
+    </ClCompile>
+    <ClCompile Include="Scoring\BridierScore.cpp">
+      <Filter>Scoring</Filter>
+    </ClCompile>
+    <ClCompile Include="Scoring\ClassicScore.cpp">
+      <Filter>Scoring</Filter>
+    </ClCompile>
+    <ClCompile Include="Scoring\TournamentScoring.cpp">
+      <Filter>Scoring</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlBuild.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlButtons.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlGameConfig.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlGameLists.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlGraphics.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlMaps.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlMessages.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlMiniMaps.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlPasswords.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlProfile.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlRatios.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlRenderer.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlSearch.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlServerInfo.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlShips.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlTextFiles.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlTOS.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlTournaments.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\BaseMapGenerator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\DefaultMapGenerator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\Dijkstra.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\FairMapGenerator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\MapFairnessEvaluator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\MirroredMapGenerator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="MapGen\TwistedMapGenerator.cpp">
+      <Filter>MapGen</Filter>
+    </ClCompile>
+    <ClCompile Include="Chatroom\CChatroom.cpp">
+      <Filter>Chatroom</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameEngine\GameEngine.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\GameEngineConstants.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\GameEngineGameObject.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\GameEngineLocks.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\GameEngineSchema.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\GameEngineStrings.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\GameEngineUI.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="GameEngine\IGameEngine.h">
+      <Filter>GameEngine Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Almonaster.h">
+      <Filter>Almonaster</Filter>
+    </ClInclude>
+    <ClInclude Include="Scoring\AlmonasterScore.h">
+      <Filter>Scoring</Filter>
+    </ClInclude>
+    <ClInclude Include="Scoring\BridierScore.h">
+      <Filter>Scoring</Filter>
+    </ClInclude>
+    <ClInclude Include="Scoring\ClassicScore.h">
+      <Filter>Scoring</Filter>
+    </ClInclude>
+    <ClInclude Include="Scoring\TournamentScoring.h">
+      <Filter>Scoring</Filter>
+    </ClInclude>
+    <ClInclude Include="HtmlRenderer\HtmlRenderer.h">
+      <Filter>HtmlRenderer</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\BaseMapGenerator.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\DefaultMapGenerator.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\Dijkstra.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\FairMapGenerator.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\MapFairnessEvaluator.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\MirroredMapGenerator.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="MapGen\TwistedMapGenerator.h">
+      <Filter>MapGen</Filter>
+    </ClInclude>
+    <ClInclude Include="Chatroom\CChatroom.h">
+      <Filter>Chatroom</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
