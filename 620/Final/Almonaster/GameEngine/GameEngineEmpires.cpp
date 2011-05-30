@@ -2582,7 +2582,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
 
     int iErrCode, iGameClass, iGameNumber;
     unsigned int i, iNumGames = 0;
-    Variant* pvGame = NULL, vNumUpdatesIdle;
+    Variant* pvGame = NULL;
 
     char pszGameData [256];
 
@@ -2603,14 +2603,27 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
         GET_GAME_EMPIRE_DATA (pszGameData, iGameClass, iGameNumber, iEmpireKey);
 
+        Variant vNumUpdatesIdle;
         iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
         if (iErrCode != OK) {
             goto Cleanup;
         }
 
-        if (vNumUpdatesIdle.GetInteger() > 0) {
-            *pfIdle = true;
+        Variant vOptions;
+        iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::Options, &vOptions);
+        if (iErrCode != OK) {
             goto Cleanup;
+        }
+
+        if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE)) {
+
+            Variant vNumUpdatesForIdle;
+            iErrCode = GetGameClassProperty (iGameClass, SystemGameClassData::NumUpdatesForIdle, &vNumUpdatesForIdle);
+
+            if (vNumUpdatesIdle.GetInteger() >= vNumUpdatesForIdle.GetInteger()) {
+                *pfIdle = true;
+                goto Cleanup;
+            }
         }
     }
 

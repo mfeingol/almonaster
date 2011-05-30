@@ -727,9 +727,12 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_COLONY) {
+
+            sprintf (pszOrder, "Standby and colonize %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
             Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_COLONIZE;
-            pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and colonize");
+            pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
             if (pfoOrders[iNumOrders].pszText == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
                 goto Cleanup;
@@ -738,9 +741,12 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_TERRAFORMER) {
+
+            sprintf (pszOrder, "Standby and terraform %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
             Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_TERRAFORM;
-            pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and terraform");
+            pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
             if (pfoOrders[iNumOrders].pszText == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
                 goto Cleanup;
@@ -749,9 +755,12 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_TROOPSHIP) {
+
+            sprintf (pszOrder, "Standby and invade %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
             Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_INVADE;
-            pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and invade");
+            pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
             if (pfoOrders[iNumOrders].pszText == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
                 goto Cleanup;
@@ -760,9 +769,12 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_DOOMSDAY) {
+
+            sprintf (pszOrder, "Standby and annihilate %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
             Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_ANNIHILATE;
-            pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and annihilate");
+            pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
             if (pfoOrders[iNumOrders].pszText == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
                 goto Cleanup;
@@ -783,9 +795,11 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
 
     if (bFlag) {
 
+        sprintf (pszOrder, "Pick up unaffiliated ships at %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
         Assert (iNumOrders < iMaxNumOrders);
         pfoOrders[iNumOrders].iKey = PICK_UP_UNAFFILIATED_SHIPS;
-        pfoOrders[iNumOrders].pszText = String::StrDup ("Pick up unaffiliated ships");
+        pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
         if (pfoOrders[iNumOrders].pszText == NULL) {
             iErrCode = ERROR_OUT_OF_MEMORY;
             goto Cleanup;

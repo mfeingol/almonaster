@@ -306,7 +306,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
             goto Cleanup;
         }
         
-        if (vUpdatesIdle.GetInteger() == 0) {
+        if ((iEmpireGameOptions & LOGGED_IN_THIS_UPDATE) || vUpdatesIdle.GetInteger() == 0) {
             
             if (bReadyForUpdate) {
                 

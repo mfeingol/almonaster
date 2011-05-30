@@ -373,15 +373,14 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
 // Request game pause
 
 int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
-    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, piGameState, true);
+    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, true, NULL, piGameState);
 }
 
-int GameEngine::RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
-    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, piGameState, false);
+int GameEngine::RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbNewPause, int* piGameState) {
+    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, false, pbNewPause, piGameState);
 }
 
-int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState,
-                                      bool bBroadcast) {
+int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, bool bBroadcast, bool* pbNewPause, int* piGameState) {
 
     int iErrCode, iGameState = 0, iOptions;
     unsigned int iNumEmpires;
@@ -391,6 +390,10 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
     Variant vTemp, vOldNum;
+
+    if (pbNewPause != NULL) {
+        *pbNewPause = false;
+    }
 
 #ifdef _DEBUG
     // Only call this function holding an exclusive lock
@@ -427,6 +430,10 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
         goto Cleanup;
     }
 
+    if (pbNewPause != NULL) {
+        *pbNewPause = true;
+    }
+
     iErrCode = m_pGameData->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
@@ -443,11 +450,22 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
 
         if (!(iGameState & ADMIN_PAUSED)) {
 
-            iErrCode = PauseGame (iGameClass, iGameNumber, false, bBroadcast);
-            Assert (iErrCode == OK);
+            // Only pause the game if not all empires are idle
+            bool bIdle;
+            iErrCode = AreAllEmpiresIdle (iGameClass, iGameNumber, &bIdle);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
 
-            if (iErrCode == OK) {
-                *piGameState |= PAUSED;
+            if (!bIdle) {
+
+                iErrCode = PauseGame (iGameClass, iGameNumber, false, bBroadcast);
+                Assert (iErrCode == OK);
+
+                if (iErrCode == OK) {
+                    *piGameState |= PAUSED;
+                }
             }
         }
     }
@@ -459,6 +477,61 @@ Cleanup:
     return iErrCode;
 }
 
+int GameEngine::CheckForDelayedPause (int iGameClass, int iGameNumber, bool* pbNewlyPaused) {
+
+    int iErrCode;
+
+    *pbNewlyPaused = false;
+
+    int iNumEmpires;
+    iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumEmpires);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    unsigned int iNumPaused;
+    iErrCode = GetNumEmpiresRequestingPause (iGameClass, iGameNumber, &iNumPaused);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (iNumPaused == (unsigned int) iNumEmpires) {
+
+        int iGameState;
+        iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        if (!(iGameState & PAUSED)) {
+
+            bool bIdle;
+            iErrCode = AreAllEmpiresIdle (iGameClass, iGameNumber, &bIdle);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            if (!bIdle) {
+
+                iErrCode = PauseGame (iGameClass, iGameNumber, false, false);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+
+                *pbNewlyPaused = true;
+            }
+        }
+    }
+
+Cleanup:
+
+    return iErrCode;
+}
 
 // Input:
 // iGameClass -> Gameclass

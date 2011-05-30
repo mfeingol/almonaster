@@ -617,7 +617,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Changes to pause status
-            if (bGameStarted) {
+            if (bGameStarted && m_iNumNewUpdates == m_iNumOldUpdates) {
 
                 int iPause;
                 bool bOldPause;
@@ -684,86 +684,86 @@ if (m_bOwnPost && !m_bRedirection) {
                         }
                     }
                 }
-            }
 
-            // Changes to draw status
-            if (bGameStarted && (iGameClassOptions & ALLOW_DRAW)) {
+                // Changes to draw status
+                if (iGameClassOptions & ALLOW_DRAW) {
 
-                int iDraw;
-                bool bOldDraw;
-                if ((pHttpForm = m_pHttpRequest->GetForm ("Draw")) != NULL) {
+                    int iDraw;
+                    bool bOldDraw;
+                    if ((pHttpForm = m_pHttpRequest->GetForm ("Draw")) != NULL) {
 
-                    iDraw = pHttpForm->GetIntValue();
+                        iDraw = pHttpForm->GetIntValue();
 
-                    // Get selected dip option
-                    GameCheck (g_pGameEngine->IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
+                        // Get selected dip option
+                        GameCheck (g_pGameEngine->IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
 
-                    // Only update if we changed the status
-                    if ((iDraw != 0) != bOldDraw) {
+                        // Only update if we changed the status
+                        if ((iDraw != 0) != bOldDraw) {
 
-                        if (iDraw != 0) {
+                            if (iDraw != 0) {
 
-                            GameCheck (g_pGameEngine->RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                                GameCheck (g_pGameEngine->RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
-                            m_iGameOptions |= REQUEST_DRAW;
+                                m_iGameOptions |= REQUEST_DRAW;
 
-                            if (!(m_iGameState & GAME_ENDED)) {
-                                AddMessage ("You are now requesting a draw");
-                            } else {
-
-                                // Release the read lock
-                                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                                m_pgeLock = NULL;
-
-                                // Take a write lock
-                                if (g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-
-                                    // The game ended
-                                    AddMessage ("That game no longer exists");
-                                    return Redirect (ACTIVE_GAME_LIST);
-
+                                if (!(m_iGameState & GAME_ENDED)) {
+                                    AddMessage ("You are now requesting a draw");
                                 } else {
 
-                                    bool bEndGame = false;
+                                    // Release the read lock
+                                    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                                    m_pgeLock = NULL;
 
-                                    // Try to end the game
-                                    iErrCode = g_pGameEngine->CheckGameForEndConditions (
-                                        m_iGameClass,
-                                        m_iGameNumber,
-                                        NULL,
-                                        &bEndGame
-                                        );
+                                    // Take a write lock
+                                    if (g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
 
-                                    // Release the write lock
-                                    g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber);
-
-                                    // Did the game end because of us?
-                                    if (iErrCode == OK && bEndGame) {
-                                        return Redirect (ACTIVE_GAME_LIST);
-                                    }
-
-                                    // Get the reader lock again
-                                    if (g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
-
-                                        // The game ended after all
+                                        // The game ended
                                         AddMessage ("That game no longer exists");
                                         return Redirect (ACTIVE_GAME_LIST);
+
+                                    } else {
+
+                                        bool bEndGame = false;
+
+                                        // Try to end the game
+                                        iErrCode = g_pGameEngine->CheckGameForEndConditions (
+                                            m_iGameClass,
+                                            m_iGameNumber,
+                                            NULL,
+                                            &bEndGame
+                                            );
+
+                                        // Release the write lock
+                                        g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber);
+
+                                        // Did the game end because of us?
+                                        if (iErrCode == OK && bEndGame) {
+                                            return Redirect (ACTIVE_GAME_LIST);
+                                        }
+
+                                        // Get the reader lock again
+                                        if (g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
+
+                                            // The game ended after all
+                                            AddMessage ("That game no longer exists");
+                                            return Redirect (ACTIVE_GAME_LIST);
+                                        }
+
+                                        // Refresh game state
+                                        GameCheck (g_pGameEngine->GetGameState (m_iGameClass, m_iGameNumber, &m_iGameState));
+
+                                        // Proceed...
+                                        AddMessage ("You are now requesting a draw");
                                     }
-
-                                    // Refresh game state
-                                    GameCheck (g_pGameEngine->GetGameState (m_iGameClass, m_iGameNumber, &m_iGameState));
-
-                                    // Proceed...
-                                    AddMessage ("You are now requesting a draw");
                                 }
+
+                            } else {
+
+                                GameCheck (g_pGameEngine->RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+                                AddMessage ("You are no longer requesting a draw");
+
+                                m_iGameOptions &= ~REQUEST_DRAW;
                             }
-
-                        } else {
-
-                            GameCheck (g_pGameEngine->RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
-                            AddMessage ("You are no longer requesting a draw");
-
-                            m_iGameOptions &= ~REQUEST_DRAW;
                         }
                     }
                 }

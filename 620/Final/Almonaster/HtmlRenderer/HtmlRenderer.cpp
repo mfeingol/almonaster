@@ -1970,19 +1970,45 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     IHttpForm* pHttpAuto = m_pHttpRequest->GetForm ("Auto");
     if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIntoGame) {
         
-        iErrCode = g_pGameEngine->LogEmpireIntoGame (
-            m_iGameClass, 
-            m_iGameNumber, 
-            m_iEmpireKey
-            );
-        
+        int iNumUpdatesIdle;
+        iErrCode = g_pGameEngine->LogEmpireIntoGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumUpdatesIdle);       
         if (iErrCode != OK) {
             AddMessage ("Your empire could not be logged into the game");
             *ppageRedirect = ACTIVE_GAME_LIST;
             return ERROR_FAILURE;
         }
-        
+
         m_bLoggedIntoGame = true;
+
+        if (iNumUpdatesIdle > 0 && !WasButtonPressed (BID_EXIT)) {
+
+            // Check for all empires idle case
+            bool bIdle;
+            iErrCode = g_pGameEngine->AreAllEmpiresIdle (m_iGameClass, m_iGameNumber, &bIdle);
+            if (iErrCode != OK) {
+                AddMessage ("That game no longer exists");
+                *ppageRedirect = ACTIVE_GAME_LIST;
+                return ERROR_FAILURE;
+            }
+
+            if (bIdle) {
+
+                AddMessage ("All empires in the game are idle this update, including yours");
+                AddMessage ("Pausing, drawing and ending turn will not take effect until the next update");
+
+                if (m_iGameOptions & REQUEST_DRAW) {
+
+                    IHttpForm* pHttpForm;
+                    if (m_pgPageId != OPTIONS ||
+                        (pHttpForm = m_pHttpRequest->GetForm ("Draw")) == NULL ||
+                        pHttpForm->GetIntValue() != 0
+                        ) {
+
+                        AddMessage ("Your empire is requesting draw, so the game may end in a draw next update");
+                    }
+                }
+            }
+        }
     }
     
     // Remove update message after update
@@ -8790,12 +8816,6 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
     {
         GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 
-        iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vValue);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-        piNumUpdatesIdle[i] = vValue.GetInteger();
-
         iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
@@ -8805,9 +8825,18 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         if (piOptions[i] & RESIGNED) {
             iResignedEmpires ++;
         }
-        
-        else if (piNumUpdatesIdle[i] > 0) {
-            iIdleEmpires ++;
+
+        if (piOptions[i] & LOGGED_IN_THIS_UPDATE) {
+            piNumUpdatesIdle[i] = 0;
+        } else {
+            iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vValue);
+            if (iErrCode != OK) {
+                goto Cleanup;
+            }
+            piNumUpdatesIdle[i] = vValue.GetInteger();
+            if (piNumUpdatesIdle[i] > 0) {
+                iIdleEmpires ++;
+            }
         }
     }
 

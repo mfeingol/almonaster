@@ -1329,7 +1329,24 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         Assert (false);
         goto Cleanup;
     }
-    
+
+    int iGameClassOptions;
+    iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (iGameClassOptions & ALLOW_DRAW) {
+
+        // Set empire to request draw
+        iErrCode = RequestDraw (iGameClass, iGameNumber, iEmpireKey, &iGameState);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+    }
+
     // Set empire to resigned
     iErrCode = m_pGameData->WriteOr (strEmpireData, GameEmpireData::Options, RESIGNED);
     if (iErrCode != OK) {
@@ -1379,6 +1396,13 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     sprintf (pszMessage, "%s resigned from the game", vEmpireName.GetCharPtr());
 
     iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    bool bUpdate;
+    iErrCode = SetEmpireReadyForUpdate (iGameClass, iGameNumber, iEmpireKey, &bUpdate);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

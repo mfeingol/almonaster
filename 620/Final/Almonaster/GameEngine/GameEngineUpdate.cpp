@@ -164,9 +164,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
 
         // Check for all empires hitting end turn when game has already closed
         Variant vNumUpdated, vIdle = 0, vTemp;
-        unsigned int iNumNeeded, iKey;
-
-        char strGameEmpireData [256];
+        unsigned int iNumNeeded;
 
         GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
 
@@ -184,66 +182,25 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
                 Assert (false);
                 goto Cleanup;
             }
-            
+
             // If not all empires are ready for an update, exit the loop
             if ((unsigned int) vNumUpdated.GetInteger() < iNumNeeded) {
                 break;
             }
+            Assert ((unsigned int) vNumUpdated.GetInteger() == iNumNeeded);
 
             // Only update if not all empires are idle
-            Assert ((unsigned int) vNumUpdated.GetInteger() == iNumNeeded);
-            
-            if (vIdle.GetInteger() == 0) {
-                
-                // Get num updates for idle
-                iErrCode = m_pGameData->ReadData (
-                    SYSTEM_GAMECLASS_DATA,
-                    iGameClass,
-                    SystemGameClassData::NumUpdatesForIdle, 
-                    &vIdle
-                    );
-                
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
+            bool bIdle;
+            iErrCode = AreAllEmpiresIdle (iGameClass, iGameNumber, &bIdle);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
             }
-            
-            // Make sure all empires aren't idle
-            iKey = NO_KEY;
-            while (true) {
-                
-                iErrCode = m_pGameData->GetNextKey (pszGameEmpires, iKey, &iKey);
-                if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                    // Everyone is idle, so don't update
-                    iErrCode = OK;
-                    goto Cleanup;
-                }
-                
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-                
-                iErrCode = m_pGameData->ReadData (pszGameEmpires, iKey, GameEmpires::EmpireKey, &vTemp);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-                
-                GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, vTemp.GetInteger());
-                
-                iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vTemp);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-                
-                if (vTemp.GetInteger() < vIdle.GetInteger()) {
-                    
-                    // Nope, not idle
-                    break;
-                }
+
+            if (bIdle) {
+                // Everyone is idle, so don't update
+                iErrCode = OK;
+                goto Cleanup;
             }
             
             if (!bGameWriter) {
@@ -532,7 +489,7 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
             Assert (false);
             goto Cleanup;
         }
-        
+
         // Increment empire updated count
         iErrCode = m_pGameData->Increment (strGameData, GameData::NumEmpiresUpdated, 1);
         if (iErrCode != OK) {

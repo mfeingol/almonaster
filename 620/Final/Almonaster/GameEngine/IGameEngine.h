@@ -681,8 +681,6 @@ public:
     virtual int PauseAllGames() = 0;
     virtual int UnpauseAllGames() = 0;
 
-    virtual int LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
-
     virtual int RuinGame (int iGameClass, int iGameNumber, const char* pszWinnerName) = 0;
 
     virtual int GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int** ppiEmpireKey, int* piNumResigned) = 0;

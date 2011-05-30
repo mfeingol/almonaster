@@ -1036,10 +1036,20 @@ int GameEngine::VerifyActiveGames() {
             
             if (!bPaused) {
 
-                iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
+                bool bIdle;
+                iErrCode = AreAllEmpiresIdle (iGameClass, iGameNumber, &bIdle);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
+                }
+
+                if (!bIdle) {
+
+                    iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
                 }
             }
             

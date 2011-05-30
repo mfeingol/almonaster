@@ -3520,28 +3520,119 @@ int GameEngine::CheckGameForDrawOut (int iGameClass, int iGameNumber, bool* pbDr
 
     int iErrCode;
     unsigned int iNumEmpires;
-    Variant vNum;
+    Variant vTemp;
 
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::NumRequestingDraw, &vNum);
+    *pbDraw = false;
+
+    unsigned int iRequesting;
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::NumRequestingDraw, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    iRequesting = vTemp.GetInteger();
+
+    iErrCode = m_pGameData->GetNumRows (strGameEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->GetNumRows (strGameEmpires, &iNumEmpires);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    Assert (iNumEmpires > 0);
+    Assert (iRequesting <= iNumEmpires);
+    if (iRequesting == iNumEmpires) {
+        
+        // Draw out iff someone isn't idle
+        bool bIdle;
+        iErrCode = AreAllEmpiresIdle (iGameClass, iGameNumber, &bIdle);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
 
-    *pbDraw = ((unsigned int) vNum.GetInteger() >= iNumEmpires);
+        *pbDraw = !bIdle;
+    }
 
 Cleanup:
 
     return iErrCode;
 }
+
+int GameEngine::AreAllEmpiresIdle (int iGameClass, int iGameNumber, bool* pbIdle) {
+
+    int iErrCode;
+    Variant vTemp;
+
+    GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
+
+    *pbIdle = true;
+
+    // Figure out idle policy
+    iErrCode = GetGameClassProperty (iGameClass, SystemGameClassData::NumUpdatesForIdle, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    unsigned int iNumUpdatesForIdle = vTemp.GetInteger();
+
+    unsigned int iKey = NO_KEY;
+    while (true) {
+
+        iErrCode = m_pGameData->GetNextKey (strGameEmpires, iKey, &iKey);
+        if (iErrCode != OK) {
+            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                iErrCode = OK;
+                break;
+            }
+            Assert (false);
+            goto Cleanup;
+        }
+
+        iErrCode = m_pGameData->ReadData (strGameEmpires, iKey, GameEmpires::EmpireKey, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        int iEmpireKey = vTemp.GetInteger();
+
+        int iEmpireOptions;
+        iErrCode = GetEmpireOptions (iGameClass, iGameNumber, iEmpireKey, &iEmpireOptions);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (iEmpireOptions & RESIGNED) {
+            continue;
+        }
+
+        char pszGameEmpireData [256];
+        GET_GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+        iErrCode = m_pGameData->ReadData (pszGameEmpireData, GameEmpireData::NumUpdatesIdle, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        unsigned int iNumUpdatesIdle = vTemp.GetInteger();
+
+        if (iNumUpdatesIdle >= iNumUpdatesForIdle) {
+            continue;
+        }
+
+        // A non-idle empire has been found
+        *pbIdle = false;
+        break;
+    }
+
+Cleanup:
+
+    return iErrCode;
+}
+
 
 int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast) {
 
@@ -3964,7 +4055,7 @@ GameObject* GameEngine::GetGameObject (int iGameClass, int iGameNumber) {
     return pGameObject;
 }
 
-int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey) {
+int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey, int* piIdleUpdates) {
 
     int iErrCode;
 
@@ -3980,14 +4071,7 @@ int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireK
     if (iErrCode != OK) {
         return ERROR_GAME_DOES_NOT_EXIST;
     }
-    
-    // Num updates idle
-    iErrCode = pTable->WriteData (GameEmpireData::NumUpdatesIdle, 0);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    
+
     // Set last login
     iErrCode = pTable->WriteData (GameEmpireData::LastLogin, tTime);
     if (iErrCode != OK) {
@@ -3997,6 +4081,13 @@ int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireK
 
     // Set logged in this update
     iErrCode = pTable->WriteOr (GameEmpireData::Options, LOGGED_IN_THIS_UPDATE);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Read idle updates
+    iErrCode = pTable->ReadData (GameEmpireData::NumUpdatesIdle, piIdleUpdates);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

@@ -870,17 +870,23 @@ WriteProfileAlienString (
 %><td align="center">-</td><%
 
 %><td align="center"><%
-WriteTime (Time::GetSecondDifference (tCurrentTime, tLastLogin)); %> ago<%
 
-if (iNumUpdatesIdle > 0) {
+WriteTime (Time::GetSecondDifference (tCurrentTime, tLastLogin));
+
+%> ago<%
+
+if (iGameOptions & RESIGNED) {
+    %><br>(<strong><em>Resigned</em></strong>)<%
+}
+
+else if (iNumUpdatesIdle > 0) {
     %><br>(<strong><% Write (iNumUpdatesIdle); %></strong> update<%
     
     if (iNumUpdatesIdle != 1) {
         %>s<%
     }
     %> idle)<%
-}
-%></td></tr><%
+} %></td></tr><%
 
 %><tr><th></th><%
 %><th bgcolor="<% Write (pszTableColor); %>">Wins</th><%
@@ -1145,9 +1151,6 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     %><tr><%
     %><th><%
-    if (iGameOptions & RESIGNED) {
-        %><em>Resigned</em><%
-    }
     %></th><%
     %><th bgcolor="<% Write (pszTableColor); %>">Alien</th><%
     %><th bgcolor="<% Write (pszTableColor); %>">Econ</th><%
@@ -1309,7 +1312,11 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     %> ago <%
 
-    if (iNumUpdatesIdle > 0) {
+    if (iGameOptions & RESIGNED) {
+        %><br>(<strong><em>Resigned</em></strong>)<%
+    }
+
+    else if (iNumUpdatesIdle > 0) {
         %><br>(<strong><% Write (iNumUpdatesIdle); %></strong> update<%
         
         if (iNumUpdatesIdle != 1) {
