@@ -811,7 +811,7 @@ public:
 		iErrCode = m_pDatabase->WriteData (SYSTEM_DATA, SystemData::col, val);	\
 		Assert (iErrCode == OK);
 
-		WriteColumn (PrivilegeForUnlimitedEmpires, APPRENTICE);
+		WriteColumn (PrivilegeForUnlimitedEmpires, ADEPT);
 		WriteColumn (BuilderMultiplier, (float) 3.0);
 		WriteColumn (NumNukesListedInSystemNukeList, 30);
 		WriteColumn (NumGamesInLatestGameList, 30);

@@ -1720,9 +1720,10 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
     String strDuplicateIPList, strDuplicateIdList, strDuplicateList, strMessage;
-    bool bWarn, bBlock, bFlag, bAddedToGame = false, bClosed = false, bStarted = false, bUnPaused = false;
+    bool bWarn, bBlock, bFlag, bAddedToGame = false, bClosed = false, bStarted = false, bPaused = false,
+        bUnPaused = false;
 
-    int iErrCode, iNumTechs, iDefaultOptions, iGameState;
+    int iErrCode, iNumTechs, iDefaultOptions, iGameState, iSystemOptions;
     unsigned int iCurrentNumEmpires = -1, i, iKey = NO_KEY;
 
     Variant vGameClassOptions, vHalted, vPassword, vPrivilege, vMinScore, vMaxScore, vEmpireScore, vTemp, 
@@ -1762,6 +1763,12 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         if (iErrCode == ERROR_UNKNOWN_ROW_KEY) {
             iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         }
+        goto OnError;
+    }
+
+    iErrCode = GetSystemOptions (&iSystemOptions);
+    if (iErrCode != OK) {
+        Assert (false);
         goto OnError;
     }
 
@@ -2034,29 +2041,33 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
             }
         }
 
-        // Check for pause
-        LockPauseGame (iGameClass, iGameNumber, &nmPause);
-        bPauseLocked = true;
+        // Check for 'pause on start' option
+        if (!(iSystemOptions & PAUSE_GAMES_BY_DEFAULT)) {
 
-        iErrCode = IsGamePaused (iGameClass, iGameNumber, &bFlag);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto OnError;
-        }
+            // Unpause the game - a new empire came in and he's not paused by default
+            LockPauseGame (iGameClass, iGameNumber, &nmPause);
+            bPauseLocked = true;
 
-        if (bFlag) {
-
-            iErrCode = UnpauseGame (iGameClass, iGameNumber, false, false);
+            iErrCode = IsGamePaused (iGameClass, iGameNumber, &bFlag);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
             }
 
-            bUnPaused = true;
-        }
+            if (bFlag) {
 
-        UnlockPauseGame (nmPause);
-        bPauseLocked = false;
+                iErrCode = UnpauseGame (iGameClass, iGameNumber, false, false);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
+
+                bUnPaused = true;
+            }
+
+            UnlockPauseGame (nmPause);
+            bPauseLocked = false;
+        }
         
         // Trigger all remaining updates
         if (!bGameAlreadyLocked) {
@@ -2171,13 +2182,6 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
                 Assert (false);
                 goto OnError;
             }
-
-            // If the game closed and we were supposed to generate the map at first update, do it now
-            // Actually, don't do this because it gives the last player who joins an unfair advantage
-            /*if (!(iGameState & GAME_MAP_GENERATED) && 
-                (vGameClassOptions.GetInteger() & GENERATE_MAP_FIRST_UPDATE)) {
-                bGenerateMapForAllEmpires = true;
-            }*/
         }
     }
 
@@ -2281,7 +2285,6 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     pvGameEmpireData[GameEmpireData::TotalFuelUse] = 0;
     pvGameEmpireData[GameEmpireData::LastLogin] = tTime;
     pvGameEmpireData[GameEmpireData::EnterGameIPAddress] = "";
-    pvGameEmpireData[GameEmpireData::Options] = 0;
     pvGameEmpireData[GameEmpireData::PartialMapCenter] = PARTIAL_MAP_NATURAL_CENTER;
     pvGameEmpireData[GameEmpireData::PartialMapXRadius] = PARTIAL_MAP_UNLIMITED_RADIUS;
     pvGameEmpireData[GameEmpireData::PartialMapYRadius] = PARTIAL_MAP_UNLIMITED_RADIUS;
@@ -2435,8 +2438,12 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         REJECT_INDEPENDENT_SHIP_GIFTS | DISPLACE_ENDTURN_BUTTON
         );
 
-    pvGameEmpireData[GameEmpireData::Options] = 
-        pvGameEmpireData[GameEmpireData::Options].GetInteger() | iDefaultOptions;
+    // Request pause if necessary
+    if (iSystemOptions & PAUSE_GAMES_BY_DEFAULT) {
+        iDefaultOptions |= REQUEST_PAUSE;
+    }
+
+    pvGameEmpireData[GameEmpireData::Options] = iDefaultOptions;
 
     // Blank notepad
     pvGameEmpireData[GameEmpireData::Notepad] = "";
@@ -2683,11 +2690,29 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
                 goto OnError;
             }
 
-            // Write max num empires
+            // Set max num empires
             iErrCode = m_pGameData->WriteData (strGameData, GameData::MaxNumEmpires, iCurrentNumEmpires);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
+            }
+
+            // Set paused if necessary
+            if (iSystemOptions & PAUSE_GAMES_BY_DEFAULT) {
+
+                bPaused = true;
+
+                iErrCode = m_pGameData->WriteData (strGameData, GameData::NumRequestingPause, iCurrentNumEmpires);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
+
+                iErrCode = PauseGame (iGameClass, iGameNumber, false, false);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
             }
             
             // Add all players to map if the game isn't configured to do so on the first update
@@ -2751,7 +2776,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     if (iCurrentNumEmpires > 1) {
 
         unsigned int iNumEmpires;
-        Variant* pvEmpireKey;
+        Variant* pvEmpireKey = NULL;
         iErrCode = m_pGameData->ReadColumn (
             strGameEmpires, 
             GameEmpires::EmpireKey, 
@@ -2782,7 +2807,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
 
             for (i = 0; i < iNumEmpires; i ++) {
                 
-                if (pvEmpireKey[i] != iEmpireKey) {
+                if (pvEmpireKey[i].GetInteger() != iEmpireKey) {
                     
                     pvDiplomacy[GameEmpireDiplomacy::EmpireKey] = pvEmpireKey[i];
                     
@@ -2849,6 +2874,10 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
             if (bUnPaused) {
                 strMessage += "\nThe game was " BEGIN_STRONG "unpaused" END_STRONG;
             }
+
+            if (bPaused) {
+                strMessage += "\nThe game is " BEGIN_STRONG "paused" END_STRONG;
+            }
             
             for (i = 0; i < iNumEmpires; i ++) {
 
@@ -2864,6 +2893,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         
         // Clean up
         m_pGameData->FreeData (pvEmpireKey);
+        pvEmpireKey = NULL;
     }
 
     // Get num updates

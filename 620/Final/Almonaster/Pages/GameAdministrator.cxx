@@ -1941,19 +1941,19 @@ case 0:
     %><tr><td>Initial state of games:</td><%
     %><td><select name="PauseGames"><%
     
-    bFlag = (iOptions & PAUSE_GAMES_BY_DEFAULT) != 0;
+    bFlag = (iSystemOptions & PAUSE_GAMES_BY_DEFAULT) != 0;
     
     %><option value="0" <%
     if (!bFlag) {
         %>selected <%
     }
-    %>>Don't pause games by default when they close</option><%
+    %>>Don't pause games by default when they start</option><%
     
     %><option value="1" <%
     if (bFlag) {
         %>selected <%
     }
-    %>>Pause games by default when they close</option><%
+    %>>Pause games by default when they start</option><%
 
     %></td></tr><%
 

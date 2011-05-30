@@ -488,6 +488,15 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
 // Request game pause
 
 int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
+    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, piGameState, true);
+}
+
+int GameEngine::RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
+    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, piGameState, false);
+}
+
+int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState,
+                                      bool bBroadcast) {
 
     int iErrCode;
     unsigned int iNumRows;
@@ -545,7 +554,7 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
 
         if (!(vState.GetInteger() & ADMIN_PAUSED)) {
 
-            iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
+            iErrCode = PauseGame (iGameClass, iGameNumber, false, bBroadcast);
             Assert (iErrCode == OK);
 
             if (iErrCode == OK) {

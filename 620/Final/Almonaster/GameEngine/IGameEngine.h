@@ -951,16 +951,6 @@ public:
     virtual int GetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int* piMessageTarget) = 0;
     virtual int SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int iMessageTarget) = 0;
 
-    virtual int RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) = 0;
-    virtual int RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) = 0;
-    virtual int IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause) = 0;
-    virtual int GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, int* piNumEmpires) = 0;
-    
-    virtual int RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) = 0;
-    virtual int RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
-    virtual int IsEmpireRequestingDraw (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbDraw) = 0;
-    virtual int GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, int* piNumEmpires) = 0;
-
     // Diplomacy
     virtual int GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpireKey, 
         int* piNumEmpires) = 0;

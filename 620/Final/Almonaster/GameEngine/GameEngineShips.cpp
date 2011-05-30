@@ -3132,7 +3132,7 @@ int GameEngine::UpdateShipOrders (int iGameClass, int iGameNumber, int iEmpireKe
                 }
 
                 // Get tech
-                int iMorphTech = MORPH_ATTACK - iNewShipOrder;
+                int iMorphTech = MORPH_TECH (iNewShipOrder);
 
                 GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 

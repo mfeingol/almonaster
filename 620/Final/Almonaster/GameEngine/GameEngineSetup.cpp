@@ -1509,7 +1509,7 @@ int GameEngine::SetupDefaultSystemTables() {
         DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS | DEFAULT_WARN_ON_DUPLICATE_SESSION_ID,    // Options
         tTime,          // LastBridierTimeBombScan
         24*60*60,       // BridierTimeBombScanFrequency
-        APPRENTICE,     // PrivilegeForUnlimitedEmpires
+        ADEPT,          // PrivilegeForUnlimitedEmpires
         (char*) NULL,   // LoginsDisabledReason
         (char*) NULL,   // NewEmpiresDisabledReason
         (char*) NULL,   // NewGamesDisabledReason

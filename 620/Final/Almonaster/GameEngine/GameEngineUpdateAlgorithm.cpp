@@ -1281,7 +1281,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     continue;
                 }
 
-                iErrCode = RequestPause (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
+                iErrCode = RequestPauseQuietly (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -2788,7 +2788,6 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
             
         // Get keys for all empire's ships
         iErrCode = m_pGameData->GetAllKeys (pstrEmpireShips[i], &piShipKey, (unsigned int*) &iNumShips);
-        
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = OK;
             continue;
@@ -2959,9 +2958,44 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                     Assert (false);
                     goto Cleanup;
                 }
+
+                // Special case for standby and ...
+                if (vAction.GetInteger() <= FLEET_STANDBY_AND_COLONIZE && 
+                    vAction.GetInteger() >= FLEET_STANDBY_AND_ANNIHILATE) {
+
+                    if (vType.GetInteger() == FLEET_STANDBY_TECH (vAction.GetInteger())) {
+
+                        switch (vType.GetInteger()) {
+                        
+                        case COLONY:
+                            vAction = COLONIZE;
+                            break;
+
+                        case TERRAFORMER:
+                            vAction = TERRAFORM;
+                            break;
+
+                        case TROOPSHIP:
+                            vAction = INVADE;
+                            break;
+
+                        case DOOMSDAY:
+                            vAction = ANNIHILATE;
+                            break;
+
+                        default:
+                            Assert (false);
+                            break;
+                        }
+                    
+                    } else {
+
+                        vAction = STAND_BY;
+                    }
+                }
                 
                 // Special case for nuke
-                if (vAction.GetInteger() == NUKE) {
+                else if (vAction.GetInteger() == NUKE) {
 
                     // Make sure not cloaked
                     iErrCode = m_pGameData->ReadData (
@@ -3870,14 +3904,15 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
 
             default:
                 
-                // Special case for morph
-                if (vAction.GetInteger() <= MORPH_ATTACK && vAction.GetInteger() >= MORPH_JUMPGATE) {
+                // Special case for morphers
+                if (vAction.GetInteger() <= (MORPH_TECH (FIRST_SHIP)) && 
+                    vAction.GetInteger() >= (MORPH_TECH (LAST_SHIP))) {
 
                     bool bDied = false;
 
                     Variant vTechs, vBR, vShipType, vShipState;
                     
-                    iTemp = MORPH_ATTACK - vAction.GetInteger();
+                    iTemp = MORPH_BASETECH - vAction.GetInteger();
                     Assert (iTemp >= FIRST_SHIP && iTemp <= LAST_SHIP);
                     
                     // Get planet key

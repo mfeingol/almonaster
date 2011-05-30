@@ -30,22 +30,22 @@
 
 // Ship types
 enum ShipTypes {
-    ATTACK = 0,
-    SCIENCE = 1,
-    COLONY = 2,
-    STARGATE = 3,
-    CLOAKER = 4,
-    SATELLITE = 5,
-    TERRAFORMER = 6,
-    TROOPSHIP = 7,
-    DOOMSDAY = 8,
-    MINEFIELD = 9,
-    MINESWEEPER = 10,
-    ENGINEER = 11,
-    CARRIER = 12,
-    BUILDER = 13,
-    MORPHER = 14,
-    JUMPGATE = 15,
+    ATTACK,
+    SCIENCE,
+    COLONY,
+    STARGATE,
+    CLOAKER,
+    SATELLITE,
+    TERRAFORMER,
+    TROOPSHIP,
+    DOOMSDAY,
+    MINEFIELD,
+    MINESWEEPER,
+    ENGINEER,
+    CARRIER,
+    BUILDER,
+    MORPHER,
+    JUMPGATE,
 
     FIRST_SHIP = ATTACK,
     LAST_SHIP = JUMPGATE,
@@ -328,24 +328,25 @@ extern const int TECH_BITS[];
 #define DEFAULT_ALLOW_SPECTATORS                (0x00000400)
 #define DISABLE_PRIVILEGE_SCORE_ELEVATION       (0x00000800)
 #define DEFAULT_RESTRICT_IDLE_EMPIRES           (0x00001000)
+#define PAUSE_GAMES_BY_DEFAULT                  (0x00002000)
 
 // GameEmpireShips::State
-#define CLOAKED                         (0x00000001)
-#define MORPH_ENABLED                   (0x00000002)
+#define CLOAKED                                 (0x00000001)
+#define MORPH_ENABLED                           (0x00000002)
 
 // GameData::State
-#define PAUSED                          (0x00000001)
-#define ADMIN_PAUSED                    (0x00000002)
-#define STILL_OPEN                      (0x00000004)
-#define STARTED                         (0x00000008)
-#define GAME_UPDATING                   (0x00000010)
-#define GAME_CREATING                   (0x00000020)
-#define GAME_ADDING_EMPIRE              (0x00000040)
-#define GAME_DELETING                   (0x00000080)
-#define GAME_DELETING_EMPIRE            (0x00000100)
-#define GAME_WAITING_TO_UPDATE          (0x00000200)
-#define GAME_MAP_GENERATED              (0x00000400)
-#define GAME_ENDED                      (0x80000000)
+#define PAUSED                                  (0x00000001)
+#define ADMIN_PAUSED                            (0x00000002)
+#define STILL_OPEN                              (0x00000004)
+#define STARTED                                 (0x00000008)
+#define GAME_UPDATING                           (0x00000010)
+#define GAME_CREATING                           (0x00000020)
+#define GAME_ADDING_EMPIRE                      (0x00000040)
+#define GAME_DELETING                           (0x00000080)
+#define GAME_DELETING_EMPIRE                    (0x00000100)
+#define GAME_WAITING_TO_UPDATE                  (0x00000200)
+#define GAME_MAP_GENERATED                      (0x00000400)
+#define GAME_ENDED                              (0x80000000)
 
 #define GAME_BUSY (GAME_UPDATING | GAME_CREATING | GAME_ADDING_EMPIRE | GAME_DELETING | GAME_DELETING_EMPIRE)
 #define GAME_DELETION_REASON_MASK (PAUSED | ADMIN_PAUSED | STILL_OPEN | STARTED | GAME_WAITING_TO_UPDATE | GAME_MAP_GENERATED)
@@ -788,25 +789,59 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 #define CREATE_PLANET_WEST (-77)
 
 // Morph
-#define MORPH_ATTACK (-78)
-#define MORPH_SCIENCE (-79)
-#define MORPH_COLONY (-80)
-#define MORPH_STARGATE (-81)
-#define MORPH_CLOAKER (-82)
-#define MORPH_SATELLITE (-83)
-#define MORPH_TERRAFORMER (-84)
-#define MORPH_TROOPSHIP (-85)
-#define MORPH_DOOMSDAY (-86)
-#define MORPH_MINEFIELD (-87)
-#define MORPH_MINESWEEPER (-88)
-#define MORPH_ENGINEER (-89)
-#define MORPH_CARRIER (-90)
-#define MORPH_BUILDER (-91)
-#define MORPH_MORPHER (-92)
-#define MORPH_JUMPGATE (-93)
+#define MORPH_BASETECH      (-78)
+#define MORPH_ATTACK        (MORPH_BASETECH - ATTACK)
+#define MORPH_SCIENCE       (MORPH_BASETECH - SCIENCE)
+#define MORPH_COLONY        (MORPH_BASETECH - COLONY)
+#define MORPH_STARGATE      (MORPH_BASETECH - STARGATE)
+#define MORPH_CLOAKER       (MORPH_BASETECH - CLOAKER)
+#define MORPH_SATELLITE     (MORPH_BASETECH - SATELLITE)
+#define MORPH_TERRAFORMER   (MORPH_BASETECH - TERRAFORMER)
+#define MORPH_TROOPSHIP     (MORPH_BASETECH - TROOPSHIP)
+#define MORPH_DOOMSDAY      (MORPH_BASETECH - DOOMSDAY)
+#define MORPH_MINEFIELD     (MORPH_BASETECH - MINEFIELD)
+#define MORPH_MINESWEEPER   (MORPH_BASETECH - MINESWEEPER)
+#define MORPH_ENGINEER      (MORPH_BASETECH - ENGINEER)
+#define MORPH_CARRIER       (MORPH_BASETECH - CARRIER)
+#define MORPH_BUILDER       (MORPH_BASETECH - BUILDER)
+#define MORPH_MORPHER       (MORPH_BASETECH - MORPHER)
+#define MORPH_JUMPGATE      (MORPH_BASETECH - JUMPGATE)
+
+#define MORPH_TECH(x) (MORPH_BASETECH - x)
 
 // Gate
 #define GATE_SHIPS (-100)
+
+// Fleet Standby and X
+#define FLEET_STANDBY_BASE              (-200)
+#define FLEET_STANDBY_AND_COLONIZE      (FLEET_STANDBY_BASE - COLONY)
+#define FLEET_STANDBY_AND_TERRAFORM     (FLEET_STANDBY_BASE - TERRAFORMER)
+#define FLEET_STANDBY_AND_INVADE        (FLEET_STANDBY_BASE - TROOPSHIP)
+#define FLEET_STANDBY_AND_ANNIHILATE    (FLEET_STANDBY_BASE - DOOMSDAY)
+
+#define FLEET_STANDBY_NUM_ACTIONS       (4)
+#define FLEET_STANDBY_TECHMASK          (TECH_COLONY | TECH_TERRAFORMER | TECH_TROOPSHIP | TECH_DOOMSDAY)
+
+#define FLEET_STANDBY_TECH(x) (MORPH_BASETECH - x)
+
+
+#define TECH_ATTACK                         (0x00000001)
+#define TECH_SCIENCE                        (0x00000002)
+#define TECH_COLONY                         (0x00000004)
+#define TECH_STARGATE                       (0x00000008)
+#define TECH_CLOAKER                        (0x00000010)
+#define TECH_SATELLITE                      (0x00000020)
+#define TECH_TERRAFORMER                    (0x00000040)
+#define TECH_TROOPSHIP                      (0x00000080)
+#define TECH_DOOMSDAY                       (0x00000100)
+#define TECH_MINEFIELD                      (0x00000200)
+#define TECH_MINESWEEPER                    (0x00000400)
+#define TECH_ENGINEER                       (0x00000800)
+#define TECH_CARRIER                        (0x00001000)
+#define TECH_BUILDER                        (0x00002000)
+#define TECH_MORPHER                        (0x00004000)
+#define TECH_JUMPGATE                       (0x00008000)
+
 
 ////////////
 // Errors //

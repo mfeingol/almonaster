@@ -167,6 +167,8 @@ private:
 
     int CheckGameForAllyOut (int iGameClass, int iGameNumber, bool* pbAlly);
     int CheckGameForDrawOut (int iGameClass, int iGameNumber, bool* pbDraw);
+
+    int RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState, bool bBroadcast);
     
     int PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
     int UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
@@ -226,6 +228,10 @@ private:
 
     int ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bCloaked, 
         const char* strEmpireShips, const char* strEmpireMap, const char* strGameMap);
+
+    // Fleets
+    int GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iFleetKey, int* piMask);
 
     // Score
     int UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* pszNukerName, 
@@ -1151,7 +1157,9 @@ public:
     int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer);
 
     int RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
+    int RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
     int RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
+
     int AdminPauseGame (int iGameClass, int iGameNumber, bool bBroadcast);
     int AdminUnpauseGame (int iGameClass, int iGameNumber, bool bBroadcast);
 

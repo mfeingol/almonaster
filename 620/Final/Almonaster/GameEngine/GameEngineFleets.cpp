@@ -392,7 +392,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
 
     char pszOrder [128 + MAX_PLANET_NAME_LENGTH];
 
-    const size_t stMaxNumOrders = NUM_CARDINAL_POINTS + NUM_SHIP_TYPES;
+    const size_t stMaxNumOrders = NUM_CARDINAL_POINTS + NUM_SHIP_TYPES + FLEET_STANDBY_NUM_ACTIONS;
 
     *ppiOrderKey = NULL;
     *ppstrOrderText = NULL;
@@ -615,6 +615,37 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
         }
     }
 
+    // Standby and ...
+    int iMask;
+    iErrCode = GetFleetSpecialActionMask (iGameClass, iGameNumber, iEmpireKey, iFleetKey, &iMask);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    if (iMask & TECH_COLONY) {
+        (*ppiOrderKey)[*piNumOrders] = FLEET_STANDBY_AND_COLONIZE;
+        (*ppstrOrderText)[*piNumOrders] = "Standby and colonize";
+        (*piNumOrders) ++;
+    }
+
+    if (iMask & TECH_TERRAFORMER) {
+        (*ppiOrderKey)[*piNumOrders] = FLEET_STANDBY_AND_TERRAFORM;
+        (*ppstrOrderText)[*piNumOrders] = "Standby and terraformer";
+        (*piNumOrders) ++;
+    }
+
+    if (iMask & TECH_TROOPSHIP) {
+        (*ppiOrderKey)[*piNumOrders] = FLEET_STANDBY_AND_INVADE;
+        (*ppstrOrderText)[*piNumOrders] = "Standby and invade";
+        (*piNumOrders) ++;
+    }
+
+    if (iMask & TECH_DOOMSDAY) {
+        (*ppiOrderKey)[*piNumOrders] = FLEET_STANDBY_AND_ANNIHILATE;
+        (*ppstrOrderText)[*piNumOrders] = "Standby and annihilate";
+        (*piNumOrders) ++;
+    }
+
     // Add disband
     (*ppiOrderKey)[*piNumOrders] = DISBAND;
     (*ppstrOrderText)[*piNumOrders] = "Disband fleet";
@@ -643,6 +674,80 @@ Cleanup:
 
         *piNumOrders = 0;
     }
+
+    return iErrCode;
+}
+
+
+int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNumber, 
+                                           unsigned int iEmpireKey, unsigned int iFleetKey, int* piMask) {
+
+    int iErrCode;
+    unsigned int iNumShips, i;
+
+    Variant* pvType = NULL;
+
+    GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
+
+    *piMask = 0;
+
+    iErrCode = m_pGameData->ReadColumnWhereEqual (
+        pszShips,
+        GameEmpireShips::FleetKey,
+        iFleetKey,
+        false,
+        GameEmpireShips::Type,
+        NULL,
+        &pvType,
+        &iNumShips
+        );
+
+    if (iErrCode != OK) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+        goto Cleanup;
+    }
+
+    for (i = 0; i < iNumShips; i ++) {
+
+        int iMask = 0;
+
+        switch (pvType[i].GetInteger()) {
+
+        case COLONY:
+            iMask |= TECH_COLONY;
+            break;
+
+        case TERRAFORMER:
+            iMask |= TECH_COLONY;
+            break;
+
+        case TROOPSHIP:
+            iMask |= TECH_TROOPSHIP;
+            break;
+
+        case DOOMSDAY:
+            iMask |= TECH_DOOMSDAY;
+            break;
+
+        default:
+            break;
+        }
+
+        if (iMask) {
+
+            *piMask |= iMask;
+            if (*piMask == FLEET_STANDBY_TECHMASK) {
+                goto Cleanup;
+            }
+
+        }
+    }
+
+Cleanup:
+
+    m_pGameData->FreeData (pvType);
 
     return iErrCode;
 }
@@ -965,6 +1070,9 @@ int GameEngine::UpdateFleetOrders (int iGameClass, int iGameNumber, int iEmpireK
         iErrCode = m_pGameData->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, NUKE);
         goto Cleanup;
     }
+
+    // TODO : check standby and ... orders
+    // 
     
     // Get proxy key for empire map
     iErrCode = m_pGameData->GetFirstKey (
