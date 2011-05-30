@@ -165,7 +165,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
         OutputText ("\" value=\"");
         m_pHttpResponse->WriteText (iOneTech);
         OutputText ("\">");
-        m_pHttpResponse->WriteText (SHIP_TYPE_STRING[i]);
+        m_pHttpResponse->WriteText (SHIP_TYPE_STRING[iOneTech]);
         OutputText ("</td>");
 
     } else {

@@ -495,25 +495,25 @@ int HttpRequest::ParseHeader (char* pszLine) {
             if (strnicmp (pszValue, "Basic ", stBasicSpaceLen)  == 0) {
 
                 pszTemp = pszValue + stBasicSpaceLen;
-                size_t stEncodeLen = strlen (pszTemp) + 1;
+                size_t cbEncodeLen = strlen (pszTemp) + 1;
 
-                if (stEncodeLen > 128) {
-
-                    pszDecode = new char [stEncodeLen];
+                if (cbEncodeLen <= 128) {
+                    pszDecode = (char*) StackAlloc (cbEncodeLen + 1);
+                } else {
+                    pszDecode = new char [cbEncodeLen + 1];
                     if (pszDecode == NULL) {
                         iErrCode = ERROR_OUT_OF_MEMORY;
                         goto Cleanup;
                     }
-                } else {
-
-                    pszDecode = (char*) StackAlloc (stEncodeLen);
                 }
 
                 size_t cbDecoded;
-                iErrCode = Algorithm::DecodeBase64 (pszTemp, pszDecode, stEncodeLen, &cbDecoded);
+                iErrCode = Algorithm::DecodeBase64 (pszTemp, pszDecode, cbEncodeLen, &cbDecoded);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
+                Assert (cbDecoded <= cbEncodeLen);
+                pszDecode [cbDecoded] = '\0';
 
                 pszTemp = strtok (pszDecode, ":");
                 m_strLogin = pszTemp;
@@ -521,7 +521,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
                 pszTemp = strtok (NULL, "");
                 m_strPassword = pszTemp;
 
-                if (stEncodeLen > 128) {
+                if (cbEncodeLen > 128) {
                     delete [] pszDecode;
                 }
             }

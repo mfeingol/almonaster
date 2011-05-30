@@ -4508,6 +4508,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                 return iErrCode;
             }
             Assert (iNumIndependentShips == 0 && piIndependentShipKey == NULL);
+            iErrCode = OK;
 
         } else {
 

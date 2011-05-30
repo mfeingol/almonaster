@@ -940,7 +940,7 @@ int HttpResponse::RespondPrivate() {
         else if (m_pPageSource->UseBasicAuthentication()) {
 
             // Are we authenticated
-            bool bAuthenticated;
+            bool bAuthenticated = false;
 
             if (m_pPageSource->OnBasicAuthenticate (
                 m_pHttpRequest->GetLogin(), 
