@@ -21,11 +21,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E57B328E-DC3B-4030-8B96-058326205BD5}</ProjectGuid>
     <RootNamespace>Osal</RootNamespace>
-    <SccProjectName>"$/622/Osal", NFTAAAAA</SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
+    <SccProjectName>$/almonaster/Main/Osal</SccProjectName>
+    <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -116,7 +115,6 @@
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -137,6 +135,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -163,10 +162,19 @@
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+
+set DropOsalSdk=..\Drop\$(Platform)\$(Configuration)\sdk\Osal
+if not exist "%DropOsalSdk%" mkdir "%DropOsalSdk%"
+copy /y *.h "%DropOsalSdk%"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -187,7 +195,6 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -208,6 +215,7 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -234,10 +242,19 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+
+set DropOsalSdk=..\Drop\$(Platform)\$(Configuration)\sdk\Osal
+if not exist "%DropOsalSdk%" mkdir "%DropOsalSdk%"
+copy /y *.h "%DropOsalSdk%"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -262,7 +279,6 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -284,6 +300,7 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -314,10 +331,19 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+
+set DropOsalSdk=..\Drop\$(Platform)\$(Configuration)\sdk\Osal
+if not exist "%DropOsalSdk%" mkdir "%DropOsalSdk%"
+copy /y *.h "%DropOsalSdk%"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -342,7 +368,6 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -364,6 +389,7 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -394,10 +420,19 @@ copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Comman
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+
+set DropOsalSdk=..\Drop\$(Platform)\$(Configuration)\sdk\Osal
+if not exist "%DropOsalSdk%" mkdir "%DropOsalSdk%"
+copy /y *.h "%DropOsalSdk%"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

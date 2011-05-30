@@ -1,73 +1,96 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Admin", "..\Admin\Admin.vcxproj", "{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Admin", "Admin\Admin.vcxproj", "{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Alajar", "..\Alajar\Alajar.vcxproj", "{98AF9BC4-B62A-4237-A539-103D0426D6BD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Alajar", "Alajar\Alajar.vcxproj", "{98AF9BC4-B62A-4237-A539-103D0426D6BD}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarDll", "..\AlajarDll\AlajarDll.vcxproj", "{A5498F4E-4124-4680-B43A-D105AA64C814}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarDll", "AlajarDll\AlajarDll.vcxproj", "{A5498F4E-4124-4680-B43A-D105AA64C814}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarSvc", "..\AlajarSvc\AlajarSvc.vcxproj", "{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarSvc", "AlajarSvc\AlajarSvc.vcxproj", "{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster.vcxproj", "{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster\Almonaster.vcxproj", "{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB} = {FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "..\AlmonasterHook\AlmonasterHook.vcxproj", "{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "AlmonasterHook\AlmonasterHook.vcxproj", "{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asfpp", "..\Asfpp\Asfpp.vcxproj", "{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asfpp", "Asfpp\Asfpp.vcxproj", "{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBConv", "..\DBConv\DBConv.vcxproj", "{8681FDA2-A273-4026-8677-D250904920C5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBConv", "DBConv\DBConv.vcxproj", "{8681FDA2-A273-4026-8677-D250904920C5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "..\Database\Database.vcxproj", "{208D5299-BDCB-4479-BD23-B544474E8772}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "Database\Database.vcxproj", "{208D5299-BDCB-4479-BD23-B544474E8772}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcxproj", "{E57B328E-DC3B-4030-8B96-058326205BD5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "Osal\Osal.vcxproj", "{E57B328E-DC3B-4030-8B96-058326205BD5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OdbcDatabase", "OdbcDatabase\OdbcDatabase.vcxproj", "{A7633999-E31C-4A55-8873-2BBF640E0964}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+		{208D5299-BDCB-4479-BD23-B544474E8772} = {208D5299-BDCB-4479-BD23-B544474E8772}
+	EndProjectSection
 EndProject
 Global
-	GlobalSection(SourceCodeControl) = preSolution
+	GlobalSection(TeamFoundationVersionControl) = preSolution
 		SccNumberOfProjects = 11
-		SccProjectName0 = \u0022$/622\u0022,\u0020TWCAAAAA
-		SccLocalPath0 = ..
-		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection0 = Almonaster\\
-		SccProjectUniqueName1 = ..\\Admin\\Admin.vcxproj
-		SccProjectName1 = \u0022$/622/Admin\u0022,\u0020HFRAAAAA
-		SccLocalPath1 = ..\\Admin
-		CanCheckoutShared = false
-		SccProjectUniqueName2 = ..\\Alajar\\Alajar.vcxproj
-		SccProjectName2 = \u0022$/622/Alajar\u0022,\u0020NFRAAAAA
-		SccLocalPath2 = ..\\Alajar
-		CanCheckoutShared = false
-		SccProjectUniqueName3 = ..\\AlajarDll\\AlajarDll.vcxproj
-		SccLocalPath3 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection3 = AlajarDll\\
-		SccProjectUniqueName4 = ..\\AlajarSvc\\AlajarSvc.vcxproj
-		SccProjectName4 = \u0022$/622/AlajarSvc\u0022,\u0020QUSAAAAA
-		SccLocalPath4 = ..\\AlajarSvc
-		CanCheckoutShared = false
-		SccProjectUniqueName5 = Almonaster.vcxproj
-		SccLocalPath5 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection5 = Almonaster\\
-		SccProjectUniqueName6 = ..\\AlmonasterHook\\AlmonasterHook.vcxproj
-		SccProjectName6 = \u0022$/622/AlmonasterHook\u0022,\u0020ICTAAAAA
-		SccLocalPath6 = ..\\AlmonasterHook
-		CanCheckoutShared = false
-		SccProjectUniqueName7 = ..\\Asfpp\\Asfpp.vcxproj
-		SccProjectName7 = \u0022$/622/Asfpp\u0022,\u0020MCTAAAAA
-		SccLocalPath7 = ..\\Asfpp
-		CanCheckoutShared = false
-		SccProjectUniqueName8 = ..\\DBConv\\DBConv.vcxproj
-		SccProjectName8 = \u0022$/622/DBConv\u0022,\u0020RDTAAAAA
-		SccLocalPath8 = ..\\DBConv
-		CanCheckoutShared = false
-		SccProjectUniqueName9 = ..\\Database\\Database.vcxproj
-		SccProjectName9 = \u0022$/622/Database\u0022,\u0020PCTAAAAA
-		SccLocalPath9 = ..\\Database
-		CanCheckoutShared = false
-		SccProjectUniqueName10 = ..\\Osal\\Osal.vcxproj
-		SccProjectName10 = \u0022$/622/Osal\u0022,\u0020NFTAAAAA
-		SccLocalPath10 = ..\\Osal
-		CanCheckoutShared = false
+		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs29
+		SccProjectUniqueName0 = Admin\\Admin.vcxproj
+		SccProjectName0 = Admin
+		SccAuxPath0 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath0 = Admin
+		SccProvider0 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName1 = Alajar\\Alajar.vcxproj
+		SccProjectName1 = Alajar
+		SccAuxPath1 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath1 = Alajar
+		SccProvider1 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName2 = AlajarDll\\AlajarDll.vcxproj
+		SccProjectName2 = .
+		SccAuxPath2 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath2 = .
+		SccProvider2 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectFilePathRelativizedFromConnection2 = AlajarDll\\
+		SccProjectUniqueName3 = AlajarSvc\\AlajarSvc.vcxproj
+		SccProjectName3 = AlajarSvc
+		SccAuxPath3 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath3 = AlajarSvc
+		SccProvider3 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName4 = Almonaster\\Almonaster.vcxproj
+		SccProjectName4 = .
+		SccAuxPath4 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath4 = .
+		SccProvider4 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectFilePathRelativizedFromConnection4 = Almonaster\\
+		SccProjectUniqueName5 = AlmonasterHook\\AlmonasterHook.vcxproj
+		SccProjectName5 = AlmonasterHook
+		SccAuxPath5 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath5 = AlmonasterHook
+		SccProvider5 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName6 = Asfpp\\Asfpp.vcxproj
+		SccProjectName6 = Asfpp
+		SccAuxPath6 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath6 = Asfpp
+		SccProvider6 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName7 = DBConv\\DBConv.vcxproj
+		SccProjectName7 = DBConv
+		SccAuxPath7 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath7 = DBConv
+		SccProvider7 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName8 = Database\\Database.vcxproj
+		SccProjectName8 = Database
+		SccAuxPath8 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath8 = Database
+		SccProvider8 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName9 = Osal\\Osal.vcxproj
+		SccProjectName9 = Osal
+		SccAuxPath9 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath9 = Osal
+		SccProvider9 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
+		SccProjectUniqueName10 = OdbcDatabase\\OdbcDatabase.vcxproj
+		SccProjectName10 = OdbcDatabase
+		SccAuxPath10 = https://tfs.codeplex.com/tfs/tfs29
+		SccLocalPath10 = OdbcDatabase
+		SccProvider10 = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -156,6 +179,13 @@ Global
 		{E57B328E-DC3B-4030-8B96-058326205BD5}.Release|Win32.Build.0 = Release|Win32
 		{E57B328E-DC3B-4030-8B96-058326205BD5}.Release|x64.ActiveCfg = Release|x64
 		{E57B328E-DC3B-4030-8B96-058326205BD5}.Release|x64.Build.0 = Release|x64
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Debug|Win32.ActiveCfg = Debug|Win32
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Debug|Win32.Build.0 = Debug|Win32
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Debug|x64.ActiveCfg = Debug|x64
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Debug|x64.Build.0 = Debug|x64
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Release|Win32.ActiveCfg = Release|Win32
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Release|Win32.Build.0 = Release|Win32
+		{A7633999-E31C-4A55-8873-2BBF640E0964}.Release|x64.ActiveCfg = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

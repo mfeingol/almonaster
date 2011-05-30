@@ -9,17 +9,8 @@
       <UniqueIdentifier>{8f51e8cc-c7fc-47d0-8f52-66e957c88e8f}</UniqueIdentifier>
       <Extensions>h</Extensions>
     </Filter>
-    <Filter Include="Page Source Files">
-      <UniqueIdentifier>{33b796f7-1e7c-4b31-935b-b2e510e0dc7c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Script Files">
-      <UniqueIdentifier>{e2afaec1-f888-40cd-a860-f7a02c45c2ac}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Almonaster">
       <UniqueIdentifier>{b502b552-7a14-4a79-9782-da2ebaf00741}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Scoring">
-      <UniqueIdentifier>{7f6049c0-0afc-4e63-9ce8-593fe5bf12ee}</UniqueIdentifier>
     </Filter>
     <Filter Include="HtmlRenderer">
       <UniqueIdentifier>{3c10ea63-62e1-495d-b47d-59e5750e4047}</UniqueIdentifier>
@@ -29,6 +20,15 @@
     </Filter>
     <Filter Include="Chatroom">
       <UniqueIdentifier>{5029e4ef-de51-471d-bd7e-3991d94db676}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Scoring">
+      <UniqueIdentifier>{7f6049c0-0afc-4e63-9ce8-593fe5bf12ee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Pages">
+      <UniqueIdentifier>{e2afaec1-f888-40cd-a860-f7a02c45c2ac}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PagesGenerated">
+      <UniqueIdentifier>{33b796f7-1e7c-4b31-935b-b2e510e0dc7c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -128,258 +128,6 @@
     <ClCompile Include="GameEngine\GameEngineUpdateAlgorithm.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
-    <ClCompile Include="Pages\ActiveGameList.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Build.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Chatroom.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Diplomacy.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\EmpireAdministrator.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameAdministrator.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameContributions.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameCredits.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameFAQ.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameNews.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameProfileViewer.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameServerRules.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameTos.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Info.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\LatestGames.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\LatestNukes.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Login.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Map.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\NewEmpire.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\OpenGameList.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Options.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\PersonalGameClasses.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\PersonalTournaments.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Planets.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ProfileEditor.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ProfileViewer.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Quit.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ServerAdministrator.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Ships.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SpectatorGames.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemContributions.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemCredits.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemFAQ.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemGameList.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemNews.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemServerRules.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemTos.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Tech.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ThemeAdministrator.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\TopLists.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\TournamentAdministrator.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Tournaments.cpp">
-      <Filter>Page Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ActiveGameList.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Build.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Chatroom.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Diplomacy.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\EmpireAdministrator.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameAdministrator.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameContributions.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameCredits.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameFAQ.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameNews.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameProfileViewer.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameServerRules.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\GameTos.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Info.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\LatestGames.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\LatestNukes.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Login.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Map.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\NewEmpire.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\OpenGameList.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Options.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\PersonalGameClasses.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\PersonalTournaments.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Planets.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ProfileEditor.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ProfileViewer.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Quit.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ServerAdministrator.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Ships.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SpectatorGames.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemContributions.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemCredits.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemFAQ.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemGameList.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemNews.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemServerRules.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\SystemTos.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Tech.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\ThemeAdministrator.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\TopLists.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\TournamentAdministrator.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Pages\Tournaments.cxx">
-      <Filter>Script Files</Filter>
-    </ClCompile>
     <ClCompile Include="Almonaster.cpp">
       <Filter>Almonaster</Filter>
     </ClCompile>
@@ -473,6 +221,132 @@
     <ClCompile Include="Chatroom\CChatroom.cpp">
       <Filter>Chatroom</Filter>
     </ClCompile>
+    <ClCompile Include="Pages\ActiveGameList.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Build.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Chatroom.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Diplomacy.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\EmpireAdministrator.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameAdministrator.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameContributions.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameCredits.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameFAQ.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameNews.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameProfileViewer.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameServerRules.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\GameTos.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Info.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\LatestGames.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\LatestNukes.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Login.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Map.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\NewEmpire.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\OpenGameList.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Options.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\PersonalGameClasses.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\PersonalTournaments.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Planets.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ProfileEditor.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ProfileViewer.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Quit.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ServerAdministrator.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Ships.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SpectatorGames.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemContributions.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemCredits.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemFAQ.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemGameList.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemNews.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemServerRules.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\SystemTos.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Tech.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\ThemeAdministrator.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\TopLists.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\TournamentAdministrator.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
+    <ClCompile Include="Pages\Tournaments.cpp">
+      <Filter>PagesGenerated</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">
@@ -541,5 +415,133 @@
     <ClInclude Include="Chatroom\CChatroom.h">
       <Filter>Chatroom</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Pages\ActiveGameList.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\TournamentAdministrator.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\TopLists.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\ThemeAdministrator.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Tech.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemTos.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemServerRules.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemNews.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemGameList.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemFAQ.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemCredits.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SystemContributions.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\SpectatorGames.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Ships.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\ServerAdministrator.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Quit.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\ProfileViewer.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\ProfileEditor.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Planets.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\PersonalTournaments.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\PersonalGameClasses.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Options.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\OpenGameList.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\NewEmpire.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Map.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Login.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\LatestNukes.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\LatestGames.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Info.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameTos.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameServerRules.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameProfileViewer.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameNews.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameFAQ.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameCredits.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameContributions.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\GameAdministrator.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\EmpireAdministrator.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Diplomacy.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Chatroom.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Tournaments.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
+    <CustomBuild Include="Pages\Build.cxx">
+      <Filter>Pages</Filter>
+    </CustomBuild>
   </ItemGroup>
 </Project>

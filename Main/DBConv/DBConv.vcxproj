@@ -21,11 +21,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{8681FDA2-A273-4026-8677-D250904920C5}</ProjectGuid>
     <RootNamespace>DBConv</RootNamespace>
-    <SccProjectName>"$/622/DBConv", RDTAAAAA</SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
+    <SccProjectName>$/almonaster/Main/DBConv</SccProjectName>
+    <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -111,7 +110,6 @@
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -132,6 +130,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -157,9 +156,11 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y dbconv.conf "%DropBin%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -178,7 +179,6 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -199,6 +199,7 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -224,9 +225,11 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y dbconv.conf "%DropBin%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -248,7 +251,6 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -270,6 +272,7 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -298,9 +301,11 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y dbconv.conf "%DropBin%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -323,7 +328,6 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -345,6 +349,7 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -373,9 +378,11 @@ copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy dbconv.conf ..\Drop\$(Platform)\$(Configuration)\bin
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y dbconv.conf "%DropBin%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>

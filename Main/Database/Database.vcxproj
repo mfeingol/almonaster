@@ -21,11 +21,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{208D5299-BDCB-4479-BD23-B544474E8772}</ProjectGuid>
     <RootNamespace>Database</RootNamespace>
-    <SccProjectName>"$/622/Database", PCTAAAAA</SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
+    <SccProjectName>$/almonaster/Main/Database</SccProjectName>
+    <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -119,7 +118,6 @@
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -141,6 +139,7 @@
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -169,10 +168,15 @@
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+copy /y Database.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -198,7 +202,6 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -220,6 +223,7 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -248,10 +252,15 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+copy /y Database.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -273,7 +282,6 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -294,6 +302,7 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -318,11 +327,17 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+copy /y Database.h "%DropSdk%"
 </Command>
+      <Message>Copying public files...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -343,7 +358,6 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -364,6 +378,7 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -388,12 +403,17 @@ copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Database.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
+copy /y Database.h "%DropSdk%"
 </Command>
+      <Message>Copying public files...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

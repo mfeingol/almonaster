@@ -21,9 +21,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A5498F4E-4124-4680-B43A-D105AA64C814}</ProjectGuid>
     <RootNamespace>AlajarDll</RootNamespace>
-    <SccProjectName>"$/622", TWCAAAAA</SccProjectName>
+    <SccProjectName>$/almonaster/Main</SccProjectName>
     <SccLocalPath>..</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
@@ -117,7 +118,6 @@
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -138,6 +138,7 @@
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -166,11 +167,17 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Message>Copying public files ...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)Alajar.lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Message>Copying public files...</Message>
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y Alajar.conf "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)Alajar.lib "%DropSdk%"
+copy /y Alajar.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -192,7 +199,6 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
       <BasicRuntimeChecks>StackFrameRuntimeCheck</BasicRuntimeChecks>
       <SmallerTypeCheck>false</SmallerTypeCheck>
@@ -213,6 +219,7 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -241,12 +248,17 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Message>Copying public files ...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
+      <Message>Copying public files...</Message>
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y Alajar.conf "%DropBin%"
 
-copy $(OutDir)Alajar.lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)Alajar.lib "%DropSdk%"
+copy /y Alajar.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -272,7 +284,6 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -294,6 +305,7 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -326,10 +338,16 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)Alajar.lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y Alajar.conf "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)Alajar.lib "%DropSdk%"
+copy /y Alajar.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -355,7 +373,6 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <StringPooling>true</StringPooling>
-      <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
@@ -377,6 +394,7 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <CompileAs>CompileAsCpp</CompileAs>
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -409,10 +427,16 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
     </Link>
     <PostBuildEvent>
       <Message>Copying public files...</Message>
-      <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)Alajar.lib ..\Drop\$(Platform)\$(Configuration)\sdk
-copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
+      <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
+if not exist "%DropBin%" mkdir "%DropBin%"
+copy /y $(OutDir)$(TargetFileName) "%DropBin%"
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
+copy /y Alajar.conf "%DropBin%"
+
+set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
+if not exist "%DropSdk%" mkdir "%DropSdk%"
+copy /y $(OutDir)Alajar.lib "%DropSdk%"
+copy /y Alajar.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -449,6 +473,9 @@ copy Alajar.h ..\Drop\$(Platform)\$(Configuration)\sdk
       <Project>{e57b328e-dc3b-4030-8b96-058326205bd5}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Alajar.conf" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
