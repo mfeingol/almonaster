@@ -1213,7 +1213,12 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                         );
 
                     if (iErrCode != OK && iErrCode != ERROR_FLEET_DOES_NOT_EXIST) {
-                        AddMessage ("At least one ship in the fleet could not be moved to the new planet");
+
+                        if (iErrCode == ERROR_CANNOT_NUKE) {
+                            AddMessage("The fleet cannot be set to nuke");
+                        } else {
+                            AddMessage ("At least one ship in the fleet could not be moved to the new planet");
+                        }
                     }
                     iErrCode = OK;
                 }

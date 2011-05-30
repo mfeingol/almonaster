@@ -474,22 +474,75 @@ void HtmlRenderer::WriteBodyString (Seconds iSecondsUntil) {
 
 void HtmlRenderer::WriteContactLine() {
 
-    Variant vEmail;
-    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
-    if (iErrCode == OK) {
+	OutputText ("<p><strong>Contact the ");
 
-        String strFilter;
+    Variant vEmail;
+	String strFilter;
+    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
+	
+	if (iErrCode == OK && 
+		!String::IsBlank(vEmail.GetCharPtr()) &&
+		HTMLFilter(vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
         
-        OutputText ("<p><strong>Contact the <a href=\"mailto:");
-        if (HTMLFilter (vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
-            m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
-        }
-        OutputText ("\">administrator</a> if you have problems or suggestions</strong><p>");
+		int i;
+		const int cLength = strFilter.GetLength();
+
+		// Use XOR 'encryption' to hide the admin's email address from spam harvesters.
+		// We do this only on the login screen which can be accessed without authentication
+
+		if (m_pgPageId == LOGIN) {
+
+			const char* pszPlainText = strFilter.GetCharPtr();
+			char* pszKey = (char*)StackAlloc(cLength + 1);
+			char* pszCypherText = (char*)StackAlloc(cLength + 1);
+			
+			for (i = 0; i < cLength; i ++) {
+				pszKey[i] = Algorithm::GetRandomASCIIChar();
+			}
+			pszKey[i] = '\0';
+
+			for (i = 0; i < cLength; i ++) {
+				pszCypherText[i] = (char) pszPlainText[i] ^ pszKey[i];
+			}
+			pszCypherText[i] = '\0';
+
+			OutputText("<script type='text/javascript'><!--\n");
+
+			OutputText("var key=\"");
+			m_pHttpResponse->WriteText(pszKey);
+			OutputText("\";");
+
+			OutputText("var txt=new Array(");
+			for (i = 0; i < cLength; i ++) {
+				m_pHttpResponse->WriteText((int)pszCypherText[i]);
+				if (i < cLength - 1)
+					OutputText(",");
+			}
+			OutputText("); var e=\"\"; for(var i=0;i<");
+
+			m_pHttpResponse->WriteText(cLength);
+
+			OutputText(
+				";i++){" \
+				"e+=String.fromCharCode(key.charCodeAt(i)^txt[i]);}" \
+				"document.write('<a href=\"javascript:void(0)\" " \
+				"onclick=\"window.location=\\'m\\u0061il\\u0074o\\u003a'+e+'?subject=Almonaster'+'\\'\">'" \
+				"+'administrator<\\/a>');" \
+				"\n--></script><noscript>administrator</noscript>"
+				);
+		} else {
+
+			OutputText("<a href=\"mailto:");
+			m_pHttpResponse->WriteText(strFilter.GetCharPtr());
+			OutputText("?subject=Almonaster\">administrator</a>");
+		}
+
+	} else {
+
+		OutputText("administrator");
+	}
         
-    } else {
-        
-        OutputText ("<p>Could not read the administrator's email address<p>");
-    }
+    OutputText(" if you have problems or suggestions</strong><p>");
 }
 
 void HtmlRenderer::OpenForm() {
@@ -3013,7 +3066,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
     }
 
     if ((pHttpForm = m_pHttpRequest->GetForm ("MapExposed")) != NULL) {
-        iSelMapExposed = pHttpForm->GetIntValue() != 0;
+        iSelMapExposed = pHttpForm->GetIntValue();
     } else {
         iSelMapExposed = 0;
     }
@@ -4412,7 +4465,7 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
         goto Cleanup;
     }
     
-    iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, &goOptions);
+    iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, iOwnerKey, &goOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }

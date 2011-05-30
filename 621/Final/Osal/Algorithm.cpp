@@ -99,6 +99,15 @@ int Algorithm::GetRandomInteger (int iUpper) {
     return iUpper ? rand() % iUpper : 0;
 }
 
+char Algorithm::GetRandomASCIIChar() {
+
+	// Relatively arbitrary range
+	const char MIN_CHAR = '0';
+	const char MAX_CHAR = '[';
+
+	return MIN_CHAR + (char) GetRandomInteger(MAX_CHAR - MIN_CHAR);
+}
+
 char* Algorithm::memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes) {
 
     size_t stMatchStringLen = strlen (pszMatchString);

@@ -562,10 +562,15 @@ bool GameEngine::IsLegalPrivilege (int iPrivilege) {
 
 int GameEngine::GetNextDiplomaticStatus (int iOffer1, int iOffer2, int iCurrentStatus) {
 
-    int iStatus = min (iOffer1, iOffer2);
-    if (iStatus > ALLIANCE) {
-        iStatus = iCurrentStatus;
+    if (iOffer1 > ALLIANCE) {
+        iOffer1 = iCurrentStatus;
     }
 
+    if (iOffer2 > ALLIANCE) {
+        iOffer2 = iCurrentStatus;
+    }
+
+    int iStatus = min (iOffer1, iOffer2);
+    Assert (iStatus <= ALLIANCE);
     return iStatus;
 }

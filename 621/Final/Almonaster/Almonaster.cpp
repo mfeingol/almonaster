@@ -526,10 +526,6 @@ int Almonaster::OnFinalize() {
 
 int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
 
-    Variant vEmail;
-    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
-    const char* pszMail = vEmail.GetCharPtr();
-
     HttpStatusReason rReason = pHttpResponse->GetStatusCodeReason();
 
     pHttpResponse->WriteText (
@@ -551,7 +547,7 @@ int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttp
     case HTTP_REASON_USER_AGENT_BLOCKED:
         
         pHttpResponse->WriteText (
-            "You cannot use your web browser with Almonaster. Please download and install a more modern browser. "
+            "You cannot use your web browser with Almonaster. Please use a supported web browser. "
             );
         break;
 
@@ -568,19 +564,7 @@ int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttp
     }
 
     pHttpResponse->WriteText (
-        "Contact the "
-        );
-
-    if (iErrCode == OK && pszMail != NULL && *pszMail != '\0') {
-        pHttpResponse->WriteText ("<a href=\"mailto:");
-        pHttpResponse->WriteText (pszMail);
-        pHttpResponse->WriteText ("\">administrator</a> ");
-    } else {
-        pHttpResponse->WriteText ("administrator ");
-    }
-
-    pHttpResponse->WriteText ("for more details."\
-
+        "Contact the administrator for more details" \
         "</body>"\
         "</html>"
         );

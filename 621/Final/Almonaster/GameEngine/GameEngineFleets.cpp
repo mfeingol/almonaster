@@ -1267,7 +1267,10 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
         }
         unsigned int iOwner = vTemp.GetInteger();
 
-        if (iOwner != SYSTEM && iOwner != INDEPENDENT && iOwner != iEmpireKey) {
+        if (iOwner == INDEPENDENT) {
+            iMask |= TECH_NUKE;
+        }
+        else if (iOwner != SYSTEM && iOwner != iEmpireKey) {
 
             GAME_EMPIRE_DIPLOMACY (strEmpireDip, iGameClass, iGameNumber, iEmpireKey);
 
@@ -1674,38 +1677,42 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
     if (iOrderKey == NUKE) {
         
         // Get owner
-        Variant vOwner;
-        iErrCode = m_pGameData->ReadData (strGameMap, vFleetPlanet, GameMap::Owner, &vOwner);
+        iErrCode = m_pGameData->ReadData (strGameMap, vFleetPlanet, GameMap::Owner, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
+        unsigned int iOwner = vTemp.GetInteger();
         
-        if (vOwner.GetInteger() == SYSTEM || (unsigned int) vOwner.GetInteger() == iEmpireKey) {
+        if (iOwner == SYSTEM || iOwner == iEmpireKey) {
             iErrCode = ERROR_CANNOT_NUKE;
-            goto Cleanup;
-        }
-        
-        // Check diplomatic status with owner
-        GAME_EMPIRE_DIPLOMACY (strDiplomacy, iGameClass, iGameNumber, iEmpireKey);
-        
-        // Make sure the diplomatic status is war           
-        unsigned int iKey;
-        iErrCode = m_pGameData->GetFirstKey (strDiplomacy, GameEmpireDiplomacy::EmpireKey, vOwner, false, &iKey);
-        if (iErrCode != OK) {
-            iErrCode = ERROR_CANNOT_NUKE;
-            goto Cleanup;
-        }
-        
-        iErrCode = m_pGameData->ReadData (strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vOwner);
-        if (iErrCode != OK) {
-            Assert (false);
             goto Cleanup;
         }
 
-        if (vOwner.GetInteger() != WAR) {
-            iErrCode = ERROR_CANNOT_NUKE;
-            goto Cleanup;
+        if (iOwner != INDEPENDENT) {
+        
+            // Check diplomatic status with owner
+            GAME_EMPIRE_DIPLOMACY (strDiplomacy, iGameClass, iGameNumber, iEmpireKey);
+            
+            // Make sure the diplomatic status is war           
+            unsigned int iKey;
+            iErrCode = m_pGameData->GetFirstKey(strDiplomacy, GameEmpireDiplomacy::EmpireKey, iOwner, false, &iKey);
+            if (iErrCode != OK) {
+                iErrCode = ERROR_CANNOT_NUKE;
+                goto Cleanup;
+            }
+            
+            iErrCode = m_pGameData->ReadData(strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vTemp);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+            int iDip = vTemp.GetInteger();
+
+            if (iDip != WAR) {
+                iErrCode = ERROR_CANNOT_NUKE;
+                goto Cleanup;
+            }
         }
         
         iErrCode = m_pGameData->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, NUKE);

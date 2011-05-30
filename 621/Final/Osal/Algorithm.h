@@ -661,6 +661,7 @@ recurse:
 
     OSAL_EXPORT void InitializeThreadRandom (int iRandFactor = 1);
     OSAL_EXPORT int GetRandomInteger (int iUpper);
+	OSAL_EXPORT char GetRandomASCIIChar();
 
     OSAL_EXPORT char* memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes);
 

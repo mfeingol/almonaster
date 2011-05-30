@@ -698,14 +698,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTeamOptions = pHttpForm->GetIntValue();
             }
 
-            // Check for advanced option
-            char pszAdvanced [128];
-            sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
-            if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
-                bAdvanced = true;
-            }
-
-            iErrCode = StartTournamentGame (iTournamentKey, iTeamOptions, bAdvanced);
+            iErrCode = StartTournamentGame (iTournamentKey, iTeamOptions);
             if (iErrCode == OK || iErrCode == ERROR_GAMECLASS_IS_NOT_IN_TOURNAMENT) {
                 iTAdminPage = 2;
             } else {
@@ -1698,7 +1691,7 @@ case 7:
     // Advanced options
     if (bAdvanced) {
 
-        %><input type="hidden" name="Advanced<% Write(iGameClassKey); %>" value="1"><%
+        %><input type="hidden" name="AdvancedOptions" value="1"><%
         %><h3>Advanced game creation options:</h3><p><%
 
         RenderGameConfiguration (iGameClassKey, iTournamentKey);

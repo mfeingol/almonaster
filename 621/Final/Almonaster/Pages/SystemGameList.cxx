@@ -93,7 +93,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             iGameClassKey = pHttpForm->GetIntValue();
 
-            iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
+            iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, m_iEmpireKey, &goOptions);
             if (iErrCode != OK) {
                 ClearGameOptions (&goOptions);
                 iSystemGameListPage = 1;

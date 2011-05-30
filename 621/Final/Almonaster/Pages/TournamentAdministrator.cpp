@@ -706,14 +706,7 @@ int HtmlRenderer::Render_TournamentAdministrator() {
 	                iTeamOptions = pHttpForm->GetIntValue();
 	            }
 
-	            // Check for advanced option
-	            char pszAdvanced [128];
-	            sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
-	            if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
-	                bAdvanced = true;
-	            }
-
-	            iErrCode = StartTournamentGame (iTournamentKey, iTeamOptions, bAdvanced);
+	            iErrCode = StartTournamentGame (iTournamentKey, iTeamOptions);
 	            if (iErrCode == OK || iErrCode == ERROR_GAMECLASS_IS_NOT_IN_TOURNAMENT) {
 	                iTAdminPage = 2;
 	            } else {
@@ -1725,9 +1718,7 @@ int HtmlRenderer::Render_TournamentAdministrator() {
 	    if (bAdvanced) {
 
 	        
-	Write ("<input type=\"hidden\" name=\"Advanced", sizeof ("<input type=\"hidden\" name=\"Advanced") - 1);
-	Write(iGameClassKey); 
-	Write ("\" value=\"1\"><h3>Advanced game creation options:</h3><p>", sizeof ("\" value=\"1\"><h3>Advanced game creation options:</h3><p>") - 1);
+	Write ("<input type=\"hidden\" name=\"AdvancedOptions\" value=\"1\"><h3>Advanced game creation options:</h3><p>", sizeof ("<input type=\"hidden\" name=\"AdvancedOptions\" value=\"1\"><h3>Advanced game creation options:</h3><p>") - 1);
 	RenderGameConfiguration (iGameClassKey, iTournamentKey);
 	    }
 

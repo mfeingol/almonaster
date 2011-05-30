@@ -58,7 +58,7 @@
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="false"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\622\Include"
+				AdditionalIncludeDirectories="..\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -106,7 +106,7 @@
 				OutputFile=".\Debug/Osal.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\622\Include"
+				AdditionalLibraryDirectories="..\Include"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Osal.pdb"
 				SubSystem="0"
@@ -186,7 +186,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalIncludeDirectories="..\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				IgnoreStandardIncludePath="false"
 				GeneratePreprocessedFile="0"
@@ -240,7 +240,7 @@
 				Version=""
 				LinkIncremental="0"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="..\Include"
 				GenerateDebugInformation="true"
 				GenerateMapFile="false"
 				MapExports="false"
@@ -278,7 +278,7 @@
 			<Tool
 				Name="VCPostBuildEventTool"
 				Description="Copying public files..."
-				CommandLine="copy release\Osal.dll ..\release&#x0D;&#x0A;copy release\Osal.pdb ..\release&#x0D;&#x0A;copy release\Osal.lib ..\sdk&#x0D;&#x0A;copy *.h ..\sdk\Osal&#x0D;&#x0A;"
+				CommandLine="copy *.h ..\include\osal&#x0D;&#x0A;copy release\Osal.dll ..\release&#x0D;&#x0A;copy release\Osal.pdb ..\release&#x0D;&#x0A;copy release\Osal.lib ..\sdk&#x0D;&#x0A;copy *.h ..\sdk\Osal&#x0D;&#x0A;"
 			/>
 		</Configuration>
 	</Configurations>

@@ -149,9 +149,7 @@ enum CardinalPoint {
     EAST,
     SOUTH,
     WEST,
-    NO_DIRECTION,
-    FIRST_DIRECTION = NORTH,
-    LAST_DIRECTION = WEST,
+    NO_DIRECTION
 };
 
 extern const CardinalPoint OPPOSITE_CARDINAL_POINT[];
@@ -317,13 +315,6 @@ enum MiniMaps {
     MINIMAPS_PRIMARY,
 };
 
-enum MapGeneration {
-    MAPGEN_STANDARD = 0x00000001,
-    MAPGEN_MIRRORED = 0x00000002,
-    MAPGEN_TWISTED  = 0x00000004,
-    MAPGEN_ALL      = 0x00000007,
-};
-
 // GameEmpireData::TechDevs
 #define TECH_ATTACK                         (0x00000001)
 #define TECH_SCIENCE                        (0x00000002)
@@ -422,8 +413,6 @@ extern const int TECH_BITS[];
 #define GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS (0x00200000)
 #define GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS (0x00400000)
 #define GAME_RESTRICT_IDLE_EMPIRES          (0x00800000)
-#define GAME_MIRRORED_MAP                   (0x01000000)
-#define GAME_TWISTED_MAP                    (0x02000000)
 
 enum EntryRestrictions {
     RESTRICT_ALMONASTER_SCORE,

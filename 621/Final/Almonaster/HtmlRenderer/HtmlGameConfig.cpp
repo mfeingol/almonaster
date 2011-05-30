@@ -43,8 +43,6 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         iRestrictWinsMin = 0, iRestrictWinsMax = 0, iRestrictBridierRankLossMin = 0, 
         iRestrictBridierRankLossMax = 0;
 
-    MapGeneration mgSelectedMapGen;
-
     Variant vMaxUpdatesBeforeGameCloses;
 
     IHttpForm* pHttpForm;
@@ -89,19 +87,6 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         if (iErrCode != OK) {
             goto OnError;
         }
-    }
-
-    // MapGenAlgo
-    if ((pHttpForm = m_pHttpRequest->GetForm("MapGenAlgo")) != NULL) {
- 
-        mgSelectedMapGen = (MapGeneration)pHttpForm->GetIntValue();
-        if (mgSelectedMapGen != MAPGEN_STANDARD &&
-            mgSelectedMapGen != MAPGEN_MIRRORED &&
-            mgSelectedMapGen != MAPGEN_TWISTED) {
-            mgSelectedMapGen = MAPGEN_STANDARD;
-        }
-    } else {
-        mgSelectedMapGen = MAPGEN_STANDARD;
     }
     
     // Bridier
@@ -475,65 +460,11 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     m_pHttpResponse->WriteText (iSecUD);
     
     OutputText (
+        
         "\"> seconds</td>"\
         "</tr>"
+        
         );
-
-    // Map generation
-    MapGeneration mgSupportedMapGen;
-    if (iGameClass == NO_KEY) {
-        mgSupportedMapGen = MAPGEN_ALL;
-    } else {
-        iErrCode = g_pGameEngine->GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
-    }
-
-    if (mgSupportedMapGen != MAPGEN_STANDARD) {
-
-        Assert(mgSupportedMapGen != 0);
-
-        OutputText(
-            "<tr><td>Map generation algorithm:</td>"\
-            "<td><select name=\"MapGenAlgo\">"
-            );
-
-        if (mgSupportedMapGen & MAPGEN_STANDARD) {
-
-            OutputText("<option");
-            if (mgSelectedMapGen == MAPGEN_STANDARD) {
-                OutputText(" selected");
-            }
-            OutputText(" value=\"");
-            m_pHttpResponse->WriteText(MAPGEN_STANDARD);
-            OutputText("\">Standard map</option>");
-        }
-
-        if (mgSupportedMapGen & MAPGEN_MIRRORED) {
-
-            OutputText("<option");
-            if (mgSelectedMapGen == MAPGEN_MIRRORED) {
-                OutputText(" selected");
-            }
-            OutputText(" value=\"");
-            m_pHttpResponse->WriteText(MAPGEN_MIRRORED);
-            OutputText("\">Mirrored map</option>");
-        }
-
-        if (mgSupportedMapGen & MAPGEN_TWISTED) {
-
-            OutputText("<option");
-            if (mgSelectedMapGen == MAPGEN_TWISTED) {
-                OutputText(" selected");
-            }
-            OutputText(" value=\"");
-            m_pHttpResponse->WriteText(MAPGEN_TWISTED);
-            OutputText("\">Twisted map</option>");
-        }
-
-        OutputText("</select></td></tr>");
-    }
     
     // Enter message
     OutputText (
@@ -1072,14 +1003,14 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
                 if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
 
                     bool bExists;
-                    unsigned int iFilterEmpireKey;
+                    unsigned int iEmpireKey;
                     Variant vRealName;
 
                     // Make sure empire exists
-                    iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bExists, &iFilterEmpireKey, &vRealName, NULL);
-                    if (iErrCode == OK && bExists && iFilterEmpireKey != m_iEmpireKey) {
+                    iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bExists, &iEmpireKey, &vRealName, NULL);
+                    if (iErrCode == OK && bExists && iEmpireKey != m_iEmpireKey) {
 
-                        Assert (iFilterEmpireKey != NO_KEY);
+                        Assert (iEmpireKey != NO_KEY);
 
                         sprintf (pszFormIP, "FilterEmpireIP%i", i);
                         sprintf (pszFormID, "FilterEmpireID%i", i);
@@ -1143,7 +1074,8 @@ OnError:
 
 
 int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey,
-                                               const Variant* pvGameClassInfo, GameOptions* pgoOptions) {
+                                               const Variant* pvGameClassInfo, int iEmpireKey, 
+                                               GameOptions* pgoOptions) {
     
     int iErrCode, iTemp, iGameClassOptions, iMaxNumEmpires;
     bool bFlag;
@@ -1235,51 +1167,6 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         return ERROR_FAILURE;
     }
     pgoOptions->sFirstUpdateDelay += pHttpForm->GetIntValue();
-
-    // MapGen
-    MapGeneration mgMapGen;
-    if ((pHttpForm = m_pHttpRequest->GetForm ("MapGenAlgo")) != NULL) {
- 
-        mgMapGen = (MapGeneration)pHttpForm->GetIntValue();
-        if (mgMapGen != MAPGEN_STANDARD &&
-            mgMapGen != MAPGEN_MIRRORED &&
-            mgMapGen != MAPGEN_TWISTED) {
-            AddMessage ("Wrong MapGenAlgo option");
-            return ERROR_FAILURE;
-        }
-    } else {
-        mgMapGen = MAPGEN_STANDARD;
-    }
-
-    MapGeneration mgSupportedMapGen;
-    if (iGameClass == NO_KEY) {
-
-        g_pGameEngine->GetSupportedMapGenerationTypes(
-            pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
-            pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger(),
-            pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger(),
-            &mgSupportedMapGen
-            );
-
-    } else {
-
-        iErrCode = g_pGameEngine->GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-    }
-
-    if (!(mgMapGen & mgSupportedMapGen)) {
-        AddMessage ("The game type does not support the selected map generation algorithm");
-        return ERROR_FAILURE;
-    }
-
-    if (mgMapGen == MAPGEN_MIRRORED) {
-        pgoOptions->iOptions |= GAME_MIRRORED_MAP;
-    }
-    else if (mgMapGen == MAPGEN_TWISTED) {
-        pgoOptions->iOptions |= GAME_TWISTED_MAP;
-    }
 
     if (iTournamentKey == NO_KEY) {
 
@@ -1788,14 +1675,14 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                     const char* pszName = pHttpForm->GetForm(i)->GetValue();
                     if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
 
-                        unsigned int iFilterEmpireKey;
+                        unsigned int iEmpireKey;
                         int64 iSecretKey;
 
                         // Make sure empire exists
-                        iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bFlag, &iFilterEmpireKey, NULL, &iSecretKey);
-                        if (iErrCode == OK && bFlag && iFilterEmpireKey != m_iEmpireKey) {
+                        iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bFlag, &iEmpireKey, NULL, &iSecretKey);
+                        if (iErrCode == OK && bFlag && iEmpireKey != m_iEmpireKey) {
 
-                            Assert (iFilterEmpireKey != NO_KEY);
+                            Assert (iEmpireKey != NO_KEY);
 
                             bool bAlready = false;
 
@@ -1829,7 +1716,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
                             if (!bAlready) {
                             
-                                pgoOptions->pSecurity[iNumRealBlocks].iEmpireKey = iFilterEmpireKey;
+                                pgoOptions->pSecurity[iNumRealBlocks].iEmpireKey = iEmpireKey;
                                 pgoOptions->pSecurity[iNumRealBlocks].iSecretKey = iSecretKey;
                                 pgoOptions->pSecurity[iNumRealBlocks].iOptions = iOptions;
                                 pgoOptions->pSecurity[iNumRealBlocks].pszEmpireName = pszName;

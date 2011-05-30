@@ -499,7 +499,7 @@ int HtmlRenderer::Render_ProfileViewer() {
 	                }
 	                iGameClassKey = pHttpForm->GetIntValue();
 
-	                iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
+	                iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, m_iEmpireKey, &goOptions);
 	                if (iErrCode != OK) {
 	                    iProfileViewerPage = 6;
 	                    break;

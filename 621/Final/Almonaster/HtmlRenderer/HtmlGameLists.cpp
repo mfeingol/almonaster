@@ -512,14 +512,6 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger());
         OutputText ("</strong> planets");
     }
-
-    if (iGameOptions & GAME_MIRRORED_MAP) {
-        OutputText ("<br>Mirrored map");
-    }
-    else if (iGameOptions & GAME_TWISTED_MAP) {
-        OutputText ("<br>Twisted map");
-    }
-
     OutputText ("<br><strong>");
     
     m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::InitialTechLevel].GetFloat());
@@ -1049,17 +1041,10 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         OutputText ("</strong> planets per empire");
     }
 
-    if (iGameOptions & GAME_MIRRORED_MAP) {
-        OutputText ("<p>Mirrored map");
-    }
-    else if (iGameOptions & GAME_TWISTED_MAP) {
-        OutputText ("<p>Twisted map");
-    }
-
     if (pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GENERATE_MAP_FIRST_UPDATE) {
-        OutputText ("<p>Map on first update");
+        OutputText ("<p>(Map on first update)");
     }
-
+    
     // Tech
     OutputText ("</font></td><td align=\"center\"><font size=\"2\"><strong>");
     

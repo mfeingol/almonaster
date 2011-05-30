@@ -633,7 +633,7 @@ public:
 
     void WriteAdministerTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);
 
-    int StartTournamentGame(unsigned int iTournamentKey, int iTeamOptions, bool bAdvanced);
+    int StartTournamentGame (unsigned int iTournamentKey, int iTeamOptions);
 
     void WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons);
 
@@ -801,7 +801,7 @@ public:
     void RenderGameConfiguration (int iGameClass, unsigned int iTournamentKey);
 
     int ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey, 
-        const Variant* pvGameClassInfo, GameOptions* pgoOptions);
+        const Variant* pvGameClassInfo, int iEmpireKey, GameOptions* pgoOptions);
 
     // GameOptions
     void InitGameOptions (GameOptions* pgoOptions);

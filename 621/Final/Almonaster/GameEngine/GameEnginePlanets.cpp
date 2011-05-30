@@ -21,8 +21,7 @@
 #include "GameEngine.h"
 
 #include "../MapGen/DefaultMapGenerator.h"
-#include "../MapGen/MirroredMapGenerator.h"
-#include "../MapGen/TwistedMapGenerator.h"
+
 
 // Input:
 // iGameClass -> Gameclass
@@ -199,7 +198,7 @@ void GameEngine::AdvanceCoordinates (int iX, int iY, int* piX, int* piY, int cpD
 int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, 
                                  bool* pbCommit) {
 
-    int iErrCode, iMinNumPlanets, iMaxNumPlanets, i, iGameClassOptions;
+    int iErrCode, iMinNumPlanets, iMaxNumPlanets, i, iNumNewPlanets, iGameClassOptions;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
@@ -209,7 +208,7 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
     Variant** ppvPlanetData = NULL, * pvGameClassData = NULL, * pvGameData = NULL, ** ppvNewPlanetData = NULL, 
         * pvNewPlanetData = NULL, vTotalAg;
 
-    unsigned int piColumn [GameMap::NumColumns], * piPlanetKey = NULL, iNumPlanets = 0, iNumNewPlanets;
+    unsigned int piColumn [GameMap::NumColumns], * piPlanetKey = NULL, iNumPlanets, iNumOrigRows;
 
     IMapGenerator* pMapGen = NULL;
 
@@ -227,102 +226,136 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
         Assert (false);
         goto Cleanup;
     }
+
     iGameClassOptions = pvGameClassData[SystemGameClassData::Options].GetInteger();
 
-    // Read game data
-    iErrCode = m_pGameData->ReadRow(strGameData, &pvGameData);
+    // Does map have planets already?
+    iErrCode = m_pGameData->GetNumRows (strGameMap, &iNumOrigRows);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
-    int iGameOptions = pvGameData[GameData::Options].GetInteger();
+
+    // Read game data
+    iErrCode = m_pGameData->ReadRow (strGameData, &pvGameData);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
 
     // Allocate new planet data
     iMinNumPlanets = pvGameClassData[SystemGameClassData::MinNumPlanets].GetInteger();
     iMaxNumPlanets = pvGameClassData[SystemGameClassData::MaxNumPlanets].GetInteger();
 
-    // Create a new map generator
-    if (iGameOptions & GAME_MIRRORED_MAP) {
-        pMapGen = MirroredMapGenerator::CreateInstance(this);
-    } else if (iGameOptions & GAME_TWISTED_MAP) {
-        pMapGen = TwistedMapGenerator::CreateInstance(this);
-    } else {
-        pMapGen = DefaultMapGenerator::CreateInstance(this);
-    }
-
-    if (pMapGen == NULL) {
+    pvNewPlanetData = new Variant [iMaxNumPlanets * GameMap::NumColumns];
+    if (pvNewPlanetData == NULL) {
         iErrCode = ERROR_OUT_OF_MEMORY;
         goto Cleanup;
     }
 
-    // Get existing map
-    iErrCode = m_pGameData->ReadColumns (
-        strGameMap,
-        GameMap::NumColumns,
-        piColumn,
-        &piPlanetKey,
-        &ppvPlanetData,
-        &iNumPlanets
-        );
-    
-    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-        Assert (false);
-        goto Cleanup;
+    ppvNewPlanetData = (Variant**) StackAlloc (iMaxNumPlanets * sizeof (Variant*));
+    for (i = 0; i < iMaxNumPlanets; i ++) {
+        ppvNewPlanetData[i] = pvNewPlanetData + i * GameMap::NumColumns;
     }
 
-    // Call into the map generator to get new planets
-    iErrCode = pMapGen->CreatePlanets(
-        iGameClass,
-        iGameNumber,
-        piEmpireKey,
-        iNumEmpires,
-        ppvPlanetData,
-        iNumPlanets,
-        pvGameClassData,
-        pvGameData,
-        &ppvNewPlanetData,
-        &iNumNewPlanets
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    iErrCode = CreateMapFromMapGeneratorData(
-        iGameClass,
-        iGameNumber,
-        piEmpireKey,
-        iNumEmpires,
-        pvGameClassData,
-        pvGameData,
-        ppvNewPlanetData,
-        iNumNewPlanets,
-        piPlanetKey,
-        ppvPlanetData,
-        iNumPlanets,
-        pbCommit        // Assumed initialized, set to true if data is committed
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    // Handle 'next statistics'
+    // Loop through every empire
     for (i = 0; i < iNumEmpires; i ++) {
 
+        // Get existing map
+        iErrCode = m_pGameData->ReadColumns (
+            strGameMap,
+            GameMap::NumColumns,
+            piColumn,
+            &piPlanetKey,
+            &ppvPlanetData,
+            &iNumPlanets
+            );
+        
+        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        // Get num planets
+        if (iNumPlanets == 0) {
+
+            if (iMinNumPlanets == iMaxNumPlanets) {
+                iNumNewPlanets = iMinNumPlanets;
+            } else {
+                iNumNewPlanets = 0;
+            }
+
+        } else {
+
+            iNumNewPlanets = pvGameData[GameData::NumPlanetsPerEmpire].GetInteger();
+        }
+
+        // Create new generator
+        // For now, every gameclass uses the default map generator
+        pMapGen = DefaultMapGenerator::CreateInstance (this);
+        if (pMapGen == NULL) {
+            iErrCode = ERROR_OUT_OF_MEMORY;
+            goto Cleanup;
+        }
+        
+        iErrCode = pMapGen->CreatePlanets (
+            iGameClass,
+            iGameNumber,
+            piEmpireKey[i],
+            ppvPlanetData,
+            iNumPlanets,
+            pvGameClassData,
+            pvGameData,
+            ppvNewPlanetData,
+            iNumNewPlanets
+            );
+
+        SafeRelease (pMapGen);
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (iNumNewPlanets == 0) {
+            iNumNewPlanets = pvGameData[GameData::NumPlanetsPerEmpire].GetInteger();
+        }
+
+        iErrCode = CreateMapFromMapGeneratorData (
+            iGameClass,
+            iGameNumber,
+            piEmpireKey[i],
+            pvGameClassData,
+            pvGameData,
+            ppvNewPlanetData,
+            iNumNewPlanets,
+            pbCommit        // Assumed initialized, set to true if data is committed
+            );
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (ppvPlanetData != NULL) {
+            m_pGameData->FreeData (ppvPlanetData);
+            ppvPlanetData = NULL;
+        }
+
         GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, piEmpireKey[i]);
+
         iErrCode = m_pGameData->ReadData (pszEmpireData, GameEmpireData::TotalAg, &vTotalAg);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
+        // Handle 'next statistics'
         iErrCode = WriteNextStatistics (
             iGameClass, 
             iGameNumber, 
-            piEmpireKey[i],
+            piEmpireKey[i], 
+            
             vTotalAg.GetInteger(), 
             0, // No trades or allies at beginning
             pvGameClassData[SystemGameClassData::MaxAgRatio].GetFloat()
@@ -334,11 +367,85 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
         }
     }
 
+    // Process subjective views if necessary
+/*  if ((iGameClassOptions & EXPOSED_MAP) && (iGameClassOptions & SUBJECTIVE_VIEWS)) {
+        
+        Variant* pvEmpireKey;
+        unsigned int iNumEmpires;
+
+        unsigned int* piEmpireKey;
+        bool* pbAlive;
+
+        String* pstrEmpireMap = NULL, * pstrEmpireDip, * pstrEmpireShips;
+
+        String strGameEmpires = GAME_EMPIRES (iGameClass, iGameNumber);
+
+        iErrCode = m_pGameData->ReadColumn (
+            strGameEmpires, 
+            GameEmpires::EmpireKey, 
+            NULL, 
+            &pvEmpireKey, 
+            &iNumEmpires
+            );
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        Assert (pvEmpireKey != NULL && iNumEmpires > 0);
+
+        piEmpireKey = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
+        pbAlive = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
+
+        pstrEmpireMap = new String [iNumEmpires * 3];
+        pstrEmpireDip = pstrEmpireMap + iNumEmpires;
+        pstrEmpireShips = pstrEmpireDip + iNumEmpires;
+
+        if (pstrEmpireMap == NULL) {
+            iErrCode = ERROR_OUT_OF_MEMORY;
+            m_pGameData->FreeData (pvEmpireKey);
+            goto Cleanup;
+        }
+
+        for (i = 0; i < (int) iNumEmpires; i ++) {
+
+            piEmpireKey[i] = pvEmpireKey[i].GetInteger();
+            pbAlive[i] = true;
+
+            pstrEmpireMap[i] = GAME_EMPIRE_MAP (iGameClass, iGameNumber, piEmpireKey[i]);
+            pstrEmpireDip[i] = GAME_EMPIRE_DIPLOMACY (iGameClass, iGameNumber, piEmpireKey[i]);
+            pstrEmpireShips[i] = GAME_EMPIRE_SHIPS (iGameClass, iGameNumber, piEmpireKey[i]);
+        }
+
+        iErrCode = ProcessSubjectiveViews (
+            iNumEmpires, 
+            piEmpireKey, 
+            pbAlive, 
+            strGameMap, 
+            pstrEmpireMap, 
+            pstrEmpireDip, 
+            pstrEmpireShips
+            );
+
+        m_pGameData->FreeData (pvEmpireKey);
+        delete [] pstrEmpireMap;
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+    }*/
+
 #ifdef _DEBUG
-    // Verify map
-    iErrCode = VerifyMap (iGameClass, iGameNumber);
-    Assert (iErrCode == OK);
-    iErrCode = OK;
+
+    // Verify map if we created a new one from scratch
+    if (iNumOrigRows == 0) {
+        iErrCode = VerifyMap (iGameClass, iGameNumber);
+        Assert (iErrCode == OK);
+        iErrCode = OK;
+    }
+
 #endif
 
 Cleanup:
@@ -363,50 +470,43 @@ Cleanup:
         m_pGameData->FreeData (ppvPlanetData);
     }
 
-    if (ppvNewPlanetData != NULL) {
-        pMapGen->FreePlanetData(ppvNewPlanetData);
-    }
-
-    SafeRelease (pMapGen);
-
     return iErrCode;    
 }
 
+
+
 //
-// Process output from a map generator
+// Handle output from a map generator
 //
-int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
-                                              int iGameNumber,
-                                              int* piNewEmpireKey,
-                                              unsigned int iNumNewEmpires,
-                                              Variant* pvGameClassData,
-                                              Variant* pvGameData, 
-                                              Variant** ppvNewPlanetData,
-                                              unsigned int iNumNewPlanets,
-                                              unsigned int* piExistingPlanetKey,
-                                              Variant** ppvExistingPlanetData,
-                                              unsigned int iNumExistingPlanets,
-                                              bool* pbCommit) {
+int GameEngine::CreateMapFromMapGeneratorData (int iGameClass, int iGameNumber, int iEmpireKey,
+                                               Variant* pvGameClassData, Variant* pvGameData, 
+                                               Variant** ppvPlanetData, unsigned int iNumNewPlanets,
+                                               bool* pbCommit) {
 
     int iErrCode = OK;
 
     IWriteTable* pWrite = NULL;
 
-    unsigned int i, j;
+    unsigned int i, j, iKey, iNextKey;
 
-    int iGameClassOptions, * piNewPlanetKey = NULL, 
-        iHomeWorldIndex, iHomeWorldKey, iMinX, iMinY, iMaxX, iMaxY,
+    float fAgRatio;
+    int iGameClassOptions, iAg, iMin, iFuel, iPop, iMaxPop, iNumPlanets, iNextTotalPop, * piNewPlanetKey, 
+        iMaxPlanetPop, iNewPop, iHomeWorldIndex, iHomeWorldKey, iMinX, iMinY, iMaxX, iMaxY,
         iGameMinX, iGameMaxX, iGameMinY, iGameMaxY;
 
-    Variant* pvEmpireKey = NULL;
+    Variant* pvKey = NULL;
 
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
+    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
+    GAME_DATA (strGameData, iGameClass, iGameNumber);
 
-    // Transfer new game data to the GameData table
+    char strAnEmpireMap[256];
+
     if (pvGameData != NULL) {
 
+        // Write newly generated random game data
         iErrCode = m_pGameData->GetTableForWriting (strGameData, &pWrite);
         if (iErrCode != OK) {
             Assert (false);
@@ -422,37 +522,55 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
             goto Cleanup;
         }
 
-        iErrCode = pWrite->WriteData (GameData::HWAg, pvGameData[GameData::HWAg].GetInteger());
+        iErrCode = pWrite->WriteData (
+            GameData::HWAg, 
+            pvGameData[GameData::HWAg].GetInteger()
+            );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pWrite->WriteData (GameData::HWMin, pvGameData[GameData::HWMin].GetInteger());
+        iErrCode = pWrite->WriteData (
+            GameData::HWMin, 
+            pvGameData[GameData::HWMin].GetInteger()
+            );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pWrite->WriteData (GameData::HWFuel, pvGameData[GameData::HWFuel].GetInteger());
+        iErrCode = pWrite->WriteData (
+            GameData::HWFuel, 
+            pvGameData[GameData::HWFuel].GetInteger()
+            );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pWrite->WriteData (GameData::AvgAg, pvGameData[GameData::AvgAg].GetInteger());
+        iErrCode = pWrite->WriteData (
+            GameData::AvgAg, 
+            pvGameData[GameData::AvgAg].GetInteger()
+            );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pWrite->WriteData (GameData::AvgMin, pvGameData[GameData::AvgMin].GetInteger());
+        iErrCode = pWrite->WriteData (
+            GameData::AvgMin, 
+            pvGameData[GameData::AvgMin].GetInteger()
+            );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pWrite->WriteData (GameData::AvgFuel, pvGameData[GameData::AvgFuel].GetInteger());
+        iErrCode = pWrite->WriteData (
+            GameData::AvgFuel, 
+            pvGameData[GameData::AvgFuel].GetInteger()
+            );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -461,8 +579,10 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
         SafeRelease (pWrite);
     }
 
-    // Initialize some vars
+    // Initialize vars
     iGameClassOptions = pvGameClassData[SystemGameClassData::Options].GetInteger();
+
+    iAg = iMin = iFuel = iPop = iMaxPop = iNextTotalPop = iNumPlanets = 0;
 
     iMinX = iMinY = MAX_COORDINATE;
     iMaxX = iMaxY = MIN_COORDINATE;
@@ -475,18 +595,68 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
     memset (piNewPlanetKey, NO_KEY, iNumNewPlanets * sizeof (int));
 #endif
 
+    // If map exposed and empire doesn't have them, put all old planets into empire's map
+    if (iGameClassOptions & EXPOSED_MAP) {
+
+        iNextKey = NO_KEY;
+        while (true) {
+            
+            iErrCode = m_pGameData->GetNextKey (strGameMap, iNextKey, &iNextKey);
+            if (iErrCode != OK) {
+                if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                    iErrCode = OK;
+                } else Assert (false);
+                break;
+            }
+            
+            iErrCode = m_pGameData->GetFirstKey (
+                strGameEmpireMap,
+                GameEmpireMap::PlanetKey,
+                iNextKey,
+                false,
+                &iKey
+                );
+            
+            if (iErrCode != OK) {
+                
+                if (iErrCode != ERROR_DATA_NOT_FOUND) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+                
+                iErrCode = InsertPlanetIntoGameEmpireData (
+                    iNextKey, 
+                    iGameClassOptions,
+                    strGameMap, 
+                    strGameEmpireMap
+                    );
+                
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+            }
+        }
+    }
+
     // Point of no return for map
     *pbCommit = true;
 
     // Perform new planet insertions
     for (i = 0; i < iNumNewPlanets; i ++) {
 
-        iErrCode = CreatePlanetFromMapGeneratorData(
-            ppvNewPlanetData[i],
-            iGameClass,
-            iGameNumber,
-            ppvNewPlanetData[i][GameMap::Owner].GetInteger(),
+        iErrCode = CreatePlanetFromMapGeneratorData (
+            strGameMap,
+            ppvPlanetData[i],
+            iEmpireKey,
             iGameClassOptions,
+            &iAg,
+            &iMin,
+            &iFuel,
+            &iPop,
+            &iMaxPop,
+            &iHomeWorldKey,
+            &iNumPlanets,
             &iMinX,
             &iMaxX,
             &iMinY,
@@ -505,7 +675,7 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
     }
 
     //
-    // Fix up min, max for gamedata table
+    // Fix up min, max for gamedata
     //
 
     iErrCode = m_pGameData->GetTableForWriting (strGameData, &pWrite);
@@ -580,85 +750,244 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
 
     SafeRelease (pWrite);
 
+    // NextTotalPop
+    fAgRatio = GetAgRatio (iAg, iPop, pvGameClassData[SystemGameClassData::MaxAgRatio].GetFloat());
+
+    for (i = 0; i < iNumNewPlanets; i ++) {
+
+        iNewPop = GetNextPopulation (ppvPlanetData[i][GameMap::Pop].GetInteger(), fAgRatio);
+
+        iMaxPlanetPop = ppvPlanetData[i][GameMap::MaxPop].GetInteger();
+        if (iNewPop > iMaxPlanetPop) {
+            iNewPop = iMaxPlanetPop;
+        }
+
+        iNextTotalPop += iNewPop;
+    }
+
+    // Write out empire parameters
+    Assert (pWrite == NULL);
+    iErrCode = m_pGameData->GetTableForWriting (strGameEmpireData, &pWrite);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // NumPlanets
+    iErrCode = pWrite->WriteData (GameEmpireData::NumPlanets, iNumPlanets);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // TotalAg
+    iErrCode = pWrite->WriteData (GameEmpireData::TotalAg, iAg);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // TotalMin
+    iErrCode = pWrite->WriteData (GameEmpireData::TotalMin, iMin);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // TotalFuel
+    iErrCode = pWrite->WriteData (GameEmpireData::TotalFuel, iFuel);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // TotalPop
+    iErrCode = pWrite->WriteData (GameEmpireData::TotalPop, iPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Econ
+    iErrCode = pWrite->WriteData (GameEmpireData::Econ, GetEcon (iFuel, iMin, iAg));
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // TargetPop
+    iErrCode = pWrite->WriteData (GameEmpireData::TargetPop, iMaxPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // HomeWorld
+    iErrCode = pWrite->WriteData (GameEmpireData::HomeWorld, iHomeWorldKey);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // NextTotalPop
+    iErrCode = pWrite->WriteData (GameEmpireData::NextTotalPop, iNextTotalPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    SafeRelease (pWrite);
+
+    // If FullyColonized or Map Exposed, put all new planets into empire's map
+    if ((iGameClassOptions & EXPOSED_MAP) || (iGameClassOptions & FULLY_COLONIZED_MAP)) {
+
+        for (i = 0; i < iNumNewPlanets; i ++) {
+
+            iErrCode = InsertPlanetIntoGameEmpireData (
+                piNewPlanetKey[i], 
+                iGameClassOptions,
+                strGameMap, 
+                strGameEmpireMap
+                );
+
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+    
+    } else {
+        
+        // Else just add homeworld
+        iErrCode = InsertPlanetIntoGameEmpireData (
+            iHomeWorldKey,
+            iGameClassOptions,
+            strGameMap, 
+            strGameEmpireMap
+            );
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+    }
+
     if (iGameClassOptions & EXPOSED_MAP) {
 
-        // Insert all new planets into every empires' map
-        unsigned int iTotalNumEmpires;
-        iErrCode = m_pGameData->ReadColumn(
-            strGameEmpires,
-            GameEmpires::EmpireKey,
-            NULL,
-            &pvEmpireKey,
-            &iTotalNumEmpires
-            );
-        
+        char strAnEmpireData [256];
+
+        IReadTable* pAnEmpireDataRead = NULL;
+
+        int piMaxMinCol[4], piMaxMinVal[4];
+        unsigned int iNumMaxMinChanged = 0, iNumKeys;
+
+        // Insert new planets into other empires' maps
+        iErrCode = m_pGameData->ReadColumn (strGameEmpires, GameEmpires::EmpireKey, NULL, &pvKey, &iNumKeys);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        for (i = 0; i < iNumNewPlanets; i ++) {
+        // Max, min
+        if (iNumKeys > 1) {
 
-            for (j = 0; j < iTotalNumEmpires; j ++) {
+            int iMyMinX, iMyMaxX, iMyMinY, iMyMaxY, iSampleKey = NO_KEY;
+
+            for (i = 0; i < iNumKeys; i ++) {
+                if (pvKey[i].GetInteger() != iEmpireKey) {
+                    iSampleKey = pvKey[i].GetInteger();
+                    break;
+                }
+            }
+
+            Assert (iSampleKey != NO_KEY);
+
+            GET_GAME_EMPIRE_DATA (strAnEmpireData, iGameClass, iGameNumber, iSampleKey);
+
+            Assert (pAnEmpireDataRead == NULL);
+            iErrCode = m_pGameData->GetTableForReading (strAnEmpireData, &pAnEmpireDataRead);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+            
+            iErrCode = pAnEmpireDataRead->ReadData (GameEmpireData::MinX, &iMyMinX);
+            if (iErrCode != OK) {
+                Assert (false);
+                pAnEmpireDataRead->Release();
+                goto Cleanup;
+            }
+
+            iErrCode = pAnEmpireDataRead->ReadData (GameEmpireData::MaxX, &iMyMaxX);
+            if (iErrCode != OK) {
+                Assert (false);
+                pAnEmpireDataRead->Release();
+                goto Cleanup;
+            }
+
+            iErrCode = pAnEmpireDataRead->ReadData (GameEmpireData::MinY, &iMyMinY);
+            if (iErrCode != OK) {
+                Assert (false);
+                pAnEmpireDataRead->Release();
+                goto Cleanup;
+            }
+
+            iErrCode = pAnEmpireDataRead->ReadData (GameEmpireData::MaxY, &iMyMaxY);
+            if (iErrCode != OK) {
+                Assert (false);
+                pAnEmpireDataRead->Release();
+                goto Cleanup;
+            }
+
+            SafeRelease (pAnEmpireDataRead);
+
+            if (iMyMinX < iMinX) {
+                iMinX = iMyMinX;
+            } else {
+                piMaxMinCol[iNumMaxMinChanged] = GameEmpireData::MinX;
+                piMaxMinVal[iNumMaxMinChanged] = iMinX;
+                iNumMaxMinChanged ++;
+            }
+
+            if (iMyMaxX > iMaxX) {
+                iMaxX = iMyMaxX;
+            } else {
+                piMaxMinCol[iNumMaxMinChanged] = GameEmpireData::MaxX;
+                piMaxMinVal[iNumMaxMinChanged] = iMaxX;
+                iNumMaxMinChanged ++;
+            }
+
+            if (iMyMinY < iMinY) {
+                iMinY = iMyMinY;
+            } else {
+                piMaxMinCol[iNumMaxMinChanged] = GameEmpireData::MinY;
+                piMaxMinVal[iNumMaxMinChanged] = iMinY;
+                iNumMaxMinChanged ++;
+            }
+
+            if (iMyMaxY > iMaxY) {
+                iMaxY = iMyMaxY;
+            } else {
+                piMaxMinCol[iNumMaxMinChanged] = GameEmpireData::MaxY;
+                piMaxMinVal[iNumMaxMinChanged] = iMaxY;
+                iNumMaxMinChanged ++;
+            }
+        }
+        
+        for (i = 0; i < iNumKeys; i ++) {
+            
+            if (pvKey[i].GetInteger() != iEmpireKey) {
+
+                // Insert planets
+                GET_GAME_EMPIRE_MAP (strAnEmpireMap, iGameClass, iGameNumber, pvKey[i].GetInteger());
+
+                for (j = 0; j < iNumNewPlanets; j ++) {
                 
-                iErrCode = InsertPlanetIntoGameEmpireData(
-                    iGameClass,
-                    iGameNumber,
-                    pvEmpireKey[j].GetInteger(),
-                    piNewPlanetKey[i],
-                    ppvNewPlanetData[i],
-                    iGameClassOptions
-                    );
-
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-            }
-        }
-
-        // Insert all old planets into each new empires' map
-        for (i = 0; i < iNumExistingPlanets; i ++) {
-
-            for (j = 0; j < iNumNewEmpires; j ++) {
-
-                iErrCode = InsertPlanetIntoGameEmpireData(
-                    iGameClass,
-                    iGameNumber,
-                    piNewEmpireKey[j],
-                    piExistingPlanetKey[i],
-                    ppvExistingPlanetData[i],
-                    iGameClassOptions
-                    );
-
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-            }
-        }
-    
-    } else {
-
-        // Not exposed maps...
-        // Add new planets to their owner's map if they're homeworlds or if the map is fully colonized
-        for (i = 0; i < iNumNewPlanets; i ++) {
-
-            int iOwner = ppvNewPlanetData[i][GameMap::Owner].GetInteger();
-            if (iOwner != SYSTEM) {
-
-                bool bHW = ppvNewPlanetData[i][GameMap::HomeWorld].GetInteger() == HOMEWORLD;
-                if (bHW || (iGameClassOptions & FULLY_COLONIZED_MAP)) {
-
-                    Assert(iOwner != SYSTEM);
-
-                    iErrCode = InsertPlanetIntoGameEmpireData(
-                        iGameClass,
-                        iGameNumber,
-                        iOwner,
-                        piNewPlanetKey[i],
-                        ppvNewPlanetData[i],
-                        iGameClassOptions
+                    iErrCode = InsertPlanetIntoGameEmpireData (
+                        piNewPlanetKey[j],
+                        iGameClassOptions,
+                        strGameMap, 
+                        strAnEmpireMap
                         );
 
                     if (iErrCode != OK) {
@@ -666,25 +995,102 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
                         goto Cleanup;
                     }
                 }
+
+                // Set min / max
+                if (iNumMaxMinChanged > 0) {
+                    
+                    GET_GAME_EMPIRE_DATA (strAnEmpireData, iGameClass, iGameNumber, pvKey[i].GetInteger());
+                    
+                    Assert (pWrite == NULL);
+                    iErrCode = m_pGameData->GetTableForWriting (strAnEmpireData, &pWrite);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+                    
+                    for (j = 0; j < iNumMaxMinChanged; j ++) {
+                        
+                        iErrCode = pWrite->WriteData (piMaxMinCol[j], piMaxMinVal[j]);
+                        if (iErrCode != OK) {
+                            Assert (false);
+                            goto Cleanup;
+                        }
+                    }
+
+                    SafeRelease (pWrite);
+                }
             }
         }
+
+        m_pGameData->FreeData (pvKey);
+        pvKey = NULL;
+    
+    }   // End if exposed map
+
+    else if (!(iGameClassOptions & FULLY_COLONIZED_MAP)) {
+
+        // Max, min for empire is homeworld
+        GetCoordinates (ppvPlanetData[iHomeWorldIndex][GameMap::Coordinates].GetCharPtr(), &iMinX, &iMinY);
+
+        iMaxX = iMinX;
+        iMaxY = iMinY;
+    }
+
+    // Write empire min, max
+    Assert (pWrite == NULL);
+    iErrCode = m_pGameData->GetTableForWriting (strGameEmpireData, &pWrite);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pWrite->WriteData (GameEmpireData::MinX, iMinX);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    
+    iErrCode = pWrite->WriteData (GameEmpireData::MaxX, iMaxX);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    
+    iErrCode = pWrite->WriteData (GameEmpireData::MinY, iMinY);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    
+    iErrCode = pWrite->WriteData (GameEmpireData::MaxY, iMaxY);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
     }
 
 Cleanup:
 
-    if (pvEmpireKey != NULL) {
-        m_pGameData->FreeData (pvEmpireKey);
+    SafeRelease (pWrite);
+
+    if (pvKey != NULL) {
+        m_pGameData->FreeData (pvKey);
     }
 
     return iErrCode;
 }
 
 
-int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
-                                                  int iGameClass,
-                                                  int iGameNumber,
+int GameEngine::CreatePlanetFromMapGeneratorData (const char* strGameMap, 
+                                                  Variant* pvPlanetData,
                                                   int iEmpireKey,
                                                   int iGameClassOptions,
+                                                  int* piAg,
+                                                  int* piMin,
+                                                  int* piFuel,
+                                                  int* piPop,
+                                                  int* piMaxPop,
+                                                  int* piHomeWorldKey,
+                                                  int* piNumPlanets,
                                                   int* piMinX,
                                                   int* piMaxX,
                                                   int* piMinY,
@@ -692,11 +1098,10 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
                                                   int* piNewPlanetKey
                                                   ) {
 
-    int iErrCode = OK, iX, iY, iNewX, iNewY, iLink, cpDir;
+    int iErrCode = OK, iMin, iFuel, iMaxPop, iX, iY, iNewX, iNewY, iLink, cpDir;
 
     unsigned int iKey;
 
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
 
     unsigned int piNeighbourKey [NUM_CARDINAL_POINTS];
@@ -704,10 +1109,6 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
     bool pbLink [NUM_CARDINAL_POINTS];
 
     unsigned int i, iNumNeighbours;
-
-    IWriteTable* pWrite = NULL;
-
-    Assert(iEmpireKey != NO_KEY);
 
     bool bHomeWorld = pvPlanetData[GameMap::HomeWorld].GetInteger() == HOMEWORLD;
 
@@ -739,29 +1140,34 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
     //
 
     // Pop, MaxPop, Owner
-    int iMin = pvPlanetData[GameMap::Minerals].GetInteger();
-    int iFuel = pvPlanetData[GameMap::Fuel].GetInteger();
+    iMin = pvPlanetData[GameMap::Minerals].GetInteger();
+    iFuel = pvPlanetData[GameMap::Fuel].GetInteger();
 
-    int iMaxPop = max (iMin, iFuel);
+    iMaxPop = max (iMin, iFuel);
     if (iMaxPop == 0) {
         iMaxPop = 1;
     }
 
     pvPlanetData[GameMap::MaxPop] = iMaxPop;
 
-    int iAg, iPop;
-    if (iEmpireKey != SYSTEM && (bHomeWorld || (iGameClassOptions & FULLY_COLONIZED_MAP))) {
+    if (bHomeWorld || (iGameClassOptions & FULLY_COLONIZED_MAP)) {
 
-        iAg = pvPlanetData[GameMap::Ag].GetInteger();
-        iPop = iAg > iMaxPop ? iMaxPop : iAg;
+        int iAg = pvPlanetData[GameMap::Ag].GetInteger();
+        int iPop = iAg > iMaxPop ? iMaxPop : iAg;
+
+        *piAg += iAg;
+        *piMin += min (iMin, iPop);
+        *piFuel += min (iFuel, iPop);
+
+        *piPop += iPop;
+        *piMaxPop += iMaxPop;
+
+        (*piNumPlanets) ++;
 
         pvPlanetData[GameMap::Pop] = iPop;
         pvPlanetData[GameMap::Owner] = iEmpireKey;
 
     } else {
-
-        iAg = 0;
-        iPop = 0;
 
         pvPlanetData[GameMap::Pop] = 0;
         pvPlanetData[GameMap::Owner] = SYSTEM;
@@ -791,7 +1197,7 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
     pvPlanetData[GameMap::SurrenderAlmonasterScore] = (float) 0.0;
 
     // NorthPlanetKey, EastPlanetKey, SouthPlanetKey, WestPlanetKey,
-    GetCoordinates(pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
+    GetCoordinates (pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
 
     if (iX < *piMinX) {
         *piMinX = iX;
@@ -850,7 +1256,7 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
     }
 
     // Insert the planet, finally!
-    iErrCode = m_pGameData->InsertRow(strGameMap, pvPlanetData, &iKey);
+    iErrCode = m_pGameData->InsertRow (strGameMap, pvPlanetData, &iKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -858,159 +1264,54 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
 
     *piNewPlanetKey = iKey;
 
-    // Fix up neighboring links
+    if (bHomeWorld) {
+        *piHomeWorldKey = iKey;
+    }
+    
+    // Fix up neighbours' data
     for (i = 0; i < iNumNeighbours; i ++) {
-
+        
         iErrCode = m_pGameData->WriteData (
             strGameMap,
             piNeighbourKey[i],
             GameMap::NorthPlanetKey + OPPOSITE_CARDINAL_POINT [piNeighbourDirection[i]],
             (int) iKey
             );
-
+        
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
-
+        
         if (pbLink[i]) {
-
+            
             iErrCode = m_pGameData->WriteOr (
                 strGameMap,
                 piNeighbourKey[i],
                 GameMap::Link,
                 OPPOSITE_LINK_X [piNeighbourDirection[i]]
-            );
-
+                );
+            
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
-        }
-    }
-
-    if (iEmpireKey != SYSTEM && (bHomeWorld || (iGameClassOptions & FULLY_COLONIZED_MAP))) {
-
-        // Increment some empire statistics
-        GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-        Assert (pWrite == NULL);
-        iErrCode = m_pGameData->GetTableForWriting (strGameEmpireData, &pWrite);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // NumPlanets
-        iErrCode = pWrite->Increment(GameEmpireData::NumPlanets, 1);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // TotalAg
-        if (iAg > 0) {
-
-            iErrCode = pWrite->Increment(GameEmpireData::TotalAg, iAg);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-        }
-
-        // TotalMin
-        iErrCode = pWrite->Increment(GameEmpireData::TotalMin, min (iMin, iPop));
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // TotalFuel
-        iErrCode = pWrite->Increment(GameEmpireData::TotalFuel, min (iFuel, iPop));
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // TotalPop
-        if (iPop > 0) {
-
-            iErrCode = pWrite->Increment(GameEmpireData::TotalPop, iPop);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-        }
-
-        // TargetPop
-        iErrCode = pWrite->Increment(GameEmpireData::TargetPop, iMaxPop);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // HomeWorld
-        if (bHomeWorld) {
-
-            iErrCode = pWrite->WriteData(GameEmpireData::HomeWorld, (int)iKey);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-        }
-
-        // TotalAg
-        iErrCode = pWrite->ReadData(GameEmpireData::TotalAg, &iAg);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // TotalMin
-        iErrCode = pWrite->ReadData(GameEmpireData::TotalMin, &iMin);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // TotalFuel
-        iErrCode = pWrite->ReadData(GameEmpireData::TotalFuel, &iFuel);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // Update Econ
-        iErrCode = pWrite->WriteData(GameEmpireData::Econ, GetEcon(iFuel, iMin, iAg));
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
         }
     }
 
 Cleanup:
 
-    SafeRelease (pWrite);
-
     return iErrCode;
 }
 
-int GameEngine::InsertPlanetIntoGameEmpireData(int iGameClass, int iGameNumber, int iEmpireKey, 
-                                               int iPlanetKey, const Variant* pvPlanetData,
-                                               int iGameClassOptions) {
+int GameEngine::InsertPlanetIntoGameEmpireData (int iPlanetKey, 
+                                                int iGameClassOptions, 
+                                                const char* pszGameMap, 
+                                                const char* pszGameEmpireMap) {
 
     int iErrCode;
 
-    GAME_MAP(pszGameMap, iGameClass, iGameNumber);
-    GAME_EMPIRE_MAP(pszGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_DATA(pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
     Variant pvOldPlanet[GameEmpireMap::NumColumns];
-
-    IWriteTable* pEmpireData = NULL;
-
-    Assert(iEmpireKey != SYSTEM && iEmpireKey != NO_KEY);
-    Assert(iPlanetKey != NO_KEY);
 
     pvOldPlanet[GameEmpireMap::PlanetKey] = iPlanetKey;
     pvOldPlanet[GameEmpireMap::RESERVED0] = 0;
@@ -1092,80 +1393,7 @@ int GameEngine::InsertPlanetIntoGameEmpireData(int iGameClass, int iGameNumber, 
         goto Cleanup;
     }
 
-    //
-    // Handle max/min settings
-    //
-    int iMinX, iMaxX, iMinY, iMaxY;
-
-    Assert (pEmpireData == NULL);
-    iErrCode = m_pGameData->GetTableForWriting(pszGameEmpireData, &pEmpireData);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MinX, &iMinX);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MaxX, &iMaxX);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MinY, &iMinY);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MaxY, &iMaxY);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    int iX, iY;
-    GetCoordinates(pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
-
-    if (iX < iMinX) {
-        iErrCode = pEmpireData->WriteData (GameEmpireData::MinX, iX);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
-    
-    if (iX > iMaxX) {
-        iErrCode = pEmpireData->WriteData (GameEmpireData::MaxX, iX);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
-    
-    if (iY < iMinY) {
-        iErrCode = pEmpireData->WriteData (GameEmpireData::MinY, iY);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
-    
-    if (iY > iMaxY) {
-        iErrCode = pEmpireData->WriteData (GameEmpireData::MaxY, iY);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
-
 Cleanup:
-
-    SafeRelease(pEmpireData);
 
     return iErrCode;
 }
@@ -1182,8 +1410,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     unsigned int* piPlanetKey = NULL, iNumPlanets, iKey, iNumMatches, iNumPlanetsPerEmpire;
     unsigned int* piKey = NULL, iNumEmpires, i;
 
-    int cpDir, iPlanet, iX, iY, iNewX, iNewY, iOwner, * piLink = NULL, iHomeWorld, iNeighbourHW;
-    int iGameClassOptions, iGameOptions;
+    int cpDir, iPlanet, iX, iY, iNewX, iNewY, iOptions, iOwner, * piLink = NULL, iHomeWorld, iNeighbourHW;
 
     char** ppszCoord = NULL, pszNewCoord [MAX_COORDINATE_LENGTH + 1];
     const char* pszCoord;
@@ -1206,33 +1433,40 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     }
 
     // Get gameclass options
-    iErrCode = m_pGameData->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    iGameClassOptions = vTemp.GetInteger();
+    iErrCode = m_pGameData->ReadData (
+        SYSTEM_GAMECLASS_DATA, 
+        iGameClass, 
+        SystemGameClassData::Options, 
+        &vTemp
+        );
 
-    // Get some game settings
-    iErrCode = m_pGameData->ReadData(strGameData, GameData::NumPlanetsPerEmpire, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+
+    iOptions = vTemp.GetInteger();
+
+    // Get num planets
+    iErrCode = m_pGameData->ReadData (
+        strGameData,  
+        GameData::NumPlanetsPerEmpire, 
+        &vTemp
+        );
+
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
     iNumPlanetsPerEmpire = vTemp.GetInteger();
-
-    iErrCode = m_pGameData->ReadData(strGameData, GameData::Options, &vTemp);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    iGameOptions = vTemp.GetInteger();
 
     iErrCode = m_pGameData->GetTableForReading (strGameMap, &pGameMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+
     iErrCode = pGameMap->ReadColumn (GameMap::Coordinates, &piPlanetKey, &ppszCoord, &iNumPlanets);
     
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -1252,8 +1486,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
         goto Cleanup;
     }
 
-    if (!(iGameOptions & (GAME_MIRRORED_MAP | GAME_TWISTED_MAP)) &&
-        (iNumPlanets % iNumPlanetsPerEmpire != 0)) {
+    if (iNumPlanets % iNumPlanetsPerEmpire != 0) {
         Assert (!"Map did not assign the same number of planets per empire");
         iErrCode = ERROR_FAILURE;
         goto Cleanup;
@@ -1387,7 +1620,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
                     
                     if (iNeighbourHW == HOMEWORLD) {
                         
-                        // Make sure there's no link between two homeworlds
+                        // Make sure there's no link!
                         if (piLink[i] & LINK_X[cpDir]) {
                             Assert (!"Homeworlds are adjacent");
                             iErrCode = ERROR_FAILURE;
@@ -1408,7 +1641,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     }   // End all planets loop
 
     // Verify all planets are connected
-    if (!(iGameClassOptions & DISCONNECTED_MAP)) {
+    if (!(iOptions & DISCONNECTED_MAP)) {
 
         pbVisited = (bool*) StackAlloc (iNumPlanets * sizeof (bool));
         memset (pbVisited, false, iNumPlanets * sizeof (bool));

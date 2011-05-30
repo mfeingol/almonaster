@@ -429,7 +429,7 @@ int HtmlRenderer::Render_GameProfileViewer() {
 	            GameOptions goOptions;
 	            InitGameOptions (&goOptions);
 
-	            iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
+	            iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, m_iEmpireKey, &goOptions);
 	            if (iErrCode != OK) {
 	                iProfilePage = 4;
 	                break;
