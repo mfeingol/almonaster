@@ -245,7 +245,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 		* piOriginalPlanetOwner = NULL, * piOriginalNumObliterations;
 
 	Variant vMaxBR, vTechLevel, vTechDevs, vNumOwnShips, vMaint, vBuild, vFuel, vTheme;
-	int iNewUpdateCount = vNumUpdates + 1, iBR1, iBR2;
+	int iNewUpdateCount = vNumUpdates.GetInteger() + 1, iBR1, iBR2;
 
 	char pszUpdateTime [OS::MaxDateLength];
 
@@ -505,7 +505,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
 		// Handle new tech developments
 		iBR1 = GetBattleRank (vTechLevel);
-		iBR2 = GetBattleRank (vTechLevel + fTechDelta);
+		iBR2 = GetBattleRank (vTechLevel.GetFloat() + fTechDelta);
 
 		iErrCode = m_pGameData->ReadData (pstrEmpireData[i], GameEmpireData::MaxBR, &vMaxBR);
 		if (iErrCode != OK) {

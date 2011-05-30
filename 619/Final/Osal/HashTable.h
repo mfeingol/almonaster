@@ -3,7 +3,7 @@
 
 #include "LinkedList.h"
 
-template <class CKey, class CData> class OSAL_EXPORT HashTableNode {
+template <class CKey, class CData> class HashTableNode {
 public:
 	CData Data;
 	CKey Key;
@@ -12,9 +12,9 @@ public:
 	static void Delete (HashTableNode<CKey, CData>* pNode) { delete pNode; }
 };
 
-template <class CKey, class CData, class HashValue, class Equals> class OSAL_EXPORT HashTable;
+template <class CKey, class CData, class HashValue, class Equals> class HashTable;
 
-template <class CKey, class CData> class OSAL_EXPORT HashTableIterator : 
+template <class CKey, class CData> class HashTableIterator : 
 	public ListIterator<HashTableNode<CKey, CData>*> {
 
 public:
@@ -38,7 +38,7 @@ public:
 
 };
 
-template <class CKey, class CData, class HashValue, class Equals> class OSAL_EXPORT HashTable {
+template <class CKey, class CData, class HashValue, class Equals> class HashTable {
 protected:
 
 	unsigned int m_iNumElements;

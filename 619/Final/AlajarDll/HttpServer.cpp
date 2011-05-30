@@ -794,7 +794,7 @@ int HttpServer::ThreadExec (void* pVoid) {
 		}
 */
 
-int HttpServer::WWWServe (ThreadInfo* pThreadInfo) {
+int HttpServer::WWWServe() {
 
 	int iErrCode = OK;
 	bool bSingleThreaded;
@@ -818,7 +818,7 @@ int HttpServer::WWWServe (ThreadInfo* pThreadInfo) {
 	// Loop 'forever'
 	while (true) {
 
-		pSocket = m_pThreadPool->WaitForTask (pThreadInfo);
+		pSocket = m_pThreadPool->WaitForTask();
 
 		// Check for exit
 		if (pSocket == NULL) {

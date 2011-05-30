@@ -104,17 +104,18 @@ copy Alajar.h ..\Include
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\619\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
-				ExceptionHandling="TRUE"
-				BasicRuntimeChecks="1"
+				ExceptionHandling="FALSE"
+				BasicRuntimeChecks="0"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="2"
 				StructMemberAlignment="0"
 				EnableFunctionLevelLinking="TRUE"
 				TreatWChar_tAsBuiltInType="TRUE"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/AlajarDll.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
@@ -131,11 +132,15 @@ copy Alajar.h ..\Include
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Osal.lib"
 				OutputFile="Release/Alajar.dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\619\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/Alajar.pdb"
 				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"
 				SupportUnloadOfDelayLoadedDLL="FALSE"
 				ImportLibrary=".\Release/Alajar.lib"/>
 			<Tool
@@ -150,7 +155,9 @@ copy Alajar.h ..\Include
 				Description="Copying public files..."
 				CommandLine="copy release\Alajar.dll ..\release
 copy release\Alajar.pdb ..\release
-"/>
+copy release\Alajar.lib ..\sdk
+copy release\Alajar.lib ..\include
+copy alajar.h ..\include"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

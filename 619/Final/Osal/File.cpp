@@ -33,7 +33,9 @@
 #define MAX_MIME_TYPE_LENGTH 512
 
 // Microsoft didn't define this in VSSP4
+#ifndef INVALID_SET_FILE_POINTER
 #define INVALID_SET_FILE_POINTER ((DWORD) -1)
+#endif
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction

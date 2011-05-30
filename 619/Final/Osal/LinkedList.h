@@ -25,7 +25,7 @@
 #include "OS.h"
 #include "ObjectCache.h"
 
-template <class T> class OSAL_EXPORT ListNode {
+template <class T> class ListNode {
 public:
 
 	T Data;
@@ -38,9 +38,9 @@ public:
 
 #define FIRST_NODE_PTR ((ListNode<T>*) 0xffffffff)
 
-template <class T> class OSAL_EXPORT LinkedList;
+template <class T> class LinkedList;
 
-template <class T> class OSAL_EXPORT ListIterator {
+template <class T> class ListIterator {
 public:
 
 	ListNode<T>* Next;
@@ -61,7 +61,7 @@ public:
 };
 
 
-template <class T> class OSAL_EXPORT LinkedList {
+template <class T> class LinkedList {
 protected:
 
 	ListNode<T>* m_plnHead;

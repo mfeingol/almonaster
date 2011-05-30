@@ -33,17 +33,18 @@
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\619\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;Database_EXPORTS"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
-				ExceptionHandling="TRUE"
-				BasicRuntimeChecks="1"
+				ExceptionHandling="FALSE"
+				BasicRuntimeChecks="0"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="2"
 				StructMemberAlignment="0"
 				EnableFunctionLevelLinking="TRUE"
 				TreatWChar_tAsBuiltInType="TRUE"
-				UsePrecompiledHeader="2"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/Database.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
@@ -60,10 +61,14 @@
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Osal.lib"
 				OutputFile=".\Release/Database.dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\619\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/Database.pdb"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"
 				SupportUnloadOfDelayLoadedDLL="FALSE"
 				ImportLibrary=".\Release/Database.lib"/>
 			<Tool
@@ -79,6 +84,8 @@
 				CommandLine="copy release\Database.dll ..\release
 copy release\Database.pdb ..\release
 copy release\Database.lib ..\sdk
+copy release\Database.lib ..\Include
+copy Database.h ..\Include
 "/>
 			<Tool
 				Name="VCPreBuildEventTool"/>

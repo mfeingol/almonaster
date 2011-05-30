@@ -25,7 +25,7 @@
 
 #include "OS.h"
 
-template <class T, class TAllocator> class OSAL_EXPORT ObjectCache {
+template <class T, class TAllocator> class ObjectCache {
 private:
 
 	unsigned int m_iMaxNumElements;

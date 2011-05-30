@@ -1,14 +1,17 @@
 Microsoft Visual Studio Solution File, Format Version 8.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Admin", "..\Admin\Admin.vcproj", "{3FD8A28F-5721-4CD7-AC0E-069C47343956}"
 	ProjectSection(ProjectDependencies) = postProject
+		{EBAD52D6-350F-4B82-A836-E65C54B2B882} = {EBAD52D6-350F-4B82-A836-E65C54B2B882}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Alajar", "..\Alajar\Alajar.vcproj", "{6D302AC7-6C46-4880-B303-CEDACC28AE68}"
 	ProjectSection(ProjectDependencies) = postProject
+		{EBAD52D6-350F-4B82-A836-E65C54B2B882} = {EBAD52D6-350F-4B82-A836-E65C54B2B882}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarDll", "..\AlajarDll\AlajarDll.vcproj", "{EBAD52D6-350F-4B82-A836-E65C54B2B882}"
 	ProjectSection(ProjectDependencies) = postProject
+		{F1EEB914-4784-4A5A-82DD-D536FBE92372} = {F1EEB914-4784-4A5A-82DD-D536FBE92372}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarSvc", "..\AlajarSvc\AlajarSvc.vcproj", "{1437C5BD-15EA-4E3A-819A-EB929F8F9E70}"
@@ -17,26 +20,27 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarSvc", "..\AlajarSvc\A
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster.vcproj", "{D1B2205C-CD5A-4552-938D-24FF760BBF36}"
 	ProjectSection(ProjectDependencies) = postProject
+		{EBAD52D6-350F-4B82-A836-E65C54B2B882} = {EBAD52D6-350F-4B82-A836-E65C54B2B882}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "..\AlmonasterHook\AlmonasterHook.vcproj", "{2879944E-D55F-411B-8284-1376B1849AD8}"
 	ProjectSection(ProjectDependencies) = postProject
+		{D1B2205C-CD5A-4552-938D-24FF760BBF36} = {D1B2205C-CD5A-4552-938D-24FF760BBF36}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asfpp", "..\Asfpp\Asfpp.vcproj", "{9F7403F4-9696-4EE8-A8F5-704418AD1BC9}"
 	ProjectSection(ProjectDependencies) = postProject
+		{F1EEB914-4784-4A5A-82DD-D536FBE92372} = {F1EEB914-4784-4A5A-82DD-D536FBE92372}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBConv", "..\DBConv\DBConv.vcproj", "{D27A5907-40E0-4169-86AF-C678AA7465E2}"
 	ProjectSection(ProjectDependencies) = postProject
+		{968B0B33-C857-4AEA-96FD-F914822FF811} = {968B0B33-C857-4AEA-96FD-F914822FF811}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "..\Database\Database.vcproj", "{968B0B33-C857-4AEA-96FD-F914822FF811}"
 	ProjectSection(ProjectDependencies) = postProject
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database3", "..\Database3\Database3.vcproj", "{014C9713-25DA-4A4D-9F28-2631603ECF7F}"
-	ProjectSection(ProjectDependencies) = postProject
+		{F1EEB914-4784-4A5A-82DD-D536FBE92372} = {F1EEB914-4784-4A5A-82DD-D536FBE92372}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcproj", "{F1EEB914-4784-4A5A-82DD-D536FBE92372}"
@@ -45,7 +49,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcproj
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 12
+		SccNumberOfProjects = 11
 		SccProjectName0 = \u0022$/619\u0022,\u0020HGAAAAAA
 		SccLocalPath0 = ..
 		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
@@ -80,22 +84,18 @@ Global
 		SccLocalPath7 = ..
 		CanCheckoutShared = false
 		SccProjectFilePathRelativizedFromConnection7 = Asfpp\\
-		SccProjectUniqueName8 = ..\\Database3\\Database3.vcproj
+		SccProjectUniqueName8 = ..\\Database\\Database.vcproj
 		SccLocalPath8 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection8 = Database3\\
-		SccProjectUniqueName9 = ..\\Database\\Database.vcproj
+		SccProjectFilePathRelativizedFromConnection8 = Database\\
+		SccProjectUniqueName9 = ..\\DBConv\\DBConv.vcproj
 		SccLocalPath9 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection9 = Database\\
-		SccProjectUniqueName10 = ..\\DBConv\\DBConv.vcproj
+		SccProjectFilePathRelativizedFromConnection9 = DBConv\\
+		SccProjectUniqueName10 = ..\\Osal\\Osal.vcproj
 		SccLocalPath10 = ..
 		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection10 = DBConv\\
-		SccProjectUniqueName11 = ..\\Osal\\Osal.vcproj
-		SccLocalPath11 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection11 = Osal\\
+		SccProjectFilePathRelativizedFromConnection10 = Osal\\
 	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
@@ -138,10 +138,6 @@ Global
 		{968B0B33-C857-4AEA-96FD-F914822FF811}.Debug.Build.0 = Debug|Win32
 		{968B0B33-C857-4AEA-96FD-F914822FF811}.Release.ActiveCfg = Release|Win32
 		{968B0B33-C857-4AEA-96FD-F914822FF811}.Release.Build.0 = Release|Win32
-		{014C9713-25DA-4A4D-9F28-2631603ECF7F}.Debug.ActiveCfg = Debug|Win32
-		{014C9713-25DA-4A4D-9F28-2631603ECF7F}.Debug.Build.0 = Debug|Win32
-		{014C9713-25DA-4A4D-9F28-2631603ECF7F}.Release.ActiveCfg = Release|Win32
-		{014C9713-25DA-4A4D-9F28-2631603ECF7F}.Release.Build.0 = Release|Win32
 		{F1EEB914-4784-4A5A-82DD-D536FBE92372}.Debug.ActiveCfg = Debug|Win32
 		{F1EEB914-4784-4A5A-82DD-D536FBE92372}.Debug.Build.0 = Debug|Win32
 		{F1EEB914-4784-4A5A-82DD-D536FBE92372}.Release.ActiveCfg = Release|Win32

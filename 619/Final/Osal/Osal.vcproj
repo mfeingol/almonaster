@@ -104,18 +104,18 @@ copy debug\Osal.lib ..\Include
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\619\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
+				IgnoreStandardIncludePath="FALSE"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
-				ExceptionHandling="TRUE"
-				BasicRuntimeChecks="1"
+				ExceptionHandling="FALSE"
+				BasicRuntimeChecks="0"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="2"
 				StructMemberAlignment="0"
 				EnableFunctionLevelLinking="TRUE"
 				TreatWChar_tAsBuiltInType="TRUE"
-				UsePrecompiledHeader="2"
-				PrecompiledHeaderFile=".\Release/Osal.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
@@ -131,11 +131,15 @@ copy debug\Osal.lib ..\Include
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="wsock32.lib odbc32.lib odbccp32.lib rpcrt4.lib"
 				OutputFile=".\Release/Osal.dll"
-				LinkIncremental="2"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\619\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Release/Osal.pdb"
 				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"
 				SupportUnloadOfDelayLoadedDLL="FALSE"
 				ImportLibrary=".\Release/Osal.lib"/>
 			<Tool
@@ -150,7 +154,9 @@ copy debug\Osal.lib ..\Include
 				Description="Copying public files..."
 				CommandLine="copy release\Osal.dll ..\release
 copy release\Osal.pdb ..\release
-copy *.h ..\include
+copy release\Osal.lib ..\sdk
+copy release\Osal.lib ..\include
+copy *.h ..\include\osal
 "/>
 			<Tool
 				Name="VCPreBuildEventTool"/>

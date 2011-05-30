@@ -4,9 +4,9 @@
 #include "LinkedList.h"
 #include "Mutex.h"
 
-template <class T> class OSAL_EXPORT QueueIterator : public ListIterator<T> {};
+template <class T> class QueueIterator : public ListIterator<T> {};
 
-template <class T> class OSAL_EXPORT FifoQueue {
+template <class T> class FifoQueue {
 
 protected:
 
@@ -68,7 +68,7 @@ public:
 //
 // Algorithm swiped from http://www.cs.rochester.edu/u/michael/
 //
-template <class T> class OSAL_EXPORT ThreadSafeFifoQueue {
+template <class T> class ThreadSafeFifoQueue {
 
 private:
 	
