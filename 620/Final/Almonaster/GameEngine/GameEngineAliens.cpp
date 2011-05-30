@@ -200,5 +200,13 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
 int GameEngine::GetAlienAuthorName (int iAlienKey, Variant* pvAuthorName) {
 
-    return m_pGameData->ReadData (SYSTEM_ALIEN_ICONS, iAlienKey, SystemAlienIcons::AuthorName, pvAuthorName);
+    int iErrCode;
+    unsigned int iKey;
+
+    iErrCode = m_pGameData->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, false, &iKey);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    return m_pGameData->ReadData (SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
 }

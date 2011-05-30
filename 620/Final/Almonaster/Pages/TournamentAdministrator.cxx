@@ -498,7 +498,7 @@ if (m_bOwnPost && !m_bRedirection) {
             goto Redirection;
         }
 
-        if (WasButtonPressed (BID_STARTGAME)) {
+        if (WasButtonPressed (BID_START)) {
             iTAdminPage = 6;
             bRedirectTest = false;
             goto Redirection;
@@ -678,7 +678,7 @@ if (m_bOwnPost && !m_bRedirection) {
             goto Redirection;
         }
 
-        if (WasButtonPressed (BID_STARTGAME)) {
+        if (WasButtonPressed (BID_START)) {
 
             int iTeamOptions = 0;
 
@@ -1666,7 +1666,7 @@ case 7:
 
     %><p><%
     WriteButton (BID_CANCEL);
-    WriteButton (BID_STARTGAME);
+    WriteButton (BID_START);
 
     // Cleanup
     if (piEmpireKey != NULL) {

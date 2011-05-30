@@ -35,7 +35,6 @@
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;ADMIN_EXPORTS"
 				StringPooling="FALSE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -76,6 +75,9 @@
 				ProgramDatabaseFile=".\Debug/Admin.pdb"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
+				OptimizeForWindows98="0"
 				ImportLibrary=".\Debug/Admin.lib"
 				TargetMachine="0"/>
 			<Tool
@@ -158,13 +160,14 @@ copy Debug\Admin.pdb ..\Alajar\PageSources
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Osal.lib Alajar.lib"
 				ShowProgress="0"
 				OutputFile=".\Release/Admin.dll"
 				Version=""
-				LinkIncremental="0"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"

@@ -51,12 +51,13 @@ int Table::Initialize() {
 
 void Table::CheckIntegrity() {
 
-    int iStaticNumRows = m_pContext->GetNumRows();
-    int iForNumRows = 0;
-    int iWhileNumRows = 0;
-    int iTerminatorKey = m_pContext->GetTerminatorRowKey();
+    // Verify row counts
+    unsigned int iStaticNumRows = m_pContext->GetNumRows();
+    unsigned int iForNumRows = 0;
+    unsigned int iWhileNumRows = 0;
+    unsigned int iTerminatorKey = m_pContext->GetTerminatorRowKey();
 
-    for (int i = 0; i < iTerminatorKey; i ++) {
+    for (unsigned int i = 0; i < iTerminatorKey; i ++) {
         if (m_pContext->IsValidRow (i)) {
             iForNumRows ++;
         }
@@ -76,6 +77,8 @@ void Table::CheckIntegrity() {
     Assert (iForNumRows == iStaticNumRows);
     Assert (iWhileNumRows == iStaticNumRows);
     Assert (iForNumRows == iWhileNumRows);
+
+    // TODO - verify indexes
 }
 
 #endif

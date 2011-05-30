@@ -27,7 +27,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
 
     bool bRestrictAlmonaster = false, bRestrictClassic = false, bRestrictBridierRank = false, 
         bRestrictBridierIndex = false, bRestrictBridierRankGain = false, bRestrictWins = false, 
-        bNamesListed, bSpectators, bRestrictBridierRankLoss = false, fFilterIdle = false;
+        bNamesListed, bSpectators, bRestrictBridierRankLoss = false, fFilterIdle = true;
     
     const char* pszRestrictAlmonasterMin = NULL, * pszRestrictAlmonasterMax = NULL, * pszRestrictClassicMin = NULL,
         * pszRestrictClassicMax = NULL, * pszRestrictBridierRankMin = NULL, * pszRestrictBridierRankMax = NULL, 

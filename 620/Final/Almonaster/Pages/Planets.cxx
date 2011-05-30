@@ -82,16 +82,11 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (String::StrCmp (pszOldPlanetName, pszNewPlanetName) != 0) {
 
-                size_t stLength;
-
-                if (pszNewPlanetName == NULL) {
-                    stLength = 0;
-                } else {
-                    stLength = strlen (pszNewPlanetName);
+                if (String::IsWhiteSpace (pszNewPlanetName)) {
+                    AddMessage ("Blank planet names are not allowed");
                 }
-
-                if (stLength > MAX_PLANET_NAME_LENGTH) {
-                    AddMessage ("The submitted planet name was too long");
+                else if (strlen (pszNewPlanetName) > MAX_PLANET_NAME_LENGTH) {
+                    AddMessage ("The new planet name was too long");
                 } else {
 
                     // Best effort
@@ -212,7 +207,7 @@ if (bMapGenerated) {
         Variant* pvPlanetData = NULL;
 
         int iBR = 0;
-        float fMaintRatio = 0;
+        float fMaintRatio = 0.0, fNextMaintRatio = 0.0;
 
         // Visible builds?
         iErrCode = pDatabase->ReadData (SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
@@ -258,6 +253,12 @@ if (bMapGenerated) {
                 Assert (false);
                 goto Cleanup;
             }
+
+            iErrCode = g_pGameEngine->GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
         }
 
         for (i = 0; i < iNumPlanets; i ++) {
@@ -294,6 +295,7 @@ if (bMapGenerated) {
                     m_iEmpireKey,
                     iBR,
                     fMaintRatio,
+                    fNextMaintRatio,
                     &simShipsInMap,
                     true,
                     NULL,

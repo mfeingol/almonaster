@@ -65,6 +65,11 @@ struct LongRunningQueryMessage {
     void* pArguments;
 };
 
+struct EmpireIdentity {
+    int iEmpireKey;
+    int64 i64SecretKey;
+};
+
 /////////////////////////////////////////////////////////////////////////////
 // GameEngine
 
@@ -203,6 +208,9 @@ private:
 
     int RemoveEmpire (int iEmpireKey);
     int UpdateEmpireString (int iEmpireKey, int iColumn, const char* pszString, size_t stMaxLen, bool* pbTruncated);
+
+    int QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey);
+    static int THREAD_CALL DeleteEmpireMsg (LongRunningQueryMessage* pMessage);
 
     // Planets
     int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, bool* pbCommit);
@@ -515,6 +523,10 @@ private:
     int GetMessageProperty (const char* strMessages, unsigned int iMessageKey, unsigned int iColumn, 
         Variant* pvProperty);
 
+    int DeleteOverflowMessages (IWriteTable* pMessages, unsigned int iTimeStampColumn, 
+        unsigned int iUnreadColumn, unsigned int iNumMessages, unsigned int iNumUnreadMessages, 
+        unsigned int iMaxNumMessages, bool bCheckUnread);
+
     // Empires
     int WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpireKey, int iTotalAg, int iBonusAg, 
         float fMaxAgRatio);
@@ -606,9 +618,8 @@ public:
     int GetTroopshipSuccessPopDecrement (float fTroopshipSuccessFactor, int iPop);
     int GetDoomsdayUpdates (float fDoomsdayAnnihilationFactor, float fBR);
     
-    void GetBuilderNewPlanetResources (float fBR, float fMinBR, float fMultiplier,
-        int iAvgAg, int iAvgMin, int iAvgFuel, 
-        int* piNewAvgAg, int* piNewAvgMin, int* piNewAvgFuel);
+    void GetBuilderNewPlanetResources (float fBR, float fBRDampening, float fMultiplier,
+        int iAvgAg, int iAvgMin, int iAvgFuel, int* piNewAvgAg, int* piNewAvgMin, int* piNewAvgFuel);
     
     float GetGateBRForRange (float fRangeFactor, int iSrcX, int iSrcY, int iDestX, int iDestY);
     float GetCarrierDESTAbsorption (float fBR);
@@ -807,7 +818,8 @@ public:
     int SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword);
 
     int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber);
-    int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, int* piNumUpdates, bool bSendMessages, bool bCreatingGame);
+    int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, int* piNumUpdates, 
+        bool bSendMessages, bool bCreatingGame, NamedMutex* pempireMutex, bool* pbUnlocked);
 
     int SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszIPAddress);
 
@@ -857,6 +869,7 @@ public:
     int GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber, int iEmpireKey, int* piGain, int* piLoss);
 
     int GetNumEmpiresInGames (unsigned int* piNumEmpires);
+    int GetNumRecentActiveEmpiresInGames (unsigned int* piNumEmpires);
 
     // GameEmpireData
     int QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, int iKillerEmpire = NO_KEY);
@@ -987,6 +1000,7 @@ public:
 
     int GetEmpireBR (int iGameClass, int iGameNumber, int iEmpireKey, int* piBR);
     int GetEmpireMaintenanceRatio (int iGameClass, int iGameNumber, int iEmpireKey, float* pfMaintenanceRatio);
+    int GetEmpireNextMaintenanceRatio (int iGameClass, int iGameNumber, int iEmpireKey, float* pfNextMaintenanceRatio);
 
     int GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTarget);
     int SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarget);
@@ -1107,8 +1121,8 @@ public:
         unsigned int* piStopKey);
 
     // Updates
-    int CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUpdate);
-    int CheckAllGamesForUpdates();
+    int CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpdateCheckTime, bool* pbUpdate);
+    int CheckAllGamesForUpdates (bool fUpdateCheckTime);
 
     static int THREAD_CALL CheckAllGamesForUpdatesMsg (LongRunningQueryMessage* pMessage);
 

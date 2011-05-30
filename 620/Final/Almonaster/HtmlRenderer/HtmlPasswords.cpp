@@ -155,7 +155,7 @@ int HtmlRenderer::LoginEmpire() {
     if (iErrCode == OK) {
 
         // Add to report
-        ReportLoginSuccess (g_pReport, m_vEmpireName.GetCharPtr());
+        ReportLoginSuccess (g_pReport, m_vEmpireName.GetCharPtr(), m_bAutoLogon);
     
         // Take a ticket
         m_bAuthenticated = true;

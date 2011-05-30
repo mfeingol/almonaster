@@ -68,6 +68,16 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
                     AppendMessage (" ");
                     AppendMessage (m_iGameNumber);
 
+                    // Add to report
+                    SystemConfiguration scConfig;
+                    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+                        
+                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_GAME_CLASS_NAME_LENGTH + 128];
+                        sprintf (pszReport, "%s resigned from %s %i", 
+                            m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
+                        g_pReport->WriteReport (pszReport);
+                    }
+
                     // Make sure we still exist after quitting
                     bool bFlag;
                     iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
@@ -85,7 +95,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
             // Check game for updates - redirect will handle error
             bool bFlag;
-            iErrCode = g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, &bFlag);
+            iErrCode = g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, true, &bFlag);
         }
 
         return Redirect (pageRedirect);
@@ -121,6 +131,16 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
                     AppendMessage (m_pszGameClassName);
                     AppendMessage (" ");
                     AppendMessage (m_iGameNumber);
+
+                    // Add to report
+                    SystemConfiguration scConfig;
+                    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+                        
+                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_GAME_CLASS_NAME_LENGTH + 128];
+                        sprintf (pszReport, "%s quit from %s %i", 
+                            m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
+                        g_pReport->WriteReport (pszReport);
+                    }
 
                     // Make sure we still exist after quitting
                     bool bFlag;

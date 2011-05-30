@@ -306,12 +306,11 @@ EndPartialMaps:
 
                 if (String::StrCmp (pszOldPlanetName, pszNewPlanetName) != 0) {
 
-                    if (pszNewPlanetName == NULL) {
-                        pszNewPlanetName = "";
+                    if (String::IsWhiteSpace (pszNewPlanetName)) {
+                        AddMessage ("Blank planet names are not allowed");
                     }
-
-                    if (strlen (pszNewPlanetName) > MAX_PLANET_NAME_LENGTH) {
-                        AddMessage ("The submitted planet name was too long");
+                    else if (strlen (pszNewPlanetName) > MAX_PLANET_NAME_LENGTH) {
+                        AddMessage ("The new planet name was too long");
                     } else {
 
                         iErrCode = g_pGameEngine->RenamePlanet (
@@ -655,10 +654,11 @@ case 1:
             ShipsInMapScreen simShipsInMap = { iClickedPlanetKey, 0, 0 };
 
             int iBR;
-            float fMaintRatio;
+            float fMaintRatio, fNextMaintRatio;
 
             GameCheck (g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
             GameCheck (g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
+            GameCheck (g_pGameEngine->GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
 
             // Render ships
             RenderShips (
@@ -667,6 +667,7 @@ case 1:
                 m_iEmpireKey,
                 iBR,
                 fMaintRatio,
+                fNextMaintRatio,
                 &simShipsInMap,
                 true,
                 &iNumShipsRendered,

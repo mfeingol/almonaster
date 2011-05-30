@@ -70,7 +70,7 @@ if (iNumGames > 0) {
 
     bool bUpdateOccurred, bReloadGameList = false;
     for (i = 0; i < iNumGames; i ++) {
-        Check (g_pGameEngine->CheckGameForUpdates (piGameClassKey[i], piGameNumber[i], &bUpdateOccurred));
+        Check (g_pGameEngine->CheckGameForUpdates (piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred));
         if (bUpdateOccurred) {
             bReloadGameList = true;
         }

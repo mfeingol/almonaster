@@ -39,15 +39,15 @@ void HtmlRenderer::WriteServerRules() {
     
     unsigned int iNumProcessors, iMHz, iNumFiles, iNumPages, iTimeSpent, iDBOptions;
     
-    String strProcessorInformation;
-    bool bMMX;
-    
     GameConfiguration gcConfig;
     MapConfiguration mcConfig;
     
     HttpServerStatistics stats;
     AlmonasterStatistics aStats;
     DatabaseStatistics dsStats;
+
+    UTCTime tNow;
+    Time::GetTime (&tNow);
     
     iErrCode = g_pGameEngine->GetGameConfiguration (&gcConfig);
     if (iErrCode != OK) {
@@ -366,29 +366,75 @@ void HtmlRenderer::WriteServerRules() {
         iNumActiveGames = iNumOpenGames + iNumClosedGames;
         
         if (iNumActiveGames == 0) {
-            OutputText ("<li>There are no active games on the server</li>");
+            OutputText ("<li>No games are active on the server</li>");
         } else {
-            OutputText ("<li>There ");
+            OutputText ("<li><strong>");
             if (iNumActiveGames == 1) { 
-                OutputText ("is <strong>1</strong> active game");
+                OutputText ("1</strong> game is active");
             } else {
-                OutputText ("are <strong>");
                 m_pHttpResponse->WriteText (iNumActiveGames);
-                OutputText ("</strong> active games");
+                OutputText ("</strong> games are active");
             }
             OutputText (" on the server (<strong>");
             m_pHttpResponse->WriteText (iNumOpenGames);
             OutputText ("</strong> open, <strong>");
-            m_pHttpResponse->WriteText (iNumClosedGames); 
+            m_pHttpResponse->WriteText (iNumClosedGames);
             OutputText ("</strong> closed)</li>");
 
-            unsigned int iNumGamingEmpires;
-            iErrCode = g_pGameEngine->GetNumEmpiresInGames (&iNumGamingEmpires);
-            if (iErrCode == OK && iNumGamingEmpires > 0) {
+            unsigned int iNumGamingEmpires = m_siNumGamingEmpires;
+            if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60) {
 
-                OutputText ("<li>There are <strong>");
-                m_pHttpResponse->WriteText (iNumGamingEmpires);
-                OutputText ("</strong> active empires on the server</li>");
+                // More than a quarter of an hour has passed since the last game check
+                // Lock to ensure only one query is made
+                m_slockEmpiresInGames.Wait();
+                if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60) {
+
+                    m_stEmpiresInGamesCheck = tNow;
+                    m_slockEmpiresInGames.Signal();
+
+                    // Yep, the people who lost the race will get the stale value until the query finishes
+                    // That's just too bad...
+
+                    iErrCode = g_pGameEngine->GetNumEmpiresInGames (&iNumGamingEmpires);
+                    if (iErrCode == OK) {
+                        m_siNumGamingEmpires = iNumGamingEmpires;
+                    }
+
+                    else Assert (false);
+
+                } else {
+
+                    m_slockEmpiresInGames.Signal();
+                }
+            }
+
+            if (iNumGamingEmpires == 0) {
+                OutputText ("<li>No empires are in games on the server</li>");
+            } else {
+                
+                if (iNumGamingEmpires == 1) {
+                    OutputText ("<li><strong>1</strong> empire is in games on the server</li>");
+                } else {
+                    OutputText ("<li><strong>");
+                    m_pHttpResponse->WriteText (iNumGamingEmpires);
+                    OutputText ("</strong> empires are in games on the server</li>");
+                }
+
+                iErrCode = g_pGameEngine->GetNumRecentActiveEmpiresInGames (&iNumGamingEmpires);
+                if (iErrCode == OK) {
+
+                    if (iNumGamingEmpires == 0) {
+                        OutputText ("<li>No empires have played recently on the server</li>");
+                    }
+                    else if (iNumGamingEmpires == 1) {
+                        OutputText ("<li><strong>1</strong> empire has played recently on the server</li>");
+                    }
+                    else {
+                        OutputText ("<li><strong>");
+                        m_pHttpResponse->WriteText (iNumGamingEmpires);
+                        OutputText ("</strong> empires have played recently on the server</li>");
+                    }
+                }
             }
         }
     }
@@ -440,15 +486,12 @@ void HtmlRenderer::WriteServerRules() {
     
     char pszProcessorInformation[OS::MaxProcessorInfoLength];
     
-    if (OS::GetProcessorInformation (pszProcessorInformation, &iNumProcessors, &bMMX, &iMHz) == OK) {
+    if (OS::GetProcessorInformation (pszProcessorInformation, &iNumProcessors, &iMHz) == OK) {
         
         OutputText ("</strong></li><li>The server machine has <strong>");
         m_pHttpResponse->WriteText (iNumProcessors);
-        if (bMMX) {
-            OutputText (" MMX-enabled ");
-        } else {
-            OutputText (" ");
-        }
+        OutputText (" ");
+
         if (iMHz != CPU_SPEED_UNAVAILABLE) {
             m_pHttpResponse->WriteText (iMHz);
             OutputText (" MHz ");
@@ -574,7 +617,7 @@ void HtmlRenderer::WriteServerRules() {
         "<li>Builders create planets with resources allocated according to the following formula: <strong>");
     m_pHttpResponse->WriteText (gcConfig.fBuilderMultiplier);
     OutputText ("</strong> * (average planet in game) * ((BR - <strong>");
-    m_pHttpResponse->WriteText (gcConfig.fBuilderMinBR);
+    m_pHttpResponse->WriteText (gcConfig.fBuilderBRDampener);
     OutputText ("</strong> + <strong>1</strong>) / BR) ^ <strong>2</strong></li>"\
 
         "<li>Morphers lose <strong>");
@@ -623,7 +666,119 @@ void HtmlRenderer::WriteServerRules() {
     } else {
         OutputText ("enabled");
     }
-    
+
+    // Ship costs
+    OutputText (
+        "</strong></li></ul><p><center><h2>Ship costs</h2>"\
+        "<table border=\"1\">"\
+        "<tr>"\
+            "<th>Ship</th>"\
+            "<th>Build Cost</th>"\
+            "<th>Maintenance Cost</th>"\
+            "<th>Fuel Cost</th>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Attack</b></td>"\
+            "<td>(BR + 4 ) ^ 2</td>"\
+            "<td>BR * 2</td>"\
+            "<td>BR * 4</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Science</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 25</td>"\
+            "<td>BR * 2 + 4</td>"\
+            "<td>BR * 4 + 8</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Colony</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 25</td>"\
+            "<td>BR * 2 + 4</td>"\
+            "<td>BR * 4 + 8</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Stargate</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 100</td>"\
+            "<td>BR * 2 + 16</td>"\
+            "<td>BR * 4 + 32</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Cloaker</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 25</td>"\
+            "<td>BR * 2 + 4</td>"\
+            "<td>BR * 4 + 8</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Satellite</b></td>"\
+            "<td>((BR + 4 ) ^ 2) - 10</td>"\
+            "<td>BR * 2 - 2&nbsp; (*)</td>"\
+            "<td>0</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Terraformer</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 25</td>"\
+            "<td>BR * 2 + 4</td>"\
+            "<td>BR * 4 + 8</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Troopship</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 25</td>"\
+            "<td>BR * 2 + 4</td>"\
+            "<td>BR * 4 + 8</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Doomsday</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 10</td>"\
+            "<td>BR * 2 + 2</td>"\
+            "<td>BR * 4 + 4</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Minefield</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 10</td>"\
+            "<td>BR * 2 + 2</td>"\
+            "<td>0</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Minesweeper</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 25</td>"\
+            "<td>BR * 2 + 4</td>"\
+            "<td>BR * 4 + 8</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Engineer</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 100</td>"\
+            "<td>BR * 2 + 16</td>"\
+            "<td>BR * 4 + 32</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Carrier</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 100</td>"\
+            "<td>BR * 2 + 16</td>"\
+            "<td>BR * 4 + 32</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Builder</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 50</td>"\
+            "<td>BR * 2 + 8</td>"\
+            "<td>BR * 4 + 16</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Morpher</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 50</td>"\
+            "<td>BR * 2 + 8</td>"\
+            "<td>BR * 4 + 16</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td><b>Jumpgate</b></td>"\
+            "<td>((BR + 4 ) ^ 2) + 200</td>"\
+            "<td>BR * 2 + 32</td>"\
+            "<td>BR * 4 + 64</td>"\
+        "</tr>"\
+        "<tr>"\
+            "<td colspan=\"4\" align=\"center\">(*) If this value falls below 2, it becomes 2</td>"\
+        "</tr>"\
+        "</table></center>"
+    );
+
     // Planets and maps
     OutputText ("</strong></li></ul><p><center><h2>Planets and maps</h2></center>"\
         "<ul><li>Planets that have been nuked <strong>");
@@ -762,7 +917,7 @@ void HtmlRenderer::WriteServerRules() {
     
     OutputText ("</strong>"\
         
-        "</li></ul><p><center><h2>User Interface</h2></center>"\
+        "</li></ul><p><center><h2>User Interface</h2></center><ul>"\
         
         "<li>Empire names are case insensitive and all beginning and trailing spaces are automatically removed, as are intermediate double spaces</li>"\
         "<li>Empire names and user input are fully filtered for HTML content</li>"\
@@ -787,7 +942,14 @@ void HtmlRenderer::WriteServerRules() {
     
     iErrCode = g_pGameEngine->GetSystemProperty (SystemData::DefaultAlien, &vValue);
     if (iErrCode == OK) {
-        OutputText ("<li>The default alien icon for new empires is: ");
+        OutputText ("<li>The default icon for new empires is: ");
+        WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
+        OutputText ("</li>");
+    }
+
+    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);
+    if (iErrCode == OK) {
+        OutputText ("<li>The icon used for system messages is: ");
         WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
         OutputText ("</li>");
     }
@@ -837,26 +999,34 @@ void HtmlRenderer::WriteServerRules() {
     OutputText ("</strong> and <strong>");
     m_pHttpResponse->WriteText (ALMONASTER_MAX_NUKED_SIGNIFICANCE_RATIO);
     OutputText ("</strong></li>");
+
+    if (iSystemOptions & DISABLE_PRIVILEGE_SCORE_ELEVATION) {
+
+        OutputText ("<li>Almonaster scores do not give special privileges to any empires."\
+            " Only an administrator can assign apprentice and adept privileges.</li>");
+
+    } else {
     
-    if (g_pGameEngine->GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMES, &fValue) == OK) {
+        if (g_pGameEngine->GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMES, &fValue) == OK) {
+            
+            OutputText ("<li>Empires with Almonaster scores greater than <strong>");
+            m_pHttpResponse->WriteText (fValue);    
+            OutputText ("</strong> are considered <strong>");
+            m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMES]);
+            OutputText ("</strong> and have the right to create their own personal games</li>");
+        }
         
-        OutputText ("<li>Empires with Almonaster scores greater than <strong>");
-        m_pHttpResponse->WriteText (fValue);    
-        OutputText ("</strong> are considered <strong>");
-        m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMES]);
-        OutputText ("</strong> and have the right to create their own personal games</li>");
-    }
-    
-    if (g_pGameEngine->GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fValue) == OK &&
-        g_pGameEngine->GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vValue) == OK) {
-        
-        OutputText ("<li>Empires with Almonaster scores greater than <strong>");
-        m_pHttpResponse->WriteText (fValue);
-        OutputText ("</strong> are considered <strong>");
-        m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMECLASSES]);
-        OutputText ("</strong> and have the right to create personal Tournaments and up to <strong>");
-        m_pHttpResponse->WriteText (vValue.GetInteger());
-        OutputText ("</strong> personal GameClasses</li>");
+        if (g_pGameEngine->GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fValue) == OK &&
+            g_pGameEngine->GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vValue) == OK) {
+            
+            OutputText ("<li>Empires with Almonaster scores greater than <strong>");
+            m_pHttpResponse->WriteText (fValue);
+            OutputText ("</strong> are considered <strong>");
+            m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMECLASSES]);
+            OutputText ("</strong> and have the right to create personal Tournaments and up to <strong>");
+            m_pHttpResponse->WriteText (vValue.GetInteger());
+            OutputText ("</strong> personal GameClasses</li>");
+        }
     }
 
     if (g_pGameEngine->GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege) == OK) {
@@ -894,10 +1064,12 @@ void HtmlRenderer::WriteServerRules() {
     }
     
     OutputText (
-        
         " will be listed in each empire's nuke history</li>"\
-        
-        "</ul><center><h2>Nomenclature</h2></center>"
+        "</ul><center>"
+        );
+    
+/*
+        "<h2>Nomenclature</h2></center>"
         
         "<center><table width=\"75%\" border=\"1\">"\
         "<tr>"\
@@ -1057,8 +1229,7 @@ void HtmlRenderer::WriteServerRules() {
         "</tr>"\
         
         "</table>"
-        
-        );
+*/
         
         return;
         

@@ -82,7 +82,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         *piCurrent = WAR;
     }
 
-    if (piWeOffer != NULL && piCurrent != NULL) {
+    if (piWeOffer != NULL || piCurrent != NULL) {
 
         GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
@@ -1926,25 +1926,28 @@ Cleanup:
 int GameEngine::GetLastUsedMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int* piLastUsedMask,
                                           int** ppiLastUsedProxyKeyArray, int* piNumLastUsed) {
 
-    int iErrCode;
-    Variant vValue;
+    int iErrCode, iLastUsedMask;
+    Variant vTemp;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
-    // Read mask
-    iErrCode = m_pGameData->ReadData (
-        strGameEmpireData,
-        GameEmpireData::LastMessageTargetMask,
-        &vValue
-        );
+    *piLastUsedMask = MESSAGE_TARGET_NONE;
+    *ppiLastUsedProxyKeyArray = NULL;
+    *piNumLastUsed = 0;
 
+    // Read mask
+    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::LastMessageTargetMask, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    *piLastUsedMask = iLastUsedMask = vTemp.GetInteger();
 
-    *piLastUsedMask = vValue.GetInteger();
+    // Leave early if we didn't cc anyone
+    if (!(iLastUsedMask & MESSAGE_TARGET_INDIVIDUALS)) {
+        return OK;
+    }
 
     // Read last used array
     iErrCode = m_pGameData->GetEqualKeys (
@@ -1987,6 +1990,12 @@ int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
+    }
+
+    // Leave early if we didn't cc anyone
+    if (!(iLastUsedMask & MESSAGE_TARGET_INDIVIDUALS)) {
+        Assert (piLastUsedKeyArray == NULL && iNumLastUsed == 0);
+        return OK;
     }
 
     // Array - first set all values to 0

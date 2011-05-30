@@ -19,7 +19,7 @@
 #include "HtmlRenderer.h"
 
 void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
-                                int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, 
+                                int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, 
                                 bool bInMapOrPlanets, unsigned int* piNumShips, unsigned int* piNumFleets) {
     
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
@@ -70,6 +70,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
         goto Cleanup;
     }
     gameInfo.fMaintRatio = fMaintRatio;
+    gameInfo.fNextMaintRatio = fNextMaintRatio;
 
     GameConfiguration gcConfig;
     iErrCode = g_pGameEngine->GetGameConfiguration (&gcConfig);
@@ -193,7 +194,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             bCloseTableRow = true;
             OutputText (
                 "<tr><td>&nbsp;</td></tr>"\
-                "<tr><td></td><td align=\"center\" colspan=\"10\">"
+                "<tr><td></td><td align=\"center\" colspan=\"11\">"
                 );
         }
         
@@ -240,7 +241,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
             if (bShipString && iNumFleets > 0) {
                 bShipString = false;
-                OutputText ("<tr><th align=\"center\" colspan=\"7\">Ships:</th></tr>");
+                OutputText ("<tr><th align=\"center\" colspan=\"8\">Ships:</th></tr>");
             }
 
             OutputText ("<tr><th bgcolor=\"");
@@ -250,6 +251,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             OutputText ("\">BR</th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Next BR</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">After BR</th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Max BR</th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
@@ -410,13 +413,13 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             bCloseTableRow = true;
             OutputText (
                 "<tr><td>&nbsp;</td></tr>"\
-                "<tr><td></td><td align=\"center\" colspan=\"10\">"
+                "<tr><td></td><td align=\"center\" colspan=\"11\">"
                 );
         }
         
         unsigned int iNumShipsInFleet;
         int iPercentage, iIndex;
-        float fCurrentStrength, fMaxStrength, fNextStrength;
+        float fCurrentStrength, fMaxStrength, fNextStrength, fAfterMaxStrength;
         
         String strHtml;
 
@@ -481,7 +484,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
             if (bFleetString && iNumFleetShips < iNumShips) {
                 bFleetString = false;
-                OutputText ("<tr><th align=\"center\" colspan=\"7\">Fleets:</th></tr>");
+                OutputText ("<tr><th align=\"center\" colspan=\"8\">Fleets:</th></tr>");
             }
 
             OutputText ("<tr><th></th><th align=\"left\" bgcolor=\"");
@@ -491,6 +494,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             OutputText ("\">Strength</th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Next</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">After</th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Max</th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
@@ -539,20 +544,22 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             fCurrentStrength = pvFleetData[GameEmpireFleets::CurrentStrength].GetFloat();
             fMaxStrength = pvFleetData[GameEmpireFleets::MaxStrength].GetFloat();
-            fNextStrength = 0;
 
-            // Determine next strength
+            fNextStrength = fAfterMaxStrength = 0;
+
+            // Determine next and after next strength
             if (iNumShipsInFleet > 0) {
 
                 Assert (pRead == NULL);
                 iErrCode = pDatabase->GetTableForReading (pszShips, &pRead);
                 if (iErrCode == OK) {
 
-                    float fBR, fMaxBR;
                     unsigned int iLoopGuard = ppiFleetShips[i][0];
                     int iType;
 
                     for (j = 1; j < iLoopGuard; j ++) {
+
+                        float fBR, fMaxBR;
 
                         iIndex = ppiFleetShips[i][j];
 
@@ -566,12 +573,17 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                             break;
                         }
 
-                        fBR *= fMaintRatio;
-                        if (fBR >= fMaxBR) {
-                            fBR = fMaxBR;
+                        float fNextBR = fBR * fMaintRatio;
+                        if (fNextBR >= fMaxBR) {
+                            fNextBR = fMaxBR;
                         }
+                        fNextStrength += fNextBR * fNextBR;
 
-                        fNextStrength += fBR * fBR;
+                        float fAfterNextBR = fNextBR * fNextMaintRatio;
+                        if (fAfterNextBR >= fMaxBR) {
+                            fAfterNextBR = fMaxBR;
+                        }
+                        fAfterMaxStrength += fAfterNextBR * fAfterNextBR;
 
                         if (bCollapsed) {
 
@@ -591,7 +603,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
             if (iErrCode != OK) {
                 Assert (false);
-                fNextStrength = fCurrentStrength;
+                fNextStrength = fAfterMaxStrength = fCurrentStrength;
             }
 
             if (fMaxStrength == (float) 0.0) {
@@ -616,6 +628,24 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 OutputText ("-");
             } else {
                 iPercentage = (int) (100 * fNextStrength / fMaxStrength);
+
+                OutputText ("<font color=\"#");
+                if (iPercentage == 100) {
+                    m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+                } else {
+                    m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+                }
+                OutputText ("\">");
+                m_pHttpResponse->WriteText (iPercentage);
+                OutputText ("%</font>");
+            }
+
+            // After Next strength
+            OutputText ("</td><td align=\"center\">");
+            if (fAfterMaxStrength == (float) 0.0) {
+                OutputText ("-");
+            } else {
+                iPercentage = (int) (100 * fAfterMaxStrength / fMaxStrength);
 
                 OutputText ("<font color=\"#");
                 if (iPercentage == 100) {
@@ -712,7 +742,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                 if (bCollapsed) {
 
-                    OutputText ("<tr><td></td><td colspan=\"6\"><strong>");
+                    OutputText ("<tr><td></td><td colspan=\"7\"><strong>");
                     m_pHttpResponse->WriteText (iNumShipsInFleet);
                     OutputText ("</strong> ship");
                     if (iNumShipsInFleet != 1) {
@@ -763,6 +793,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                     OutputText ("\">BR</th><th bgcolor=\"");
                     m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
                     OutputText ("\">Next BR</th><th bgcolor=\"");
+                    m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+                    OutputText ("\">After BR</th><th bgcolor=\"");
                     m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
                     OutputText ("\">Max BR</th><th bgcolor=\"");
                     m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
@@ -1095,7 +1127,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             
             if (strcmp (pszOldName, pszNewName) != 0) {
                 
-                if (!ShipOrFleetNameFilter (pszNewName)) {
+                if (String::IsBlank (pszNewName) || !ShipOrFleetNameFilter (pszNewName)) {
                     AddMessage ("Illegal fleet name");
                 } else {
                     
@@ -1199,7 +1231,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
                              const BuildLocation* pblLocations, unsigned int iNumLocations) {
 
     int iErrCode, iType, iState, iSelectedOrder;
-    float fCurrentBR, fMaxBR, fNextBR;
+    float fCurrentBR, fMaxBR, fNextBR, fAfterNextBR;
 
     ShipOrder* psoOrder = NULL;
     unsigned int iNumOrders = 0, j;
@@ -1245,8 +1277,8 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
     m_pHttpResponse->WriteText (fCurrentBR);
     OutputText ("</font></td><td align=\"center\">");
 
+    // Next BR
     fNextBR = gameInfo.fMaintRatio * fCurrentBR;
-
     OutputText ("<font color=\"");
     if (fNextBR < fMaxBR) {
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
@@ -1257,6 +1289,21 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
         OutputText ("\">");
         m_pHttpResponse->WriteText (fMaxBR);
     }
+
+    // After Next BR
+    fAfterNextBR = gameInfo.fNextMaintRatio * fNextBR;
+    OutputText ("</font></td><td align=\"center\"><font color=\"");
+    if (fAfterNextBR < fMaxBR) {
+        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (fAfterNextBR);
+    } else {
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (fMaxBR);
+    }
+
+    // Max BR
     OutputText ("</font></td><td align=\"center\"><font color=\"");
     if (fMaxBR < shipInfo.fBR) {
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());

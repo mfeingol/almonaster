@@ -37,6 +37,46 @@
 #include <psapi.h>
 #endif
 
+
+//
+// Stuff to run at initialization time
+//
+
+class OsalInitialization {
+private:
+
+    OsalInitialization() {
+
+#ifdef _WIN32
+
+        HMODULE hModule = GetModuleHandleW (L"kernel32.dll");
+        if (hModule != NULL) {
+
+            typedef BOOL (__stdcall *Fxn_HeapSetInfo) (HANDLE, HEAP_INFORMATION_CLASS, PVOID, SIZE_T);
+
+            Fxn_HeapSetInfo HeapSetInfo = (Fxn_HeapSetInfo) GetProcAddress (hModule, "HeapSetInformation");
+            if (HeapSetInfo != NULL) {
+
+                ULONG ulLFH = 2;
+
+                //BOOL f = 
+                HeapSetInfo (
+                    GetProcessHeap(),
+                    HeapCompatibilityInformation,
+                    &ulLFH,
+                    sizeof (ulLFH)
+                    );
+            }
+        }
+#endif
+
+    }
+
+    static OsalInitialization init;
+};
+
+OsalInitialization OsalInitialization::init;
+
 //
 // OS functionality
 //
@@ -159,24 +199,22 @@ int OS::GetMemoryStatistics (size_t* pstTotalPhysicalMemory, size_t* pstTotalFre
 
 #else if defined __WIN32__
 
-    MEMORYSTATUSEX msStatus;
-    if (!::GlobalMemoryStatusEx (&msStatus)) {
-        return ERROR_FAILURE;
-    }
+    MEMORYSTATUS memStatus;
+    ::GlobalMemoryStatus (&memStatus);
 
-    *pstTotalPhysicalMemory = (size_t) msStatus.ullTotalPhys;
-    *pstTotalFreePhysicalMemory = (size_t) msStatus.ullAvailPhys;
-    *pstTotalVirtualMemory = (size_t) msStatus.ullTotalPageFile;
-    *pstTotalFreeVirtualMemory = (size_t) msStatus.ullAvailPageFile;
+    *pstTotalPhysicalMemory = memStatus.dwTotalPhys;
+    *pstTotalFreePhysicalMemory = memStatus.dwAvailPhys;
+    *pstTotalVirtualMemory = memStatus.dwTotalPageFile;
+    *pstTotalFreeVirtualMemory = memStatus.dwAvailPageFile;
 
     return OK;
 #endif
 }
 
 
-int g_iNumProcessors = INVALID_NUM_PROCESSORS;
-
 int OS::GetNumProcessors() {
+
+    static int g_iNumProcessors = INVALID_NUM_PROCESSORS;
 
 #ifdef __WIN32__
 
@@ -192,16 +230,15 @@ int OS::GetNumProcessors() {
 #else if defined __LINUX__
 
     char szProcessorInformation[MaxProcessorInfoLength];
-    bool bMMX;
     unsigned int iMHz;
-    GetProcessorInformation(szProcessorInformation, (unsigned int *)&g_iNumProcessors, &bMMX, &iMHz);
+    GetProcessorInformation(szProcessorInformation, (unsigned int *)&g_iNumProcessors, &iMHz);
     return g_iNumProcessors;
 
 #endif
 }
 
 int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLength], 
-                                 unsigned int* piNumProcessors, bool* pbMMX, unsigned int* piMHz) {
+                                 unsigned int* piNumProcessors, unsigned int* piMHz) {
 
 #ifdef __LINUX__
     // some code from Wine
@@ -245,12 +282,6 @@ int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLe
 			if (sscanf(value,"%d",&x))
                 *piNumProcessors = x+1;
 		}
-		if (!strncasecmp(line,"flags",strlen("flags"))	||
-			!strncasecmp(line,"features",strlen("features"))) 
-        {
-			if (strstr(value,"mmx"))
-				*pbMMX = true;
-		}
 	}
 
     fclose(cpuinfo);
@@ -261,7 +292,7 @@ int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLe
     OSVERSIONINFOEX osVer;
     osVer.dwOSVersionInfoSize = sizeof (osVer);
 
-    if (!::GetVersionEx ((LPOSVERSIONINFO) &osVer)) {
+    if (!::GetVersionEx ((OSVERSIONINFO*) &osVer)) {
         return ERROR_FAILURE;
     }
 
@@ -269,46 +300,46 @@ int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLe
     ::GetSystemInfo (&siInfo);
 
     *piNumProcessors = siInfo.dwNumberOfProcessors;
-    
-    if (IsProcessorFeaturePresent != NULL) {
-        *pbMMX = IsProcessorFeaturePresent (PF_MMX_INSTRUCTIONS_AVAILABLE) == TRUE;
-    } else {
-        *pbMMX = false;
-    }
 
-    HKEY hKey = NULL;
-    if (::RegOpenKeyExW (
-        HKEY_LOCAL_MACHINE,
-        L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
-        0,
-        KEY_READ,
-        &hKey
-        ) != ERROR_SUCCESS
-        ) {
+    static unsigned int g_iMHz = CPU_SPEED_UNAVAILABLE;
+    if (g_iMHz == CPU_SPEED_UNAVAILABLE) {
 
-        *piMHz = CPU_SPEED_UNAVAILABLE;
-
-    } else {
-
-        DWORD dwSize = sizeof (DWORD), dwValue;
-        if (::RegQueryValueExW (
-            hKey,
-            L"~MHz",
+        HKEY hKey = NULL;
+        if (::RegOpenKeyExW (
+            HKEY_LOCAL_MACHINE,
+            L"HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0",
             0,
-            NULL,
-            (LPBYTE) &dwValue,
-            &dwSize
-            ) != ERROR_SUCCESS) {
+            KEY_READ,
+            &hKey
+            ) != ERROR_SUCCESS
+            ) {
 
-            *piMHz = CPU_SPEED_UNAVAILABLE;
+            g_iMHz = CPU_SPEED_UNAVAILABLE;
 
         } else {
 
-            *piMHz = dwValue;
-        }
+            DWORD dwSize = sizeof (DWORD), dwValue;
+            if (::RegQueryValueExW (
+                hKey,
+                L"~MHz",
+                0,
+                NULL,
+                (LPBYTE) &dwValue,
+                &dwSize
+                ) != ERROR_SUCCESS) {
 
-        ::RegCloseKey (hKey);
+                g_iMHz = CPU_SPEED_UNAVAILABLE;
+
+            } else {
+
+                g_iMHz = dwValue;
+            }
+
+            ::RegCloseKey (hKey);
+        }
     }
+
+    *piMHz = g_iMHz;
 
     switch (osVer.dwPlatformId) {
     

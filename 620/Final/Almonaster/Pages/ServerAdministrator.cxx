@@ -616,8 +616,11 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (UpdateIntroUpper (pszNewValue)) {
+            iErrCode = UpdateIntroUpper (pszNewValue);
+            if (iErrCode == OK ) {
                 AddMessage ("The text above the login form was updated");
+            } else if (iErrCode != WARNING) {
+                AddMessage ("The text above the login form could not be updated");
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("IntroL")) == NULL) {
@@ -625,8 +628,11 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (UpdateIntroLower (pszNewValue)) {
+            iErrCode = UpdateIntroLower (pszNewValue);
+            if (iErrCode == OK) {
                 AddMessage ("The text below the login form was updated");
+            } else if (iErrCode != WARNING) {
+                AddMessage ("The text below the login form could not be updated");
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("ServerN")) == NULL) {
@@ -634,8 +640,23 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (UpdateServerNews (pszNewValue)) {
+            iErrCode = UpdateServerNews (pszNewValue);
+            if (iErrCode == OK) {
                 AddMessage ("The server news text was updated");
+            } else if (iErrCode != WARNING) {
+                AddMessage ("The server news text could not be updated");
+            }
+
+            if ((pHttpForm = m_pHttpRequest->GetForm ("Contributors")) == NULL) {
+                goto Redirection;
+            }
+            pszNewValue = pHttpForm->GetValue();
+
+            iErrCode = UpdateContributors (pszNewValue);
+            if (iErrCode == OK) {
+                AddMessage ("The contributors text was updated");
+            } else if (iErrCode != WARNING) {
+                AddMessage ("The contributors text could not be updated");
             }
 
             // Create empire?
@@ -1100,6 +1121,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bRedirectTest = false;
 
+                int iPrivilege;
                 unsigned int iNewEmpireKey;
                 bool bFlag;
                 const char* pszNewName, * pszNewPass;
@@ -1141,6 +1163,18 @@ if (m_bOwnPost && !m_bRedirection) {
                     goto Redirection;
                 }
 
+                pHttpForm = m_pHttpRequest->GetForm ("NPrivilege");
+                if (pHttpForm == NULL) {
+                    goto Redirection;
+                }
+                iPrivilege = pHttpForm->GetIntValue();
+
+                if (!IS_VALID_PRIVILEGE (iPrivilege)) {
+                    AddMessage ("Invalid privilege");
+                    iServerAdminPage = 7;
+                    goto Redirection;
+                }
+
                 if (VerifyEmpireName (pszNewName) != OK || 
                     StandardizeEmpireName (pszNewName, pszStandardizedName) != OK) {
                     iServerAdminPage = 7;
@@ -1163,7 +1197,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iErrCode = g_pGameEngine->CreateEmpire (
                     pszStandardizedName,
                     pszNewPass,
-                    NOVICE,
+                    iPrivilege,
                     NO_KEY,
                     true,
                     &iNewEmpireKey
@@ -1205,8 +1239,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
 SYSTEM_REDIRECT_ON_SUBMIT
 
-//SYSTEM_OPEN (iServerAdminPage == 0)
-SYSTEM_OPEN (false);
+SYSTEM_OPEN (iServerAdminPage == 0)
 
 // Individual page stuff starts here
 switch (iServerAdminPage) {
@@ -1249,7 +1282,7 @@ case 0:
 
 
     %><tr><td>Administrator e-mail address:</td><%
-    %><td><input type="text" size="25" maxlength="<% Write (MAX_EMAIL_LENGTH); %>" name="NewAdminEmail"<% 
+    %><td><input type="text" size="40" maxlength="<% Write (MAX_EMAIL_LENGTH); %>" name="NewAdminEmail"<% 
     %> value="<% Write (pvServerData[SystemData::AdminEmail].GetCharPtr()); 
     %>"><input type="hidden" name="OldAdminEmail" value="<% 
 
@@ -1379,12 +1412,10 @@ case 0:
     }
 
     %></select><input type="hidden" name="OldDefaultMaxNumSystemMessages" value="<% 
-    Write (pvServerData[SystemData::DefaultMaxNumSystemMessages].GetInteger()); %>"></td></tr><%
-
-    %><tr><td>Maximum size of uploaded icons:</td><%
-    %><td><input type="text" size="8" maxlength="8" name="MaxSizeIcons" value="<% 
-    Write (pvServerData[SystemData::MaxIconSize].GetInteger()); %>"> bytes<input type="hidden" name="OldMaxSizeIcons" value="<% 
-    Write (pvServerData[SystemData::MaxIconSize].GetInteger()); %>"></td></tr><tr><td>Default maximum saved game messages:</td><%
+    Write (pvServerData[SystemData::DefaultMaxNumSystemMessages].GetInteger()); %>"><%
+    %></td></tr><%
+    
+    %><tr><td>Default maximum saved game messages:</td><%
 
     %><td><select name="NewDefaultMaxNumGameMessages"><% 
     for (i = 0; i <= pvServerData[SystemData::MaxNumGameMessages].GetInteger(); i += 10) {
@@ -1395,6 +1426,11 @@ case 0:
     %></select><input type="hidden" name="OldDefaultMaxNumGameMessages" value="<% 
     Write (pvServerData[SystemData::DefaultMaxNumGameMessages]); %>"></td></tr><%
 
+    %><tr><td>Maximum size of uploaded icons:</td><%
+    %><td><input type="text" size="8" maxlength="8" name="MaxSizeIcons" value="<% 
+    Write (pvServerData[SystemData::MaxIconSize].GetInteger()); %>"> bytes<input type="hidden" name="OldMaxSizeIcons" value="<% 
+    Write (pvServerData[SystemData::MaxIconSize].GetInteger()); %>"><%
+    %></td></tr><%
 
     %><tr><td>Number of nukes listed in empire nuke histories:</td><%
     %><td><input type="text" size="6" maxlength="6" name="NewNumNukes" value="<% 
@@ -1648,6 +1684,10 @@ case 0:
     WriteServerNewsFile();
     %></textarea></td></tr><%
 
+    %><tr><td>Edit contributor list:</td><td><textarea name="Contributors" rows="10" cols="60"><%
+    WriteContributorsFile();
+    %></textarea></td></tr><%
+
     %></table><p><%
 
 Cancel:
@@ -1897,7 +1937,9 @@ case 7:
 
     %><input type="hidden" name="ServerAdminPage" value="7"><%
 
-    %><p><table width="50%"><%
+    %><p>Create a new empire:<%
+
+    %><p><table width="60%"><%
 
     %><tr><%
     %><td><strong>Empire name</strong>:</td><%
@@ -1912,6 +1954,30 @@ case 7:
     %><tr><%
     %><td><strong>Verify password</strong>:</td><%
     %><td><input type="password" name="NPassword2" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>"></td><%
+    %></tr><%
+
+    %><tr><%
+    %><td><strong>Privilege level</strong>:</td><%
+    %><td><select name="NPrivilege"><%
+
+        %><option selected value="<% m_pHttpResponse->WriteText (NOVICE); %>"><%
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING [NOVICE]);
+        %></option><%
+
+        %><option value="<% m_pHttpResponse->WriteText (APPRENTICE); %>"><%
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING [APPRENTICE]);
+        %></option><%
+
+        %><option value="<% m_pHttpResponse->WriteText (ADEPT); %>"><%
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING [ADEPT]);
+        %></option><%
+
+        %><option value="<% m_pHttpResponse->WriteText (ADMINISTRATOR); %>"><%
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING [ADMINISTRATOR]);
+        %></option><%
+    
+    %></select><%
+    %></td><%
     %></tr><%
 
     %></table><p><%

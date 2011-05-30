@@ -529,16 +529,23 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
                                         unsigned int iLastKey
                                         ) {
     int iErrCode;
+    unsigned int i, j, iNumSearchColumns = sd.iNumColumns, iNumEmpiresFoundSoFar = iNumSearchEmpires;
 
-    unsigned int i, j, iNumSearchColumns = sd.iNumColumns;
-    
-    OutputText ("<p>");
-    
-    if (iLastKey != NO_KEY) {
-        OutputText ("More than ");
+    IHttpForm* pHttpForm = m_pHttpRequest->GetForm ("EmpiresFoundSoFar");
+    if (pHttpForm != NULL) {
+        iNumEmpiresFoundSoFar += pHttpForm->GetUIntValue();
     }
+
+    OutputText ("<p>");
+
+    if (iLastKey != NO_KEY) {
+        OutputText ("<input type=\"hidden\" name=\"EmpiresFoundSoFar\" value=\"");
+        m_pHttpResponse->WriteText (iNumEmpiresFoundSoFar);
+        OutputText ("\">More than ");
+    }
+
     OutputText ("<strong>");
-    m_pHttpResponse->WriteText (iNumSearchEmpires);
+    m_pHttpResponse->WriteText (iNumEmpiresFoundSoFar);
     OutputText ("</strong> empire");
     
     if (iNumSearchEmpires == 1) {
@@ -697,22 +704,61 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
             OutputText ("<input type=\"hidden\" name=\"");
             m_pHttpResponse->WriteText (pszFormName[i]);
             OutputText ("\" value=\"1\">");
-            OutputText ("<input type=\"hidden\" name=\"");
-            m_pHttpResponse->WriteText (pszColName1[i]);
-            OutputText ("\" value=\"");
-            m_pHttpResponse->WriteText (sc.vData);
-            OutputText ("\">");
+
+            RenderHiddenSearchVariant (pszColName1[i], sc.vData);
             
             if (pszColName2[i] != NULL) {
-                OutputText ("<input type=\"hidden\" name=\"");
-                m_pHttpResponse->WriteText (pszColName2[i]);
-                OutputText ("\" value=\"");
-                m_pHttpResponse->WriteText (sc.vData2);
-                OutputText ("\">");
+                RenderHiddenSearchVariant (pszColName2[i], sc.vData2);
             }
         }
     }
     
     OutputText ("<p>");
     WriteButton (BID_CANCEL);
+}
+
+void HtmlRenderer::RenderHiddenSearchVariant (const char* pszColName, const Variant& vData) {
+
+    switch (vData.GetType()) {
+
+    case V_TIME:
+
+        int iSec, iMin, iHour, iDay, iMonth, iYear;
+        DayOfWeek dayOfWeek;
+
+        Time::GetDate (vData.GetUTCTime(), &iSec, &iMin, &iHour, &dayOfWeek, &iDay, &iMonth, &iYear);
+
+        // Year
+        OutputText ("<input type=\"hidden\" name=\"");
+        m_pHttpResponse->WriteText (pszColName);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (iYear);
+        OutputText ("\">");
+
+        // Month
+        OutputText ("<input type=\"hidden\" name=\"");
+        m_pHttpResponse->WriteText (pszColName);
+        OutputText ("Month\" value=\"");
+        m_pHttpResponse->WriteText (iMonth);
+        OutputText ("\">");
+
+        // Day
+        OutputText ("<input type=\"hidden\" name=\"");
+        m_pHttpResponse->WriteText (pszColName);
+        OutputText ("Day\" value=\"");
+        m_pHttpResponse->WriteText (iDay);
+        OutputText ("\">");
+
+        break;
+
+    default:
+
+        OutputText ("<input type=\"hidden\" name=\"");
+        m_pHttpResponse->WriteText (pszColName);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (vData);
+        OutputText ("\">");
+
+        break;
+    }
 }

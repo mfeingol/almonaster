@@ -366,7 +366,7 @@ if (m_bOwnPost && !m_bRedirection) {
     case 4:
 
         // Check for choose
-        if (WasButtonPressed (BID_STARTGAME) || WasButtonPressed (BID_BLOCK)) {
+        if (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK)) {
 
             bRedirectTest = false;
 
@@ -521,7 +521,7 @@ case 4:
     %><p><%
 
     WriteButton (BID_CANCEL);
-    WriteButton (BID_STARTGAME);
+    WriteButton (BID_START);
 
     break;
 

@@ -14,7 +14,7 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program; if not, write to the Free Software
-// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+// Foundation, Inc., 59 Temple Place - Suite nu330, Boston, MA  02111-1307, USA.
 
 #include "GameEngine.h"
 
@@ -1313,11 +1313,11 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         if (iNumIdleEmpires > 0) {
 
             if (iNumIdleEmpires == 1) {
-                strMessage = "There is " BEGIN_STRONG "1" END_STRONG " idle empire\n";
+                strMessage = "There is " BEGIN_STRONG "1" END_STRONG " idle empire in the game\n";
             } else {
                 strMessage = "There are " BEGIN_STRONG;
                 strMessage += iNumIdleEmpires;
-                strMessage += END_STRONG " idle empires\n";
+                strMessage += END_STRONG " idle empires in the game\n";
             }
 
             for (j = 0; j < iNumEmpires; j ++) {
@@ -1435,6 +1435,12 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     /////////////////////////////
     
     iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateTime, tUpdateTime);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateCheck, tUpdateTime);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3524,7 +3530,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                             iNewY
                             );
 
-                        pstrUpdateMessage[i] += ")\n";
+                        pstrUpdateMessage[i] += "\n";
 
                         // If mapshare, add to fellow sharer's maps
                         iErrCode = m_pGameData->ReadData (
@@ -4258,7 +4264,6 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                 Variant* pvGoodColor, Variant* pvBadColor, 
                                 const GameConfiguration& gcConfig) {
 
-
     int i, j, k, l, iErrCode = OK, iCurrentShip, iCounter;
     
     unsigned int iPlanetProxyKey, iKey, * piShipKey = NULL, iNumShips, iNumIndependentShips = 0,
@@ -4310,7 +4315,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
     // Randomize planet list
     Algorithm::Randomize <unsigned int> (piPlanetKey, iNumPlanets);
-    
+
     // Loop through all planets
     int iNumBattleEmpires, iNumWatchers;
     bool bFight, bTestedIndependence;
@@ -4501,8 +4506,8 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                         }
                         
                         // Save the diplomatic status between the empires
-                        ppiDipRef[iNumBattleEmpires][k] = vDipStatus;
-                        ppiDipRef[k][iNumBattleEmpires] = vDipStatus;
+                        ppiDipRef[iNumBattleEmpires][k] = vDipStatus.GetInteger();
+                        ppiDipRef[k][iNumBattleEmpires] = vDipStatus.GetInteger();
                     }
                     
                     // Increment the number of empires with ships on the planet
@@ -4750,7 +4755,6 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                 }
             }
 
-
             ////////////////////
             // Resolve combat //
             ////////////////////
@@ -4785,14 +4789,14 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                         iTypeColumn, 
                         &vTemp
                         );
-                    
+
                     if (iErrCode != OK) {
                         Assert (false);
                         goto OnError;
                     }
-                    
+
                     switch (vTemp.GetInteger()) {
-                        
+
                     case MINEFIELD:
 
                         //
@@ -8343,7 +8347,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                                 piTotalMin[k] -= vPop.GetInteger();
                             }
                             
-                            if (vFuel < vPop) {
+                            if (vFuel.GetInteger() < vPop.GetInteger()) {
                                 piTotalFuel[k] -= vFuel.GetInteger();
                             } else {
                                 piTotalFuel[k] -= vPop.GetInteger();
@@ -11443,7 +11447,7 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
         0, //NumCloakedShips,
         0, //NumUncloakedBuildShips,
         0, //NumCloakedBuildShips,
-        0, //SurrenderEmpireNameHash,
+        (int64) 0, //SurrenderEmpireSecretKey,
         (float) 0.0, //SurrenderAlmonasterScore,
     };
 
@@ -11469,7 +11473,7 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
     // Get real resources
     GetBuilderNewPlanetResources (
         fBR, 
-        gcConfig.fBuilderMinBR,
+        gcConfig.fBuilderBRDampener,
         gcConfig.fBuilderMultiplier,
         pvGameMap[GameMap::Ag].GetInteger(),
         pvGameMap[GameMap::Minerals].GetInteger(),

@@ -137,6 +137,7 @@ namespace SystemData {
         MaxNumGameClassesPerPersonalTournament,
         SystemMessagesAlienKey,
         AdminEmail,
+        BuilderBRDampener,
     };
 
     static const VariantType Types[] = {
@@ -243,6 +244,7 @@ namespace SystemData {
         V_INT,
         V_INT,
         V_STRING,
+        V_FLOAT,
     };
     
     static const size_t Sizes[] = {
@@ -349,9 +351,10 @@ namespace SystemData {
         0,
         0,
         VARIABLE_LENGTH_STRING,
+        0,
     };
 
-    static const unsigned int NumColumns = AdminEmail + 1;
+    static const unsigned int NumColumns = BuilderBRDampener + 1;
 
     static const TemplateDescription Template = {
         "SystemData",

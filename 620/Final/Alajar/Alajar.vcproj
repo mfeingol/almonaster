@@ -67,13 +67,14 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Alajar.lib Osal.lib"
 				ShowProgress="0"
 				OutputFile=".\Release/Alajar.exe"
 				Version=""
-				LinkIncremental="0"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
@@ -90,7 +91,8 @@
 				Name="VCPostBuildEventTool"
 				Description="Copying public files..."
 				CommandLine="copy release\Alajar.exe ..\release
-copy release\Alajar.pdb ..\release"/>
+copy release\Alajar.pdb ..\release
+"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
@@ -127,7 +129,6 @@ copy release\Alajar.pdb ..\release"/>
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
 				StringPooling="FALSE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -169,6 +170,9 @@ copy release\Alajar.pdb ..\release"/>
 				SubSystem="1"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
+				OptimizeForWindows98="0"
 				TargetMachine="0"/>
 			<Tool
 				Name="VCMIDLTool"

@@ -425,8 +425,8 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
     OutputText ("</td><td>&nbsp;</td><td><strong>Bridier Rank:</strong></td><td>");
     m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::BridierRank].GetInteger());
     
-    // Instant Messaging
-    OutputText ("</td></tr><tr><td><strong>Instant Messaging:</strong></td><td>");
+    // Instant Messenger
+    OutputText ("</td></tr><tr><td><strong>Instant Messenger:</strong></td><td>");
 
     iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::IMId].GetCharPtr(), &strHtml, 0, false);
     if (iErrCode == OK && !strHtml.IsBlank()) {
@@ -483,7 +483,7 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
     m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Browser].GetCharPtr());
 
     // Active Games
-    OutputText ("</td><td>&nbsp;</td><td><strong>Active Games:</strong></td><td>");
+    OutputText ("</td><td>&nbsp;</td><td><strong>Games:</strong></td><td>");
     m_pHttpResponse->WriteText (iNumActiveGames);
 
     // IP Address  
@@ -530,8 +530,12 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
     }
 
     // Active Tournaments
-    OutputText ("</td><td>&nbsp;</td><td><strong>Active Tournaments:</strong></td><td>");
+    OutputText ("</td><td>&nbsp;</td><td><strong>Tournaments:</strong></td><td>");
     m_pHttpResponse->WriteText (iNumActiveTournaments);
+
+    if (iOptions2 & UNAVAILABLE_FOR_TOURNAMENTS) {
+        OutputText (" (unavailable)");
+    }
 
     // Session Id
     OutputText ("</td></tr><tr><td>");
@@ -548,14 +552,6 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
             OutputText ("&nbsp;&nbsp;");
             WriteButton (BID_RESET);
         }
-    }
-
-    // Available for Tournaments
-    OutputText ("</td><td>&nbsp;</td><td><strong>Available for Tournaments:</strong></td><td>");
-    if (iOptions2 & UNAVAILABLE_FOR_TOURNAMENTS) {
-        OutputText ("No");
-    } else {
-        OutputText ("Yes");
     }
 
     OutputText ("</td></tr></table>");

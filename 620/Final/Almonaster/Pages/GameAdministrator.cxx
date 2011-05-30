@@ -752,6 +752,12 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             gcNewConfig.fBuilderMinBR = pHttpForm->GetFloatValue();
 
+            // BuilderDampener
+            if ((pHttpForm = m_pHttpRequest->GetForm ("BuilderDampener")) == NULL) {
+                goto Redirection;
+            }
+            gcNewConfig.fBuilderBRDampener = pHttpForm->GetFloatValue();
+
             // BuilderMultiplier
             if ((pHttpForm = m_pHttpRequest->GetForm ("BuilderMultiplier")) == NULL) {
                 goto Redirection;
@@ -1197,7 +1203,12 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     iErrCode = g_pGameEngine->SetGamePassword (iGameClass, iGameNumber, pszMessage);
                     if (iErrCode == OK) {
-                        AddMessage ("The game password was updated");
+
+                        if (String::IsBlank (pszMessage)) {
+                            AddMessage ("The game password was removed");
+                        } else {
+                            AddMessage ("The game password was updated");
+                        }
                         iGameAdminPage = 3;
                     } else {
                         AddMessage ("The game no longer exists");
@@ -2309,6 +2320,10 @@ case 0:
     %><input type="text" size="6" maxlength="10" name="BuilderMultiplier"<%
     %> value="<% Write (gcConfig.fBuilderMultiplier); %>"></td></tr><%
 
+    %><tr><td>Builder BR dampening factor:</td><td><%
+    %><input type="text" size="6" maxlength="10" name="BuilderDampener"<%
+    %> value="<% Write (gcConfig.fBuilderBRDampener); %>"></td></tr><%
+
 
     iValue = gcConfig.iShipBehavior & CLOAKER_CLOAK_ON_BUILD;
 
@@ -2473,14 +2488,14 @@ case 3:
 case 4:
     {
 
-    bool bStarted;
+    int iState;
 
-    iErrCode = g_pGameEngine->HasGameStarted (iGameClass, iGameNumber, &bStarted);
+    iErrCode = g_pGameEngine->GetGameState (iGameClass, iGameNumber, &iState);
     if (iErrCode != OK) {
         goto AllGames;
     }
 
-    if (!bStarted) {
+    if (!(iState & GAME_MAP_GENERATED)) {
         goto AllGames;
     }
 

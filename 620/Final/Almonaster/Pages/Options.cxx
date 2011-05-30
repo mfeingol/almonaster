@@ -104,7 +104,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 iOldValue = pHttpForm->GetIntValue();
 
                 if (iOldValue != iNewValue) {
+
                     bUpdate = iNewValue != 0;
+
                     iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, AUTO_UPDATE, bUpdate);
                     if (iErrCode == OK) {
 
@@ -117,17 +119,21 @@ if (m_bOwnPost && !m_bRedirection) {
 
                             if (RedirectOnSubmitGame (&pageRedirect)) {
                                 return Redirect (pageRedirect);
-                            } else {
-                                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                                m_pgeLock = NULL;
-                                return Redirect (m_pgPageId);
                             }
+                             
+                            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                            m_pgeLock = NULL;
+
+                            return Redirect (m_pgPageId);
+
                         } else {
 
                             m_iGameOptions &= ~AUTO_UPDATE;
                             AddMessage ("You are no longer in automatic update mode");
                         }
+
                     } else {
+
                         if (iErrCode == ERROR_LAST_EMPIRE_CANNOT_AUTOUPDATE) {
                             AddMessage ("All the other empires are auto-updating. You are not allowed to enter autoupdate mode");
                         } else {
@@ -539,7 +545,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 m_iGameRatios = iNewValue;
 
-                AppendMessage ("Your game ratios line setting was updated");
+                AddMessage ("Your game ratios line setting was updated");
             }
 
 
@@ -682,14 +688,15 @@ if (m_bOwnPost && !m_bRedirection) {
                     // Only update if we changed the status
                     if ((iPause != 0) != bOldPause) {
 
+                        iErrCode = g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                        m_pgeLock = NULL;
+
+                        if (iErrCode != OK || g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
+                            AddMessage ("That game no longer exists");
+                            return Redirect (ACTIVE_GAME_LIST);
+                        }
+
                         if (iPause != 0) {
-
-                            if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock) != OK || 
-                                g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-
-                                AddMessage ("That game no longer exists");
-                                return Redirect (ACTIVE_GAME_LIST);
-                            }
 
                             GameCheck (g_pGameEngine->RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
@@ -706,13 +713,6 @@ if (m_bOwnPost && !m_bRedirection) {
                             }
 
                             m_iGameOptions |= REQUEST_PAUSE;
-
-                            if (g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber) != OK || 
-                                g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
-
-                                AddMessage ("That game no longer exists");
-                                return Redirect (ACTIVE_GAME_LIST);
-                            }
 
                         } else {
 
@@ -731,6 +731,13 @@ if (m_bOwnPost && !m_bRedirection) {
                             }
 
                             m_iGameOptions &= ~REQUEST_PAUSE;
+                        }
+
+                        if (g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber) != OK || 
+                            g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
+
+                            AddMessage ("That game no longer exists");
+                            return Redirect (ACTIVE_GAME_LIST);
                         }
                     }
                 }

@@ -152,7 +152,8 @@ int GameEngine::GetBuildCost (int iType, float fBR) {
 
     Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
 
-    int iFactor = (int) fBR + 4, iCost = iFactor * iFactor;
+    int iFactor = (int) fBR + 4;
+    int iCost = iFactor * iFactor;
 
     // Add special
     switch (iType) {
@@ -169,19 +170,24 @@ int GameEngine::GetBuildCost (int iType, float fBR) {
         iCost += 10;
         break;
 
-    case BUILDER:
     case MORPHER:
+        iCost += 35;
+
+    case BUILDER:
         iCost += 50;
+        break;
+
+    case CARRIER:
+        iCost += 75;
         break;
 
     case STARGATE:
     case ENGINEER:
-    case CARRIER:
         iCost += 100;
         break;
 
     case JUMPGATE:
-        iCost += 200;
+        iCost += 150;
         break;
 
     default:
@@ -208,12 +214,9 @@ int GameEngine::GetMaintenanceCost (int iType, float fBR) {
 
     case SATELLITE:
         iCost -= 2;
-
-        // BR1 sats default to 2
         if (iCost <= 2) {
-            iCost = 2;
+            iCost = 2; // BR1 sats default to 2
         }
-
         break;
 
     case MINEFIELD:
@@ -221,19 +224,25 @@ int GameEngine::GetMaintenanceCost (int iType, float fBR) {
         iCost += 2;
         break;
 
-    case BUILDER:
     case MORPHER:
+        iCost += 6;
+        break;
+
+    case BUILDER:
         iCost += 8;
+        break;
+
+    case CARRIER:
+        iCost += 12;
         break;
 
     case STARGATE:
     case ENGINEER:
-    case CARRIER:
         iCost += 16;
         break;
 
     case JUMPGATE:
-        iCost += 32;
+        iCost += 24;
         break;
 
     default:
@@ -258,28 +267,34 @@ int GameEngine::GetFuelCost (int iType, float fBR) {
     case ATTACK:
         break;
 
-    case DOOMSDAY:
-        iCost += 4;
-        break;
-
     case SATELLITE:
     case MINEFIELD:
         iCost = 0;
         break;
 
-    case BUILDER:
+    case DOOMSDAY:
+        iCost += 4;
+        break;
+
     case MORPHER:
+        iCost += 12;
+        break;
+
+    case BUILDER:
         iCost += 16;
+        break;
+
+    case CARRIER:
+        iCost += 24;
         break;
 
     case STARGATE:
     case ENGINEER:
-    case CARRIER:
         iCost += 32;
         break;
 
     case JUMPGATE:
-        iCost += 64;
+        iCost += 48;
         break;
 
     default:
@@ -364,17 +379,16 @@ int GameEngine::GetTroopshipSuccessPopDecrement (float fTroopshipSuccessFactor, 
 int GameEngine::GetDoomsdayUpdates (float fDoomsdayAnnihilationFactor, float fBR) {
 
     Assert (fBR > 0.0);
-
     return (int) (fDoomsdayAnnihilationFactor * fBR);
 }
 
-void GameEngine::GetBuilderNewPlanetResources (float fBR, float fMinBR, float fMultiplier,
+void GameEngine::GetBuilderNewPlanetResources (float fBR, float fBRDampening, float fMultiplier,
                                                int iAvgAg, int iAvgMin, int iAvgFuel,
                                                int* piNewAvgAg, int* piNewAvgMin, int* piNewAvgFuel) {
 
-    Assert (fMinBR <= fBR);
+    Assert (fBRDampening <= fBR);
 
-    float fMultiple = (fBR - fMinBR + (float) 1.0) / fBR;
+    float fMultiple = (fBR - fBRDampening + (float) 1.0) / fBR;
     float fBase = (float) fMultiplier * fMultiple * fMultiple;
 
     *piNewAvgAg = (int) ((float) iAvgAg * fBase);

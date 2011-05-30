@@ -163,6 +163,9 @@ private:
 
     inline bool Enter();
     inline void Exit (bool bLocked);
+    
+    int OpenReport();
+    int OpenLog();
 
     void GetReportFileName (char pszFileName[OS::MaxFileNameLength]);
     void GetLogFileName (char pszFileName[OS::MaxFileNameLength]);

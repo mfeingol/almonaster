@@ -187,7 +187,7 @@ enum ButtonId {
     BID_EMPIREADMINISTRATOR,
     BID_ENDTURN,
     BID_ENGINEER,
-    BID_ENTERGAME,
+    BID_ENTER,
     BID_EXIT,
     BID_DOCUMENTATION,
     BID_FLUSH,
@@ -229,7 +229,7 @@ enum ButtonId {
     BID_SHUTDOWNSERVER,
     BID_SPEAK,
     BID_STARGATE,
-    BID_STARTGAME,
+    BID_START,
     BID_SYSTEM,
     BID_SYSTEMGAMELIST,
     BID_TECH,
@@ -389,8 +389,9 @@ protected:
     bool m_bNotifiedTournamentInvitation;
     bool m_bNotifiedTournamentJoinRequest;
     bool m_bOwnPost;
-    bool m_bLoggedIn;
+    bool m_bLoggedIntoGame;
     bool m_bAuthenticated;
+    bool m_bAutoLogon;
 
     Timer m_tmTimer;
     Seconds m_sSecondsUntil;
@@ -422,24 +423,28 @@ protected:
     void AddResources (const Variant* pvGameClassInfo);
     void AddDiplomacy (const Variant* pvGameClassInfo);
 
-    void AddTechList (int iTechs);
+    void AddTechList (int iTechs, int iInitial);
 
-    void AddBridier (int iGameOptions, const Variant* pvMin, const Variant* pvMax);
+    void AddBridier (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
+        int iGameOptions, const Variant* pvMin, const Variant* pvMax, bool bDisplayGainLoss);
+
+    void AddBridierGame (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, int iGameOptions, 
+        bool bDisplayGainLoss);
+
     void AddScore (int iGameOptions, const Variant* pvMin, const Variant* pvMax);
     void AddSecurity (int iGameOptions);
-
-    void AddBridierGame (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, int iGameOptions, bool bDisplayGainLoss);
 
     int PostGamePageInformation();
 
     void WriteGameButtons();
     void WriteGameNextUpdateString();
 
-    bool UpdateCachedFile (const char* pszFileName, const char* pszText);
+    int UpdateCachedFile (const char* pszFileName, const char* pszText);
 
     void RenderSearchField (const SearchField& sfField, bool fAdvanced);
     void RenderDateField (const char* pszField);
     bool ParseDateField (const char* pszField, UTCTime* ptTime);
+    void RenderHiddenSearchVariant (const char* pszColName, const Variant& vData);
 
     static ReadWriteLock ms_mNewsFileLock;
     static ReadWriteLock ms_mIntroUpperFileLock;
@@ -447,9 +452,14 @@ protected:
 
 public:
 
-    // Stats
+    // Statics
     static AlmonasterStatistics m_sStats;
 
+    static UTCTime m_stEmpiresInGamesCheck;
+    static Mutex m_slockEmpiresInGames;
+    static unsigned int m_siNumGamingEmpires;
+
+    // Constructor
     HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
     ~HtmlRenderer();
 
@@ -561,7 +571,7 @@ public:
     int DeleteAlien (int iAlienKey);
 
     void ReportLoginFailure (IReport* pReport, const char* pszEmpireName);
-    void ReportLoginSuccess (IReport* pReport, const char* pszEmpireName);
+    void ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon);
     void ReportEmpireCreation (IReport* pReport, const char* pszEmpireName);
 
     void WriteSystemTitleString();
@@ -667,14 +677,16 @@ public:
     void WriteIntroUpper();
     void WriteIntroLower();
     void WriteServerNewsFile();
+    void WriteContributorsFile();
 
     void WriteTOS();
     void WriteTOSFile();
     void WriteConfirmTOSDecline();
 
-    bool UpdateIntroUpper (const char* pszText);
-    bool UpdateIntroLower (const char* pszText);
-    bool UpdateServerNews (const char* pszText);
+    int UpdateIntroUpper (const char* pszText);
+    int UpdateIntroLower (const char* pszText);
+    int UpdateServerNews (const char* pszText);
+    int UpdateContributors (const char* pszText);
 
     int WriteShip (unsigned int iShipKey, const Variant* pvData, unsigned int iIndex, bool bFleet,
         const GameConfiguration& gcConfig, const ShipOrderPlanetInfo& planetInfo, 
@@ -717,7 +729,7 @@ public:
     int LoginEmpire();
 
     void RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
-        int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString,
+        int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString,
         unsigned int* piShips, unsigned int* piFleets);
 
     int HandleShipMenuSubmissions();
@@ -1127,6 +1139,7 @@ const ThreadFunction g_pfxnRenderPage[] = {
 #define BASE_UPLOADED_TOURNAMENT_ICON_DIR "tournamentuploads"
 #define BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR "tournamentteamuploads"
 
+#define TRANSPARENT_DOT         "dot.gif"
 #define INDEPENDENT_PLANET_NAME "independent.gif"
 #define BACKGROUND_IMAGE        "background.jpg"
 #define ALMONASTER_BANNER_IMAGE "almonaster.gif"
@@ -1148,6 +1161,7 @@ const ThreadFunction g_pfxnRenderPage[] = {
 #define INTRO_FILE              "text/intro.html"
 #define INTRO_UPPER_FILE        "text/intro-upper.html"
 #define INTRO_LOWER_FILE        "text/intro-lower.html"
+#define CONTRIBUTORS_FILE       "text/contributors.html"
 
 #define CREDITS_FILE            "text/credits.html"
 #define CONTRIBUTIONS_FILE      "text/contributions.html"
@@ -1379,52 +1393,58 @@ Redirection:                                                                    
         Check (g_pGameEngine->SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
         Check (g_pGameEngine->GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
         sprintf (pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
-        AddMessage (pszMessage);                                                        \
-        return Redirect (INFO);                         \
+        AddMessage (pszMessage);                                                                \
+        SystemConfiguration scConfig;                                                           \
+        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {      \
+            char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_GAME_CLASS_NAME_LENGTH + 128];         \
+            sprintf (pszReport, "%s entered %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);  \
+            g_pReport->WriteReport (pszReport);                                                 \
+        }                                                                                       \
+        return Redirect (INFO);                                                                 \
         }                                                                                       \
     case ERROR_GAME_DOES_NOT_EXIST:                                                             \
-        AddMessage ("That game no longer exists");                                  \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("That game no longer exists");                                              \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_ALREADY_IN_GAME:                                                                 \
         AddMessage ("Your empire is already in that game");                                     \
         return Redirect (m_pgPageId);                                                           \
-    case ERROR_WAS_ALREADY_IN_GAME:                                                                 \
-        AddMessage ("Your empire was already in that game");                                        \
+    case ERROR_WAS_ALREADY_IN_GAME:                                                             \
+        AddMessage ("Your empire was already in that game");                                    \
         return Redirect (m_pgPageId);                                                           \
     case ERROR_GAME_CLOSED:                                                                     \
-        AddMessage ("The game already closed");                                     \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("The game already closed");                                                 \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_WRONG_PASSWORD:                                                                  \
-        AddMessage ("Your password was not accepted");                              \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("Your password was not accepted");                                          \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_NULL_PASSWORD:                                                                   \
-        AddMessage ("Game passwords cannot be blank");                              \
-        return Redirect (m_pgPageId);               \
-    case ERROR_ACCESS_DENIED:                                                                       \
-        AddMessage ("Your scores were not within the accepted range");                  \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("Game passwords cannot be blank");                                          \
+        return Redirect (m_pgPageId);                                                           \
+    case ERROR_ACCESS_DENIED:                                                                   \
+        AddMessage ("Your scores were not within the accepted range");                          \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_GAMECLASS_HALTED:                                                                \
-        AddMessage ("The gameclass is halted");                                     \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("The gameclass is halted");                                                 \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_EMPIRE_IS_HALTED:                                                                \
-        AddMessage ("Your empire is halted and cannot enter games");                    \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("Your empire is halted and cannot enter games");                            \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_DUPLICATE_IP_ADDRESS:                                                            \
         AddMessage ("You could not enter the game because your IP address was the same as an empire already playing the game");                                         \
-        return Redirect (m_pgPageId);               \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_DUPLICATE_SESSION_ID:                                                            \
         AddMessage ("You could not enter the game because your Session Id was the same as an empire already playing the game");                                         \
-        return Redirect (m_pgPageId);               \
+        return Redirect (m_pgPageId);                                                           \
     case ERROR_COULD_NOT_CREATE_PLANETS:                                                        \
         /* Fatal error:  we should never reach this case */                                     \
         Assert (false);                                                                         \
         iErrCode = g_pGameEngine->DeleteGame (iGameClassKey, iGameNumber, SYSTEM, NULL, MAP_CREATION_ERROR);                                                                \
         break;                                                                                  \
     default:                                                                                    \
-        AddMessage ("Unknown error ");                                              \
-        AppendMessage (iErrCode);                                                       \
-        AppendMessage (" occurred while entering a game");                          \
-        return Redirect (m_pgPageId);               \
+        AddMessage ("Unknown error ");                                                          \
+        AppendMessage (iErrCode);                                                               \
+        AppendMessage (" occurred while entering a game");                                      \
+        return Redirect (m_pgPageId);                                                           \
     }
 
 #endif

@@ -62,7 +62,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszPassword == NULL ? "" : pszPassword,
                 &iNumUpdatesTranspired,
                 true,
-                false
+                false,
+                NULL,
+                NULL
                 );
 
             HANDLE_ENTER_GAME_OUTPUT (iErrCode);
@@ -108,13 +110,15 @@ if (bConfirmPage) {
     %><p>Are you sure that you want to enter <strong><%
     Write (pszGameClassName);
     %> <% Write (iGameNumber); %></strong>?<p><%
+    %>If you enter a game, you are responsible for updating until the game ends.<%
+    %><p><%
 
     WriteButton (BID_CANCEL);
 
-    char pszEnter[256];
+    char pszEnter[128];
     sprintf (pszEnter, "Enter%i.%i", iGameClassKey, iGameNumber);
 
-    WriteButtonString (m_iButtonKey, "EnterGame", "Enter", pszEnter);
+    WriteButtonString (m_iButtonKey, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
 
 } else {
 
@@ -167,7 +171,7 @@ if (bConfirmPage) {
                 iGameNumber = piGameNumber[i];
 
                 // Check everything
-                if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, &bFlag) == OK &&
+                if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
                     g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
                     g_pGameEngine->IsGameOpen (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
                     g_pGameEngine->IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag) == OK && !bFlag &&

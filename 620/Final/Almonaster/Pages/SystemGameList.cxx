@@ -82,7 +82,7 @@ if (m_bOwnPost && !m_bRedirection) {
     case 1:
 
         // Check for choose
-        if (WasButtonPressed (BID_STARTGAME) || WasButtonPressed (BID_BLOCK)) {
+        if (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK)) {
 
             bRedirectTest = false;
 
@@ -132,7 +132,7 @@ if (m_bOwnPost && !m_bRedirection) {
         {
 
         if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMES &&
-            (WasButtonPressed (BID_STARTGAME) || WasButtonPressed (BID_BLOCK))) {
+            (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK))) {
 
             int iGameClassKey, iGameNumber;
             bool bGameCreated;
@@ -193,10 +193,9 @@ case 0:
         if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMES) {
 
             %><p><h3>Start a personal game:</h3><%
-            %><table border="1" bordercolor="<% Write (m_vTableColor.GetCharPtr()); %>" <%
-            %>width="90%" cellspacing="1" cellpadding="2"><%
-            %><tr><td colspan="2" align="center" bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>"><%
-            %><strong><font size="3">Personal game</font></strong></td><%
+            %><table width="90%" cellspacing="1" cellpadding="2"><%
+            %><tr><th colspan="2" align="center" bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>"><%
+            %><font size="3">Personal game</font></th><%
 
             %></tr><tr><td width="20%"><font size="3">Personal game</font><p><%
             WriteButton (BID_STARTCUSTOMGAME);
@@ -205,7 +204,7 @@ case 0:
             %><td>Click on the Start Game button to create a personal game with the specs that you desire. <%
             %>You will be presented with a menu that allows you to define the characteristics of the new <%
             %>game. Please read the documentation and familiarize yourself with the different Almonaster features <%
-            %>before you create a game.<%
+            %>before you create a personal game.<%
 
             %></td></tr></table><%
         }
@@ -318,7 +317,7 @@ case 1:
     %><p><%
 
     WriteButton (BID_CANCEL);
-    WriteButton (BID_STARTGAME);
+    WriteButton (BID_START);
 
     break;
 
@@ -343,7 +342,7 @@ case 2:
     %><p><%
 
     WriteButton (BID_CANCEL);
-    WriteButton (BID_STARTGAME);
+    WriteButton (BID_START);
 
     }
     break;

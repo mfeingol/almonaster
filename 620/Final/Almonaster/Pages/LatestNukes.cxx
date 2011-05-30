@@ -60,7 +60,7 @@ else {
         ppvData[i] = ppvNukeData[i];
     }
 
-    Algorithm::QSortTwoAscending<UTCTime, Variant*> (ptTime, ppvData, iNumNukes);
+    Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumNukes);
 
     if (iNumNukes != 1) {
         %><p><h3>These are the latest <% Write (iNumNukes); %> nukes recorded on the server:</h3><%

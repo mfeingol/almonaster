@@ -3,6 +3,20 @@
 
 #include "LinkedList.h"
 
+template <class T> class GenericHashValue {
+public:
+    static unsigned int GetHashValue (T t, unsigned int iNumBuckets, const void* pHashHint) {
+        return (unsigned int) t % iNumBuckets;
+    }
+};
+
+template <class T> class GenericEquals {
+public:
+    static bool Equals (T t1, T t2, const void* pEqualsHint) {
+        return t1 == t2;
+    }
+};
+
 template <class CKey, class CData> class HashTableNode {
 public:
     CData Data;

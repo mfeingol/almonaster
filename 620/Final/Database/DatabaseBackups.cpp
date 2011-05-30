@@ -72,7 +72,9 @@ int Database::Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) 
 
     // Get date
     int iSec, iMin, iHour, iDay, iMonth, iYear, iVersion = 0;
-    Time::GetDate (&iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+    DayOfWeek day;
+
+    Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 
     // Prepare a backup directory
     GetBackupDirectory (iDay, iMonth, iYear, 0, pszBackupDir);
@@ -253,7 +255,9 @@ unsigned int Database::DeleteOldBackups (Seconds iNumSecondsOld) {
 
     // Get the old date
     int iSec, iMin, iHour, iDay, iMonth, iYear, iTestDay, iTestMonth, iTestYear, iTestVersion, iErrCode;
-    Time::GetDate (tThen, &iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+    DayOfWeek day;
+
+    Time::GetDate (tThen, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
     
     // Lock backup table
     m_rwBackupLock.WaitWriter();
@@ -393,6 +397,7 @@ int Database::DeleteBackupFromDisk (IDatabaseBackup* pBackup) {
 int Database::ReplaceDatabaseWithBackup (IDatabaseBackup* pRestoreBackup) {
 
     int iSec, iMin, iHour, iDay, iMonth, iYear, iVersion = 0;
+    DayOfWeek day;
 
     char pszBackupDir [OS::MaxFileNameLength];
     char pszRestoreDir [OS::MaxFileNameLength];
@@ -409,7 +414,7 @@ int Database::ReplaceDatabaseWithBackup (IDatabaseBackup* pRestoreBackup) {
     }
 
     // Make a new backup directory with the current time
-    Time::GetDate (&iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+    Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 
     GetBackupDirectory (iDay, iMonth, iYear, 0, pszBackupDir);
 

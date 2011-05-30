@@ -854,8 +854,8 @@ int WriteTable::Increment (unsigned int iKey, unsigned int iColumn, const Varian
                     return ERROR_OUT_OF_MEMORY;
                 }
                 
-                strncpy (pszAppend, pszData, stOldLen);
-                strncpy (pszAppend + stOldLen, vIncrement.GetCharPtr(), stNewLen);
+                memcpy (pszAppend, pszData, stOldLen + 1);
+                memcpy (pszAppend + stOldLen, vIncrement.GetCharPtr(), stNewLen);
 
                 iErrCode = WriteData (iKey, iColumn, pszAppend);
 
@@ -1025,14 +1025,18 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey) {
 
 int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned int* piKey) {
 
-    int iErrCode;
+    if (pvColVal == NULL) {
+        Assert (false);
+        return ERROR_INVALID_ARGUMENT;
+    }
 
-    Assert ((m_pCtx->IsOneRow() && m_pCtx->GetNumRows() == 0) || !m_pCtx->IsOneRow());
+    Assert (!m_pCtx->IsOneRow() || m_pCtx->GetNumRows() == 0);
 
     if (piKey != NULL) {
         *piKey = NO_KEY;
     }
 
+    int iErrCode;
     unsigned int i, iNumCols = m_pCtx->GetNumColumns(), iLastColWritten = NO_KEY;
 
     // TODOTODO - deadlock check
@@ -1056,6 +1060,7 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
         if (iKey == NO_KEY) {
             iKey = iTerminatorRowKey;
         }
+        else Assert (iKey < iTerminatorRowKey);
     }
 
     unsigned int iExpandRows = 1;
@@ -1211,6 +1216,7 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
     if (iKey >= iTerminatorRowKey) {
         m_pCtx->IncrementTerminatorRowKey (iExpandRows);
     }
+    Assert (iKey < m_pCtx->GetTerminatorRowKey());
 
     m_pCtx->SetValidRow (iKey);
 
@@ -1571,6 +1577,10 @@ int WriteTable::DeleteRow (unsigned int iKey) {
     if (iNewTerminatorKey == 0) {
         m_pCtx->DeleteAllIndexes();
     }
+
+#ifdef _DEBUG
+    m_pTable->CheckIntegrity();
+#endif
 
     return OK;
 }

@@ -35,7 +35,6 @@
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;ALMONASTERHOOK_EXPORTS"
 				StringPooling="FALSE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -55,7 +54,7 @@
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="4"
-				WarnAsError="TRUE"
+				WarnAsError="FALSE"
 				SuppressStartupBanner="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"
@@ -76,6 +75,9 @@
 				ProgramDatabaseFile=".\Debug/AlmonasterHook.pdb"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
+				OptimizeForWindows98="0"
 				ImportLibrary=".\Debug/AlmonasterHook.lib"
 				TargetMachine="0"/>
 			<Tool
@@ -157,13 +159,14 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib osal.lib"
 				ShowProgress="0"
 				OutputFile=".\Release/AlmonasterHook.dll"
 				Version=""
-				LinkIncremental="0"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"

@@ -89,13 +89,14 @@ typedef unsigned long long int uint64;
 //
 #if defined WIN32 || defined _WIN32
 
+// Compile for NT4SP3 or later
+#define _WIN32_WINNT 0x0403
+
 #define __WIN32__
 
 #ifdef _WIN64
 #define __WIN64__
 #endif
-
-#define _WIN32_WINNT 0x0501
 
 #include <windows.h>
 #include <malloc.h>
@@ -209,7 +210,7 @@ namespace OS {
 
     OSAL_EXPORT int GetNumProcessors();
     OSAL_EXPORT int GetProcessorInformation (char pszProcessorInformation[OS::MaxProcessorInfoLength], 
-        unsigned int* piNumProcessors, bool* pbMMX, unsigned int* piMHz);
+        unsigned int* piNumProcessors, unsigned int* piMHz);
 
     OSAL_EXPORT void Sleep (MilliSeconds iMs = 0);
 

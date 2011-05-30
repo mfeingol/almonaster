@@ -35,7 +35,8 @@ static const char* pszDay[] = {
     "Wed",
     "Thu",
     "Fri",
-    "Sat"
+    "Sat",
+    "ERR"
 };
 
 static const char* pszDayOfWeek[] = {
@@ -45,7 +46,8 @@ static const char* pszDayOfWeek[] = {
     "Wednesday",
     "Thursday",
     "Friday",
-    "Saturday"
+    "Saturday",
+    "ERROR"
 };
 
 
@@ -150,28 +152,27 @@ int Time::GetTimeZoneBias (int* piBias) {
 #endif
 }
 
-int Time::GetDate (int* piSec, int* piMin, int* piHour, int* piDay, int* piMonth, int* piYear) {
+void Time::GetDate (
+    int* piSec, int* piMin, int* piHour, DayOfWeek* pdayOfWeek, int* piDay, int* piMonth, int* piYear) {
 
-    return GetDate (time (NULL), piSec, piMin, piHour, piDay, piMonth, piYear);
+    GetDate (time (NULL), piSec, piMin, piHour, pdayOfWeek, piDay, piMonth, piYear);
 }
 
-int Time::GetDate (const UTCTime& tTime, int* piSec, int* piMin, int* piHour, int* piDay, int* piMonth, 
-                   int* piYear) {
+void Time::GetDate (
+    const UTCTime& tTime,
+    int* piSec, int* piMin, int* piHour, DayOfWeek* pdayOfWeek, int* piDay, int* piMonth, int* piYear) {
 
     tm* ptmTime = localtime ((time_t*) &tTime);
-    if (ptmTime == NULL) {
-        return ERROR_INVALID_ARGUMENT;
-    }
 
     *piSec = ptmTime->tm_sec;
     *piMin = ptmTime->tm_min;
     *piHour = ptmTime->tm_hour;
 
+    *pdayOfWeek = (DayOfWeek) ptmTime->tm_wday;
+
     *piDay = ptmTime->tm_mday;
     *piMonth = ptmTime->tm_mon + 1;
     *piYear = ptmTime->tm_year + 1900;
-
-    return OK;
 }
     
 int Time::GetTimeString (char pszTimeString[OS::MaxTimeLength]) {
@@ -218,21 +219,14 @@ int Time::GetDateString (const UTCTime& tTime, char pszDateString[OS::MaxDateLen
         return ERROR_INVALID_ARGUMENT;
     }
 
-    char pszHour[8], pszMin[8], pszSec[8], pszDayM[8];
-    
-    String::ItoA (ptmTime->tm_hour, pszHour, 10, 2);
-    String::ItoA (ptmTime->tm_min, pszMin, 10, 2);
-    String::ItoA (ptmTime->tm_sec, pszSec, 10, 2);
-    String::ItoA (ptmTime->tm_mday, pszDayM, 10, 2);
-
     sprintf (
         pszDateString,
-        "%s:%s:%s %s, %s %s %i",
-        pszHour,
-        pszMin,
-        pszSec,
+        "%.2d:%.2d:%.2d %s, %.2d %s %.4d",
+        ptmTime->tm_hour,
+        ptmTime->tm_min,
+        ptmTime->tm_sec,
         pszDay [ptmTime->tm_wday],
-        pszDayM,
+        ptmTime->tm_mday,
         pszMonth[ptmTime->tm_mon],
         ptmTime->tm_year + 1900
         );
@@ -256,21 +250,14 @@ int Time::GetGMTDateString (const UTCTime& tTime, char pszGMTDateString[OS::MaxG
         return ERROR_INVALID_ARGUMENT;
     }
 
-    char pszHour[8], pszMin[8], pszSec[8], pszDayM[8];
-    
-    String::ItoA (ptmTime->tm_hour, pszHour, 10, 2);
-    String::ItoA (ptmTime->tm_min, pszMin, 10, 2);
-    String::ItoA (ptmTime->tm_sec, pszSec, 10, 2);
-    String::ItoA (ptmTime->tm_mday, pszDayM, 10, 2);
-    
     sprintf (
         pszGMTDateString,
-        "%s:%s:%s %s, %s %s %i GMT",
-        pszHour,
-        pszMin,
-        pszSec,
+        "%.2d:%.2d:%.2d %s, %.2d %s %.4d GMT",
+        ptmTime->tm_hour,
+        ptmTime->tm_min,
+        ptmTime->tm_sec,
         pszDay [ptmTime->tm_wday],
-        pszDayM,
+        ptmTime->tm_mday,
         pszMonth[ptmTime->tm_mon],
         ptmTime->tm_year + 1900
         );
@@ -357,7 +344,7 @@ int Time::GetYear (const UTCTime& tTime) {
     return ptmTime->tm_year + 1900;
 }
 
-const char* Time::GetDayOfWeek() {
+DayOfWeek Time::GetDayOfWeek() {
 
     UTCTime tTime;
     GetTime (&tTime);
@@ -366,14 +353,20 @@ const char* Time::GetDayOfWeek() {
 }
 
 
-const char* Time::GetDayOfWeek (const UTCTime& tTime) {
+DayOfWeek Time::GetDayOfWeek (const UTCTime& tTime) {
 
     tm* ptmTime = localtime (&tTime);
-    if (ptmTime == NULL || ptmTime->tm_wday > 6 || ptmTime->tm_wday < 0) {
-        return "Invalid day of week";
-    }
+    return (DayOfWeek) ptmTime->tm_wday;
+}
 
-    return pszDayOfWeek [ptmTime->tm_wday];
+const char* Time::GetDayOfWeekName (DayOfWeek dayOfWeek) {
+
+    return pszDayOfWeek [dayOfWeek];
+}
+
+const char* Time::GetAbbreviatedDayOfWeekName (DayOfWeek dayOfWeek) {
+
+    return pszDay [dayOfWeek];
 }
 
 const char* Time::GetMonthName() {
@@ -420,10 +413,6 @@ const char* Time::GetAbbreviatedMonthName (int iMonth) {
 const char* Time::GetAbbreviatedMonthName (const UTCTime& tTime) {
 
     tm* ptmTime = localtime (&tTime);
-    if (ptmTime == NULL) {
-        return "ERR";
-    }
-
     return GetAbbreviatedMonthName (ptmTime->tm_mon + 1);
 }
 

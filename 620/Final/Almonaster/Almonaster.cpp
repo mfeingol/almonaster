@@ -47,6 +47,7 @@ private:
     ~Almonaster();
 
     bool m_bIsDefault;
+    bool m_bNoBuffering;
 
     char* m_pszUri1;
     char* m_pszUri2;
@@ -93,6 +94,8 @@ Almonaster* Almonaster::CreateInstance() {
 Almonaster::Almonaster() {
 
     m_bIsDefault = false;
+    m_bNoBuffering = false;
+
     m_iNumRefs = 1;
 
     m_pszUri1 = NULL;
@@ -346,6 +349,13 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     }
     scConfig.bDatabaseWriteThrough = atoi (pszTemp) != 0;
 
+    iErrCode = g_pConfig->GetParameter ("BufferedPageRendering", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the BufferedPageRendering value from the configuration file");
+        return ERROR_FAILURE;
+    }
+    m_bNoBuffering = atoi (pszTemp) == 0;
+
 
     g_pReport->WriteReport ("Finished reading parameters from configuration file");
 
@@ -477,8 +487,10 @@ int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
         }
     }
 
-    // Enable chunked encoding, if available
-    pHttpResponse->SetNoBuffering();
+    // Enable chunked encoding, if wanted or if the page requested is a doc page
+    if (m_bNoBuffering || pageId == SYSTEM_DOCUMENTATION || pageId == GAME_DOCUMENTATION) {
+        pHttpResponse->SetNoBuffering();
+    }
 
     // Call the function
     HtmlRenderer htmlRenderer (pageId, pHttpRequest, pHttpResponse);
@@ -524,8 +536,6 @@ int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttp
     const char* pszMail = vEmail.GetCharPtr();
 
     HttpStatusReason rReason = pHttpResponse->GetStatusCodeReason();
-
-    //pHttpResponse->SetNoBuffering();
 
     pHttpResponse->WriteText (
         "<html>"\

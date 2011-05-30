@@ -354,7 +354,7 @@ unsigned int Algorithm::GetStringHashValue (const char* pszString, size_t stStri
     double dTemp;
 
     if (stStringLen == 0) {
-        stStringLen = strlen (pszString);
+        stStringLen = String::StrLen (pszString);
     }
     
     size_t iHash = 1;

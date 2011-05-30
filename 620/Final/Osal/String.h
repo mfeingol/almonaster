@@ -80,6 +80,8 @@ public:
     operator const char*() const;
 
     bool IsBlank() const;
+    bool IsWhiteSpace() const;
+
     bool Equals (const String& strComp) const;
     bool IEquals (const String& strComp) const;
 
@@ -133,6 +135,7 @@ public:
     static int StriStr (const char* pszString, const char* pszCharSet, const char** ppszStrStr);
 
     static bool IsBlank (const char* pszString);
+    static bool IsWhiteSpace (const char* pszString);
 };
 
 EXPORT String operator+ (const String& strLhs, const String& strRhs);

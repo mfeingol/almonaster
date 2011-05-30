@@ -104,12 +104,12 @@ const char* const SHIP_TYPE_DESCRIPTION[] = {
     "Increases planetary agricultural resources",               // Terraformer
     "Invades enemy planets",                                    // Troopship
     "Makes planets uninhabitable",                              // Doomsday
-    "Explodes and destroys enemy fleets",                       // Minefield
+    "Detonates, destroying enemy fleets",                       // Minefield
     "Nullifies the effects of minefield explosions",            // Minesweeper
     "Opens and closes links between planets",                   // Engineer
     "Absorbs enemy fire during combat",                         // Carrier
     "Builds new planets",                                       // Builder
-    "Change into other ship types",                             // Morpher
+    "Changes into other ship types",                            // Morpher
     "Teleports ships to other planets within range",            // Jumpgate
 };
 

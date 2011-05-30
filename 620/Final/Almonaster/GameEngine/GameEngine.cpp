@@ -93,7 +93,7 @@ GameEngine::~GameEngine() {
     int iErrCode;
     
     if (m_bGoodDatabase) {
-        iErrCode = CheckAllGamesForUpdates();
+        iErrCode = CheckAllGamesForUpdates (true);
         Assert (iErrCode == OK);
     }
 
@@ -512,6 +512,12 @@ int GameEngine::GetGameConfiguration (GameConfiguration* pgcConfig) {
         goto Cleanup;
     }
 
+    iErrCode = pSystem->ReadData (SystemData::BuilderBRDampener, &pgcConfig->fBuilderBRDampener);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
     iErrCode = pSystem->ReadData (SystemData::BuilderMultiplier, &pgcConfig->fBuilderMultiplier);
     if (iErrCode != OK) {
         Assert (false);
@@ -671,6 +677,7 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
         gcConfig.fDoomsdayAnnihilationFactor < 0 ||
         gcConfig.fCarrierCost < 0 ||
         gcConfig.fBuilderMinBR < 0 ||
+        gcConfig.fBuilderBRDampener < 0 ||
         gcConfig.fBuilderMultiplier < 0 ||
         gcConfig.fMorpherCost < 0 ||
         gcConfig.fJumpgateGateCost < 0 ||
@@ -775,6 +782,12 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
     }
 
     iErrCode = pSystem->WriteData (SystemData::BuilderMinBR, gcConfig.fBuilderMinBR);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pSystem->WriteData (SystemData::BuilderBRDampener, gcConfig.fBuilderBRDampener);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -940,7 +953,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 620 RC3";
+    return "Almonaster Build 620 RC4";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

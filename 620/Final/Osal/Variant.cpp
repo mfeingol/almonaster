@@ -51,7 +51,7 @@ Variant::Variant (const Variant& vRhs) {
             m_vArg.pszArg = new char [stLength];
 
             if (m_vArg.pszArg != NULL) {
-                strncpy (m_vArg.pszArg, vRhs.m_vArg.pszArg, stLength);
+                memcpy (m_vArg.pszArg, vRhs.m_vArg.pszArg, stLength);
             }
         }
         break;
@@ -76,7 +76,7 @@ Variant::Variant (const char* pszString) {
         m_vArg.pszArg = new char [stLength];
         
         if (m_vArg.pszArg != NULL) {
-            strncpy (m_vArg.pszArg, pszString, stLength);
+            memcpy (m_vArg.pszArg, pszString, stLength);
         }
     }
 }
@@ -153,7 +153,7 @@ Variant& Variant::operator= (const Variant& vRhs) {
             m_vArg.pszArg = new char [stLength];
 
             if (m_vArg.pszArg != NULL) {
-                strncpy (m_vArg.pszArg, vRhs.m_vArg.pszArg, stLength);
+                memcpy (m_vArg.pszArg, vRhs.m_vArg.pszArg, stLength);
             }
 
         } else {
@@ -180,7 +180,7 @@ Variant& Variant::operator= (const char* pszString) {
         m_vArg.pszArg = new char [stLength];
         
         if (m_vArg.pszArg != NULL) {
-            strncpy (m_vArg.pszArg, pszString, stLength);
+            memcpy (m_vArg.pszArg, pszString, stLength);
         }
     }
 
@@ -281,7 +281,7 @@ Variant& Variant::operator+= (const Variant& vRhs) {
 
                     m_vArg.pszArg = new char [stLength];
                     if (m_vArg.pszArg != NULL) {
-                        strncpy (m_vArg.pszArg, vRhs.m_vArg.pszArg, stLength);
+                        memcpy (m_vArg.pszArg, vRhs.m_vArg.pszArg, stLength);
                     }
                 
                 } else {
@@ -292,8 +292,8 @@ Variant& Variant::operator+= (const Variant& vRhs) {
                     pszTemp = new char [stLength + stLengthRhs];
                     if (pszTemp != NULL) {
                     
-                        strncpy (pszTemp, m_vArg.pszArg, stLength + 1);
-                        strncpy (pszTemp + stLength, vRhs.m_vArg.pszArg, stLengthRhs);
+                        memcpy (pszTemp, m_vArg.pszArg, stLength + 1);
+                        memcpy (pszTemp + stLength, vRhs.m_vArg.pszArg, stLengthRhs);
                         
                         delete [] m_vArg.pszArg;
                         m_vArg.pszArg = pszTemp;
@@ -329,8 +329,8 @@ Variant& Variant::operator+= (const Variant& vRhs) {
             pszTemp = new char [stLength + stLengthRhs];
             if (pszTemp != NULL) {
                 
-                strncpy (pszTemp, m_vArg.pszArg, stLength + 1);
-                strncpy (pszTemp + stLength, pszBuffer, stLengthRhs);
+                memcpy (pszTemp, m_vArg.pszArg, stLength + 1);
+                memcpy (pszTemp + stLength, pszBuffer, stLengthRhs);
                 
                 delete [] m_vArg.pszArg;
             }
@@ -341,7 +341,7 @@ Variant& Variant::operator+= (const Variant& vRhs) {
 
             pszTemp = new char [stLength];
             if (pszTemp != NULL) {
-                strncpy (pszTemp, pszBuffer, stLength);
+                memcpy (pszTemp, pszBuffer, stLength);
             }
         }
 
@@ -369,8 +369,8 @@ Variant& Variant::operator+= (const Variant& vRhs) {
             pszTemp = new char [stLength + stLengthRhs];
             if (pszTemp != NULL) {
                 
-                strncpy (pszTemp, pszBuffer, stLength + 1);
-                strncpy (pszTemp + stLength, vRhs.m_vArg.pszArg, stLengthRhs);
+                memcpy (pszTemp, pszBuffer, stLength + 1);
+                memcpy (pszTemp + stLength, vRhs.m_vArg.pszArg, stLengthRhs);
                 
                 delete [] m_vArg.pszArg;
             }
@@ -381,7 +381,7 @@ Variant& Variant::operator+= (const Variant& vRhs) {
 
             pszTemp = new char [stLength];
             if (pszTemp != NULL) {
-                strncpy (pszTemp, pszBuffer, stLength);
+                memcpy (pszTemp, pszBuffer, stLength);
             }
         }
 
@@ -460,7 +460,7 @@ Variant& Variant::operator+= (const char* pszRhs) {
             size_t stLength = strlen (pszRhs) + 1;
 
             m_vArg.pszArg = new char [stLength];
-            strncpy (m_vArg.pszArg, pszRhs, stLength);
+            memcpy (m_vArg.pszArg, pszRhs, stLength);
         
         } else {
 
@@ -470,8 +470,8 @@ Variant& Variant::operator+= (const char* pszRhs) {
             char* pszTemp = new char [stLength + stLengthRhs];
             if (pszTemp != NULL) {
 
-                strncpy (pszTemp, m_vArg.pszArg, stLength + 1);
-                strncpy (pszTemp + stLength, pszRhs, stLengthRhs);
+                memcpy (pszTemp, m_vArg.pszArg, stLength + 1);
+                memcpy (pszTemp + stLength, pszRhs, stLengthRhs);
 
                 delete [] m_vArg.pszArg;
                 m_vArg.pszArg = pszTemp;

@@ -46,8 +46,6 @@ else {
 
     int i;
 
-    char pszDateString [OS::MaxDateLength];
-
     UTCTime* ptTime = (UTCTime*) StackAlloc (iNumGames * sizeof (UTCTime));
     Variant** ppvData = (Variant**) StackAlloc (iNumGames * sizeof (Variant*));
 
@@ -57,7 +55,7 @@ else {
         ppvData[i] = ppvGameData[i];
     }
 
-    Algorithm::QSortTwoAscending<UTCTime, Variant*> (ptTime, ppvData, iNumGames);
+    Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumGames);
 
     // Start off page
     if (iNumGames != 1) {
@@ -96,6 +94,10 @@ else {
 
         const char* pszList;
 
+        int iSec, iMin, Hour, iDay, iMonth, iYear;
+        DayOfWeek dayOfWeek;
+        char pszDate [64];
+
         %><tr><%
 
         // Name
@@ -107,32 +109,30 @@ else {
         // Created
         %><td align="center"><%
 
-        iErrCode = Time::GetDateString (
-            ppvData[i][SystemLatestGames::Created].GetUTCTime(), 
-            pszDateString
+        Time::GetDate (
+            ppvData[i][SystemLatestGames::Created].GetUTCTime(),
+            &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
-        if (iErrCode == OK) {
-            m_pHttpResponse->WriteText (pszDateString);
-        } else {
-            OutputText ("Unknown");
-        }
+        sprintf (pszDate, "%s, %i %s %i", 
+            Time::GetAbbreviatedDayOfWeekName (dayOfWeek), iDay, Time::GetAbbreviatedMonthName (iMonth), iYear);
+
+        m_pHttpResponse->WriteText (pszDate);
 
         %></td><%
 
         // Ended
         %><td align="center"><%
 
-        iErrCode = Time::GetDateString (
-            ppvData[i][SystemLatestGames::Ended].GetUTCTime(), 
-            pszDateString
+        Time::GetDate (
+            ppvData[i][SystemLatestGames::Ended].GetUTCTime(),
+            &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
-        if (iErrCode == OK) {
-            m_pHttpResponse->WriteText (pszDateString);
-        } else {
-            OutputText ("Unknown");
-        }
+        sprintf (pszDate, "%s, %i %s %i", 
+            Time::GetAbbreviatedDayOfWeekName (dayOfWeek), iDay, Time::GetAbbreviatedMonthName (iMonth), iYear);
+
+        m_pHttpResponse->WriteText (pszDate);
 
         %></td><%
 
@@ -165,7 +165,7 @@ else {
         %></td><%
 
         // Survivors
-        %><td align="center"><%
+        %><td align="center" width="20%"><%
 
         pszList = ppvData[i][SystemLatestGames::Winners].GetCharPtr();
 
@@ -175,7 +175,7 @@ else {
         %></td><%
 
         // Losers
-        %><td align="center"><%
+        %><td align="center" width="20%"><%
 
         pszList = ppvData[i][SystemLatestGames::Losers].GetCharPtr();
 

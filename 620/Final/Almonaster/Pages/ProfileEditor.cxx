@@ -294,13 +294,13 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
                 if (strlen (pszNewValue) > MAX_IMID_LENGTH) {
-                    AddMessage ("Your instant messaging id was too long");
+                    AddMessage ("Your instant messenger id was too long");
                 }
 
                 else if (g_pGameEngine->SetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, pszNewValue) == OK) {
-                    AddMessage ("Your instant messaging id was changed");
+                    AddMessage ("Your instant messenger id was changed");
                 } else {
-                    AddMessage ("Your instant messaging id could not be changed");
+                    AddMessage ("Your instant messenger id could not be changed");
                 }
             }
 
@@ -1355,15 +1355,19 @@ Quote:
             // Handle undelete empire request
             if (WasButtonPressed (BID_UNDELETEEMPIRE)) {
 
+                const char* pszReport = NULL;
+
                 switch (g_pGameEngine->UndeleteEmpire (m_iEmpireKey)) {
 
                 case ERROR_CANNOT_UNDELETE_EMPIRE:
 
+                    pszReport = "could not be undeleted";
                     AddMessage ("Your empire cannot be undeleted");
                     break;
 
                 case OK:
 
+                    pszReport = "was successfully undeleted";
                     AddMessage ("Your empire is no longer marked for deletion"); 
                     m_iSystemOptions &= ~EMPIRE_MARKED_FOR_DELETION;
 
@@ -1372,6 +1376,19 @@ Quote:
                 default:
 
                     AddMessage ("An unexpected error occurred");
+                }
+
+                SystemConfiguration scConfig;
+                if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+
+                    char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+
+                    if (pszReport == NULL) {
+                        sprintf (pszText, "UndeleteEmpire failed for %s: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
+                    } else {
+                        sprintf (pszText, "%s %s", m_vEmpireName.GetCharPtr(), pszReport);
+                    }
+                    g_pReport->WriteReport (pszText);
                 }
 
                 break;
@@ -1565,10 +1582,7 @@ Quote:
 
                                     String::StrCmp (vSource.GetCharPtr(), pszSrcEmpire) == 0 &&
 
-                                    g_pGameEngine->DeleteSystemMessage (
-                                    m_iEmpireKey,
-                                    iMessageKey
-                                    ) == OK) {
+                                    g_pGameEngine->DeleteSystemMessage (m_iEmpireKey, iMessageKey) == OK) {
 
                                     iDeletedMessages ++;
                                 }
@@ -1880,6 +1894,14 @@ Quote:
         case 5:
             {
 
+            SystemConfiguration scConfig;
+            bool bReport = g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport;
+            if (bReport) {
+                char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+                sprintf (pszText, "%s asked to be deleted", m_vEmpireName.GetCharPtr());
+                g_pReport->WriteReport (pszText);
+            }
+
             iErrCode = g_pGameEngine->DeleteEmpire (m_iEmpireKey, NULL, true, false);
             switch (iErrCode) {
 
@@ -1890,11 +1912,20 @@ Quote:
                 AppendMessage (" was deleted");
                 return Redirect (LOGIN);
 
+                // The code in DeleteEmpire will report
+
             case ERROR_EMPIRE_IS_IN_GAMES:
 
                 AddMessage ("Your empire is still in at least one game. It will be deleted when it is no longer in any games");
                 AddMessage ("Your personal information has been cleared");
                 m_iSystemOptions |= EMPIRE_MARKED_FOR_DELETION;
+
+                if (bReport) {
+                    char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+                    sprintf (pszText, "%s was marked for deletion", m_vEmpireName.GetCharPtr());
+                    g_pReport->WriteReport (pszText);
+                }
+
                 break;
 
             case ERROR_EMPIRE_DOES_NOT_EXIST:
@@ -1909,6 +1940,13 @@ Quote:
                 Assert (false);
                 AddMessage ("An unexpected error occurred: ");
                 AppendMessage (iErrCode);
+
+                if (bReport) {
+                    char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+                    sprintf (pszText, "%s was not deleted: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
+                    g_pReport->WriteReport (pszText);
+                }
+
                 return Redirect (m_pgPageId);
             }
 
@@ -1919,6 +1957,14 @@ Quote:
 
             EmpireCheck (g_pGameEngine->BlankEmpireStatistics (m_iEmpireKey));
             AddMessage ("Your empire's statistics have been blanked");
+
+            SystemConfiguration scConfig;
+	        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+	            char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+	            sprintf (pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
+                g_pReport->WriteReport (pszText);
+	        }
+
             break;
 
         case 7:
@@ -2097,7 +2143,7 @@ case 0:
 
     if (HTMLFilter (pvEmpireData[SystemEmpireData::IMId].GetCharPtr(), &strFilter, 0, false) == OK) {
 
-        %><tr><td align="left">Instant Messaging:</td><%
+        %><tr><td align="left">Instant Messenger:</td><%
         %><td><input type="text" name="IMId" size="40" maxlength="<% 
             Write (MAX_IMID_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
         %>"></td></tr><%

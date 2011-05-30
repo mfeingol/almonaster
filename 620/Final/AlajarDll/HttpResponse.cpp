@@ -87,8 +87,7 @@ HttpResponse::HttpResponse() {
     m_bHeadersSent = false;
     m_bConnectionClosed = false;
 
-    // TODO:  should be 1.1
-    m_iResponseHttpVersion = HTTP10;
+    m_iResponseHttpVersion = HTTP11;
 
     m_ppszCustomLogMessages = NULL;
     m_iNumCustomLogMessages = 0;
@@ -341,11 +340,7 @@ int HttpResponse::SendChunk (const void* pData, size_t stDataLen) {
 
     int iErrCode;
 
-    if (m_stLength == 0) {
-        return OK;
-    }
-
-    Assert (pData != NULL);
+    Assert (pData != NULL && stDataLen > 0);
 
     char pszChunkLength [128];
     String::UI64toA (stDataLen, pszChunkLength, 16);
@@ -362,7 +357,7 @@ int HttpResponse::SendChunk (const void* pData, size_t stDataLen) {
     Check (m_pSocket->Send (pData, stDataLen, &stSent));
     m_stResponseLength += stSent;
 
-    Check (m_pSocket->Send ("\r\n", sizeof ("\r\n"), &stSent));
+    Check (m_pSocket->Send ("\r\n", sizeof ("\r\n") - 1, &stSent));
     m_stResponseLength += stSent;
 
     return OK;
@@ -374,7 +369,7 @@ int HttpResponse::FlushChunkFromBuffer() {
     size_t stSent;
 
     Check (SendChunkFromBuffer());
-    Check (m_pSocket->Send ("0\r\n", sizeof ("0\r\n"), &stSent));
+    Check (m_pSocket->Send ("0\r\n\r\n", sizeof ("0\r\n\r\n") - 1, &stSent));
 
     m_stResponseLength += stSent;
 
@@ -415,7 +410,7 @@ int HttpResponse::WriteText (const char* pszData, size_t stStrlen) {
         }
         m_pszResponseData = m_pszRealResponseData + RESPONSE_BUFFER_PRE_PADDING;
 
-        strncpy (m_pszResponseData, pszData, stStrlen);
+        memcpy (m_pszResponseData, pszData, stStrlen);
         m_pszResponseData[stStrlen] = '\0';
 
         m_stLength = stStrlen;
@@ -426,7 +421,7 @@ int HttpResponse::WriteText (const char* pszData, size_t stStrlen) {
     
         if (m_stRealLength > stNewLength) {
             
-            strncpy (m_pszResponseData + m_stLength, pszData, stStrlen);
+            memcpy (m_pszResponseData + m_stLength, pszData, stStrlen);
             m_pszResponseData[stNewLength] = '\0';
 
         } else {
@@ -440,7 +435,7 @@ int HttpResponse::WriteText (const char* pszData, size_t stStrlen) {
             char* pszResponseData = pszRealResponseData + RESPONSE_BUFFER_PRE_PADDING;
             
             strcpy (pszResponseData, m_pszResponseData);
-            strncpy (pszResponseData + m_stLength, pszData, stStrlen);
+            memcpy (pszResponseData + m_stLength, pszData, stStrlen);
             pszResponseData[stNewLength] = '\0';
             
             delete [] m_pszRealResponseData;
@@ -717,10 +712,10 @@ int HttpResponse::CreateCookie (const char* pszCookieName, const char* pszCookie
         return ERROR_OUT_OF_MEMORY;
     }
 
-    strncpy (m_ppszCookieSetName[m_iNumCookiesSet], pszCookieName, stName + 1);
+    memcpy (m_ppszCookieSetName[m_iNumCookiesSet], pszCookieName, stName + 1);
 
     m_ppszCookieSetValue[m_iNumCookiesSet] = m_ppszCookieSetName[m_iNumCookiesSet] + stName + 1;
-    strncpy (m_ppszCookieSetValue[m_iNumCookiesSet], pszCookieValue, stValue + 1);
+    memcpy (m_ppszCookieSetValue[m_iNumCookiesSet], pszCookieValue, stValue + 1);
 
     m_piCookieTTL[m_iNumCookiesSet] = iTTLinSeconds;
 
@@ -728,7 +723,7 @@ int HttpResponse::CreateCookie (const char* pszCookieName, const char* pszCookie
         m_ppszCookieSetPath[m_iNumCookiesSet] = NULL;
     } else {
         m_ppszCookieSetPath[m_iNumCookiesSet] = m_ppszCookieSetValue[m_iNumCookiesSet] + stValue + 1;
-        strncpy (m_ppszCookieSetPath[m_iNumCookiesSet], pszCookiePath, stPath);
+        memcpy (m_ppszCookieSetPath[m_iNumCookiesSet], pszCookiePath, stPath);
     }
 
     m_iNumCookiesSet ++;
@@ -787,13 +782,13 @@ int HttpResponse::DeleteCookie (const char* pszCookieName, const char* pszCookie
         return ERROR_OUT_OF_MEMORY;
     }
 
-    strncpy (m_ppszCookieDelName[m_iNumCookiesDel], pszCookieName, stName + 1);
+    memcpy (m_ppszCookieDelName[m_iNumCookiesDel], pszCookieName, stName + 1);
 
     if (pszCookiePath == NULL) {
         m_ppszCookieDelPath[m_iNumCookiesDel] = NULL;
     } else {
         m_ppszCookieDelPath[m_iNumCookiesDel] = m_ppszCookieDelName[m_iNumCookiesDel] + stName + 1;
-        strncpy (m_ppszCookieDelPath[m_iNumCookiesDel], pszCookiePath, stPath + 1);
+        memcpy (m_ppszCookieDelPath[m_iNumCookiesDel], pszCookiePath, stPath + 1);
     }
 
     m_iNumCookiesDel ++;
@@ -1086,11 +1081,11 @@ int HttpResponse::Send() {
     int iErrCode;
 
     // Get time
-    UTCTime tTime, tTimePlus;
-    Time::GetTime (&tTime);
+    UTCTime tNow, tTimePlus;
+    Time::GetTime (&tNow);
     
     char pszGMTDateString [OS::MaxGMTDateLength];
-    iErrCode = Time::GetGMTDateString (tTime, pszGMTDateString);
+    iErrCode = Time::GetGMTDateString (tNow, pszGMTDateString);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1098,7 +1093,7 @@ int HttpResponse::Send() {
 
     unsigned int i;
 
-    char pszInt [40];
+    char pszInt [32];
     char* pszBuffer = (char*) StackAlloc (4096 + m_stCookieSpace + m_stCustomHeaderLength);
 
     ///////////////////////////
@@ -1106,46 +1101,70 @@ int HttpResponse::Send() {
     ///////////////////////////
 
     // Protocol and status
-    // TODO:  all output should be 1.1
-    if (m_bNoBuffering && m_rType == RESPONSE_BUFFER) {
-        strcpy (pszBuffer, "HTTP/1.1 ");
-        m_iResponseHttpVersion = HTTP11;
-    } else {
-        strcpy (pszBuffer, "HTTP/1.0 ");
-        SetResponseHttpVersion (HTTP10);
-    }
+    strcpy (pszBuffer, "HTTP/1.1 ");
+    SetResponseHttpVersion (HTTP11);
 
     strcat (pszBuffer, HttpStatusText[m_sStatus]);
 
     // Date, server name, connection
-    strcat (pszBuffer, "\r\nServer: Alajar/1.58\r\nDate: ");
+    strcat (pszBuffer, "\r\nServer: Alajar/1.59\r\nDate: ");
     strcat (pszBuffer, pszGMTDateString);
 
-    // Last modified
-    strcat (pszBuffer, "\r\nLast-Modified: ");
+    if (m_rType != RESPONSE_REDIRECT && m_rType != RESPONSE_ERROR) {
 
-    if (m_rType == RESPONSE_FILE) {
+        // Last modified, Expires, Cache-Control
+        strcat (pszBuffer, "\r\nLast-Modified: ");
 
-        Assert (m_pCachedFile != NULL);
+        if (m_rType == RESPONSE_FILE) {
 
-        UTCTime tLastModifiedTime;
-        char pszLastModified[OS::MaxGMTDateLength];
+            Assert (m_pCachedFile != NULL);
 
-        m_pCachedFile->GetLastModifiedTime (&tLastModifiedTime);
+            UTCTime tTime;
+            char pszTime [OS::MaxGMTDateLength];
 
-        iErrCode = Time::GetGMTDateString (tLastModifiedTime, pszLastModified);
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
+            m_pCachedFile->GetLastModifiedTime (&tTime);
+
+            iErrCode = Time::GetGMTDateString (tTime, pszTime);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            // File's last modified time
+            strcat (pszBuffer, pszTime);
+
+            // Expires in a year
+            strcat (pszBuffer, "\r\nExpires: ");
+
+            Time::AddSeconds (tNow, 60 * 60 * 24 * 365, &tTime);
+            iErrCode = Time::GetGMTDateString (tTime, pszTime);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            strcat (pszBuffer, pszTime);
+
+            // Cache-control is private
+            strcat (pszBuffer, "\r\nCache-Control: public");
+
+        } else {
+
+            Assert (m_rType == RESPONSE_BUFFER);
+
+            // Last modified this second
+            strcat (pszBuffer, pszGMTDateString);
+
+            // Expires this second
+            strcat (pszBuffer, "\r\nExpires: ");
+            strcat (pszBuffer, pszGMTDateString);
+
+            // Cache-control is private
+            //
+            // It might seem more appropriate to use no-cache or no-store, but
+            // they have the effect of preventing the back button in IE6 from working
+            strcat (pszBuffer, "\r\nCache-Control: private");
         }
-
-        // File's last modified time
-        strcat (pszBuffer, pszLastModified);
-
-    } else {
-
-        // Last modified this second
-        strcat (pszBuffer, pszGMTDateString);
     }
     
     strcat (pszBuffer, "\r\nContent-Type: ");
@@ -1202,13 +1221,20 @@ int HttpResponse::Send() {
         }
     }
 
+    // Accept ranges is none
+    strcat (pszBuffer, "\r\nAccept-Ranges: none");
+
+
     // Connection
-    m_bConnectionClosed = !m_pHttpRequest->GetKeepAlive() || m_iResponseHttpVersion < HTTP11;
+    // TODO - blocks reusing connections for HTTP 1.1
+    m_bConnectionClosed = true || !m_pHttpRequest->GetKeepAlive() || m_iResponseHttpVersion < HTTP11;
     if (m_bConnectionClosed) {
         strcat (pszBuffer, "\r\nConnection: close");
-    } else {
-        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
     }
+    
+    /*else {
+        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
+    }*/
 
     //////////////////////////////////
     // Send status specific headers //
@@ -1256,7 +1282,7 @@ int HttpResponse::Send() {
         // Set cookies
         for (i = 0; i < m_iNumCookiesSet; i ++) {
             
-            Time::AddSeconds (tTime, m_piCookieTTL[i], &tTimePlus);
+            Time::AddSeconds (tNow, m_piCookieTTL[i], &tTimePlus);
             
             iErrCode = Time::GetCookieDateString (tTimePlus, pszCookieExpirationDate);
             if (iErrCode != OK) {
@@ -1287,7 +1313,7 @@ int HttpResponse::Send() {
         // Delete cookies
         for (i = 0; i < m_iNumCookiesDel; i ++) {
             
-            Time::SubtractSeconds (tTime, 24 * 60 * 60, &tTimePlus);
+            Time::SubtractSeconds (tNow, 24 * 60 * 60, &tTimePlus);
             
             iErrCode = Time::GetCookieDateString (tTimePlus, pszCookieExpirationDate);
             if (iErrCode != OK) {
@@ -1625,7 +1651,7 @@ int HttpResponse::BuildDirectoryIndex (const char* pszDirName, TempFile* ptfTemp
 
         pszFixedUri = (char*) StackAlloc (stUriLen + 2);
         
-        strncpy (pszFixedUri, pszSentUri, stUriLen);
+        memcpy (pszFixedUri, pszSentUri, stUriLen);
         pszFixedUri[stUriLen] = '/';
         pszFixedUri[stUriLen + 1] = '\0';
     }

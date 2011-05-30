@@ -35,7 +35,6 @@
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				StringPooling="FALSE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -76,6 +75,9 @@
 				SubSystem="2"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
+				OptimizeForWindows98="0"
 				ImportLibrary=".\Debug/Alajar.lib"
 				TargetMachine="0"/>
 			<Tool
@@ -161,13 +163,14 @@ copy Alajar.h ..\Include
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Osal.lib"
 				ShowProgress="0"
 				OutputFile="Release/Alajar.dll"
 				Version=""
-				LinkIncremental="0"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"

@@ -534,11 +534,14 @@ enum MessageTargets {
     NUM_MESSAGE_TARGETS = MESSAGE_TARGET_LAST_USED
 };
 
+// GameEmpireData::LastMessageTargetMask
+#define MESSAGE_TARGET_NONE_MASK        (0x00000000)
 #define MESSAGE_TARGET_BROADCAST_MASK   (0x00000001)
 #define MESSAGE_TARGET_WAR_MASK         (0x00000002)
 #define MESSAGE_TARGET_TRUCE_MASK       (0x00000004)
 #define MESSAGE_TARGET_TRADE_MASK       (0x00000008)
 #define MESSAGE_TARGET_ALLIANCE_MASK    (0x00000010)
+#define MESSAGE_TARGET_INDIVIDUALS      (0x00000020)
 
 // Maximum values
 #define MAX_NUM_UPDATES_BEFORE_IDLE 10
@@ -566,6 +569,8 @@ extern const char* const REAL_PRIVILEGE_STRING_PLURAL[];
 
 const char** const PRIVILEGE_STRING = (const char** const) &REAL_PRIVILEGE_STRING[5];
 const char** const PRIVILEGE_STRING_PLURAL = (const char** const) &REAL_PRIVILEGE_STRING_PLURAL[5];
+
+#define IS_VALID_PRIVILEGE(x) (x == GUEST || (x >= NOVICE && x <= ADMINISTRATOR))
 
 enum ScoringSystem {
     ALMONASTER_SCORE,

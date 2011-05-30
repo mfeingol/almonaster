@@ -42,12 +42,26 @@ if (m_bOwnPost && !m_bRedirection) {
 
             AddMessage ("You accepted the Terms of Service");
 
+            SystemConfiguration scConfig;
+	        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+	            char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
+	            sprintf (pszText, "%s accepted the Terms of Service", m_vEmpireName.GetCharPtr());
+                g_pReport->WriteReport (pszText);
+	        }
+
             return Redirect (ACTIVE_GAME_LIST);
         }
 
         if (WasButtonPressed (BID_DECLINE)) {
             iTosPage = 1;
             bRedirectTest = false;
+
+            SystemConfiguration scConfig;
+	        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+	            char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
+	            sprintf (pszText, "%s declined the Terms of Service", m_vEmpireName.GetCharPtr());
+                g_pReport->WriteReport (pszText);
+	        }
         }
         break;
 

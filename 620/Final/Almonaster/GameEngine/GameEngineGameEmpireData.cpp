@@ -864,13 +864,37 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 
         if (iErrCode == OK && (vOld.GetInteger() & EMPIRE_MARKED_FOR_DELETION)) {
 
-            // Fire at will
-            iErrCode = DeleteEmpire (iEmpireKey, NULL, false, false);
+            iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::SecretKey, &vOld);
             Assert (iErrCode == OK);
+
+            if (iErrCode == OK) {
+
+                // Fire at will
+                iErrCode = QueueDeleteEmpire (iEmpireKey, vOld.GetInteger64());
+                Assert (iErrCode == OK);
+            }
         }
     }
 
     return OK;
+}
+
+int GameEngine::QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey) {
+
+    EmpireIdentity* pid = new EmpireIdentity;
+    pid->iEmpireKey = iEmpireKey;
+    pid->i64SecretKey = i64SecretKey;
+
+    return SendLongRunningQueryMessage (DeleteEmpireMsg, pid);
+}
+
+int GameEngine::DeleteEmpireMsg (LongRunningQueryMessage* pMessage) {
+
+    EmpireIdentity* pid = (EmpireIdentity*) pMessage->pArguments;
+    int iErrCode = pMessage->pGameEngine->DeleteEmpire (pid->iEmpireKey, &pid->i64SecretKey, false, false);
+
+    delete pid;
+    return iErrCode;
 }
 
 int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
@@ -2145,11 +2169,7 @@ int GameEngine::GetEmpireMaintenanceRatio (int iGameClass, int iGameNumber, int 
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    int iErrCode = m_pGameData->GetTableForReading (
-        strGameEmpireData,
-        &pGameEmpireData
-        );
-
+    int iErrCode = m_pGameData->GetTableForReading (strGameEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -2181,6 +2201,65 @@ int GameEngine::GetEmpireMaintenanceRatio (int iGameClass, int iGameNumber, int 
     SafeRelease (pGameEmpireData);
     
     *pfMaintenanceRatio = GetMaintenanceRatio (iMin + iBonusMin, iMaint, iBuild);
+
+Cleanup:
+
+    SafeRelease (pGameEmpireData);
+
+    return iErrCode;
+}
+
+int GameEngine::GetEmpireNextMaintenanceRatio (int iGameClass, int iGameNumber, int iEmpireKey, 
+                                               float* pfNextMaintenanceRatio) {
+
+    int iMin, iBonusMin, iNextMin, iMaint, iNextMaint;
+
+    IReadTable* pGameEmpireData = NULL;
+
+    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+    int iErrCode = m_pGameData->GetTableForReading (strGameEmpireData, &pGameEmpireData);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    iErrCode = pGameEmpireData->ReadData (GameEmpireData::TotalMin, &iMin);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    
+    iErrCode = pGameEmpireData->ReadData (GameEmpireData::BonusMin, &iBonusMin);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pGameEmpireData->ReadData (GameEmpireData::NextMin, &iNextMin);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pGameEmpireData->ReadData (GameEmpireData::TotalMaintenance, &iMaint);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    
+    iErrCode = pGameEmpireData->ReadData (GameEmpireData::NextMaintenance, &iNextMaint);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    int iCalcMin = iMin + iBonusMin + iNextMin;
+    Assert (iCalcMin >= 0);
+
+    int iCalcMaint = iMaint + iNextMaint;
+    Assert (iCalcMaint >= 0);
+
+    *pfNextMaintenanceRatio = GetMaintenanceRatio (iCalcMin, iCalcMaint, 0);
 
 Cleanup:
 

@@ -370,6 +370,11 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
         }
     }
 
+    // Disallow URIs with carriage returns
+    if (strstr (m_pszUri, "\n") != NULL) {
+        return ERROR_MALFORMED_REQUEST;
+    }
+
     strcpy (pszUri, m_pszUri);
 
     // The first word of the URI is the name of the PageSource
@@ -466,7 +471,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
     }
 
     // Separate header name from value
-    strncpy (pszBuf, pszLine, stLineLen + 1);
+    memcpy (pszBuf, pszLine, stLineLen + 1);
 
     char* pszEnd = pszBuf + stLineLen;
     char* pszHeader = strtok (pszBuf, " ");
@@ -485,7 +490,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
 
         if (stricmp (pszHeader, "Authorization:") == 0) {
 
-            const size_t stBasicSpaceLen = sizeof ("Basic") / sizeof (char);
+            const size_t stBasicSpaceLen = sizeof ("Basic");
 
             if (strnicmp (pszValue, "Basic ", stBasicSpaceLen)  == 0) {
 
@@ -580,7 +585,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
 
                 if (*pszValue == '\"' && pszValue[m_stSeparatorLength - 2] == '\"') {
 
-                    // Fucking Opera 3.50 puts quotes around the separator
+                    // Opera 3.50 puts quotes around the separator
                     m_stSeparatorLength -= 2;
                     strncpy (m_pszSeparator + 2, pszValue + 1, m_stSeparatorLength - 1);
                     m_pszSeparator[m_stSeparatorLength + 1] = '\0';
@@ -588,7 +593,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
                 } else {
 
                     // Normal case: no quotes
-                    strncpy (m_pszSeparator + 2, pszValue, m_stSeparatorLength);
+                    memcpy (m_pszSeparator + 2, pszValue, m_stSeparatorLength);
                     m_stSeparatorLength ++;
                 }
             }
@@ -825,7 +830,7 @@ int HttpRequest::ParseHeaders() {
     char* pszBegin, * pszEnd, * pszEndMarker;
     
     // Set the timeout to 10 seconds, just in case
-    // TODO:  this blocks Http 1.1
+    // TODO:  this blocks reusing connections in HTTP 1.1
     iErrCode = m_pSocket->SetRecvTimeOut (10000);
 
     // Recv as big a block of data as possible
@@ -1559,7 +1564,7 @@ int HttpRequest::HandleBigMultiPartForm (size_t stNumRemaining, char* pszBuffer,
         pszFormName = (char*) StackAlloc (stFormNameLen);
     }
 
-    strncpy (pszFormName, pszEnd, stFormNameLen);
+    memcpy (pszFormName, pszEnd, stFormNameLen);
 
     // Determine form type
     pszEnd += stFormNameLen;

@@ -67,13 +67,14 @@
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib osal.lib"
 				ShowProgress="0"
 				OutputFile=".\Release/OldDatabase.dll"
 				Version=""
-				LinkIncremental="0"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
@@ -131,7 +132,6 @@ copy .\release\OldDatabase.pdb ..\release
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;OLDDATABASE_EXPORTS"
 				StringPooling="FALSE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -172,6 +172,9 @@ copy .\release\OldDatabase.pdb ..\release
 				ProgramDatabaseFile=".\Debug/OldDatabase.pdb"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
+				OptimizeForWindows98="0"
 				ImportLibrary=".\Debug/OldDatabase.lib"
 				TargetMachine="0"/>
 			<Tool

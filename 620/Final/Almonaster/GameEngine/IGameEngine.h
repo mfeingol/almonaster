@@ -61,6 +61,7 @@ struct GameConfiguration {
 
     float fCarrierCost;
     float fBuilderMinBR;
+    float fBuilderBRDampener;
     float fBuilderMultiplier;
     float fMorpherCost;
     float fJumpgateGateCost;
@@ -251,6 +252,7 @@ struct ShipOrderShipInfo {
 struct ShipOrderGameInfo {
     int iGameClassOptions;
     float fMaintRatio;
+    float fNextMaintRatio;
 };
 
 class IAlmonasterUIEventSink : virtual public IObject {
@@ -486,11 +488,7 @@ public:
     virtual int GetTroopshipFailurePopDecrement (float fTroopshipFailureFactor, float fBR) = 0;
     virtual int GetTroopshipSuccessPopDecrement (float fTroopshipSuccessFactor, int iPop) = 0;
     virtual int GetDoomsdayUpdates (float fDoomsdayAnnihilationFactor, float fBR) = 0;
-    
-    virtual void GetBuilderNewPlanetResources (float fBR, float fMinBR, float fMultiplier, 
-        int iAvgAg, int iAvgMin, int iAvgFuel, 
-        int* piNewAvgAg, int* piNewAvgMin, int* piNewAvgFuel) = 0;
-    
+
     virtual float GetGateBRForRange (float fRangeFactor, int iSrcX, int iSrcY, int iDestX, int iDestY) = 0;
     virtual float GetCarrierDESTAbsorption (float fBR) = 0;
 
@@ -806,7 +804,6 @@ public:
     virtual int SetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iDefaultBuildPlanet) = 0;
 
     virtual int GetEmpireBR (int iGameClass, int iGameNumber, int iEmpireKey, int* piBR) = 0;
-    virtual int GetEmpireMaintenanceRatio (int iGameClass, int iGameNumber, int iEmpireKey, float* pfMaintenanceRatio) = 0;
 
     virtual int GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTarget) = 0;
     virtual int SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarget) = 0;
@@ -870,10 +867,6 @@ public:
 
     // Top Lists
     virtual int GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsigned int* piNumEmpires) = 0;
-
-    // Updates
-    virtual int CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUpdate) = 0;
-    virtual int CheckAllGamesForUpdates() = 0;
 
     //////////
     // Game //

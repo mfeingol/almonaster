@@ -171,7 +171,7 @@ Cleanup:
     
     if (bMultipart) {
         
-        strncpy (m_pszFormName, pszFormName, stLen1);
+        memcpy (m_pszFormName, pszFormName, stLen1);
 
     } else {
 
@@ -187,7 +187,7 @@ Cleanup:
 
         if (bMultipart) {
             
-            strncpy (m_pszFormValue, pszFormValue, stLen2);
+            memcpy (m_pszFormValue, pszFormValue, stLen2);
             
         } else {
             

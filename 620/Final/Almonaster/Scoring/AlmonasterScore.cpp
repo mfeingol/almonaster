@@ -938,7 +938,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
                                                           int* piWinnerSignificance, int* piWinnerNumAllies, 
                                                           unsigned int iNumEmpires) {
 
-    int iErrCode;
+    int iErrCode, iLoserSignificance, iLoserNumAllies, iLoserKey;
 
     unsigned int i;
 
@@ -947,7 +947,6 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
     float* pfIncrease = (float*) StackAlloc (iNumEmpires * sizeof (float));
     float fLoserScore, fPartialDecrease, fDecrease = 0.0, fNumEmpires = (float) iNumEmpires;
 
-    int iLoserSignificance, iLoserNumAllies, iLoserKey;
     int64 i64EmpireSecretKey;
 
     bool bEmpireLocked = false, bValid;

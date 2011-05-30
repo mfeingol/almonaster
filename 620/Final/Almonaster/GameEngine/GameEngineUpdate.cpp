@@ -27,7 +27,7 @@
 //
 // Executes an update if one has occurred.  Also updates game lastlogin data
 
-int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUpdate) {
+int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpdateCheckTime, bool* pbUpdate) {
 
     int iErrCode;
 
@@ -276,7 +276,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUp
     
 Cleanup:
 
-    if (!bGameOver && iErrCode == OK) {
+    if (fUpdateCheckTime && !bGameOver && iErrCode == OK) {
         
         // Update last checked
         iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateCheck, tNow);
@@ -634,7 +634,7 @@ int GameEngine::ForceUpdate (int iGameClass, int iGameNumber) {
 // Check all currently existing games for an update
 // This is best effort
 
-int GameEngine::CheckAllGamesForUpdates() {
+int GameEngine::CheckAllGamesForUpdates (bool fUpdateCheckTime) {
 
     unsigned int i, iNumGames;
     int iGameClass, iGameNumber;
@@ -655,7 +655,7 @@ int GameEngine::CheckAllGamesForUpdates() {
         for (i = 0; i < iNumGames; i ++) {
             
             GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
-            CheckGameForUpdates (iGameClass, iGameNumber, &bUpdate);
+            CheckGameForUpdates (iGameClass, iGameNumber, fUpdateCheckTime, &bUpdate);
         }
         
         // Clean up

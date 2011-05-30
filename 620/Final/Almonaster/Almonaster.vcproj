@@ -75,7 +75,7 @@
 				ShowProgress="0"
 				OutputFile=".\Release/Almonaster.dll"
 				Version=""
-				LinkIncremental="0"
+				LinkIncremental="1"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
@@ -136,7 +136,6 @@ copy release\Almonaster.pdb ..\release\pagesources
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS"
 				StringPooling="FALSE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -178,6 +177,9 @@ copy release\Almonaster.pdb ..\release\pagesources
 				SubSystem="2"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
+				OptimizeReferences="0"
+				EnableCOMDATFolding="0"
+				OptimizeForWindows98="0"
 				ImportLibrary=".\Debug/Almonaster.lib"
 				TargetMachine="0"/>
 			<Tool
@@ -1200,6 +1202,16 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
 				</FileConfiguration>
 			</File>
+			<Filter
+				Name="MapGen"
+				Filter="">
+				<File
+					RelativePath=".\MapGen\DefaultMapGenerator.cpp">
+				</File>
+				<File
+					RelativePath=".\MapGen\DefaultMapGenerator.h">
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Almonaster"
@@ -1210,16 +1222,16 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath=".\Almonaster.h">
 			</File>
-		</Filter>
-		<Filter
-			Name="MapGen"
-			Filter="">
-			<File
-				RelativePath=".\MapGen\DefaultMapGenerator.cpp">
-			</File>
-			<File
-				RelativePath=".\MapGen\DefaultMapGenerator.h">
-			</File>
+			<Filter
+				Name="Chatroom"
+				Filter="">
+				<File
+					RelativePath=".\Chatroom\CChatroom.cpp">
+				</File>
+				<File
+					RelativePath=".\Chatroom\CChatroom.h">
+				</File>
+			</Filter>
 		</Filter>
 		<Filter
 			Name="Scoring"
@@ -1247,16 +1259,6 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			</File>
 			<File
 				RelativePath="Scoring\TournamentScoring.h">
-			</File>
-		</Filter>
-		<Filter
-			Name="Chatroom"
-			Filter="">
-			<File
-				RelativePath=".\Chatroom\CChatroom.cpp">
-			</File>
-			<File
-				RelativePath=".\Chatroom\CChatroom.h">
 			</File>
 		</Filter>
 		<Filter
@@ -1340,6 +1342,9 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			</File>
 			<File
 				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\News.html">
+			</File>
+			<File
+				RelativePath="..\Alajar\Www_root\Almonaster\resource\text\contributors.html">
 			</File>
 		</Filter>
 	</Files>

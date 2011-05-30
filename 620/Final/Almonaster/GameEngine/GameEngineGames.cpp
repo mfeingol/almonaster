@@ -965,6 +965,15 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     }
     bEmpireLocked = true;
 
+    // Check empire existence
+    for (i = 0; i < iNumEmpires; i ++) {
+
+        if (DoesEmpireExist (piCopy[i], &bFlag, NULL) != OK || !bFlag) {
+            iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
+            goto OnError;
+        }
+    }
+
     iErrCode = LockGameClass (iGameClass, &nmGameClassMutex);
     if (iErrCode != OK) {
         Assert (false);
@@ -1347,11 +1356,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     if (vOptions.GetInteger() & INDEPENDENCE) {
 
         GAME_INDEPENDENT_SHIPS (strTableName, iGameClass, *piGameNumber);
-
-        iErrCode = m_pGameData->CreateTable (
-            strTableName, 
-            GameIndependentShips::Template.Name
-            );
+        iErrCode = m_pGameData->CreateTable (strTableName, GameIndependentShips::Template.Name);
         if (iErrCode != OK) {
             Assert (false);
             goto OnError;
@@ -1359,26 +1364,16 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     }
 
     // No longer creating
-    iErrCode = m_pGameData->WriteAnd (
-        strGameData,
-        GameData::State,
-        ~GAME_CREATING
-        );
-
+    iErrCode = m_pGameData->WriteAnd (strGameData, GameData::State, ~GAME_CREATING);
     if (iErrCode != OK) {
         Assert (false);
         goto OnError;
     }
 
-    // Unlock
+    // Unlock empires
     Assert (bEmpireLocked && !bGameClassLocked);
 
-    for (i = 0; i < iNumEmpires; i ++) {
-        UnlockEmpire (pnmEmpireMutex[i]);
-    }
-    bEmpireLocked = false;
-
-    // Add the game to our game table
+    // Add the game to the system game table
     iErrCode = AddToGameTable (iGameClass, *piGameNumber);
     if (iErrCode != OK) {
         Assert (false);
@@ -1393,12 +1388,30 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     bGameLocked = true;
 
     // Enter game
+    bEmpireLocked = false;
+
     for (i = 0; i < iNumEmpires; i ++) {
 
-        iErrCode = EnterGame (iGameClass, *piGameNumber, piEmpireKey[i], goGameOptions.pszPassword, &iNumUpdates, iEmpireCreator != TOURNAMENT, true);
+        bool bUnlocked = false;
+        iErrCode = EnterGame (
+            iGameClass, *piGameNumber, piEmpireKey[i], goGameOptions.pszPassword, &iNumUpdates, 
+            iEmpireCreator != TOURNAMENT, 
+            true, pnmEmpireMutex + i, &bUnlocked
+            );
+
         if (iErrCode != OK) {
+            
+            if (!bUnlocked) {
+                UnlockEmpire (pnmEmpireMutex[i]);
+            }
+
+            for (j = i + 1; j < iNumEmpires; j ++) {
+                UnlockEmpire (pnmEmpireMutex[j]);
+            }
             goto OnError;
         }
+
+        Assert (bUnlocked);
     }
 
     // Handle team arrangements
@@ -1646,6 +1659,10 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
         }
     }
 
+    //
+    // No errors from this point on
+    //
+
     // Send notification messages for tournament games
     if (iEmpireCreator == TOURNAMENT) {
         
@@ -1736,7 +1753,8 @@ OnError:
 // Make an empire enter an already created game.
 
 int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, 
-                           int* piNumUpdates, bool bSendMessages, bool bCreatingGame) {
+                           int* piNumUpdates, bool bSendMessages, 
+                           bool bCreatingGame, NamedMutex* pempireMutex, bool* pbUnlocked) {
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
@@ -1762,16 +1780,24 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         vMaxNumEmpires, vStillOpen, vNumUpdates, vMaxTechDev, vEmpireName, vDiplomacyLevel,
         vGameOptions, vSecretKey;
 
-    bool bEmpireLocked = true, bGenerateMapForAllEmpires = false;
+    bool bEmpireLocked = false, bGenerateMapForAllEmpires = false;
 
     Variant pvGameEmpireData [GameEmpireData::NumColumns];
 
     NamedMutex nmEmpireMutex;
     if (!bCreatingGame) {
+
         iErrCode = LockEmpire (iEmpireKey, &nmEmpireMutex);
         if (iErrCode != OK) {
             goto OnError;
         }
+        bEmpireLocked = true;
+
+    } else {
+
+        Assert (pempireMutex != NULL);
+        Assert (pbUnlocked != NULL);
+        *pbUnlocked = false;
     }
 
     // Get time
@@ -2079,7 +2105,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         
         // Try to trigger all remaining updates
         if (!bCreatingGame) {
-            iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, &bFlag);
+            iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bFlag);
             Assert (iErrCode == OK);
         }
     }
@@ -2539,6 +2565,11 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     if (!bCreatingGame) {
         UnlockEmpire (nmEmpireMutex);
         bEmpireLocked = false;
+    } else {
+        Assert (pempireMutex != NULL);
+        Assert (!bEmpireLocked);
+        UnlockEmpire (*pempireMutex);
+        *pbUnlocked = true;
     }
 
     ////////////////////////////////////////////////
@@ -3566,6 +3597,10 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         return iErrCode;
     }
 
+    if (!(iState & STARTED)) {
+        return OK;
+    }
+
     iErrCode = m_pGameData->GetTableForWriting (strGameData, &pGameData);
     if (iErrCode != OK) {
         Assert (false);
@@ -3787,11 +3822,7 @@ int GameEngine::PauseAllGames() {
             GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
 
             // Flush remaining updates
-            iErrCode = CheckGameForUpdates (
-                iGameClass,
-                iGameNumber,
-                &bExists
-                );
+            iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists);
 
             // Best effort pause the game
             if (iErrCode == OK && DoesGameExist (iGameClass, iGameNumber, &bExists) == OK && bExists) {
@@ -4394,16 +4425,21 @@ int GameEngine::GetNumEmpiresInGames (unsigned int* piNumEmpires) {
     int iErrCode;
 
     IReadTable* pGames = NULL;
-
-    unsigned int iNumEmpiresSoFar = 0;
-    unsigned int iKey = NO_KEY;
+    unsigned int iKey = NO_KEY, iEmpireKey;
 
     char pszGameEmpires [256];
+    Variant vTemp;
+
+    HashTable<unsigned int, unsigned int, GenericHashValue<unsigned int>, GenericEquals <unsigned int> > 
+        htEmpires (NULL, NULL);
+
+    if (!htEmpires.Initialize (250)) {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
     while (true) {
 
         const char* pszGame;
-        unsigned int iNumEmpiresThisGame;
         int iGameClass, iGameNumber;
 
         iErrCode = m_pGameData->GetTableForReading (SYSTEM_ACTIVE_GAMES, &pGames);
@@ -4425,25 +4461,63 @@ int GameEngine::GetNumEmpiresInGames (unsigned int* piNumEmpires) {
             goto Cleanup;
         }
 
-        GetGameClassGameNumber (pszGame, &iGameClass, &iGameNumber);
-
         SafeRelease (pGames);
 
-        GET_GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
+        GetGameClassGameNumber (pszGame, &iGameClass, &iGameNumber);
 
-        iErrCode = m_pGameData->GetNumRows (pszGameEmpires, &iNumEmpiresThisGame);
-        if (iErrCode != OK) {
-            goto Cleanup;
+        if (WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL) == OK) {
+
+            unsigned int iProxyKey = NO_KEY;
+            GET_GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
+
+            while (true) {
+
+                iErrCode = m_pGameData->GetNextKey (pszGameEmpires, iProxyKey, &iProxyKey);
+                if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                    iErrCode = OK;
+                    break;
+                }
+                if (iErrCode != OK) {
+                    break;
+                }
+
+                iErrCode = m_pGameData->ReadData (pszGameEmpires, iProxyKey, GameEmpires::EmpireKey, &vTemp);
+                if (iErrCode != OK) {
+                    break;
+                }
+                iEmpireKey = vTemp.GetInteger();
+
+                if (!htEmpires.FindFirst (iEmpireKey, (unsigned int*) NULL)) {
+
+                    if (!htEmpires.Insert (iEmpireKey, iEmpireKey)) {
+                        iErrCode = ERROR_OUT_OF_MEMORY;
+                        break;
+                    }
+                }
+            }
+
+            SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+
+            if (iErrCode != OK) {
+                goto Cleanup;
+            }
         }
-
-        iNumEmpiresSoFar += iNumEmpiresThisGame;
     }
 
-    *piNumEmpires = iNumEmpiresSoFar;
+    SafeRelease (pGames);
+
+    *piNumEmpires = htEmpires.GetNumElements();
 
 Cleanup:
 
     SafeRelease (pGames);
 
     return iErrCode;
+}
+
+int GameEngine::GetNumRecentActiveEmpiresInGames (unsigned int* piNumEmpires) {
+
+    // To implement this, we'll use the lock table
+    *piNumEmpires = m_lockMgr.GetNumElements();    
+    return OK;
 }

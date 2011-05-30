@@ -343,7 +343,7 @@ int GameEmpireLockManager::Initialize (const LockManagerConfig& lmConf) {
         return iErrCode;
     }
 
-    unsigned int iNumObjects = max (m_lmConf.iNumEmpiresHint, 200);
+    unsigned int iNumObjects = max (m_lmConf.iNumEmpiresHint * 2, 200);
 
     if (!m_oCache.Initialize (iNumObjects / 4)) {
         return ERROR_OUT_OF_MEMORY;
@@ -441,6 +441,17 @@ void GameEmpireLockManager::ReleaseGameEmpireLock (GameEmpireLock* pgeLock) {
     pgeLock->SetInUse (false);
 }
 
+unsigned int GameEmpireLockManager::GetNumElements() {
+
+    unsigned int iNumEmpires;
+
+    m_rwHTLock.WaitReader();
+    iNumEmpires = m_htLocks.GetNumElements();
+    m_rwHTLock.SignalReader();
+
+    return iNumEmpires;
+}
+
 GameEmpireLock* GameEmpireLockManager::FindOrCreateLock() {
 
     m_mOCLock.Wait();
@@ -466,8 +477,9 @@ void GameEmpireLockManager::Scan() {
 
     UTCTime tNow;
     Timer timer;
-    LMHashTableIterator itor;
+    LMHashTableIterator iReadItor, iWriteItor;
 
+    int iSleepDivisor = 1;
     const unsigned int iMaxNumAgedOut = m_lmConf.iMaxAgedOutPerScan;
     unsigned int iNumAgedOut;
 
@@ -479,9 +491,12 @@ void GameEmpireLockManager::Scan() {
     while (true) {
 
         // Sleep for the scan period, exit if the event is signalled
-        if (m_eShutdown.Wait (m_lmConf.msScanPeriod) == OK) {
+        if (m_eShutdown.Wait (m_lmConf.msScanPeriod / iSleepDivisor) == OK) {
             break;
         }
+
+        // Reset the sleep divisor to 1
+        iSleepDivisor = 1;
 
         iNumAgedOut = 0;
 
@@ -492,11 +507,11 @@ void GameEmpireLockManager::Scan() {
 
         while (true) {
 
-            if (!m_htLocks.GetNextIterator (&itor)) {
-                itor.Reset();
+            if (!m_htLocks.GetNextIterator (&iReadItor)) {
+                iReadItor.Reset();
                 break;
             }
-            pgeLock = itor.GetData();
+            pgeLock = iReadItor.GetData();
 
             if (!pgeLock->InUse() && 
                 (!pgeLock->Active() ||
@@ -514,13 +529,17 @@ void GameEmpireLockManager::Scan() {
 
             // See if we've overstayed our welcome holding the read lock
             if (Time::GetTimerCount (timer) > m_lmConf.msMaxScanTime) {
-                itor.Freeze();
+                iReadItor.Freeze();
+
+                // Set the sleep divisor to 2, so we sleep half as long before scanning again
+                iSleepDivisor = 2;
                 break;
             }
         }
 
         m_rwHTLock.SignalReader();
 
+        // Age out the empires we collected in the previous loop
         if (iNumAgedOut > 0) {
 
             unsigned int i, iLoopGuard = iNumAgedOut;
@@ -531,17 +550,17 @@ void GameEmpireLockManager::Scan() {
 
             for (i = 0; i < iLoopGuard; i ++) {
 
-                if (!m_htLocks.FindFirst (ageTimeOut + i, &itor)) {
+                if (!m_htLocks.FindFirst (ageTimeOut + i, &iWriteItor)) {
                     continue;
                 }
-                pgeLock = itor.GetData();
+                pgeLock = iWriteItor.GetData();
 
                 if (!pgeLock->InUse() &&
                     (!pgeLock->Active() ||
                     Time::GetSecondDifference (tNow, pgeLock->GetLastAccess()) > m_lmConf.sAgeOutPeriod)) {
 
                     // Remove from the hash table
-                    bool bRemove = m_htLocks.Delete (&itor, NULL, NULL);
+                    bool bRemove = m_htLocks.Delete (&iWriteItor, NULL, NULL);
                     Assert (bRemove);
 
                     apgeLock [iNumAgedOut] = pgeLock;

@@ -36,6 +36,17 @@ typedef _timeb Timer;
 
 class String;
 
+enum DayOfWeek {
+    Sunday,
+    Monday,
+    Tuesday,
+    Wednesday,
+    Thursday,
+    Friday,
+    Saturday,
+    DayOfWeekError
+};
+
 namespace Time {
 
     OSAL_EXPORT void ZeroTime (UTCTime* ptUTCTime);
@@ -46,9 +57,11 @@ namespace Time {
     OSAL_EXPORT int GetTimeZone (char pszTimeZone[OS::MaxTimeZoneLength], int* piBias);
     OSAL_EXPORT int GetTimeZoneBias (int* piBias);
 
-    OSAL_EXPORT int GetDate (int* piSec, int* piMin, int* piHour, int* piDay, int* piMonth, int* piYear);
-    OSAL_EXPORT int GetDate (const UTCTime& tTime, int* piSec, int* piMin, int* piHour, int* piDay, int* piMonth, 
-        int* piYear);
+    OSAL_EXPORT void GetDate (
+        int* piSec, int* piMin, int* piHour, DayOfWeek* pdayOfWeek, int* piDay, int* piMonth, int* piYear);
+    OSAL_EXPORT void GetDate (
+        const UTCTime& tTime,
+        int* piSec, int* piMin, int* piHour, DayOfWeek* pdayOfWeek, int* piDay, int* piMonth, int* piYear);
 
     OSAL_EXPORT int GetTimeString (char pszTimeString[OS::MaxTimeLength]);
     OSAL_EXPORT int GetTimeString (const UTCTime& tTime, char pszTimeString[OS::MaxTimeLength]);
@@ -71,10 +84,13 @@ namespace Time {
     OSAL_EXPORT int GetYear();
     OSAL_EXPORT int GetYear (const UTCTime& tTime);
 
-    OSAL_EXPORT const char* GetDayOfWeek();
-    OSAL_EXPORT const char* GetDayOfWeek (const UTCTime& tTime);
+    OSAL_EXPORT DayOfWeek GetDayOfWeek();
+    OSAL_EXPORT DayOfWeek GetDayOfWeek (const UTCTime& tTime);
 
-    OSAL_EXPORT const char* GetMonthName ();
+    OSAL_EXPORT const char* GetDayOfWeekName (DayOfWeek dayOfWeek);
+    OSAL_EXPORT const char* GetAbbreviatedDayOfWeekName (DayOfWeek dayOfWeek);
+
+    OSAL_EXPORT const char* GetMonthName();
     OSAL_EXPORT const char* GetMonthName (int iMonth);
     OSAL_EXPORT const char* GetMonthName (const UTCTime& tTime);
 

@@ -143,7 +143,7 @@ void HtmlRenderer::WriteGameMessages() {
                 OutputText ("</strong>");
                 
                 if (iFlags & MESSAGE_BROADCAST) {
-                    OutputText (" broadcasted");
+                    OutputText (" broadcast");
                 } else {
                     OutputText (" sent");
                 }
@@ -156,7 +156,7 @@ void HtmlRenderer::WriteGameMessages() {
                     OutputText ("the system ");
 
                     if (iFlags & MESSAGE_BROADCAST) {
-                        OutputText ("broadcasted");
+                        OutputText ("broadcast");
                     } else {
                         OutputText ("sent");
                     }
@@ -365,7 +365,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
             if (iFlags & MESSAGE_BROADCAST) {
                 pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
-                OutputText ("broadcasted");
+                OutputText ("broadcast");
             } else {
                 pszFontColor = m_vPrivateMessageColor.GetCharPtr();
                 OutputText ("sent");
@@ -383,7 +383,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
             if (iFlags & MESSAGE_BROADCAST) {
                 pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
-                OutputText ("broadcasted");
+                OutputText ("broadcast");
             } else {
                 pszFontColor = m_vPrivateMessageColor.GetCharPtr();
                 OutputText ("sent");

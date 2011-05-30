@@ -312,7 +312,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
             "<td>Start a new tournament game:</td><td>"
             );
 
-        WriteButton (BID_STARTGAME);
+        WriteButton (BID_START);
         
         OutputText (
             "</td>"\
@@ -1149,7 +1149,7 @@ void HtmlRenderer::RenderTournaments (const unsigned int* piTournamentKey, unsig
 
     unsigned int i;
 
-    OutputText ("<p><table width=\"75%\" border=\"1\" cellspacing=\"1\" cellpadding=\"2\" bordercolor=\"");
+    OutputText ("<p><table width=\"75%\" bordercolor=\"#");
     m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
     OutputText (
 
@@ -1405,7 +1405,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 goto Cleanup;
             }
 
-            OutputText ("<p><table width=\"60%\" border=\"1\" cellspacing=\"1\" cellpadding=\"2\" bordercolor=\"");
+            OutputText ("<p><table width=\"60%\" bordercolor=\"#");
             m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
             OutputText (
 
@@ -1586,7 +1586,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
         OutputText (
             
             "<p><h3>Unaffiliated Empires:</h3>"\
-            "<p><table width=\"60%\" border=\"1\" cellspacing=\"1\" cellpadding=\"2\" bordercolor=\""
+            "<p><table width=\"60%\" bordercolor=\"#"
             );
 
         m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());

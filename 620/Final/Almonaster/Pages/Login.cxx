@@ -72,6 +72,7 @@ if (m_pHttpRequest->GetMethod() == GET) {
                     if (i64RealPasswordHash == i64SubmittedPasswordHash) {
 
                         m_iEmpireKey = iAutoLogonKey;
+                        m_bAutoLogon = true;
 
                         if (LoginEmpire() == OK && InitializeEmpire (true) == OK) {
                             return Redirect (ACTIVE_GAME_LIST);
@@ -171,7 +172,8 @@ else if (!m_bRedirection) {
         return Redirect (NEW_EMPIRE);
     }
 
-    else if (m_pHttpRequest->GetFormBeginsWith ("BLogin")) {
+    else if (m_pHttpRequest->GetFormBeginsWith ("BLogin") ||
+             m_pHttpRequest->GetFormBeginsWith ("TransDot")) {
 
         if (bFlag) {
 
@@ -377,7 +379,8 @@ if (!(iOptions & LOGINS_ENABLED)) {
     %><p><table align="center"><tr><%
 
     %><td align="right"><strong>Empire Name:</strong></td><%
-    %><td><input type="text" size="20" maxlength="<% Write (MAX_EMPIRE_NAME_LENGTH); %>" name="EmpireName"<% 
+    %><td><%
+    %><input type="text" size="20" tabindex="32767" maxlength="<% Write (MAX_EMPIRE_NAME_LENGTH); %>" name="EmpireName"<% 
 
     if (pszPrintEmpireName != NULL) {
         %> value="<% Write (pszPrintEmpireName); %>"<%
@@ -387,11 +390,15 @@ if (!(iOptions & LOGINS_ENABLED)) {
     %></tr><tr><%
 
     %><td align="right"><strong>Password:</strong></td><%
-    %><td><input type="password" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>" name="Password"><%
+    %><td><%
+    %><input type="password" size="20" tabindex="32767" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>" name="Password"><%
     %></td><%
 
     %></tr><%
-    %></table><p><%
+    %></table><%
+    %><p><%
+
+    %><input type="image" src="<% Write (BASE_RESOURCE_DIR TRANSPARENT_DOT); %>" name="TransDot"><%
 
     if (iOptions & NEW_EMPIRES_ENABLED) {
         WriteButton (BID_CREATEEMPIRE); %> <%

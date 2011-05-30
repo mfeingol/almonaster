@@ -343,7 +343,7 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
             if (m_ccConf.bPostSystemMessages) {
 
                 sprintf (pszTimeOut, "%s timed out of the chatroom", pszName);
-                iErrCode = PostMessageWithTime (NULL, pszTimeOut, tTimeOutTime, 0);
+                iErrCode = PostMessageWithTime (NULL, pszTimeOut, tTimeOutTime, CHATROOM_MESSAGE_SYSTEM);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }

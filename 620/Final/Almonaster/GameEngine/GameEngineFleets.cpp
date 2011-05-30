@@ -1279,6 +1279,11 @@ int GameEngine::UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey
 
     GAME_EMPIRE_FLEETS (strEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
 
+    // Make sure that the name isn't null
+    if (String::IsBlank (pszNewName)) {
+        return ERROR_EMPTY_NAME;
+    }
+
     // Make sure fleet exists
     bool bFleetExists;
     if (m_pGameData->DoesRowExist (strEmpireFleets, iFleetKey, &bFleetExists) != OK || !bFleetExists) {
@@ -2052,8 +2057,7 @@ int GameEngine::CreateRandomFleet (unsigned int iGameClass, unsigned int iGameNu
     while (iErrCode == ERROR_NAME_IS_IN_USE) {
 
         // Generate a random fleet name
-        int iRand = Algorithm::GetRandomInteger (0x7fffffff);
-        snprintf (pszFleetName, sizeof (pszFleetName), "Fleet%i", iRand);
+        snprintf (pszFleetName, sizeof (pszFleetName), "%d", Algorithm::GetRandomInteger (0x7fffffff));
 
         iErrCode = CreateNewFleet (
             iGameClass,

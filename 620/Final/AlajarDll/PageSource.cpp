@@ -346,7 +346,20 @@ int PageSource::Initialize (const char* pszLibraryName, const char* pszClsid) {
         return iErrCode;
     }
 
-    // Initialize PageSource
+    // Open report and log
+    iErrCode = OpenReport();
+    if (iErrCode != OK) {
+        m_libPageSource.Close();
+        return iErrCode;
+    }
+
+    iErrCode = OpenLog();
+    if (iErrCode != OK) {
+        m_libPageSource.Close();
+        return iErrCode;
+    }
+
+    // Initialize underlying PageSource
     return OnInitialize (m_pHttpServer, this);
 }
 
@@ -1415,8 +1428,9 @@ void PageSource::GetReportFileName (char pszFileName[OS::MaxFileNameLength]) {
     
     int iSec, iMin, iHour, iDay, iMonth, iYear;
     char pszMonth[20], pszDay[20];
+    DayOfWeek day;
 
-    Time::GetDate (m_tReportTime, &iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+    Time::GetDate (m_tReportTime, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 
     sprintf (pszFileName, "%s/%s_%i_%s_%s.report", m_pHttpServer->GetReportPath(), m_pszName, iYear, 
         String::ItoA (iMonth, pszMonth, 10, 2), String::ItoA (iDay, pszDay, 10, 2));
@@ -1426,8 +1440,9 @@ void PageSource::GetLogFileName (char pszFileName[OS::MaxFileNameLength]) {
 
     int iSec, iMin, iHour, iDay, iMonth, iYear;
     char pszMonth[20], pszDay[20];
+    DayOfWeek day;
 
-    Time::GetDate (m_tLogTime, &iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+    Time::GetDate (m_tLogTime, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 
     sprintf (pszFileName, "%s/%s_%i_%s_%s.log", m_pHttpServer->GetLogPath(), m_pszName, iYear, 
         String::ItoA (iMonth, pszMonth, 10, 2), String::ItoA (iDay, pszDay, 10, 2));
@@ -1442,14 +1457,7 @@ void PageSource::LogMessage (const char* pszMessage) {
     m_mLogMutex.Wait();
 
     if (HttpServer::DifferentDays (m_tLogTime, tNow)) {
-
-        m_tLogTime = tNow;
-
-        char pszFileName [OS::MaxFileNameLength];
-        GetLogFileName (pszFileName);
-
-        m_fLogFile.Close();
-        m_fLogFile.OpenAppend (pszFileName);
+        OpenLog();        
     }
 
     if (m_fLogFile.IsOpen()) {
@@ -1458,6 +1466,17 @@ void PageSource::LogMessage (const char* pszMessage) {
     }
 
     m_mLogMutex.Signal();
+}
+
+int PageSource::OpenLog() {
+
+    Time::GetTime (&m_tLogTime);
+
+    char pszFileName [OS::MaxFileNameLength];
+    GetLogFileName (pszFileName);
+
+    m_fLogFile.Close();
+    return m_fLogFile.OpenAppend (pszFileName);
 }
 
 void PageSource::ReportMessage (const char* pszMessage) {
@@ -1469,20 +1488,36 @@ void PageSource::ReportMessage (const char* pszMessage) {
     m_mReportMutex.Wait();
 
     if (HttpServer::DifferentDays (m_tReportTime, tNow)) {
-
-        m_tReportTime = tNow;
-
-        char pszFileName [OS::MaxFileNameLength];
-        GetReportFileName (pszFileName);
-
-        m_fReportFile.Close();
-        m_fReportFile.OpenWrite (pszFileName);
+        OpenReport();
     }
 
+    // Add date and time
+    DayOfWeek weekDay;
+    int iSec, iMin, iHour, iDay, iMonth, iYear;
+    Time::GetDate (tNow, &iSec, &iMin, &iHour, &weekDay, &iDay, &iMonth, &iYear);
+
+    char pszDate [64];
+    snprintf (
+        pszDate, sizeof (pszDate), "[%.4d-%.2d-%.2d %.2d:%.2d:%.2d] ",
+        iYear, iMonth, iDay, iHour, iMin, iSec
+        );
+
+    m_fReportFile.Write (pszDate);
     m_fReportFile.Write (pszMessage);
     m_fReportFile.WriteEndLine();
 
     m_mReportMutex.Signal();
+}
+
+int PageSource::OpenReport() {
+
+    Time::GetTime (&m_tReportTime);
+
+    char pszFileName [OS::MaxFileNameLength];
+    GetReportFileName (pszFileName);
+
+    m_fReportFile.Close();
+    return m_fReportFile.OpenWrite (pszFileName);
 }
 
 
@@ -1548,7 +1583,7 @@ int PageSource::WriteReport (const char* pszMessage) {
 
     plmMessage->lmtMessageType = REPORT_MESSAGE;
     plmMessage->pPageSource = this;
-    strncpy (plmMessage->pszText, pszMessage, stLength + 1);
+    memcpy (plmMessage->pszText, pszMessage, stLength + 1);
 
     AddRef();
 

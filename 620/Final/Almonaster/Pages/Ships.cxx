@@ -68,7 +68,7 @@ if (!bMapGenerated) {
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
 
     int iBR;
-    float fMaintRatio;
+    float fMaintRatio, fNextMaintRatio;
 
     if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
 
@@ -77,11 +77,13 @@ if (!bMapGenerated) {
 
         iBR = ratInfo.iBR;
         fMaintRatio = ratInfo.fMaintRatio;
+        fNextMaintRatio = ratInfo.fNextMaintRatio;
 
     } else {
 
         GameCheck (g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
         GameCheck (g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
+        GameCheck (g_pGameEngine->GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
     }
 
     // Render ships
@@ -91,6 +93,7 @@ if (!bMapGenerated) {
         m_iEmpireKey,
         iBR,
         fMaintRatio,
+        fNextMaintRatio,
         NULL,
         false,
         NULL,

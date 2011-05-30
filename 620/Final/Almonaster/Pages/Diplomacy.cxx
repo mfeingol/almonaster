@@ -38,6 +38,23 @@ int i, j, iErrCode;
 bool bIgnore;
 const char* pszRedrawMessage = NULL;
 
+// Read default message target
+int iDefaultMessageTarget;
+iErrCode = g_pGameEngine->GetEmpireDefaultMessageTarget (
+    m_iGameClass,
+    m_iGameNumber,
+    m_iEmpireKey,
+    &iDefaultMessageTarget
+    );
+
+if (iErrCode != OK) {
+    Assert (false);
+    AddMessage ("Could not read default message target; error was ");
+    AppendMessage (iErrCode);
+    iDefaultMessageTarget = MESSAGE_TARGET_BROADCAST;
+}
+Assert (iDefaultMessageTarget >= MESSAGE_TARGET_NONE && iDefaultMessageTarget <= MESSAGE_TARGET_LAST_USED);
+
 if (m_bOwnPost && !m_bRedirection) {
 
     // Handle submissions
@@ -95,30 +112,31 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     case NO_KEY:
                         bBroadcast = true;
-                        iLastMessageTargetMask |= MESSAGE_TARGET_BROADCAST;
+                        iLastMessageTargetMask |= MESSAGE_TARGET_BROADCAST_MASK;
                         break;
 
                     case ALL_WAR:
                         bWar = true;
-                        iLastMessageTargetMask |= MESSAGE_TARGET_WAR;
+                        iLastMessageTargetMask |= MESSAGE_TARGET_WAR_MASK;
                         break;
 
                     case ALL_TRUCE:
                         bTruce = true;
-                        iLastMessageTargetMask |= MESSAGE_TARGET_TRUCE;
+                        iLastMessageTargetMask |= MESSAGE_TARGET_TRUCE_MASK;
                         break;
 
                     case ALL_TRADE:
                         bTrade = true;
-                        iLastMessageTargetMask |= MESSAGE_TARGET_TRADE;
+                        iLastMessageTargetMask |= MESSAGE_TARGET_TRADE_MASK;
                         break;
 
                     case ALL_ALLIANCE:
                         bAlliance = true;
-                        iLastMessageTargetMask |= MESSAGE_TARGET_ALLIANCE;
+                        iLastMessageTargetMask |= MESSAGE_TARGET_ALLIANCE_MASK;
                         break;
 
                     default:
+                        iLastMessageTargetMask |= MESSAGE_TARGET_INDIVIDUALS;
                         piDelayEmpireKey[iDelayEmpireKeys ++] = piTargetKey[iCounter ++];
                         break;
                     }
@@ -360,28 +378,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Update last used, if necessary
-                int iDefaultMessageTarget;
-
-                iErrCode = g_pGameEngine->GetEmpireDefaultMessageTarget (
-                    m_iGameClass,
-                    m_iGameNumber,
-                    m_iEmpireKey,
-                    &iDefaultMessageTarget
-                    );
-
-                if (iErrCode != OK) {
-
-                    AddMessage ("Could not read default message target; error was ");
-                    AppendMessage (iErrCode);
-
-                } else {
+                if (iDefaultMessageTarget == MESSAGE_TARGET_LAST_USED) {
 
                     iErrCode = g_pGameEngine->SetLastUsedMessageTarget (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
                         iLastMessageTargetMask,
-                        piLastMessageTargetKeyArray,
+                        iNumLastUsed == 0 ? NULL : piLastMessageTargetKeyArray,
                         iNumLastUsed
                         );
 
@@ -498,7 +502,9 @@ int piDipKey [NUM_DIP_LEVELS], iSelected = 0, iNumOptions = 0, iSelectedIndex, i
     iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey, iActiveEmpires,
     iRuins, iSec, iMin, iHour, iDay, iMonth, iYear, * piStatus = NULL, * piIndex = NULL, iIndex;
 
+DayOfWeek day;
 UTCTime tCreated;
+
 char pszCreated [OS::MaxDateLength];
 
 bool bPrivateMessages;
@@ -642,11 +648,7 @@ if (iErrCode != OK) {
 
 SafeRelease (pSystemEmpireDataTable);
 
-iErrCode = Time::GetDate (tCreated, &iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
-if (iErrCode != OK) {
-    Assert (false);
-    goto Cleanup;
-}
+Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
 
@@ -1131,16 +1133,12 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     SafeRelease (pSystemEmpireDataTable);
 
-    iErrCode = Time::GetDate (tCreated, &iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
     sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
     %><tr><td colspan="11">&nbsp;</td></tr><%
 
-    if (iIndex == 0 || piStatus[iIndex] != piStatus[iIndex - 1]) {
+    if ((iIndex == 0 && piStatus[0] != ALLIANCE) || (iIndex > 0 && piStatus[iIndex] != piStatus[iIndex - 1])) {
         %><tr><td align="center" colspan="11"><% WriteSeparatorString (m_iSeparatorKey); %></td></tr><%
         %><tr><td colspan="11">&nbsp;</td></tr><%
     }
@@ -1203,24 +1201,27 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     %><td align="center"><% Write (iEcon); %></td><%
     %><td align="center"><% Write (iMil); %></td><%
-    %><td colspan="2" align="center"><% 
 
-    if (iTheyOffer == WAR) {
-        %><font color="#<% Write (pszBad); %>"><% Write (WAR_STRING);
-    }
-
-    else if (iTheyOffer == ALLIANCE) {
-        %><font color="#<% Write (pszGood); %>"><% 
-        Write (ALLIANCE_STRING); %></font><%
-    } else {
-        Write (DIP_STRING (iTheyOffer)); 
-    } %></td><%
-
-    %><td colspan="2" align="center"><%
     if (!bGameStarted) {
-        %><strong><font color="#<% Write (pszBad); %>"><% 
-        Write (WAR_STRING); %></font></strong><%
+        %><td colspan="2" align="center">-</td><%
+        %><td colspan="2" align="center">-</td><%
+        %><td align="center">-</td><%
     } else {
+
+        %><td colspan="2" align="center"><%
+
+        if (iTheyOffer == WAR) {
+            %><font color="#<% Write (pszBad); %>"><% Write (WAR_STRING);
+        }
+
+        else if (iTheyOffer == ALLIANCE) {
+            %><font color="#<% Write (pszGood); %>"><% 
+            Write (ALLIANCE_STRING); %></font><%
+        } else {
+            Write (DIP_STRING (iTheyOffer)); 
+        }
+
+        %></td><td colspan="2" align="center"><%
 
         if (iNumOptions > 1) {
             %><select name="DipOffer<% Write (i); %>" size="1"><%
@@ -1260,21 +1261,22 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         }
 
         %><input type="hidden" name="FoeKey<% Write (i); %>" value="<% Write (iKnownEmpireKey); %>"><%
-    }
 
-    %></td><td align="center"><strong><%
+        %></td><td align="center"><strong><%
 
-    if (iCurrentStatus == WAR) {
-        %><font color="#<% Write (pszBad); %>"><% 
-        Write (WAR_STRING);
-    }
+        if (iCurrentStatus == WAR) {
+            %><font color="#<% Write (pszBad); %>"><% 
+            Write (WAR_STRING);
+        }
 
-    else if (iCurrentStatus == ALLIANCE) {
-        %><font color="#<% Write (pszGood); %>"><% 
-        Write (ALLIANCE_STRING); %></font><%
-    } else {
-        Write (DIP_STRING (iCurrentStatus)); 
-    } %></strong></td><%
+        else if (iCurrentStatus == ALLIANCE) {
+            %><font color="#<% Write (pszGood); %>"><% 
+            Write (ALLIANCE_STRING); %></font><%
+        } else {
+            Write (DIP_STRING (iCurrentStatus)); 
+        } %></strong></td><%
+    
+    }   // End if game started
 
     %><td align="center"><% 
     %><select name="Ignore<% Write (i); %>"><%
@@ -1398,7 +1400,7 @@ if (iActiveEmpires > 1) {
 
     if (bBroadcast || (bPrivateMessages && iNumKnownEmpires > 0)) {
 
-        int iExtra = 0, iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0, iDefaultTarget, iDipTargets = 0;
+        int iExtra = 0, iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0, iDipTargets = 0;
 
         if (bAllTargets) {
 
@@ -1442,24 +1444,7 @@ if (iActiveEmpires > 1) {
         bool* pbSelected = (bool*) StackAlloc (stAlloc);
         memset (pbSelected, 0, stAlloc);
 
-        iErrCode = g_pGameEngine->GetEmpireDefaultMessageTarget (
-            m_iGameClass,
-            m_iGameNumber,
-            m_iEmpireKey,
-            &iDefaultTarget
-            );
-
-        // Best effort
-        Assert (iErrCode == OK);
-
-        if (iErrCode != OK) {
-            iDefaultTarget = MESSAGE_TARGET_NONE;
-        }
-
-        // Process default target
-        Assert (iDefaultTarget >= MESSAGE_TARGET_NONE && iDefaultTarget <= MESSAGE_TARGET_LAST_USED);
-
-        switch (iDefaultTarget) {
+        switch (iDefaultMessageTarget) {
 
         case MESSAGE_TARGET_NONE:
 
@@ -1491,24 +1476,34 @@ if (iActiveEmpires > 1) {
             if (iErrCode == OK) {
 
                 // Process mask
-                if (iLastUsedMask & MESSAGE_TARGET_BROADCAST_MASK) {
-                    pbSelected[MESSAGE_TARGET_BROADCAST] = true;
-                }
+                if ((iLastUsedMask & (~MESSAGE_TARGET_INDIVIDUALS)) == 0) {
 
-                if (iLastUsedMask & MESSAGE_TARGET_WAR_MASK) {
-                    pbSelected[MESSAGE_TARGET_WAR] = true;
-                }
+                    // Default to broadcast if no last target
+                    if (iNumLastUsed == 0) {
+                        pbSelected[MESSAGE_TARGET_BROADCAST] = true;
+                    }
 
-                if (iLastUsedMask & MESSAGE_TARGET_TRUCE_MASK) {
-                    pbSelected[MESSAGE_TARGET_TRUCE] = true;
-                }
+                } else {
 
-                if (iLastUsedMask & MESSAGE_TARGET_TRADE_MASK) {
-                    pbSelected[MESSAGE_TARGET_TRADE] = true;
-                }
+                    if (iLastUsedMask & MESSAGE_TARGET_BROADCAST_MASK) {
+                        pbSelected[MESSAGE_TARGET_BROADCAST] = true;
+                    }
 
-                if (iLastUsedMask & MESSAGE_TARGET_ALLIANCE_MASK) {
-                    pbSelected[MESSAGE_TARGET_ALLIANCE] = true;
+                    if (iLastUsedMask & MESSAGE_TARGET_WAR_MASK) {
+                        pbSelected[MESSAGE_TARGET_WAR] = true;
+                    }
+
+                    if (iLastUsedMask & MESSAGE_TARGET_TRUCE_MASK) {
+                        pbSelected[MESSAGE_TARGET_TRUCE] = true;
+                    }
+
+                    if (iLastUsedMask & MESSAGE_TARGET_TRADE_MASK) {
+                        pbSelected[MESSAGE_TARGET_TRADE] = true;
+                    }
+
+                    if (iLastUsedMask & MESSAGE_TARGET_ALLIANCE_MASK) {
+                        pbSelected[MESSAGE_TARGET_ALLIANCE] = true;
+                    }
                 }
 
                 // Process array
@@ -1535,7 +1530,7 @@ if (iActiveEmpires > 1) {
 
         default:
 
-            pbSelected[iDefaultTarget] = true;
+            pbSelected[iDefaultMessageTarget] = true;
             break;
         }
 

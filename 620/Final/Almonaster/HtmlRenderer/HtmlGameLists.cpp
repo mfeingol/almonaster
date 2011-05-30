@@ -127,9 +127,7 @@ void HtmlRenderer::WriteGameListHeader (const char** ppszHeaders, size_t stNumHe
     size_t i;
     
     // Setup string
-    OutputText ("<p><center><table border=\"1\" bordercolor=\"");
-    m_pHttpResponse->WriteText (pszTableColor);
-    OutputText ("\" width=\"90%\" cellspacing=\"1\" cellpadding=\"2\"><tr>");
+    OutputText ("<p><center><table width=\"90%\" cellspacing=\"1\" cellpadding=\"2\"><tr>");
     
     for (i = 0; i < stNumHeaders; i ++) {
         OutputText ("<th bgcolor=\"");
@@ -462,10 +460,6 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
         pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
         );
-
-    AddBridierGame (iGameClass, iGameNumber, pvGameClassInfo, iGameOptions, true);
-    
-    OutputText ("</font></td>");
     
     // Features
     OutputText (
@@ -505,14 +499,18 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     OutputText ("</strong> initial tech<br><strong>");
     
     m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxTechDev].GetFloat());
-    OutputText ("</strong> delta tech<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
-    OutputText ("</strong> tech dev");
+    OutputText ("</strong> delta tech");
 
-    if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
-        OutputText ("s");
+    if (pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger() != ALL_TECHS) {    
+
+        OutputText ("<br><strong>");
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
+        OutputText ("</strong> tech dev");
+
+        if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
+            OutputText ("s");
+        }
     }
-
     OutputText ("</font></td>");
     
     // Dip
@@ -522,7 +520,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     AddResources (pvGameClassInfo);
 
     // Bridier, Score
-    AddBridier (iGameOptions, pvMin, pvMax);
+    AddBridier (iGameClass, iGameNumber, pvGameClassInfo, iGameOptions, pvMin, pvMax, (iState & STARTED) != 0);
     AddScore (iGameOptions, pvMin, pvMax);
     AddSecurity (iGameOptions);
 
@@ -676,7 +674,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
             OutputText ("<p>");
 
             sprintf (pszEnter, "Enter%i.%i", iGameClass, iGameNumber);          
-            WriteButtonString (m_iButtonKey, ButtonName[BID_ENTERGAME], ButtonText[BID_ENTERGAME], pszEnter);
+            WriteButtonString (m_iButtonKey, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
 
             if (bFlag) {
                 OutputText ("<br>Password: <input type=\"Password\" size=\"8\" maxlength=\"25\" name=\"Pass");
@@ -775,7 +773,7 @@ Cleanup:
 
 int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGameClassInfo) {
     
-    int iErrCode;   
+    int iErrCode = OK;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH + 1];
 
     // Description
@@ -813,7 +811,7 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
             OutputText ("<p>");
             
             sprintf (pszForm, "Start%i", iGameClass);
-            WriteButtonString (m_iButtonKey, "StartGame", "Start", pszForm);
+            WriteButtonString (m_iButtonKey, ButtonName[BID_START], ButtonText[BID_START], pszForm);
             
             // Password protection
             OutputText ("<br>Advanced:<input type=\"checkbox\" name=\"Advanced");
@@ -857,11 +855,11 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
     }
     
     OutputText ("</td>");
-    
+
     iErrCode = AddGameClassDescription (SYSTEM_GAME_LIST, pvGameClassInfo, NO_KEY, NO_KEY, NULL, 0, false, false);
 
 Cleanup:
-    
+
     return iErrCode;
 }
 
@@ -920,6 +918,8 @@ void HtmlRenderer::AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpir
 
         OutputText ("</strong> required");
     }
+
+    OutputText ("</font></td>");
 }
 
 int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGameClassInfo, 
@@ -964,11 +964,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
             pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
             );
 
-    if (iWhichList == OPEN_GAME_LIST) {
-        AddBridierGame (iGameClass, iGameNumber, pvGameClassInfo, iGameOptions, !bAdmin && !bSpectators);
-    }
-
-    OutputText ("</font></td><td align=\"center\"><font size=\"2\"><strong>");
+    OutputText ("<td align=\"center\"><font size=\"2\"><strong>");
     
     
     // Planets per empire
@@ -1002,14 +998,18 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::InitialTechLevel].GetFloat());
     OutputText ("</strong> initial<br><strong>");
     m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxTechDev].GetFloat());
-    OutputText ("</strong> delta<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
-    OutputText ("</strong> tech dev");
+    OutputText ("</strong> delta");
 
-    if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
-        OutputText ("s");
+    if (pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger() != ALL_TECHS) {    
+
+        OutputText ("<br><strong>");
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
+        OutputText ("</strong> tech devs");
+
+        if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
+            OutputText ("s");
+        }
     }
-
     OutputText ("</font></td>");
     
     // Dip
@@ -1019,10 +1019,13 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     AddResources (pvGameClassInfo);
 
     // Init techs
-    AddTechList (pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger());
-    
+    AddTechList (
+        pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger(),
+        pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger()
+        );
+
     // Dev techs
-    AddTechList (pvGameClassInfo[SystemGameClassData::DevelopableTechDevs].GetInteger());
+    AddTechList (pvGameClassInfo[SystemGameClassData::DevelopableTechDevs].GetInteger(), 0);
 
     // Bridier, Score
     if (iWhichList == OPEN_GAME_LIST) {
@@ -1045,7 +1048,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         
         } else {
             
-            AddBridier (iOptions, pvMin, pvMax);
+            AddBridier (iGameClass, iGameNumber, pvGameClassInfo, iOptions, pvMin, pvMax, true);
             AddScore (iOptions, pvMin, pvMax);
             AddSecurity (iOptions);
         }
@@ -1488,7 +1491,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
     OutputText ("</font></td>");
 }
 
-void HtmlRenderer::AddTechList (int iTechs) {
+void HtmlRenderer::AddTechList (int iTechs, int iInitial) {
 
     OutputText ("<td align=\"center\"><font size=\"2\">");
     
@@ -1545,17 +1548,19 @@ void HtmlRenderer::AddTechList (int iTechs) {
 
 #define OUTPUT_TEXT_SEPARATOR OutputText ("<br>")
 
-void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant* pvMax) {
+void HtmlRenderer::AddBridier (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
+                               int iGameOptions, const Variant* pvMin, const Variant* pvMax, 
+                               bool bDisplayGainLoss) {
         
     bool bText = false;
     
     // Bridier
     OutputText ("<td align=\"center\"><font size=\"2\">");
     
-    if (iOptions & GAME_COUNT_FOR_BRIDIER) {
+    if (iGameOptions & GAME_COUNT_FOR_BRIDIER) {
         
         // Bridier Rank Gain
-        if ((iOptions & (GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN | GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN)) == 
+        if ((iGameOptions & (GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN | GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN)) == 
             (GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN | GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN)) {
             
             if (bText) {
@@ -1571,7 +1576,7 @@ void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant
             OutputText ("</strong> Rank Gain");
         }
         
-        else if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN) {
+        else if (iGameOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN) {
             
             if (bText) {
                 OUTPUT_TEXT_SEPARATOR;
@@ -1584,7 +1589,7 @@ void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant
             OutputText ("</strong> Rank Gain");
         }
         
-        else if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN) {
+        else if (iGameOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN) {
             
             if (bText) {
                 OUTPUT_TEXT_SEPARATOR;
@@ -1598,7 +1603,7 @@ void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant
         }
 
         // Bridier Rank Loss
-        if ((iOptions & (GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS | GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS)) == 
+        if ((iGameOptions & (GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS | GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS)) == 
             (GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS | GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS)) {
             
             if (bText) {
@@ -1614,7 +1619,7 @@ void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant
             OutputText ("</strong> Rank Loss");
         }
         
-        else if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS) {
+        else if (iGameOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS) {
             
             if (bText) {
                 OUTPUT_TEXT_SEPARATOR;
@@ -1627,7 +1632,7 @@ void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant
             OutputText ("</strong> Rank Loss");
         }
         
-        else if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS) {
+        else if (iGameOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS) {
             
             if (bText) {
                 OUTPUT_TEXT_SEPARATOR;
@@ -1648,6 +1653,8 @@ void HtmlRenderer::AddBridier (int iOptions, const Variant* pvMin, const Variant
         
         OutputText ("N/A");
     }
+
+    AddBridierGame (iGameClass, iGameNumber, pvGameClassInfo, iGameOptions, bDisplayGainLoss);
         
     OutputText ("</font></td>");
 }

@@ -1808,17 +1808,15 @@ int GameEngine::DfsTraversePlanets (IReadTable* pGameMap, unsigned int iPlanetKe
 int GameEngine::GetPlanetNameWithSecurity (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
                                            Variant* pvPlanetName) {
 
-    if (iEmpireKey == NO_KEY) {
+    int iErrCode = ERROR_DATA_NOT_FOUND;
 
-        // Just return coordinates
-        *pvPlanetName = "";
-        return OK;
+    if (iEmpireKey != NO_KEY) {
+
+        unsigned int iKey;
+        GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
+        iErrCode = m_pGameData->GetFirstKey (strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, false, &iKey);
     }
 
-    GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
-
-    unsigned int iKey;
-    int iErrCode = m_pGameData->GetFirstKey (strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, false, &iKey);
     if (iErrCode == OK) {
 
         GAME_MAP (strGameMap, iGameClass, iGameNumber);

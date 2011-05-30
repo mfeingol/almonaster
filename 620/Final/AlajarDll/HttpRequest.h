@@ -43,7 +43,6 @@
 class PageSource;
 class PageSourceHashValue;
 class PageSourceEquals;
-template <class CKey, class CData, class HashValue, class Equals> class HashTable;
 
 class HttpServer;
 

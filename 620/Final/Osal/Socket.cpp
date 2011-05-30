@@ -39,6 +39,12 @@
 #define SD_BOTH         0x02
 #endif
 
+//#define RECV_LOGGING
+#undef  RECV_LOGGING
+
+//#define SEND_LOGGING
+#undef  SEND_LOGGING
+
 #include <stdio.h>
 
 //////////////////////////////////////////////////////////////////////
@@ -205,12 +211,6 @@ int Socket::Connect (const char* pszAddress, short siPort) {
     return (connect (m_Socket, (struct sockaddr*) &m_saTheirAddr, sizeof (m_saTheirAddr)) == SOCKET_ERROR) ? ERROR_FAILURE : OK;
 }
 
-//#define RECV_LOGGING
-#undef  RECV_LOGGING
-
-//#define SEND_LOGGING
-#undef  SEND_LOGGING
-
 int Socket::Recv (void* pData, size_t stNumBytes, size_t* pstNumBytesRecvd) {
 
     *pstNumBytesRecvd = 0;
@@ -312,6 +312,8 @@ int Socket::Send (const void* pData, size_t stNumBytes, size_t* pstNumBytesSent)
             
         } while (stNumBytesSent < stNumBytes);
     }
+
+    *pstNumBytesSent = stTotalNumBytesSent;
 
     return OK;
 }
@@ -521,7 +523,7 @@ int Socket::GetHostNameFromIPAddress (const char* pszIP, char* pszHostName, size
         if (stHeNameLen >= stLen) {
             return ERROR_INVALID_ARGUMENT;
         }
-        strncpy (pszHostName, heName->h_name, stHeNameLen + 1);
+        memcpy (pszHostName, heName->h_name, stHeNameLen + 1);
         return OK;
     }
 

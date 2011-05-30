@@ -64,6 +64,8 @@ bool MemoryMappedFile::IsOpen() {
 
 int MemoryMappedFile::Close() {
 
+    Flush();
+
 #ifdef __LINUX__
 
     if (m_pBaseAddress)
@@ -105,7 +107,7 @@ int MemoryMappedFile::Flush() {
 #else if defined __WIN32__
 
     if (m_hMappedFile != NULL && m_hMappedFile != INVALID_HANDLE_VALUE) {
-        return ::FlushViewOfFile (m_pBaseAddress, m_stSize) ? OK : ERROR_FAILURE;
+        return ::FlushViewOfFile (m_pBaseAddress, 0) ? OK : ERROR_FAILURE;
     }
 #endif
 
@@ -297,7 +299,8 @@ int MemoryMappedFile::OpenExisting (const char* pszFileName, unsigned int iFlags
     }
 
     LARGE_INTEGER li;
-    if (!::GetFileSizeEx (m_hFile, &li)) {
+    li.LowPart = ::GetFileSize (m_hFile, (LPDWORD) &li.HighPart);
+    if (li.LowPart == INVALID_FILE_SIZE) {
         return ERROR_FAILURE;
     }
 

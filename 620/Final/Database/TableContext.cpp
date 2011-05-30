@@ -227,14 +227,14 @@ int TableContext::Create (const char* pszTableName, Template* pTemplate) {
     m_oFirstRow = ALIGN ((m_oTableHeader + sizeof (TableHeader) + sizeof (Offset) * (iNumIndexCols - 1)), 8);
 
     // Write table name
-    strncpy (
+    memcpy (
         (char*) pTableHeap->GetAddress (m_oBaseOffset), 
         pszTableName, 
         stTableNameLen
         );
 
     // Write template name
-    strncpy (
+    memcpy (
         (char*) pTableHeap->GetAddress (m_oBaseOffset + stTableNameLen), 
         pszTemplateName, 
         stTemplateNameLen

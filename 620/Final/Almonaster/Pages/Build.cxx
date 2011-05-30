@@ -115,7 +115,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 if (!ShipOrFleetNameFilter (pszShipName)) {
-                    AddMessage ("Illegal ship name for ");
+                    AddMessage ("Invalid ship name for ");
                     AppendMessage (SHIP_TYPE_STRING [iTechKey]);
                     continue;
                 }
@@ -271,7 +271,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if ((pszTemp = pHttpForm->GetValue()) != NULL) {
 
             if (!ShipOrFleetNameFilter (pszTemp)) {
-                AddMessage ("Illegal fleet name");
+                AddMessage ("Blank fleet names are not allowed");
             } else {
 
                 if (strlen (pszTemp) > MAX_FLEET_NAME_LENGTH) {

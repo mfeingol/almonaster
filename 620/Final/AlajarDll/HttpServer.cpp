@@ -52,8 +52,8 @@ HttpServer::HttpServer() {
 
     m_pSocket = NULL;
 
-    m_pszServerName = "Alajar 1.58";
-    m_stServerNameLength = sizeof ("Alajar 1.58") - 1;
+    m_pszServerName = "Alajar 1.59";
+    m_stServerNameLength = sizeof ("Alajar 1.59") - 1;
 
     Time::GetTime (&m_tLogDate);
 
@@ -1574,6 +1574,7 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
 
     HttpMethod mMethod = pHttpRequest->GetMethod();
     HttpStatus sStatus = pHttpResponse->GetStatusCode();
+    char* pszReferer = "";
 
     // Update Statistics
     if (iErrCode != OK) {
@@ -1603,7 +1604,15 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
             break;
 
         case HTTP_REASON_GET_REFERER_BLOCKED:
-            
+
+            const char* pszRealReferer = pHttpRequest->GetReferer();
+            if (String::IsBlank (pszRealReferer)) {
+                pszReferer = " [Null]";
+            } else {
+                pszReferer = (char*) StackAlloc (strlen (pszRealReferer) + 4);
+                sprintf (pszReferer, " [%s]", pszRealReferer);
+            }
+
             psThreadStats->NumGETFilter403s ++;
             break;
         }
@@ -1656,7 +1665,9 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
 
             // Get date
             int iSec, iMin, iHour, iDay, iMonth, iYear;
-            Time::GetDate (&iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+            DayOfWeek day;
+
+            Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
             
             // Write log message
             if (pPageSource->UseCommonLogFormat()) {
@@ -1719,13 +1730,14 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
                     
                     snprintf (
                         plmMessage->pszText, sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]),
-                        "[%s:%s:%s] %s\t%s\t%i\t%s\t%s", 
+                        "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s", 
                         String::ItoA (iHour, pszHour, 10, 2),
                         String::ItoA (iMin, pszMin, 10, 2),
                         String::ItoA (iSec, pszSec, 10, 2),
                         pszIP, 
                         HttpMethodText[mMethod], 
-                        HttpStatusValue [sStatus], 
+                        HttpStatusValue [sStatus],
+                        pszReferer,
                         pszUri,
                         pszBrowser
                         );
@@ -1734,13 +1746,14 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
                     
                     snprintf (
                         plmMessage->pszText, sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]),
-                        "[%s:%s:%s] %s\t%s\t%i\t%s\t%s\t%d uploa%s (%u bytes)", 
+                        "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s\t%d uploa%s (%u bytes)", 
                         String::ItoA (iHour, pszHour, 10, 2),
                         String::ItoA (iMin, pszMin, 10, 2),
                         String::ItoA (iSec, pszSec, 10, 2),
                         pszIP,
                         HttpMethodText[mMethod],
                         HttpStatusValue [sStatus],
+                        pszReferer,
                         pszUri,
                         pszBrowser,
                         iNumUploads, iNumUploads == 1 ? "d" : "ds",
@@ -2067,11 +2080,12 @@ void HttpServer::GetStatisticsFileName (char* pszStatName, const UTCTime& tTime)
     
     int iSec, iMin, iHour, iDay, iMonth, iYear;
     char pszMonth[20], pszDay[20];
+    DayOfWeek day;
 
     if (tTime == 0) {
-        Time::GetDate (&iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+        Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
     } else {
-        Time::GetDate (tTime, &iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+        Time::GetDate (tTime, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
     }
 
     sprintf (pszStatName, "%s/Statistics_%i_%s_%s.stat", m_pszStatisticsPath, iYear, 
@@ -2131,7 +2145,9 @@ int HttpServer::WriteReport (const char* pszMessage) {
 
         // Write the time
         int iSec, iMin, iHour, iDay, iMonth, iYear;
-        Time::GetDate (&iSec, &iMin, &iHour, &iDay, &iMonth, &iYear);
+        DayOfWeek day;
+
+        Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
         
         char pszText[512], pszDay[20], pszHour[20], pszMin[20], pszSec[20], pszMonth[20];
         

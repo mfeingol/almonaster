@@ -179,16 +179,16 @@ static const size_t HttpStatusErrorTextLength[] = {
     0,
     0,
     0,
-    sizeof ("<html>\n<head><title>Error 400</title></head>\n<body>\n<h2>Error 400: Bad Request.</h2>\n<p>The request contained bad syntax.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 401</title></head>\n<body>\n<h2>Error 401: Unauthorized.</h2>\n<p>The resource requires authentication before access can be granted.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 403</title></head>\n<body>\n<h2>Error 403: Forbidden.</h2>\n<p>The server understood the request but will not fulfill it.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 404</title></head>\n<body>\n<h2>Error 404: Not Found.</h2>\n<p>The indicated resource was not found on the server.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 409</title></head>\n<body>\n<h2>Error 409: Conflict.</h2>\n<p>A conflict in the current state of the resource prevented the request from being fulfilled.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 500</title></head>\n<body>\n<h2>Error 500: Internal Server Error.</h2>\n<p>General server error encountered.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 501</title></head>\n<body>\n<h2>Error 501: Not Implemented.</h2>\n<p>The requested method is not supported by the server.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 503</title></head>\n<body>\n<h2>Error 503: Service Unavailable.</h2>\n<p>The server cannot fulfill the request at the moment. This is an indication of temporary conditions such as overloading or server maintenance.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 505</title></head>\n<body>\n<h2>Error 505: HTTP Version Not Supported.</h2>\n<p>The server does not or is unwilling to support the HTTP version of the request.\n</body>\n</html>"),
-    sizeof ("<html>\n<head><title>Error 666</title></head>\n<body>\n<h2>Error 666: Nonexistent Error.</h2>\n<p>This error does not exist.\n</body>\n</html>")
+    sizeof ("<html>\n<head><title>Error 400</title></head>\n<body>\n<h2>Error 400: Bad Request.</h2>\n<p>The request contained bad syntax.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 401</title></head>\n<body>\n<h2>Error 401: Unauthorized.</h2>\n<p>The resource requires authentication before access can be granted.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 403</title></head>\n<body>\n<h2>Error 403: Forbidden.</h2>\n<p>The server understood the request but will not fulfill it.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 404</title></head>\n<body>\n<h2>Error 404: Not Found.</h2>\n<p>The indicated resource was not found on the server.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 409</title></head>\n<body>\n<h2>Error 409: Conflict.</h2>\n<p>A conflict in the current state of the resource prevented the request from being fulfilled.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 500</title></head>\n<body>\n<h2>Error 500: Internal Server Error.</h2>\n<p>General server error encountered.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 501</title></head>\n<body>\n<h2>Error 501: Not Implemented.</h2>\n<p>The requested method is not supported by the server.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 503</title></head>\n<body>\n<h2>Error 503: Service Unavailable.</h2>\n<p>The server cannot fulfill the request at the moment. This is an indication of temporary conditions such as overloading or server maintenance.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 505</title></head>\n<body>\n<h2>Error 505: HTTP Version Not Supported.</h2>\n<p>The server does not or is unwilling to support the HTTP version of the request.\n</body>\n</html>") - 1,
+    sizeof ("<html>\n<head><title>Error 666</title></head>\n<body>\n<h2>Error 666: Nonexistent Error.</h2>\n<p>This error does not exist.\n</body>\n</html>") - 1
 };
 
 

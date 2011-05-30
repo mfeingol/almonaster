@@ -180,10 +180,7 @@ int File::Reset() {
     SetFilePointer(0);
     return OK;
 #else if defined __WIN32__
-
-    LARGE_INTEGER li;
-    li.QuadPart = 0;
-    return ::SetFilePointerEx (m_hFile, li, NULL, FILE_BEGIN) ? OK : ERROR_FAILURE;
+    return ::SetFilePointer (m_hFile, 0, NULL, FILE_BEGIN) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -199,13 +196,17 @@ int File::GetFilePointer (size_t* pstLocation) {
 
 #else if defined __WIN32__
 
-    LARGE_INTEGER li, li2;
+    LARGE_INTEGER li;
     li.QuadPart = 0;
-    int iErrCode = ::SetFilePointerEx (m_hFile, li, &li2, FILE_CURRENT) ? OK : ERROR_FAILURE;
-    if (iErrCode == OK) {
-        *pstLocation = (size_t) li2.QuadPart;
+
+    li.LowPart = ::SetFilePointer (m_hFile, 0, &li.HighPart, FILE_CURRENT);
+    if (li.LowPart == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
+        return ERROR_FAILURE;
     }
-    return iErrCode;
+
+    *pstLocation = (size_t) li.QuadPart;
+    return OK;
+
 #endif
 }
 
@@ -214,9 +215,16 @@ int File::SetFilePointer (size_t stLocation) {
 #ifdef __LINUX__
     return (lseek(m_hFile, stLocation, SEEK_SET) != stLocation) ? ERROR_FAILURE : OK;
 #else if defined __WIN32__
+
     LARGE_INTEGER li;
     li.QuadPart = stLocation;
-    return ::SetFilePointerEx (m_hFile, li, NULL, FILE_BEGIN) ? OK : ERROR_FAILURE;
+
+    DWORD dwLow = ::SetFilePointer (m_hFile, li.LowPart, (PLONG) &li.HighPart, FILE_BEGIN);
+    if (dwLow == INVALID_SET_FILE_POINTER && ::GetLastError() != NO_ERROR) {
+        return ERROR_FAILURE;
+    }
+    return OK;
+
 #endif
 }
 
@@ -238,12 +246,16 @@ int File::GetSize (size_t* pstSize) {
     return OK;
 
 #else if defined __WIN32__
+
     LARGE_INTEGER li;
-    int iErrCode = ::GetFileSizeEx (m_hFile, &li) ? OK : ERROR_FAILURE;
-    if (iErrCode == OK) {
-        *pstSize = (size_t) li.QuadPart;
+    li.LowPart = ::GetFileSize (m_hFile, (LPDWORD) &li.HighPart);
+    if (li.LowPart == INVALID_FILE_SIZE) {
+        return ERROR_FAILURE;
     }
-    return iErrCode;
+
+    *pstSize = (size_t) li.QuadPart;
+    return OK;
+
 #endif
 }
 
@@ -561,7 +573,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
         char* pszKeyName = (char*) StackAlloc (stExtLen + 1);
         
         pszKeyName[0] = '.';
-        strncpy (pszKeyName + 1, pszExtension, stExtLen);
+        memcpy (pszKeyName + 1, pszExtension, stExtLen);
         
         char pszRegInfo [MAX_MIME_TYPE_LENGTH];
         DWORD dwTypeLen = 0;
@@ -1108,7 +1120,7 @@ int File::ResolvePath (const char* pszPath, char pszResolvedPath [OS::MaxFileNam
     if (*pszPath == '/')
     {
         // absolute path
-		strncpy (pszResolvedPath, pszPath, stLength + 1);
+		memcpy (pszResolvedPath, pszPath, stLength + 1);
     }
     else
     {

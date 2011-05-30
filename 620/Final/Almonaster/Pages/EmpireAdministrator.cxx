@@ -316,6 +316,10 @@ SearchResults:
                     AddMessage ("You cannot change " GUEST_NAME "'s privilege level");
                 }
 
+                else if (!IS_VALID_PRIVILEGE (iValue)) {
+                    AddMessage ("Invalid privilege");
+                }
+
                 else {
 
                     if (g_pGameEngine->SetEmpirePrivilege (iTargetEmpireKey, iValue) == OK) {

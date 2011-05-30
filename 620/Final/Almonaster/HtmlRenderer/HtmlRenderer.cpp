@@ -49,6 +49,11 @@ ReadWriteLock HtmlRenderer::ms_mNewsFileLock;
 ReadWriteLock HtmlRenderer::ms_mIntroUpperFileLock;
 ReadWriteLock HtmlRenderer::ms_mIntroLowerFileLock;
 
+AlmonasterStatistics HtmlRenderer::m_sStats;
+
+UTCTime HtmlRenderer::m_stEmpiresInGamesCheck;
+Mutex HtmlRenderer::m_slockEmpiresInGames;
+unsigned int HtmlRenderer::m_siNumGamingEmpires;
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -94,8 +99,9 @@ HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResp
     m_bRepeatedButtons = false;
     m_bTimeDisplay = false;
     m_bOwnPost = false;
-    m_bLoggedIn = false;
+    m_bLoggedIntoGame = false;
     m_bAuthenticated = false;
+    m_bAutoLogon = false;
     
     m_sSecondsUntil = 0;
     m_sSecondsSince = 0;
@@ -133,6 +139,15 @@ int HtmlRenderer::Initialize() {
     if (iErrCode != OK) {
         return iErrCode;
     }
+
+    m_stEmpiresInGamesCheck = NULL_TIME;
+    
+    iErrCode = m_slockEmpiresInGames.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    m_siNumGamingEmpires = 0;
 
     return OK;
 }
@@ -686,10 +701,10 @@ int HtmlRenderer::VerifyCategoryName (const char* pszCategory, const char* pszNa
     
     char c;
     
-    if (pszName == NULL || *pszName == '\0') {
+    if (String::IsWhiteSpace (pszName)) {
         if (bPrintErrors) {
             AddMessage (pszCategory);
-            AddMessage (" names cannot be blank");
+            AppendMessage (" names cannot be blank");
         }
         return ERROR_FAILURE;
     }
@@ -699,9 +714,9 @@ int HtmlRenderer::VerifyCategoryName (const char* pszCategory, const char* pszNa
         
         if (bPrintErrors) {
             AddMessage (pszCategory);
-            AddMessage (" names cannot be longer than ");
-            AddMessage ((int) stMaxLen);
-            AddMessage (" characters");
+            AppendMessage (" names cannot be longer than ");
+            AppendMessage ((int) stMaxLen);
+            AppendMessage (" characters");
         }
         
         return ERROR_FAILURE;
@@ -1906,7 +1921,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     ///////////////////////
     
     bool bUpdate;
-    if (g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, &bUpdate) != OK ||
+    if (g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, false, &bUpdate) != OK ||
         g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK
         ) {
         
@@ -1946,7 +1961,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     
     // Log empire into game if not an auto submission
     IHttpForm* pHttpAuto = m_pHttpRequest->GetForm ("Auto");
-    if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIn) {
+    if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIntoGame) {
         
         iErrCode = g_pGameEngine->LogEmpireIntoGame (
             m_iGameClass, 
@@ -1960,7 +1975,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
             return ERROR_FAILURE;
         }
         
-        m_bLoggedIn = true;
+        m_bLoggedIntoGame = true;
     }
     
     // Remove update message after update
@@ -2242,7 +2257,7 @@ void HtmlRenderer::GetAlienButtonString (int iAlienKey, int iEmpireKey, bool bBo
     *pstrAlienButtonString += (bBorder ? 1:0);
     *pstrAlienButtonString += "\" src=\"" BASE_RESOURCE_DIR;
     
-    if (iAlienKey == NO_KEY) {
+    if (iAlienKey == UPLOADED_ICON) {
         *pstrAlienButtonString += BASE_UPLOADED_ALIEN_DIR "/" ALIEN_NAME;
         *pstrAlienButtonString += iEmpireKey;
     } else {
@@ -2980,7 +2995,7 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
             
             Assert (iNeighbourKey != NO_KEY);
             
-            if (!bAdmin) {
+            if (!bAdmin && !bSpectator) {
                 
                 iErrCode = g_pGameEngine->GetPlanetNameWithSecurity (
                     m_iGameClass, 
@@ -3000,19 +3015,23 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                     );
             }
 
-            if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
-                return ERROR_OUT_OF_MEMORY;
-            }
-            
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
             }
-            
+
+            if (vTemp.GetCharPtr() != NULL && 
+                String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
+                return ERROR_OUT_OF_MEMORY;
+            }
+
             OutputText ("<strong>");
             m_pHttpResponse->WriteText (CARDINAL_STRING[piCardinalPoint[i]]);
             OutputText ("</strong>: ");
-            m_pHttpResponse->WriteText (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
+
+            if (!strPlanetName.IsBlank()) {
+                m_pHttpResponse->WriteText (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
+            }
             OutputText (" (");
             m_pHttpResponse->WriteText (piJumpX[i]);
             OutputText (",");
@@ -3509,14 +3528,19 @@ void HtmlRenderer::ReportLoginFailure (IReport* pReport, const char* pszEmpireNa
     }
 }
 
-void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireName) {
+void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon) {
     
     SystemConfiguration scConfig;
     if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
         
         char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
-        sprintf (pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
-        
+
+        if (bAutoLogon) {
+            sprintf (pszMessage, "Autologon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+        } else {
+            sprintf (pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+        }
+
         pReport->WriteReport (pszMessage);
     }
 }
@@ -4085,7 +4109,7 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
                 } else {
 
                     if (bAccept) {
-                        AddMessage ("You have accepted the empire into tournament");
+                        AddMessage ("You have accepted the empire into the tournament");
                     } else {
                         AddMessage ("You have declined to accept the empire into the tournament");
                     }
@@ -4713,7 +4737,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
     }
 
     if ((pHttpForm = m_pHttpRequest->GetForm ("DipShareLevel")) != NULL) {
-        iSelDipShareLevel = pHttpForm->GetIntValue() != 0;
+        iSelDipShareLevel = pHttpForm->GetIntValue();
     } else {
         iSelDipShareLevel = NO_DIPLOMACY;
     }
@@ -5998,8 +6022,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
         OutputText (" selected");
     }
 
-    OutputText (
-        " value=\"");
+    OutputText (" value=\"");
     m_pHttpResponse->WriteText (ALLIANCE);
     OutputText ("\">Maps shared at " ALLIANCE_STRING "</option><option"
         );
@@ -6008,8 +6031,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
         OutputText (" selected");
     }
 
-    OutputText (
-        " value=\"");
+    OutputText (" value=\"");
     m_pHttpResponse->WriteText (NO_DIPLOMACY);
     OutputText ("\">Maps not shared</option></select></td>"\
         
@@ -7291,23 +7313,10 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     }
     
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = iDevTechDevs;
-    
-    // Check NumInitialTechDevs
-    if (pvSubmitArray[SystemGameClassData::NumInitialTechDevs].GetInteger() > 
-        iNumTechDevs - iNumInitTechDevs) {
-
-        AddMessage ("Too many initial tech developments");
-        return ERROR_FAILURE;
-    }
-
-    if (pvSubmitArray[SystemGameClassData::NumInitialTechDevs].GetInteger() < 0) {
-        AddMessage ("Not enough initial tech developments");
-        return ERROR_FAILURE;
-    }
 
     // Make sure at least one ship type can be developed
     if (iDevTechDevs == 0) {
-        AddMessage ("At least one ship must be developable");
+        AddMessage ("At least one tech must be developable");
         return ERROR_FAILURE;
     }
     
@@ -7315,18 +7324,32 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     ENUMERATE_TECHS(i) {
         
         if ((iInitTechDevs & TECH_BITS[i]) && !(iDevTechDevs & TECH_BITS[i])) {
-            
+
             // An initial ship couldn't be developed
-            AddMessage ("An initial ship could not be developed");
+            AddMessage ("Techs marked as initially developed must be marked as developable");
             return ERROR_FAILURE;
         }
+    }
+
+    // Check NumInitialTechDevs
+    iTemp = iNumTechDevs - iNumInitTechDevs;
+    if (pvSubmitArray[SystemGameClassData::NumInitialTechDevs].GetInteger() > iTemp) {
+
+        pvSubmitArray[SystemGameClassData::NumInitialTechDevs] = iTemp;
+        AddMessage ("The initial number of tech developments was adjusted to ");
+        AppendMessage (iTemp);
+    }
+
+    if (pvSubmitArray[SystemGameClassData::NumInitialTechDevs].GetInteger() < 0) {
+        AddMessage ("Not enough initial tech developments");
+        return ERROR_FAILURE;
     }
     
     // Verify that engineers can be built if disconnected maps are selected
     if ((pvSubmitArray[SystemGameClassData::Options].GetInteger() & DISCONNECTED_MAP) &&
         !(iDevTechDevs & TECH_BITS[ENGINEER])
         ) {
-        AddMessage ("Engineer ships must be developable if maps are disconnected");
+        AddMessage ("Engineer tech must be developable if maps are disconnected");
         return ERROR_FAILURE;
     }
     
@@ -7426,16 +7449,14 @@ void HtmlRenderer::WriteFaq() {
 
 void HtmlRenderer::WriteServerNews() {
     
-    UTCTime tTime;
-    
-    Time::GetTime (&tTime);
-    
-    int iDay  = Time::GetDay (tTime);
-    int iYear = Time::GetYear (tTime);
-    
-    const char* pszMonth = Time::GetMonthName (Time::GetMonth (tTime));
-    const char* pszDayW  = Time::GetDayOfWeek (tTime);
-    
+    int iSec, iMin, iHour, iDay, iMon, iYear;
+    DayOfWeek day;
+
+    Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMon, &iYear); 
+
+    const char* pszMonth = Time::GetMonthName (iMon);
+    const char* pszDayW  = Time::GetDayOfWeekName (day);
+
     OutputText ("<p><table><tr><th bgcolor=\"#");
     m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
     OutputText ("\">Today is ");
@@ -7463,6 +7484,10 @@ void HtmlRenderer::WriteContributions() {
         m_pHttpResponse->WriteTextFile (pcfFile);
         pcfFile->Release();
     }
+
+    OutputText ("<p>");
+
+    WriteContributorsFile();
 }
 
 void HtmlRenderer::WriteCredits() {
@@ -7543,106 +7568,116 @@ void HtmlRenderer::WriteServerNewsFile() {
     ms_mNewsFileLock.SignalReader();
 }
 
+void HtmlRenderer::WriteContributorsFile() {
+    
+    char pszFileName[OS::MaxFileNameLength];
+    sprintf (pszFileName, "%s/" CONTRIBUTORS_FILE, g_pszResourceDir);
+    
+    ms_mNewsFileLock.WaitReader();
+    
+    ICachedFile* pcfCachedFile = g_pFileCache->GetFile (pszFileName);
+    
+    if (pcfCachedFile != NULL) {
+        m_pHttpResponse->WriteTextFile (pcfCachedFile);
+        pcfCachedFile->Release();
+    }
+    
+    ms_mNewsFileLock.SignalReader();
+}
 
-bool HtmlRenderer::UpdateIntroUpper (const char* pszText) {
+
+int HtmlRenderer::UpdateIntroUpper (const char* pszText) {
     
     char pszFileName[OS::MaxFileNameLength];
     sprintf (pszFileName, "%s/" INTRO_UPPER_FILE, g_pszResourceDir);
     
     ms_mIntroUpperFileLock.WaitWriter();
-    
-    bool bRetVal = UpdateCachedFile (pszFileName, pszText);
-    
+    int iErrCode = UpdateCachedFile (pszFileName, pszText);
     ms_mIntroUpperFileLock.SignalWriter();
     
-    return bRetVal;
+    return iErrCode;
 }
 
-bool HtmlRenderer::UpdateIntroLower (const char* pszText) {
+int HtmlRenderer::UpdateIntroLower (const char* pszText) {
     
     char pszFileName[OS::MaxFileNameLength];
     sprintf (pszFileName, "%s/" INTRO_LOWER_FILE, g_pszResourceDir);
     
     ms_mIntroLowerFileLock.WaitWriter();
-    
-    bool bRetVal = UpdateCachedFile (pszFileName, pszText);
-    
+    int iErrCode = UpdateCachedFile (pszFileName, pszText);
     ms_mIntroLowerFileLock.SignalWriter();
     
-    return bRetVal;
+    return iErrCode;
 }
 
-bool HtmlRenderer::UpdateServerNews (const char* pszText) {
+int HtmlRenderer::UpdateServerNews (const char* pszText) {
     
     char pszFileName[OS::MaxFileNameLength];
     sprintf (pszFileName, "%s/" NEWS_FILE, g_pszResourceDir);
     
     ms_mNewsFileLock.WaitWriter();
-    
-    bool bRetVal = UpdateCachedFile (pszFileName, pszText);
-    
+    int iErrCode = UpdateCachedFile (pszFileName, pszText);
     ms_mNewsFileLock.SignalWriter();
     
-    return bRetVal;
+    return iErrCode;
 }
 
-bool HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText) {
+int HtmlRenderer::UpdateContributors (const char* pszText) {
     
+    char pszFileName[OS::MaxFileNameLength];
+    sprintf (pszFileName, "%s/" CONTRIBUTORS_FILE, g_pszResourceDir);
+    
+    ms_mNewsFileLock.WaitWriter();
+    int iErrCode = UpdateCachedFile (pszFileName, pszText);
+    ms_mNewsFileLock.SignalWriter();
+    
+    return iErrCode;
+}
+
+int HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText) {
+    
+    int iErrCode = OK;
     size_t stSize;
+
+    File fCachedFile;
     
     ICachedFile* pcfCachedFile = g_pFileCache->GetFile (pszFileName);
     if (pcfCachedFile == NULL || (stSize = pcfCachedFile->GetSize()) == 0) {
-        
+
         if (pszText == NULL || *pszText == '\0') {
-            // No change
-            return false;
+            iErrCode =  WARNING;
+            goto Cleanup;
         }
-        
-        // Null file: write away
-        File fCachedFile;
-        if (fCachedFile.OpenWrite (pszFileName) != OK) {
-            Assert (false);
-            return false;
-        }
-        
-        fCachedFile.Write (pszText);
-        fCachedFile.Close();
-        
-        return true;
-        
+
     } else {
-        
-        // Are we changing?
-        const char* pszData = (char*) pcfCachedFile->GetData();
-        
+
+        const char* pszData = (char*) pcfCachedFile->GetData();        
         size_t stNewSize = String::StrLen (pszText);
-        
-        if (stSize != stNewSize || strncmp (pszText, pszData, stNewSize) != 0) {
-            
-            // File is changing, so get the filecache to release it
-            g_pFileCache->ReleaseFile (pszFileName);
-            pcfCachedFile->Release();
-            
-            // Now, replace the file
-            File fCachedFile;
-            if (fCachedFile.OpenWrite (pszFileName) != OK) {
-                Assert (false);
-                return false;
-            }
-            
-            fCachedFile.Write (pszText == NULL ? "" : pszText);
-            fCachedFile.Close();
-            
-            return true;
-            
-        } else {
-            
-            // Just release the file
-            pcfCachedFile->Release();
-            
-            return false;
+
+        if (stSize == stNewSize && strncmp (pszText, pszData, stNewSize) == 0) {
+            iErrCode =  WARNING;
+            goto Cleanup;
         }
     }
+
+    if (pcfCachedFile != NULL) {
+        g_pFileCache->ReleaseFile (pszFileName);
+        SafeRelease (pcfCachedFile);
+    }
+
+    iErrCode = fCachedFile.OpenWrite (pszFileName);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    fCachedFile.Write (pszText == NULL ? "" : pszText);
+    fCachedFile.Close();
+
+Cleanup:
+
+    SafeRelease (pcfCachedFile);
+    return iErrCode;
 }
 
 void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
@@ -8492,8 +8527,6 @@ End:
 // Events and statistics
 //
 
-AlmonasterStatistics HtmlRenderer::m_sStats;
-
 int HtmlRenderer::OnCreateEmpire (int iEmpireKey) {
     
     // Stats
@@ -8504,6 +8537,7 @@ int HtmlRenderer::OnCreateEmpire (int iEmpireKey) {
 
 int HtmlRenderer::OnDeleteEmpire (int iEmpireKey) {
     
+    int iErrCode;
     char pszDestFileName[OS::MaxFileNameLength];
     
     sprintf (
@@ -8517,10 +8551,32 @@ int HtmlRenderer::OnDeleteEmpire (int iEmpireKey) {
     g_pFileCache->ReleaseFile (pszDestFileName);
     
     // Attempt to delete an uploaded file
-    File::DeleteFile (pszDestFileName);
-    
+    bool bFileDeleted = File::DeleteFile (pszDestFileName) == OK;
+
     // Stats
     Algorithm::AtomicIncrement (&m_sStats.EmpiresDeleted);
+
+    // Report
+    SystemConfiguration scConfig;
+    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+
+        char pszEmpireName [MAX_EMPIRE_NAME_LENGTH + 1];
+        iErrCode = g_pGameEngine->GetEmpireName (iEmpireKey, pszEmpireName);
+        if (iErrCode == OK) {
+
+            char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
+            
+            sprintf (pszMessage, "%s was deleted", pszEmpireName);
+            g_pReport->WriteReport (pszMessage);
+
+            if (bFileDeleted) {
+                sprintf (pszMessage, "Uploaded icon %i was deleted", iEmpireKey);
+                g_pReport->WriteReport (pszMessage);
+            }
+        }
+
+        else Assert (false);
+    }
     
     return OK;
 }
@@ -9711,19 +9767,10 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
     for (i = 0; i < iNumActiveGames; i ++) {
 
         // Check game for updates
-        if (g_pGameEngine->CheckGameForUpdates (
-            piGameClass[i],
-            piGameNumber[i],
-            &bExists
-            ) != OK ||
-
+        if (g_pGameEngine->CheckGameForUpdates (piGameClass[i], piGameNumber[i], true, &bExists) != OK ||
             g_pGameEngine->DoesGameExist (piGameClass[i], piGameNumber[i], &bExists) != OK || !bExists ||
             g_pGameEngine->GetGameClassName (piGameClass[i], pszGameClassName) != OK ||
             g_pGameEngine->GetGameClassUpdatePeriod (piGameClass[i], &iSeconds) != OK ||
-            g_pGameEngine->IsGamePaused (piGameClass[i], piGameNumber[i], &bPaused) != OK ||
-            g_pGameEngine->IsGameAdminPaused (piGameClass[i], piGameNumber[i], &bAdminPaused) != OK ||
-            g_pGameEngine->IsGameOpen (piGameClass[i], piGameNumber[i], &bOpen) != OK ||
-            g_pGameEngine->HasGameStarted (piGameClass[i], piGameNumber[i], &bStarted) != OK ||
             g_pGameEngine->GetGamePassword (piGameClass[i], piGameNumber[i], &vGamePassword) != OK ||
             g_pGameEngine->GetGameCreationTime (piGameClass[i], piGameNumber[i], &tCreationTime) != OK ||
             g_pGameEngine->GetEmpiresInGame (piGameClass[i], piGameNumber[i], &pvEmpireKey, 
@@ -9733,6 +9780,11 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             ) {
             continue;
         }
+
+        bPaused = (iGameState & PAUSED) || (iGameState & ADMIN_PAUSED);
+        bAdminPaused = (iGameState & ADMIN_PAUSED) != 0;
+        bOpen = (iGameState & STILL_OPEN) != 0;
+        bStarted = (iGameState & STARTED) != 0;
 
         if (i > 0 && piGameClass[i] != iCurrentGameClass) {
             iCurrentGameClass = piGameClass[i];
@@ -9789,19 +9841,11 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
 
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    if (g_pGameEngine->CheckGameForUpdates (
-        iGameClass,
-        iGameNumber,
-        &bExists
-        ) != OK ||
+    if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists) != OK ||
 
         g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bExists) != OK || !bExists ||
         g_pGameEngine->GetGameClassName (iGameClass, pszGameClassName) != OK ||
         g_pGameEngine->GetGameClassUpdatePeriod (iGameClass, &iSeconds) != OK ||
-        g_pGameEngine->IsGamePaused (iGameClass, iGameNumber, &bPaused) != OK ||
-        g_pGameEngine->IsGameAdminPaused (iGameClass, iGameNumber, &bAdminPaused) != OK ||
-        g_pGameEngine->IsGameOpen (iGameClass, iGameNumber, &bOpen) != OK ||
-        g_pGameEngine->HasGameStarted (iGameClass, iGameNumber, &bStarted) != OK ||
         g_pGameEngine->GetGamePassword (iGameClass, iGameNumber, &vGamePassword) != OK ||
         g_pGameEngine->GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires) != OK ||
         g_pGameEngine->GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime) != OK ||
@@ -9813,6 +9857,11 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         WriteButton (BID_CANCEL);
         return;
     }
+
+    bPaused = (iGameState & PAUSED) || (iGameState & ADMIN_PAUSED);
+    bAdminPaused = (iGameState & ADMIN_PAUSED) != 0;
+    bOpen = (iGameState & STILL_OPEN) != 0;
+    bStarted = (iGameState & STARTED) != 0;
 
     Variant* pvEmpireName = new Variant [iNumActiveEmpires];
     if (pvEmpireName == NULL) {
@@ -9866,7 +9915,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
     OutputText ("<p><table width=\"90%\">");
 
     // View Map
-    if (bStarted) {
+    if (iGameState & GAME_MAP_GENERATED) {
         OutputText ("<tr><td>View the game's map:</td><td>");
         WriteButton (BID_VIEWMAP);
         OutputText ("</td></tr>");

@@ -332,9 +332,11 @@ public:
 
     inline void IncrementTerminatorRowKey (int iInc) {
 
+        TableHeader* pHeader = GetTableHeader();
+
         Assert (iInc != 0);
-        Assert (iInc > 0 || GetTerminatorRowKey() > (unsigned int) (- iInc));
-        GetTableHeader()->iTerminatorRowKey += iInc;
+        Assert (iInc > 0 || pHeader->iTerminatorRowKey > (unsigned int) (- iInc));
+        pHeader->iTerminatorRowKey += iInc;
     }
 
     inline void SetTerminatorRowKey (unsigned int iNewTerminatorKey) {

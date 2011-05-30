@@ -139,6 +139,8 @@ public:
 
     GameEmpireLock* GetGameEmpireLock (const GameEmpireId& geId);
     void ReleaseGameEmpireLock (GameEmpireLock* pgeLock);
+
+    unsigned int GetNumElements();
 };
 
 #endif // !defined(AFX_GAMEENGINELOCKS_H__E21FE393_D69B_11D3_A2F0_0050047FE2E2__INCLUDED_)

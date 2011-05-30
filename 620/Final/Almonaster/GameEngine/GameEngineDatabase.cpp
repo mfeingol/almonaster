@@ -110,7 +110,7 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
     tSelf.SetPriority (Thread::HigherPriority);
 
     // Update all games
-    CheckAllGamesForUpdates();
+    CheckAllGamesForUpdates (true);
 
     m_bActiveBackup = true;
 

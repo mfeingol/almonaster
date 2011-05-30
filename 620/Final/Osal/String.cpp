@@ -51,7 +51,7 @@ String::String (const String& strString) {
         m_pszString = new char [m_iRealLength];
         
         if (m_pszString != NULL) {
-            strncpy (m_pszString, strString.m_pszString, strString.m_iLength + 1);
+            memcpy (m_pszString, strString.m_pszString, strString.m_iLength + 1);
         }
     }
 }
@@ -69,7 +69,7 @@ String::String (const char* pszString) {
         m_pszString = new char [m_iRealLength];
 
         if (m_pszString != NULL) {
-            strncpy (m_pszString, pszString, m_iLength + 1);
+            memcpy (m_pszString, pszString, m_iLength + 1);
         }
     }
 }
@@ -176,7 +176,7 @@ String& String::operator= (const String& strString) {
 
     if (m_iRealLength > strString.m_iLength) {
 
-        strncpy (m_pszString, strString.m_pszString, strString.m_iLength + 1);
+        memcpy (m_pszString, strString.m_pszString, strString.m_iLength + 1);
         m_iLength = strString.m_iLength;
 
     } else {
@@ -191,7 +191,7 @@ String& String::operator= (const String& strString) {
             }
             m_pszString = pszString;
             
-            strncpy (m_pszString, strString.m_pszString, strString.m_iLength + 1);
+            memcpy (m_pszString, strString.m_pszString, strString.m_iLength + 1);
 
             m_iLength = strString.m_iLength;
             m_iRealLength = stRealLength;
@@ -232,7 +232,7 @@ String& String::operator= (const char* pszString) {
                 }
                 m_pszString = pszTemp;
 
-                strncpy (m_pszString, pszString, stLength + 1);
+                memcpy (m_pszString, pszString, stLength + 1);
                 
                 m_iLength = stLength;
                 m_iRealLength = stRealLength;
@@ -272,7 +272,7 @@ String& String::AddString (const char* pszString, size_t stLength) {
         if (m_pszString != NULL) {
             m_iLength = stLength;
             m_iRealLength = stRealLength;
-            strncpy (m_pszString, pszString, stLength + 1);
+            memcpy (m_pszString, pszString, stLength + 1);
         }
 
     } else {
@@ -280,7 +280,7 @@ String& String::AddString (const char* pszString, size_t stLength) {
         size_t stNewLength = m_iLength + stLength;
 
         if (m_iRealLength > stNewLength) {
-            strncpy (m_pszString + m_iLength, pszString, stLength + 1);
+            memcpy (m_pszString + m_iLength, pszString, stLength + 1);
             m_iLength = stNewLength;
         } else {
 
@@ -289,8 +289,8 @@ String& String::AddString (const char* pszString, size_t stLength) {
 
             if (pszTemp != NULL) {
 
-                strncpy (pszTemp, m_pszString, m_iLength + 1);
-                strncpy (pszTemp + m_iLength, pszString, stLength + 1);
+                memcpy (pszTemp, m_pszString, m_iLength + 1);
+                memcpy (pszTemp + m_iLength, pszString, stLength + 1);
                 
                 delete [] m_pszString;
                 m_pszString = pszTemp;
@@ -376,7 +376,11 @@ String operator+ (const char* pszLhs, const String& strRhs) {
 
 
 bool String::IsBlank() const {
-    return m_pszString == NULL || m_pszString[0] == '\0';
+    return String::IsBlank (m_pszString);
+}
+
+bool String::IsWhiteSpace() const {
+    return String::IsWhiteSpace (m_pszString);
 }
 
 bool String::Equals (const String& strComp) const {
@@ -606,7 +610,7 @@ char* String::StrDup (const char* pszString) {
         return NULL;
     }
     
-    strncpy (pszRetVal, pszString, stLength);
+    memcpy (pszRetVal, pszString, stLength);
 
     return pszRetVal;
 }
@@ -804,7 +808,7 @@ int String::PreAllocate (size_t stNumChars) {
         }
 
         if (m_pszString != NULL) {
-            strncpy (pszString, m_pszString, m_iLength + 1);
+            memcpy (pszString, m_pszString, m_iLength + 1);
             delete [] m_pszString;
         }
         m_pszString = pszString;
@@ -868,6 +872,9 @@ char* String::AppendHtml (const char* pszString, size_t stMaxNumSpacelessChars, 
     for (; i < stLength; i ++) {
 
         switch (pszString[i]) {
+
+        case '\r':
+            break;
 
         case '\n':
 
@@ -940,7 +947,6 @@ char* String::AppendHtml (const char* pszString, size_t stMaxNumSpacelessChars, 
 
         default:
 DoDefault:
-
             stSpaceNeeded = stCurrentCopyChar + 2;
             if (stSpaceNeeded > m_iRealLength && PreAllocate (stSpaceNeeded * 2) != OK) {
                 return NULL;
@@ -1010,4 +1016,26 @@ DoDefault:
 bool String::IsBlank (const char* pszString) {
 
     return pszString == NULL || *pszString == '\0';
+}
+
+bool String::IsWhiteSpace (const char* pszString) {
+
+    // We'll consider a blank string to be whitespace
+    if (pszString == NULL) {
+        return true;
+    }
+
+    size_t i = 0;
+    while (true) {
+
+        char c = pszString[i ++];
+        if (c == ' ' || c == '\t') {
+            continue;
+        }
+        if (c == '\0') {
+            return true;
+        }
+
+        return false;
+    }
 }

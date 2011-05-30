@@ -211,7 +211,7 @@ case 0:
                 iGameNumber = piGameNumber[i];
 
                 // Check everything
-                if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, &bFlag) == OK &&
+                if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
                     g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
                     g_pGameEngine->IsSpectatorGame (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
                     g_pGameEngine->GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {

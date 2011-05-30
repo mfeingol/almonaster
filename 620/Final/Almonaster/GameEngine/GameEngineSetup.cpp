@@ -617,11 +617,8 @@ int GameEngine::VerifySystem() {
 
     int iErrCode;
 
-    iErrCode = SetSystemOption (
-        LOGINS_ENABLED | NEW_EMPIRES_ENABLED | NEW_GAMES_ENABLED | ACCESS_ENABLED, 
-        true
-        );
-
+    // Re-enable logins so admins can log in if needed
+    iErrCode = SetSystemOption (LOGINS_ENABLED, true);
     if (iErrCode != OK) {
         Assert (false);
     }
@@ -1131,7 +1128,7 @@ int GameEngine::VerifyActiveGames() {
         }
 
         // Update the game
-        iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, &bUpdate);
+        iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -1568,7 +1565,8 @@ int GameEngine::SetupDefaultSystemTables() {
         24*60*60,       // PersonalMaxSecs
         LOGINS_ENABLED | NEW_EMPIRES_ENABLED | NEW_GAMES_ENABLED | ACCESS_ENABLED |
         DEFAULT_BRIDIER_GAMES | DEFAULT_NAMES_LISTED | DEFAULT_ALLOW_SPECTATORS |
-        DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS | DEFAULT_WARN_ON_DUPLICATE_SESSION_ID,    // Options
+        DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS | DEFAULT_WARN_ON_DUPLICATE_SESSION_ID |
+        DEFAULT_RESTRICT_IDLE_EMPIRES,    // Options
         tTime,          // LastBridierTimeBombScan
         24*60*60,       // BridierTimeBombScanFrequency
         ADEPT,          // PrivilegeForUnlimitedEmpires
@@ -1633,7 +1631,8 @@ int GameEngine::SetupDefaultSystemTables() {
         5,              // MaxNumPersonalTournaments
         10,             // MaxNumGameClassesPerPersonalTournament
         140,            // SystemMessagesAlienKey
-        (const char*) NULL, //AdminEmail
+        (const char*) NULL, //AdminEmail,
+        (float) 4.0,    // BuilderBRDampener
     };
 
     iErrCode = m_pGameData->InsertRow (SYSTEM_DATA, pvSystemData);
@@ -3079,6 +3078,15 @@ int GameEngine::SetupDefaultSystemGameClasses() {
             Assert (false);
             return iErrCode;
         }
+    }
+
+    // 153
+    pvSubmitArray[SystemAlienIcons::AlienKey] = 153;
+    pvSubmitArray[SystemAlienIcons::AuthorName] = "Kia";
+    iErrCode = m_pGameData->InsertRow (SYSTEM_ALIEN_ICONS, pvSubmitArray);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
     }
 
     return iErrCode;
