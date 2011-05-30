@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="AlajarDll"
-	SccProjectName="&quot;$/620&quot;, TWCAAAAA"
+	SccProjectName="&quot;$/621&quot;, TWCAAAAA"
 	SccAuxPath=""
 	SccLocalPath=".."
 	SccProvider="MSSCCI:Microsoft Visual SourceSafe">
@@ -311,25 +311,6 @@ copy Alajar.h ..\sdk
 			</File>
 			<File
 				RelativePath=".\PageSourceEnumerator.h">
-			</File>
-		</Filter>
-		<Filter
-			Name="Errors"
-			Filter="html">
-			<File
-				RelativePath="..\Alajar\Errors\401.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Errors\403.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Errors\404.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Errors\500.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Errors\501.html">
 			</File>
 		</Filter>
 	</Files>
