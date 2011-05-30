@@ -72,40 +72,25 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         return iErrCode;
     }
 
-    // Handle numupdated
+    // Handle num updated
     if (vOptions.GetInteger() & UPDATED) {
 
         iErrCode = m_pGameData->Increment (strGameData, GameData::NumEmpiresUpdated, -1, &vTemp);
         Assert (iErrCode == OK);
     }
-    
+
     // Handle num paused
     if (vOptions.GetInteger() & REQUEST_PAUSE) {
         
         // Decrement number of paused empires
         iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingPause, -1);
         Assert (iErrCode == OK);
-        
-    } else {
-        
-        // Check for paused game
-        unsigned int iNumRows;
-        Variant vNumPaused;
-        
-        iErrCode = m_pGameData->ReadData (strGameData, GameData::NumRequestingPause, &vNumPaused);
-        Assert (iErrCode == OK);
-        
-        iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumRows);
-        Assert (iErrCode == OK);
+    }
 
-        Assert (!(vGameState.GetInteger() & PAUSED) || (vGameState.GetInteger() & ADMIN_PAUSED));
-        
-        if (vNumPaused.GetInteger() == (int) iNumRows && !(vGameState.GetInteger() & ADMIN_PAUSED)) {
-            
-            // Pause the game
-            iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
-            Assert (iErrCode == OK);
-        }
+    // Handle num drawing
+    if (vOptions.GetInteger() & REQUEST_DRAW) {
+        iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingDraw, -1);
+        Assert (iErrCode == OK);
     }
     
     // Handle num resigned
@@ -1062,7 +1047,7 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
                         );
                     
                     // Best effort
-                    iErrCode2 = SendSystemMessage (pvEmpireKey[i].GetInteger(), pszMessage, SYSTEM, false);
+                    iErrCode2 = SendSystemMessage (pvEmpireKey[i].GetInteger(), pszMessage, SYSTEM, MESSAGE_SYSTEM);
                     Assert (iErrCode2 == OK);
                     break;
                 }
@@ -1090,13 +1075,28 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
         Assert (iErrCode == OK);
         
         bGameAlive = !bFlag;
+
+        // Check for pause
+        if (bGameAlive) {
+
+            iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, &bFlag);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            if (bFlag) {
+                BroadcastGameMessage (iGameClass, iGameNumber, "The game is now paused", SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
+            }
+        }
+
         break;                  
     }
 
     if (bGameAlive) {
 
         // The game didn't end, so broadcast event to remaining empires in game
-        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -1123,7 +1123,7 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
                 vAdmin.GetCharPtr()
                 );
 
-            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, false);
+            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
         }
     }
 
@@ -1261,7 +1261,7 @@ int GameEngine::QuitEmpireFromGameInternal (int iGameClass, int iGameNumber, int
                 );
         }
         
-        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1285,7 +1285,7 @@ Cleanup:
                 vAdminName.GetCharPtr()
                 );
             
-            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, false);
+            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
         }
     }
 
@@ -1395,7 +1395,7 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     
     sprintf (pszMessage, "%s resigned from the game", vEmpireName.GetCharPtr());
 
-    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1513,7 +1513,7 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
                 );
         }
         
-        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1825,7 +1825,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
             }
         }
 
-        SendSystemMessage (iWinnerKey, pszString, SYSTEM);
+        SendSystemMessage (iWinnerKey, pszString, SYSTEM, MESSAGE_SYSTEM);
 
         iErrCode = UpdateScoresOnWin (iGameClass, iGameNumber, iWinnerKey);
         if (iErrCode != OK) {
@@ -1871,7 +1871,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
         }
         
         if (!bFlag) {
-            
+
             // Game is still alive - tell empires what happened
             sprintf (
                 pszString,
@@ -1879,10 +1879,17 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
                 vEmpireName.GetCharPtr()
                 );
             
-            iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszString, SYSTEM, false);
+            BroadcastGameMessage (iGameClass, iGameNumber, pszString, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
+
+            // Check game for pause
+            iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, &bFlag);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
+            }
+
+            if (bFlag) {
+                BroadcastGameMessage (iGameClass, iGameNumber, "The game is now paused", SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
             }
         }
     }
@@ -2294,7 +2301,7 @@ int GameEngine::RuinEmpire (int iGameClass, int iGameNumber, int iEmpireKey, con
     // Best effort everything
     //
     
-    iErrCode = SendSystemMessage (iEmpireKey, pszMessage, SYSTEM);
+    iErrCode = SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
     Assert (iErrCode == OK);
 
     iErrCode = UpdateScoresOnRuin (iGameClass, iGameNumber, iEmpireKey);
@@ -2319,6 +2326,19 @@ int GameEngine::WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpir
 
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+#ifdef _DEBUG
+
+    Variant vTargetPop;
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TargetPop, &vTargetPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    int iTotalMaxPop = 0;
+
+#endif
 
     // Calculate NextTotalPop
     iErrCode = m_pGameData->GetEqualKeys (
@@ -2359,6 +2379,10 @@ int GameEngine::WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpir
             Assert (false);
             goto Cleanup;
         }
+
+#ifdef _DEBUG
+        iTotalMaxPop += vMaxPop.GetInteger();
+#endif
         
         // Calculate new pop
         iNewPop = GetNextPopulation (vPop.GetInteger(), fAgRatio);
@@ -2383,6 +2407,8 @@ int GameEngine::WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpir
         iNextMin += min (vMin.GetInteger(), iNewPop) - min (vMin.GetInteger(), vPop.GetInteger());
         iNextFuel += min (vFuel.GetInteger(), iNewPop) - min (vFuel.GetInteger(), vPop.GetInteger());
     }
+
+    Assert (iTotalMaxPop == vTargetPop.GetInteger());
 
     // Write nextpop, nextmin, next fuel
     iErrCode = m_pGameData->WriteData (strEmpireData, GameEmpireData::NextTotalPop, iNextPop);
@@ -2411,6 +2437,128 @@ Cleanup:
 
     return iErrCode;
 }
+
+#ifdef _DEBUG
+
+void GameEngine::CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey) {
+
+    int iErrCode;
+
+    unsigned int* piPlanetKey = NULL, iNumPlanets, i;
+
+    int iNextPop, iNextMin, iNextFuel, iNewPop;
+    float fAgRatio;
+
+    Variant vTotalPop, vPop, vMaxPop, vMin, vFuel, vTemp;
+
+    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+    Variant vTargetPop;
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TargetPop, &vTargetPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    int iTotalMaxPop = 0;
+
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    float fMaxAgRatio = vTemp.GetFloat();
+
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TotalAg, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    int iTotalAg = vTemp.GetInteger();
+
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::BonusAg, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    int iBonusAg = vTemp.GetInteger();
+
+    // Calculate NextTotalPop
+    iErrCode = m_pGameData->GetEqualKeys (
+        strGameMap, 
+        GameMap::Owner, 
+        iEmpireKey, 
+        false, 
+        &piPlanetKey, 
+        &iNumPlanets
+        );
+    
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TotalPop, &vTotalPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    fAgRatio = GetAgRatio (iTotalAg + iBonusAg, vTotalPop.GetInteger(), fMaxAgRatio);
+    
+    iNextPop = iNextMin = iNextFuel = 0;
+
+    for (i = 0; i < iNumPlanets; i ++) {
+        
+        // Calculate new planet pop
+        iErrCode = m_pGameData->ReadData (strGameMap, piPlanetKey[i], GameMap::Pop, &vPop);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        iErrCode = m_pGameData->ReadData (strGameMap, piPlanetKey[i], GameMap::MaxPop, &vMaxPop);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        iTotalMaxPop += vMaxPop.GetInteger();
+        
+        // Calculate new pop
+        iNewPop = GetNextPopulation (vPop.GetInteger(), fAgRatio);
+        if (iNewPop > vMaxPop.GetInteger()) {
+            iNewPop = vMaxPop.GetInteger();
+        }
+        iNextPop += iNewPop;
+        
+        // Calculate min increase
+        iErrCode = m_pGameData->ReadData (strGameMap, piPlanetKey[i], GameMap::Minerals, &vMin);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        iErrCode = m_pGameData->ReadData (strGameMap, piPlanetKey[i], GameMap::Fuel, &vFuel);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        iNextMin += min (vMin.GetInteger(), iNewPop) - min (vMin.GetInteger(), vPop.GetInteger());
+        iNextFuel += min (vFuel.GetInteger(), iNewPop) - min (vFuel.GetInteger(), vPop.GetInteger());
+    }
+
+    Assert (iTotalMaxPop == vTargetPop.GetInteger());
+
+Cleanup:
+
+    if (piPlanetKey != NULL) {
+        m_pGameData->FreeKeys (piPlanetKey);
+    }
+}
+
+#endif
 
 int GameEngine::UpdateGameEmpireNotepad (int iGameClass, int iGameNumber, int iEmpireKey, 
                                          const char* pszNotepad, bool* pbTruncated) {

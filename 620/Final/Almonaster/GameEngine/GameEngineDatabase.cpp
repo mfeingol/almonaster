@@ -73,11 +73,7 @@ int GameEngine::FlushDatabasePrivate (int iEmpireKey) {
             pszMessage = pszText;
         }
         
-        SendSystemMessage (
-            iEmpireKey, 
-            pszMessage,
-            SYSTEM
-            );
+        SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
     }
 
     return iErrCode;
@@ -123,13 +119,13 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
     Time::StartTimer (&tTimer);
 
     // Talk to the unwashed masses
-    iErrCode = SetSystemProperty (SystemData::AccessDisabledReason, "The server is being backed up");
+    iErrCode = SetSystemProperty (SystemData::AccessDisabledReason, BACKUP_BLOCK_REASON);
     if (iErrCode != OK) {
         Assert (false);
         goto End;
     }
 
-    iErrCode = SetSystemProperty (SystemData::NewEmpiresDisabledReason, "The server is being backed up");
+    iErrCode = SetSystemProperty (SystemData::NewEmpiresDisabledReason, BACKUP_BLOCK_REASON);
     if (iErrCode != OK) {
         Assert (false);
         goto End;
@@ -228,11 +224,7 @@ End:
             pszMessage = pszText;
         }
 
-        SendSystemMessage (
-            iEmpireKey, 
-            pszMessage,
-            SYSTEM
-            );
+        SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
     }
 
     Seconds sec = ms / 1000;
@@ -324,11 +316,7 @@ int GameEngine::RestoreDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMon
                 sprintf (pszText, "The %i-%i-%i (%i)%s",  iYear, iMonth, iDay, iVersion, pszBackedUp);
             }
 
-            SendSystemMessage (
-                iEmpireKey, 
-                pszText, 
-                SYSTEM
-                );
+            SendSystemMessage (iEmpireKey, pszText, SYSTEM, MESSAGE_SYSTEM);
 
         } else {
 
@@ -341,11 +329,7 @@ int GameEngine::RestoreDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMon
                 sprintf (pszText, "The %i-%i-%i (%i)%s%i occurred",  iYear, iMonth, iDay, iVersion, pszBackedUp, iErrCode);
             }
             
-            SendSystemMessage (
-                iEmpireKey, 
-                pszText, 
-                SYSTEM
-                );
+            SendSystemMessage (iEmpireKey, pszText, SYSTEM, MESSAGE_SYSTEM);
         }
     }
 
@@ -425,7 +409,7 @@ int GameEngine::DeleteDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMont
         if (iErrCode == OK) {
 
             strcat (pszMessage, "was deleted");
-            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM);
+            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
 
         } else {
 
@@ -435,7 +419,7 @@ int GameEngine::DeleteDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMont
             strcat (pszMessage, "could not be deleted; the error code was ");
             strcat (pszMessage, pszErrorCode);
             
-            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM);
+            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
         }
     }
 
@@ -668,7 +652,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
     }
 
     // Best effort send message
-    SendSystemMessage (iEmpireKey, pszText, SYSTEM);
+    SendSystemMessage (iEmpireKey, pszText, SYSTEM, MESSAGE_SYSTEM);
 
     return iErrCode;
 }

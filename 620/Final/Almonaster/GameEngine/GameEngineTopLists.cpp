@@ -265,7 +265,7 @@ int GameEngine::UpdateTopListOnDecrease (TopListQuery* pQuery) {
             goto Cleanup;
         }
     }
-    
+
     else if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
@@ -477,7 +477,7 @@ int GameEngine::MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey
                                          const Variant* pvOurData) {
 
     int iErrCode;
-    unsigned int iNumRows, iNumNewRows;
+    unsigned int iNumRows, iNewNumRows;
     bool bChanged;
 
     Variant** ppvData = NULL, ** ppvStackData;
@@ -500,7 +500,7 @@ int GameEngine::MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey
         iEmpireKey, 
         iKey, 
         pvOurData,
-        &iNumNewRows,
+        &iNewNumRows,
         &bChanged
         );
 
@@ -510,9 +510,9 @@ int GameEngine::MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey
     }
 
     if (bChanged) {
-        
+
         // Flush the table
-        iErrCode = PrivateFlushTopListData (ssTopList, ppvStackData, iNumNewRows);
+        iErrCode = PrivateFlushTopListData (ssTopList, ppvStackData, iNewNumRows);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -546,7 +546,7 @@ Cleanup:
 
 int GameEngine::PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant** ppvData, 
                                                 unsigned int iNumRows, int iEmpireKey, unsigned int iKey, 
-                                                const Variant* pvOurData, unsigned int* piNumNewRows,
+                                                const Variant* pvOurData, unsigned int* piNewNumRows,
                                                 bool* pbChanged) {
 
     int iErrCode = OK;
@@ -558,15 +558,22 @@ int GameEngine::PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant
     Assert (pScoringSystem != NULL);
     Assert (ppvData[iKey][TopList::EmpireKey].GetInteger() == iEmpireKey);
 
+    *pbChanged = false;
+    *piNewNumRows = iNumRows;
+
     // Maybe empire no longer belongs?
     bool bValid = pScoringSystem->IsValidScore (pvOurData);
 
     // Assign new data
     for (i = 0; i < TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [ssTopList]; i ++) {
-        ppvData[iKey][TopList::Data + i] = pvOurData[i];
+
+        if (ppvData[iKey][TopList::Data + i] != pvOurData[i]) {
+            ppvData[iKey][TopList::Data + i] = pvOurData[i];
+            *pbChanged = true;
+        }
     }
 
-    // Look for people to replace
+    // Move empire down the list
     for (i = iKey + 1; i < iNumRows; i ++) {
 
         if (bValid && pScoringSystem->CompareScores (pvOurData, ppvData[i] + TopList::Data) >= 0) {
@@ -579,11 +586,18 @@ int GameEngine::PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant
         pvTempData = ppvData[i];
         ppvData[i] = ppvData[i - 1];
         ppvData[i - 1] = pvTempData;
+
+        *pbChanged = true;
     }
 
+    // If we're not valid, we should have been pushed down to the end of the list
     if (!bValid) {
+        Assert (i == iNumRows);
+    }
+
+    if (!bValid || i == TOPLIST_SIZE) {
         
-        iErrCode = PrivateFindNewEmpireForTopList (ssTopList, ppvData, iNumRows, false, piNumNewRows);
+        iErrCode = PrivateFindNewEmpireForTopList (ssTopList, ppvData, iNumRows, bValid, piNewNumRows);
         if (iErrCode != OK) {
 
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -592,39 +606,6 @@ int GameEngine::PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant
             
             else Assert (false);
             goto Cleanup;
-        }
-        
-    } else {
-
-        if (i == iKey + 1) {
-
-            *pbChanged = false;
-            *piNumNewRows = iNumRows;
-        
-        } else {
-
-            *pbChanged = true;
-
-            if (i == TOPLIST_SIZE) {
-
-                Assert (iNumRows == TOPLIST_SIZE);
-
-                // Look for a replacement if we're at the end of the list
-                iErrCode = PrivateFindNewEmpireForTopList (ssTopList, ppvData, iNumRows, true, piNumNewRows);
-                if (iErrCode != OK) {
-
-                    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                        iErrCode = OK;
-                    }
-
-                    else Assert (false);
-                    goto Cleanup;
-                }
-            
-            } else {
-
-                *piNumNewRows = iNumRows;
-            }
         }
     }
 
@@ -687,7 +668,11 @@ int GameEngine::PrivateFindNewEmpireForTopList (ScoringSystem ssTopList, Variant
             Assert (false);
             goto Cleanup;
         }
-        
+
+        if (!pScoringSystem->IsValidScore (pvData)) {
+            continue;
+        }
+
         // See if they have a score...
         if (pScoringSystem->CompareScores (pvData, pvReplacementData) > 0) {
             
@@ -991,7 +976,7 @@ int GameEngine::PrivateFlushTopListData (ScoringSystem ssTopList, Variant** ppvD
     }
 
     if (iNumRows != iNumActualRows) {
-    
+
         iErrCode = pWriteTable->DeleteAllRows();
         if (iErrCode != OK) {
             Assert (false);

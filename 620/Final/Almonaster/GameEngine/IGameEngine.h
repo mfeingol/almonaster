@@ -807,7 +807,7 @@ public:
     virtual int SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarget) = 0;
 
     // Messages
-    virtual int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, bool bBroadcast = false) = 0;
+    virtual int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, int iFlags) = 0;
 
     // Planets
     virtual int GetPlanetCoordinates (int iGameClass, int iGameNumber, int iPlanetKey, int* piPlanetX, int* piPlanetY) = 0;

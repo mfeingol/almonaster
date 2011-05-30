@@ -67,7 +67,7 @@
 #define MAX_TOURNAMENT_TEAM_DESCRIPTION_LENGTH 384
 
 // Tournament team description
-#define MAX_TOURNAMENT_NEWS_LENGTH 512
+#define MAX_TOURNAMENT_NEWS_LENGTH 1024
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 // These values cannot be changed without running dbconv on the affected database tables //

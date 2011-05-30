@@ -8744,7 +8744,7 @@ static const char* const g_pszEmpireInfoHeadersAdmin[] = {
     "Alien",
     "Econ",
     "Mil",
-    "Tech Level",
+    "Tech",
     "Planets",
     "Ships",
     "War",
@@ -8752,6 +8752,7 @@ static const char* const g_pszEmpireInfoHeadersAdmin[] = {
     "Trade",
     "Alliance",
     "Pause",
+    "Draw",
     "Last Access",
     "Ready for Update",
 };
@@ -8787,7 +8788,6 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         * piNumUpdatesIdle, * piOptions, iIdleEmpires, iResignedEmpires;
     unsigned int iKey, iNumRows;
     float fValue;
-    bool bUpdated;
 
     Variant* pvEmpireKey = NULL, vValue, vTemp;
     UTCTime tCurrentTime, tValue;
@@ -8814,6 +8814,9 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
     iIdleEmpires = iResignedEmpires = 0;
     for (i = 0; i < iNumEmpires; i ++)
     {
+#ifdef _DEBUG
+        g_pGameEngine->CheckTargetPop (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+#endif
         GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 
         iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
@@ -8978,7 +8981,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
         if (bAdmin) {
 
-            // TechLevel
+            // Tech
             iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::TechLevel, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
@@ -9145,7 +9148,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             OutputText ("</td>");
         }
 
-        // Paused
+        // Pause
         iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
@@ -9156,7 +9159,12 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         m_pHttpResponse->WriteText ((iValue & REQUEST_PAUSE) != 0 ? "Yes" : "No");
         OutputText ("</td>");
 
-        bUpdated = iValue & UPDATED;
+        // Draw
+        OutputText ("<td align=\"center\">");
+        m_pHttpResponse->WriteText ((iValue & REQUEST_DRAW) != 0 ? "Yes" : "No");
+        OutputText ("</td>");
+
+        bool bUpdated = iValue & UPDATED;
 
         // LastLogin, idle
         iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::LastLogin, &vValue);
@@ -9179,7 +9187,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             if (iValue != 1) {
                 OutputText ("s");
             }
-            OutputText (" idle)");
+            OutputText (" idle");
         }
         OutputText ("</td>");
 

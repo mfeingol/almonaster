@@ -124,6 +124,10 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     iErrCode = m_pGameData->GetFirstKey (SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, pszEmpireName, true, &iKey);
     if (iErrCode != ERROR_DATA_NOT_FOUND) {
 
+        // Set the key back to NO_KEY, or we'll hit the delete-empire clause in the cleanup
+        Assert (iKey != NO_KEY);
+        iKey = NO_KEY;
+
         if (iErrCode == OK) {
             iErrCode = ERROR_EMPIRE_ALREADY_EXISTS;
         } else Assert (false);
@@ -948,12 +952,7 @@ int GameEngine::SendVictorySneer (int iWinnerKey, const char* pszWinnerName, int
 
         strMessage.AppendHtml (vSneer.GetCharPtr(), 0, true);
 
-        iErrCode = SendSystemMessage (
-            iLoserKey,
-            strMessage.GetCharPtr(),
-            SYSTEM
-            );
-        
+        iErrCode = SendSystemMessage (iLoserKey, strMessage.GetCharPtr(), SYSTEM, MESSAGE_SYSTEM);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -2221,19 +2220,15 @@ int GameEngine::SetEmpirePrivilege (int iEmpireKey, int iPrivilege) {
     
     if (iErrCode == OK) {
 
-        char pszMessage [1024];
+        char pszMessage [512];
         sprintf (
-            pszMessage, 
-            "Your privilege level was changed to %s by an administrator", 
-            PRIVILEGE_STRING[iPrivilege]
+            pszMessage,
+            "Your privilege level was changed to %s by an administrator",
+            PRIVILEGE_STRING [iPrivilege]
             );
 
         // Send a message to the affected empire
-        iErrCode = SendSystemMessage (
-            iEmpireKey,
-            pszMessage,
-            SYSTEM
-            );
+        SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
     }
 
     return iErrCode;

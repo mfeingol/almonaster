@@ -44,15 +44,11 @@ void TableContext::DeleteOnDisk() {
         // Free all varlen and meta blocks
         FileHeap* pTableHeap = GetTableHeap();
         FileHeap* pMetaHeap = GetMetaDataHeap();
-        FileHeap* pVarLenHeap = GetVarLenHeap();
 
-        pTableHeap->Lock();
-        pVarLenHeap->Lock();
+        Lock();
 
         // Varlen data
         FreeAllVarLenData();
-
-        pVarLenHeap->Unlock();
 
         // Bitmap offset
         TableHeader* pTableHeader = (TableHeader*) pTableHeap->GetAddress (m_oTableHeader);
@@ -67,12 +63,13 @@ void TableContext::DeleteOnDisk() {
             if (pTableHeader->poIndexOffset[i] != NO_OFFSET) {
                 pMetaHeap->Free (pTableHeader->poIndexOffset[i]);
             }
-        }       
-
-        pTableHeap->Unlock();
+        }
 
         // Free the table block
         pTableHeap->Free (m_oBaseOffset);
+
+        Unlock();
+
         m_oBaseOffset = NO_OFFSET;
     }
 }
@@ -94,7 +91,7 @@ void TableContext::FreeAllVarLenData() {
                 piVarLenCol [iNumVarLenCols ++] = i;
             }
         }
-        
+
         unsigned int iKey = NO_KEY;
         while (true) {
             
@@ -220,7 +217,7 @@ int TableContext::Create (const char* pszTableName, Template* pTemplate) {
         return ERROR_OUT_OF_DISK_SPACE;
     }
 
-    pTableHeap->Lock();
+    Lock();
 
     // Compute other offsets
     m_oTableHeader = ALIGN ((m_oBaseOffset + stTableNameLen + stTemplateNameLen), 8);
@@ -254,7 +251,7 @@ int TableContext::Create (const char* pszTableName, Template* pTemplate) {
         pHeader->poIndexOffset[i] = NO_OFFSET;
     }
 
-    pTableHeap->Unlock();
+    Unlock();
 
     return OK;
 }
@@ -270,9 +267,9 @@ int TableContext::Resize (unsigned int iNumNewRows) {
     stNewSize = max (stOldSize + stOldSize / 3, stOldSize + (iNumNewRows + 10) * stRowSize);
 
     // Can't perform memory operations while holding the lock
-    GetTableHeap()->Unlock();
+    Unlock();
     Offset oOffset = GetTableHeap()->Reallocate (m_oBaseOffset, stNewSize);
-    GetTableHeap()->Lock();
+    Lock();
 
     if (oOffset == NO_OFFSET) {
         return ERROR_OUT_OF_DISK_SPACE;
@@ -306,15 +303,16 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
         
         FileHeap* pMetaHeap = GetMetaDataHeap();
 
-        pMetaHeap->Unlock();
+        Unlock();
         Offset oNewOffset = pMetaHeap->Allocate (sNewSize);
-        pMetaHeap->Lock();
+        Lock();
 
         if (oNewOffset == NO_OFFSET) {
             Assert (false);
             return ERROR_OUT_OF_DISK_SPACE;
         }
 
+        pTableHeader = GetTableHeader();
         pTableHeader->oRowBitmapOffset = oNewOffset;
         pTableHeader->iNumBitmapElements = INITIAL_BITMAP_ELEMENTS;
 
@@ -332,9 +330,9 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
             unsigned int iNewSize = iMaxNumRows / BITS_PER_BITMAP_ELEMENT + INITIAL_BITMAP_ELEMENTS;
             
             // Reallocate space
-            pMetaHeap->Unlock();
+            Unlock();
             Offset oNewOffset = pMetaHeap->Reallocate (oBitmapOffset, iNewSize * sizeof (size_t));
-            pMetaHeap->Lock();
+            Lock();
 
             if (oNewOffset == NO_OFFSET) {
                 Assert (false);
@@ -433,16 +431,13 @@ void TableContext::SetRowValidity (unsigned int iKey, bool bValid) {
 
 void TableContext::SetAllRowsInvalid() {
 
-    TableHeader* pTableHeader = (TableHeader*) GetTableHeap()->GetAddress (m_oTableHeader);
+    TableHeader* pTableHeader = GetTableHeader();
 
     Offset oBitmap = pTableHeader->oRowBitmapOffset;
     if (oBitmap != NO_OFFSET) {
-        
-        FileHeap* pMetaHeap = GetMetaDataHeap();
 
-        pMetaHeap->Unlock();
+        FileHeap* pMetaHeap = GetMetaDataHeap();
         pMetaHeap->Free (oBitmap);
-        pMetaHeap->Lock();
 
         pTableHeader->oRowBitmapOffset = NO_OFFSET;
         pTableHeader->iNumBitmapElements = 0;

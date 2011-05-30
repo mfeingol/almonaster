@@ -1316,9 +1316,9 @@ int TableContext::CreateAllIndexes (unsigned int iNumNewRows) {
         return OK;
     }
 
-    TableHeader* pTableHeader = GetTableHeader();
     FileHeap* pMetaHeap = GetMetaDataHeap();
 
+    TableHeader* pTableHeader = NULL;
     IndexHeader* pIndexHeader;
 
     //
@@ -1338,9 +1338,11 @@ int TableContext::CreateAllIndexes (unsigned int iNumNewRows) {
     for (i = 0; i < iNumIndexes; i ++) {
 
         // Allocate the new block
-        pMetaHeap->Unlock();
+        m_pDatabase->GetHeapLock()->SignalReader();
         Offset oOffset = pMetaHeap->Allocate (sSize);
-        pMetaHeap->Lock();
+        m_pDatabase->GetHeapLock()->WaitReader();
+
+        pTableHeader = GetTableHeader();
         
         if (oOffset == NO_OFFSET) {
             Assert (false);
@@ -1370,17 +1372,13 @@ int TableContext::CreateAllIndexes (unsigned int iNumNewRows) {
     if (iErrCode != OK) {
 
         unsigned int iLastIndex = i;
-        
+
         for (i = 0; i < iLastIndex; i ++) {
 
-            Offset oOffset = pTableHeader->poIndexOffset[i];
-            
+            Offset oOffset = pTableHeader->poIndexOffset[i];           
             Assert (oOffset != NO_OFFSET);
             
-            pMetaHeap->Unlock();
             pMetaHeap->Free (oOffset);
-            pMetaHeap->Lock();
-
             pTableHeader->poIndexOffset[i] = NO_OFFSET;
         }
     }
@@ -1426,22 +1424,17 @@ void TableContext::DeleteAllIndexes() {
 
     unsigned int i, iNumIndexes = GetNumIndexColumns();
 
-    TableHeader* pTableHeader = GetTableHeader();
     FileHeap* pMetaHeap = GetMetaDataHeap();
-
-    pMetaHeap->Unlock();
+    TableHeader* pTableHeader = GetTableHeader();
 
     for (i = 0; i < iNumIndexes; i ++) {
-        
-        Offset oOffset = pTableHeader->poIndexOffset[i];
-        
-        if (oOffset != NO_OFFSET) {
-            pMetaHeap->Free (oOffset);
+
+        Offset offset = pTableHeader->poIndexOffset[i];
+        if (offset != NO_OFFSET) {
+            pMetaHeap->Free (offset);
             pTableHeader->poIndexOffset[i] = NO_OFFSET;
         }
     }
-
-    pMetaHeap->Lock();
 }
 
 unsigned int TableContext::GetIndexForColumn (unsigned int iColumn) {
@@ -1667,9 +1660,9 @@ Offset TableContext::AllocateIndexNode (unsigned int iIndex) {
             sOldHeapSize + max (sOldHeapSize / 3, 10 * sizeof (IndexNode)), sizeof (IndexNode)
             );
 
-        pMetaHeap->Unlock();
+        m_pDatabase->GetHeapLock()->SignalReader();
         Offset oNewBaseOffset = pMetaHeap->Reallocate (oBaseOffset, sBucketSize + sNewHeapSize);
-        pMetaHeap->Lock();
+        m_pDatabase->GetHeapLock()->WaitReader();
 
         if (oNewBaseOffset == NO_OFFSET) {
             return NO_OFFSET;

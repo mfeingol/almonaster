@@ -57,9 +57,12 @@ void Table::CheckIntegrity() {
     unsigned int iWhileNumRows = 0;
     unsigned int iTerminatorKey = m_pContext->GetTerminatorRowKey();
 
+    int64 iForValidRowSum = 0, iWhileValidRowSum = 0;
+
     for (unsigned int i = 0; i < iTerminatorKey; i ++) {
         if (m_pContext->IsValidRow (i)) {
             iForNumRows ++;
+            iForValidRowSum += i;
         }
     }
 
@@ -70,13 +73,16 @@ void Table::CheckIntegrity() {
         if (iRowKey == NO_KEY) {
             break;
         }
+        Assert (m_pContext->IsValidRow (iRowKey));
 
         iWhileNumRows ++;
+        iWhileValidRowSum += iRowKey;
     }
 
     Assert (iForNumRows == iStaticNumRows);
     Assert (iWhileNumRows == iStaticNumRows);
     Assert (iForNumRows == iWhileNumRows);
+    Assert (iForValidRowSum == iWhileValidRowSum);
 
     // TODO - verify indexes
 }

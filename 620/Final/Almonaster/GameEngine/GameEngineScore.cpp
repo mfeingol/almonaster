@@ -772,10 +772,11 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
                 return iErrCode;
             }
             
-            iErrCode = SendSystemMessage (
+            SendSystemMessage (
                 iEmpireKey, 
                 "Congratulations! You have attained the level of Apprentice and can now create your own personal games",
-                SYSTEM
+                SYSTEM,
+                MESSAGE_SYSTEM
             );
         }
         
@@ -787,11 +788,12 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
                 return iErrCode;
             }
 
-            iErrCode = SendSystemMessage (
+            SendSystemMessage (
                 iEmpireKey, 
                 "Congratulations! You have attained the level of Adept, "\
                 "so you can now create your own personal gameclasses",
-                SYSTEM
+                SYSTEM,
+                MESSAGE_SYSTEM
                 );
         }
     }
@@ -807,11 +809,12 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
                 return iErrCode;
             }
             
-            iErrCode = SendSystemMessage (
+            SendSystemMessage (
                 iEmpireKey, 
                 "Unfortunately, you have lost your Apprentice status, "\
                 "so you can no longer create your own personal games",
-                SYSTEM
+                SYSTEM,
+                MESSAGE_SYSTEM
                 );
         }
         
@@ -823,11 +826,12 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
                 return iErrCode;
             }
 
-            iErrCode = SendSystemMessage (
+            SendSystemMessage (
                 iEmpireKey, 
                 "Congratulations! You have attained the level of Adept, "\
                 "so you can now create personal gameclasses",
-                SYSTEM
+                SYSTEM,
+                MESSAGE_SYSTEM
                 );
         }
     }
@@ -842,11 +846,12 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
                 return iErrCode;
             }
 
-            iErrCode = SendSystemMessage (
+            SendSystemMessage (
                 iEmpireKey, 
                 "Unfortunately, you have lost your Adept and Apprentice status and can no longer\n"\
                 "create personal gameclasses or personal games",
-                SYSTEM
+                SYSTEM,
+                MESSAGE_SYSTEM
                 );
             
         } else {
@@ -857,10 +862,11 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
                 return iErrCode;
             }
             
-            iErrCode = SendSystemMessage (
+            SendSystemMessage (
                 iEmpireKey, 
                 "Unfortunately, you have lost your Adept status and can no longer create personal gameclasses",
-                SYSTEM
+                SYSTEM,
+                MESSAGE_SYSTEM
                 );
         }
     }

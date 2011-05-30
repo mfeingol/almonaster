@@ -106,7 +106,7 @@ typedef unsigned long long int uint64;
 
 #undef ERROR_ACCESS_DENIED
 
-#pragma warning (disable : 4100 4127 4786) 
+#pragma warning (disable : 4100 4127 4512 4786) 
 
 typedef __int64 int64;
 typedef unsigned __int64 uint64;

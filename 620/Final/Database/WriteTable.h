@@ -16,7 +16,6 @@ protected:
     ReadTable m_rTable;
 
     int InsertDuplicateVariableLengthRows (Variant* pvColVal, unsigned int iNumRows);
-
     int InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned int* piKey);
 
 public:

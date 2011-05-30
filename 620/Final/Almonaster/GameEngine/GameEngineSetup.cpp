@@ -616,12 +616,64 @@ Cleanup:
 int GameEngine::VerifySystem() {
 
     int iErrCode;
+    Variant vTemp;
 
-    // Re-enable logins so admins can log in if needed
-    iErrCode = SetSystemOption (LOGINS_ENABLED, true);
+    int iOptions;
+    iErrCode = GetSystemOptions (&iOptions);
     if (iErrCode != OK) {
         Assert (false);
+        goto Cleanup;
     }
+
+    if (!(iOptions & ACCESS_ENABLED)) {
+
+        iErrCode = GetSystemProperty (SystemData::AccessDisabledReason, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (strcmp (vTemp.GetString(), BACKUP_BLOCK_REASON) == 0) {
+
+            iErrCode = SetSystemProperty (SystemData::AccessDisabledReason, (const char*) NULL);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            iErrCode = SetSystemOption (ACCESS_ENABLED, true);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+    }
+
+    if (!(iOptions & NEW_EMPIRES_ENABLED)) {
+
+        iErrCode = GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (strcmp (vTemp.GetString(), BACKUP_BLOCK_REASON) == 0) {
+
+            iErrCode = SetSystemProperty (SystemData::NewEmpiresDisabledReason, (const char*) NULL);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            iErrCode = SetSystemOption (NEW_EMPIRES_ENABLED, true);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+    }
+
+Cleanup:
 
     return iErrCode;
 }
@@ -2069,7 +2121,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::InitialTechDevs] = TECH_ATTACK | TECH_SCIENCE | TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2125,7 +2177,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::InitialTechDevs] = TECH_ATTACK | TECH_SCIENCE | TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2179,7 +2231,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::InitialTechDevs] = TECH_SCIENCE | TECH_COLONY | TECH_SATELLITE;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2235,7 +2287,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_MINESWEEPER | TECH_MINEFIELD;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2292,7 +2344,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_TROOPSHIP;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2348,7 +2400,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2404,7 +2456,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_DOOMSDAY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2459,7 +2511,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_TERRAFORMER;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2514,7 +2566,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_CLOAKER;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2570,7 +2622,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_SCIENCE | TECH_COLONY | TECH_ENGINEER | TECH_CLOAKER | TECH_DOOMSDAY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2626,7 +2678,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_TERRAFORMER;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2680,7 +2732,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::InitialTechDevs] = TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = TECH_COLONY;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2735,7 +2787,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2791,7 +2843,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2847,7 +2899,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
         TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_TROOPSHIP;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
@@ -2901,7 +2953,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::InitialTechDevs] = TECH_SCIENCE | TECH_COLONY;
     pvSubmitArray[SystemGameClassData::DevelopableTechDevs] = ALL_CLASSIC_TECHS;
 
-    // TODO
+    // TODO - description
     pvSubmitArray[SystemGameClassData::Description] = "";
     pvSubmitArray[SystemGameClassData::MaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::MaxNumActiveGames] = INFINITE_ACTIVE_GAMES;

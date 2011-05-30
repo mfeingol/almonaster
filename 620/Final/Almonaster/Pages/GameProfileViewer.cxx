@@ -101,7 +101,7 @@ if (m_bOwnPost && !m_bRedirection) {
             Variant vSentName;
             if (pszMessage != NULL) {
 
-                iErrCode = g_pGameEngine->SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey);
+                iErrCode = g_pGameEngine->SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                 switch (iErrCode) {
 
                 case OK:

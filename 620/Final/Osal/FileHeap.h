@@ -97,7 +97,7 @@ protected:
     //
     // Data
     //
-    ReadWriteLock m_rwGlobalLock;
+    ReadWriteLock& m_rwGlobalLock;
 
     MemoryMappedFile m_mmfData;
     FileHeapHeader* m_pHeader;
@@ -150,17 +150,8 @@ protected:
 
 public:
 
-    FileHeap();
+    FileHeap (ReadWriteLock& rwGlobalLock);
     ~FileHeap();
-
-    //
-    // Locks
-    //
-    void Lock();
-    void Unlock();
-
-    void Freeze();
-    void Unfreeze();
 
     //
     // Single threaded
@@ -183,11 +174,12 @@ public:
     // Heap operations
     Offset Allocate (Size sSize);
     Offset Reallocate (Offset oBlock, Size sSize);
-    void Free (Offset oBlock);
 
     //
     // Must hold the lock
     //
+
+    void Free (Offset oBlock);
 
     // Memory usage
     const void* GetBaseAddress();

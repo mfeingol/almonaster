@@ -35,7 +35,7 @@ if (m_bOwnPost && !m_bRedirection) {
     switch (iTosPageSubmit) {
     case 0:
 
-        if (WasButtonPressed (BID_ACCEPT)) {
+        if (WasButtonPressed (BID_TOS_ACCEPT)) {
 
             EmpireCheck (g_pGameEngine->SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
             m_iSystemOptions2 |= EMPIRE_ACCEPTED_TOS;
@@ -52,7 +52,7 @@ if (m_bOwnPost && !m_bRedirection) {
             return Redirect (ACTIVE_GAME_LIST);
         }
 
-        if (WasButtonPressed (BID_DECLINE)) {
+        if (WasButtonPressed (BID_TOS_DECLINE)) {
             iTosPage = 1;
             bRedirectTest = false;
 
@@ -67,7 +67,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     case 1:
 
-        if (WasButtonPressed (BID_DECLINE)) {
+        if (WasButtonPressed (BID_TOS_DECLINE)) {
             
             // Best effort
             g_pGameEngine->DeleteEmpire (m_iEmpireKey, NULL, true, false);

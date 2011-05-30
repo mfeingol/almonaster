@@ -149,7 +149,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         m_iGameNumber, 
                         pszSentMessage,
                         m_iEmpireKey, 
-                        false
+                        MESSAGE_BROADCAST
                         );
 
                     switch (iErrCode) {
@@ -306,8 +306,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             piDelayEmpireKey[i],
                             pszSentMessage,
                             m_iEmpireKey,
-                            false,
-                            false,
+                            0,
                             NULL_TIME
                             );
 

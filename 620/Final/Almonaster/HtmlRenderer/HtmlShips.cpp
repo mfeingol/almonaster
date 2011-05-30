@@ -1212,7 +1212,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                         foOrder
                         );
 
-                    if (iErrCode != OK) {
+                    if (iErrCode != OK && iErrCode != ERROR_FLEET_DOES_NOT_EXIST) {
                         AddMessage ("At least one ship in the fleet could not be moved to the new planet");
                     }
                     iErrCode = OK;

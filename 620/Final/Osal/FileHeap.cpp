@@ -61,7 +61,7 @@ const size_t BUCKET_SIZE [NUM_BUCKETS] = {
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-FileHeap::FileHeap() {
+FileHeap::FileHeap (ReadWriteLock& rwGlobalLock) : m_rwGlobalLock (rwGlobalLock) {
 
     m_pHeader = NULL;
 
@@ -85,11 +85,6 @@ FileHeap::~FileHeap() {
 int FileHeap::Initialize() {
 
     int iErrCode, i;
-
-    iErrCode = m_rwGlobalLock.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
 
     for (i = 0; i < sizeof (m_prwBucketLock) / sizeof (m_prwBucketLock[0]); i ++) {
 
@@ -195,9 +190,9 @@ int FileHeap::OpenExisting (const char* pszFileName, unsigned int iFlags) {
 int FileHeap::Flush() {
 
     // Lock to protect against resizes
-    Lock();
+    m_rwGlobalLock.WaitReader();
     int iErrCode = m_mmfData.Flush();
-    Unlock();
+    m_rwGlobalLock.SignalReader();
 
     return iErrCode;
 }
@@ -373,7 +368,7 @@ Offset FileHeap::Allocate (Size sSize) {
 
     Size sRealSize = sSize;
 
-    Lock();
+    m_rwGlobalLock.WaitReader();
 
     // Can't accept zero
     if (sRealSize <= 0 || sRealSize == NO_SIZE) {
@@ -424,7 +419,7 @@ Offset FileHeap::Allocate (Size sSize) {
 
 Cleanup:
 
-    Unlock();
+    m_rwGlobalLock.SignalReader();
 
     return oOffset;
 }
@@ -439,7 +434,7 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
 
     Offset oNewBlock = NO_OFFSET, oRealBlock;
 
-    Lock();
+    m_rwGlobalLock.WaitReader();
 
     if (!IsValidUserBlock (oBlock)) {
         Assert (!"Bad block provided to Free");
@@ -534,7 +529,7 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
         }
     }
 
-    Unlock();
+    m_rwGlobalLock.SignalReader();
 
     // At this point, we'll just have to allocate a new block of the desired size
     oNewBlock = Allocate (sSize);
@@ -542,6 +537,8 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
         Assert (!"Out of disk space");
         return NO_OFFSET;
     }
+
+    m_rwGlobalLock.WaitReader();
 
     // Note: we refresh the old header because the old pointer might have become stale!
     // Out allocate might have resized the file and changed every real address
@@ -551,11 +548,13 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
     MemCopy (oNewBlock, oBlock, pOldHeader->sUserSize);
     Free (oBlock);
 
+    m_rwGlobalLock.SignalReader();
+
     return oNewBlock;
 
 Cleanup:
 
-    Unlock();
+    m_rwGlobalLock.SignalReader();
 
     return GetUserOffset (oNewBlock);
 }
@@ -566,8 +565,6 @@ void FileHeap::Free (Offset oBlock) {
     Bucket iBucket;
 
     Offset oRealBlock;
-
-    Lock();
 
     if (!IsValidUserBlock (oBlock)) {
         Assert (!"Bad block provided to Free");
@@ -617,8 +614,7 @@ void FileHeap::Free (Offset oBlock) {
     Algorithm::AtomicDecrement (&m_pHeader->cNumAllocatedBlocks);
 
 Cleanup:
-
-    Unlock();
+    ;
 }
 
 const void* FileHeap::GetBaseAddress() {
@@ -704,22 +700,6 @@ bool FileHeap::IsBlockFree (Offset oBlock) {
     Assert (pHeader != NULL);
 
     return pHeader->bFree;
-}
-
-void FileHeap::Lock() {
-    m_rwGlobalLock.WaitReader();
-}
-
-void FileHeap::Unlock() {
-    m_rwGlobalLock.SignalReader();
-}
-
-void FileHeap::Freeze() {
-    m_rwGlobalLock.WaitWriter();
-}
-
-void FileHeap::Unfreeze() {
-    m_rwGlobalLock.SignalWriter();
 }
 
 //
@@ -1265,7 +1245,7 @@ int FileHeap::Resize (Bucket iBucket) {
     Size sAddedSize = BUCKET_SIZE [iBucket];
 
     // Lock for real
-    Unlock();
+    m_rwGlobalLock.SignalReader();
     m_rwGlobalLock.WaitWriter();
 
     // Get old size
@@ -1301,13 +1281,13 @@ int FileHeap::Resize (Bucket iBucket) {
 
     } else {
 
-        Assert (!"Out of disk space");
+        Assert (!"Out of disk or virtual memory space");
 
         // Unlock
         m_rwGlobalLock.SignalWriter();
     }
 
-    Lock();
+    m_rwGlobalLock.WaitReader();
 
     return iErrCode;
 }

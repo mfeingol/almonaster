@@ -201,13 +201,13 @@ int GameEngine::DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, con
 
     // Best effort send messages
     for (i = 0; i < iNumEmpires; i ++) {
-        SendSystemMessage (pvEmpireKey[i], pszTemp, SYSTEM);
+        SendSystemMessage (pvEmpireKey[i], pszTemp, SYSTEM, MESSAGE_SYSTEM);
     }
 
     // Best effort send the message from the admin  
     if (!String::IsBlank (pszMessage)) {
         for (i = 0; i < iNumEmpires; i ++) {
-            SendSystemMessage (pvEmpireKey[i], pszMessage, iEmpireKey);
+            SendSystemMessage (pvEmpireKey[i], pszMessage, iEmpireKey, MESSAGE_ADMINISTRATOR);
         }
     }
 
@@ -1681,7 +1681,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
             
             for (i = 0; i < iNumEmpires; i ++) {
                 
-                int iErrCode2 = SendSystemMessage (piEmpireKey[i], pszMessage, SYSTEM);
+                int iErrCode2 = SendSystemMessage (piEmpireKey[i], pszMessage, SYSTEM, MESSAGE_SYSTEM);
                 Assert (iErrCode2 == OK);
             }
         }
@@ -2001,9 +2001,9 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
                         );
 
                     // Best effort send
-                    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+                    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
                     Assert (iErrCode == OK);
-                    
+
                     // Exit with access denied
                     iErrCode = ERROR_DUPLICATE_IP_ADDRESS;
                     goto OnError;
@@ -2077,9 +2077,9 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
                         );
                     
                     // Best effort
-                    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+                    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
                     Assert (iErrCode == OK);
-                    
+
                     iErrCode = ERROR_DUPLICATE_SESSION_ID;
                     goto OnError;
                 }
@@ -2637,14 +2637,15 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
                 );
         }
 
-        iErrCode = SendGameMessage (iGameClass, iGameNumber, iEmpireKey, pszMessage, SYSTEM, false, false, NULL_TIME);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto OnError;
-        }
+        iErrCode = SendGameMessage (iGameClass, iGameNumber, iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM, NULL_TIME);
 
         if (pszMessage != vTemp.GetCharPtr()) {
             delete [] (char*) pszMessage;
+        }
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto OnError;
         }
     }
 
@@ -2928,8 +2929,8 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
                     
                     // Best effort
                     SendGameMessage (
-                        iGameClass, iGameNumber, pvEmpireKey[i].GetInteger(), strMessage.GetCharPtr(), SYSTEM, true, 
-                        false, NULL_TIME);
+                        iGameClass, iGameNumber, pvEmpireKey[i].GetInteger(), strMessage.GetCharPtr(), 
+                        SYSTEM, MESSAGE_SYSTEM | MESSAGE_BROADCAST, NULL_TIME);
                 }
             }
         }
@@ -3346,11 +3347,11 @@ int GameEngine::CheckGameForEndConditions (int iGameClass, int iGameNumber, cons
             
             // Best effort send messages
             if (!String::IsBlank (pszAdminMessage)) {
-                iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszAdminMessage, SYSTEM);
+                iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszAdminMessage, SYSTEM, MESSAGE_SYSTEM);
                 Assert (iErrCode == OK);
             }
             
-            iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszMessage, SYSTEM);
+            iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszMessage, SYSTEM, MESSAGE_SYSTEM);
             Assert (iErrCode == OK);
             
             // Best effort update empires' statistics
@@ -3402,11 +3403,11 @@ int GameEngine::CheckGameForEndConditions (int iGameClass, int iGameNumber, cons
             
             // Best effort send messages
             if (!String::IsBlank (pszAdminMessage)) {
-                iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszAdminMessage, SYSTEM);
+                iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszAdminMessage, SYSTEM, MESSAGE_SYSTEM);
                 Assert (iErrCode == OK);
             }
             
-            iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszMessage, SYSTEM);
+            iErrCode = SendSystemMessage (vEmpireKey.GetInteger(), pszMessage, SYSTEM, MESSAGE_SYSTEM);
             Assert (iErrCode == OK);
 
             // Best effort update empires' statistics
@@ -3741,7 +3742,7 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         
         pszMessage = bAdmin ? "The game was paused by an administrator" : "The game is now paused";
 
-        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+        iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
         Assert (iErrCode == OK);
     }
 
@@ -3881,7 +3882,7 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
 
     // Best effort broadcast message
     if (bBroadcast) {
-        BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, false);
+        BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
     }
 
 Cleanup:

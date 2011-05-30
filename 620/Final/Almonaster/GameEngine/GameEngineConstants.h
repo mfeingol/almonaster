@@ -28,6 +28,8 @@
 
 #define TEST_ERROR(x) iErrCode = x;  if (iErrCode != OK) return iErrCode;
 
+#define BACKUP_BLOCK_REASON "The server is being backed up"
+
 // Ship types
 enum ShipType {
     ATTACK,
@@ -451,9 +453,11 @@ enum MessageType {
 
 // SystemEmpireMessages::Flags
 // GameEmpireMessages::Flags
-#define MESSAGE_BROADCAST               (0x00000001)
-#define MESSAGE_UPDATE                  (0x00000002)
-#define MESSAGE_SYSTEM                  (0x00000004)
+#define MESSAGE_BROADCAST                (0x00000001)
+#define MESSAGE_UPDATE                   (0x00000002)
+#define MESSAGE_SYSTEM                   (0x00000004)
+#define MESSAGE_ADMINISTRATOR            (0x00000008)
+#define MESSAGE_TOURNAMENT_ADMINISTRATOR (0x00000010)
 
 // GameSecurity::Options
 #define GAME_SECURITY_CHECK_IPADDRESS   (0x00000001)

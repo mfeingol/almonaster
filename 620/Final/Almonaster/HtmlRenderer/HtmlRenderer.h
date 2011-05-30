@@ -296,6 +296,8 @@ enum ButtonId {
     BID_PLUS,
     BID_MINUS,
     BID_TOS,
+    BID_TOS_ACCEPT,
+    BID_TOS_DECLINE,
     BID_LAST,
 };
 

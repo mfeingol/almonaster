@@ -164,6 +164,8 @@ const char* ButtonText[] = {
     "+",
     "-",
     "TOS",
+    "Accept",
+    "Decline",
     NULL
 };
 
@@ -313,6 +315,8 @@ const char* ButtonName[] = {
     "Plus",
     "Minus",
     "TOS",
+    "TOSAccept",
+    "TOSDecline",
     NULL
 };
 
@@ -462,6 +466,8 @@ const char* ButtonImageName[] = {
     "Plus.x",
     "Minus.x",
     "TOS.x",
+    "TOSAccept.x",
+    "TOSDecline.x",
     NULL
 };
 
@@ -611,6 +617,8 @@ const char* ButtonFileName[] = {
     "Plus.gif",
     "Minus.gif",
     "TOS.gif",
+    "Accept.gif",
+    "Decline.gif",
     NULL
 };
 
@@ -789,7 +797,7 @@ void HtmlRenderer::WriteButton (ButtonId bidButton) {
         OutputText ("\">");
         
         break;
-        
+
     case ALTERNATIVE_PATH:
         
         OutputText ("<input type=\"image\" border=\"0\" alt=\"");

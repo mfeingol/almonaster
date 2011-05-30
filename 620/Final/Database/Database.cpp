@@ -26,7 +26,11 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-Database::Database() {
+Database::Database() : m_fhTableData (m_rwHeapLock), 
+                       m_fhVariableData (m_rwHeapLock),
+                       m_fhMetaData (m_rwHeapLock),
+                       m_fhTemplateData (m_rwHeapLock)
+{
 
     m_pTemplates = NULL;
     m_pTables = NULL;
@@ -136,6 +140,10 @@ int Database::Initialize (const char* pszMainDirectory, unsigned int iOptions) {
         return iErrCode;
     }
     iErrCode = m_rwBackupLock.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+    iErrCode = m_rwHeapLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }

@@ -28,7 +28,7 @@
 //
 // Add a System Message to a given empire's queue.
 
-int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, bool bBroadcast) {
+int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, int iFlags) {
 
     int iErrCode;
 
@@ -56,15 +56,9 @@ int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int i
 
     // Insert the message into the table
     pvData[SystemEmpireMessages::Unread] = MESSAGE_UNREAD;
-    
-    int iFlags = 0;
-    
-    if (bBroadcast) {
-        iFlags |= MESSAGE_BROADCAST;
-    }
 
     if (iSource == SYSTEM) {
-        iFlags |= MESSAGE_SYSTEM;
+        Assert (iFlags & MESSAGE_SYSTEM);
         pvData[SystemEmpireMessages::Source] = (const char*) NULL;
     } else {
         
@@ -264,7 +258,7 @@ int GameEngine::SendMessageToAll (int iEmpireKey, const char* pszMessage) {
         }
 
         // Best effort
-        SendSystemMessage (iDestKey, pszMessage, iEmpireKey, true);
+        SendSystemMessage (iDestKey, pszMessage, iEmpireKey, MESSAGE_ADMINISTRATOR);
     }
 
     return iErrCode;
@@ -577,10 +571,10 @@ int GameEngine::GetNumUnreadGameMessagesPrivate (IReadTable* pMessages, unsigned
 // Add a game message to a given empire's queue.
 
 int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage, 
-                                 int iSourceKey, bool bBroadcast, bool bUpdateMessage, const UTCTime& tSendTime) {
+                                 int iSourceKey, int iFlags, const UTCTime& tSendTime) {
 
     int iErrCode;
-    unsigned int iNumMessages, iNumUnreadMessages;;
+    unsigned int iNumMessages, iNumUnreadMessages;
 
     bool bFlag;
     Variant vTemp;
@@ -588,15 +582,9 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     UTCTime tTime = tSendTime;
     
     // Make sure private messages are allowed
-    if (iSourceKey != SYSTEM && !bBroadcast) {
+    if (!(iFlags & (MESSAGE_BROADCAST | MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
-        iErrCode = m_pGameData->ReadData (
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::Options,
-            &vTemp
-            );
-
+        iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return ERROR_EMPIRE_DOES_NOT_EXIST;
@@ -607,29 +595,26 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
         }
     }
 
-    // Make sure both empires are still in the game    
+    // Make sure both empires are still in the game
     iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bFlag);
     if (iErrCode != OK || !bFlag) {
         return ERROR_EMPIRE_IS_NOT_IN_GAME;
     }
 
-    if (iSourceKey != SYSTEM) {
+    if (!(iFlags & (MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
         iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iSourceKey, &bFlag);
         if (iErrCode != OK || !bFlag) {
             return ERROR_EMPIRE_IS_NOT_IN_GAME;
         }
-    }
 
-    // Is empire ignoring other empire?
-    if (iSourceKey != SYSTEM) {
-
+        // Is empire ignoring other empire?
         iErrCode = GetEmpireIgnoreMessages (iGameClass, iGameNumber, iEmpireKey, iSourceKey, &bFlag);
         if (iErrCode != ERROR_EMPIRE_IS_NOT_IN_DIPLOMACY && (iErrCode != OK || bFlag)) {
             return ERROR_EMPIRE_IS_IGNORING_SENDER;
         }
 
-        if (bBroadcast) {
+        if (iFlags & MESSAGE_BROADCAST) {
 
             iErrCode = GetEmpireOption (iGameClass, iGameNumber, iEmpireKey, IGNORE_BROADCASTS, &bFlag);
             if (iErrCode != OK || bFlag) {
@@ -647,7 +632,6 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
         return iErrCode;
     }
     const unsigned int iMaxNumMessages = vTemp.GetInteger();
-    int iFlags = 0;
 
     // Get time if necessary
     if (tTime == NULL_TIME) {
@@ -665,7 +649,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
         pvData[GameEmpireMessages::Source] = (const char*) NULL;
     
     } else {
-        
+
         if (m_pGameData->ReadData (
             SYSTEM_EMPIRE_DATA, 
             iSourceKey, 
@@ -682,15 +666,6 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     }
     
     pvData[GameEmpireMessages::TimeStamp] = tTime;
-    
-    if (bBroadcast) {
-        iFlags |= MESSAGE_BROADCAST;
-    }
-
-    if (bUpdateMessage) {
-        iFlags |= MESSAGE_UPDATE;
-    }
-    
     pvData[GameEmpireMessages::Flags] = iFlags;
     pvData[GameEmpireMessages::Text] = pszMessage;
 
@@ -1022,11 +997,31 @@ int GameEngine::DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireK
 // Broadcast a game message to everyone in the game
 
 int GameEngine::BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey,
-                                      bool bAdmin) {
+                                      int iFlags) {
 
     int iErrCode;
-    
-    if (iSourceKey != SYSTEM && !bAdmin) {
+
+    Assert (iFlags & MESSAGE_BROADCAST);
+
+#ifdef _DEBUG
+
+    if (iFlags & MESSAGE_SYSTEM) {
+        Assert (!(iFlags & (MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR)));
+    }
+
+    if (iFlags & MESSAGE_ADMINISTRATOR) {
+        Assert (!(iFlags & MESSAGE_TOURNAMENT_ADMINISTRATOR));
+    }
+
+    if (iSourceKey == SYSTEM) {
+        Assert (iFlags & MESSAGE_SYSTEM);
+    } else {
+        Assert (!(iFlags & MESSAGE_SYSTEM));
+    }
+
+#endif
+
+    if (!(iFlags & (MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
         bool bFlag;
         
@@ -1065,7 +1060,7 @@ int GameEngine::BroadcastGameMessage (int iGameClass, int iGameNumber, const cha
         if (iErrCode == OK) {
 
             iErrCode = SendGameMessage (
-                iGameClass, iGameNumber, vEmpireKey.GetInteger(), pszMessage, iSourceKey, true, false, NULL_TIME
+                iGameClass, iGameNumber, vEmpireKey.GetInteger(), pszMessage, iSourceKey, iFlags, NULL_TIME
                 );
 
             if (iErrCode == OK) {
@@ -1145,7 +1140,7 @@ int GameEngine::SendFatalUpdateMessage (int iGameClass, int iGameNumber, int iEm
         strUpdateMessage.GetCharPtr()
         );
 
-    iErrCode = SendSystemMessage (iEmpireKey, pszFullMessage, SYSTEM);
+    iErrCode = SendSystemMessage (iEmpireKey, pszFullMessage, SYSTEM, MESSAGE_SYSTEM);
 
     delete [] pszFullMessage;
     return iErrCode;

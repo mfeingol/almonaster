@@ -1004,7 +1004,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
 
         OutputText ("<br><strong>");
         m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
-        OutputText ("</strong> tech devs");
+        OutputText ("</strong> tech dev");
 
         if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
             OutputText ("s");

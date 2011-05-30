@@ -37,8 +37,8 @@ void HtmlRenderer::WriteTOS() {
         m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
         OutputText ("\">Do you accept these terms?<p>");
 
-        WriteButton (BID_DECLINE);
-        WriteButton (BID_ACCEPT);
+        WriteButton (BID_TOS_DECLINE);
+        WriteButton (BID_TOS_ACCEPT);
     }
 }
 
@@ -51,7 +51,7 @@ void HtmlRenderer::WriteConfirmTOSDecline() {
         "If you do decline, your empire will removed from the server</font><p>"
         );
 
-    WriteButton (BID_DECLINE);
+    WriteButton (BID_TOS_DECLINE);
     WriteButton (BID_CANCEL);
 }
 

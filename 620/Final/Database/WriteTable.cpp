@@ -10,7 +10,7 @@
 WriteTable::WriteTable() {
 
     m_pTable = NULL;
-    // Uses m_iNumRefs member from ReadTable
+    // Uses reference count from contained ReadTable
 
     m_pCtx = m_rTable.GetContext();
     Assert (m_pCtx != NULL);
@@ -21,7 +21,6 @@ WriteTable::~WriteTable() {}
 unsigned int WriteTable::AddRef() {
 
     unsigned int iNumRefs = m_rTable.AddRefInternal();
-
     if (iNumRefs == 2) {
         m_pCtx->GetDatabase()->GetGlobalLock()->WaitReader();
         m_pTable->WaitWriter();
@@ -33,7 +32,6 @@ unsigned int WriteTable::AddRef() {
 unsigned int WriteTable::Release() {
 
     unsigned int iNumRefs = m_rTable.ReleaseInternal();
-
     if (iNumRefs == 1) {
         m_pTable->SignalWriter();
         m_pCtx->GetDatabase()->GetGlobalLock()->SignalReader();

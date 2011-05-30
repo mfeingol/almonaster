@@ -1420,7 +1420,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         iGameNumber,
                         pszMessage,
                         m_iEmpireKey,
-                        true)
+                        MESSAGE_BROADCAST | MESSAGE_ADMINISTRATOR)
                         ) == OK) {
                         AddMessage ("Your message was broadcast to all empires in the game");
                     } else {

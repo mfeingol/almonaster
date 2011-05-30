@@ -458,7 +458,7 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
             continue;
         }
 
-        SendSystemMessage (vKey.GetInteger(), pszMessage, SYSTEM);
+        SendSystemMessage (vKey.GetInteger(), pszMessage, SYSTEM, MESSAGE_SYSTEM);
     }
 
     iErrCode = m_pGameData->DeleteTable (pszTable);
@@ -877,7 +877,7 @@ Cleanup:
             vTourneyName.GetCharPtr()
             );
         
-        SendSystemMessage (iSendMessageKey, pszMessage, SYSTEM);
+        SendSystemMessage (iSendMessageKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
     }
 
     return iErrCode;
@@ -1087,7 +1087,7 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
         vTourneyName.GetCharPtr()
         );
     
-    SendSystemMessage (iDeleteKey, pszMessage, SYSTEM);
+    SendSystemMessage (iDeleteKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
 
 Cleanup:
 

@@ -399,7 +399,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
                 iGameNumber
                 );
             
-            m_pGameEngine->SendSystemMessage (iLoserKey, pszMessage, SYSTEM);
+            m_pGameEngine->SendSystemMessage (iLoserKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
         }
     }
     
@@ -478,8 +478,14 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
                     &iNumEmpires
                     );
 
-                // Must be at least one empire left...
+                // There may or may not be empires left...
                 if (iErrCode != OK) {
+
+                    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                        iErrCode = OK;
+                        continue;
+                    }
+
                     Assert (false);
                     goto Cleanup;
                 }
@@ -1092,7 +1098,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
                 iGameNumber
                 );
 
-            m_pGameEngine->SendSystemMessage (iLoserKey, pszMessage, SYSTEM);
+            m_pGameEngine->SendSystemMessage (iLoserKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
         }
     }
 
@@ -1471,7 +1477,7 @@ int AlmonasterScore::SendScoreChangeMessage (NukeList nukeList, int iGameClass, 
         goto Cleanup;
     }
 
-    iErrCode = m_pGameEngine->SendSystemMessage (iEmpireKey, pszMessage, SYSTEM);
+    iErrCode = m_pGameEngine->SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
     if (iErrCode != OK) {
         goto Cleanup;
     }

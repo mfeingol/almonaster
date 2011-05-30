@@ -468,18 +468,20 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     if (iTechKey == COLONY) {
 
         Variant vOldColsBuilding, vMin, vFuel, vMaxPop, vTotalAg, vTotalPop;
+        const int iPopLostToTheseShips = iPopLostToColoniesPerShip * iNumShips;
 
         // Increment pop lost to colony build counter
         iErrCode = m_pGameData->Increment (
             strGameMap, 
             iPlanetKey, 
             GameMap::PopLostToColonies, 
-            iPopLostToColoniesPerShip * iNumShips
+            iPopLostToTheseShips
             );
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
+        const int iNewPopLostToColonies = vPopLostToColonies.GetInteger() + iPopLostToTheseShips;
 
         // Calculate pop change difference
         iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::MaxPop, &vMaxPop);
@@ -516,7 +518,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
         // Calculate what next pop will be after this
         int iNewNextPop = GetNextPopulation (
-            vPop.GetInteger() - iPopLostToColoniesPerShip * iNumShips,
+            vPop.GetInteger() - iNewPopLostToColonies,
             fAgRatio
             );
 

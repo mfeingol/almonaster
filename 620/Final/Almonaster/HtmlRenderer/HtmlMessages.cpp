@@ -138,6 +138,13 @@ void HtmlRenderer::WriteGameMessages() {
             
             if (!(iFlags & MESSAGE_SYSTEM)) {
 
+                if (iFlags & MESSAGE_ADMINISTRATOR) {
+                    OutputText (" the administrator ");
+                }
+                else if (iFlags & MESSAGE_TOURNAMENT_ADMINISTRATOR) {
+                    OutputText (" the tournament administrator ");
+                }
+
                 OutputText ("<strong>");
                 m_pHttpResponse->WriteText (ppvMessage[i][GameEmpireMessages::Source].GetCharPtr());
                 OutputText ("</strong>");
@@ -376,6 +383,13 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
             pszMessage = pvMessage[SystemEmpireMessages::Text].GetCharPtr();
         
         } else {
+
+            if (iFlags & MESSAGE_ADMINISTRATOR) {
+                OutputText (" the administrator ");
+            }
+            else if (iFlags & MESSAGE_TOURNAMENT_ADMINISTRATOR) {
+                OutputText (" the tournament administrator ");
+            }
 
             OutputText ("<strong>");
             m_pHttpResponse->WriteText (pszSource);

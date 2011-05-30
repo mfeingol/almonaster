@@ -172,7 +172,7 @@ SearchResults:
                 Variant vSentName;
                 if (pszMessage != NULL && pszTargetEmpire != NULL) {
 
-                    iErrCode = g_pGameEngine->SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey);
+                    iErrCode = g_pGameEngine->SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                     switch (iErrCode) {
 
                     case OK:

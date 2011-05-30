@@ -133,6 +133,7 @@ protected:
     ReadWriteLock m_rwTableLock;
     ReadWriteLock m_rwTemplateLock;
     ReadWriteLock m_rwGlobalLock;
+    ReadWriteLock m_rwHeapLock;
 
     // Backups
     ReadWriteLock m_rwBackupLock;
@@ -212,6 +213,7 @@ public:
     inline FileHeap* GetTemplateFileHeap() { return &m_fhTemplateData; }
 
     inline ReadWriteLock* GetGlobalLock() { return &m_rwGlobalLock; }
+    inline ReadWriteLock* GetHeapLock() { return &m_rwHeapLock; }
 
     ////////////////
     // Accounting //

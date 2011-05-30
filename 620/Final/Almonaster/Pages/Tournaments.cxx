@@ -95,11 +95,14 @@ if (m_bOwnPost && !m_bRedirection) {
 
             iErrCode = g_pGameEngine->DeleteEmpireFromTournament (iTournamentKey, m_iEmpireKey);
             if (iErrCode == OK) {
-                AddMessage ("You quit from the tournament");
+                AddMessage ("Your empire was deleted from the tournament");
+            } else if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT) {
+                AddMessage ("Your empire was no longer in the tournament");
+            } else if (iErrCode == ERROR_EMPIRE_IS_IN_GAMES) {
+                AddMessage ("Your empire could not be deleted from the tournament because it is still in a tournament game");
             } else {
-                AddMessage ("Error ");
+                AddMessage ("Your empire could not be deleted from the tournament. The error was ");
                 AppendMessage (iErrCode);
-                AddMessage (" occurred");
             }
 
             bRedirectTest = false;

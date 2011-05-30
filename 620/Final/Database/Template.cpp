@@ -148,7 +148,7 @@ int Template::Reload (Offset oTemplate) {
     pTemplateHeap = m_pDatabase->GetTemplateFileHeap();
     Assert (pTemplateHeap != NULL);
 
-    pTemplateHeap->Lock();
+    m_pDatabase->GetHeapLock()->WaitReader();
 
     //
     // Calculate size of block needed, copy simple data members
@@ -240,7 +240,7 @@ int Template::Reload (Offset oTemplate) {
 
 Cleanup:
 
-    pTemplateHeap->Unlock();
+    m_pDatabase->GetHeapLock()->SignalReader();
 
     return iErrCode;
 

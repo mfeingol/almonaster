@@ -128,9 +128,9 @@ int Database::ReloadTables() {
         return ERROR_OUT_OF_MEMORY;
     }
 
-    // Loop through all blocks
-    m_fhTableData.Lock();
+    m_rwHeapLock.WaitReader();
 
+    // Loop through all blocks
     Offset oTable = m_fhTableData.GetFirstBlock();
     while (oTable != NO_OFFSET) {
 
@@ -190,7 +190,7 @@ int Database::ReloadTables() {
         oTable = m_fhTableData.GetNextBlock (oTable);
     }
 
-    m_fhTableData.Unlock();
+    m_rwHeapLock.SignalReader();
 
     if (iErrCode == OK && m_pTables->GetNumElements() != stNumTables) {
         Assert (false);

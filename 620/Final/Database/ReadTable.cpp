@@ -235,6 +235,11 @@ int ReadTable::ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvDat
     UTCTime tData;
     const char* pszData;
 
+    if (!IsValidKey (iKey)) {
+        Assert (false);
+        return ERROR_UNKNOWN_ROW_KEY;
+    }
+
     Assert ((m_tcContext.IsOneRow() && iKey == 0) || !m_tcContext.IsOneRow());
 
     if (!IsValidColumn (iColumn)) {
@@ -1411,8 +1416,9 @@ int ReadTable::GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** p
         break;
 
     case ERROR_COLUMN_NOT_INDEXED:
+        {
 
-        unsigned int iDataKey, iTerminatorRowKey;
+        unsigned int iData1 = 0, iData2 = 0, iTerminatorRowKey;
 
         iErrCode = OK;
 
@@ -1423,12 +1429,13 @@ int ReadTable::GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** p
         }
         if (iKeyColumnIndex != NO_KEY) {
 
-            unsigned int iDataKey = sdSearch.pscColumns[iKeyColumnIndex].vData.GetInteger();
-            if (iDataKey == NO_KEY) {
-                iDataKey = 0;
+            iData1 = sdSearch.pscColumns[iKeyColumnIndex].vData.GetInteger();
+            if (iData1 == NO_KEY) {
+                iData1 = 0;
             }
-            if (iStartKey < iDataKey) {
-                iStartKey = iDataKey;
+
+            if (iStartKey < iData1) {
+                iStartKey = iData1;
             }
         }
 
@@ -1436,21 +1443,31 @@ int ReadTable::GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** p
         iTerminatorRowKey = m_tcContext.GetTerminatorRowKey();
         if (iKeyColumnIndex != NO_KEY) {
 
-            iDataKey = sdSearch.pscColumns[iKeyColumnIndex].vData2.GetInteger();
-            if (iDataKey == NO_KEY) {
-                iDataKey = 0;
+            iData2 = sdSearch.pscColumns[iKeyColumnIndex].vData2.GetInteger();
+            if (iData2 == NO_KEY) {
+                iData2 = 0;
             }
-            iDataKey ++;
+            iData2 ++;
 
-            if (iTerminatorRowKey > iDataKey) {
-                iTerminatorRowKey = iDataKey;
+            if (iData1 >= iData2) {
+                return ERROR_DATA_NOT_FOUND;
             }
+
+            if (iTerminatorRowKey > iData2) {
+                iTerminatorRowKey = iData2;
+            }
+        }
+
+        if (iStartKey >= iTerminatorRowKey) {
+            return ERROR_DATA_NOT_FOUND;
         }
 
         // Compute num keys
         iNumKeys = iTerminatorRowKey - iStartKey;
-        Assert (iNumKeys <= iTerminatorRowKey);
+        Assert (iNumKeys > 0 && iNumKeys <= iTerminatorRowKey);
         break;
+
+        }
 
     default:
         return iErrCode;

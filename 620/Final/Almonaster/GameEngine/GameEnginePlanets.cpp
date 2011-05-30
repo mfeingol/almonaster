@@ -2456,6 +2456,7 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
                                  int iNewMaxPop) {
     
     int iErrCode;
+    Variant vTemp;
 
     GAME_MAP (strMap, iGameClass, iGameNumber);
 
@@ -2476,12 +2477,13 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
 
     // Get old maxpop
-    Variant vOldMaxPop;
-    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::MaxPop, &vOldMaxPop);
+    int iOldMaxPop;
+    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::MaxPop, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iOldMaxPop = vTemp.GetInteger();
     
     // Write new maxpop
     iErrCode = m_pGameData->WriteData (strMap, iPlanetKey, GameMap::MaxPop, iNewMaxPop);
@@ -2491,7 +2493,7 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     
     // Update empire's target pop
-    int iPopDiff = iNewMaxPop - vOldMaxPop.GetInteger();
+    int iPopDiff = iNewMaxPop - iOldMaxPop;
     
     // Update empire targetpop
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
@@ -2503,52 +2505,57 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     
     // Update NextTotalPop
-    Variant vPlanetPop, vPop, vAg;
+    int iPlanetPop, iPop, iAg, iBonusAg, iPopLostToColonies;
+    float fMaxAgRatio;
 
-    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::Pop, &vPlanetPop);
+    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::Pop, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iPlanetPop = vTemp.GetInteger();
 
-    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TotalAg, &vAg);
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TotalAg, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iAg = vTemp.GetInteger();
 
-    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TotalPop, &vPop);
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::BonusAg, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
-    
-    Variant vMaxAgRatio;
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxAgRatio, 
-        &vMaxAgRatio
-        );
+    iBonusAg = vTemp.GetInteger();
+
+    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TotalPop, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iPop = vTemp.GetInteger();
+
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+    fMaxAgRatio = vTemp.GetFloat();
 
     // Adjust for colony pop loss
-    Variant vPopLostToColonies;
-    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::PopLostToColonies, &vPopLostToColonies);
+    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::PopLostToColonies, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
-
-    Assert (vPopLostToColonies.GetInteger() >= 0);
+    iPopLostToColonies = vTemp.GetInteger();
+    Assert (iPopLostToColonies >= 0);
     
     // Calculate next pop
     int iNewPlanetPop = GetNextPopulation (
-        vPlanetPop.GetInteger() - vPopLostToColonies.GetInteger(),
-        GetAgRatio (vAg.GetInteger(), vPop.GetInteger(), vMaxAgRatio.GetFloat())
+        iPlanetPop - iPopLostToColonies, 
+        GetAgRatio (iAg + iBonusAg, iPop, fMaxAgRatio)
         );
 
     int iOldNewPlanetPop = iNewPlanetPop;
@@ -2556,10 +2563,10 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     if (iNewPlanetPop > iNewMaxPop) {
         iNewPlanetPop = iNewMaxPop;
     }
-    if (iOldNewPlanetPop > vOldMaxPop.GetInteger()) {
-        iOldNewPlanetPop = vOldMaxPop.GetInteger();
+    if (iOldNewPlanetPop > iOldMaxPop) {
+        iOldNewPlanetPop = iOldMaxPop;
     }
-    
+
     iPopDiff = iNewPlanetPop - iOldNewPlanetPop;
     if (iPopDiff != 0) {
         iErrCode = m_pGameData->Increment (strEmpireData, GameEmpireData::NextTotalPop, iPopDiff);
@@ -2570,23 +2577,25 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     
     // Update next min, fuel changes
-    Variant vPlanetMin, vPlanetFuel;
+    int iPlanetMin, iPlanetFuel;
 
-    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::Minerals, &vPlanetMin);
+    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::Minerals, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iPlanetMin = vTemp.GetInteger();
 
-    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::Fuel, &vPlanetFuel);
+    iErrCode = m_pGameData->ReadData (strMap, iPlanetKey, GameMap::Fuel, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iPlanetFuel = vTemp.GetInteger();
 
     int iResDiff = 
-        min (vPlanetMin.GetInteger(), iOldNewPlanetPop + iPopDiff) - 
-        min (vPlanetMin.GetInteger(), iOldNewPlanetPop);
+        min (iPlanetMin, iOldNewPlanetPop + iPopDiff) - 
+        min (iPlanetMin, iOldNewPlanetPop);
 
     iErrCode = m_pGameData->Increment (strEmpireData, GameEmpireData::NextMin, iResDiff);
     if (iErrCode != OK) {
@@ -2595,8 +2604,8 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
         
     iResDiff = 
-        min (vPlanetFuel.GetInteger(), iOldNewPlanetPop + iPopDiff) - 
-        min (vPlanetFuel.GetInteger(), iOldNewPlanetPop);
+        min (iPlanetFuel, iOldNewPlanetPop + iPopDiff) - 
+        min (iPlanetFuel, iOldNewPlanetPop);
 
     iErrCode = m_pGameData->Increment (strEmpireData, GameEmpireData::NextFuel, iResDiff);
     if (iErrCode != OK) {

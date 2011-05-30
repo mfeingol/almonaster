@@ -1035,7 +1035,7 @@ void HtmlRenderer::WriteServerRules() {
         OutputText ("<li>Empires with a privilege level of <strong>");
         m_pHttpResponse->WriteText (PRIVILEGE_STRING [vUnlimitedEmpirePrivilege.GetInteger()]);
         OutputText ("</strong> or greater have the right to create games with an unlimited "\
-            "maximum number of empire");
+            "maximum number of empires");
 
     }
 

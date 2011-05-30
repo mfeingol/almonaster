@@ -223,25 +223,22 @@ public:
 
     inline Offset Allocate (FileHeap* pfhHeap, Size sSize) {
         
-        pfhHeap->Unlock();
+        Unlock();
         Offset oOffset = pfhHeap->Allocate (sSize);
-        pfhHeap->Lock();
+        Lock();
 
         return oOffset;
     }
 
     inline void Free (FileHeap* pfhHeap, Offset oOffset) {
-        
-        pfhHeap->Unlock();
         pfhHeap->Free (oOffset);
-        pfhHeap->Lock();
     }
 
     inline Offset Reallocate (FileHeap* pfhHeap, Offset oOffset, Size sSize) {
 
-        pfhHeap->Unlock();
+        Unlock();
         Offset oNewOffset = pfhHeap->Reallocate (oOffset, sSize);
-        pfhHeap->Lock();
+        Lock();
 
         return oNewOffset;
     }
@@ -348,27 +345,19 @@ public:
     //
 
     inline void Lock() {
-        GetVarLenHeap()->Lock();
-        GetMetaDataHeap()->Lock();
-        GetTableHeap()->Lock();
+        m_pDatabase->GetHeapLock()->WaitReader();
     }
 
     inline void Unlock() {
-        GetTableHeap()->Unlock();
-        GetMetaDataHeap()->Unlock();
-        GetVarLenHeap()->Unlock();
+        m_pDatabase->GetHeapLock()->SignalReader();
     }
 
     inline void Freeze() {
-        GetVarLenHeap()->Freeze();
-        GetMetaDataHeap()->Freeze();
-        GetTableHeap()->Freeze();
+        m_pDatabase->GetHeapLock()->WaitWriter();
     }
 
     inline void Unfreeze() {
-        GetTableHeap()->Unfreeze();
-        GetMetaDataHeap()->Unfreeze();
-        GetVarLenHeap()->Unfreeze();
+        m_pDatabase->GetHeapLock()->SignalWriter();
     }
 
     //

@@ -1499,6 +1499,43 @@ public:
 		}
 	}
 
+    void FixGameDrawCount (int iGameClass, int iGameNumber) {
+
+        int iErrCode;
+        unsigned int iKey;
+        GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
+
+        int iDrawing = 0;
+
+        iKey = NO_KEY;
+		while (true) {
+
+			iErrCode = m_pDatabase->GetNextKey (pszGameEmpires, iKey, &iKey);
+			if (iErrCode == ERROR_DATA_NOT_FOUND) {
+				break;
+			}
+			Assert (iErrCode == OK);
+
+            Variant vTemp;
+            iErrCode = m_pDatabase->ReadData (pszGameEmpires, iKey, GameEmpires::EmpireKey, &vTemp);
+            Assert (iErrCode == OK);
+
+            GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, vTemp.GetInteger());
+
+            iErrCode = m_pDatabase->ReadData (pszGameEmpireData, GameEmpireData::Options, &vTemp);
+            Assert (iErrCode == OK);
+
+            if (vTemp.GetInteger() & REQUEST_DRAW) {
+                iDrawing ++;
+            }
+        }
+
+        GAME_DATA (pszGameData, iGameClass, iGameNumber);
+
+        iErrCode = m_pDatabase->WriteData (pszGameData, GameData::NumRequestingDraw, iDrawing);
+        Assert (iErrCode == OK);
+    }
+
 	void FixTruceTradeAllianceCounts (int iGameClass, int iGameNumber) {
 
 		// Count truces, trades and alliances for each empire
@@ -1761,12 +1798,23 @@ public:
 				
 				GET_GAME_EMPIRE_DATA (pszData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 
-				iErrCode = m_pDatabase->WriteData (
+                Variant vTargetPop;
+                iErrCode = m_pDatabase->ReadData (
 					pszData,
 					GameEmpireData::TargetPop,
-					iTargetPop
-					);
-				Assert (iErrCode == OK);
+					&vTargetPop
+                    );
+                Assert (iErrCode == OK);
+
+                if (vTargetPop.GetInteger() != iTargetPop) {
+
+                    iErrCode = m_pDatabase->WriteData (
+                        pszData,
+                        GameEmpireData::TargetPop,
+                        iTargetPop
+                        );
+                    Assert (iErrCode == OK);
+                }
 			}
 		}
 
@@ -2829,7 +2877,7 @@ Cleanup:
 				iTemp = sscanf (pvGame[i].GetCharPtr(), "%i.%i", &iGameClass, &iGameNumber);
 				Assert (iTemp == 2);
 
-				UpgradeGame (iGameClass, iGameNumber);
+				FixTargetPopTotals (iGameClass, iGameNumber);
 			}
 			
 			m_pDatabase->FreeData (pvGame);
@@ -2969,13 +3017,13 @@ Cleanup:
 
 		m_pDatabase = m_pGameEngine->GetDatabase();
 
-		System();
-        ForEachTheme();
-        ForEachGameClass();
-		ForEachEmpire();
-		ForEachTournament();
+		//System();
+        //ForEachTheme();
+        //ForEachGameClass();
+		//ForEachEmpire();
+		//ForEachTournament();
 		ForEachGame();
-		ForEachEmpireInEachGame();
+		//ForEachEmpireInEachGame();
 
 		return OK;
 	}

@@ -242,8 +242,8 @@ private:
     // Ships
     int DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey);
 
-    int ChangeShipTypeOrMaxBR (const char* pszShips, const char* pszEmpireData, int iEmpireKey, int iShipKey, 
-        int iOldShipType, int iNewShipType, float fBRChange);
+    int ChangeShipTypeOrMaxBR (const char* pszShips, const char* pszEmpireData, 
+        int iEmpireKey, int iShipKey, int iOldShipType, int iNewShipType, float fBRChange);
 
     int ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bCloaked, 
         const char* strEmpireShips, const char* strEmpireMap, const char* strGameMap);
@@ -374,8 +374,8 @@ private:
 
     int PerformSpecialActions (int iGameClass, int iGameNumber, int iNumEmpires, unsigned int* piEmpireKey, 
         const Variant* pvGoodColor, const Variant* pvBadColor, const Variant* pvEmpireName, bool* pbAlive, 
-        int iNumPlanets, unsigned int* piPlanetKey, unsigned int* piOriginalPlanetOwner, 
-        unsigned int* piOriginalNumObliterations, const char** pstrEmpireShips, 
+        unsigned int iNumPlanets, unsigned int* piPlanetKey, unsigned int* piOriginalPlanetOwner, 
+        unsigned int* piOriginalNumObliterations, const char** pstrEmpireShips, const char** pstrEmpireFleets,
         const char** pstrEmpireData, const char** pstrEmpireMap, String* pstrUpdateMessage, 
         const char* strGameMap, const char* strGameData, int* piTotalAg, int* piTotalMin, int* piTotalFuel,
         const char** pstrEmpireDip, int* piObliterator, int* piObliterated, unsigned int* piNumObliterations, 
@@ -630,6 +630,10 @@ public:
 
     float GetLateComerTechIncrease (int iPercentTechIncreaseForLatecomers, int iNumUpdates, float fMaxTechDev);
     int GetMaxPop (int iMin, int iFuel);
+
+#ifdef _DEBUG
+    void CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey);
+#endif
 
     int GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel, int* piMaxNumPartners);
 
@@ -1017,7 +1021,7 @@ public:
         const Variant& vProperty);
 
     // System Messages
-    int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, bool bBroadcast = false);
+    int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, int iFlags);
     int DeliverSystemMessage (int iEmpireKey, const Variant* pvData);
 
     int GetNumSystemMessages (int iEmpireKey, unsigned int* piNumber);
@@ -1042,14 +1046,14 @@ public:
         Variant*** ppvData, unsigned int* piNumMessages);
     
     int SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage, int iSource, 
-        bool bBroadcast, bool bUpdateMessage, const UTCTime& tSendTime);
+        int iFlags, const UTCTime& tSendTime);
     
     int GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, Variant*** pppvMessage, 
         unsigned int* piNumMessages);
     
     int DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey);
     int BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey, 
-        bool bAdmin);
+        int iFlags);
 
     int GetGameMessageProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey, 
         unsigned int iColumn, Variant* pvProperty);
