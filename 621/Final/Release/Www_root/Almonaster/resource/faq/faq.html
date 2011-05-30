@@ -23,7 +23,10 @@
         </ul>
       </li>
       <li><a href="#ProfileViewer">2.6 The Profile Viewer</a></li>
-      <li><a href="#ProfileEditor">2.7 The Profile Editor</a></li>
+      <li><a href="#ProfileEditor">2.7 The Profile Editor</a><ul>
+      <li><a href="#associations">2.7.1 Empire Associations</a></li>
+    </ul>
+  	</li>
       <li><a href="#TopLists">2.8 The Top Lists</a><ul><li>
         <a href="#ClassicScore">2.8.1 Classic Score</a></li>
            <li><a href="#AlmonasterScore">2.8.2 <i>Almonaster </i>Score</a></li>
@@ -137,7 +140,8 @@ reading this page and your browser can post forms, then you can play.</p>
 <p><em>Almonaster </em>was inspired by a long line of strategy games, 
 particularly
 T&amp;E Software's <em>Daiva</em> series, which were programmed for the MSX2
-computer. If you have an MSX2 emulator, you can run the 1986 game <a href="ftp://ftp.funet.fi/pub/msx/games/msx2/disk/DAIVAS5.LZH">Daiva
+computer. If you have an MSX2 emulator, you can run the 1986 game 
+<a href="http://www.msxarchive.nl/pub/msx/games/msx2/disk/daivas5.lzh">Daiva
 story V</a>, which was way ahead of its time.</p>
 <p>The design of <em>Almonaster</em> was also heavily influenced by the popular
 online game <em>Stellar Crisis</em>, and the look and feel of <em>Almonaster</em>
@@ -145,7 +149,9 @@ has been designed to be familiar and usable by those who are familiar with <em>S
 Crisis</em> 2.8x. <em>Stellar Crisis</em> resources that may be useful for a
 better understanding of <em>Almonaster </em>culture and gameplay include:
 <ul>
-  <li>Al Camp's <a href="http://sc-room.stellar-crisis.net/SC.main.shtml">Stellar
+  <li>Yahoo's <a href="http://games.groups.yahoo.com/group/stellarcrisisclub/">
+	Stellar Crisis Club</a></li>
+	<li>Al Camp's <a href="http://sc-room.stellar-crisis.net/SC.main.shtml">Stellar
     Crisis Room</a></li>
   <li>The original <em>Stellar Crisis</em>
   <a href="http://sc-room.stellar-crisis.net/SC.FAQintro.shtml">FAQ</a>,
@@ -172,7 +178,7 @@ and  any derivative works:
   <li><b>The game may not suffer from the addition of commercials of any type
     during gameplay.</b></li>
 </ul>
-<p>If a server is found to be violating these principles, please notify <a href="mailto:almonaster@myrealbox.com">almonaster@myrealbox.com</a>
+<p>If a server is found to be violating these principles, please notify the current maintainer 
 of the matter.</p>
 <p>The  folllowing are responsible for the existence of <em>Almonaster</em>:<ul>
   <li><a href="http://almonaster.sourceforge.net/mfeingol/">Max
@@ -661,7 +667,12 @@ values are inactive and non-scratched values are active.</p>
       before it becomes idle.&nbsp; Idle empires are automatically ready for each 
     update.&nbsp; They also automatically request draw and pause.&nbsp; Idle 
     empires cease to be idle not when they log in again, but when the next 
-    update occurs.</td>
+    update occurs.<p>When all empires are idle in a game, and then one or more empires return, 
+  	that empire will not be able to pause, draw or prematurely end the update via end 
+  turn until the next update occurs. This is because these empires are 
+  internally considered to be idle until the next update. This prevents games in which all empires are idle from 
+  prematurely pausing or drawing when they should ordinarily have ended in a 
+  ruin.</td>
   </tr>
   <tr>
     <td align="center"><b>Ruins</b></td>
@@ -866,7 +877,7 @@ self-explanatory:</p>
     </tr>
     <tr>
       <td><strong>Real Name:</strong></td>
-      <td>Max Attar Feingold</td>
+      <td>John Smith</td>
       <td></td>
       <td><b>Ruins:</b></td>
       <td>0</td>
@@ -887,28 +898,28 @@ self-explanatory:</p>
     </tr>
     <tr>
       <td><b>Location:</b></td>
-      <td>WA, USA</td>
+      <td>New York</td>
       <td></td>
       <td><strong>Classic Score:</strong></td>
       <td>36.000</td>
     </tr>
     <tr>
       <td><strong>Email Address:</strong></td>
-      <td><a href="mailto:almonaster@myrealbox.com">almonaster@myrealbox.com</a></td>
+      <td><a href="mailto:notreally@mailinator.com">notreally@mailinator.com</a></td>
       <td>&nbsp;</td>
       <td><strong>Bridier Rank:</strong></td>
       <td>590</td>
     </tr>
     <tr>
       <td><strong>Instant Messenger:</strong></td>
-      <td>MSN: notreally@hotmail.com</td>
+      <td>MSN: notreally@mailinator.com</td>
       <td>&nbsp;</td>
       <td><strong>Bridier Index:</strong></td>
       <td>330 (60 days left)</td>
     </tr>
     <tr>
       <td><strong>Webpage:</strong></td>
-      <td><a href="http://almonaster.netpedia.net/mfeingol/">http://almonaster.sourceforge.net/mfeingol/</a></td>
+      <td><a href="http://almonaster.sourceforge.net/">http://almonaster.sourceforge.net/</a></td>
       <td></td>
       <td><strong>Max Econ:</strong></td>
       <td>291</td>
@@ -1000,6 +1011,8 @@ Information:<ul>
   </li>
   <li>The empire's tournament membership details can be changed.</li>
   <li>Empire <a href="#Autologon">autologon</a> can be turned on or off.</li>
+	<li>Empires can be added and removed from the empire's
+	<a href="#associations">associations</a>.</li>
 </ul>
 <p>System User Interface:</p>
 <ul>
@@ -1038,6 +1051,8 @@ Information:<ul>
   <li>The number of system
     messages that the system will save can be changed.</li>
   <li>The background can be made fixed (<a href="http://www.microsoft.com/ie/">Internet Explorer</a> only).</li>
+	<li>Uploaded icons can be blocked from display, and replaced by the server's 
+	default icon. This option also applies to the empire's own icon.</li>
   <li>If the empire is not a novice, the player can choose between simple and
     advanced search interfaces in the <a href="#ProfileViewer">Profile Viewer</a>.</li>
   <li>Confirmation prompts when performing actions such as deleting an empire, 
@@ -1118,7 +1133,20 @@ longer in any games. Otherwise, they will be <b>marked for deletion</b>: their
 personal information will be deleted and they will
     not be able to join new games. When they leave their last game they will be
     automatically deleted by the system. Such empires can be <b>undeleted</b> from the Profile Editor and restored to their normal
-    state.<h2><a name="TopLists"><b>2.8 Top Lists</b></a></h2>
+    state.<h2><a name="associations"><b>2.7.1 Empire Associations</b></a></h2>
+<p>An empire association is a two way relationship that is established between 
+two empires. These associations provide a mechanism for quickly switching 
+between different empires belonging to the same player. New empire associations 
+can be established through the Profile Editor by entering the name and password 
+of another empire. When this is done, each of the two empires involved in the 
+association will be able to log in as the other empire without entering a 
+password, even if the empires' passwords change. Associations may be deleted by 
+either empire involved in the association. There is no limit on the number of 
+empires that may be associated with one another.</p>
+<p>Associations are used by navigating to the current empire's profile and 
+selecting the desired empire from the dropdown list. This list will only appear 
+when the empire forms an association with another. </p>
+<h2><a name="TopLists"><b>2.8 Top Lists</b></a></h2>
 <p>The Top Lists screen allows players to view lists of empires  ranked using various 
 scoring systems.</p>
 <p>For novices to understand the contents of this screen, it should be explained that an empire can only
@@ -1345,7 +1373,9 @@ their own tournaments. Tournaments are explained in detail in
 <p>The Server News screen displays a news page edited by the server's 
 administrators. The content will vary depending on the server. Users of a 
 particular server are advised to check the Server News page once in a while to 
-inform themselves of important occurrences concerning the server and the game.</p>
+inform themselves of important occurrences concerning the server and the game. 
+When the server news page is updated, empires that log in or autologin 
+afterwards will receive notifications that the server news has been updated.</p>
 
 <h2><a name="ServerRules">2.18 Server Information</a></h2>
 <p>The Server Information screen provides information about system and game variables that are
@@ -1536,9 +1566,9 @@ addresses or Session Ids. Restrictions defined here do not apply to
       <td width="194"><b>Block idle empires</b></td>
       <td width="665">Entrance into the game can be restricted to empires that 
       are not idle in another game on the server. When this option is selected, 
-      players whose empires are idle in some game will not  be able to see 
+      empires that are currently idle in at least one game will not  be able to see 
       the game in their <a href="#OpenGameList">Open Game List</a> and will be 
-      prevented from joining.&nbsp; An empire is idle in a game if it has not 
+      prevented from joining.&nbsp;An empire is idle in a game if it has not 
       logged into that game for a gameclass-specific number of updates.<p>Empires with the same IP address and Session Id 
       as the blocked empire can also be blocked from entering the game. The 
       server will compare both the current values for these fields to all 
@@ -1839,9 +1869,9 @@ Turn button, which sets the empire back to an unready state.</p>
 <p>The <strong>next maintenance</strong>, <strong>next fuel use </strong>and <strong>
 next agriculture ratios</strong> are defined as the system's best guess at the 
 values of these ratios after the next update. These values take into account 
-deterministic factors such as max population settings and colony ship 
-construction. They do not consider non-deterministic events such as ship combat, 
-special actions such as terraforming, invasion or planet colonization.</p>
+deterministic factors such as max population settings, colony construction, 
+visible upcoming trade settings, colonies set to colonize or minefields set to detonate. They do not consider non-deterministic events such as ship combat, 
+most special actions such as terraforming, invasion or planet colonization.</p>
 <p>The reason special actions are not considered is because it is not possible to predict if 
 the ship in question will successfully act. There are two reasons why it might fail:</p>
 <ul>
@@ -2673,9 +2703,11 @@ with the empire.</p>
     <tr>
       <td width="12%"><strong>Trade</strong></td>
       <td width="88%">When empires are at trade, they receive the benefits of 
-      truce as well as additional economic benefits: a server-specific 
-      percentage of their resource totals for the first trade partner (typically 
-      10%), and a certain percentage of that for each additional partner.</td>
+		truce as well as additional economic benefits: a server-specific 
+		percentage of their resource totals for the first trade partner 
+		(typically 10%), and a certain percentage of that for each additional 
+		partner (typically 90%). Trade bonuses do not stack on top of one 
+		another.</td>
     </tr>
     <tr>
       <td width="12%"><strong>Alliance</strong></td>
@@ -3517,7 +3549,10 @@ both may remain alive. In recent versions of classic <i>Stellar Crisis </i>
 (3.2.11 onwards) this behavior has been changed to be identical to the <i>
 Almonaster</i> version.</p>
 <p>It should be noted that fuel ratio is only used during ship combat. It does 
-not affect other ship operations such as military level or special actions.</p>
+not affect other ship operations such as military level or special actions. When 
+an empire's fuel ratio is below 1.0, it will affect ship combat on the next 
+update. After ship combat is resolved, a new fuel ratio is calculated, which 
+will be used during the following update.</p>
 <h2><a name="OverBuild">4.2 Overbuilding</a></h2>
 <p>Beginning players who have  mastered the basics of ship deployment
 will usually be careful to keep their maintenance ratios above 1.0, in order to keep
@@ -3921,8 +3956,8 @@ privileges)</p>
   <li>Shutdown the server, restart the server and restart the <i>Almonaster</i>
     page source.</li>
   <li>Flush the database's dirty pages to disk.</li>
-  <li>Purge the database of empires. Purges can be tested before being
-    implemented.</li>
+  <li>Purge the database of empires that match certain characteristics. Purges can be tested before being
+    put into effect.</li>
   <li>Backup the database, view all backups and restore or delete a database backup</li>
   <li>Create a new alien icon by providing the new key, the author's name and an 
   uploaded
@@ -3960,11 +3995,13 @@ message to all empires on the server.
 <p>This screen allows an administrator to perform the following tasks:
 <ul>
   <li>Pause and un-pause all games.</li>
+	<li>Reset the update periods on all games</li>
   <li>Create, rename and delete superclasses.</li>
   <li>Create,  halt, un-halt and delete gameclasses.</li>
   <li>Change the default limits on system and personal gameclass characteristics.</li>
   <li>View and modify any active games:<ul><li>Pause a game.</li><li>Delete a 
-    game.</li><li>Broadcast messages to all empires in a game.</li><li>Force a 
+    game.</li>
+	<li>Reset the update period on a game.</li><li>Broadcast messages to all empires in a game.</li><li>Force a 
     game to update.</li><li>Removed empires from a game.</li><li>Restore 
     resigned empires to a game.</li><li>Search for empires with matching IP 
     addresses or Session Ids in a game.</li><li>View the full map of the game.</li><li>
@@ -4013,7 +4050,8 @@ message to all empires on the server.
   was established that should be used to calculate the  increase for the next 
   trade agreement. For example,
     if the first increase was 10% and this value is set to 90%, then the second trade
-    agreement will give an 9% increase, the third 8.1%, etc.</li>
+    agreement will give an 9% increase, the third 8.1%, etc. All percentages 
+	apply to the original totals, not the stacked totals.</li>
   <li>Percent of full tech increase for late entrances. This is the percentage of the
     maximum possible tech increase given to latecomers in a game. The maximum 
   possible tech increase is the maximum tech development for an update, as 
@@ -4364,6 +4402,9 @@ source configuration file:
     remain in the database without refreshing the screen or posting a message.</li>
   <li><b>ChatroomPostSystemMessages</b> is 1 if the system should post messages 
   concerning enter, leave and timeout events, 0 if not.</li>
+	<li><b>ChatroomStoreMessagesInDatabase </b>is 1 if the system should store 
+	chatroom messages durably in the server database, 0 if they should just be 
+	stored in memory.</li>
   <li><strong>AutoBackup </strong>is 1 if the system should be scheduled to
     automatically backup the database, 0 if not</li>
   <li><strong>NumHoursBetweenBackups</strong> is an integer value that
@@ -4560,9 +4601,10 @@ problems that may occur in the database as a consequence of hypothetical <i>Almo
 bugs. In order to use these, the AlmonasterHook library will need to be customized
 as needed and recompiled.</p>
 <h2><a name="Win32">5.10.2 The Win32 version</a></h2>
-<p>The Win32 version of <em>Alájar</em> and <i>Almonaster</i> <font size="3">is compiled and tested with Visual C++.NET 
-on Windows XP, and will </font>run
-on Windows NT 4.0 SP3 and above, Windows 2000 and Windows XP.</p>
+<p>The Win32 version of <em>Alájar</em> and <i>Almonaster</i> <font size="3">is compiled and tested with Visual C++ 
+on Windows XP. It will </font>run
+on Windows NT 4.0 SP3 and above, Windows 2000, Windows XP and Windows 2003 
+Server.</p>
 <p>While <em>Alájar</em> and <em>Almonaster</em> may work on Windows 98/ME, 
 it is not recommended that anyone run a server on any Win9x-based OSes because 
 of their intrinsic instability. As development proceeds, more NT-specific 
@@ -5286,3 +5328,5 @@ contributions page.</p>
         <td align="center">View Profile</td>
       </tr>
     </table>
+    
+</center>
