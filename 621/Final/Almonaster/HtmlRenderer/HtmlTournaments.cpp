@@ -841,7 +841,7 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
     return OK;
 }
 
-int HtmlRenderer::StartTournamentGame (unsigned int iTournamentKey, int iTeamOptions) {
+int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOptions, bool bAdvanced) {
 
     int iErrCode, iGameNumber;
     unsigned int* piEmpireKey = NULL, * piJoinedKey = NULL;
@@ -890,7 +890,6 @@ int HtmlRenderer::StartTournamentGame (unsigned int iTournamentKey, int iTeamOpt
         iErrCode = ERROR_FAILURE;
         goto Cleanup;
     }
-
     iGameClass = pHttpForm->GetIntValue();
 
     iErrCode = g_pGameEngine->GetGameClassTournament (iGameClass, &iCheckKey);
@@ -977,9 +976,15 @@ int HtmlRenderer::StartTournamentGame (unsigned int iTournamentKey, int iTeamOpt
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetDefaultGameOptions (iGameClass, &goOptions);
+    // Game options
+    if (bAdvanced) {
+        iErrCode = ParseGameConfigurationForms(iGameClass, iTournamentKey, NULL, &goOptions);
+    } else {
+        iErrCode = g_pGameEngine->GetDefaultGameOptions (iGameClass, &goOptions);
+    }
+
     if (iErrCode != OK) {
-        AddMessage ("Could not read gameclass data");;
+        AddMessage ("Could not process game options");
         goto Cleanup;
     }
 

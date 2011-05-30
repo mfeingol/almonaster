@@ -103,6 +103,15 @@ private:
     String m_strCNonce;              // Digest
     String m_strQop;                 // Digest
 
+    bool m_bConnectionHeaderParsed;
+    bool m_bContentTypeHeaderParsed;
+    bool m_bContentLengthHeaderParsed;
+    bool m_bCookieHeaderParsed;
+    bool m_bIfModifiedSinceHeaderParsed;
+    bool m_bHostHeaderParsed;
+    bool m_bUserAgentHeaderParsed;
+    bool m_bRefererHeaderParsed;
+
     // Parse time
     MilliSeconds m_msParseTime;
 

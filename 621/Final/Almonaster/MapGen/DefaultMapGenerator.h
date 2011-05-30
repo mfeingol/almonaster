@@ -1,150 +1,39 @@
-// DefaultMapGenerator.h: interface for the DefaultMapGenerator class.
 //
-//////////////////////////////////////////////////////////////////////
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998-2004-2001 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if !defined(AFX_DEFAULTMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
 #define AFX_DEFAULTMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
 
-#include "../GameEngine/GameEngine.h"
+#include "BaseMapGenerator.h"
 
-#include "Osal/HashTable.h"
-
-class CoordHashValue {
-public:
-    static unsigned int GetHashValue (const char* pszData, unsigned int iNumBuckets, const void* pHashHint) {
-        return Algorithm::GetStringHashValue (pszData, iNumBuckets, false);
-    }
-};
-
-class CoordEquals {
-public:
-    static bool Equals (const char* pszLeft, const char* pszRight, const void* pEqualsHint) {
-        return strcmp (pszLeft, pszRight) == 0;
-    }
-};
-
-
-class DefaultMapGenerator : public IMapGenerator {
-
-protected:
-
-    // Objects - may be needed
-    IGameEngine* m_pGameEngine;
-    IDatabase* m_pDatabase;
-
-    // Map configuration data
-    MapConfiguration m_mcConfig;
-
-    //
-    // Data
-    //
-    // Note - all heap memory is allocated by caller of CreatePlanets
-
-    int m_iGameClass;
-    int m_iGameNumber;
-    int m_iEmpireKey;
-
-    int m_iGameClassOptions;
-
-    // Data of already created planets - GameMap rows
-    Variant** m_ppvPlanetData;
-    unsigned int m_iNumPlanets;
-    
-    // GameClass data - SystemGameClassData row
-    Variant* m_pvGameClassData;
-
-    // Game data - GameData row
-    Variant* m_pvGameData;
-
-    // Array of new planet data - uninitialized GameMap rows
-    Variant** m_ppvNewPlanetData;
-    unsigned int m_iNumNewPlanets;
-
-    // Number of planets created so far
-    unsigned int m_iNumPlanetsCreated;
-
-    // Index of planet chosen to be empire's homeworld
-    unsigned int m_iHomeWorldIndex;
-
-    // Hashtable for fast coordinate lookups
-    HashTable<const char*, Variant*, CoordHashValue, CoordEquals> m_htCoordinates;
+class DefaultMapGenerator : public BaseMapGenerator {
+private:
 
     // Methods
-    void RollDiceForGameResources();
-    void AdvanceCoordinates (int iX, int iY, int* piX, int* piY, CardinalPoint cpDirection);
-    bool DoesPlanetExist (int iX, int iY);
-    bool InsertMapCoordinates();
-
-    void ChooseHomeworld();
-    void AssignResources();
-    void AddNonDefaultLinks();
-
-    bool CreateFirstPlanet();
-    bool CreatePlanet (unsigned int iIndex, int iX, int iY, CardinalPoint cpDirection);
-
-    int CreatePlanets();
-
-    bool ChoosePlanetAndDirectionFromMap (unsigned int* piIndex, CardinalPoint* pcpDirection);
-    bool ChoosePlanetAndDirectionFromNewPlanets (unsigned int* piIndex, int* piX, int* piY, 
-        CardinalPoint* pcpDirection);
-
     DefaultMapGenerator (IGameEngine* pGameEngine);
-    ~DefaultMapGenerator();
+
+    virtual int CreatePlanetChains();
+
+    int AllocateDefaultPlanetData();
 
 public:
 
-    IMPLEMENT_INTERFACE (IMapGenerator);
-
-    static IMapGenerator* CreateInstance (IGameEngine* pGameEngine);
-
-    //
-    // Main IMapGenerator method
-    //
-    //
-    // Implementor must do the following:
-    //
-    // 1) If iNumPlanets == 0, fill in the following columns in the pvGameData row:
-    //
-    // GameData::NumPlanetsPerEmpire,
-    // GameData::HWAg
-    // GameData::AvgAg
-    // GameData::HWMin
-    // GameData::AvgMin
-    // GameData::HWFuel
-    // GameData::AvgFuel
-    //
-    // 2) Fill in iNumNewPlanets rows in ppvNewPlanetData with the following columns:
-    //
-    // GameMap::Ag,
-    // GameMap::Minerals
-    // GameMap::Fuel
-    // GameMap::Coordinates
-    // GameMap::Link
-    // GameMap::HomeWorld
-    //
-    // Everything else will be taken care of by the caller
-    //
-    // Sanity rules apply:
-    // - Coordinates already in use on the map must not be used
-    // - Links must actually have a planet behind them
-    // - Exactly one homeworld per empire must be selected
-    // - etc.
-
-    int CreatePlanets (
-
-        int iGameClass, 
-        int iGameNumber, 
-        int iEmpireKey, 
-
-        Variant** ppvPlanetData, 
-        unsigned int iNumPlanets,
-
-        Variant* pvGameClassData,
-        Variant* pvGameData,
-
-        Variant** ppvNewPlanetData,
-        unsigned int iNumNewPlanets
-        );
+    static IMapGenerator* CreateInstance(IGameEngine* pGameEngine);
 };
 
 #endif // !defined(AFX_DEFAULTMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

@@ -1488,7 +1488,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
 
             if (iDipLevel & ALLIANCE) {
 
-                // Set each empire to alliance teammate's diplomacy table
+                // Set each empire to alliance in teammate's diplomacy table
                 for (i = 0; i < goGameOptions.iNumPrearrangedTeams; i ++) {
 
                     const PrearrangedTeam& aTeam = goGameOptions.paPrearrangedTeam[i];
@@ -1628,9 +1628,10 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
                                     (const char**) ppszDip,
                                     (const char**) ppszData, 
                                     pszMap,
-                                    iNumEmpires,
+                                    countof(piEmpireKey),
                                     piEmpireKey,
-                                    ALLIANCE
+                                    ALLIANCE,
+                                    false
                                     );
 
                                 if (iErrCode != OK) {

@@ -4412,7 +4412,7 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
         goto Cleanup;
     }
     
-    iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, iOwnerKey, &goOptions);
+    iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, &goOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
