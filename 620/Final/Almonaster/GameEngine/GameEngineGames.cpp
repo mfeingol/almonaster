@@ -920,7 +920,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     Variant vTemp, vOptions, vHalted, vPrivilege, vEmpireScore, vGameNumber, vMaxNumActiveGames;
 
     bool bGameClassLocked = false, bEmpireLocked = false, bIncrementedActiveGameCount = false, 
-        bDeleteRequired = false, bGameLocked = true;
+        bDeleteRequired = false, bGameLocked = true, bFlag;
 
     char strTableName [256], strGameData [256];
 
@@ -958,7 +958,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
         if (iErrCode != OK) {
             Assert (false);
             for (j = i - 1; j < i; j --) {
-                UnlockEmpire (pnmEmpireMutex + j);
+                UnlockEmpire (pnmEmpireMutex[j]);
             }
             return iErrCode;
         }
@@ -1251,48 +1251,64 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
 
         for (i = 0; i < goGameOptions.iNumSecurityEntries; i ++) {
 
-            int64 i64SessionId = 0;
+            IReadTable* pEmpires = NULL;
             unsigned int iRowEmpireKey = goGameOptions.pSecurity[i].iEmpireKey;
 
-            // Lock empire
-            NamedMutex nmLock;
-            iErrCode = LockEmpire (iRowEmpireKey, &nmLock);
+            //
+            // The idea is to ignore rows that don't resolve to the intended empire
+            //
+
+            iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
             if (iErrCode != OK) {
                 Assert (false);
+                goto OnError;
+            }
+
+            iErrCode = pEmpires->DoesRowExist (iRowEmpireKey, &bFlag);
+            if (iErrCode != OK || !bFlag) {
+                SafeRelease (pEmpires);
                 continue;
             }
 
-            // Get empire name
-            iErrCode = GetEmpireName (iRowEmpireKey, pvGameSec + GameSecurity::EmpireName);
+            // Get empire name, secret key, ip address, and session id
+            iErrCode = pEmpires->ReadData (
+                iRowEmpireKey, SystemEmpireData::Name, pvGameSec + GameSecurity::Name);
+
             if (iErrCode == OK) {
+                iErrCode = pEmpires->ReadData (
+                    iRowEmpireKey, SystemEmpireData::IPAddress, pvGameSec + GameSecurity::IPAddress);
 
-                // Check name - ignore if not matching
-                if (stricmp (
-                    pvGameSec[GameSecurity::EmpireName].GetCharPtr(), 
-                    goGameOptions.pSecurity[i].pszEmpireName
-                    ) != 0) {
-                    iErrCode = ERROR_FAILURE;
-                } else {
+                if (iErrCode == OK) {
+                    iErrCode = pEmpires->ReadData (
+                        iRowEmpireKey, SystemEmpireData::SessionId, pvGameSec + GameSecurity::SessionId);
 
-                    // Get empire ip address and session id
-                    iErrCode = GetEmpireIPAddress (iRowEmpireKey, pvGameSec + GameSecurity::IPAddress);
                     if (iErrCode == OK) {
-                        iErrCode = GetEmpireSessionId (iRowEmpireKey, &i64SessionId);
+                        iErrCode = pEmpires->ReadData (
+                            iRowEmpireKey, SystemEmpireData::SecretKey, pvGameSec + GameSecurity::SecretKey);
                     }
                 }
             }
 
-            // Unlock empire
-            UnlockEmpire (nmLock);
+            SafeRelease (pEmpires);
 
             if (iErrCode != OK) {
+                Assert (false);
+                goto OnError;
+            }
+
+            // Check name against string provided by creator
+            if (stricmp (
+                pvGameSec[GameSecurity::Name].GetCharPtr(), 
+                goGameOptions.pSecurity[i].pszEmpireName
+                ) != 0) {
+
+                // The empire was probably deleted - just ignore and continue
                 continue;
             }
 
             // Set remaining columns
             pvGameSec [GameSecurity::EmpireKey] = iRowEmpireKey;
             pvGameSec [GameSecurity::Options] = goGameOptions.pSecurity[i].iOptions;
-            pvGameSec [GameSecurity::SessionId] = i64SessionId;
 
             // Insert row
             iErrCode = m_pGameData->InsertRow (strTableName, pvGameSec);
@@ -1739,12 +1755,12 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     bool bWarn, bBlock, bFlag, bAddedToGame = false, bClosed = false, bStarted = false, bPaused = false,
         bUnPaused = false, bUnlockGame = false;
 
-    int iErrCode, iNumTechs, iDefaultOptions, iGameState, iSystemOptions;
+    int iErrCode, iNumTechs, iDefaultOptions, iGameState, iSystemOptions, iEmpireOptions;
     unsigned int iCurrentNumEmpires = -1, i, iKey = NO_KEY;
 
     Variant vGameClassOptions, vHalted, vPassword, vPrivilege, vMinScore, vMaxScore, vEmpireScore, vTemp, 
-        vMaxNumEmpires, vStillOpen, vNumUpdates, vMaxTechDev, vEmpireOptions, vEmpireName, vDiplomacyLevel,
-        vGameOptions;
+        vMaxNumEmpires, vStillOpen, vNumUpdates, vMaxTechDev, vEmpireName, vDiplomacyLevel,
+        vGameOptions, vSecretKey;
 
     bool bEmpireLocked = true, bGenerateMapForAllEmpires = false;
 
@@ -1813,7 +1829,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         goto OnError;
     }
 
-    // Make sure game still exists, get num empires in game
+    // Get num empires in game
     iErrCode = m_pGameData->GetNumRows (strGameEmpires, &iCurrentNumEmpires);
     if (iErrCode != OK) {
         iErrCode = ERROR_GAME_DOES_NOT_EXIST;
@@ -1821,13 +1837,13 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     }
 
     // Make sure empire isn't halted
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vEmpireOptions);
+    iErrCode = GetEmpireOptions (iEmpireKey, &iEmpireOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto OnError;
     }
     
-    if (vEmpireOptions.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
+    if (iEmpireOptions & EMPIRE_MARKED_FOR_DELETION) {
         iErrCode = ERROR_EMPIRE_IS_HALTED;
         goto OnError;
     }
@@ -1842,23 +1858,16 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         goto OnError;
     }
 
+    iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+    if (iErrCode != OK) {
+        goto OnError;
+    }
+
     // Make sure empire wasn't nuked out
-    iErrCode = m_pGameData->GetFirstKey (strGameDeadEmpires, GameDeadEmpires::Name, vEmpireName, true, &iKey);
-    if (iErrCode != ERROR_DATA_NOT_FOUND) {
-
-        if (iErrCode != OK) {
-            goto OnError;
-        }
-
-        iErrCode = m_pGameData->ReadData (strGameDeadEmpires, iKey, GameDeadEmpires::EmpireKey, &vTemp);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
-
-        if (iEmpireKey == vTemp.GetInteger()) {
-            iErrCode = ERROR_WAS_ALREADY_IN_GAME;
-            goto OnError;
-        }
+    iErrCode = m_pGameData->GetFirstKey (strGameDeadEmpires, GameDeadEmpires::SecretKey, vSecretKey, false, &iKey);
+    if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != ERROR_UNKNOWN_TABLE_NAME) {
+        iErrCode = ERROR_WAS_ALREADY_IN_GAME;
+        goto OnError;
     }
     
     // Make sure game is still open
@@ -2432,7 +2441,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     }
 
     // Grab default game options from empire's options
-    iDefaultOptions = vEmpireOptions.GetInteger() & (
+    iDefaultOptions = iEmpireOptions & (
         AUTO_REFRESH | COUNTDOWN | GAME_REPEATED_BUTTONS | MAP_COLORING | SHIP_MAP_COLORING |
         SHIP_MAP_HIGHLIGHTING | SENSITIVE_MAPS | PARTIAL_MAPS | SHIPS_ON_MAP_SCREEN | 
         SHIPS_ON_PLANETS_SCREEN | LOCAL_MAPS_IN_UPCLOSE_VIEWS | GAME_DISPLAY_TIME | 

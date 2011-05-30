@@ -287,8 +287,6 @@ private:
         int iEmpireKey, const char* pszEmpireName, int iAlienKey,
         int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey);
 
-    bool ValidateEmpireKey (int iLoserKey, unsigned int iHashEmpireName);
-
     int GetBridierScore (int iEmpireKey, int* piRank, int* piIndex);
     
     int TriggerBridierTimeBombIfNecessaryCallback();
@@ -907,10 +905,10 @@ public:
 
     int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire);
 
-    int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName);
+    int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName, int64* piSecretKey);
     int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName);
 
-    int DoesEmpireKeyMatchName (int iEmpireKey, const char* pszEmpireName, bool* pbMatch);
+    int CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, bool* pbMatch, int64* pi64SessionId, Variant* pvIPAddress);
 
     int IsPasswordCorrect (int iEmpireKey, const char* pszPassword);
 

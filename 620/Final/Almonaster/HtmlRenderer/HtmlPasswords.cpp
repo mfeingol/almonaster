@@ -226,7 +226,8 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
                         pszName, 
                         &bExists, 
                         &m_iEmpireKey, 
-                        &m_vEmpireName
+                        &m_vEmpireName,
+                        NULL
                         );
                     
                     if (iErrCode != OK || !bExists) {

@@ -184,7 +184,8 @@ if (!m_bRedirection &&
                             pszStandardParentName, 
                             &bFlag, 
                             &iParentEmpireKey, 
-                            &vParentName
+                            &vParentName,
+                            NULL
                             );
 
                         if (!bFlag) {

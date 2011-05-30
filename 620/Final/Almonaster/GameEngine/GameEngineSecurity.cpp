@@ -168,12 +168,30 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                                  bool* pbAccess) {
 
     int iErrCode, iOptions, iPrivilege;
-    Variant vGame, vEmpire, vTemp, * pvSec = NULL;
+    unsigned int iKey;
+
+    Variant vGame, vEmpire, vTemp, * pvSec = NULL, vEmpireSecretKey;
 
     char pszGameData [256] = "";
+
     GAME_SECURITY (pszGameSec, iGameClass, iGameNumber);
+    GAME_DEAD_EMPIRES (pszDeadEmpires, iGameClass, iGameNumber);
+
+    bool bFlag;
 
     IReadTable* pGameSec = NULL;
+
+    // Make sure empire wasn't nuked out of this game
+    iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::SecretKey, &vEmpireSecretKey);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->GetFirstKey (pszDeadEmpires, GameDeadEmpires::SecretKey, vEmpireSecretKey, false, &iKey);
+    if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != ERROR_UNKNOWN_TABLE_NAME) {
+        *pbAccess = false;
+        goto Cleanup;
+    }
 
     // Fast resolution for admins, guests
     iErrCode = GetEmpirePrivilege (iEmpireKey, &iPrivilege);
@@ -608,13 +626,12 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Check for idle filtering
     if (iOptions & GAME_RESTRICT_IDLE_EMPIRES) {
 
-        bool fIdle = false;
-        iErrCode = IsEmpireIdleInSomeGame (iEmpireKey, &fIdle);
+        iErrCode = IsEmpireIdleInSomeGame (iEmpireKey, &bFlag);
         if (iErrCode != OK) {
             goto Cleanup;
         }
 
-        if (fIdle) {
+        if (bFlag) {
             *pbAccess = false;
             goto Cleanup;
         }
@@ -623,23 +640,24 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Check for block on specific empire
     if (iOptions & GAME_ENFORCE_SECURITY) {
 
-        LinkedList<unsigned int> llBrokenList;
+        Variant vEmpireIPAddress;
 
-        unsigned int iKey = NO_KEY, iNumSecEntries = 0;
+        unsigned int iNumSecEntries = 0;
 
-        int iSecKey, iSecOptions;
-        int64 i64SessionId = NO_SESSION_ID, i64EmpireSessionId = NO_SESSION_ID;
-        const char* pszIPAddress = NULL, * pszEmpireName = NULL;
-
-        bool bFlag;
-
-        Variant vEmpireIPAddress, vNewIPAddress, vNewSessionId;
-
+        iKey = NO_KEY;
         while (true) {
+
+            int iSecKey = NO_KEY, iSecOptions = 0;
+
+            const char* pszIPAddress = NULL, * pszIPAddress2 = NULL;
+            Variant vIPAddress2, * pvIPAddress2 = NULL;
+
+            int64 i64SessionId = NO_SESSION_ID, i64SessionId2 = NO_SESSION_ID, * pi64SessionId2 = NULL;
+            int64 i64EmpireSessionId = NO_SESSION_ID, i64SecretKey;
             
             if (pgoGameOptions == NULL) {
 
-                bool bBroken = false;
+                bool bValidKey = false;
 
                 iErrCode = m_pGameData->GetTableForReading (pszGameSec, &pGameSec);
                 if (iErrCode != OK) {
@@ -664,85 +682,44 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 }
 
                 SafeRelease (pGameSec);
-                
-                iSecKey = pvSec [GameSecurity::EmpireKey].GetInteger();
+
+                iSecKey = pvSec [GameSecurity::EmpireKey].GetInteger();                
+                i64SecretKey = pvSec [GameSecurity::SecretKey].GetInteger64();
+                iSecOptions = pvSec [GameSecurity::Options].GetInteger();
+
+                if (iSecOptions & GAME_SECURITY_CHECK_SESSIONID) {
+                    i64SessionId = pvSec [GameSecurity::SessionId].GetInteger64();
+                    pi64SessionId2 = &i64SessionId2;
+                }
+
+                if (iSecOptions & GAME_SECURITY_CHECK_IPADDRESS) {
+                    pszIPAddress = pvSec [GameSecurity::IPAddress].GetCharPtr();
+                    pvIPAddress2 = &vIPAddress2;
+                }
+
                 if (iSecKey != NO_KEY) {
 
-                    pszEmpireName = pvSec [GameSecurity::EmpireName].GetCharPtr();
-
-                    iErrCode = DoesEmpireKeyMatchName (iSecKey, pszEmpireName, &bFlag);
-                    if (iErrCode != OK || !bFlag) {
-                        iSecKey = NO_KEY;
-                        bBroken = true;                     
-                    }
-                }
-                
-                iSecOptions = pvSec [GameSecurity::Options].GetInteger();
-                if (iSecOptions & GAME_SECURITY_CHECK_SESSIONID) {
-
-                    i64SessionId = pvSec [GameSecurity::SessionId].GetInteger64();
-                    if (iSecKey != NO_KEY) {
-
-                        // See if empire's session id is still valid
-                        iErrCode = m_pGameData->ReadData (
-                            SYSTEM_EMPIRE_DATA,
-                            iSecKey,
-                            SystemEmpireData::SessionId,
-                            &vNewSessionId
-                            );
-                        
-                        if (iErrCode != OK) {
-                            iSecKey = NO_KEY;
-                            iErrCode = OK;
-                            bBroken = true;
-                        }
-                        
-                        else if (i64SessionId != vNewSessionId.GetInteger64()) {
-                            bBroken = true;
-                            i64SessionId = vNewSessionId.GetInteger64();
-                        }
-                    }
-                }
-                
-                if (iSecOptions & GAME_SECURITY_CHECK_IPADDRESS) {
-
-                    pszIPAddress = pvSec [GameSecurity::IPAddress].GetCharPtr();
-
-                    if (iSecKey != NO_KEY) {
-
-                        // See if empire's ip address is still valid
-                        iErrCode = m_pGameData->ReadData (
-                            SYSTEM_EMPIRE_DATA,
-                            iSecKey,
-                            SystemEmpireData::IPAddress,
-                            &vNewIPAddress
-                            );
-
-                        if (iErrCode != OK) {
-                            iSecKey = NO_KEY;
-                            iErrCode = OK;
-                            bBroken = true;                     
-                        }
-                        
-                        else if (strcmp (pszIPAddress, vNewIPAddress.GetCharPtr()) != 0) {
-                            bBroken = true;
-                            pszIPAddress = vNewIPAddress.GetCharPtr();
-                        }
-                    }
-                }
-                
-                // If the row is broken, take note
-                if (bBroken) {
-
-                    if (!llBrokenList.PushLast (iKey)) {
-                        iErrCode = ERROR_OUT_OF_MEMORY;
+                    iErrCode = CheckSecretKey (iSecKey, i64SecretKey, &bValidKey, pi64SessionId2, pvIPAddress2);
+                    if (iErrCode != OK) {
                         goto Cleanup;
                     }
-                }
 
-                if (pvSec != NULL) {
-                    m_pGameData->FreeData (pvSec);
-                    pvSec = NULL;
+                    if (bValidKey) {
+
+                        // i64SessionId2 is already set one way or another
+
+                        if (pvIPAddress2 != NULL) {
+                            pszIPAddress2 = vIPAddress2.GetCharPtr();
+                        }
+
+                    } else {
+
+                        // Nuke the key in the row
+                        iErrCode = m_pGameData->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, NO_KEY);
+                        if (iErrCode != OK) {
+                            goto Cleanup;
+                        }
+                    }
                 }
 
             } else {
@@ -753,39 +730,37 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 }
 
                 iSecKey = pgoGameOptions->pSecurity[iNumSecEntries].iEmpireKey;
+                i64SecretKey = pgoGameOptions->pSecurity[iNumSecEntries].iSecretKey;                
                 iSecOptions = pgoGameOptions->pSecurity[iNumSecEntries].iOptions;
 
                 // Don't check session ids and ip addresses here
+                // The provider of the options pointer is the game creator
                 iSecOptions &= ~(GAME_SECURITY_CHECK_SESSIONID | GAME_SECURITY_CHECK_IPADDRESS);
 
                 iNumSecEntries ++;
             }
             
-            // Check empire key
-            if (iEmpireKey == iSecKey) {
-                
-                // Access denied
+            // Check empire secret key
+            if (vEmpireSecretKey.GetInteger64() == i64SecretKey) {
                 *pbAccess = false;
                 break;
             }
             
-            // Check session id
+            // Check session id match
             if (iSecOptions & GAME_SECURITY_CHECK_SESSIONID) {
 
                 Assert (i64SessionId != NO_SESSION_ID);
                 
                 // Fault in session id
                 if (i64EmpireSessionId == NO_SESSION_ID) {
-                    
                     iErrCode = GetEmpireSessionId (iEmpireKey, &i64EmpireSessionId);
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
                 }
                 
-                if (i64EmpireSessionId == i64SessionId) {
-                    
-                    // Access denied
+                // Check
+                if (i64EmpireSessionId == i64SessionId || i64EmpireSessionId == i64SessionId2) {
                     *pbAccess = false;
                     break;
                 }
@@ -798,133 +773,26 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 
                 // Fault in ip address
                 if (vEmpireIPAddress.GetType() != V_STRING) {
-                    
                     iErrCode = GetEmpireIPAddress (iEmpireKey, &vEmpireIPAddress);
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
                 }
                 
-                if (strcmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress) == 0) {
-                    
-                    // Access denied
+                // Check
+                if (String::StrCmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress) == 0 ||
+                    String::StrCmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress2) == 0) {
                     *pbAccess = false;
                     break;
                 }
             }
 
+            if (pvSec != NULL) {
+                    m_pGameData->FreeData (pvSec);
+                    pvSec = NULL;
+                }
+
         }   // End while loop
-
-        if (llBrokenList.GetNumElements() > 0) {
-
-            ListIterator<unsigned int> li;
-
-            GAME_SECURITY (pszGameSec, iGameClass, iGameNumber);
-
-            while (llBrokenList.PopFirst (&li)) {
-
-                iKey = li.GetData();
-
-                iErrCode = m_pGameData->ReadData (pszGameSec, iKey, GameSecurity::EmpireKey, &vTemp);
-                if (iErrCode != OK) {
-                    goto Cleanup;
-                }
-                iSecKey = vTemp.GetInteger();
-
-                if (iSecKey != NO_KEY) {
-
-                    iErrCode = m_pGameData->ReadData (pszGameSec, iKey, GameSecurity::EmpireName, &vTemp);
-                    if (iErrCode != OK) {
-                        goto Cleanup;
-                    }
-                    
-                    pszEmpireName = vTemp.GetCharPtr();
-                    
-                    // See if empire's ip address is still valid
-                    iErrCode = DoesEmpireKeyMatchName (iSecKey, pszEmpireName, &bFlag);
-                    if (iErrCode != OK || !bFlag) {
-                        
-                        // No more empire key
-                        iErrCode = m_pGameData->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, (int) NO_KEY);
-                        if (iErrCode != OK) {
-                            goto Cleanup;
-                        }
-                    }
-                    
-                    else if (bFlag) {
-                        
-                        iErrCode = m_pGameData->ReadData (
-                            SYSTEM_EMPIRE_DATA,
-                            iSecKey,
-                            SystemEmpireData::SessionId,
-                            &vNewSessionId
-                            );
-                        
-                        if (iErrCode != OK) {
-                            
-                            // No more empire key
-                            iErrCode = m_pGameData->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, (int) NO_KEY);
-                            if (iErrCode != OK) {
-                                goto Cleanup;
-                            }
-                            
-                        } else {
-                            
-                            iErrCode = m_pGameData->ReadData (pszGameSec, iKey, GameSecurity::SessionId, &vTemp);
-                            if (iErrCode != OK) {
-                                goto Cleanup;
-                            }
-                            i64SessionId = vTemp.GetInteger64();
-                            
-                            if (i64SessionId != vNewSessionId.GetInteger64()) {
-                                
-                                // New Session Id
-                                iErrCode = m_pGameData->WriteData (pszGameSec, iKey, GameSecurity::SessionId, vNewSessionId);
-                                if (iErrCode != OK) {
-                                    goto Cleanup;
-                                }
-                            }
-                            
-                            iErrCode = m_pGameData->ReadData (
-                                SYSTEM_EMPIRE_DATA,
-                                iSecKey,
-                                SystemEmpireData::IPAddress,
-                                &vNewIPAddress
-                                );
-                            
-                            if (iErrCode != OK) {
-                                
-                                // No more empire key
-                                iErrCode = m_pGameData->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, (int) NO_KEY);
-                                if (iErrCode != OK) {
-                                    goto Cleanup;
-                                }
-                                
-                            } else {
-                                
-                                iErrCode = m_pGameData->ReadData (pszGameSec, iKey, GameSecurity::IPAddress, &vTemp);
-                                if (iErrCode != OK) {
-                                    goto Cleanup;
-                                }
-                                pszIPAddress = vTemp.GetCharPtr();
-                                
-                                if (strcmp (pszIPAddress, vNewIPAddress.GetCharPtr()) != 0) {
-                                    
-                                    // New IP address
-                                    iErrCode = m_pGameData->WriteData (pszGameSec, iKey, GameSecurity::IPAddress, vNewIPAddress.GetCharPtr());
-                                    if (iErrCode != OK) {
-                                        goto Cleanup;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            llBrokenList.Clear();
-        
-        }   // End if any rows were broken
 
     }   // End if enforce security
 

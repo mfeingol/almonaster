@@ -953,6 +953,7 @@ int GameEngine::SendVictorySneer (int iWinnerKey, const char* pszWinnerName, int
 int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOnFailure, bool bDeletePersonal) {
 
     int iErrCode = OK;
+    unsigned int iNumGames = 0;
 
     NamedMutex nmMutex;
     iErrCode = LockEmpire (iEmpireKey, &nmMutex);
@@ -985,7 +986,6 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
     }
 
     // Read active games total
-    unsigned int iNumGames = 0;
     SYSTEM_EMPIRE_ACTIVE_GAMES (pszGames, iEmpireKey);
 
     if (m_pGameData->DoesTableExist (pszGames)) {
@@ -1366,42 +1366,61 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
 // Determines if a given empire name already exists
 
 int GameEngine::DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, 
-                                 Variant* pvEmpireName) {
+                                 Variant* pvEmpireName, int64* piSecretKey) {
 
-    int iErrCode = OK;
+    int iErrCode;
+
+    IReadTable* pEmpires = NULL;
+    unsigned int iEmpireKey;
 
     *pbExists = false;
     *piEmpireKey = NO_KEY;
 
-    iErrCode = m_pGameData->GetFirstKey (
-        SYSTEM_EMPIRE_DATA, 
-        SystemEmpireData::Name, 
-        pszName, 
-        true, 
-        (unsigned int*) piEmpireKey
-        );
+    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
-    // Fetch proper capitalization
-    if (iErrCode == OK) {
+    iErrCode = pEmpires->GetFirstKey (SystemEmpireData::Name, pszName, true, &iEmpireKey);
+    if (iErrCode != OK) {
 
-        Assert (*piEmpireKey != NO_KEY);
-        
-        *pbExists = true;
-        
-        if (pvEmpireName != NULL) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+        else Assert (false);
+        goto Cleanup;
+    }
+    Assert (iEmpireKey != NO_KEY);
 
-            iErrCode = m_pGameData->ReadData (
-                SYSTEM_EMPIRE_DATA, 
-                *piEmpireKey, 
-                SystemEmpireData::Name, 
-                pvEmpireName
-                );
+    // Fetch proper capitalization if required
+    if (pvEmpireName != NULL) {
+
+        iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Name, pvEmpireName);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
         }
     }
 
-    else if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = OK;
+    // Fetch secret key if required
+    if (piSecretKey != NULL) {
+
+        iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::SecretKey, piSecretKey);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
     }
+
+    SafeRelease (pEmpires);
+
+    *piEmpireKey = iEmpireKey;
+    *pbExists = true;
+
+Cleanup:
+
+    SafeRelease (pEmpires);
 
     return iErrCode;
 }
@@ -1441,33 +1460,72 @@ int GameEngine::DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Varian
 
 // Input:
 // iEmpireKey -> Key of empire
+// iSecretKey -> Secret key of empire
 //
 // Output:
 // *pbMatch-> true if key matches name
 //
-// Determines if a given empire key matches a given empire name
+// Determines if a given secret key matches a given empire key
 
-int GameEngine::DoesEmpireKeyMatchName (int iEmpireKey, const char* pszEmpireName, bool* pbMatch) {
+int GameEngine::CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, bool* pbMatch, int64* pi64SessionId, 
+                                Variant* pvIPAddress) {
 
     int iErrCode;
+    bool bFlag;
+    int64 i64StoredSecretKey;
 
-    // Check row
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_EMPIRE_DATA, iEmpireKey, pbMatch);
+    IReadTable* pEmpires = NULL;
+
+    *pbMatch = false;
+
+    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
+        Assert (false);
         return iErrCode;
     }
 
-    if (*pbMatch) {
-        
-        Variant vEmpireName;
-        
-        iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Name, &vEmpireName);
-        if (iErrCode != OK) {
-            return iErrCode;
+    // Check row
+    iErrCode = pEmpires->DoesRowExist (iEmpireKey, &bFlag);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    if (!bFlag) {
+        goto Cleanup;
+    }
+
+    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::SecretKey, &i64StoredSecretKey);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (i64SecretKey == i64StoredSecretKey) {
+
+        *pbMatch = true;
+
+        if (pi64SessionId != NULL) {
+
+            iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::SessionId, pi64SessionId);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
         }
 
-        *pbMatch = (String::StriCmp (pszEmpireName, vEmpireName.GetCharPtr()) == 0);
+        if (pvIPAddress != NULL) {
+
+            iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::IPAddress, pvIPAddress);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
     }
+
+Cleanup:
+
+    SafeRelease (pEmpires);
 
     return iErrCode;
 }

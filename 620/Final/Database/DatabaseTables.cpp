@@ -323,7 +323,7 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
 
                 case V_INT64:
 
-                    pvDestRow[j] = (int64) pvSrcRow[j];
+                    vTest = (int64) pvSrcRow[j];
                     break;
                     
                 default:

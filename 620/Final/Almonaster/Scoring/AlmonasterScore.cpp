@@ -243,12 +243,12 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
                                                      int iPlanetKey) {
     NamedMutex nmEmpireLock;
 
-    bool bLocked = false;
+    bool bLocked = false, bValid;
 
     float fWinnerScore, fLoserScore, fWinnerIncrease, fLoserDecrease;
     int iErrCode, iLoserSignificance, iLoserNumAllies, iWinnerNumAllies, iWinnerSignificance, iLoserKey;
 
-    unsigned int iHashEmpireName;
+    int64 i64EmpireSecretKey;
 
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
     GAME_EMPIRE_DIPLOMACY (strWinnerDip, iGameClass, iGameNumber, iWinnerKey);
@@ -274,7 +274,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         &iLoserSignificance,
         &iLoserNumAllies,
         &iLoserKey,
-        &iHashEmpireName,
+        &i64EmpireSecretKey,
         NULL
         );
 
@@ -338,9 +338,14 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
     }
     bLocked = true;
 
-    if (m_pGameEngine->ValidateEmpireKey (iLoserKey, iHashEmpireName)) {
-        
-        // Close enough!  Let's tag him
+    iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (bValid) {
+
         iErrCode = m_pDatabase->Increment (
             SYSTEM_EMPIRE_DATA, 
             iLoserKey, 
@@ -862,7 +867,7 @@ Cleanup:
 
 int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, int iPlanetKey, float* pfScore,
                                                       int* piSignificance, int* piNumAllies, 
-                                                      int* piLoserKey, unsigned int* piHashEmpireName,
+                                                      int* piLoserKey, int64* pi64EmpireSecretKey,
                                                       Variant* pvPlanetName) {
 
     int iErrCode;
@@ -900,7 +905,7 @@ int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, in
         goto Cleanup;
     }
 
-    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::SurrenderEmpireNameHash, (int*) piHashEmpireName);
+    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::SurrenderEmpireSecretKey, pi64EmpireSecretKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -935,19 +940,19 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
 
     int iErrCode;
 
-    unsigned int iHashEmpireName, i;
+    unsigned int i;
 
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
     float* pfIncrease = (float*) StackAlloc (iNumEmpires * sizeof (float));
-
     float fLoserScore, fPartialDecrease, fDecrease = 0.0, fNumEmpires = (float) iNumEmpires;
-    int iLoserSignificance, iLoserNumAllies, iLoserKey;
 
-    bool bEmpireLocked = false;
+    int iLoserSignificance, iLoserNumAllies, iLoserKey;
+    int64 i64EmpireSecretKey;
+
+    bool bEmpireLocked = false, bValid;
 
     Variant vPlanetName;
-
     IScoringSystem* pClassicScore = NULL;
 
     NamedMutex nmEmpireLock;
@@ -960,7 +965,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
         &iLoserSignificance,
         &iLoserNumAllies,
         &iLoserKey,
-        &iHashEmpireName,
+        &i64EmpireSecretKey,
         &vPlanetName
         );
 
@@ -1022,7 +1027,13 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
     bEmpireLocked = true;
     
     // If empire is valid, decrement its score
-    if (!m_pGameEngine->ValidateEmpireKey (iLoserKey, iHashEmpireName)) {
+    iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (!bValid) {
 
         iLoserKey = NO_KEY;
 

@@ -1001,7 +1001,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
                     Variant vRealName;
 
                     // Make sure empire exists
-                    iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bExists, &iEmpireKey, &vRealName);
+                    iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bExists, &iEmpireKey, &vRealName, NULL);
                     if (iErrCode == OK && bExists && iEmpireKey != m_iEmpireKey) {
 
                         Assert (iEmpireKey != NO_KEY);
@@ -1658,9 +1658,10 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                     if (pszName != NULL && stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
 
                         unsigned int iEmpireKey;
+                        int64 iSecretKey;
 
                         // Make sure empire exists
-                        iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bFlag, &iEmpireKey, NULL);
+                        iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bFlag, &iEmpireKey, NULL, &iSecretKey);
                         if (iErrCode == OK && bFlag && iEmpireKey != m_iEmpireKey) {
 
                             Assert (iEmpireKey != NO_KEY);
@@ -1698,6 +1699,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                             if (!bAlready) {
                             
                                 pgoOptions->pSecurity[iNumRealBlocks].iEmpireKey = iEmpireKey;
+                                pgoOptions->pSecurity[iNumRealBlocks].iSecretKey = iSecretKey;
                                 pgoOptions->pSecurity[iNumRealBlocks].iOptions = iOptions;
                                 pgoOptions->pSecurity[iNumRealBlocks].pszEmpireName = pszName;
 
@@ -1736,22 +1738,6 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
         pgoOptions->iNumSecurityEntries = 0;
     }
-
-/*/ Finally, do a quick access check to make sure the game can be created by this empire
-    // When a non-null options structure is passed in, the code won't blindly approve gameclass
-    // owners, and will reject out of line parameters like score constraints that exclude the creator
-
-    iErrCode = g_pGameEngine->GameAccessCheck (iGameClass, 0, iEmpireKey, pgoOptions, ENTER_GAME, &bFlag);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-    
-    if (!bFlag) {
-        AddMessage ("You do not have permission to enter the game");
-        return ERROR_ACCESS_DENIED;
-    }
-*/
 
     return OK;
     

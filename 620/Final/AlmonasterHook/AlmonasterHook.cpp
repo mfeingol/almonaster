@@ -39,14 +39,15 @@ public:
 		Variant vTemp;
 		int iErrCode;
 
-		unsigned int iNumRows;
+//		unsigned int iNumRows;
 		unsigned iKey;
 
 		GAME_DATA (pszGameData, iGameClass, iGameNumber);
 		GAME_MAP (pszGameMap, iGameClass, iGameNumber);
 		GAME_DEAD_EMPIRES (pszDeadEmps, iGameClass, iGameNumber);
+        GAME_SECURITY (pszSec, iGameClass, iGameNumber);
 
-		iErrCode = m_pDatabase->GetNumRows (pszGameMap, &iNumRows);
+/*		iErrCode = m_pDatabase->GetNumRows (pszGameMap, &iNumRows);
 		Assert (iErrCode == OK);
 
 		if (iNumRows > 0) {
@@ -152,7 +153,7 @@ public:
 			iErrCode = m_pDatabase->ReadData (pszDeadEmps, iKey, GameDeadEmpires::Name, &vTemp);
 			Assert (iErrCode == OK);
 
-			iErrCode = m_pGameEngine->DoesEmpireExist (vTemp.GetCharPtr(), &bExists, &iEmpireKey, NULL);
+			iErrCode = m_pGameEngine->DoesEmpireExist (vTemp.GetCharPtr(), &bExists, &iEmpireKey, NULL, NULL);
 			Assert (iErrCode == OK);
 
 			if (bExists) {
@@ -168,7 +169,7 @@ public:
 				Assert (iErrCode == OK);
 			}
 
-			iErrCode = m_pDatabase->WriteData (pszDeadEmps, iKey, GameDeadEmpires::EmpireKey, iEmpireKey);
+			iErrCode = m_pDatabase->WriteData (pszDeadEmps, iKey, GameDeadEmpires::Key, iEmpireKey);
 			Assert (iErrCode == OK);
 
 			iErrCode = m_pDatabase->WriteData (pszDeadEmps, iKey, GameDeadEmpires::Icon, vIcon);
@@ -198,6 +199,116 @@ public:
 
         iErrCode = m_pDatabase->WriteData (pszGameData, GameData::MaxBridierRankLoss, 0);
         Assert (iErrCode == OK);
+*/
+        // RC3
+        iKey = NO_KEY;
+		while (true) {
+
+            Variant vKey, vName, vSecretKey = (int64) 0, vRealName;
+
+			iErrCode = m_pDatabase->GetNextKey (pszDeadEmps, iKey, &iKey);
+			if (iErrCode == ERROR_DATA_NOT_FOUND || iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
+				break;
+			}
+			Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (pszDeadEmps, iKey, GameDeadEmpires::Key, &vKey);
+            Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (pszDeadEmps, iKey, GameDeadEmpires::Name, &vName);
+            Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (SYSTEM_EMPIRE_DATA, vKey.GetInteger(), SystemEmpireData::Name, &vRealName);
+            if (iErrCode == OK) {
+
+                if (stricmp (vName.GetCharPtr(), vRealName.GetCharPtr()) == 0) {
+
+                    iErrCode = m_pDatabase->ReadData (SYSTEM_EMPIRE_DATA, vKey.GetInteger(), SystemEmpireData::SecretKey, &vSecretKey);
+                    Assert (iErrCode == OK);
+                }
+            }
+
+            iErrCode = m_pDatabase->WriteData (pszDeadEmps, iKey, GameDeadEmpires::SecretKey, vSecretKey);
+			Assert (iErrCode == OK);
+		}
+
+        iKey = NO_KEY;
+		while (true) {
+
+            Variant vKey, vName, vSecretKey = (int64) 0, vRealName;
+
+			iErrCode = m_pDatabase->GetNextKey (pszSec, iKey, &iKey);
+			if (iErrCode == ERROR_DATA_NOT_FOUND || iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
+				break;
+			}
+			Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (pszSec, iKey, GameSecurity::EmpireKey, &vKey);
+            Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (pszSec, iKey, GameSecurity::Name, &vName);
+            Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (SYSTEM_EMPIRE_DATA, vKey.GetInteger(), SystemEmpireData::Name, &vRealName);
+            if (iErrCode == OK) {
+
+                if (stricmp (vName.GetCharPtr(), vRealName.GetCharPtr()) == 0) {
+
+                    iErrCode = m_pDatabase->ReadData (SYSTEM_EMPIRE_DATA, vKey.GetInteger(), SystemEmpireData::SecretKey, &vSecretKey);
+                    Assert (iErrCode == OK);
+                }
+            }
+
+            iErrCode = m_pDatabase->WriteData (pszSec, iKey, GameSecurity::SecretKey, vSecretKey);
+			Assert (iErrCode == OK);
+		}
+
+        iKey = NO_KEY;
+		while (true) {
+
+            Variant vHW;
+
+			iErrCode = m_pDatabase->GetNextKey (pszGameMap, iKey, &iKey);
+			if (iErrCode == ERROR_DATA_NOT_FOUND) {
+				break;
+			}
+			Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->ReadData (pszGameMap, iKey, GameMap::HomeWorld, &vHW);
+            Assert (iErrCode == OK);
+
+            unsigned int iEmpireKey = vHW.GetInteger();
+            if (iEmpireKey != HOMEWORLD && iEmpireKey != NOT_HOMEWORLD) {
+
+                Variant vEmpireName;
+                iErrCode = m_pDatabase->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Name, &vEmpireName);
+                if (iErrCode == OK) {
+
+                    Variant vSecretKey;
+                    iErrCode = m_pDatabase->ReadData (pszGameMap, iKey, GameMap::SurrenderEmpireSecretKey, &vSecretKey);
+			        Assert (iErrCode == OK);
+
+                    unsigned int iHashEmpireName = (unsigned int) vSecretKey.GetInteger64();
+
+                    unsigned int iRealHash = Algorithm::GetStringHashValue (
+                        vEmpireName.GetCharPtr(), 
+                        EMPIRE_NAME_HASH_BUCKETS, 
+                        true
+                        );
+
+                    vSecretKey = (int64) 0;
+
+                    if (iHashEmpireName == iRealHash) {
+
+                        iErrCode = m_pDatabase->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+                        Assert (iErrCode == OK);
+                    }
+
+                    iErrCode = m_pDatabase->WriteData (pszGameMap, iKey, GameMap::SurrenderEmpireSecretKey, vSecretKey);
+                    Assert (iErrCode == OK);
+                }
+            }
+        }
 	}
 
 	void UpgradeEmpireInGameTo620 (int iGameClass, int iGameNumber, int iEmpireKey) {
@@ -2705,10 +2816,10 @@ Cleanup:
 
 		//System();
         //ForEachTheme();
-		ForEachEmpire();
+		//ForEachEmpire();
 		//ForEachGameClass();
 		//ForEachTournament();
-		//ForEachGame();
+		ForEachGame();
 		//ForEachEmpireInEachGame();
 
 		return OK;

@@ -1153,7 +1153,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Test empire existence
-                iErrCode = g_pGameEngine->DoesEmpireExist (pszStandardizedName, &bFlag, &iNewEmpireKey, NULL);
+                iErrCode = g_pGameEngine->DoesEmpireExist (pszStandardizedName, &bFlag, &iNewEmpireKey, NULL, NULL);
                 if (iErrCode != OK || bFlag) {
                     AddMessage ("That empire already exists");
                     iServerAdminPage = 7;

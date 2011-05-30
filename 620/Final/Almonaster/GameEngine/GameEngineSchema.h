@@ -1877,10 +1877,11 @@ namespace GameSecurity {
     
     enum Columns {
         EmpireKey,
-        EmpireName,
+        Name,
         Options,
         SessionId,
         IPAddress,
+        SecretKey,
     };
 
     static const VariantType Types[] = {
@@ -1889,6 +1890,7 @@ namespace GameSecurity {
         V_INT,
         V_INT64,
         V_STRING,
+        V_INT64,
     };
     
     static const size_t Sizes[] = {
@@ -1897,9 +1899,10 @@ namespace GameSecurity {
         0,
         0,
         MAX_IP_ADDRESS_LENGTH,
+        0,
     };
 
-    static const unsigned int NumColumns = IPAddress + 1;
+    static const unsigned int NumColumns = SecretKey + 1;
 
     static const TemplateDescription Template = {
         "GameSecurity",
@@ -1981,10 +1984,11 @@ namespace GameDeadEmpires {
 
     enum Columns {
         Name,
-        EmpireKey,
+        Key,
         Icon,
         Update,
         Reason,
+        SecretKey
     };
 
     static const VariantType Types[] = {
@@ -1993,6 +1997,7 @@ namespace GameDeadEmpires {
         V_INT,
         V_INT,
         V_INT,
+        V_INT64,
     };
 
     static const size_t Sizes[] = {
@@ -2001,9 +2006,10 @@ namespace GameDeadEmpires {
         0,
         0,
         0,
+        0,
     };
 
-    static const unsigned int NumColumns = Reason + 1;
+    static const unsigned int NumColumns = SecretKey + 1;
 
     static const TemplateDescription Template = {
         "GameDeadEmpires",
@@ -2058,7 +2064,7 @@ namespace GameMap {
         NumCloakedShips,
         NumUncloakedBuildShips,
         NumCloakedBuildShips,
-        SurrenderEmpireNameHash,
+        SurrenderEmpireSecretKey,
         SurrenderAlmonasterScore,
     };
     
@@ -2086,7 +2092,7 @@ namespace GameMap {
         V_INT,
         V_INT,
         V_INT,
-        V_INT,
+        V_INT64,
         V_FLOAT,
     };
 

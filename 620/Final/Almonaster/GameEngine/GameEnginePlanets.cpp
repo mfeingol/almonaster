@@ -1193,7 +1193,7 @@ int GameEngine::CreatePlanetFromMapGeneratorData (const char* strGameMap,
     // 3.0 style Surrenders
     pvPlanetData[GameMap::SurrenderNumAllies] = 0;
     pvPlanetData[GameMap::SurrenderAlmonasterSignificance] = 0;
-    pvPlanetData[GameMap::SurrenderEmpireNameHash] = 0;
+    pvPlanetData[GameMap::SurrenderEmpireSecretKey] = (int64) 0;
     pvPlanetData[GameMap::SurrenderAlmonasterScore] = (float) 0.0;
 
     // NorthPlanetKey, EastPlanetKey, SouthPlanetKey, WestPlanetKey,

@@ -7117,6 +7117,21 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                             }
 
                             if (vTemp.GetInteger() >= ROOT_KEY) {
+                                                                
+                                // Update scores
+                                iErrCode = UpdateScoresOn30StyleSurrenderColonization (
+                                    piEmpireKey[i],
+                                    vPlanetKey.GetInteger(),
+                                    pvEmpireName[i].GetCharPtr(),
+                                    iGameClass,
+                                    iGameNumber,
+                                    pszGameClassName
+                                    );
+
+                                if (iErrCode != OK) {
+                                    Assert (false);
+                                    goto Cleanup;
+                                }
 
                                 // Restore planet name
                                 if (sscanf (vPlanetName.GetCharPtr(), RUINS_OF, pszEmpireName) == 1) {
@@ -7132,21 +7147,6 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                                         Assert (false);
                                         goto Cleanup;
                                     }
-                                }
-                                                                
-                                // Update scores
-                                iErrCode = UpdateScoresOn30StyleSurrenderColonization (
-                                    piEmpireKey[i],
-                                    vPlanetKey.GetInteger(),
-                                    pvEmpireName[i].GetCharPtr(),
-                                    iGameClass,
-                                    iGameNumber,
-                                    pszGameClassName
-                                    );
-
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    goto Cleanup;
                                 }
 
                                 // Set not homeworld

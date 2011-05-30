@@ -969,7 +969,7 @@ Variant::operator int64() const {
     case V_FLOAT:
         return (int64) m_vArg.fArg;
     case V_STRING:
-        return m_vArg.pszArg == NULL ? 0 : (int64) atoi (m_vArg.pszArg);
+        return m_vArg.pszArg == NULL ? 0 : String::AtoI64 (m_vArg.pszArg);
     case V_TIME:
         return (int64) m_vArg.tArg;
     default:

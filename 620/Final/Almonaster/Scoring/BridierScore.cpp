@@ -356,7 +356,7 @@ int BridierObject::GetReplacementKeys (bool bEstablished, const Variant* pvScore
 
     sc[BRIDIER_RANK].iColumn = SystemEmpireData::BridierRank;
     sc[BRIDIER_RANK].iFlags = 0;
-    sc[BRIDIER_RANK].vData = pvScore != NULL ? pvScore [BRIDIER_RANK] : BRIDIER_MIN_RANK;
+    sc[BRIDIER_RANK].vData = pvScore != NULL ? pvScore [BRIDIER_RANK].GetInteger() : BRIDIER_MIN_RANK;
     sc[BRIDIER_RANK].vData2 = BRIDIER_MAX_RANK;
 
     sc[BRIDIER_INDEX].iColumn = SystemEmpireData::BridierIndex;

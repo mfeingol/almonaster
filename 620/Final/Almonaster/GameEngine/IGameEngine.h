@@ -106,6 +106,7 @@ struct GameSecurityEntry {
     int iEmpireKey;
     int iOptions;
     const char* pszEmpireName;
+    int64 iSecretKey;
 };
 
 struct PrearrangedTeam {
@@ -381,8 +382,6 @@ public:
     virtual int AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
         int iEmpireKey, const char* pszEmpireName, int iAlienKey,
         int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey) = 0;
-
-    virtual bool ValidateEmpireKey (int iLoserKey, unsigned int iHashEmpireName) = 0;
 
     virtual int GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) = 0;
 
@@ -738,10 +737,11 @@ public:
 
     virtual int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire) = 0;
 
-    virtual int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName) = 0;
+    virtual int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName, int64* piSecretKey) = 0;
+    virtual int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName) = 0;
 
-    virtual int DoesEmpireKeyMatchName (int iEmpireKey, const char* pszEmpireName, bool* pbMatch) = 0;
     virtual int IsPasswordCorrect (int iEmpireKey, const char* pszPassword) = 0;
+    virtual int CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, bool* pbMatch, int64* pi64SessionId, Variant* pvIPAddress) = 0;
 
     virtual int GetNumEmpiresOnServer (int* piNumEmpires) = 0;
 

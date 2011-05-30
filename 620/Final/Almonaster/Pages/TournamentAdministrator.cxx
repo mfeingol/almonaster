@@ -1372,7 +1372,8 @@ case 4:
             pszInviteEmpire,
             &bExists,
             &iInviteKey,
-            &vInviteName
+            &vInviteName,
+            NULL
             );
     }
 

@@ -145,7 +145,8 @@ else if (!m_bRedirection) {
         pszStandardizedName,
         &bFlag, 
         &m_iEmpireKey,
-        &vEmpireName
+        &vEmpireName,
+        NULL
         );
 
     if (iErrCode != OK) {
@@ -336,11 +337,11 @@ OpenForm();
 
 %><table align="center" width="90%" cellpadding="0" cellspacing="0"><%
 %><tr><%
-%><td width="35%"><%
+%><td width="42%"><%
 
 WriteIntro();
 
-%></td><td width="65%" align="center"><%
+%></td><td width="58%" align="center"><%
 
 WriteAlmonasterBanner();
 

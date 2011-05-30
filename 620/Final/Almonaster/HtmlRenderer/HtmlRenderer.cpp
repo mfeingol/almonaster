@@ -9068,7 +9068,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             }
             iIcon = vValue.GetInteger();
             
-            iErrCode = pDatabase->ReadData (strGameEmpireData, iKey, GameDeadEmpires::EmpireKey, &vValue);
+            iErrCode = pDatabase->ReadData (strGameEmpireData, iKey, GameDeadEmpires::Key, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }

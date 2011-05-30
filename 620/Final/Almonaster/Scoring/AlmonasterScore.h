@@ -24,7 +24,7 @@ protected:
         float* pfAlmonasterScore, int* piSignificance, int* piNumAllies);
 
     int GetRelevantStatisticsFromPlanet (const char* pszGameMap, int iPlanetKey, float* pfScore,
-        int* piSignificance, int* piNumAllies, int* piLoserKey, unsigned int* piHashEmpireName,
+        int* piSignificance, int* piNumAllies, int* piLoserKey, int64* pi64EmpireSecretKey,
         Variant* pvPlanetName);
 
     int HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iGameNumber, int iPlanetKey, 

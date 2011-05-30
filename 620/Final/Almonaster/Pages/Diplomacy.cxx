@@ -24,6 +24,12 @@ INITIALIZE_EMPIRE
 
 INITIALIZE_GAME
 
+const unsigned int piColumns[] = {
+    GameEmpireDiplomacy::EmpireKey,
+    GameEmpireDiplomacy::DipOffer,
+    GameEmpireDiplomacy::CurrentStatus,
+};
+
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
 IHttpForm* pHttpForm;
@@ -907,12 +913,6 @@ if (iGameOptions & UPDATED) {
 } %></td></tr><%
 
 // Other empires
-const unsigned int piColumns[] = {
-    GameEmpireDiplomacy::EmpireKey,
-    GameEmpireDiplomacy::DipOffer,
-    GameEmpireDiplomacy::CurrentStatus,
-};
-
 iErrCode = pDatabase->ReadColumns (
     strGameEmpireDiplomacy,
     countof (piColumns),

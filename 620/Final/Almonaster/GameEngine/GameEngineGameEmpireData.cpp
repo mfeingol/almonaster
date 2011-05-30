@@ -142,15 +142,20 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
             Variant vIcon;
             if (GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienKey, &vIcon) == OK) {
 
-                pvTemp [GameDeadEmpires::EmpireKey] = iEmpireKey;
+                pvTemp [GameDeadEmpires::Key] = iEmpireKey;
                 pvTemp [GameDeadEmpires::Icon] = vIcon.GetInteger();
 
                 pvTemp [GameDeadEmpires::Update] = pguInfo == NULL ? 0 : pguInfo->iUpdate;
                 pvTemp [GameDeadEmpires::Reason] = rReason;
 
-                GET_GAME_DEAD_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
-                iErrCode = m_pGameData->InsertRow (strGameEmpireData, pvTemp);
-                Assert (iErrCode == OK);
+                if (GetEmpireProperty (
+                    iEmpireKey, SystemEmpireData::SecretKey, pvTemp + GameDeadEmpires::SecretKey
+                    ) == OK) {
+
+                    GET_GAME_DEAD_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
+                    iErrCode = m_pGameData->InsertRow (strGameEmpireData, pvTemp);
+                    Assert (iErrCode == OK);
+                }
             }
         }
     }
@@ -1486,7 +1491,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
     unsigned int iEmpires, iNumAllies = 0, iNumEmpires;
     bool bFlag;
 
-    Variant vTemp, vEmpireName, vHomeWorld, vNumUpdates;
+    Variant vTemp, vEmpireName, vHomeWorld, vNumUpdates, vSecretKey;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
@@ -1534,6 +1539,12 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
 
     // Get empire name
     iErrCode = GetEmpireName (iEmpireKey, &vEmpireName);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1611,14 +1622,10 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
 
         // Write hash
         iErrCode = m_pGameData->WriteData (
-            strGameMap, 
-            vHomeWorld.GetInteger(), 
-            GameMap::SurrenderEmpireNameHash, 
-            Algorithm::GetStringHashValue (
-                vEmpireName.GetCharPtr(), 
-                EMPIRE_NAME_HASH_BUCKETS, 
-                true
-                )
+            strGameMap,
+            vHomeWorld.GetInteger(),
+            GameMap::SurrenderEmpireSecretKey,
+            vSecretKey
             );
 
         if (iErrCode != OK) {

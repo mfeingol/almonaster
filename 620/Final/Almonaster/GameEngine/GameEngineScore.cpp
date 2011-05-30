@@ -199,11 +199,11 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
-    Variant vPlanetName, vHashEmpireName, vNukedKey;
+    Variant vPlanetName, vEmpireSecretKey, vNukedKey;
     
     char pszNukedName [MAX_EMPIRE_NAME_LENGTH + 1];
 
-    bool bEmpireLocked = false;
+    bool bEmpireLocked = false, bValid;
     NamedMutex nmEmpireMutex;
 
     iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Name, &vPlanetName);
@@ -230,13 +230,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     }
 
     // Give empire credit for nuke
-    iErrCode = m_pGameData->Increment (
-        SYSTEM_EMPIRE_DATA, 
-        iWinnerKey, 
-        SystemEmpireData::Nukes, 
-        1
-        );
-    
+    iErrCode = m_pGameData->Increment (SYSTEM_EMPIRE_DATA, iWinnerKey, SystemEmpireData::Nukes, 1);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -245,8 +239,8 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     iErrCode = m_pGameData->ReadData (
         strGameMap, 
         iPlanetKey, 
-        GameMap::SurrenderEmpireNameHash, 
-        &vHashEmpireName
+        GameMap::SurrenderEmpireSecretKey, 
+        &vEmpireSecretKey
         );
 
     if (iErrCode != OK) {
@@ -275,7 +269,13 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     }
     bEmpireLocked = true;
 
-    if (ValidateEmpireKey (vNukedKey.GetInteger(), vHashEmpireName.GetInteger())) {
+    iErrCode = CheckSecretKey (vNukedKey.GetInteger(), vEmpireSecretKey.GetInteger64(), &bValid, NULL, NULL);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (bValid) {
         iLoserKey = vNukedKey.GetInteger();
     } else {
 
@@ -1039,20 +1039,6 @@ Cleanup:
     }
 
     return iErrCode;
-}
-
-bool GameEngine::ValidateEmpireKey (int iLoserKey, unsigned int iHashEmpireName) {
-
-    bool bFlag;
-    Variant vEmpireName;
-
-    return DoesEmpireExist (iLoserKey, &bFlag, &vEmpireName) == OK && 
-        bFlag &&
-        Algorithm::GetStringHashValue (
-        vEmpireName.GetCharPtr(), 
-        EMPIRE_NAME_HASH_BUCKETS, 
-        true
-        ) == iHashEmpireName;
 }
 
 int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {

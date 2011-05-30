@@ -104,7 +104,7 @@ void HtmlRenderer::WriteGameMessages() {
 
             } else {
                 
-                if (g_pGameEngine->DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL) == OK && bExists) {
+                if (g_pGameEngine->DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL) == OK && bExists) {
 
                     if (g_pGameEngine->GetEmpireProperty (
                         iSrcEmpireKey, 
@@ -289,7 +289,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
         
     } else {
 
-        iErrCode = g_pGameEngine->DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL);
+        iErrCode = g_pGameEngine->DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL);
         if (iErrCode == OK && bExists) {
 
             iErrCode = g_pGameEngine->GetEmpireProperty (
