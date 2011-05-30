@@ -146,8 +146,10 @@ void HtmlRenderer::WriteGameListHeader (const char** ppszHeaders, size_t stNumHe
 int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo) {
     
     int iErrCode, iButtonKey = m_iButtonKey, iEmpireKey =  m_iEmpireKey, i, iNumUpdates, iNumActiveEmpires,
-        iSecondsSince, iSecondsUntil, iState, iGameOptions, iNumUnreadMessages,
+        iSecondsSince, iSecondsUntil, iState, iGameOptions,
         iNumUpdatesBeforeGameCloses, iEmpireGameOptions, iNumUpdatedEmpires = 0;
+
+    unsigned int iNumUnreadMessages;
 
     Seconds sFirstUpdateDelay = 0;
     
@@ -273,11 +275,14 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     OutputText ("</strong>)</font>");
     
     // Login
-    sprintf (pszLogin, "Login%i.%i", iGameClass, iGameNumber);
+    if (m_iPrivilege > GUEST) {
     
-    OutputText ("<p>");
-    WriteButtonString (iButtonKey, "Login", "Login", pszLogin);
-    
+        OutputText ("<p>");
+
+        sprintf (pszLogin, "Login%i.%i", iGameClass, iGameNumber);
+        WriteButtonString (iButtonKey, "Login", "Login", pszLogin);
+    }
+
     // Ready
     OutputText ("</td><td align=\"center\">");
     

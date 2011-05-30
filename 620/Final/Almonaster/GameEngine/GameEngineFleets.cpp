@@ -1066,29 +1066,27 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    const unsigned int piColumns[] = {
-        GameEmpireShips::FleetKey,
-        GameEmpireShips::BuiltThisUpdate
-    };
-    const unsigned int piFlags[] = {
-        0,
-        0
-    };
-    const Variant pvData[] = {
-        iFleetKey,
-        0
-    };
+    SearchColumn sc[2];
+    sc[0].iColumn = GameEmpireShips::FleetKey;
+    sc[0].iFlags = 0;
+    sc[0].vData = iFleetKey;
+    sc[0].vData2 = iFleetKey;
+
+    sc[1].iColumn = GameEmpireShips::BuiltThisUpdate;
+    sc[1].iFlags = 0;
+    sc[1].vData = 0;
+    sc[1].vData2 = 0;
+
+    SearchDefinition sd;
+    sd.iMaxNumHits = 0;
+    sd.iSkipHits = 0;
+    sd.iStartKey = NO_KEY;
+    sd.iNumColumns = countof (sc);
+    sd.pscColumns = sc;
 
     iErrCode = m_pGameData->GetSearchKeys (
         pszShips,
-        2,
-        piColumns,
-        piFlags,
-        pvData,
-        pvData,
-        NO_KEY,
-        0,
-        0,
+        sd,
         &piShipKey,
         &iNumShips,
         &iStopKey

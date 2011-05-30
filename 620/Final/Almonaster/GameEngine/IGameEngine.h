@@ -388,8 +388,6 @@ public:
 
     // Updates
     virtual int RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpdateTime, bool* pbGameOver) = 0;
-    
-    virtual int VerifyGameTables (int iGameClass, int iGameNumber) = 0;
 
     // Score
     virtual int ScanEmpiresOnScoreChanges() = 0;
@@ -520,17 +518,8 @@ public:
     virtual void LockSuperClasses() = 0;
     virtual void UnlockSuperClasses() = 0;
 
-    virtual int LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockEmpireSystemMessages (const NamedMutex& nmMutex) = 0;
-
     virtual int LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpireBridier (const NamedMutex& nmMutex) = 0;
-
-    virtual int LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockEmpireGameMessages (const NamedMutex& nmMutex) = 0;
-
-    virtual void LockEmpires() = 0;
-    virtual void UnlockEmpires() = 0;
 
     virtual void LockAlienIcons() = 0;
     virtual void UnlockAlienIcons() = 0;
@@ -725,8 +714,6 @@ public:
     virtual int SetEmpirePassword (int iEmpireKey, const char* pszPassword) = 0;
     virtual int ChangeEmpirePassword (int iEmpireKey, const char* pszPassword) = 0;
 
-    virtual int SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int iMaxNumSavedMessages) = 0;
-    
     virtual int UpdateEmpireQuote (int iEmpireKey, const char* pszQuote, bool* pbTruncated) = 0;
     virtual int UpdateEmpireVictorySneer (int iEmpireKey, const char* pszSneer, bool* pbTruncated) = 0;
 
@@ -748,9 +735,6 @@ public:
     virtual int SetEmpireThemeKey (int iEmpireKey, int iThemeKey) = 0;
 
     virtual int GetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int* piMaxNumSavedMessages) = 0;
-
-    virtual int DeleteEmpire (int iEmpireKey) = 0;
-    virtual int ObliterateEmpire (int iEmpireKey, int iKillerEmpire) = 0;
 
     virtual int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire) = 0;
 
@@ -798,6 +782,9 @@ public:
     virtual int GetEmpireProperty (int iEmpireKey, unsigned int iProperty, Variant* pvProperty) = 0;
     virtual int SetEmpireProperty (int iEmpireKey, unsigned int iProperty, const Variant& vProperty) = 0;
 
+    virtual int GetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool* pbOption) = 0;
+    virtual int SetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool bSet) = 0;
+
     //
     // Game Empire Data
     //
@@ -824,33 +811,8 @@ public:
     virtual int GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTarget) = 0;
     virtual int SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarget) = 0;
 
-    // System Messages
+    // Messages
     virtual int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, bool bBroadcast = false) = 0;
-    virtual int DeliverSystemMessage (int iEmpireKey, const Variant* pvData) = 0;
-
-    virtual int GetNumSystemMessages (int iEmpireKey, int* piNumber) = 0;
-    virtual int GetNumUnreadSystemMessages (int iEmpireKey, int* piNumber) = 0;
-    virtual int SendMessageToAll (int iEmpireKey, const char* pszMessage) = 0;
-    virtual int GetSavedSystemMessages (int iEmpireKey, int** ppiMessageKey, Variant*** pppvMessage, int* piNumMessages) = 0;
-
-    virtual int GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage, unsigned int** ppiMessageKey, int* piNumMessages) = 0;
-    
-    virtual int DeleteSystemMessage (int iEmpireKey, int iKey) = 0;
-
-    // Game Messages
-    virtual int GetNumGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumber) = 0;
-    virtual int GetNumUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumber) = 0;
-    virtual int GetSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiMessageKey,
-        Variant*** ppvData, int* piNumMessages) = 0;
-    
-    virtual int SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage, 
-        int iSource, bool bBroadcast, bool bUpdateMessage, const UTCTime& tSendTime) = 0;
-    
-    virtual int GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, Variant*** pppvMessage, 
-        int* piNumMessages) = 0;
-    
-    virtual int DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, int iMessageKey) = 0;
-    virtual int BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey, bool bAdmin) = 0;
 
     // Planets
     virtual int GetPlanetCoordinates (int iGameClass, int iGameNumber, int iPlanetKey, int* piPlanetX, int* piPlanetY) = 0;
@@ -909,11 +871,6 @@ public:
     // Top Lists
     virtual int GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsigned int* piNumEmpires) = 0;
 
-    // Search
-    virtual int PerformMultipleSearch (int iStartKey, int iSkipHits, int iMaxNumHits, int iNumCols, 
-        const unsigned int* piColumn, const unsigned int* piFlags, const Variant* pvData, const Variant* pvData2, 
-        int** ppiKey, int* piNumHits, int* piStopKey) = 0;
-
     // Updates
     virtual int CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUpdate) = 0;
     virtual int CheckAllGamesForUpdates() = 0;
@@ -932,9 +889,6 @@ public:
 
     // Options
     virtual int SetEmpireAutoUpdate (int iGameClass, int iGameNumber, int iEmpireKey, bool bAutoUpdate) = 0;
-
-    virtual int GetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumMessages) = 0;
-    virtual int SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iNumMessages) = 0;
 
     virtual int GetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool* pbIgnore) = 0;
     virtual int SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool bIgnore) = 0;

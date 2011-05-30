@@ -414,9 +414,12 @@ int Database::DoesRowExist (const char* pszTableName, unsigned int iKey, bool* p
 }
 
 int Database::InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int* piKey) {
-
+    
     int iErrCode = ERROR_UNKNOWN_TABLE_NAME;
-    *piKey = NO_KEY;
+
+    if (piKey != NULL) {
+        *piKey = NO_KEY;
+    }
 
     m_rwGlobalLock.WaitReader();
     
@@ -424,6 +427,7 @@ int Database::InsertRow (const char* pszTableName, const Variant* pvColVal, unsi
     if (pTable != NULL) {
 
         pTable->WaitWriter();
+
         iErrCode = pTable->InsertRow (pvColVal, piKey);
         pTable->SignalWriter();
         pTable->Release();
@@ -434,13 +438,26 @@ int Database::InsertRow (const char* pszTableName, const Variant* pvColVal, unsi
     return iErrCode;
 }
 
+int Database::InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int iKey) {
+    
+    int iErrCode = ERROR_UNKNOWN_TABLE_NAME;
 
-int Database::InsertRow (const char* pszTableName, const Variant* pvColVal) {
+    m_rwGlobalLock.WaitReader();
+    
+    Table* pTable = FindTable (pszTableName);
+    if (pTable != NULL) {
 
-    unsigned int iKey;
-    return InsertRow (pszTableName, pvColVal, &iKey);
+        pTable->WaitWriter();
+
+        iErrCode = pTable->InsertRow (pvColVal, iKey);
+        pTable->SignalWriter();
+        pTable->Release();
+    }
+
+    m_rwGlobalLock.SignalReader();
+
+    return iErrCode;
 }
-
 
 int Database::InsertRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows) {
 
@@ -725,14 +742,19 @@ int Database::GetEqualKeys (const char* pszTableName, unsigned int iColumn, cons
     return iErrCode;
 }
 
-int Database::GetSearchKeys (const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
-                             const unsigned int* piFlags, const Variant* pvData, const Variant* pvData2, 
-                             unsigned int iStartKey, unsigned int iSkipHits, unsigned int iMaxNumHits, 
+int Database::GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, 
                              unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) {
 
     int iErrCode = ERROR_UNKNOWN_TABLE_NAME;
-    *ppiKey = NULL;
+
+    if (ppiKey != NULL) {
+        *ppiKey = NULL;
+    }
     *piNumHits = 0;
+
+    if (piStopKey != NULL) {
+        *piStopKey = NO_KEY;
+    }
 
     m_rwGlobalLock.WaitReader();
     
@@ -740,8 +762,7 @@ int Database::GetSearchKeys (const char* pszTableName, unsigned int iNumColumns,
     if (pTable != NULL) {
 
         pTable->WaitReader();
-        iErrCode = pTable->GetSearchKeys (iNumColumns, piColumn, piFlags, pvData, pvData2, iStartKey, iSkipHits, 
-            iMaxNumHits, ppiKey, piNumHits, piStopKey);
+        iErrCode = pTable->GetSearchKeys (sdSearch, ppiKey, piNumHits, piStopKey);
         
         pTable->SignalReader();
         pTable->Release();

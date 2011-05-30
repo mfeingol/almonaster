@@ -19,40 +19,28 @@
 #include "GameEngine.h"
 
 // Input:
-// strTableName -> Name of table to be searched
-// iNumCols -> Number of columns to be tested
-// *pstrColName -> Array of names of columns to be tested
-// *pvData -> Array of data to test with (min if numeric, data string if string)
-// *pvData2 -> Another array of data (max if numeric, comparison type if string)
+// sdSearch -> Search definition
 //
 // Output:
 // **ppiKey -> Keys of empires found
 // *piNumHits -> Number of hits found
+// *piStopKey -> Key at which the search stopped
 //
 // Perform case insensitive searches on multiple categories of empire data
 
-int GameEngine::PerformMultipleSearch (int iStartKey, int iSkipHits, int iMaxNumHits, int iNumCols, 
-                                       const unsigned int* piColumn, const unsigned int* piFlags, 
-                                       const Variant* pvData, const Variant* pvData2, 
-                                       int** ppiKey, int* piNumHits, int* piStopKey) {
+int GameEngine::PerformMultipleSearch (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
+                                       unsigned int* piNumHits, unsigned int* piStopKey) {
 
     int iErrCode = m_pGameData->GetSearchKeys (
         SYSTEM_EMPIRE_DATA, 
-        iNumCols, 
-        piColumn,
-        piFlags,
-        pvData,
-        pvData2,
-        iStartKey,
-        iSkipHits, 
-        iMaxNumHits, 
-        (unsigned int**) ppiKey, 
-        (unsigned int*) piNumHits, 
-        (unsigned int*) piStopKey
+        sdSearch,
+        ppiKey, 
+        piNumHits, 
+        piStopKey
         );
 
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        return OK;
+        iErrCode = OK;
     }
 
     return iErrCode;

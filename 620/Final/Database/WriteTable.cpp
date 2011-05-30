@@ -86,13 +86,18 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, int iData) {
         return ERROR_TYPE_MISMATCH;
     }
 
+    int* piData = (int*) m_pCtx->GetData (iKey, iColumn);
+    if (*piData == iData) {
+        return OK;
+    }
+
     iErrCode = m_pCtx->IndexWriteData (iKey, iColumn, iData);
     if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
         Assert (false);
         return iErrCode;
     }
 
-    *(int*) m_pCtx->GetData (iKey, iColumn) = iData;
+    *piData = iData;
 
     return OK;
 }
@@ -118,13 +123,18 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, float fData)
         return ERROR_TYPE_MISMATCH;
     }
 
+    float* pfData = (float*) m_pCtx->GetData (iKey, iColumn);
+    if (*pfData == fData) {
+        return OK;
+    }
+
     iErrCode = m_pCtx->IndexWriteData (iKey, iColumn, fData);
     if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
         Assert (false);
         return iErrCode;
     }
 
-    *(float*) m_pCtx->GetData (iKey, iColumn) = fData;
+    *pfData = fData;
 
     return OK;
 }
@@ -226,7 +236,7 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const char* 
     iErrCode = m_pCtx->IndexWriteData (iKey, iColumn, pszData);
     if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
 
-        Assert (false);
+        Assert (iErrCode == ERROR_DUPLICATE_DATA);
 
         if (stSize == VARIABLE_LENGTH_STRING) {
 
@@ -284,13 +294,18 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const UTCTim
         return ERROR_TYPE_MISMATCH;
     }
 
+    UTCTime* ptData = (UTCTime*) m_pCtx->GetData (iKey, iColumn);
+    if (*ptData == tData) {
+        return OK;
+    }
+
     iErrCode = m_pCtx->IndexWriteData (iKey, iColumn, tData);
     if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
         Assert (false);
         return iErrCode;
     }
 
-    *(UTCTime*) m_pCtx->GetData (iKey, iColumn) = tData;
+    *ptData = tData;
 
     return OK;
 }
@@ -316,13 +331,18 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, int64 i64Dat
         return ERROR_TYPE_MISMATCH;
     }
 
+    int64* pi64Data = (int64*) m_pCtx->GetData (iKey, iColumn);
+    if (*pi64Data == i64Data) {
+        return OK;
+    }
+
     iErrCode = m_pCtx->IndexWriteData (iKey, iColumn, i64Data);
     if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
         Assert (false);
         return iErrCode;
     }
 
-    *(int64*) m_pCtx->GetData (iKey, iColumn) = i64Data;
+    *pi64Data = i64Data;
 
     return OK;
 }
@@ -995,21 +1015,25 @@ int WriteTable::WriteNot (unsigned int iKey, unsigned int iColumn) {
     return OK;
 }
 
-int WriteTable::InsertRow (const Variant* pvColVal) {
-
-    unsigned int iKey;
-    return InsertRow (pvColVal, &iKey);
+int WriteTable::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
+    return InsertRow (pvColVal, NO_KEY, piKey);
 }
 
-int WriteTable::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
+int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey) {
+    return InsertRow (pvColVal, iKey, NULL);
+}
+
+int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned int* piKey) {
 
     int iErrCode;
 
     Assert ((m_pCtx->IsOneRow() && m_pCtx->GetNumRows() == 0) || !m_pCtx->IsOneRow());
 
-    *piKey = NO_KEY;
+    if (piKey != NULL) {
+        *piKey = NO_KEY;
+    }
 
-    unsigned int i, iNumCols = m_pCtx->GetNumColumns(), iKey = NO_KEY, iLastColWritten = 0, iTerminatorRowKey;
+    unsigned int i, iNumCols = m_pCtx->GetNumColumns(), iLastColWritten = NO_KEY;
 
     // TODOTODO - deadlock check
 #ifdef _DEBUG
@@ -1019,27 +1043,38 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
     m_pCtx->Lock();
 #endif
 
-    iErrCode = m_pCtx->ExpandMetaDataIfNecessary (1);
+    // Get row size
+    size_t stRowSize = m_pCtx->GetRowSize();
+
+    // Get terminator key
+    unsigned int iTerminatorRowKey = m_pCtx->GetTerminatorRowKey();
+
+    // Select key
+    if (iKey == NO_KEY) {
+
+        iKey = m_pCtx->FindFirstInvalidRow();
+        if (iKey == NO_KEY) {
+            iKey = iTerminatorRowKey;
+        }
+    }
+
+    unsigned int iExpandRows = 1;
+    if (iKey >= iTerminatorRowKey) {
+        iExpandRows = iKey - iTerminatorRowKey + 1;
+    }
+
+    iErrCode = m_pCtx->ExpandMetaDataIfNecessary (max (iKey + 1, iTerminatorRowKey));
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    size_t stRowSize = m_pCtx->GetRowSize();
-
-    // Get terminator key
-    iTerminatorRowKey = m_pCtx->GetTerminatorRowKey();
-
-    // Select key
-    iKey = m_pCtx->FindFirstInvalidRow();
-    if (iKey == NO_KEY) {
-        iKey = iTerminatorRowKey;
-    }
-
     if (m_pCtx->GetRowOffset (iKey) + stRowSize > m_pCtx->GetEndOfTable()) {
-        
+     
+        Assert (iKey >= iTerminatorRowKey);
+
         // Not enough room for new row - resize table space
-        iErrCode = m_pCtx->Resize (1);
+        iErrCode = m_pCtx->Resize (iExpandRows);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -1047,6 +1082,12 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
     }
 
     Assert (m_pCtx->GetRowOffset (iKey) + stRowSize <= m_pCtx->GetEndOfTable());
+
+    iErrCode = m_pCtx->IndexInsertRow (iKey, pvColVal);
+    if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
+        Assert (iErrCode == ERROR_DUPLICATE_DATA);
+        return iErrCode;
+    }
 
     for (i = 0; i < iNumCols; i ++) {
 
@@ -1165,16 +1206,10 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
         iLastColWritten = i;
     }
 
-    iErrCode = m_pCtx->IndexInsertRow (iKey, pvColVal);
-    if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
-        Assert (false);
-        goto OnError;
-    }
-
     m_pCtx->IncrementNumRows (1);
 
-    if (iKey == iTerminatorRowKey) {
-        m_pCtx->IncrementTerminatorRowKey (1);
+    if (iKey >= iTerminatorRowKey) {
+        m_pCtx->IncrementTerminatorRowKey (iExpandRows);
     }
 
     m_pCtx->SetValidRow (iKey);
@@ -1183,12 +1218,18 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
     m_pTable->CheckIntegrity();
 #endif
 
-    *piKey = iKey;
+    if (piKey != NULL) {
+        *piKey = iKey;
+    }
+
     return OK;
 
 OnError:
 
-    if (m_pCtx->HasVariableLengthData()) {
+    int iIgnoreErrorCode = m_pCtx->IndexDeleteRow (iKey, pvColVal);
+    Assert (iIgnoreErrorCode == OK || iIgnoreErrorCode == ERROR_COLUMN_NOT_INDEXED);
+
+    if (m_pCtx->HasVariableLengthData() && iLastColWritten != NO_KEY) {
 
         // Free allocated blocks
         for (i = 0; i <= iLastColWritten; i ++) {
@@ -1202,6 +1243,10 @@ OnError:
             }
         }
     }
+
+#ifdef _DEBUG
+    m_pTable->CheckIntegrity();
+#endif
 
     return iErrCode;
 }
@@ -1223,7 +1268,7 @@ int WriteTable::InsertRows (const Variant* pvColVal, unsigned int iNumRows) {
 
     for (i = 0; i < iNumRows; i ++) {
 
-        iErrCode = InsertRow (pvColVal + i * iNumCols, piKey + i);
+        iErrCode = InsertRow (pvColVal + i * iNumCols, NO_KEY, piKey + i);
         if (iErrCode != OK) {
 
             Assert (false);
@@ -1280,7 +1325,7 @@ int WriteTable::InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumR
         }
     }
 
-    iErrCode = m_pCtx->ExpandMetaDataIfNecessary (iNumRows);
+    iErrCode = m_pCtx->ExpandMetaDataIfNecessary (iNewTerminatorKey + iNumRows);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;

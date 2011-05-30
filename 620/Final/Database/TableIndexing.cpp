@@ -14,17 +14,20 @@ int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, int i
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_INT);
+
     iOldData = *(int*) GetData (iKey, iColumn);
-    if (iOldData == iData) {
-        return OK;
+    Assert (iOldData != iData);
+
+    iErrCode = IndexCheckUniqueData<int> (iData, iIndex, iKey, iColumn);
+    if (iErrCode != OK) {
+        return iErrCode;
     }
 
     iNumBuckets = GetNumIndexBuckets();
 
-    // Hash new data
+    // Hash data
     iNewHash = Algorithm::GetIntHashValue (iData, iNumBuckets);
-
-    // Hash old data
     iOldHash = Algorithm::GetIntHashValue (iOldData, iNumBuckets);
 
     if (iOldHash == iNewHash) {
@@ -56,17 +59,20 @@ int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, float
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_FLOAT);
+
     fOldData = *(float*) GetData (iKey, iColumn);
-    if (fOldData == fData) {
-        return OK;
+    Assert (fOldData != fData);
+
+    iErrCode = IndexCheckUniqueData<float> (fData, iIndex, iKey, iColumn);
+    if (iErrCode != OK) {
+        return iErrCode;
     }
 
     iNumBuckets = GetNumIndexBuckets();
 
-    // Hash new data
+    // Hash data
     iNewHash = Algorithm::GetFloatHashValue (fData, iNumBuckets);
-
-    // Hash old data
     iOldHash = Algorithm::GetFloatHashValue (fOldData, iNumBuckets);
 
     if (iOldHash == iNewHash) {
@@ -98,19 +104,34 @@ int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, const
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_STRING);
+
+    bool bCaseInsensitive = !(GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE);
+
     pszOldData = GetStringData (iKey, iColumn);
-    if (String::StrCmp (pszOldData, pszData) == 0) {
-        return OK;
+
+    if (bCaseInsensitive) {
+
+        if (String::StriCmp (pszOldData, pszData) == 0) {
+            return OK;
+        }
+
+    } else {
+
+        if (String::StrCmp (pszOldData, pszData) == 0) {
+            return OK;
+        }
+    }
+
+    iErrCode = IndexCheckUniqueData<const char*> (pszData, iIndex, iKey, iColumn);
+    if (iErrCode != OK) {
+        return iErrCode;
     }
 
     iNumBuckets = GetNumIndexBuckets();
 
-    bool bCaseInsensitive = !(GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE);
-
-    // Hash new data
+    // Hash data
     iNewHash = Algorithm::GetStringHashValue (pszData, iNumBuckets, bCaseInsensitive);
-
-    // Hash old data
     iOldHash = Algorithm::GetStringHashValue (pszOldData, iNumBuckets, bCaseInsensitive);
 
     if (iOldHash == iNewHash) {
@@ -142,17 +163,20 @@ int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, const
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
-    tOldData = *(UTCTime*) GetData (iKey, iColumn);
-    if (tOldData == tData) {
-        return OK;
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_TIME);
+
+    iErrCode = IndexCheckUniqueData<const UTCTime&> (tData, iIndex, iKey, iColumn);
+    if (iErrCode != OK) {
+        return iErrCode;
     }
+
+    tOldData = *(UTCTime*) GetData (iKey, iColumn);
+    Assert (tOldData != tData);
 
     iNumBuckets = GetNumIndexBuckets();
 
-    // Hash new data
+    // Hash data
     iNewHash = Time::GetHashValue (tData, iNumBuckets);
-
-    // Hash old data
     iOldHash = Time::GetHashValue (tOldData, iNumBuckets);
 
     if (iOldHash == iNewHash) {
@@ -184,10 +208,15 @@ int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, int64
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
-    i64OldData = *(int64*) GetData (iKey, iColumn);
-    if (i64OldData == i64Data) {
-        return OK;
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_INT64);
+
+    iErrCode = IndexCheckUniqueData<int64> (i64Data, iIndex, iKey, iColumn);
+    if (iErrCode != OK) {
+        return iErrCode;
     }
+
+    i64OldData = *(int64*) GetData (iKey, iColumn);
+    Assert (i64OldData != i64Data);
 
     iNumBuckets = GetNumIndexBuckets();
 
@@ -222,6 +251,13 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, int iData) {
     iIndex = GetIndexForColumn (iColumn);
     if (iIndex == NO_KEY) {
         return ERROR_COLUMN_NOT_INDEXED;
+    }
+
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_INT);
+
+    // If the column has a unique-data index, forget it
+    if (GetIndexFlags (iIndex) & INDEX_UNIQUE_DATA) {
+        return ERROR_DUPLICATE_DATA;
     }
 
     iNumBuckets = GetNumIndexBuckets();
@@ -313,6 +349,13 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, float fData) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_FLOAT);
+
+    // If the column has a unique-data index, forget it
+    if (GetIndexFlags (iIndex) & INDEX_UNIQUE_DATA) {
+        return ERROR_DUPLICATE_DATA;
+    }
+
     iNumBuckets = GetNumIndexBuckets();
 
     // Get new hash
@@ -400,6 +443,13 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, const UTCTime& tData) 
     iIndex = GetIndexForColumn (iColumn);
     if (iIndex == NO_KEY) {
         return ERROR_COLUMN_NOT_INDEXED;
+    }
+
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_TIME);
+
+    // If the column has a unique-data index, forget it
+    if (GetIndexFlags (iIndex) & INDEX_UNIQUE_DATA) {
+        return ERROR_DUPLICATE_DATA;
     }
 
     iNumBuckets = GetNumIndexBuckets();
@@ -491,6 +541,13 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, int64 i64Data) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_INT64);
+
+    // If the column has a unique-data index, forget it
+    if (GetIndexFlags (iIndex) & INDEX_UNIQUE_DATA) {
+        return ERROR_DUPLICATE_DATA;
+    }
+
     iNumBuckets = GetNumIndexBuckets();
 
     // Get new hash
@@ -580,6 +637,58 @@ int TableContext::IndexInsertRow (unsigned int iKey, const Variant* pvData) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    // Uniqueness check
+    for (i = 0; i < iNumIndexes; i ++) {
+
+        unsigned int iFlags = GetIndexFlags (i);
+
+        if (iFlags & INDEX_UNIQUE_DATA) {
+
+            unsigned int iDupKey;
+
+            iColumn = m_pTemplate->TemplateData.IndexColumn[i];
+            Assert (iColumn != NO_KEY);
+            Assert (m_pTemplate->TemplateData.Type [iColumn] == pvData[iColumn].GetType());
+
+            switch (m_pTemplate->TemplateData.Type [iColumn]) {
+
+            case V_INT:
+                iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetInteger(), &iDupKey);
+                break;
+
+            case V_TIME:
+                iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetUTCTime(), &iDupKey);
+                break;
+
+            case V_FLOAT:
+                iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetFloat(), &iDupKey);
+                break;
+
+            case V_STRING:
+                iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetCharPtr(), !(iFlags & INDEX_CASE_SENSITIVE), &iDupKey);
+                break;
+
+            case V_INT64:
+                iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetInteger64(), &iDupKey);
+                break;
+
+            default:
+                iErrCode = ERROR_DATA_CORRUPTION;
+            }
+
+            if (iErrCode == OK) {
+                return ERROR_DUPLICATE_DATA;
+            }
+
+            if (iErrCode != ERROR_DATA_NOT_FOUND) {
+                Assert (false);
+                return iErrCode;
+            }
+            iErrCode = OK;
+        }
+    }
+
+    // Insertion
     for (i = 0; i < iNumIndexes; i ++) {
 
         bool bCaseInsensitive = !(GetIndexFlags (i) & INDEX_CASE_SENSITIVE);
@@ -620,6 +729,10 @@ int TableContext::IndexInsertDuplicateRows (unsigned int iNumRows, const unsigne
     unsigned int i;
 
     Assert (iNumRows > 0);
+
+    if (iNumRows > 1 && HasUniqueDataIndex()) {
+        return ERROR_DUPLICATE_DATA;
+    }
 
     for (i = 0; i < iNumRows; i ++) {
 
@@ -721,6 +834,8 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, int iData, unsigned in
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_INT);
+
     Offset oOffset = GetIndexOffset (iIndex);
 
     iHash = Algorithm::GetIntHashValue (iData, GetNumIndexBuckets());
@@ -762,6 +877,8 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, float fData, unsigned 
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_FLOAT);
+
     Offset oOffset = GetIndexOffset (iIndex);
     
     iHash = Algorithm::GetFloatHashValue (fData, GetNumIndexBuckets());
@@ -794,6 +911,20 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, float fData, unsigned 
     return ERROR_DATA_NOT_FOUND;
 }
 
+int TableContext::IndexGetFirstKey (unsigned int iColumn, const char* pszData, unsigned int* piKey) {
+
+    unsigned int iIndex;
+
+    iIndex = GetIndexForColumn (iColumn);
+    if (iIndex == NO_KEY) {
+        return ERROR_COLUMN_NOT_INDEXED;
+    }
+
+    bool bCaseInsensitive = !(GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE);
+
+    return IndexGetFirstKey (iColumn, pszData, bCaseInsensitive, piKey);
+}
+
 int TableContext::IndexGetFirstKey (unsigned int iColumn, const char* pszData, bool bCaseInsensitive, 
                                     unsigned int* piKey) {
     
@@ -803,6 +934,8 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, const char* pszData, b
     if (iIndex == NO_KEY) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
+
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_STRING);
 
     if (bCaseInsensitive == ((GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE) != 0)) {
         return ERROR_COLUMN_NOT_INDEXED;
@@ -849,6 +982,8 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, const UTCTime& tData, 
     if (iIndex == NO_KEY) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
+
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_TIME);
     
     Offset oOffset = GetIndexOffset (iIndex);
 
@@ -890,6 +1025,8 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, int64 i64Data, unsigne
     if (iIndex == NO_KEY) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
+
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_INT64);
 
     Offset oOffset = GetIndexOffset (iIndex);
     
@@ -933,7 +1070,10 @@ int TableContext::IndexGetEqualKeys (unsigned int iColumn, const Variant& vData,
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
-    if (bCaseInsensitive == ((GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE) != 0)) {
+    Assert (m_pTemplate->TemplateData.Type[iColumn] == vData.GetType());
+
+    if (vData.GetType() == V_STRING &&
+        bCaseInsensitive == ((GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE) != 0)) {
         return ERROR_COLUMN_NOT_INDEXED;
     }
 
@@ -1015,6 +1155,9 @@ int TableContext::IndexGetEqualKeys (unsigned int iColumn, const Variant& vData,
         *piNumKeys = iNumKeys;
 
         if (ppiKey != NULL) {
+
+            // Sort the keys and return
+            Algorithm::QSortAscending<unsigned int> (piKey, iNumKeys);
             *ppiKey = piKey;
         }
 
@@ -1029,6 +1172,136 @@ int TableContext::IndexGetEqualKeys (unsigned int iColumn, const Variant& vData,
     return ERROR_DATA_NOT_FOUND;
 }
 
+
+int TableContext::GetInitialSearchKeys (const SearchDefinition& sdSearch, 
+                                        unsigned int** ppiKeys, unsigned int* piNumKeys) {
+
+    int iErrCode;
+
+    unsigned int iNumIndexes = GetNumIndexColumns();
+    if (iNumIndexes == 0) {
+        return ERROR_COLUMN_NOT_INDEXED;
+    }
+
+    *ppiKeys = NULL;
+    *piNumKeys = 0;
+
+    unsigned int i, j, iNumSearchCols = sdSearch.iNumColumns;
+
+    for (i = 0; i < iNumSearchCols; i ++) {
+
+        const SearchColumn& sc = sdSearch.pscColumns[i];
+        const unsigned int iColumn = sc.iColumn;
+
+        if (iColumn == NO_KEY) {
+            continue;
+        }
+
+        const VariantType vt = sc.vData.GetType();
+        Assert (m_pTemplate->TemplateData.Type[iColumn] == vt);
+
+        bool bSearchCI = false;
+
+        // Ensure exact search
+        if (vt == V_STRING) {
+            
+            if (!(sc.iFlags & SEARCH_EXACT)) {
+                continue;
+            }
+
+        } else {
+
+            if (sc.vData != sc.vData2) {
+                continue;
+            }
+        }
+
+        // Ensure an index exists for the column
+        const unsigned int iIndex = GetIndexForColumn (iColumn);
+        if (iIndex == NO_KEY) {
+            continue;
+        }
+
+        // Ensure string columns match the case sensitivity of the index
+        if (vt == V_STRING) {
+
+            const bool bIndexCI = !(GetIndexFlags (iIndex) & INDEX_CASE_SENSITIVE);
+
+            bSearchCI = !(sc.iFlags & SEARCH_CASE_SENSITIVE);
+            if (bSearchCI != bIndexCI) {
+                continue;
+            }
+        }
+
+        // We found a usable index for a search column. Do the query
+        unsigned int* piKeys = NULL, iNumKeys;
+
+        iErrCode = IndexGetEqualKeys (iColumn, sc.vData, bSearchCI, &piKeys, &iNumKeys);
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+
+        else if (iErrCode == OK) {
+
+            // Blow away everything before the start key
+            // TODO - use binary search
+            unsigned int iStartKey = sdSearch.iStartKey;
+            if (iStartKey != NO_KEY) {
+
+                for (j = 0; j < iNumKeys; j ++) {
+
+                    if (piKeys[j] >= iStartKey) {
+                        break;
+                    }
+                }
+
+                if (j == iNumKeys) {
+
+                    iErrCode = ERROR_DATA_NOT_FOUND;
+                    delete [] piKeys;
+                    piKeys = NULL;
+                    iNumKeys = 0;
+
+                } else {
+
+                    iNumKeys -= j;
+                    memmove (piKeys, piKeys + j, iNumKeys * sizeof (unsigned int));
+                }
+            }
+
+            *ppiKeys = piKeys;
+            *piNumKeys = iNumKeys;
+        }
+
+        return iErrCode;
+    }
+
+    return ERROR_COLUMN_NOT_INDEXED;
+}
+
+template <class T> int TableContext::IndexCheckUniqueData (T tData, unsigned int iIndex, unsigned int iKey, 
+                                                           unsigned int iColumn) {
+    int iErrCode;
+    unsigned int iDupKey;
+
+    Assert (iIndex != NO_KEY);
+    if (!(GetIndexFlags (iIndex) & INDEX_UNIQUE_DATA)) {
+        return OK;
+    }
+
+    iErrCode = IndexGetFirstKey (iColumn, tData, &iDupKey);
+    if (iErrCode == OK) {
+        Assert (iDupKey != NO_KEY);
+        return ERROR_DUPLICATE_DATA;
+    }
+
+    if (iErrCode != ERROR_DATA_NOT_FOUND) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    return OK;
+}
 
 //
 // Utilities
@@ -1198,8 +1471,6 @@ unsigned int TableContext::GetIndexForColumn (unsigned int iColumn) {
             iIndex = iLeft;
         }
     }
-
-    // TODO - remove this 
 
 #ifdef _DEBUG
 

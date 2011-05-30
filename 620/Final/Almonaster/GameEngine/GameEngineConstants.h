@@ -286,6 +286,24 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 #define REFRESH_UNSTARTED_GAME_PAGES        (0x00000004)
 #define DISBAND_EMPTY_FLEETS_ON_UPDATE      (0x00000008)
 #define FLEETS_COLLAPSED_BY_DEFAULT         (0x00000010)
+#define EMPIRE_ACCEPTED_TOS                 (0x00000020)
+
+// SystemEmpireData::Gender
+enum EmpireGender {
+    EMPIRE_GENDER_UNKNOWN,
+    EMPIRE_GENDER_MALE,
+    EMPIRE_GENDER_FEMALE,
+};
+
+#define EMPIRE_NUM_GENDERS                  (3)
+
+extern const EmpireGender EMPIRE_GENDER[];
+extern const char* const EMPIRE_GENDER_STRING[];
+
+// SystemEmpireData::Age
+#define EMPIRE_AGE_UNKNOWN                  (-999999)
+#define EMPIRE_AGE_MINIMUM                  (13)
+#define EMPIRE_AGE_MAXIMUM                  (133)
 
 // GameEmpireData::MiniMaps
 enum MiniMaps {

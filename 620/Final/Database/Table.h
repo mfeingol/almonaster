@@ -124,7 +124,9 @@ public:
     int GetNumRows (unsigned int* piNumRows);
     int DoesRowExist (unsigned int iKey, bool* pbExists);
 
-    int InsertRow (const Variant* pvColVal, unsigned int* piKey);
+    int InsertRow (const Variant* pvColVal, unsigned int* piKey = NULL);
+    int InsertRow (const Variant* pvColVal, unsigned int iKey);
+
     int InsertRows (const Variant* pvColVal, unsigned int iNumCols);
     int InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumRows);
 
@@ -147,9 +149,8 @@ public:
     int GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int** ppiKey, 
         unsigned int* piNumKeys);
 
-    int GetSearchKeys (unsigned int iNumColumns, const unsigned int* piColumn, const unsigned int* piFlags,
-        const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, unsigned int iSkipHits, 
-        unsigned int iMaxNumHits, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, 
+        unsigned int* piStopKey);
 
     int ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& vData, bool bCaseInsensitive, 
         unsigned int iReadColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys);

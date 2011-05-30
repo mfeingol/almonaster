@@ -4130,18 +4130,29 @@ int GameEngine::GetUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, uns
                                                     unsigned int iEmpireKey, unsigned int iPlanetKey,
                                                     unsigned int** ppiShipKey, unsigned int* piNumShips) {
     int iErrCode;
-    IReadTable* pIReadShips = NULL;
 
+    IReadTable* pIReadShips = NULL;
     unsigned int* piShipKey = NULL, iNumHits = 0, iStopKey;
 
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
 
-    const unsigned int piColumns[] = { GameEmpireShips::CurrentPlanet, GameEmpireShips::FleetKey };
-    const unsigned int piFlags[] = { 0, 0 };
-    const Variant pvData[] = { iPlanetKey, NO_KEY };
+    SearchColumn sc[2];
+    sc[0].iColumn = GameEmpireShips::CurrentPlanet;
+    sc[0].iFlags = 0;
+    sc[0].vData = iPlanetKey;
+    sc[0].vData2 = iPlanetKey;
 
-    Assert (countof (piColumns) == countof (piFlags));
-    Assert (countof (piColumns) == countof (pvData));
+    sc[1].iColumn = GameEmpireShips::FleetKey;
+    sc[1].iFlags = 0;
+    sc[1].vData = NO_KEY;
+    sc[1].vData2 = NO_KEY;
+
+    SearchDefinition sd;
+    sd.iMaxNumHits = 0;
+    sd.iSkipHits = 0;
+    sd.iStartKey = NO_KEY;
+    sd.iNumColumns = countof (sc);
+    sd.pscColumns = sc;
 
     if (ppiShipKey != NULL) {
         *ppiShipKey = NULL;
@@ -4155,14 +4166,7 @@ int GameEngine::GetUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, uns
     }
 
     iErrCode = pIReadShips->GetSearchKeys (
-        countof (piColumns),
-        piColumns,
-        piFlags,
-        pvData,
-        pvData,
-        NO_KEY,
-        0,
-        0,
+        sd,
         &piShipKey,
         &iNumHits,
         &iStopKey
@@ -4224,12 +4228,24 @@ int GameEngine::HasUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, uns
 
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
 
-    const unsigned int piColumns[] = { GameEmpireShips::CurrentPlanet, GameEmpireShips::FleetKey };
-    const unsigned int piFlags[] = { 0, 0 };
-    const Variant pvData[] = { iPlanetKey, NO_KEY };
+    SearchColumn sc[2];
 
-    Assert (countof (piColumns) == countof (piFlags));
-    Assert (countof (piColumns) == countof (pvData));
+    sc[0].iColumn = GameEmpireShips::FleetKey;
+    sc[0].iFlags = 0;
+    sc[0].vData = NO_KEY;
+    sc[0].vData2 = NO_KEY;
+
+    sc[1].iColumn = GameEmpireShips::CurrentPlanet;
+    sc[1].iFlags = 0;
+    sc[1].vData = iPlanetKey;
+    sc[1].vData2 = iPlanetKey;
+
+    SearchDefinition sd;
+    sd.iMaxNumHits = 0;
+    sd.iSkipHits = 0;
+    sd.iStartKey = NO_KEY;
+    sd.iNumColumns = countof (sc);
+    sd.pscColumns = sc;
 
     *pbFlag = false;
 
@@ -4240,14 +4256,7 @@ int GameEngine::HasUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, uns
     }
 
     iErrCode = pIReadShips->GetSearchKeys (
-        countof (piColumns),
-        piColumns,
-        piFlags,
-        pvData,
-        pvData,
-        NO_KEY,
-        0,
-        0,
+        sd,
         &piShipKey,
         &iNumHits,
         &iStopKey

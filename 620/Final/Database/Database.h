@@ -39,6 +39,7 @@ DATABASE_EXPORT extern const Uuid IID_ITemplate;
 
 // Index flags
 #define INDEX_CASE_SENSITIVE (0x00000001)
+#define INDEX_UNIQUE_DATA    (0x00000002)
 
 struct TemplateDescription {
     char* Name;
@@ -61,6 +62,23 @@ struct DatabaseStatistics {
     FileHeapStatistics fhsMetaStats;
     FileHeapStatistics fhsVarlenStats;
     FileHeapStatistics fhsTemplateStats;
+};
+
+struct SearchColumn {
+
+    unsigned int iColumn;
+    unsigned int iFlags;
+    Variant vData;
+    Variant vData2;
+};
+
+struct SearchDefinition {
+
+    unsigned int iStartKey;
+    unsigned int iSkipHits;
+    unsigned int iMaxNumHits;
+    unsigned int iNumColumns;
+    SearchColumn* pscColumns;
 };
 
 //
@@ -120,7 +138,7 @@ struct DatabaseStatistics {
 #define ERROR_DATABASE_ALREADY_INITIALIZED (-1000032)
 #define ERROR_DATABASE_HAS_NO_BACKUPS (-1000033)
 #define ERROR_COULD_NOT_CREATE_TEMPLATE_TABLE_DIRECTORY (-1000034)
-
+#define ERROR_DUPLICATE_DATA (-1000035)
 #define ERROR_TABLE_COULD_NOT_BE_INITIALIZED (-1000036)
 #define ERROR_TEMPLATE_COULD_NOT_BE_INITIALIZED (-1000037)
 
@@ -201,9 +219,8 @@ public:
     virtual int GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, 
         unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
 
-    virtual int GetSearchKeys (unsigned int iNumColumns, const unsigned int* piColumn, const unsigned int* piFlags,
-        const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, unsigned int iSkipHits, 
-        unsigned int iMaxNumHits, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+    virtual int GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
+        unsigned int* piNumHits, unsigned int* piStopKey) = 0;
 
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, int* piData) = 0;
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, float* pfData) = 0;
@@ -279,8 +296,8 @@ public:
     virtual int WriteColumn (unsigned int iColumn, int64 i64Data) = 0;
     virtual int WriteColumn (unsigned int iColumn, const Variant& vData) = 0;
 
-    virtual int InsertRow (const Variant* pvColVal, unsigned int* piKey) = 0;
-    virtual int InsertRow (const Variant* pvColVal) = 0;
+    virtual int InsertRow (const Variant* pvColVal, unsigned int* piKey = NULL) = 0;
+    virtual int InsertRow (const Variant* pvColVal, unsigned int iKey) = 0;
 
     virtual int InsertRows (const Variant* pvColVal, unsigned int iNumRows) = 0;
     virtual int InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumRows) = 0;
@@ -382,8 +399,9 @@ public:
     virtual unsigned int GetNumRows (const char* pszTableName, unsigned int* piNumRows) = 0;
     virtual int DoesRowExist (const char* pszTableName, unsigned int iKey, bool* pbExists) = 0;
 
-    virtual int InsertRow (const char* pszTableName, const Variant* pvColVal) = 0;
-    virtual int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int* piKey) = 0;
+    virtual int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int* piKey = NULL) = 0;
+    virtual int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int iKey) = 0;
+
     virtual int InsertRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows) = 0;
     virtual int InsertDuplicateRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows) = 0;
 
@@ -412,9 +430,7 @@ public:
     virtual int GetEqualKeys (const char* pszTableName, unsigned int iColumn, const Variant& vData, 
         bool bCaseInsensitive, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
     
-    virtual int GetSearchKeys (const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn,
-        const unsigned int* piFlags, const Variant* pvData, const Variant* pvData2, 
-        unsigned int iStartKey, unsigned int iSkipHits, unsigned int iMaxNumHits, unsigned int** ppiKey, 
+    virtual int GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, 
         unsigned int* piNumHits, unsigned int* piStopKey) = 0;
 
     virtual int GetTableForReading (const char* pszTableName, IReadTable** ppTable) = 0;

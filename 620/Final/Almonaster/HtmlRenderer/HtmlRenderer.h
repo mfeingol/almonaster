@@ -111,16 +111,18 @@ enum PageId {
     GAME_PROFILE_VIEWER = 29,
     GAME_CONTRIBUTIONS = 30,
     GAME_CREDITS = 31,
-    QUIT = 32,
-    LATEST_NUKES = 33,
-    SPECTATOR_GAMES = 34,
-    SYSTEM_CONTRIBUTIONS = 35,
-    SYSTEM_CREDITS = 36,
-    LATEST_GAMES = 37,
-    TOURNAMENT_ADMINISTRATOR = 38,
-    PERSONAL_TOURNAMENTS = 39,
-    TOURNAMENTS = 40,
-    MAX_PAGE_ID = 41,
+    GAME_TERMS_OF_SERVICE = 32,
+    QUIT = 33,
+    LATEST_NUKES = 34,
+    SPECTATOR_GAMES = 35,
+    SYSTEM_CONTRIBUTIONS = 36,
+    SYSTEM_CREDITS = 37,
+    LATEST_GAMES = 38,
+    TOURNAMENT_ADMINISTRATOR = 39,
+    PERSONAL_TOURNAMENTS = 40,
+    TOURNAMENTS = 41,
+    SYSTEM_TERMS_OF_SERVICE = 42,
+    MAX_PAGE_ID = 43,
 };
 
 #define FIRST_GAME_PAGE                     INFO
@@ -293,6 +295,7 @@ enum ButtonId {
     BID_MINIBUILD,
     BID_PLUS,
     BID_MINUS,
+    BID_TOS,
     BID_LAST,
 };
 
@@ -310,6 +313,8 @@ enum SearchFieldType {
     SEARCHFIELD_DATE,
     SEARCHFIELD_STRING,
     SEARCHFIELD_PRIVILEGE,
+    SEARCHFIELD_AGE,
+    SEARCHFIELD_GENDER,
 };
 
 struct SearchField {
@@ -325,7 +330,7 @@ struct SearchField {
 
 extern const SearchField g_AdvancedSearchFields[];
 
-#define MAX_NUM_SEARCH_COLUMNS 29
+#define MAX_NUM_SEARCH_COLUMNS 31
 
 //
 // Globals
@@ -663,6 +668,10 @@ public:
     void WriteIntroLower();
     void WriteServerNewsFile();
 
+    void WriteTOS();
+    void WriteTOSFile();
+    void WriteConfirmTOSDecline();
+
     bool UpdateIntroUpper (const char* pszText);
     bool UpdateIntroLower (const char* pszText);
     bool UpdateServerNews (const char* pszText);
@@ -733,37 +742,29 @@ public:
 
     // Search interface
     int HandleSearchSubmission (
-        unsigned int* piSearchColName, 
-        Variant* pvSearchColData1,
-        Variant* pvSearchColData2,
+        SearchDefinition& sd,
+
         const char** pszFormName,
         const char** pszColName1,
         const char** pszColName2,
-
-        int* piNumSearchColumns,
         
-        int** ppiSearchEmpireKey,
-        int* piNumSearchEmpires,
-        int* piLastKey,
-        int* piMaxNumHits
+        unsigned int** ppiSearchEmpireKey,
+        unsigned int* piNumSearchEmpires,
+        unsigned int* piLastKey
         );
 
     void RenderSearchForms (bool fAdvanced);
 
     void RenderSearchResults (
-        unsigned int* piSearchColName, 
-        Variant* pvSearchColData1,
-        Variant* pvSearchColData2,
+        SearchDefinition& sd,
+
         const char** pszFormName,
         const char** pszColName1,
         const char** pszColName2,
-        
-        int iNumSearchColumns,
-        
-        int* piSearchEmpireKey,
-        int iNumSearchEmpires,
-        int iLastKey,
-        int iMaxNumHits
+
+        unsigned int* piSearchEmpireKey,
+        unsigned int iNumSearchEmpires,
+        unsigned int iLastKey
         );
 
     void RenderEmpireInformation (int iGameClass, int iGameNumber, bool bAdmin);
@@ -880,168 +881,179 @@ public:
     int Render_TournamentAdministrator();
     int Render_PersonalTournaments();
     int Render_Tournaments();
+    int Render_GameTos();
+    int Render_SystemTos();
 };
 
 // Function Pointers
-static int THREAD_CALL Fxn_ActiveGameList (void* pThis) {
+static inline int THREAD_CALL Fxn_ActiveGameList (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_ActiveGameList();
 }
 
-static int THREAD_CALL Fxn_Login (void* pThis) {
+static inline int THREAD_CALL Fxn_Login (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Login();
 }
 
-static int THREAD_CALL Fxn_NewEmpire (void* pThis) {
+static inline int THREAD_CALL Fxn_NewEmpire (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_NewEmpire();
 }
 
-static int THREAD_CALL Fxn_OpenGameList (void* pThis) {
+static inline int THREAD_CALL Fxn_OpenGameList (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_OpenGameList();
 }
 
-static int THREAD_CALL Fxn_SystemGameList (void* pThis) {
+static inline int THREAD_CALL Fxn_SystemGameList (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SystemGameList();
 }
 
-static int THREAD_CALL Fxn_ProfileEditor (void* pThis) {
+static inline int THREAD_CALL Fxn_ProfileEditor (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_ProfileEditor();
 }
 
-static int THREAD_CALL Fxn_TopLists (void* pThis) {
+static inline int THREAD_CALL Fxn_TopLists (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_TopLists();
 }
 
-static int THREAD_CALL Fxn_ProfileViewer (void* pThis) {
+static inline int THREAD_CALL Fxn_ProfileViewer (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_ProfileViewer();
 }
 
-static int THREAD_CALL Fxn_ServerAdministrator (void* pThis) {
+static inline int THREAD_CALL Fxn_ServerAdministrator (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_ServerAdministrator();
 }
 
-static int THREAD_CALL Fxn_EmpireAdministrator (void* pThis) {
+static inline int THREAD_CALL Fxn_EmpireAdministrator (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_EmpireAdministrator();
 }
 
-static int THREAD_CALL Fxn_GameAdministrator (void* pThis) {
+static inline int THREAD_CALL Fxn_GameAdministrator (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameAdministrator();
 }
 
-static int THREAD_CALL Fxn_ThemeAdministrator (void* pThis) {
+static inline int THREAD_CALL Fxn_ThemeAdministrator (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_ThemeAdministrator();
 }
 
-static int THREAD_CALL Fxn_PersonalGameClasses (void* pThis) {
+static inline int THREAD_CALL Fxn_PersonalGameClasses (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_PersonalGameClasses();
 }
 
-static int THREAD_CALL Fxn_Chatroom (void* pThis) {
+static inline int THREAD_CALL Fxn_Chatroom (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Chatroom();
 }
 
-static int THREAD_CALL Fxn_SystemServerRules (void* pThis) {
+static inline int THREAD_CALL Fxn_SystemServerRules (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SystemServerRules();
 }
 
-static int THREAD_CALL Fxn_SystemFAQ (void* pThis) {
+static inline int THREAD_CALL Fxn_SystemFAQ (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SystemFAQ();
 }
 
-static int THREAD_CALL Fxn_SystemNews (void* pThis) {
+static inline int THREAD_CALL Fxn_SystemNews (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SystemNews();
 }
 
-static int THREAD_CALL Fxn_Info (void* pThis) {
+static inline int THREAD_CALL Fxn_Info (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Info();
 }
 
-static int THREAD_CALL Fxn_Tech (void* pThis) {
+static inline int THREAD_CALL Fxn_Tech (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Tech();
 }
 
-static int THREAD_CALL Fxn_Diplomacy (void* pThis) {
+static inline int THREAD_CALL Fxn_Diplomacy (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Diplomacy();
 }
 
-static int THREAD_CALL Fxn_Map (void* pThis) {
+static inline int THREAD_CALL Fxn_Map (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Map();
 }
 
-static int THREAD_CALL Fxn_Planets (void* pThis) {
+static inline int THREAD_CALL Fxn_Planets (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Planets();
 }
 
-static int THREAD_CALL Fxn_Options (void* pThis) {
+static inline int THREAD_CALL Fxn_Options (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Options();
 }
 
-static int THREAD_CALL Fxn_Build (void* pThis) {
+static inline int THREAD_CALL Fxn_Build (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Build();
 }
 
-static int THREAD_CALL Fxn_Ships (void* pThis) {
+static inline int THREAD_CALL Fxn_Ships (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Ships();
 }
 
-static int THREAD_CALL Fxn_GameServerRules (void* pThis) {
+static inline int THREAD_CALL Fxn_GameServerRules (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameServerRules();
 }
 
-static int THREAD_CALL Fxn_GameFAQ (void* pThis) {
+static inline int THREAD_CALL Fxn_GameFAQ (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameFAQ();
 }
 
-static int THREAD_CALL Fxn_GameNews (void* pThis) {
+static inline int THREAD_CALL Fxn_GameNews (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameNews();
 }
 
-static int THREAD_CALL Fxn_GameProfileViewer (void* pThis) {
+static inline int THREAD_CALL Fxn_GameProfileViewer (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameProfileViewer();
 }
 
-static int THREAD_CALL Fxn_Quit (void* pThis) {
+static inline int THREAD_CALL Fxn_Quit (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Quit();
 }
 
-static int THREAD_CALL Fxn_LatestNukes (void* pThis) {
+static inline int THREAD_CALL Fxn_LatestNukes (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_LatestNukes();
 }
 
-static int THREAD_CALL FXN_SpectatorGames (void* pThis) {
+static inline int THREAD_CALL Fxn_SpectatorGames (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SpectatorGames();
 }
 
-static int THREAD_CALL Fxn_GameContributions (void* pThis) {
+static inline int THREAD_CALL Fxn_GameContributions (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameContributions();
 }
 
-static int THREAD_CALL Fxn_GameCredits (void* pThis) {
+static inline int THREAD_CALL Fxn_GameCredits (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_GameCredits();
 }
 
-static int THREAD_CALL Fxn_SystemContributions (void* pThis) {
+static inline int THREAD_CALL Fxn_SystemContributions (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SystemContributions();
 }
 
-static int THREAD_CALL Fxn_SystemCredits (void* pThis) {
+static inline int THREAD_CALL Fxn_SystemCredits (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_SystemCredits();
 }
 
-static int THREAD_CALL Fxn_LatestGames (void* pThis) {
+static inline int THREAD_CALL Fxn_LatestGames (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_LatestGames();
 }
 
-static int THREAD_CALL Fxn_TournamentAdministrator (void* pThis) {
+static inline int THREAD_CALL Fxn_TournamentAdministrator (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_TournamentAdministrator();
 }
 
-static int THREAD_CALL Fxn_PersonalTournaments (void* pThis) {
+static inline int THREAD_CALL Fxn_PersonalTournaments (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_PersonalTournaments();
 }
 
-static int THREAD_CALL Fxn_Tournaments (void* pThis) {
+static inline int THREAD_CALL Fxn_Tournaments (void* pThis) {
     return ((HtmlRenderer*) pThis)->Render_Tournaments();
 }
+
+static inline int THREAD_CALL Fxn_GameTos (void* pThis) {
+    return ((HtmlRenderer*) pThis)->Render_GameTos();
+}
+
+static inline int THREAD_CALL Fxn_SystemTos (void* pThis) {
+    return ((HtmlRenderer*) pThis)->Render_SystemTos();
+}
+
 
 
 const ThreadFunction g_pfxnRenderPage[] = {
@@ -1077,14 +1089,17 @@ const ThreadFunction g_pfxnRenderPage[] = {
     Fxn_GameProfileViewer,
     Fxn_GameContributions,
     Fxn_GameCredits,
+    Fxn_GameTos,
     Fxn_Quit,
     Fxn_LatestNukes,
-    FXN_SpectatorGames,
+    Fxn_SpectatorGames,
     Fxn_SystemContributions,
     Fxn_SystemCredits,
     Fxn_LatestGames,
     Fxn_TournamentAdministrator,
     Fxn_PersonalTournaments,
+    Fxn_Tournaments,
+    Fxn_SystemTos,
     Fxn_Tournaments,
     NULL
 };
@@ -1136,6 +1151,8 @@ const ThreadFunction g_pfxnRenderPage[] = {
 
 #define CREDITS_FILE            "text/credits.html"
 #define CONTRIBUTIONS_FILE      "text/contributions.html"
+
+#define TOS_FILE                "text/tos.html"
 
 #define MAX_NUM_SPACELESS_CHARS 72
 
@@ -1191,7 +1208,7 @@ const ThreadFunction g_pfxnRenderPage[] = {
                                                                                     \
     goto Redirection;                                                               \
 Redirection:                                                                        \
-    if (bRedirectTest && !m_bRedirection) {                                         \
+    if (bRedirectTest) {                                                            \
         PageId pageRedirect;                                                        \
         if (RedirectOnSubmit (&pageRedirect)) {                                     \
             return Redirect (pageRedirect);                                         \
@@ -1252,7 +1269,7 @@ Redirection:                                                                    
                                                                                     \
     goto Redirection;                                                               \
 Redirection:                                                                        \
-    if (bRedirectTest && !m_bRedirection) {                                         \
+    if (bRedirectTest) {                                                            \
         PageId pageRedirect;                                                        \
         if (RedirectOnSubmitGame (&pageRedirect)) {                                 \
             return Redirect (pageRedirect);                                         \

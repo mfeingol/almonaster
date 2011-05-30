@@ -74,6 +74,7 @@ public:
     size_t* ColOffset;
 
     bool HasVariableLengthData;
+    bool HasUniqueDataIndex;
 };
 
 #endif // !defined(AFX_TEMPLATE_H__05370B5C_2751_11D3_A0DC_0050047FE2E2__INCLUDED_)

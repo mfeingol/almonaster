@@ -26,13 +26,14 @@ INITIALIZE_EMPIRE
 
 IHttpForm* pHttpForm;
 
-int iErrCode, iProfileViewerPage = 0, iTargetEmpireKey = NO_KEY,
-    iNumSearchColumns = 0, * piSearchEmpireKey = NULL, iLastKey = 0, iMaxNumHits = 0,
-    iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
+int iErrCode, iProfileViewerPage = 0;
 
-unsigned int piSearchColName [MAX_NUM_SEARCH_COLUMNS];
-Variant pvSearchColData1 [MAX_NUM_SEARCH_COLUMNS];
-Variant pvSearchColData2 [MAX_NUM_SEARCH_COLUMNS];
+unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, 
+    iGameClassKey = NO_KEY;
+
+SearchColumn sc [MAX_NUM_SEARCH_COLUMNS];
+SearchDefinition sd;
+sd.pscColumns = sc;
 
 const char* ppszFormName [MAX_NUM_SEARCH_COLUMNS];
 const char* ppszColName1 [MAX_NUM_SEARCH_COLUMNS];
@@ -65,21 +66,14 @@ if (m_bOwnPost && !m_bRedirection) {
 SearchResults:
 
                 iErrCode = HandleSearchSubmission (
-                    piSearchColName, 
-                    pvSearchColData1,
-                    pvSearchColData2,
+                    sd,
                     ppszFormName,
                     ppszColName1,
                     ppszColName2,
-
-                    &iNumSearchColumns,
-
                     &piSearchEmpireKey,
                     &iNumSearchEmpires,
-                    &iLastKey,
-                    &iMaxNumHits
+                    &iLastKey
                     );
-
 
                 switch (iErrCode) {
 
@@ -168,7 +162,7 @@ SearchResults:
             iTargetEmpireKey = pHttpForm->GetIntValue();
 
             // Send messages
-            if (WasButtonPressed (BID_SENDMESSAGE)) {
+            if (m_iPrivilege > GUEST && WasButtonPressed (BID_SENDMESSAGE)) {
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("Message")) == NULL) {
                     goto Redirection;
@@ -514,17 +508,13 @@ case 1:
     Assert (piSearchEmpireKey != NULL);
 
     RenderSearchResults (
-        piSearchColName,
-        pvSearchColData1,
-        pvSearchColData2,
+        sd,
         ppszFormName,
         ppszColName1,
         ppszColName2,
-        iNumSearchColumns,
         piSearchEmpireKey,
         iNumSearchEmpires,
-        iLastKey,
-        iMaxNumHits
+        iLastKey
         );
 
     g_pGameEngine->FreeKeys (piSearchEmpireKey);

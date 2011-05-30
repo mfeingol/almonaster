@@ -168,6 +168,40 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
             }
 
+            // Handle EmpAge change
+            if ((pHttpForm = m_pHttpRequest->GetForm ("EmpAge")) == NULL) {
+                goto Redirection;
+            }
+            iNewValue = pHttpForm->GetIntValue();
+
+            EmpireCheck (g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, &vVerify));
+            if (iNewValue != vVerify.GetInteger()) {
+
+                if (iNewValue < EMPIRE_AGE_MINIMUM && iNewValue != EMPIRE_AGE_UNKNOWN) {
+                    AddMessage ("Your age is invalid");
+                } else {
+                    EmpireCheck (g_pGameEngine->SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, iNewValue));
+                    AddMessage ("Your age was changed");
+                }
+            }
+
+            // Handle EmpGender change
+            if ((pHttpForm = m_pHttpRequest->GetForm ("EmpGender")) == NULL) {
+                goto Redirection;
+            }
+            iNewValue = pHttpForm->GetIntValue();
+
+            EmpireCheck (g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, &vVerify));
+            if (iNewValue != vVerify.GetInteger()) {
+
+                if (iNewValue < EMPIRE_GENDER_UNKNOWN || iNewValue > EMPIRE_GENDER_FEMALE) {
+                    AddMessage ("Your gender is invalid");
+                } else {
+                    EmpireCheck (g_pGameEngine->SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, iNewValue));
+                    AddMessage ("Your gender was changed");
+                }
+            }
+
             // Handle Location change
             if ((pHttpForm = m_pHttpRequest->GetForm ("Location")) == NULL) {
                 goto Redirection;
@@ -1846,7 +1880,7 @@ Quote:
         case 5:
             {
 
-            iErrCode = g_pGameEngine->DeleteEmpire (m_iEmpireKey);
+            iErrCode = g_pGameEngine->DeleteEmpire (m_iEmpireKey, NULL, true, false);
             switch (iErrCode) {
 
             case OK:
@@ -1858,7 +1892,8 @@ Quote:
 
             case ERROR_EMPIRE_IS_IN_GAMES:
 
-                AddMessage ("Your empire has been marked for deletion");
+                AddMessage ("Your empire is still in at least one game. It will be deleted when it is no longer in any games");
+                AddMessage ("Your personal information has been cleared");
                 m_iSystemOptions |= EMPIRE_MARKED_FOR_DELETION;
                 break;
 
@@ -1930,11 +1965,11 @@ case 0:
     {
 
     Variant* pvEmpireData, vMaxNumSystemMessages;
-    int iNumActiveGames, iOptions, iNumSystemMessages, * piThemeKey, iNumThemes, iValue, j, iMaxNumSystemMessages;
+    int iNumActiveGames, iOptions, * piThemeKey, iNumThemes, iValue, j, iMaxNumSystemMessages;
     bool bIP, bID, bFlag;
     size_t stLen;
 
-    unsigned int iNumTournamentsJoined;
+    unsigned int iNumTournamentsJoined, iNumSystemMessages;
 
     String strFilter;
 
@@ -1990,6 +2025,47 @@ case 0:
     }
 
 
+    // Age
+    iValue = pvEmpireData[SystemEmpireData::Age].GetInteger();
+
+    %><tr><td align="left">Age:</td><%
+    %><td><select name="EmpAge"><%
+
+    %><option<%
+    if (iValue == EMPIRE_AGE_UNKNOWN) {
+        %> selected<%
+    }
+    %> value="<% Write (EMPIRE_AGE_UNKNOWN); %>">N/A</option><%
+
+    for (i = EMPIRE_AGE_MINIMUM; i <= EMPIRE_AGE_MAXIMUM; i ++) {
+        %><option<%
+        if (iValue == i) {
+            %> selected<%
+        }
+        %> value="<% Write (i); %>"><% Write (i); %></option><%
+    }
+
+    %></select></td></tr><%
+
+
+    // Gender
+    iValue = pvEmpireData[SystemEmpireData::Gender].GetInteger();
+
+    %><tr><td align="left">Gender:</td><%
+    %><td><select name="EmpGender"><%
+
+    for (i = 0; i < EMPIRE_NUM_GENDERS; i ++) {
+
+        %><option<%
+        if (iValue == EMPIRE_GENDER[i]) {
+            %> selected<%
+        }
+        %> value="<% Write (EMPIRE_GENDER[i]); %>"><% Write (EMPIRE_GENDER_STRING[EMPIRE_GENDER[i]]); %></option><%
+    }
+    %></select></td></tr><%
+
+
+    // Location
     if (HTMLFilter (pvEmpireData[SystemEmpireData::Location].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Location:</td><%
@@ -2817,7 +2893,7 @@ case 2:
     {
 
     Variant** ppvMessage;
-    int* piMessageKey, iNumMessages, j, iNumNames = 0;
+    unsigned int* piMessageKey, iNumMessages, j, iNumNames = 0;
     bool bSystem = false, bFound;
     const char* pszFontColor = NULL;
 
@@ -2837,7 +2913,7 @@ case 2:
         UTCTime* ptTime = (UTCTime*) StackAlloc (iNumMessages * sizeof (UTCTime));
         int* piIndex = (int*) StackAlloc (iNumMessages * sizeof (int));
 
-        for (i = 0; i < iNumMessages; i ++) {
+        for (i = 0; i < (int) iNumMessages; i ++) {
             piIndex[i] = i;
             ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetUTCTime();
         }
@@ -2863,7 +2939,7 @@ case 2:
 
             char pszDate [OS::MaxDateLength];
 
-            for (i = 0; i < iNumMessages; i ++) {
+            for (i = 0; i < (int) iNumMessages; i ++) {
 
                 int iFlags = ppvMessage[piIndex[i]][SystemEmpireMessages::Flags].GetInteger();
 

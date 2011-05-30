@@ -695,33 +695,28 @@ int GameEngine::GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, 
     // Search for matches
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
-    const unsigned int piColumns[] = {
-        GameMap::Owner,
-        GameMap::Pop
-    };
-    const unsigned int piFlags[] = {
-        0,
-        0
-    };
-    const Variant pvData[] = {
-        iEmpireKey,
-        vBuilderPopLevel.GetInteger()
-    };
-    const Variant pvData2[] = {
-        iEmpireKey,
-        MAX_POPULATION
-    };
+
+    SearchColumn sc[2];
+    sc[0].iColumn = GameMap::Owner;
+    sc[0].iFlags = 0;
+    sc[0].vData = iEmpireKey;
+    sc[0].vData2 = iEmpireKey;
+
+    sc[1].iColumn = GameMap::Pop;
+    sc[1].iFlags = 0;
+    sc[1].vData = vBuilderPopLevel;
+    sc[1].vData2 = MAX_POPULATION;
+
+    SearchDefinition sd;
+    sd.iMaxNumHits = 0;
+    sd.iSkipHits = 0;
+    sd.iStartKey = NO_KEY;
+    sd.iNumColumns = countof (sc);
+    sd.pscColumns = sc;
 
     iErrCode = m_pGameData->GetSearchKeys (
         strGameMap,
-        2,
-        piColumns,
-        piFlags,
-        pvData,
-        pvData2,
-        NO_KEY,
-        0,
-        0,
+        sd,
         ppiBuilderKey,
         piNumBuilders,
         &iStopKey

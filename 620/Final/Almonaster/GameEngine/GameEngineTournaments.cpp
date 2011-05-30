@@ -712,7 +712,7 @@ int GameEngine::RespondToTournamentInvitation (int iInviteKey, int iMessageKey, 
 int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey, int iMessageType, 
                                                 bool bAccept) {
 
-    int iErrCode, iOwnerKey, iInviteKey, iSendMessageKey = NO_KEY;
+    int iErrCode, iOwnerKey, iInviteKey, iSendMessageKey = NO_KEY, iVal;
     unsigned int iTournamentKey;
     const char* pszFormatString = NULL, * pszYesNo = NULL;
 
@@ -720,48 +720,55 @@ int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey,
     Variant vVal, vEmpireName, vTourneyName;
 
     IReadTable* pTable = NULL;
+    IWriteTable* pMessages = NULL;
 
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
-    bool bMessagesLocked = true, bDeleteMessage = false, bSendMessage = false;
+    bool bSendMessage = false;
 
-    NamedMutex nmLock;
-    iErrCode = LockEmpireSystemMessages (iEmpireKey, &nmLock);
+    iErrCode = m_pGameData->GetTableForWriting (pszMessages, &pMessages);
     if (iErrCode != OK) {
-        Assert (false);
+        if (iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
+            iErrCode = ERROR_MESSAGE_DOES_NOT_EXIST;
+        }
         return iErrCode;
     }
 
-    bExists = m_pGameData->DoesTableExist (pszMessages);
-    if (!bExists) {
-        iErrCode = ERROR_MESSAGE_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
-
-    iErrCode = m_pGameData->DoesRowExist (pszMessages, iMessageKey, &bExists);
+    iErrCode = pMessages->DoesRowExist (iMessageKey, &bExists);
     if (iErrCode != OK || !bExists) {
         iErrCode = ERROR_MESSAGE_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->ReadData (pszMessages, iMessageKey, SystemEmpireMessages::Type, &vVal);
-    if (iErrCode != OK || vVal.GetInteger() != iMessageType) {
+    iErrCode = pMessages->ReadData (iMessageKey, SystemEmpireMessages::Type, &iVal);
+    if (iErrCode != OK || iVal != iMessageType) {
         iErrCode = ERROR_MESSAGE_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
-    bDeleteMessage = true;
-    
-    iErrCode = m_pGameData->ReadData (pszMessages, iMessageKey, SystemEmpireMessages::Data, &vVal);
+    iErrCode = pMessages->ReadData (iMessageKey, SystemEmpireMessages::Data, &vVal);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
+    iErrCode = pMessages->DeleteRow (iMessageKey);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    SafeRelease (pMessages);
+
     if (iMessageType == MESSAGE_TOURNAMENT_INVITATION) {
 
+        if (sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iOwnerKey) != 2) {
+            Assert (false);
+            iErrCode = ERROR_FAILURE;
+            goto Cleanup;
+        }
+
         iInviteKey = iEmpireKey;
-        sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iOwnerKey);
         iSendMessageKey = iOwnerKey;
 
         if (iSendMessageKey == SYSTEM) {
@@ -773,8 +780,13 @@ int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey,
 
     } else {
 
+        if (sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iInviteKey) != 2) {
+            Assert (false);
+            iErrCode = ERROR_FAILURE;
+            goto Cleanup;
+        }
+
         iOwnerKey = iEmpireKey;
-        sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iInviteKey);
         iSendMessageKey = iInviteKey;
 
         pszFormatString = "%s has %s you to join the %s tournament", 
@@ -786,9 +798,6 @@ int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey,
     if (iErrCode != OK) {
         goto Cleanup;
     }
-
-    UnlockEmpireSystemMessages (nmLock);
-    bMessagesLocked = false;
 
     iErrCode = m_pGameData->GetTableForReading (SYSTEM_TOURNAMENTS, &pTable);
     if (iErrCode != OK) {
@@ -855,14 +864,7 @@ int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey,
 Cleanup:
 
     SafeRelease (pTable);
-
-    if (bMessagesLocked) {
-        UnlockEmpireSystemMessages (nmLock);
-    }
-
-    if (bDeleteMessage) {
-        DeleteSystemMessage (iEmpireKey, iMessageKey);
-    }
+    SafeRelease (pMessages);
 
     if (bSendMessage) {
         

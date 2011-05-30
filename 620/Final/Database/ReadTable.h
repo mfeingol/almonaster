@@ -71,9 +71,8 @@ public:
     int GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int** ppiKey, 
         unsigned int* piNumKeys);
 
-    int GetSearchKeys (unsigned int iNumColumns, const unsigned int* piColumn, const unsigned int* piFlags,
-        const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, unsigned int iSkipHits, 
-        unsigned int iMaxNumHits, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, 
+        unsigned int* piStopKey);
 
     int ReadData (unsigned int iKey, unsigned int iColumn, int* piData);
     int ReadData (unsigned int iKey, unsigned int iColumn, float* pfData);

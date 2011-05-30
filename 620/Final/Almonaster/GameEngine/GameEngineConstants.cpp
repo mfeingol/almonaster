@@ -203,49 +203,61 @@ const char* DIPLOMACY_STRING[] = {
     ACCEPT_SURRENDER_STRING,
 };
 
-const CardinalPoint OPPOSITE_CARDINAL_POINT[] = {
+const CardinalPoint OPPOSITE_CARDINAL_POINT [NUM_CARDINAL_POINTS] = {
     SOUTH,
     WEST,
     NORTH,
     EAST
 };
 
-const char* const CARDINAL_STRING[] = {
+const char* const CARDINAL_STRING [NUM_CARDINAL_POINTS] = {
     "North",
     "East",
     "South",
     "West"
 };
 
-const char* const OPPOSITE_CARDINAL_STRING[] = {
+const char* const OPPOSITE_CARDINAL_STRING [NUM_CARDINAL_POINTS] = {
     "South",
     "West",
     "North",
     "East"
 };
 
-const int CLOSE_LINK[] = {
+const int CLOSE_LINK [NUM_CARDINAL_POINTS] = {
     CLOSE_LINK_NORTH,
     CLOSE_LINK_EAST,
     CLOSE_LINK_SOUTH,
     CLOSE_LINK_WEST
 };
 
-const int OPEN_LINK[] = {
+const int OPEN_LINK [NUM_CARDINAL_POINTS] = {
     OPEN_LINK_NORTH,
     OPEN_LINK_EAST,
     OPEN_LINK_SOUTH,
     OPEN_LINK_WEST
 };
 
-const int CREATE_PLANET_LINK[] = {
+const int CREATE_PLANET_LINK [NUM_CARDINAL_POINTS] = {
     CREATE_PLANET_NORTH,
     CREATE_PLANET_EAST,
     CREATE_PLANET_SOUTH,
-    CREATE_PLANET_WEST,
+    CREATE_PLANET_WEST
 };
 
-const Privilege PrivilegeKey [5] = {
+extern const EmpireGender EMPIRE_GENDER[EMPIRE_NUM_GENDERS] = {
+    EMPIRE_GENDER_UNKNOWN,
+    EMPIRE_GENDER_MALE,
+    EMPIRE_GENDER_FEMALE
+};
+
+const char* const EMPIRE_GENDER_STRING[EMPIRE_NUM_GENDERS] = {
+    "N/A",
+    "Male",
+    "Female",
+};
+
+const Privilege PrivilegeKey [NUM_PRIVILEGES] = {
     GUEST,
     NOVICE,
     APPRENTICE,

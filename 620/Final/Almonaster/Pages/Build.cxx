@@ -34,14 +34,22 @@ String strFilter;
 
 bool bMapGenerated = (m_iGameState & GAME_MAP_GENERATED) != 0;
 
+struct NewFleetKey {
+    unsigned int iPlanetKey;
+    unsigned int iFleetKey;
+};
+
+NewFleetKey nfkNewFleet [NUM_SHIP_TYPES];
+unsigned int iNumNewFleets = 0;
+
 if (m_bOwnPost && !m_bRedirection) {
 
     // Make sure cancel wasn't pressed
     // Discard submission if update counts don't match
     if (bMapGenerated && !WasButtonPressed (BID_CANCEL) && m_iNumNewUpdates == m_iNumOldUpdates) {
 
-        int iNumShips, iTechKey, iShipBR, iLocationKey, iPlanetKey;
-        unsigned int iFleetKey, iNumShipTypes;
+        int iNumShips, iTechKey, iShipBR, iLocationKey;
+        unsigned int iFleetKey, iNumShipTypes, iPlanetKey;
         String strTechName;
         const char* pszShipName;
 
@@ -131,7 +139,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
-                iPlanetKey = pHttpForm->GetIntValue();
+                iPlanetKey = pHttpForm->GetUIntValue();
 
                 // Get fleet key
                 sprintf (pszForm, "LocFleetKey%i", iLocationKey);
@@ -142,9 +150,25 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (iFleetKey == FLEET_NEWFLEETKEY) {
 
-                    iErrCode = CreateRandomFleet (iPlanetKey, &iFleetKey);
-                    if (iErrCode != OK) {
-                        goto Redirection;
+                    for (j = 0; j < iNumNewFleets; j ++) {
+
+                        if (nfkNewFleet[j].iPlanetKey == iPlanetKey) {
+                            iFleetKey = nfkNewFleet[j].iFleetKey;
+                            break;
+                        }
+                    }
+
+                    if (iFleetKey == FLEET_NEWFLEETKEY) {
+
+                        iErrCode = CreateRandomFleet (iPlanetKey, &iFleetKey);
+                        if (iErrCode != OK) {
+                            goto Redirection;
+                        }
+
+                        Assert (iNumNewFleets < NUM_SHIP_TYPES);
+                        nfkNewFleet [iNumNewFleets].iPlanetKey = iPlanetKey;
+                        nfkNewFleet [iNumNewFleets].iFleetKey = iFleetKey;
+                        iNumNewFleets ++;
                     }
                 }
 

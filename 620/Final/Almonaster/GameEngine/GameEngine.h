@@ -134,7 +134,6 @@ private:
     // Synchronization
     ReadWriteLock m_mConfigLock;
 
-    Mutex m_mEmpires;
     Mutex m_mGameClasses;
     Mutex m_mSuperClasses;
     Mutex m_mAlienIcons;
@@ -156,14 +155,26 @@ private:
     // Setup
     int Setup();
     
+    int CreateNewDatabase();
+    int ReloadDatabase();
+
     int CreateDefaultSystemTemplates();
     int CreateDefaultSystemTables();
     int SetupDefaultSystemTables();
     int SetupDefaultSystemGameClasses();
 
+    int VerifySystem();
+    int VerifyEmpires();
+    int VerifyGameClasses();
+    int VerifyMarkedGameClasses();
+    int VerifyActiveGames();
+
     int VerifyTournaments();
     int VerifyTopLists();
     int RebuildTopList (ScoringSystem ssTopList);
+
+    void VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable);
+    void VerifyGameTables (int iGameClass, int iGameNumber, bool* pbGoodDatabase);
 
     // Games
     int CleanupGame (int iGameClass, int iGameNumber, GameResult grResult, const char* pszWinnerName = NULL);
@@ -423,8 +434,7 @@ private:
         const char* strEmpireDip, const char* strGameMap, const char** pstrEmpireDip, 
         String* pstrUpdateMessage);
 
-    int VerifyGameTables (int iGameClass, int iGameNumber);
-
+    // Setup
     void GetNextUpdateTime (const UTCTime& tLastUpdate, Seconds sUpdatePeriod, int iNumUpdates,
         Seconds sFirstUpdateDelay, Seconds sAfterWeekendDelay, bool bWeekends, UTCTime* ptNextUpdateTime);
 
@@ -500,6 +510,12 @@ private:
     // Messages
     int SendFatalUpdateMessage (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszGameClassName,
         const String& strUpdateMessage);
+
+    int GetNumUnreadSystemMessagesPrivate (IReadTable* pMessages, unsigned int* piNumber);
+    int GetNumUnreadGameMessagesPrivate (IReadTable* pMessages, unsigned int* piNumber);
+
+    int GetMessageProperty (const char* strMessages, unsigned int iMessageKey, unsigned int iColumn, 
+        Variant* pvProperty);
 
     // Empires
     int WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpireKey, int iTotalAg, int iBonusAg, 
@@ -621,17 +637,8 @@ public:
     void LockSuperClasses();
     void UnlockSuperClasses();
 
-    int LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireSystemMessages (const NamedMutex& nmMutex);
-
     int LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpireBridier (const NamedMutex& nmMutex);
-
-    int LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireGameMessages (const NamedMutex& nmMutex);
-
-    void LockEmpires();
-    void UnlockEmpires();
 
     void LockAlienIcons();
     void UnlockAlienIcons();
@@ -871,7 +878,7 @@ public:
     int SetEmpirePassword (int iEmpireKey, const char* pszPassword);
     int ChangeEmpirePassword (int iEmpireKey, const char* pszPassword);
 
-    int SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int iMaxNumSavedMessages);
+    int SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int iMaxNumSavedMessages);
 
     int UpdateEmpireQuote (int iEmpireKey, const char* pszQuote, bool* pbTruncated);
     int UpdateEmpireVictorySneer (int iEmpireKey, const char* pszSneer, bool* pbTruncated);
@@ -895,8 +902,8 @@ public:
 
     int GetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int* piMaxNumSavedMessages);
 
-    int DeleteEmpire (int iEmpireKey);
-    int ObliterateEmpire (int iEmpireKey, int iKillerEmpire);
+    int DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOnFailure, bool bDeletePersonal);
+    int ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, unsigned int iKillerEmpire);
 
     int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire);
 
@@ -996,33 +1003,38 @@ public:
     int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, bool bBroadcast = false);
     int DeliverSystemMessage (int iEmpireKey, const Variant* pvData);
 
-    int GetNumSystemMessages (int iEmpireKey, int* piNumber);
-    int GetNumUnreadSystemMessages (int iEmpireKey, int* piNumber);
+    int GetNumSystemMessages (int iEmpireKey, unsigned int* piNumber);
+    int GetNumUnreadSystemMessages (int iEmpireKey, unsigned int* piNumber);
     int SendMessageToAll (int iEmpireKey, const char* pszMessage);
-    int GetSavedSystemMessages (int iEmpireKey, int** ppiMessageKey, Variant*** pppvMessage, int* piNumMessages);
+    int GetSavedSystemMessages (int iEmpireKey, unsigned int** ppiMessageKey, Variant*** pppvMessage, 
+        unsigned int* piNumMessages);
 
-    int GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage, unsigned int** ppiMessageKey, int* piNumMessages);
+    int GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage, unsigned int** ppiMessageKey, 
+        unsigned int* piNumMessages);
     
-    int DeleteSystemMessage (int iEmpireKey, int iKey);
+    int DeleteSystemMessage (int iEmpireKey, unsigned int iKey);
 
-    int GetSystemMessageProperty (int iEmpireKey, int iMessageKey, unsigned int iColumn, Variant* pvProperty);
+    int GetSystemMessageProperty (int iEmpireKey, unsigned int iMessageKey, unsigned int iColumn, 
+        Variant* pvProperty);
 
     // Game Messages
-    int GetNumGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumber);
-    int GetNumUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumber);
-    int GetSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiMessageKey,
-        Variant*** ppvData, int* piNumMessages);
+    int GetNumGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumber);
+    int GetNumUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumber);
+
+    int GetSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int** ppiMessageKey,
+        Variant*** ppvData, unsigned int* piNumMessages);
     
     int SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage, int iSource, 
         bool bBroadcast, bool bUpdateMessage, const UTCTime& tSendTime);
     
     int GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, Variant*** pppvMessage, 
-        int* piNumMessages);
+        unsigned int* piNumMessages);
     
-    int DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, int iMessageKey);
-    int BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey, bool bAdmin);
+    int DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey);
+    int BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey, 
+        bool bAdmin);
 
-    int GetGameMessageProperty (int iGameClass, int iGameNumber, int iEmpireKey, int iMessageKey, 
+    int GetGameMessageProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey, 
         unsigned int iColumn, Variant* pvProperty);
 
     // Planets
@@ -1093,9 +1105,8 @@ public:
     int RebuildTopLists();
 
     // Search
-    int PerformMultipleSearch (int iStartKey, int iSkipHits, int iMaxNumHits, int iNumCols, 
-        const unsigned int* piColumn, const unsigned int* piFlags, 
-        const Variant* pvData, const Variant* pvData2, int** ppiKey, int* piNumHits, int* piStopKey);
+    int PerformMultipleSearch (const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, 
+        unsigned int* piStopKey);
 
     // Updates
     int CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUpdate);
@@ -1118,8 +1129,8 @@ public:
     // Options
     int SetEmpireAutoUpdate (int iGameClass, int iGameNumber, int iEmpireKey, bool bAutoUpdate);
 
-    int GetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumMessages);
-    int SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iNumMessages);
+    int GetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumMessages);
+    int SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iNumMessages);
 
     int GetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool* pbIgnore);
     int SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool bIgnore);
@@ -1153,12 +1164,12 @@ public:
     int RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
 
     int IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause);
-    int GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, int* piNumEmpires);
+    int GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, unsigned int* piNumEmpires);
 
     int RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
     int RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey);
     int IsEmpireRequestingDraw (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbDraw);
-    int GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, int* piNumEmpires);
+    int GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, unsigned int* piNumEmpires);
 
     int GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey,
         int* piWar, int* piTruce, int* piTrade, int* piAlliance);

@@ -151,9 +151,9 @@ GameEngine::~GameEngine() {
         
         UTCTime tTime;
         Time::GetTime (&tTime);
-        
-        m_pGameData->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tTime);
-        
+        iErrCode = m_pGameData->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tTime);
+        Assert (iErrCode == OK);
+
         m_pReport->WriteReport ("GameEngine wrote last shutdown time to database");
     }
 
@@ -194,11 +194,6 @@ int GameEngine::Initialize() {
 
     int iOptions = 0, i, iErrCode;
 
-    iErrCode = m_mEmpires.Initialize();
-    if (iErrCode != OK) {
-        m_pReport->WriteReport ("GameEngine is out of memory");
-        return iErrCode;
-    }
     iErrCode = m_mGameClasses.Initialize();
     if (iErrCode != OK) {
         m_pReport->WriteReport ("GameEngine is out of memory");
@@ -945,7 +940,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 620 RC1";
+    return "Almonaster Build 620 RC2";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

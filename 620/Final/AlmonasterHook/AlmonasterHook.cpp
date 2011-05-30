@@ -413,7 +413,7 @@ public:
 	void UpgradeEmpireTo620 (int iEmpireKey) {
 
 		int iErrCode;
-		unsigned int iKey;
+		/*unsigned int iKey;
         Variant vTemp;
 
 		char pszTable [256];
@@ -617,6 +617,30 @@ public:
                 );
             Assert (iErrCode == OK);
         }
+        */
+        
+        // RC2
+        iErrCode = m_pDatabase->WriteData (
+            SYSTEM_EMPIRE_DATA, 
+            iEmpireKey,
+            SystemEmpireData::Age,
+            EMPIRE_AGE_UNKNOWN
+            );
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (
+            SYSTEM_EMPIRE_DATA, 
+            iEmpireKey,
+            SystemEmpireData::Gender,
+            EMPIRE_GENDER_UNKNOWN
+            );
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pGameEngine->SetEmpireOption2 (ROOT_KEY, EMPIRE_ACCEPTED_TOS, true);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pGameEngine->SetEmpireOption2 (GUEST_KEY, EMPIRE_ACCEPTED_TOS, true);
+        Assert (iErrCode == OK);
     }
 
 
@@ -2679,13 +2703,13 @@ Cleanup:
 
 		m_pDatabase = m_pGameEngine->GetDatabase();
 
-		System();
-        ForEachTheme();
+		//System();
+        //ForEachTheme();
 		ForEachEmpire();
-		ForEachGameClass();
-		ForEachTournament();
-		ForEachGame();
-		ForEachEmpireInEachGame();
+		//ForEachGameClass();
+		//ForEachTournament();
+		//ForEachGame();
+		//ForEachEmpireInEachGame();
 
 		return OK;
 	}

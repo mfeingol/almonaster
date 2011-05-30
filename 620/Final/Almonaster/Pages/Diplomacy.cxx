@@ -1141,7 +1141,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     %><tr><td colspan="11">&nbsp;</td></tr><%
 
     if (iIndex == 0 || piStatus[iIndex] != piStatus[iIndex - 1]) {
-        %><tr><td colspan="11"><% WriteSeparatorString (m_iSeparatorKey); %></td></tr><%
+        %><tr><td align="center" colspan="11"><% WriteSeparatorString (m_iSeparatorKey); %></td></tr><%
         %><tr><td colspan="11">&nbsp;</td></tr><%
     }
 
@@ -1367,6 +1367,10 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     } %></td></tr><%
 }   // End known empire loop
 
+//
+// Messages
+//
+
 iErrCode = g_pGameEngine->DoesGameClassAllowPrivateMessages (m_iGameClass, &bPrivateMessages);
 if (iErrCode != OK) {
     Assert (false);
@@ -1379,7 +1383,15 @@ if (iErrCode != OK) {
     goto Cleanup;
 }
 
+if (iNumKnownEmpires > 0 || iActiveEmpires > 1) {
+    %><tr><td colspan="11">&nbsp;</td></tr><%
+}
+
+%></table><%
+
 if (iActiveEmpires > 1) {
+
+    WriteSeparatorString (m_iSeparatorKey);
 
     bool bBroadcast = bBroadcast = (m_iSystemOptions & CAN_BROADCAST) != 0;
     bool bAllTargets = bPrivateMessages && bGameStarted;

@@ -1291,19 +1291,22 @@ int AlmonasterScore::GetReplacementKeys (const Variant* pvScore, unsigned int** 
         return m_pDatabase->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
     }
 
-    Variant vMaxScore = ALMONASTER_MAX_SCORE;
-    unsigned int iColumn = SystemEmpireData::AlmonasterScore, iFlag = 0;
+    SearchColumn sc;
+    sc.iColumn = SystemEmpireData::AlmonasterScore;
+    sc.iFlags = 0;
+    sc.vData = *pvScore;
+    sc.vData2 = ALMONASTER_MAX_SCORE;
+
+    SearchDefinition sd;
+    sd.iMaxNumHits = 0;
+    sd.iSkipHits = 0;
+    sd.iStartKey = NO_KEY;
+    sd.iNumColumns = 1;
+    sd.pscColumns = &sc;
 
     return m_pDatabase->GetSearchKeys (
         SYSTEM_EMPIRE_DATA,
-        1,
-        &iColumn,
-        &iFlag,
-        pvScore, 
-        &vMaxScore, 
-        NO_KEY, 
-        0,
-        0,
+        sd,
         ppiKey, 
         piNumEmpires, 
         NULL

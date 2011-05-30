@@ -17,6 +17,8 @@ protected:
 
     int InsertDuplicateVariableLengthRows (Variant* pvColVal, unsigned int iNumRows);
 
+    int InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned int* piKey);
+
 public:
 
     WriteTable();
@@ -202,12 +204,10 @@ public:
         return m_rTable.ReadRow (iKey, ppvData);                                                            
     }                                                                                                       
                                                                                                             
-    inline int GetSearchKeys (unsigned int iNumColumns, const unsigned int* piColumn, const unsigned int* piFlags,
-        const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, unsigned int iSkipHits, 
-        unsigned int iMaxNumHits, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) {
+    inline int GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, 
+        unsigned int* piStopKey) {
 
-        return m_rTable.GetSearchKeys (iNumColumns, piColumn, piFlags, pvData, pvData2, iStartKey, iSkipHits,       
-            iMaxNumHits, ppiKey, piNumHits, piStopKey);                                                     
+        return m_rTable.GetSearchKeys (sdSearch, ppiKey, piNumHits, piStopKey);                                                     
     }
 
     inline int ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& vData, bool bCaseInsensitive, 
@@ -251,8 +251,8 @@ public:
     int WriteColumn (unsigned int iColumn, int64 i64Data);
     int WriteColumn (unsigned int iColumn, const Variant& vData);
 
-    int InsertRow (const Variant* pvColVal, unsigned int* piKey);
-    int InsertRow (const Variant* pvColVal);
+    int InsertRow (const Variant* pvColVal, unsigned int* piKey = NULL);
+    int InsertRow (const Variant* pvColVal, unsigned int iKey);
 
     int InsertRows (const Variant* pvColVal, unsigned int iNumRows);
     int InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumRows);

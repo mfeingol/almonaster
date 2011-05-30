@@ -17,10 +17,10 @@ protected:
     IGameEngine* m_pGameEngine;
     IDatabase* m_pDatabase;
 
-public:
-
     BridierObject (IGameEngine* pGameEngine);
     ~BridierObject();
+
+public:
 
     int IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridier);
     int CompareScores (const Variant* pvLeft, const Variant* pvRight);
@@ -31,6 +31,9 @@ public:
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
 
     int UpdateBridierScore (int iEmpireKey, int iRankChange, int iIndexChange);
+
+    int GetReplacementKeys (bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, 
+        unsigned int* piNumEmpires);
 };
 
 

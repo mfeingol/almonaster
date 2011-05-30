@@ -46,18 +46,6 @@ void GameEngine::UnlockSuperClasses() {
     m_mSuperClasses.Signal();
 }
 
-int GameEngine::LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex) {
-
-    char pszLock [256];
-    sprintf (pszLock, "Game%i", iEmpireKey);
-
-    return Mutex::Wait (pszLock, pnmMutex);
-}
-
-void GameEngine::UnlockEmpireSystemMessages (const NamedMutex& nmMutex) {
-    Mutex::Signal (nmMutex);
-}
-
 int GameEngine::LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) {
 
     char pszLock [256];
@@ -68,26 +56,6 @@ int GameEngine::LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) {
 
 void GameEngine::UnlockEmpireBridier (const NamedMutex& nmMutex) {
     Mutex::Signal (nmMutex);
-}
-
-int GameEngine::LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) {
-
-    char pszLock [256];
-    sprintf (pszLock, "GameMessages%i.%i.%i", iGameClass, iGameNumber, iEmpireKey);
-
-    return Mutex::Wait (pszLock, pnmMutex);
-}
-
-void GameEngine::UnlockEmpireGameMessages (const NamedMutex& nmMutex) {
-    Mutex::Signal (nmMutex);
-}
-
-void GameEngine::LockEmpires() {
-    m_mEmpires.Wait();
-}
-
-void GameEngine::UnlockEmpires() {
-    m_mEmpires.Signal();
 }
 
 void GameEngine::LockAlienIcons() {

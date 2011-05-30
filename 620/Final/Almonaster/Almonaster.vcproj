@@ -373,6 +373,21 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 				RelativePath=".\Pages\GameServerRules.cpp">
 			</File>
 			<File
+				RelativePath="Pages\GameTos.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\Pages\Info.cpp">
 			</File>
 			<File
@@ -440,6 +455,21 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			</File>
 			<File
 				RelativePath=".\Pages\SystemServerRules.cpp">
+			</File>
+			<File
+				RelativePath="Pages\SystemTos.cpp">
+				<FileConfiguration
+					Name="Release|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32">
+					<Tool
+						Name="VCCLCompilerTool"
+						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\Pages\Tech.cpp">
@@ -662,6 +692,15 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="Pages\GameTos.cxx">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
 				</FileConfiguration>
 			</File>
 			<File
@@ -1056,6 +1095,15 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="Pages\SystemTos.cxx">
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="TRUE">
+					<Tool
+						Name="VCCLCompilerTool"/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath="Pages\Tech.cxx">
 				<FileConfiguration
 					Name="Release|Win32"
@@ -1246,6 +1294,9 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			</File>
 			<File
 				RelativePath=".\HtmlRenderer\HtmlShips.cpp">
+			</File>
+			<File
+				RelativePath="HtmlRenderer\HtmlTOS.cpp">
 			</File>
 			<File
 				RelativePath=".\HtmlRenderer\HtmlTournaments.cpp">

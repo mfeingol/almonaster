@@ -379,11 +379,27 @@ OpenForm();
 %><input type="hidden" name="GoodColor" value="<% Write (m_vGoodColor.GetCharPtr()); %>"><%
 %><input type="hidden" name="BadColor" value="<% Write (m_vBadColor.GetCharPtr()); %>"><%
 
-%><p><table width="75%"><td>Please retype your password to confirm it:</td></table><%
+
+%><p><table width="75%"><tr><td colspan="2"><%
+
+%>If you are under 13 years old, please do not continue playing on this server. <%
+%>This game is not designed to comply with <%
+%>US <a href="http://www.ftc.gov/bcp/conline/edcams/coppa/intro.htm">legislation</a> <%
+%>concerning minors. In particular, the constraints imposed by this law on user interface and profile design <%
+%>are excessively broad. Therefore, children under 13 are encouraged to find entertainment elsewhere.<%
+
+%><p>If you are over 13 years old, please retype your password to confirm it:<%
+
+%></td></tr><%
+%></table><%
 
 %><p><table width="50%"><%
 
-%><tr><td><strong>Empire name</strong>:</td><td><strong><% Write (m_vEmpireName); %></strong></td></tr><%
+%><tr><%
+%><td><strong>Empire name</strong>:</td><%
+%><td><strong><% Write (m_vEmpireName.GetCharPtr()); %></strong></td><%
+%></tr><%
+
 %><tr><td><strong>Password</strong>:</td><td><strong><% 
 
 size_t i, stLength = m_vPassword.GetLength();
@@ -405,31 +421,38 @@ if (bRepost && bVerified && (pHttpForm = m_pHttpRequest->GetForm ("PasswordCopy"
 WriteButton (BID_CANCEL);
 WriteButton (BID_CREATEEMPIRE);
 
-%><p><table width="75%"><tr><%
+%><p><table width="75%"><%
+%><tr><%
 %><td>If you are an experienced player and you already have an empire registered on this server, you can <%
-%>inherit that empire's Almonaster Score and Privilege Level with this empire. The empire that you inherit <%
+%>inherit that empire's privilege level, Almonaster score and significance with this empire. The empire that you inherit <%
 %>from <strong>will be deleted</strong>. If you wish to do this, <%
-%>type in the name and password of the empire you will be inheriting from:</strong></td></tr></table><%
+%>type in the name and password of the empire you will be inheriting from:</strong></td><%
+%></tr><%
+%></table><%
 
-%><table width="50%"><tr></tr><%
+%><table width="50%"><%
+%><tr><td>&nbsp;</td></tr><%
 
-%><tr><td><strong>Parent empire's name:</strong></td><td><input type="text" name="ParentEmpireName" size="20"<%
-
-%> maxlength="<% Write (MAX_EMPIRE_NAME_LENGTH); %>"<%
+%><tr><%
+%><td><strong>Parent empire's name:</strong></td><%
+%><td><input type="text" name="ParentEmpireName" size="20" maxlength="<% Write (MAX_EMPIRE_NAME_LENGTH); %>"<%
 
 const char* pszParentName;
 
-if (bRepost && 
+if (bRepost &&
     (pHttpForm = m_pHttpRequest->GetForm ("ParentEmpireName")) != NULL &&
     (pszParentName = pHttpForm->GetValue()) != NULL &&
     VerifyEmpireName (pszParentName, false) == OK) {
     %> value="<% Write (pszParentName); %>"<%;
 }
-%>></td></tr><%
+%>></td><%
+%></tr><%
 
 %><tr><td><strong>Parent empire's password:</strong></td><%
-%><td><input type="password" name="ParentPassword" size="20" maxlength="<% 
-    Write (MAX_PASSWORD_LENGTH); %>"></td></tr></table><%
+%><td><input type="password" name="ParentPassword" size="20" maxlength="<%
+    Write (MAX_PASSWORD_LENGTH); %>"></td><%
+
+%></tr></table><%
 
 CloseSystemPage();
 

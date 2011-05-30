@@ -24,6 +24,8 @@ const SearchField g_AdvancedSearchFields[] = {
     { true, NULL, "EmpName", "TEmpName", "SEmpName", SystemEmpireData::Name, SEARCHFIELD_STRING, GUEST },
     { false, "Empire Key", "EmpKey", "LEmpKey", "REmpKey", NO_KEY, SEARCHFIELD_INTEGER, GUEST },
     { false, NULL, "RealName", "TRealName", "SRealName", SystemEmpireData::RealName, SEARCHFIELD_STRING, GUEST },
+    { false, NULL, "Age", "TAge", "SAge", SystemEmpireData::Age, SEARCHFIELD_AGE, GUEST },
+    { false, NULL, "Gender", "TGender", NULL, SystemEmpireData::Gender, SEARCHFIELD_GENDER, GUEST },
     { false, NULL, "Loc", "TLoc", "SLoc", SystemEmpireData::Location, SEARCHFIELD_STRING, GUEST },
     { false, NULL, "Email", "TEmail", "SEmail", SystemEmpireData::Email, SEARCHFIELD_STRING, GUEST },
     { false, NULL, "PrivM", "TPrivM", "SPrivM", SystemEmpireData::PrivateEmail, SEARCHFIELD_STRING, ADMINISTRATOR },
@@ -55,7 +57,8 @@ const SearchField g_AdvancedSearchFields[] = {
 
 void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
 
-    Assert (MAX_NUM_SEARCH_COLUMNS == sizeof (g_AdvancedSearchFields) / sizeof (SearchField));
+    Assert (MAX_NUM_SEARCH_COLUMNS == countof (g_AdvancedSearchFields));
+    Assert (countof (SYSTEM_EMPIRE_DATA_COLUMN_NAMES) == SystemEmpireData::NumColumns); 
     
     int iNumEmpires, iErrCode = g_pGameEngine->GetNumEmpiresOnServer (&iNumEmpires);
     if (iErrCode != OK) {
@@ -211,6 +214,71 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
         RenderDateField (sfField.pszInput2);
 
         break;
+
+    case SEARCHFIELD_GENDER:
+        
+        OutputText ("<td><select name=\"");
+        m_pHttpResponse->WriteText (sfField.pszInput1);
+        OutputText ("\">");
+
+        for (i = 0; i < EMPIRE_NUM_GENDERS; i ++) {
+
+            OutputText ("<option value=\"");
+            m_pHttpResponse->WriteText (EMPIRE_GENDER[i]);
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (EMPIRE_GENDER_STRING [EMPIRE_GENDER[i]]);
+            OutputText ("</option>");
+        }
+
+        OutputText ("</select>");
+        break;
+
+    case SEARCHFIELD_AGE:
+        
+        OutputText ("<td><select name=\"");
+        m_pHttpResponse->WriteText (sfField.pszInput1);
+        OutputText (
+            "\">"\
+            "<option value=\""
+            );
+
+        m_pHttpResponse->WriteText (EMPIRE_AGE_UNKNOWN);
+        OutputText (
+            "\">N/A</option>"
+            );
+
+        for (i = EMPIRE_AGE_MINIMUM; i <= EMPIRE_AGE_MAXIMUM; i ++) {
+
+            OutputText ("<option value=\"");
+            m_pHttpResponse->WriteText (i);
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (i);
+            OutputText ("</option>");
+        }
+
+        OutputText ("</select> to <select name=\"");
+        m_pHttpResponse->WriteText (sfField.pszInput2);
+        OutputText (
+            "\">"\
+            "<option value=\""
+            );
+
+        m_pHttpResponse->WriteText (EMPIRE_AGE_UNKNOWN);
+        OutputText (
+            "\">N/A</option>"
+            );
+
+        for (i = EMPIRE_AGE_MINIMUM; i <= EMPIRE_AGE_MAXIMUM; i ++) {
+
+            OutputText ("<option value=\"");
+            m_pHttpResponse->WriteText (i);
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (i);
+            OutputText ("</option>");
+        }
+
+        OutputText ("</select>");
+        break;
         
     default:
         
@@ -283,26 +351,22 @@ bool HtmlRenderer::ParseDateField (const char* pszField, UTCTime* ptTime) {
     return true;
 }
 
-int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol, 
-                                          Variant* pvSearchColData1,
-                                          Variant* pvSearchColData2,
+int HtmlRenderer::HandleSearchSubmission (SearchDefinition& sd,
+
                                           const char** pszFormName,
                                           const char** pszColName1,
                                           const char** pszColName2,
-                                          
-                                          int* piNumSearchColumns,
-                                          
-                                          int** ppiSearchEmpireKey,
-                                          int* piNumSearchEmpires,
-                                          int* piLastKey,
-                                          int* piMaxNumHits
+
+                                          unsigned int** ppiSearchEmpireKey,
+                                          unsigned int* piNumSearchEmpires,
+                                          unsigned int* piLastKey
                                           ) {
 
     IHttpForm* pHttpForm, * pHttpForm1, * pHttpForm2;
 
-    int i, iErrCode = OK, iMaxNumHits = 0, iNumSearchColumns = 0, iSkip = 0, iStartKey = 0;
-
-    unsigned int piFlags [MAX_NUM_SEARCH_COLUMNS];
+    int iErrCode = OK;
+    
+    unsigned int i, iMaxNumHits = 0, iNumSearchColumns = 0, iSkip = 0, iStartKey = NO_KEY;
 
     // Loop through all possible search fields
     for (i = 0; i < MAX_NUM_SEARCH_COLUMNS; i ++) {
@@ -326,8 +390,8 @@ int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol,
         }
 
         // Assign common fields
-        piSearchCol [iNumSearchColumns] = g_AdvancedSearchFields[i].iSystemEmpireDataColumn;
-        piFlags [iNumSearchColumns] = 0;
+        sd.pscColumns[iNumSearchColumns].iColumn = g_AdvancedSearchFields[i].iSystemEmpireDataColumn;
+        sd.pscColumns[iNumSearchColumns].iFlags = 0;
 
         pszFormName [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInputCheckBox;
         pszColName1 [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInput1;
@@ -338,32 +402,63 @@ int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol,
 
         case SEARCHFIELD_INTEGER:
 
-            pvSearchColData1 [iNumSearchColumns] = pHttpForm1->GetIntValue();
-            pvSearchColData2 [iNumSearchColumns] = pHttpForm2->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData2 = pHttpForm2->GetIntValue();
             break;
 
         case SEARCHFIELD_INTEGER64:
 
-            pvSearchColData1 [iNumSearchColumns] = pHttpForm1->GetInt64Value();
-            pvSearchColData2 [iNumSearchColumns] = pHttpForm2->GetInt64Value();
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetInt64Value();
+            sd.pscColumns[iNumSearchColumns].vData2 = pHttpForm2->GetInt64Value();
             break;
 
         case SEARCHFIELD_FLOAT:
 
-            pvSearchColData1 [iNumSearchColumns] = pHttpForm1->GetFloatValue();
-            pvSearchColData2 [iNumSearchColumns] = pHttpForm2->GetFloatValue();
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetFloatValue();
+            sd.pscColumns[iNumSearchColumns].vData2 = pHttpForm2->GetFloatValue();
             break;
 
         case SEARCHFIELD_STRING:
 
-            pvSearchColData1 [iNumSearchColumns] = pHttpForm1->GetValue();
-            pvSearchColData2 [iNumSearchColumns] = piFlags [iNumSearchColumns] = pHttpForm2->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetValue();
+
+            sd.pscColumns[iNumSearchColumns].iFlags = pHttpForm2->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData2 = sd.pscColumns[iNumSearchColumns].iFlags;
             break;
 
         case SEARCHFIELD_PRIVILEGE:
 
-            pvSearchColData1 [iNumSearchColumns] = pHttpForm1->GetIntValue();
-            pvSearchColData2 [iNumSearchColumns] = pHttpForm1->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData2 = pHttpForm1->GetIntValue();
+            break;
+
+        case SEARCHFIELD_GENDER:
+
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData2 = pHttpForm1->GetIntValue();
+
+            if (sd.pscColumns[iNumSearchColumns].vData.GetInteger() < EMPIRE_GENDER_UNKNOWN ||
+                sd.pscColumns[iNumSearchColumns].vData.GetInteger() > EMPIRE_GENDER_FEMALE) {
+                continue;
+            }
+            break;
+
+        case SEARCHFIELD_AGE:
+
+            sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetIntValue();
+            sd.pscColumns[iNumSearchColumns].vData2 = pHttpForm2->GetIntValue();
+
+            if (sd.pscColumns[iNumSearchColumns].vData.GetInteger() < EMPIRE_AGE_MINIMUM ||
+                sd.pscColumns[iNumSearchColumns].vData2.GetInteger() > EMPIRE_AGE_MAXIMUM ||
+
+                (sd.pscColumns[iNumSearchColumns].vData.GetInteger() == EMPIRE_AGE_UNKNOWN &&
+                 sd.pscColumns[iNumSearchColumns].vData2.GetInteger() != EMPIRE_AGE_UNKNOWN) ||
+
+                (sd.pscColumns[iNumSearchColumns].vData.GetInteger() != EMPIRE_AGE_UNKNOWN &&
+                 sd.pscColumns[iNumSearchColumns].vData2.GetInteger() == EMPIRE_AGE_UNKNOWN)
+                ) {
+                continue;
+            }
             break;
 
         case SEARCHFIELD_DATE:
@@ -371,10 +466,10 @@ int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol,
             UTCTime tTime;
 
             if (!ParseDateField (g_AdvancedSearchFields[i].pszInput1, &tTime)) continue;
-            pvSearchColData1 [iNumSearchColumns] = tTime;
+            sd.pscColumns[iNumSearchColumns].vData = tTime;
 
             if (!ParseDateField (g_AdvancedSearchFields[i].pszInput2, &tTime)) continue;
-            pvSearchColData2 [iNumSearchColumns] = tTime;
+            sd.pscColumns[iNumSearchColumns].vData2 = tTime;
 
             break;
 
@@ -390,62 +485,52 @@ int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol,
 
     Assert (iNumSearchColumns <= MAX_NUM_SEARCH_COLUMNS);
     
-    if ((pHttpForm = m_pHttpRequest->GetForm ("Skip")) != NULL) {
-        iSkip = pHttpForm->GetIntValue();
-    } else {
+    if ((pHttpForm = m_pHttpRequest->GetForm ("Skip")) == NULL) {
         return ERROR_INVALID_ARGUMENT;
     }
+    iSkip = pHttpForm->GetUIntValue();
     
     if (iNumSearchColumns == 0 ||
         (pHttpForm = m_pHttpRequest->GetForm ("MaxNumHits")) == NULL ||
-        (iMaxNumHits = pHttpForm->GetIntValue()) < 1
+        (iMaxNumHits = pHttpForm->GetUIntValue()) < 1
         ) {
-        
         return ERROR_INVALID_QUERY;
     }
     
     // Get startkey
     pHttpForm = m_pHttpRequest->GetForm ("StartKey");
     if (pHttpForm != NULL) {
-        iStartKey = pHttpForm->GetIntValue();
+        iStartKey = pHttpForm->GetUIntValue();
     }
+
+    sd.iMaxNumHits = iMaxNumHits;
+    sd.iSkipHits = iSkip;
+    sd.iStartKey = iStartKey;
+    sd.iNumColumns = iNumSearchColumns;
     
     iErrCode = g_pGameEngine->PerformMultipleSearch (
-        iStartKey,
-        iSkip,
-        iMaxNumHits,
-        iNumSearchColumns,
-        piSearchCol,
-        piFlags,
-        pvSearchColData1,
-        pvSearchColData2,
+        sd,
         ppiSearchEmpireKey,
         piNumSearchEmpires,
         piLastKey
         );
     
-    // Out
-    *piNumSearchColumns = iNumSearchColumns;
-    *piMaxNumHits = iMaxNumHits;
-    
     return iErrCode;
 }
 
-void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName, 
-                                        Variant* pvSearchColData1,
-                                        Variant* pvSearchColData2,
+void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
+
                                         const char** pszFormName,
                                         const char** pszColName1,
                                         const char** pszColName2,
-                                        
-                                        int iNumSearchColumns,
-                                        
-                                        int* piSearchEmpireKey,
-                                        int iNumSearchEmpires,
-                                        int iLastKey,
-                                        int iMaxNumHits
+
+                                        unsigned int* piSearchEmpireKey,
+                                        unsigned int iNumSearchEmpires,
+                                        unsigned int iLastKey
                                         ) {
-    int i, iErrCode;
+    int iErrCode;
+
+    unsigned int i, j, iNumSearchColumns = sd.iNumColumns;
     
     OutputText ("<p>");
     
@@ -472,7 +557,8 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
     
     for (i = 0; i < iNumSearchColumns; i ++) {
         
-        switch (piSearchColName[i]) {
+        SearchColumn& sc = sd.pscColumns[i];
+        switch (sc.iColumn) {
             
         case NO_KEY:
             
@@ -491,7 +577,7 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
             OutputText ("<th align=\"center\" bgcolor=\"");
             m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
             OutputText ("\"><strong>"); 
-            m_pHttpResponse->WriteText (SYSTEM_EMPIRE_DATA_COLUMN_NAMES [piSearchColName[i]]);
+            m_pHttpResponse->WriteText (SYSTEM_EMPIRE_DATA_COLUMN_NAMES [sc.iColumn]);
             OutputText ("</strong></td>");
             
             break;
@@ -499,9 +585,8 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
     }
     
     OutputText ("</tr>");
-    
-    int j;
-    Variant vName, vData, vAlien;
+
+    Variant vName, vAlien;
     char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
 
     NotifyProfileLink();
@@ -530,27 +615,25 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
             
             OutputText ("</td>");
             
-            iErrCode = OK;
-            
-            for (j = 0; j < iNumSearchColumns && iErrCode == OK; j ++) {
+            for (j = 0; j < iNumSearchColumns; j ++) {
+
+                Variant vData;
                 
-                if (piSearchColName[j] != SystemEmpireData::Name) {
+                SearchColumn& sc = sd.pscColumns[j];
+                unsigned int iCol = sc.iColumn;
+
+                if (iCol != SystemEmpireData::Name) {
                     
                     OutputText ("<td align=\"center\">");
                     
-                    if (piSearchColName[j] == NO_KEY) {
+                    if (iCol == NO_KEY) {
                         m_pHttpResponse->WriteText (piSearchEmpireKey[i]);
                     } else {
                         
-                        iErrCode = g_pGameEngine->GetEmpireDataColumn (
-                            piSearchEmpireKey[i], 
-                            piSearchColName[j], 
-                            &vData
-                            );
-                        
+                        iErrCode = g_pGameEngine->GetEmpireDataColumn (piSearchEmpireKey[i], iCol, &vData);
                         if (iErrCode == OK) {
                             
-                            switch (piSearchColName[j]) {
+                            switch (iCol) {
                                 
                             case SystemEmpireData::Privilege:
                                 
@@ -560,6 +643,12 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
                             case SystemEmpireData::WebPage:
 
                                 RenderUnsafeHyperText (vData.GetCharPtr(), vData.GetCharPtr());
+                                break;
+
+                            case SystemEmpireData::Gender:
+
+                                Assert (vData.GetInteger() > 0 && vData.GetInteger() < EMPIRE_NUM_GENDERS);
+                                m_pHttpResponse->WriteText (EMPIRE_GENDER_STRING[vData.GetInteger()]);
                                 break;
                                 
                             default:
@@ -584,8 +673,8 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
         
         OutputText ("<p>Search for the next ");
         
-        if (iMaxNumHits != 1) {
-            m_pHttpResponse->WriteText (iMaxNumHits);
+        if (sd.iMaxNumHits != 1) {
+            m_pHttpResponse->WriteText (sd.iMaxNumHits);
             OutputText (" empires");
         } else {
             OutputText ("empire");
@@ -595,13 +684,15 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
         
         OutputText ("<input type=\"hidden\" name=\"Skip\" value=\"0\">");
         OutputText ("<input type=\"hidden\" name=\"MaxNumHits\" value=\"");
-        m_pHttpResponse->WriteText (iMaxNumHits);
+        m_pHttpResponse->WriteText (sd.iMaxNumHits);
         OutputText ("\">");
         OutputText ("<input type=\"hidden\" name=\"StartKey\" value=\"");
         m_pHttpResponse->WriteText (iLastKey);
         OutputText ("\">");
         
         for (i = 0; i < iNumSearchColumns; i ++) {
+
+            SearchColumn& sc = sd.pscColumns[i];
             
             OutputText ("<input type=\"hidden\" name=\"");
             m_pHttpResponse->WriteText (pszFormName[i]);
@@ -609,14 +700,14 @@ void HtmlRenderer::RenderSearchResults (unsigned int* piSearchColName,
             OutputText ("<input type=\"hidden\" name=\"");
             m_pHttpResponse->WriteText (pszColName1[i]);
             OutputText ("\" value=\"");
-            m_pHttpResponse->WriteText (pvSearchColData1[i]);
+            m_pHttpResponse->WriteText (sc.vData);
             OutputText ("\">");
             
             if (pszColName2[i] != NULL) {
                 OutputText ("<input type=\"hidden\" name=\"");
                 m_pHttpResponse->WriteText (pszColName2[i]);
                 OutputText ("\" value=\"");
-                m_pHttpResponse->WriteText (pvSearchColData2[i]);
+                m_pHttpResponse->WriteText (sc.vData2);
                 OutputText ("\">");
             }
         }

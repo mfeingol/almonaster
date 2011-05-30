@@ -447,6 +447,8 @@ namespace SystemEmpireData {
         GameRatios,
         SecretKey,
         Options2,
+        Gender,
+        Age,
     };
 
     static const VariantType Types[] = {
@@ -521,6 +523,8 @@ namespace SystemEmpireData {
         V_STRING,
         V_INT,
         V_INT64,
+        V_INT,
+        V_INT,
         V_INT,
     };
 
@@ -597,6 +601,8 @@ namespace SystemEmpireData {
         0,
         0,
         0,
+        0,
+        0,
     };
 
     static unsigned int IndexColumns[] = {
@@ -604,10 +610,10 @@ namespace SystemEmpireData {
     };
 
     static unsigned int IndexFlags[] = {
-        0,
+        INDEX_UNIQUE_DATA,
     };
 
-    static const unsigned int NumColumns = Options2 + 1;
+    static const unsigned int NumColumns = Age + 1;
 
     static const TemplateDescription Template = {
         "SystemEmpireData",
@@ -623,7 +629,7 @@ namespace SystemEmpireData {
 };
 
 // Around for the sake of the profile viewer
-static const char* const SYSTEM_EMPIRE_DATA_COLUMN_NAMES[SystemEmpireData::NumColumns] = {
+static const char* const SYSTEM_EMPIRE_DATA_COLUMN_NAMES[] = {
     "Name",
     "Password",
     "Privilege Level",
@@ -694,6 +700,10 @@ static const char* const SYSTEM_EMPIRE_DATA_COLUMN_NAMES[SystemEmpireData::NumCo
     "Location",
     "Instant Messaging",
     "Game Ratios",
+    "Secret Key",
+    "Options2",
+    "Gender",
+    "Age",
 };
 
 
@@ -2111,10 +2121,12 @@ namespace GameMap {
     };
 
     static unsigned int IndexColumns[] = {
+        Owner,
         Coordinates
     };
 
     static unsigned int IndexFlags[] = {
+        0,
         INDEX_CASE_SENSITIVE,
     };
     
@@ -2126,7 +2138,7 @@ namespace GameMap {
         (VariantType*) Types,
         (size_t*) Sizes,
         false,
-        1,
+        countof (IndexColumns),
         IndexColumns,
         100,
         IndexFlags,

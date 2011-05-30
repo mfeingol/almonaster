@@ -140,9 +140,8 @@ public:
     int GetEqualKeys (const char* pszTableName, unsigned int iColumn, const Variant& vData, 
         bool bCaseInsensitive, unsigned int** ppiKey, unsigned int* piNumKeys);
     
-    int GetSearchKeys (const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
-        const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, unsigned int iSkipHits, 
-        unsigned int iMaxNumHits, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, 
+    unsigned int* piNumHits, unsigned int* piStopKey);
 
     int GetTableForReading (const char* pszTableName, IReadTable** ppTable);
     int GetTableForWriting (const char* pszTableName, IWriteTable** ppTable);

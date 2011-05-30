@@ -111,6 +111,12 @@ protected:
     int CreateHash (unsigned int iIndex, unsigned int iHash, unsigned int iKey);
     int DeleteHash (unsigned int iIndex, unsigned int iHash, unsigned int iKey);
 
+    template <class T> int IndexCheckUniqueData (
+        T tData, unsigned int iIndex, unsigned int iKey, unsigned int iColumn
+        );
+
+    int IndexGetFirstKey (unsigned int iColumn, const char* pszData, unsigned int* piKey);
+
 public:
 
     //
@@ -193,6 +199,10 @@ public:
 
     inline bool HasVariableLengthData() {
         return m_pTemplate->HasVariableLengthData;
+    }
+
+    inline bool HasUniqueDataIndex() {
+        return m_pTemplate->HasUniqueDataIndex;
     }
 
     inline const char* GetName() {
@@ -363,7 +373,7 @@ public:
     // Row bitmap
     //
 
-    int ExpandMetaDataIfNecessary (unsigned int iNumNewRows);
+    int ExpandMetaDataIfNecessary (unsigned int iMaxNumRows);
 
     bool IsValidRow (unsigned int iKey);
     
@@ -419,6 +429,9 @@ public:
 
     int IndexDeleteRow (int iKey, const Variant* pvData);
     int IndexDeleteAllRows();
+
+    // Indexing for searches
+    int GetInitialSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKeys, unsigned int* piNumKeys);
 };
 
 int AppendKey (unsigned int*& piKey, unsigned int& iNumKeys, unsigned int& iKeySpace, int iRowKey);

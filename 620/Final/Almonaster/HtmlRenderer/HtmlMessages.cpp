@@ -29,7 +29,7 @@ void HtmlRenderer::WriteGameMessages() {
     
     // Check for messages
     Variant** ppvMessage;
-    int iNumMessages, i;
+    unsigned int iNumMessages, i;
     
     int iErrCode = g_pGameEngine->GetUnreadGameMessages (
         m_iGameClass,
@@ -143,7 +143,7 @@ void HtmlRenderer::WriteGameMessages() {
                 OutputText ("</strong>");
                 
                 if (iFlags & MESSAGE_BROADCAST) {
-                    OutputText (" broadcast");
+                    OutputText (" broadcasted");
                 } else {
                     OutputText (" sent");
                 }
@@ -202,8 +202,7 @@ void HtmlRenderer::WriteSystemMessages() {
     
     // Check for messages
     Variant** ppvMessage = NULL;
-    unsigned int* piMessageKey = NULL;
-    int iNumMessages, i;
+    unsigned int* piMessageKey = NULL, iNumMessages, i;
     
     int iErrCode = g_pGameEngine->GetUnreadSystemMessages (
         m_iEmpireKey,

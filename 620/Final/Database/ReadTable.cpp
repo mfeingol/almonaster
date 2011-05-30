@@ -1348,9 +1348,7 @@ int ReadTable::GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bC
 // pvData[i].GetType() is V_STRING:
 // pvData2[i].GetInteger() indicates SUBSTRING_SEARCH, EXACT_SEARCH or BEGINS_WITH_SEARCH
 
-int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piColumn, const unsigned int* piFlags,
-                              const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, 
-                              unsigned int iSkipHits, unsigned int iMaxNumHits, unsigned int** ppiKey, 
+int ReadTable::GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
                               unsigned int* piNumHits, unsigned int* piStopKey) {
 
     int iErrCode;
@@ -1361,60 +1359,109 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
         *piStopKey = NO_KEY;
     }
 
-    if (m_tcContext.GetNumRows() == 0) {
+    if (ppiKey != NULL) {
         *ppiKey = NULL;
+    }
+
+    if (m_tcContext.GetNumRows() == 0) {
         return ERROR_DATA_NOT_FOUND;
     }
 
-    // Check for errors
-    unsigned int i, j, iRealNumColumns = m_tcContext.GetNumColumns(), iNumHitsSkipped = 0;
+    unsigned int iNumColumns = sdSearch.iNumColumns, i, j, 
+        iRealNumColumns = m_tcContext.GetNumColumns(), iNumHits = 0, iNumHitsSkipped = 0, 
+        * piKey = NULL, iNumKeys, iKeyColumnIndex = NO_KEY;
 
+    // Check for errors
     for (i = 0; i < iNumColumns; i ++) {
 
-        if (piColumn[i] == NO_KEY) {
+        const SearchColumn& scColumn = sdSearch.pscColumns[i];
 
-            if (pvData[i].GetType() != V_INT || pvData2[i].GetType() != V_INT) {
-                *ppiKey = NULL;
+        if (scColumn.iColumn == NO_KEY) {
+
+            Assert (iKeyColumnIndex == NO_KEY);
+            if (scColumn.vData.GetType() != V_INT || scColumn.vData2.GetType() != V_INT) {
                 return ERROR_TYPE_MISMATCH;
             }
-            continue;
+            iKeyColumnIndex = i;
         }
 
-        if (piColumn[i] >= iRealNumColumns) {
+        else if (scColumn.iColumn >= iRealNumColumns) {
             Assert (false);
-            *ppiKey = NULL;
             return ERROR_UNKNOWN_COLUMN_INDEX;
         }
 
-        if (pvData[i].GetType() != m_tcContext.GetColumnType (piColumn[i])) {           
+        else if (scColumn.vData.GetType() != m_tcContext.GetColumnType (scColumn.iColumn)) {           
             Assert (false);
-            *ppiKey = NULL;
             return ERROR_TYPE_MISMATCH;
         }
     }
 
-    // Allocate space for keys
-    size_t stKeySpace = 16;
-    *ppiKey = new unsigned int [stKeySpace];
-    if (*ppiKey == NULL) {
-        return ERROR_OUT_OF_MEMORY;
+    bool bIndexed = false;
+    size_t stKeySpace = 0;
+
+    unsigned int iStartKey = NO_KEY;
+
+    // Try indexing first
+    iErrCode = m_tcContext.GetInitialSearchKeys (sdSearch, &piKey, &iNumKeys);
+    switch (iErrCode) {
+
+    case OK:
+        
+        bIndexed = true;
+        break;
+
+    case ERROR_COLUMN_NOT_INDEXED:
+
+        unsigned int iDataKey, iTerminatorRowKey;
+
+        iErrCode = OK;
+
+        // Compute start key
+        iStartKey = sdSearch.iStartKey;
+        if (iStartKey == NO_KEY) {
+            iStartKey = 0;
+        }
+        if (iKeyColumnIndex != NO_KEY) {
+
+            unsigned int iDataKey = sdSearch.pscColumns[iKeyColumnIndex].vData.GetInteger();
+            if (iDataKey == NO_KEY) {
+                iDataKey = 0;
+            }
+            if (iStartKey < iDataKey) {
+                iStartKey = iDataKey;
+            }
+        }
+
+        // Compute end row
+        iTerminatorRowKey = m_tcContext.GetTerminatorRowKey();
+        if (iKeyColumnIndex != NO_KEY) {
+
+            iDataKey = sdSearch.pscColumns[iKeyColumnIndex].vData2.GetInteger();
+            if (iDataKey == NO_KEY) {
+                iDataKey = 0;
+            }
+            iDataKey ++;
+
+            if (iTerminatorRowKey > iDataKey) {
+                iTerminatorRowKey = iDataKey;
+            }
+        }
+
+        // Compute num keys
+        iNumKeys = iTerminatorRowKey - iStartKey;
+        Assert (iNumKeys <= iTerminatorRowKey);
+        break;
+
+    default:
+        return iErrCode;
     }
 
-    String strData, strPvData;
-    unsigned int* piTemp;
+    for (i = 0; i < iNumKeys; i ++) {
 
-    iErrCode = ERROR_DATA_NOT_FOUND;
+        unsigned int iRow = bIndexed ? piKey[i] : iStartKey + i;
 
-    // Loop through all keys and match all conditions
-    unsigned int iTerminatorRowKey = m_tcContext.GetTerminatorRowKey();
-
-    if (iStartKey == NO_KEY) {
-        iStartKey = 0;
-    }
-
-    for (i = iStartKey; i < iTerminatorRowKey; i ++) {
-
-        if (!m_tcContext.IsValidRow (i)) {
+        if (!m_tcContext.IsValidRow (iRow)) {
+            Assert (!bIndexed);
             continue;
         }
 
@@ -1424,39 +1471,37 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
 
         for (j = 0; j < iNumColumns && bHit; j ++) {
 
-            switch (pvData[j].GetType()) {
+            const SearchColumn& scColumn = sdSearch.pscColumns[j];
+            switch (scColumn.vData.GetType()) {
                 
             case V_INT:
 
                 int iData;
-                
-                switch (piFlags[j]) {
+                switch (scColumn.iFlags) {
                     
                 case 0:                 
 
-                    if (piColumn[j] == NO_KEY) {
-                        iData = i;
+                    if (scColumn.iColumn == NO_KEY) {
+                        iData = iRow;
                     } else {
-                        iData = *((int*) m_tcContext.GetData (i, piColumn[j]));
+                        iData = *((int*) m_tcContext.GetData (iRow, scColumn.iColumn));
                     }
 
-                    if (iData < pvData[j].GetInteger() || iData > pvData2[j].GetInteger()) {
+                    if (iData < scColumn.vData.GetInteger() || iData > scColumn.vData2.GetInteger()) {
                         bHit = false;
                     }
-
                     break;
 
                 case SEARCH_AND:
                 case SEARCH_NOTAND:
 
-                    iData = *((int*) m_tcContext.GetData (i, piColumn[j]));
+                    iData = *((int*) m_tcContext.GetData (iRow, scColumn.iColumn));
 
-                    if (piFlags[j] == SEARCH_AND) {
-                        bHit = (iData & pvData[j].GetInteger()) != 0;
+                    if (scColumn.iFlags == SEARCH_AND) {
+                        bHit = (iData & scColumn.vData.GetInteger()) != 0;
                     } else {
-                        bHit = (iData & pvData[j].GetInteger()) == 0;
+                        bHit = (iData & scColumn.vData.GetInteger()) == 0;
                     }
-
                     break;
 
                 default:
@@ -1467,39 +1512,31 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
                 break;
 
             case V_FLOAT:
-
                 {
-
-                float fData = *((float*) m_tcContext.GetData (i, piColumn[j]));
-
-                if (fData < pvData[j].GetFloat() || fData > pvData2[j].GetFloat()) {
-                    bHit = false;
-                }
-                
+                    float fData = *((float*) m_tcContext.GetData (iRow, scColumn.iColumn));
+                    if (fData < scColumn.vData.GetFloat() || fData > scColumn.vData2.GetFloat()) {
+                        bHit = false;
+                    }
                 }
                 break;
 
             case V_TIME:
-
                 {
-
-                UTCTime tData = *((UTCTime*) m_tcContext.GetData (i, piColumn[j]));
-
-                if (tData < pvData[j].GetUTCTime() || tData > pvData2[j].GetUTCTime()) {
-                    bHit = false;
-                }
-                
+                    UTCTime tData = *((UTCTime*) m_tcContext.GetData (iRow, scColumn.iColumn));
+                    if (tData < scColumn.vData.GetUTCTime() || tData > scColumn.vData2.GetUTCTime()) {
+                        bHit = false;
+                    }
                 }
                 break;
                 
             case V_STRING:
 
-                switch (piFlags[j]) {
+                switch (scColumn.iFlags) {
 
                 case SEARCH_SUBSTRING | SEARCH_CASE_SENSITIVE:
 
                     if (String::StrStr (
-                        m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()
+                        m_tcContext.GetStringData (iRow, scColumn.iColumn), scColumn.vData.GetCharPtr()
                         ) == NULL) {
                         bHit = false;
                     }
@@ -1508,14 +1545,11 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
                 case SEARCH_SUBSTRING:
 
                     iErrCode = String::StriStr (
-                        m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), &pszStr
+                        m_tcContext.GetStringData (iRow, scColumn.iColumn), scColumn.vData.GetCharPtr(), &pszStr
                         );
 
                     if (iErrCode != OK) {
-                        delete [] (*ppiKey);
-                        *ppiKey = NULL;
-                        *piNumHits = 0;
-                        return iErrCode;
+                        goto Cleanup;
                     }
 
                     if (pszStr == NULL) {
@@ -1525,44 +1559,44 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
 
                 case SEARCH_EXACT | SEARCH_CASE_SENSITIVE:
 
-                    if (String::StrCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()) != 0) {
+                    if (String::StrCmp (m_tcContext.GetStringData (iRow, scColumn.iColumn), scColumn.vData.GetCharPtr()) != 0) {
                         bHit = false;
                     }
                     break;
 
                 case SEARCH_EXACT:
                     
-                    if (String::StriCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()) != 0) {
+                    if (String::StriCmp (m_tcContext.GetStringData (iRow, scColumn.iColumn), scColumn.vData.GetCharPtr()) != 0) {
                         bHit = false;
                     }
                     break;
 
                 case SEARCH_BEGINS_WITH | SEARCH_CASE_SENSITIVE:
 
-                    if (String::StrnCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), 
-                        String::StrLen (pvData[j].GetCharPtr())) != 0) {
+                    if (String::StrnCmp (m_tcContext.GetStringData (iRow, scColumn.iColumn), scColumn.vData.GetCharPtr(), 
+                        String::StrLen (scColumn.vData.GetCharPtr())) != 0) {
                         bHit = false;
                     }
                     break;
 
                 case SEARCH_BEGINS_WITH:
 
-                    if (String::StrniCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), 
-                        String::StrLen (pvData[j].GetCharPtr())) != 0) {
+                    if (String::StrniCmp (m_tcContext.GetStringData (iRow, scColumn.iColumn), scColumn.vData.GetCharPtr(), 
+                        String::StrLen (scColumn.vData.GetCharPtr())) != 0) {
                         bHit = false;
                     }
                     break;
 
                 case SEARCH_ENDS_WITH | SEARCH_CASE_SENSITIVE:
 
-                    pszStr = m_tcContext.GetStringData (i, piColumn[j]);
+                    pszStr = m_tcContext.GetStringData (iRow, scColumn.iColumn);
                     cchTestLen = String::StrLen (pszStr);
-                    cchDataLen = String::StrLen (pvData[j].GetCharPtr());
+                    cchDataLen = String::StrLen (scColumn.vData.GetCharPtr());
 
                     if (cchDataLen > cchTestLen ||
                         String::StrnCmp (
                         pszStr + cchTestLen - cchDataLen,
-                        pvData[j].GetCharPtr(),
+                        scColumn.vData.GetCharPtr(),
                         cchDataLen
                         ) != 0) {
                         bHit = false;
@@ -1571,14 +1605,14 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
 
                 case SEARCH_ENDS_WITH:
 
-                    pszStr = m_tcContext.GetStringData (i, piColumn[j]);
+                    pszStr = m_tcContext.GetStringData (iRow, scColumn.iColumn);
                     cchTestLen = String::StrLen (pszStr);
-                    cchDataLen = String::StrLen (pvData[j].GetCharPtr());
+                    cchDataLen = String::StrLen (scColumn.vData.GetCharPtr());
 
                     if (cchDataLen > cchTestLen ||
                         String::StrniCmp (
                         pszStr + cchTestLen - cchDataLen,
-                        pvData[j].GetCharPtr(),
+                        scColumn.vData.GetCharPtr(),
                         cchDataLen
                         ) != 0) {
                         bHit = false;
@@ -1587,26 +1621,23 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
 
                 default:
 
-                    bHit = false;
-                    break;
+                    iErrCode = ERROR_INVALID_ARGUMENT;
+                    goto Cleanup;
                 }
                 break;
 
             case V_INT64:
                 {
+                    int64 i64Data;
+                    if (scColumn.iColumn == NO_KEY) {
+                        i64Data = iRow;
+                    } else {
+                        i64Data = *((int64*) m_tcContext.GetData (iRow, scColumn.iColumn));
+                    }
 
-                int64 i64Data;
-
-                if (piColumn[j] == NO_KEY) {
-                    i64Data = i;
-                } else {
-                    i64Data = *((int64*) m_tcContext.GetData (i, piColumn[j]));
-                }
-
-                if (i64Data < pvData[j].GetInteger64() || i64Data > pvData2[j].GetInteger64()) {
-                    bHit = false;
-                }
-                
+                    if (i64Data < scColumn.vData.GetInteger64() || i64Data > scColumn.vData2.GetInteger64()) {
+                        bHit = false;
+                    }
                 }
                 break;
 
@@ -1618,57 +1649,88 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
             }
         }
 
+        if (bHit && iNumHitsSkipped < sdSearch.iSkipHits) {
+            iNumHitsSkipped ++;
+            bHit = false;
+        }
+
         if (bHit) {
 
-            if (iNumHitsSkipped < iSkipHits) {
-                iNumHitsSkipped ++;
-            } else {
-
-                if (iMaxNumHits != 0 && *piNumHits == iMaxNumHits) {
-                    
-                    // Abort!
-                    if (piStopKey != NULL) {
-                        *piStopKey = i;
-                    }
-                    iErrCode = ERROR_TOO_MANY_HITS;
-                    break;
-                }
+            if (sdSearch.iMaxNumHits != 0 && iNumHits == sdSearch.iMaxNumHits) {
                 
-                // Add to hits list
-                if (*piNumHits == stKeySpace) {
-                    
-                    stKeySpace *= 2;
-                    piTemp = new unsigned int [stKeySpace];
-                    if (piTemp == NULL) {
-
-                        delete [] (*ppiKey);
-                        *ppiKey = NULL;
-                        *piNumHits = 0;
-
-                        return ERROR_OUT_OF_MEMORY;
-                    }
-
-                    memcpy (piTemp, *ppiKey, *piNumHits * sizeof (unsigned int));
-
-                    delete [] (*ppiKey);
-                    *ppiKey = piTemp;
+                // Abort!
+                if (piStopKey != NULL) {
+                    *piStopKey = iRow;
                 }
-                
-                (*ppiKey)[*piNumHits] = i;
-                (*piNumHits) ++;
+                iErrCode = ERROR_TOO_MANY_HITS;
+                break;
             }
+            
+            if (!bIndexed && ppiKey != NULL) {
+
+                // Add to hit array
+                if (iNumHits == stKeySpace) {
+                    
+                    if (stKeySpace == 0) {
+                        stKeySpace = 16;
+                    } else {
+                        stKeySpace *= 2;
+                    }
+
+                    unsigned int* piTemp = new unsigned int [stKeySpace];
+                    if (piTemp == NULL) {
+                        iErrCode = ERROR_OUT_OF_MEMORY;
+                        goto Cleanup;
+                    }
+
+                    memcpy (piTemp, piKey, iNumHits * sizeof (unsigned int));
+
+                    delete [] piKey;
+                    piKey = piTemp;
+                }
+
+                piKey[iNumHits] = iRow;
+            }
+            
+            iNumHits ++;
+        
+        } else if (bIndexed) {
+
+            // A miss means that we need to remove the key from the list
+            // This isn't terribly efficient, but it saves us from allocating a second array
+            iNumKeys --;
+            if (iNumKeys == 0) {
+                iErrCode = ERROR_DATA_NOT_FOUND;
+                goto Cleanup;
+            }
+
+            //for (unsigned int j = i; j < iNumKeys; j ++) {
+            //    piKey[j] = piKey[j + 1];
+            //}
+            memmove (piKey + i, piKey + i + 1, (iNumKeys - i) * sizeof (unsigned int));
+            i --;
         }
+
+    }   // End key loop
+
+    // Set out params
+    *piNumHits = iNumHits;
+
+    if (iNumHits > 0 && ppiKey != NULL) {
+        *ppiKey = piKey;
+        piKey = NULL;
     }
 
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        
-        if (*piNumHits > 0) {
-            iErrCode = OK;
-        } else {
+    if (iNumHits == 0) {
+        Assert (iErrCode == OK);
+        Assert (ppiKey == NULL || *ppiKey == NULL);
+        iErrCode = ERROR_DATA_NOT_FOUND;
+    }
 
-            delete [] (*ppiKey);
-            *ppiKey = NULL;
-        }
+Cleanup:
+
+    if (piKey != NULL) {
+        delete [] piKey;
     }
 
     return iErrCode;

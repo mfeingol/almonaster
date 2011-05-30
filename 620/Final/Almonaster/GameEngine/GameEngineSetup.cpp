@@ -18,40 +18,162 @@
 
 #include "GameEngine.h"
 
-// TODO:  break up into functions!
 int GameEngine::Setup() {
 
     int iErrCode;
-    unsigned int iNumRows;
 
-    bool bNewDatabase = false, bGoodDatabase = true;
-
-    Variant vPeriod, vStarted;
-
+    bool bNewDatabase, bGoodDatabase;
     const char* pszBadTable;
-
-    char pszBuffer [512];
-    char strGameData [256];
 
     /////////////////////////
     // Check system tables //
     /////////////////////////
 
     m_pReport->WriteReport ("GameEngine setup attempting to reuse an existing database");
-    
+    VerifySystemTables (&bNewDatabase, &bGoodDatabase, &pszBadTable);
+
+    if (!bGoodDatabase) {
+
+        if (bNewDatabase) {
+
+            // Create a new database and we're done
+            iErrCode = CreateNewDatabase();
+            m_bGoodDatabase = (iErrCode == OK);
+            return iErrCode;
+        }
+
+        // Bad database - report error
+        char* pszMessage = (char*) StackAlloc (strlen (pszBadTable) + 256);
+
+        sprintf (
+            pszMessage,
+            "GameEngine setup found errors in the %s table or its template",
+            pszBadTable
+            );
+
+        m_pReport->WriteReport (pszMessage);
+        m_pReport->WriteReport ("GameEngine setup could not successfully reuse an existing database");
+        
+        m_bGoodDatabase = false;
+        return ERROR_FAILURE;
+    }
+
+    // Test the reloaded database
+    return ReloadDatabase();
+}
+
+
+int GameEngine::ReloadDatabase() {
+
+    int iErrCode;
+
+    //
+    // System
+    //
+
+    iErrCode = VerifySystem();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify system data");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified system data");
+
+    //
+    // Empires
+    //
+
+    iErrCode = VerifyEmpires();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify empire data");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified empire data");
+
+    //
+    // Gameclasses
+    //
+
+    iErrCode = VerifyGameClasses();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify gameclasses");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified gameclasses");
+
+    //
+    // Games
+    //
+
+    iErrCode = VerifyActiveGames();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify active games");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified active games");    
+
+    //
+    // Marked gameclasses
+    //
+
+    iErrCode = VerifyMarkedGameClasses();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify marked gameclasses");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified marked gameclasses");
+
+    //
+    // Tournaments
+    //
+
+    iErrCode = VerifyTournaments();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify tournaments");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified tournaments");
+
+    //
+    // Top lists
+    //
+
+    iErrCode = VerifyTopLists();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup failed to verify top lists");
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine setup successfully verified top lists");
+
+    //////////
+    // Done //
+    //////////
+
+    m_bGoodDatabase = true;
+    m_pReport->WriteReport ("GameEngine setup successfully reused the existing database");
+
+    return OK;
+}
+
+void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable) {
+
+    const char* pszBadTable = NULL;
+    bool bNewDatabase = false, bGoodDatabase = true;
+
+    unsigned int iNumRows;
+
     // SystemData
     pszBadTable = SYSTEM_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_DATA)) {
         bNewDatabase = true;
         bGoodDatabase = false;
-        goto EndCheck;
+        goto Cleanup;
     }
     
     if (m_pGameData->GetNumRows (SYSTEM_DATA, &iNumRows) != OK || iNumRows != 1 ||
         !m_pGameData->IsTemplateEqual (SystemData::Template.Name, SystemData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemEmpireData
@@ -60,13 +182,13 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemEmpireData::Template.Name, SystemEmpireData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     if (m_pGameData->GetNumRows (SYSTEM_EMPIRE_DATA, &iNumRows) != OK || iNumRows < 1) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemGameClassData
@@ -75,7 +197,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemGameClassData::Template.Name, SystemGameClassData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemAlienIcons
@@ -84,13 +206,13 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemAlienIcons::Template.Name, SystemAlienIcons::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     if (m_pGameData->GetNumRows (SYSTEM_DATA, &iNumRows) != OK || iNumRows < 1) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }       
     
     // SystemSystemGameClassData
@@ -100,7 +222,7 @@ int GameEngine::Setup() {
         SystemSystemGameClassData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemSuperClassData
@@ -109,7 +231,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemSuperClassData::Template.Name, SystemSuperClassData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemThemes
@@ -118,7 +240,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemThemes::Template.Name, SystemThemes::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemActiveGames
@@ -127,7 +249,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemActiveGames::Template.Name, SystemActiveGames::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemAlmonasterScoreTopList
@@ -136,7 +258,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemAlmonasterScoreTopList::Template.Name, SystemAlmonasterScoreTopList::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     // SystemClassicScoreTopList
@@ -145,7 +267,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemClassicScoreTopList::Template.Name, SystemClassicScoreTopList::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     // SystemBridierScoreTopList
@@ -154,7 +276,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemBridierScoreTopList::Template.Name, SystemBridierScoreTopList::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     // SystemBridierScoreEstablishedTopList
@@ -163,7 +285,7 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemBridierScoreEstablishedTopList::Template.Name, SystemBridierScoreEstablishedTopList::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     // SystemTournaments
@@ -172,70 +294,70 @@ int GameEngine::Setup() {
         !m_pGameData->IsTemplateEqual (SystemTournaments::Template.Name, SystemTournaments::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemEmpireMessages::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireMessages::Template.Name, SystemEmpireMessages::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemEmpireNukeList::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireNukeList::Template.Name, SystemEmpireNukeList::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemNukeList::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemNukeList::Template.Name, SystemNukeList::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemLatestGames::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemLatestGames::Template.Name, SystemLatestGames::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemEmpireActiveGames::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireActiveGames::Template.Name, SystemEmpireActiveGames::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemTournamentTeams::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemTournamentTeams::Template.Name, SystemTournamentTeams::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemTournamentEmpires::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemTournamentEmpires::Template.Name, SystemTournamentEmpires::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemTournamentActiveGames::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemTournamentActiveGames::Template.Name, SystemTournamentActiveGames::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = SystemEmpireTournaments::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireTournaments::Template.Name, SystemEmpireTournaments::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     // Check game templates
@@ -243,786 +365,143 @@ int GameEngine::Setup() {
     if (!m_pGameData->IsTemplateEqual (GameData::Template.Name, GameData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameEmpires::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpires::Template.Name, GameEmpires::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = GameDeadEmpires::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameDeadEmpires::Template.Name, GameDeadEmpires::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameMap::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameMap::Template.Name, GameMap::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = GameEmpireData::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireData::Template.Name, GameEmpireData::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameEmpireMessages::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireMessages::Template.Name, GameEmpireMessages::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameEmpireMap::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireMap::Template.Name, GameEmpireMap::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameEmpireDiplomacy::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireDiplomacy::Template.Name, GameEmpireDiplomacy::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameEmpireShips::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireShips::Template.Name, GameEmpireShips::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
     
     pszBadTable = GameEmpireFleets::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireFleets::Template.Name, GameEmpireFleets::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
     pszBadTable = GameSecurity::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameSecurity::Template.Name, GameSecurity::Template)) {
         bGoodDatabase = false;
         Assert (false);
-        goto EndCheck;
+        goto Cleanup;
     }
 
-EndCheck:
-
-    if (bGoodDatabase) {
-
-        /////////////////////////////
-        // We reloaded a database! //
-        /////////////////////////////
-
-
-        ///////////////////////////////
-        // Reset access denied flags //
-        ///////////////////////////////
-
-        iErrCode = SetSystemOption (
-            LOGINS_ENABLED | NEW_EMPIRES_ENABLED | NEW_GAMES_ENABLED | ACCESS_ENABLED, 
-            true
-            );
-
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
-
-        ///////////////////////////////////////////////////////////
-        // Check all gameclasses for halted with no active games //
-        ///////////////////////////////////////////////////////////
-
-        unsigned int* piGameClassKey, iNumGameClasses, iNumEmpires = 0, i;
-        Variant vOptions;
-        bool bDeleted;
-
-        iErrCode = m_pGameData->GetAllKeys (SYSTEM_GAMECLASS_DATA, &piGameClassKey, &iNumGameClasses);
-        if (iErrCode == OK) {
-
-            for (i = 0; i < iNumGameClasses; i ++) {
-
-                iErrCode = m_pGameData->ReadData (
-                    SYSTEM_GAMECLASS_DATA,
-                    piGameClassKey[i],
-                    SystemGameClassData::Options,
-                    &vOptions
-                    );
-
-                if (iErrCode != OK) {
-                    sprintf (
-                        pszBuffer,
-                        "GameEngine setup failed read data from the SystemGameClassData table; error %i occurred. This is a fatal error",
-                        iErrCode
-                        );
-                    m_pReport->WriteReport (pszBuffer);
-                    goto CleanupGameClass;
-                }
-    
-                // Set number of games in gameclass to 0
-                iErrCode = m_pGameData->WriteData (
-                    SYSTEM_GAMECLASS_DATA,
-                    piGameClassKey[i],
-                    SystemGameClassData::NumActiveGames,
-                    0
-                    );
-                
-                if (iErrCode != OK) {
-                    sprintf (
-                        pszBuffer,
-                        "GameEngine setup failed to write information to the gameclass table; error %i occurred. This is a fatal error",
-                        iErrCode
-                        );
-                    m_pReport->WriteReport (pszBuffer);
-                    goto CleanupGameClass;
-                }
-            }
-
-CleanupGameClass:
-            m_pGameData->FreeKeys (piGameClassKey);
-
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
-        }
-
-
-        // Check all games
-        unsigned int j, iNumPaused, iNumKeys;
-        int iGameClass, iGameNumber, iReason;
-        bool bUpdate, bDelete, bPaused = false, bPasswordProtected = false, bStarted;
-
-        Seconds iConsumedTime, iElapsedTime;
-
-        Variant* pvGame, * pvEmpireKey, vLastCheckTime, vLastUpdateTime, vLastLoginTime, vPaused, vTemp, vState,
-            vSecondsForLongtermStatus, vNumUpdatesDownBeforeGameIsKilled;
-        
-        char strGameEmpires [256], strEmpireData [256];
-
-        UTCTime tNewTime, tCurrentTime;
-
-        Time::GetTime (&tCurrentTime);
-        
-        m_pReport->WriteReport ("GameEngine setup verifying active games");
-        
-        iErrCode = m_pGameData->ReadColumn (
-            SYSTEM_ACTIVE_GAMES, 
-            SystemActiveGames::GameClassGameNumber,
-            &pvGame,
-            &iNumKeys
-            );
-
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        }
-        
-        else if (iErrCode != OK) {
-            sprintf (
-                pszBuffer,
-                "GameEngine setup failed read data from the SystemGameClassData table; error %i occurred. This is a fatal error",
-                iErrCode
-                );
-            m_pReport->WriteReport (pszBuffer);
-            return iErrCode;
-        }
-        
-        else {
-
-            char pszGameEmpires [256];
-
-            iErrCode = m_pGameData->ReadData (
-                SYSTEM_DATA,
-                SystemData::SecondsForLongtermStatus,
-                &vSecondsForLongtermStatus
-                );
-
-            if (iErrCode != OK) {
-                m_pReport->WriteReport ("Error reading data from SystemData table. This is a fatal error");
-                goto Cleanup;
-            }
-
-
-            iErrCode = m_pGameData->ReadData (
-                SYSTEM_DATA,
-                SystemData::NumUpdatesDownBeforeGameIsKilled,
-                &vNumUpdatesDownBeforeGameIsKilled
-                );
-
-            if (iErrCode != OK) {
-                m_pReport->WriteReport ("Error reading data from SystemData table. This is a fatal error");
-                goto Cleanup;
-            }
-
-            for (i = 0; i < iNumKeys; i ++) {
-
-                GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
-
-                // Add the game to our game table
-                iErrCode = AddToGameTable (iGameClass, iGameNumber);
-                if (iErrCode != OK) {
-                    sprintf (
-                        pszBuffer,
-                        "GameEngine setup failed to add a game to a table; error %i occurred. This is a fatal error",
-                        iErrCode
-                        );
-                    m_pReport->WriteReport (pszBuffer);
-                    goto Cleanup;
-                }
-                
-                // Increment number of games in gameclass
-                iErrCode = m_pGameData->Increment (
-                    SYSTEM_GAMECLASS_DATA,
-                    iGameClass,
-                    SystemGameClassData::NumActiveGames,
-                    1
-                    );
-
-                if (iErrCode != OK) {
-                    sprintf (
-                        pszBuffer,
-                        "GameEngine setup failed to write information to the gameclass table; error %i occurred. This is a fatal error",
-                        iErrCode
-                        );
-                    m_pReport->WriteReport (pszBuffer);
-                    goto Cleanup;
-                }
-                
-                // Get game update period
-                iErrCode = m_pGameData->ReadData (
-                    SYSTEM_GAMECLASS_DATA, 
-                    iGameClass, 
-                    SystemGameClassData::NumSecPerUpdate,  
-                    &vPeriod
-                    );
-
-                if (iErrCode != OK) {
-                    sprintf (
-                        pszBuffer,
-                        "GameEngine setup failed to read data from the SystemGameClassData table; error %i occurred. This is a fatal error",
-                        iErrCode
-                        );
-                    m_pReport->WriteReport (pszBuffer);
-                    goto Cleanup;
-                }
-                
-                GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
-                GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
-                
-                // Get game state
-                iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
-                if (iErrCode != OK) {
-                    goto Test;
-                }
-
-                bPaused = (vState.GetInteger() & PAUSED) || (vState.GetInteger() & ADMIN_PAUSED);
-                bStarted = (vState.GetInteger() & STARTED) != 0;
-                
-                // Get game last update check time
-                iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateCheck, &vLastCheckTime);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-                
-                // Reset state
-                iErrCode = m_pGameData->WriteAnd (strGameData, GameData::State, ~GAME_BUSY);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-                
-                // Get num empires
-                iErrCode = m_pGameData->GetNumRows (strGameEmpires, &iNumEmpires);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-                
-                // Is password protected?
-                iErrCode = IsGamePasswordProtected (iGameClass, iGameNumber, &bPasswordProtected);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-                
-                // Get last update time
-                iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateTime, &vLastUpdateTime);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-
-                // If started and not paused, reset last update time to current time minus 
-                // (last shutdown time minus last update time)
-                if (bStarted && !bPaused) {
-                    
-                    iConsumedTime = Time::GetSecondDifference (
-                        vLastCheckTime.GetUTCTime(), 
-                        vLastUpdateTime.GetUTCTime()
-                        );
-                    
-                    if (iConsumedTime < 0) {
-                        Assert (false);
-                        iConsumedTime = 0;
-                    }
-                    
-                    Time::SubtractSeconds (tCurrentTime, iConsumedTime, &tNewTime);
-                    
-                    // Write final update time to database
-                    iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateTime, tNewTime);
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        goto Test;
-                    }
-                }
-                
-                // Update empires' last login settings
-                GET_GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
-
-                iErrCode = m_pGameData->ReadColumn (
-                    pszGameEmpires, 
-                    GameEmpires::EmpireKey, 
-                    &pvEmpireKey, 
-                    &iNumEmpires
-                    );
-
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-                
-                iNumPaused = 0;
-                for (j = 0; j < iNumEmpires; j ++) {
-                    
-                    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, pvEmpireKey[j].GetInteger());
-                    
-                    iErrCode = m_pGameData->ReadData (
-                        strEmpireData, 
-                        GameEmpireData::LastLogin, 
-                        &vLastLoginTime
-                        );
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        m_pGameData->FreeData (pvEmpireKey);
-                        goto Test;
-                    }
-                    
-                    iConsumedTime = Time::GetSecondDifference (vLastCheckTime, vLastLoginTime);
-                    if (iConsumedTime < 0) {
-                        Assert (false);
-                        iConsumedTime = 0;
-                    }
-                    
-                    Time::SubtractSeconds (tCurrentTime, iConsumedTime, &tNewTime);
-                    
-                    iErrCode = m_pGameData->WriteData (strEmpireData, GameEmpireData::LastLogin, tNewTime);
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        m_pGameData->FreeData (pvEmpireKey);
-                        goto Test;
-                    }
-                    
-                    iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::Options, &vPaused);
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        m_pGameData->FreeData (pvEmpireKey);
-                        goto Test;
-                    }
-
-                    if (vPaused.GetInteger() & REQUEST_PAUSE) {
-                        iNumPaused ++;
-                    }
-                }
-                
-                m_pGameData->FreeData (pvEmpireKey);
-                
-                // Update num paused
-                iErrCode = m_pGameData->WriteData (strGameData, GameData::NumRequestingPause, iNumPaused);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Test;
-                }
-                
-                // Set paused status
-                if (iNumPaused == iNumEmpires) {
-                    
-                    if (!bPaused) {
-                        iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
-                        if (iErrCode != OK) {
-                            Assert (false);
-                            goto Test;
-                        }
-                    }
-                    
-                } else {
-                    
-                    if (bPaused && !(vState.GetInteger() & ADMIN_PAUSED)) {
-                        iErrCode = UnpauseGame (iGameClass, iGameNumber, false, true);
-                        if (iErrCode != OK) {
-                            Assert (false);
-                            goto Test;
-                        }
-                    }
-                }
-Test:
-                // If an error occurred, or if game is in the middle of an update, 
-                // it must have been damaged by a crash.  Kill it.
-                if (iErrCode != OK ||
-                    
-                    VerifyGameTables (iGameClass, iGameNumber) != OK ||
-                    
-                    (
-                        (vState.GetInteger() & GAME_BUSY) != 0 && 
-                        !(vState.GetInteger() & GAME_WAITING_TO_UPDATE)
-                    )
-                    ) {
-
-                    iReason = vState.GetInteger() & ~GAME_DELETION_REASON_MASK;
-                    if (iReason == 0) {
-                        iReason = TABLE_VERIFICATION_ERROR;
-                    }
-
-                    iErrCode = DeleteGame (iGameClass, iGameNumber, SYSTEM, "", iReason);
-
-                    if (iErrCode == OK) {
-                        
-                        sprintf (
-                            pszBuffer,
-                            "GameEngine setup deleted game %i of gameclass %i because it was in an "\
-                            "inconsistent state",
-                            iGameNumber,
-                            iGameClass
-                            );
-
-                        m_pReport->WriteReport (pszBuffer);
-
-                    } else {
-
-                        sprintf (
-                            pszBuffer,
-                            "Error: GameEngine setup could not delete game %i of gameclass %i"\
-                            "after it was discovered to be in an inconsistent state. The error was %i. "\
-                            "A database restore is recommended",
-                            iGameNumber,
-                            iGameClass,
-                            iErrCode
-                            );
-                        
-                        m_pReport->WriteReport (pszBuffer);
-                        iErrCode = OK;
-                    }
-
-                    continue;
-                }
-
-                // Game should be killed if it's not paused and it's not a longterm and 
-                // more than x updates have transpired while the server was down
-                iElapsedTime = Time::GetSecondDifference (tCurrentTime, vLastCheckTime.GetUTCTime());
-
-                if (!bPaused &&
-                    vPeriod.GetInteger() < vSecondsForLongtermStatus.GetInteger() && 
-                    iElapsedTime > (Seconds) (vPeriod.GetInteger() * vNumUpdatesDownBeforeGameIsKilled.GetInteger())) {
-
-                    if (DeleteGame (iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN) == OK) {
-                        
-                        sprintf (
-                            pszBuffer,
-                            "GameEngine setup deleted game %i of gameclass %i "\
-                            "because it grew stale during a system shutdown",
-                            iGameNumber,
-                            iGameClass
-                            );
-
-                        m_pReport->WriteReport (pszBuffer);
-
-                    } else {
-
-                        sprintf (
-                            pszBuffer,
-                            "Error: GameEngine setup could not delete game %i of gameclass %i "\
-                            "after it grew stale during a system shutdown. A database restore is recommended",
-                            iGameNumber,
-                            iGameClass
-                            );
-                        
-                        m_pReport->WriteReport (pszBuffer);
-                    }
-
-                    continue;
-                }
-
-                // If game hasn't started and is password protected and has only one empire, kill it                    
-                if (!(vState.GetInteger() & STARTED) && bPasswordProtected && iNumEmpires == 1) {
-                    
-                    if (DeleteGame (iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED) == OK) {
-                        
-                        bDelete = true;
-                        
-                        sprintf (
-                            pszBuffer,
-                            "GameEngine setup deleted game %i of gameclass %i "\
-                            "because it was password protected and only contained one empire",
-                            iGameNumber,
-                            iGameClass
-                            );
-                        
-                        m_pReport->WriteReport (pszBuffer);
-                        
-                    } else {
-                        
-                        sprintf (
-                            pszBuffer,
-                            "Error: GameEngine setup could not delete game %i of gameclass %i "\
-                            "after it was determined to be password protected and contain only one empire. "\
-                            "A database restore is recommended",
-                            iGameNumber,
-                            iGameClass
-                            );
-                        
-                        m_pReport->WriteReport (pszBuffer);
-                    }
-
-                    continue;
-                }
-
-                // Update the game
-                iErrCode = CheckGameForUpdates (
-                    iGameClass, 
-                    iGameNumber,
-                    &bUpdate
-                    );
-
-                if (iErrCode != OK) {
-                    goto Test;
-                }
-
-                if (bUpdate) {
-
-                    iErrCode = DoesGameExist (
-                        iGameClass, 
-                        iGameNumber,
-                        &bUpdate
-                        );
-
-                    if (iErrCode == OK && !bUpdate) {
-                        // Game ended
-                        continue;
-                    }
-                }
-            }
-            
 Cleanup:
-            // Clean up
-            m_pGameData->FreeData (pvGame);
 
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
-        }
-        
-        iErrCode = m_pGameData->GetAllKeys (
-            SYSTEM_GAMECLASS_DATA,
-            &piGameClassKey, 
-            &iNumGameClasses
-            );
-        
-        if (iErrCode == OK) {
-            
-            for (i = 0; i < iNumGameClasses; i ++) {
-                
-                iErrCode = m_pGameData->ReadData (
-                    SYSTEM_GAMECLASS_DATA,
-                    piGameClassKey[i],
-                    SystemGameClassData::Options,
-                    &vOptions
-                    );
-
-                // Hard to react to an error here
-                Assert (iErrCode == OK);
-                
-                if (iErrCode == OK && vOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION) {
-                    
-                    // Make sure there are active games belonging to this game
-                    if (!DoesGameClassHaveActiveGames (piGameClassKey[i])) {
-                        
-                        // This game class needs to be deleted
-                        iErrCode = DeleteGameClass (piGameClassKey[i], &bDeleted);
-                        
-                        if (iErrCode == OK) {
-                            sprintf (
-                                pszBuffer,
-                                "GameEngine setup deleted gameclass %i because it was marked for deletion",
-                                piGameClassKey[i]
-                                );
-                            m_pReport->WriteReport (pszBuffer);
-                        }
-                    }
-                }
-            }
-
-            m_pGameData->FreeKeys (piGameClassKey);
-        }
-
-        m_bGoodDatabase = true;
-        m_pReport->WriteReport ("GameEngine setup finished verifying active games");
-
-        //////////////////////
-        // Verify top lists //
-        //////////////////////
-
-        iErrCode = VerifyTournaments();
-        if (iErrCode != OK) {
-            
-            sprintf (
-                pszBuffer,
-                "Error: GameEngine setup could not verify the existing tournaments."\
-                "The error was %i. This is a fatal error",
-                iErrCode
-                );
-            
-            m_pReport->WriteReport (pszBuffer);
-            
-            return iErrCode;
-        }
-
-        m_pReport->WriteReport ("GameEngine setup finished verifying tournaments");
-
-        iErrCode = VerifyTopLists();
-        if (iErrCode != OK) {
-            
-            sprintf (
-                pszBuffer,
-                "Error: GameEngine setup could not rebuild a toplist."\
-                "The error was %i. This is a fatal error",
-                iErrCode
-                );
-            
-            m_pReport->WriteReport (pszBuffer);
-            
-            return iErrCode;
-        }
-
-        m_pReport->WriteReport ("GameEngine setup finished verifying top lists");
-
-        //////////
-        // Done //
-        //////////
-
-        m_pReport->WriteReport ("GameEngine setup successfully reused the existing database");
-
-        return OK;
-
-    } else {
-
-        if (bNewDatabase) {
-
-            m_pReport->WriteReport ("GameEngine setup is initializing a new database");
-            
-            iErrCode = CreateDefaultSystemTemplates();
-            if (iErrCode != OK) {
-                m_pReport->WriteReport ("GameEngine setup could not create the default system templates");
-                return iErrCode;
-            }
-
-            iErrCode = CreateDefaultSystemTables();
-            if (iErrCode != OK) {
-                m_pReport->WriteReport ("GameEngine setup could not create the default system tables");
-                return iErrCode;
-            }
-
-            iErrCode = SetupDefaultSystemTables();
-            if (iErrCode != OK) {
-                m_pReport->WriteReport ("GameEngine setup could not set up the default system tables");
-                return iErrCode;
-            }
-
-            iErrCode = SetupDefaultSystemGameClasses();
-            if (iErrCode != OK) {
-                m_pReport->WriteReport ("GameEngine setup could not set up the default system gameclasses");
-                return iErrCode;
-            }
-            
-            m_pReport->WriteReport ("GameEngine setup finished initializing a new database");
-
-            m_bGoodDatabase = true;
-            return OK;
-        
-        } else {
-
-            char* pszMessage = (char*) StackAlloc (strlen (pszBadTable) + 256);
-
-            sprintf (
-                pszMessage,
-                "GameEngine setup found errors in the %s table or its template",
-                pszBadTable
-                );
-
-            m_pReport->WriteReport (pszMessage);
-            m_pReport->WriteReport ("GameEngine setup could not successfully reuse the database");
-            
-            m_bGoodDatabase = false;
-            return ERROR_FAILURE;
-        }
-    }
+    *pbNewDatabase = bNewDatabase;
+    *pbGoodDatabase = bGoodDatabase;
+    *ppszBadTable = pszBadTable;
 }
 
-int GameEngine::VerifyGameTables (int iGameClass, int iGameNumber) {
+void GameEngine::VerifyGameTables (int iGameClass, int iGameNumber, bool* pbGoodDatabase) {
 
     int iErrCode;
     bool bGoodDatabase = true;
 
     char strBadTable [512];
 
-    Variant vGameClassOptions, vGameOptions, * pvEmpireKey = NULL;
+    Variant vTemp, * pvEmpireKey = NULL;
     unsigned int iNumEmpires, i;
+
+    int iGameOptions, iGameClassOptions;
+
+    // Gameclass options
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        bGoodDatabase = false;
+        goto Cleanup;
+    }
+    iGameClassOptions = vTemp.GetInteger();
 
     // GameData
     GET_GAME_DATA (strBadTable, iGameClass, iGameNumber);
     
     if (!m_pGameData->DoesTableExist (strBadTable)) {
+        Assert (false);
         bGoodDatabase = false;
-        goto EndCheck;
+        goto Cleanup;
     }
 
-    iErrCode = m_pGameData->ReadData (strBadTable, GameData::Options, &vGameOptions);
+    iErrCode = m_pGameData->ReadData (strBadTable, GameData::Options, &vTemp);
     if (iErrCode != OK) {
+        Assert (false);
         bGoodDatabase = false;
-        goto EndCheck;
+        goto Cleanup;
     }
+    iGameOptions = vTemp.GetInteger();
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
-    if (iErrCode != OK) {
-        bGoodDatabase = false;
-        goto EndCheck;
-    }
-
-    if (vGameClassOptions.GetInteger() & INDEPENDENCE) {
+    if (iGameClassOptions & INDEPENDENCE) {
 
         GET_GAME_INDEPENDENT_SHIPS (strBadTable, iGameClass, iGameNumber);
 
         if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
             bGoodDatabase = false;
-            goto EndCheck;
+            goto Cleanup;
         }
     }
 
-    if (vGameOptions.GetInteger() & GAME_ENFORCE_SECURITY) {
+    if (iGameOptions & GAME_ENFORCE_SECURITY) {
 
         GET_GAME_SECURITY (strBadTable, iGameClass, iGameNumber);
 
         if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
             bGoodDatabase = false;
-            goto EndCheck;
+            goto Cleanup;
         }
     }
 
@@ -1030,100 +509,683 @@ int GameEngine::VerifyGameTables (int iGameClass, int iGameNumber) {
     GET_GAME_DEAD_EMPIRES (strBadTable, iGameClass, iGameNumber);
     
     if (!m_pGameData->DoesTableExist (strBadTable)) {
+        Assert (false);
         bGoodDatabase = false;
-        goto EndCheck;
-    }
-
-    // GameEmpires
-    GET_GAME_EMPIRES (strBadTable, iGameClass, iGameNumber);
-    
-    if (!m_pGameData->DoesTableExist (strBadTable)) {
-        bGoodDatabase = false;
-        goto EndCheck;
-    }
-
-    // Check empire tables  
-    if (m_pGameData->ReadColumn (strBadTable, GameEmpires::EmpireKey, &pvEmpireKey, &iNumEmpires) != OK) {
-        bGoodDatabase = false;
-        goto EndCheck;
-    }
-    if (iNumEmpires > 0) {
-
-        for (i = 0; i < iNumEmpires; i ++) {
-            
-            // GameEmpireData(I.I.I)
-            GET_GAME_EMPIRE_DATA (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            if (!m_pGameData->DoesTableExist (strBadTable)) {
-                bGoodDatabase = false;
-                goto EndCheck;
-            }
-
-            // GameEmpireMessages(I.I.I)
-            GET_GAME_EMPIRE_MESSAGES (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            if (!m_pGameData->DoesTableExist (strBadTable)) {
-                bGoodDatabase = false;
-                goto EndCheck;
-            }
-
-            // GameEmpireMap(I.I.I)
-            GET_GAME_EMPIRE_MAP (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            if (!m_pGameData->DoesTableExist (strBadTable)) {
-                bGoodDatabase = false;
-                goto EndCheck;
-            }
-
-            // GameEmpireDiplomacy(I.I.I)
-            GET_GAME_EMPIRE_DIPLOMACY (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            if (!m_pGameData->DoesTableExist (strBadTable)) {
-                bGoodDatabase = false;
-                goto EndCheck;
-            }
-
-            // GameEmpireShips(I.I.I)
-            GET_GAME_EMPIRE_SHIPS (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            if (!m_pGameData->DoesTableExist (strBadTable)) {
-                bGoodDatabase = false;
-                goto EndCheck;
-            }
-
-            // GameEmpireFleets(I.I.I)
-            GET_GAME_EMPIRE_FLEETS (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            if (!m_pGameData->DoesTableExist (strBadTable)) {
-                bGoodDatabase = false;
-                goto EndCheck;
-            }
-        }
-
-        m_pGameData->FreeData (pvEmpireKey);
+        goto Cleanup;
     }
 
     // GameMap
     GET_GAME_MAP (strBadTable, iGameClass, iGameNumber);
     
     if (!m_pGameData->DoesTableExist (strBadTable)) {
+        Assert (false);
         bGoodDatabase = false;
-        goto EndCheck;
+        goto Cleanup;
     }
 
-EndCheck:
+    // GameEmpires
+    GET_GAME_EMPIRES (strBadTable, iGameClass, iGameNumber);
+    
+    if (!m_pGameData->DoesTableExist (strBadTable)) {
+        Assert (false);
+        bGoodDatabase = false;
+        goto Cleanup;
+    }
+
+    // Check empire tables  
+    if (m_pGameData->ReadColumn (strBadTable, GameEmpires::EmpireKey, &pvEmpireKey, &iNumEmpires) != OK) {
+        Assert (false);
+        bGoodDatabase = false;
+        goto Cleanup;
+    }
+
+    for (i = 0; i < iNumEmpires; i ++) {
+        
+        // GameEmpireData(I.I.I)
+        GET_GAME_EMPIRE_DATA (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        
+        if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+
+        // GameEmpireMessages(I.I.I)
+        GET_GAME_EMPIRE_MESSAGES (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        
+        if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+
+        // GameEmpireMap(I.I.I)
+        GET_GAME_EMPIRE_MAP (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        
+        if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+
+        // GameEmpireDiplomacy(I.I.I)
+        GET_GAME_EMPIRE_DIPLOMACY (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        
+        if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+
+        // GameEmpireShips(I.I.I)
+        GET_GAME_EMPIRE_SHIPS (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        
+        if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+
+        // GameEmpireFleets(I.I.I)
+        GET_GAME_EMPIRE_FLEETS (strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        
+        if (!m_pGameData->DoesTableExist (strBadTable)) {
+            Assert (false);
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
+Cleanup:
+
+    *pbGoodDatabase = bGoodDatabase;
+
+    if (pvEmpireKey != NULL) {
+        m_pGameData->FreeData (pvEmpireKey);
+    }
 
     if (!bGoodDatabase) {
 
         char* pszMessage = (char*) StackAlloc (strlen (strBadTable) + 256);
-        
         sprintf (pszMessage, "GameEngine setup found an inconsistency in the %s table", strBadTable);
 
         m_pReport->WriteReport (pszMessage);
-        return ERROR_FAILURE;
+    }
+}
+
+int GameEngine::VerifySystem() {
+
+    int iErrCode;
+
+    iErrCode = SetSystemOption (
+        LOGINS_ENABLED | NEW_EMPIRES_ENABLED | NEW_GAMES_ENABLED | ACCESS_ENABLED, 
+        true
+        );
+
+    if (iErrCode != OK) {
+        Assert (false);
+    }
+
+    return iErrCode;
+}
+
+int GameEngine::VerifyEmpires() {
+
+    int iErrCode = OK;
+
+    IWriteTable* pEmpires = NULL;
+
+    Variant vTemp;
+    Seconds sDiff;
+
+    UTCTime tLastShutdownTime, tNow;
+    Time::GetTime (&tNow);
+
+    iErrCode = GetSystemProperty (SystemData::LastShutdownTime, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    tLastShutdownTime = vTemp.GetUTCTime();
+
+    sDiff = Time::GetSecondDifference (tNow, tLastShutdownTime);
+
+    // If the server was down longer than a week, 
+    if (sDiff > 7 * DAY_LENGTH_IN_SECONDS) {
+
+        unsigned int iKey = NO_KEY;
+
+        iErrCode = m_pGameData->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        // Update every empire's Bridier timebomb
+        while (true) {
+
+            UTCTime tBridier, tNewBridier;
+
+            iErrCode = pEmpires->GetNextKey (iKey, &iKey);
+            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                iErrCode = OK;
+                break;
+            }
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            iErrCode = pEmpires->ReadData (iKey, SystemEmpireData::LastBridierActivity, &tBridier);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            Time::AddSeconds (tBridier, sDiff, &tNewBridier);
+
+            iErrCode = pEmpires->WriteData (iKey, SystemEmpireData::LastBridierActivity, tNewBridier);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+    }    
+
+Cleanup:
+
+    SafeRelease (pEmpires);
+
+    return iErrCode;
+}
+
+int GameEngine::VerifyGameClasses() {
+
+    int iErrCode;
+    unsigned int* piGameClassKey = NULL, iNumGameClasses = 0, i;
+
+    iErrCode = m_pGameData->GetAllKeys (SYSTEM_GAMECLASS_DATA, &piGameClassKey, &iNumGameClasses);
+    if (iErrCode != OK) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+        else Assert (false);
+        return iErrCode;
+    }
+
+    for (i = 0; i < iNumGameClasses; i ++) {
+
+        // Set number of active games in gameclass to 0
+        iErrCode = m_pGameData->WriteData (
+            SYSTEM_GAMECLASS_DATA,
+            piGameClassKey[i],
+            SystemGameClassData::NumActiveGames,
+            0
+            );
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+    }
+
+Cleanup:
+
+    if (piGameClassKey != NULL) {
+        m_pGameData->FreeKeys (piGameClassKey);
+    }
+
+    return iErrCode;
+}
+
+
+int GameEngine::VerifyMarkedGameClasses() {
+
+    int iErrCode;
+    unsigned int* piGameClassKey = NULL, iNumGameClasses = 0, i;
+
+    iErrCode = m_pGameData->GetAllKeys (SYSTEM_GAMECLASS_DATA, &piGameClassKey, &iNumGameClasses);
+    if (iErrCode != OK) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+        else Assert (false);
+        return iErrCode;
     }
     
-    return OK;
+    for (i = 0; i < iNumGameClasses; i ++) {
+
+        Variant vOptions;
+        
+        iErrCode = m_pGameData->ReadData (
+            SYSTEM_GAMECLASS_DATA,
+            piGameClassKey[i],
+            SystemGameClassData::Options,
+            &vOptions
+            );
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+            
+        if (vOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION) {
+            
+            // Make sure there are active games belonging to this game
+            if (!DoesGameClassHaveActiveGames (piGameClassKey[i])) {
+                
+                // This game class needs to be deleted
+                bool bDeleted;
+
+                iErrCode = DeleteGameClass (piGameClassKey[i], &bDeleted);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+                Assert (bDeleted);
+                
+                if (bDeleted) {
+
+                    char pszBuffer [128];
+                    sprintf (
+                        pszBuffer,
+                        "GameEngine setup deleted gameclass %i because it was marked for deletion",
+                        piGameClassKey[i]
+                        );
+                    m_pReport->WriteReport (pszBuffer);
+                }
+            }
+        }
+    }
+
+Cleanup:
+
+    if (piGameClassKey != NULL) {
+        m_pGameData->FreeKeys (piGameClassKey);
+    }
+
+    return iErrCode;
+}
+
+
+int GameEngine::VerifyActiveGames() {
+
+    int iErrCode, iNumUpdatesDownBeforeGameIsKilled;
+    unsigned int i, iNumGames;
+    Seconds sSecondsForLongtermStatus;
+    bool bUpdate;
+
+    Variant* pvGame = NULL, * pvEmpireKey = NULL, vTemp;
+
+    UTCTime tNewTime, tCurrentTime;
+    Time::GetTime (&tCurrentTime);
+
+    iErrCode = m_pGameData->ReadColumn (
+        SYSTEM_ACTIVE_GAMES, 
+        SystemActiveGames::GameClassGameNumber,
+        &pvGame,
+        &iNumGames
+        );
+
+    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+        return OK;
+    }
+
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Read some system data
+    iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    sSecondsForLongtermStatus = vTemp.GetInteger();
+
+    iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    iNumUpdatesDownBeforeGameIsKilled = vTemp.GetInteger();
+
+    // Loop through all games
+    for (i = 0; i < iNumGames; i ++) {
+
+        char pszBuffer [512];
+
+        Seconds sPeriod, sConsumedTime, sElapsedTime;
+        UTCTime tLastUpdateTime, tLastCheckTime;
+
+        bool bPasswordProtected, bPaused, bStarted, bGoodDatabase;
+        unsigned int j, iNumEmpires, iNumPaused;
+
+        int iGameClass, iGameNumber, iState;
+        GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
+
+        GAME_DATA (strGameData, iGameClass, iGameNumber);
+        GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
+
+        // Verify the game's tables
+        VerifyGameTables (iGameClass, iGameNumber, &bGoodDatabase);
+        if (!bGoodDatabase) {
+            iErrCode = ERROR_DATA_CORRUPTION;
+            goto Cleanup;
+        }
+
+        // Add the game to our game table
+        iErrCode = AddToGameTable (iGameClass, iGameNumber);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        // Increment number of games in gameclass
+        iErrCode = m_pGameData->Increment (
+            SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        // Get game update period
+        iErrCode = m_pGameData->ReadData (
+            SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        sPeriod = vTemp.GetInteger();
+        
+        // Get game state
+        iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        iState = vTemp.GetInteger();
+
+        bPaused = (iState & PAUSED) || (iState & ADMIN_PAUSED);
+        bStarted = (iState & STARTED) != 0;
+
+        // Get game last update check time
+        iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateCheck, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        tLastCheckTime = vTemp.GetUTCTime();
+        
+        // Reset state
+        iErrCode = m_pGameData->WriteAnd (strGameData, GameData::State, ~GAME_BUSY);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        // Get num empires
+        iErrCode = m_pGameData->GetNumRows (strGameEmpires, &iNumEmpires);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        // Is password protected?
+        iErrCode = IsGamePasswordProtected (iGameClass, iGameNumber, &bPasswordProtected);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        // Get last update time
+        iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateTime, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        tLastUpdateTime = vTemp.GetUTCTime();
+
+        // If started and not paused, reset last update time to current time minus 
+        // (last shutdown time minus last update time)
+        if (bStarted && !bPaused) {
+            
+            sConsumedTime = Time::GetSecondDifference (tLastCheckTime, tLastUpdateTime);
+            if (sConsumedTime < 0) {
+                Assert (false);
+                sConsumedTime = 0;
+            }
+
+            // Write final update time to database
+            Time::SubtractSeconds (tCurrentTime, sConsumedTime, &tNewTime);
+
+            iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateTime, tNewTime);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+        
+        // Update empires' last login settings
+        iErrCode = m_pGameData->ReadColumn (
+            strGameEmpires, 
+            GameEmpires::EmpireKey, 
+            &pvEmpireKey, 
+            &iNumEmpires
+            );
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        // Loop through all empires in game
+        iNumPaused = 0;
+
+        for (j = 0; j < iNumEmpires; j ++) {
+
+            UTCTime tLastLoginTime;
+            int iOptions;
+            unsigned int iEmpireKey = pvEmpireKey[j].GetInteger();
+
+            GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+            iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::LastLogin, &vTemp);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+            tLastLoginTime = vTemp.GetUTCTime();
+            
+            sConsumedTime = Time::GetSecondDifference (tLastCheckTime, tLastLoginTime);
+            if (sConsumedTime < 0) {
+                Assert (false);
+                sConsumedTime = 0;
+            }
+            tLastLoginTime = vTemp.GetUTCTime();
+            
+            Time::SubtractSeconds (tCurrentTime, sConsumedTime, &tNewTime);
+            
+            iErrCode = m_pGameData->WriteData (strEmpireData, GameEmpireData::LastLogin, tNewTime);
+            if (iErrCode != OK) {
+                Assert (false);
+                m_pGameData->FreeData (pvEmpireKey);
+                goto Cleanup;
+            }
+            
+            iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::Options, &vTemp);
+            if (iErrCode != OK) {
+                Assert (false);
+                m_pGameData->FreeData (pvEmpireKey);
+                goto Cleanup;
+            }
+            iOptions = vTemp.GetInteger();
+
+            if (iOptions & REQUEST_PAUSE) {
+                iNumPaused ++;
+            }
+        }
+
+        // Update num paused
+        iErrCode = m_pGameData->WriteData (strGameData, GameData::NumRequestingPause, iNumPaused);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        
+        // Set paused status
+        if (iNumPaused == iNumEmpires) {
+            
+            if (!bPaused) {
+
+                iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+            }
+            
+        } else {
+            
+            if (bPaused && !(iState & ADMIN_PAUSED)) {
+
+                iErrCode = UnpauseGame (iGameClass, iGameNumber, false, true);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+            }
+        }
+
+        // Delete the game if it's in an 'interrupted' state
+        if ((iState & GAME_BUSY) && !(iState & GAME_WAITING_TO_UPDATE)) {
+
+            int iReason = iState & ~GAME_DELETION_REASON_MASK;
+            Assert (iReason != 0);
+
+            iErrCode = DeleteGame (iGameClass, iGameNumber, SYSTEM, "", iReason);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            sprintf (
+                pszBuffer,
+                "GameEngine setup deleted game %i of gameclass %i because it was in "\
+                "inconsistent state %i",
+                iGameNumber,
+                iGameClass,
+                iReason
+                );
+
+            m_pReport->WriteReport (pszBuffer);
+            continue;
+        }
+
+        // Game should be killed if it's not paused and it's not a longterm and 
+        // more than x updates have transpired while the server was down
+        sElapsedTime = Time::GetSecondDifference (tCurrentTime, tLastCheckTime);
+
+        if (!bPaused &&
+            sPeriod < sSecondsForLongtermStatus && 
+            sElapsedTime > sPeriod * iNumUpdatesDownBeforeGameIsKilled) {
+
+            iErrCode = DeleteGame (iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+                
+            sprintf (
+                pszBuffer,
+                "GameEngine setup deleted game %i of gameclass %i "\
+                "because it grew stale during a system shutdown",
+                iGameNumber,
+                iGameClass
+                );
+
+            m_pReport->WriteReport (pszBuffer);
+            continue;
+        }
+
+        // If game hasn't started and is password protected and has only one empire, kill it                    
+        if (!(iState & STARTED) && bPasswordProtected && iNumEmpires == 1) {
+            
+            iErrCode = DeleteGame (iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            sprintf (
+                pszBuffer,
+                "GameEngine setup deleted game %i of gameclass %i "\
+                "because it was password protected and only contained one empire",
+                iGameNumber,
+                iGameClass
+                );
+                
+            m_pReport->WriteReport (pszBuffer);
+            continue;
+        }
+
+        // Update the game
+        iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, &bUpdate);
+        if (iErrCode != OK) {
+            goto Cleanup;
+        }
+    }
+    
+Cleanup:
+
+    if (pvGame != NULL) {
+        m_pGameData->FreeData (pvGame);
+    }
+
+    if (pvEmpireKey != NULL) {
+        m_pGameData->FreeData (pvEmpireKey);
+    }
+
+    return iErrCode;
+}
+
+//
+// Creation
+//
+
+int GameEngine::CreateNewDatabase() {
+    
+    int iErrCode;
+
+    m_pReport->WriteReport ("GameEngine setup is initializing a new database");
+            
+    iErrCode = CreateDefaultSystemTemplates();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup could not create the default system templates");
+        return iErrCode;
+    }
+
+    iErrCode = CreateDefaultSystemTables();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup could not create the default system tables");
+        return iErrCode;
+    }
+
+    iErrCode = SetupDefaultSystemTables();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup could not set up the default system tables");
+        return iErrCode;
+    }
+
+    iErrCode = SetupDefaultSystemGameClasses();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine setup could not set up the default system gameclasses");
+        return iErrCode;
+    }
+    
+    m_pReport->WriteReport ("GameEngine setup finished initializing a new database");
+    return iErrCode;
 }
 
 
@@ -1592,6 +1654,12 @@ int GameEngine::SetupDefaultSystemTables() {
         return ERROR_FAILURE;
     }
 
+    iErrCode = SetEmpireOption2 (ROOT_KEY, EMPIRE_ACCEPTED_TOS, true);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
     // Set up default guest empire (Guest)
     iErrCode = CreateEmpire (
         GUEST_NAME,
@@ -1613,6 +1681,12 @@ int GameEngine::SetupDefaultSystemTables() {
     }
 
     iErrCode = SetEmpireOption (GUEST_KEY, CAN_BROADCAST, false);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    iErrCode = SetEmpireOption2 (GUEST_KEY, EMPIRE_ACCEPTED_TOS, true);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;

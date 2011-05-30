@@ -290,7 +290,7 @@ int TableContext::Resize (unsigned int iNumNewRows) {
 #define BITS_PER_BITMAP_ELEMENT (sizeof (size_t) * 8)
 #define INITIAL_BITMAP_ELEMENTS (5)
 
-int TableContext::ExpandMetaDataIfNecessary (unsigned int iNumNewRows) {
+int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
 
     TableHeader* pTableHeader = GetTableHeader();
     Offset oBitmapOffset = pTableHeader->oRowBitmapOffset;
@@ -302,7 +302,7 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iNumNewRows) {
     if (oBitmapOffset == NO_OFFSET) {
 
         Size sNewSize = 
-            max (iNumNewRows / BITS_PER_BITMAP_ELEMENT, INITIAL_BITMAP_ELEMENTS) * sizeof (size_t);
+            max (iMaxNumRows / BITS_PER_BITMAP_ELEMENT, INITIAL_BITMAP_ELEMENTS) * sizeof (size_t);
         
         FileHeap* pMetaHeap = GetMetaDataHeap();
 
@@ -324,13 +324,12 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iNumNewRows) {
     } else {
 
         unsigned int iSize = pTableHeader->iNumBitmapElements;
-        unsigned int iNumRows = GetNumRows();
 
-        if (iSize * BITS_PER_BITMAP_ELEMENT <= iNumRows + iNumNewRows) {
+        if (iSize * BITS_PER_BITMAP_ELEMENT <= iMaxNumRows) {
 
             FileHeap* pMetaHeap = GetMetaDataHeap();
 
-            unsigned int iNewSize = (iNumRows + iNumNewRows) / BITS_PER_BITMAP_ELEMENT + INITIAL_BITMAP_ELEMENTS;
+            unsigned int iNewSize = iMaxNumRows / BITS_PER_BITMAP_ELEMENT + INITIAL_BITMAP_ELEMENTS;
             
             // Reallocate space
             pMetaHeap->Unlock();
@@ -359,8 +358,8 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iNumNewRows) {
     //
 
     if (GetNumIndexColumns() > 0 && pTableHeader->poIndexOffset[0] == NO_OFFSET) {
-        Assert (GetNumRows() == 0 && iNumNewRows > 0);
-        return CreateAllIndexes (iNumNewRows);
+        Assert (GetNumRows() == 0 && iMaxNumRows > 0);
+        return CreateAllIndexes (iMaxNumRows);
     }
 
     return OK;
@@ -403,6 +402,8 @@ bool TableContext::IsValidRow (unsigned int iKey) {
     size_t stBit = iKey % BITS_PER_BITMAP_ELEMENT;
     size_t stIndex = iKey / BITS_PER_BITMAP_ELEMENT;
 
+    Assert (stIndex < GetTableHeader()->iNumBitmapElements);
+
     return (pstBits[stIndex] & SignificantBit[stBit]) != 0;
 }
 
@@ -415,6 +416,8 @@ void TableContext::SetRowValidity (unsigned int iKey, bool bValid) {
 
     size_t stBit = iKey % BITS_PER_BITMAP_ELEMENT;
     size_t stIndex = iKey / BITS_PER_BITMAP_ELEMENT;
+
+    Assert (stIndex < GetTableHeader()->iNumBitmapElements);
 
     if (bValid) {
 

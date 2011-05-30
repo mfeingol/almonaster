@@ -24,10 +24,8 @@ INITIALIZE_EMPIRE
 
 IHttpForm* pSearchForm, * pHttpForm;
 
-int iErrCode, iEmpireAdminPage = 0, iNumSearchColumns = 0, 
-    iLastKey = NO_KEY, * piSearchEmpireKey = NULL, iNumSearchEmpires = 0, iMaxNumHits = 0;
-    
-unsigned int iTargetEmpireKey = NO_KEY;
+int iErrCode, iEmpireAdminPage = 0;
+unsigned int iLastKey = NO_KEY, * piSearchEmpireKey = NULL, iNumSearchEmpires = 0, iTargetEmpireKey = NO_KEY;
 
 // Make sure that the unprivileged don't abuse this:
 if (m_iPrivilege < ADMINISTRATOR) {
@@ -35,9 +33,9 @@ if (m_iPrivilege < ADMINISTRATOR) {
     return Redirect (LOGIN);
 }
 
-unsigned int piSearchColName [MAX_NUM_SEARCH_COLUMNS];
-Variant pvSearchColData1 [MAX_NUM_SEARCH_COLUMNS];
-Variant pvSearchColData2 [MAX_NUM_SEARCH_COLUMNS];
+SearchColumn sc [MAX_NUM_SEARCH_COLUMNS];
+SearchDefinition sd;
+sd.pscColumns = sc;
 
 const char* pszFormName [MAX_NUM_SEARCH_COLUMNS];
 const char* pszColName1 [MAX_NUM_SEARCH_COLUMNS];
@@ -89,17 +87,13 @@ SearchResults:
                     iEmpireAdminPage = 0;
 
                     iErrCode = HandleSearchSubmission (
-                        piSearchColName,
-                        pvSearchColData1,
-                        pvSearchColData2,
+                        sd,
                         pszFormName,
                         pszColName1,
                         pszColName2,
-                        &iNumSearchColumns,
                         &piSearchEmpireKey,
                         &iNumSearchEmpires,
-                        &iLastKey,
-                        &iMaxNumHits
+                        &iLastKey
                         );
 
                     switch (iErrCode) {
@@ -112,6 +106,7 @@ SearchResults:
                             if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
                                 iTargetEmpireKey = piSearchEmpireKey[0];
                                 g_pGameEngine->FreeKeys (piSearchEmpireKey);
+                                piSearchEmpireKey = NULL;
                                 iEmpireAdminPage = 3;
                             } else {
                                 iEmpireAdminPage = 1;
@@ -324,13 +319,7 @@ SearchResults:
                 else {
 
                     if (g_pGameEngine->SetEmpirePrivilege (iTargetEmpireKey, iValue) == OK) {
-                    
                         AddMessage ("The empire's privilege level was successfully updated");
-                        
-                        if (!bValue) {
-                            AddMessage ("It will be reset the next time the empire's score transitions to another level");
-                        }
-                        
                     } else {
                         AddMessage ("The empire's privilege level could not be updated");
                     }
@@ -422,8 +411,8 @@ SearchResults:
                 bRedirectTest = false;
             }
 
-            // Lookup
-            if (WasButtonPressed (BID_LOOKUP)) {
+            // Lookup or Update
+            if (WasButtonPressed (BID_LOOKUP) || WasButtonPressed (BID_UPDATE)) {
                 bRedirectTest = false;
                 iEmpireAdminPage = 3;
                 break;
@@ -475,6 +464,11 @@ SearchResults:
                 }
                 iTargetEmpireKey = pHttpForm->GetIntValue();
 
+                if ((pHttpForm = m_pHttpRequest->GetForm ("TargetEmpireSecret")) == NULL) {
+                    goto Redirection;
+                }
+                int64 i64TargetEmpireSecret = pHttpForm->GetInt64Value();
+
                 if (iTargetEmpireKey == m_iEmpireKey) {
                     AddMessage ("You cannot obliterate yourself");
                 }
@@ -489,15 +483,15 @@ SearchResults:
 
                 else {
 
-                    iErrCode = g_pGameEngine->ObliterateEmpire (iTargetEmpireKey, m_iEmpireKey);
+                    iErrCode = g_pGameEngine->ObliterateEmpire (iTargetEmpireKey, i64TargetEmpireSecret, m_iEmpireKey);
 
                     if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST) {
-                        AddMessage ("The empire does not exist");
+                        AddMessage ("The empire no longer exists");
                     } else {
                         if (iErrCode == OK) {
-                            AddMessage ("The empire was obliterated from the server");
+                            AddMessage ("The empire was successfully obliterated from the server");
                         } else {
-                            char pszMessage [512];
+                            char pszMessage [256];
                             sprintf (pszMessage, "Error %i occurred while obliterating the empire", iErrCode);
                             AddMessage (pszMessage);
                         }
@@ -551,17 +545,13 @@ case 1:
     Assert (piSearchEmpireKey != NULL);
 
     RenderSearchResults (
-        piSearchColName,
-        pvSearchColData1,
-        pvSearchColData2,
+        sd,
         pszFormName,
         pszColName1,
         pszColName2,
-        iNumSearchColumns,
         piSearchEmpireKey,
         iNumSearchEmpires,
-        iLastKey,
-        iMaxNumHits
+        iLastKey
         );
 
     g_pGameEngine->FreeKeys (piSearchEmpireKey);
@@ -624,7 +614,9 @@ case 3:
         }
     }
 
-    %><p><% WriteButton (BID_CANCEL);
+    %><p><%
+    WriteButton (BID_CANCEL);
+    WriteButton (BID_UPDATE);
 
     }
 
@@ -633,18 +625,19 @@ case 3:
 case 4:
     {
 
-    Variant vEmpireName;
+    Variant vEmpireName, vSecretKey;
 
     %><input type="hidden" name="EmpireAdminPage" value="4"><%
     %><input type="hidden" name="TargetEmpire" value="<% Write (iTargetEmpireKey); %>"><%
 
     %><p><%
 
-    iErrCode = g_pGameEngine->GetEmpireName (iTargetEmpireKey, &vEmpireName);
-    if (iErrCode != OK) {
+    if (g_pGameEngine->GetEmpireName (iTargetEmpireKey, &vEmpireName) != OK ||
+        g_pGameEngine->GetEmpireProperty (iTargetEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) != OK) {
         %>That empire no longer exists<%
         %><p><% WriteButton (BID_CANCEL);
     } else {
+        %><input type="hidden" name="TargetEmpireSecret" value="<% Write (vSecretKey.GetInteger64()); %>"><%
         %>Are you sure you want to obliterate the <% Write (vEmpireName.GetCharPtr()); %> empire?<%
         %><p><%
         WriteButton (BID_CANCEL);

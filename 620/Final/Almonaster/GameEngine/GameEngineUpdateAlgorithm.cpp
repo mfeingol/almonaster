@@ -971,7 +971,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     //////////////
     {
         unsigned int iNumUpdatedEmpires = 0, iSurvivorIndex = NO_KEY, iGameRuinIdlers = 0, 
-            iAwake = 0, iNotIdle = 0;
+            iAwake = 0, iNotIdle = 0, iNumIdleEmpires = 0;
         Variant vEmpireOptions, vNumIdleUpdates, vNumIdleUpdatesForRuin, vRuinFlags;
 
         bool* pbPauseCandidate = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
@@ -1072,6 +1072,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     }
                     
                     iNumUpdatedEmpires ++;
+                    iNumIdleEmpires ++;
                     
                     // Request pause if not requesting already
                     if (!(vEmpireOptions.GetInteger() & REQUEST_PAUSE)) {
@@ -1080,7 +1081,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     
                 } else {
                     
-                    // We're only mildly idle
+                    // The empire is only mildly idle
                     if (vEmpireOptions.GetInteger() & UPDATED) {
 
                         iErrCode = m_pGameData->WriteAnd (pstrEmpireData[i], GameEmpireData::Options, ~UPDATED);
@@ -1252,7 +1253,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
                 sprintf (
                     pszDead,
-                    "\n" BEGIN_STRONG "%s has fallen into ruin" END_STRONG,
+                    BEGIN_STRONG "%s has fallen into ruin" END_STRONG "\n",
                     pvEmpireName[iIndex].GetCharPtr()
                     );
                 
@@ -1291,7 +1292,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     
                     for (j = 0; j < iNumEmpires; j ++) {
                         if (pbAlive[j]) {
-                            pstrUpdateMessage[j] += "\n\nThe game is now paused";
+                            pstrUpdateMessage[j] += "The game is now paused\n";
                         }
                     }
                     
@@ -1306,6 +1307,25 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
+        }
+
+        // Notify world of idle empires
+        if (iNumIdleEmpires > 0) {
+
+            if (iNumIdleEmpires == 1) {
+                strMessage = "There is " BEGIN_STRONG "1" END_STRONG " idle empire\n";
+            } else {
+                strMessage = "There are " BEGIN_STRONG;
+                strMessage += iNumIdleEmpires;
+                strMessage += END_STRONG " idle empires\n";
+            }
+
+            for (j = 0; j < iNumEmpires; j ++) {
+
+                if (pbAlive[j]) {
+                    pstrUpdateMessage[j] += strMessage;
+                }
+            }
         }
     }
 
@@ -1337,11 +1357,11 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         strMessage.Clear();
         for (i = 0; i < iNumObliterations; i ++) {
             
-            strMessage += "\n" BEGIN_STRONG;
+            strMessage += BEGIN_STRONG;
             strMessage += pvEmpireName [piObliterator[i]].GetCharPtr();
             strMessage += " has obliterated ";
             strMessage += pvEmpireName [piObliterated[i]].GetCharPtr();
-            strMessage += END_STRONG;
+            strMessage += END_STRONG "\n";
         }
 
         for (i = 0; i < iNumEmpires; i ++) {
@@ -1368,11 +1388,11 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
             }
 
             if (j == i) {
-                strMessage += "\n" BEGIN_STRONG;
+                strMessage += BEGIN_STRONG;
                 strMessage += pvEmpireName[piLoser[i]].GetCharPtr();
                 strMessage += " surrendered to ";
                 strMessage += pvEmpireName[piWinner[i]].GetCharPtr();
-                strMessage += END_STRONG;
+                strMessage += END_STRONG "\n";
             }
         }
 
@@ -1384,9 +1404,9 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     if (bIndependence && (iNumObliterations > 0 || iNumSurrenders > 0)) {
 
         if (iNumObliterations + iNumSurrenders > 1) {
-            strMessage = "\nThe planets and ships belonging to the dead empires are now independent";
+            strMessage = "The planets and ships belonging to the dead empires are now independent\n";
         } else {
-            strMessage = "\nThe planets and ships belonging to the dead empire are now independent";
+            strMessage = "The planets and ships belonging to the dead empire are now independent\n";
         }
 
         for (i = 0; i < iNumEmpires; i ++) {

@@ -96,7 +96,7 @@ Cleanup:
 int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
 
     int iErrCode;
-    unsigned int i, j, iNumRows, * piRowKey = NULL, iKey, * piDelRows, iNumDelRows = 0, iMinNumCols;
+    unsigned int i, j, iNumRows, * piRowKey = NULL, iMinNumCols;
 
     ITemplate* pSrcTemplate = NULL, * pDestTemplate = NULL;
     TemplateDescription ttSrcTemplate, ttDestTemplate;
@@ -193,9 +193,6 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
         goto Cleanup;
     }
 
-    // Allocate space for empty rows inserted that should be deleted later
-    piDelRows = (unsigned int*) StackAlloc (piRowKey[iNumRows - 1] * sizeof (unsigned int));
-
     for (i = 0; i < iNumRows; i ++) {
 
         // Read data from the src row
@@ -253,45 +250,15 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
             }
         }   // End for
 
-        while (true) {
-
-            // Insert the row
-            iErrCode = pWriteTable->InsertRow (pvDestRow, &iKey);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-            
-            if (iKey > piRowKey[i]) {
-                Assert (false);
-                iErrCode = ERROR_DATA_CORRUPTION;
-                goto Cleanup;
-            }
-            
-            else if (iKey < piRowKey[i]) {
-                Assert (iNumDelRows < piRowKey[iNumRows - 1]);
-                piDelRows[iNumDelRows ++] = iKey;
-            }
-
-            else {
-
-                // We inserted the row with the right key, go on to the next one
-                break;
-            }
-        }
-
-        pSrcDatabase->FreeData (pvSrcRow);
-        pvSrcRow = NULL;
-    }
-
-    // Delete rows that weren't in the original table
-    for (i = 0; i < iNumDelRows; i ++) {
-
-        iErrCode = pWriteTable->DeleteRow (piDelRows[i]);
+        // Insert row with correct key
+        iErrCode = pWriteTable->InsertRow (pvDestRow, piRowKey[i]);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
+
+        pSrcDatabase->FreeData (pvSrcRow);
+        pvSrcRow = NULL;
     }
 
 #ifdef _DEBUG

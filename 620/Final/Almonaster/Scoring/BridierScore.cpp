@@ -344,6 +344,50 @@ Cleanup:
     return iErrCode;
 }
 
+int BridierObject::GetReplacementKeys (bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, 
+                                       unsigned int* piNumEmpires) {
+
+#ifdef _DEBUG
+    const int iMaxIndex = bEstablished ? BRIDIER_ESTABLISHED_TOPLIST_INDEX : BRIDIER_TOPLIST_INDEX;
+    Assert (pvScore == NULL || pvScore [BRIDIER_INDEX].GetInteger() <= iMaxIndex);
+#endif
+
+    SearchColumn sc [NUM_BRIDIER_COLUMNS];
+
+    sc[BRIDIER_RANK].iColumn = SystemEmpireData::BridierRank;
+    sc[BRIDIER_RANK].iFlags = 0;
+    sc[BRIDIER_RANK].vData = pvScore != NULL ? pvScore [BRIDIER_RANK] : BRIDIER_MIN_RANK;
+    sc[BRIDIER_RANK].vData2 = BRIDIER_MAX_RANK;
+
+    sc[BRIDIER_INDEX].iColumn = SystemEmpireData::BridierIndex;
+    sc[BRIDIER_INDEX].iFlags = 0;
+
+    if (bEstablished) {
+        sc[BRIDIER_INDEX].vData = BRIDIER_ESTABLISHED_TOPLIST_INDEX;
+        sc[BRIDIER_INDEX].vData2 = BRIDIER_ESTABLISHED_TOPLIST_INDEX;
+    } else {
+        sc[BRIDIER_INDEX].vData = BRIDIER_MIN_INDEX;
+        sc[BRIDIER_INDEX].vData2 = BRIDIER_TOPLIST_INDEX;
+    }
+
+    SearchDefinition sd;
+    sd.iMaxNumHits = 0;
+    sd.iSkipHits = 0;
+    sd.iStartKey = NO_KEY;
+    sd.iNumColumns = NUM_BRIDIER_COLUMNS;
+    sd.pscColumns = sc;
+
+    Assert (countof (sc) == NUM_BRIDIER_COLUMNS);
+
+    return m_pDatabase->GetSearchKeys (
+        SYSTEM_EMPIRE_DATA,
+        sd,
+        ppiKey,
+        piNumEmpires,
+        NULL
+        );
+}
+
 //
 // BridierScore
 //
@@ -537,48 +581,7 @@ int BridierScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) {
 
 int BridierScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
 
-    Variant pvMinScore [NUM_BRIDIER_COLUMNS], pvMaxScore [NUM_BRIDIER_COLUMNS];
-
-    const unsigned int piColumn[] = {
-        SystemEmpireData::BridierRank,
-        SystemEmpireData::BridierIndex,
-    };
-
-    const unsigned int piFlags[] = {
-        0,
-        0,
-    };
-
-    if (pvScore != NULL) {
-
-        Assert (pvScore [BRIDIER_INDEX].GetInteger() <= BRIDIER_TOPLIST_INDEX);
-
-        pvMinScore [BRIDIER_RANK] = pvScore [BRIDIER_RANK];
-    
-    } else {
-
-        pvMinScore [BRIDIER_RANK] = BRIDIER_MIN_RANK;
-    }
-
-    pvMinScore [BRIDIER_INDEX] = BRIDIER_MIN_INDEX;
-
-    pvMaxScore [BRIDIER_RANK] = BRIDIER_MAX_RANK;
-    pvMaxScore [BRIDIER_INDEX] = BRIDIER_TOPLIST_INDEX;
-
-    return m_pDatabase->GetSearchKeys (
-        SYSTEM_EMPIRE_DATA,
-        NUM_BRIDIER_COLUMNS,
-        piColumn,
-        piFlags,
-        pvMinScore,
-        pvMaxScore,
-        NO_KEY,
-        0,
-        0,
-        ppiKey,
-        piNumEmpires,
-        NULL
-        );
+    return BridierObject::GetReplacementKeys (false, pvScore, ppiKey, piNumEmpires);
 }
 
 
@@ -662,46 +665,5 @@ int BridierScoreEstablished::GetEmpireScore (unsigned int iEmpireKey, Variant* p
 
 int BridierScoreEstablished::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
 
-    Variant pvMinScore [NUM_BRIDIER_COLUMNS], pvMaxScore [NUM_BRIDIER_COLUMNS];
-
-    const unsigned int piColumn[] = {
-        SystemEmpireData::BridierRank,
-        SystemEmpireData::BridierIndex
-    };
-
-    const unsigned int piFlags[] = {
-        0,
-        0,
-    };
-
-    if (pvScore != NULL) {
-
-        Assert (pvScore [BRIDIER_INDEX].GetInteger() == BRIDIER_ESTABLISHED_TOPLIST_INDEX);
-
-        pvMinScore [BRIDIER_RANK] = pvScore [BRIDIER_RANK];
-    
-    } else {
-
-        pvMinScore [BRIDIER_RANK] = BRIDIER_MIN_RANK;
-    }
-
-    pvMinScore [BRIDIER_INDEX] = BRIDIER_ESTABLISHED_TOPLIST_INDEX;
-
-    pvMaxScore [BRIDIER_RANK] = BRIDIER_MAX_RANK;
-    pvMaxScore [BRIDIER_INDEX] = BRIDIER_ESTABLISHED_TOPLIST_INDEX;
-
-    return m_pDatabase->GetSearchKeys (
-        SYSTEM_EMPIRE_DATA,
-        NUM_BRIDIER_COLUMNS,
-        piColumn,
-        piFlags,
-        pvMinScore,
-        pvMaxScore,
-        NO_KEY,
-        0,
-        0,
-        ppiKey,
-        piNumEmpires,
-        NULL
-        );
+    return BridierObject::GetReplacementKeys (true, pvScore, ppiKey, piNumEmpires);
 }

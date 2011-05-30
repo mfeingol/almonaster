@@ -75,17 +75,17 @@ int GameEngine::GetEmpireOptions (int iGameClass, int iGameNumber, int iEmpireKe
 // *piMaxNumSavedMessages -> Maximum number of saved messages for the empire in the game
 
 int GameEngine::GetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, 
-                                                  int* piMaxNumSavedMessages) {
+                                                  unsigned int* piMaxNumSavedMessages) {
 
     int iErrCode = OK;
 
     GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
-    Variant vMaxNumSavedMessages = 0;
-    iErrCode = m_pGameData->ReadData (strEmpireOptions, GameEmpireData::MaxNumGameMessages, &vMaxNumSavedMessages);
+    Variant vTemp;
+    iErrCode = m_pGameData->ReadData (strEmpireOptions, GameEmpireData::MaxNumGameMessages, &vTemp);
 
     if (iErrCode == OK) {
-        *piMaxNumSavedMessages = vMaxNumSavedMessages;
+        *piMaxNumSavedMessages = vTemp.GetInteger();
     }
 
     return iErrCode;
@@ -206,94 +206,26 @@ Cleanup:
 // Set the empire's MaxNumSavedMessages parameter in the given game
 
 int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, 
-                                                  int iMaxNumSavedMessages) {
+                                                  unsigned int iMaxNumSavedMessages) {
     
-    Variant vMaxNum;
-    int iErrCode, iNumMessages;
+    int iErrCode;
 
-    unsigned int* piKey = NULL;
-    Variant* pvTimeStamp = NULL;
-    
+    unsigned int* piKey = NULL, iNumMessages, iMaxNum;
+    UTCTime* ptTimeStamp = NULL;
+   
+    Variant vTemp;
+
     GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DATA (strOptions, iGameClass, iGameNumber, iEmpireKey);
 
-    // Lock message table
-    NamedMutex nmMutex;
-    iErrCode = LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    IWriteTable* pMessages = NULL;
 
-    // Get current and max number of messages
-    iErrCode = m_pGameData->GetNumRows (strGameEmpireMessages, (unsigned int*) &iNumMessages);
+    iErrCode = m_pGameData->ReadData (strOptions, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
+    iMaxNum = vTemp.GetInteger();
 
-    iErrCode = m_pGameData->ReadData (strOptions, GameEmpireData::MaxNumGameMessages, &vMaxNum);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    // If we're going to be over the limit, trim the list of unread messages
-    if (vMaxNum.GetInteger() > iMaxNumSavedMessages && 
-        iNumMessages > iMaxNumSavedMessages) {
-        
-        // Get the oldest messages' keys
-        int iErrCode2;
-        
-        iErrCode2 = m_pGameData->ReadColumn (
-            strGameEmpireMessages,
-            GameEmpireMessages::TimeStamp,
-            &piKey,
-            &pvTimeStamp,
-            (unsigned int*) &iNumMessages
-            );
-
-        if (iErrCode2 == OK) {
-
-            // Sort the messages by age
-            Algorithm::QSortTwoAscending<Variant, unsigned int> (pvTimeStamp, piKey, iNumMessages);
-
-            // Delete read messages until we're below the limit
-            int i = 0;
-            Variant vUnread;
-
-            while (iNumMessages > iMaxNumSavedMessages && i < iNumMessages) {
-                
-                // Has message been read
-                iErrCode2 = m_pGameData->ReadData (
-                    strGameEmpireMessages, 
-                    piKey[i], 
-                    GameEmpireMessages::Unread, 
-                    &vUnread
-                    );
-
-                if (iErrCode2 != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-                
-                if (vUnread.GetInteger() == MESSAGE_READ) {
-
-                    iErrCode = m_pGameData->DeleteRow (strGameEmpireMessages, piKey[i]);
-                    if (iErrCode2 != OK) {
-                        Assert (false);
-                        goto Cleanup;
-                    }
-                    iNumMessages --;
-                } else {
-                    break;
-                }
-
-                i ++;
-            }
-        }
-
-        else Assert (iErrCode2 == ERROR_DATA_NOT_FOUND);
-    }
-    
     // Set the max number of messages
     iErrCode = m_pGameData->WriteData (strOptions, GameEmpireData::MaxNumGameMessages, iMaxNumSavedMessages);
     if (iErrCode != OK) {
@@ -301,17 +233,76 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
         goto Cleanup;
     }
 
+    if (iMaxNumSavedMessages >= iMaxNum) {
+        goto Cleanup;
+    }
+
+    // Lock message table
+    iErrCode = m_pGameData->GetTableForWriting (strGameEmpireMessages, &pMessages);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    // Get current and max number of messages
+    iErrCode = pMessages->GetNumRows (&iNumMessages);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    // If we're going to be over the limit, trim the list of unread messages
+    if (iMaxNum > iMaxNumSavedMessages && iNumMessages > iMaxNumSavedMessages) {
+        
+        int iUnread;
+        unsigned int iReadNumMessages, i, iCurrentNumMessages;
+
+        // Get the oldest messages' keys
+        iErrCode = pMessages->ReadColumn (GameEmpireMessages::TimeStamp, &piKey, &ptTimeStamp, &iReadNumMessages);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        Assert (iReadNumMessages == iNumMessages);
+
+        // Sort the messages by age
+        Algorithm::QSortTwoAscending<UTCTime, unsigned int> (ptTimeStamp, piKey, iReadNumMessages);
+
+        // Delete read messages until we're below the limit
+        iCurrentNumMessages = iReadNumMessages;
+
+        for (i = 0; i < iReadNumMessages && iCurrentNumMessages > iMaxNumSavedMessages; i ++) {
+
+            // Has message been read?
+            iErrCode = pMessages->ReadData (piKey[i], GameEmpireMessages::Unread, &iUnread);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+            
+            if (iUnread == MESSAGE_UNREAD) {
+                continue;
+            }
+
+            iErrCode = pMessages->DeleteRow (piKey[i]);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            iCurrentNumMessages --;
+        }
+    }
+
 Cleanup:
 
     // Unlock the messages table
-    UnlockEmpireGameMessages (nmMutex);
+    SafeRelease (pMessages);
 
     if (piKey != NULL) {
         m_pGameData->FreeKeys (piKey);
     }
 
-    if (pvTimeStamp != NULL) {
-        m_pGameData->FreeData (pvTimeStamp);
+    if (ptTimeStamp != NULL) {
+        m_pGameData->FreeData (ptTimeStamp);
     }
     
     return iErrCode;
@@ -684,7 +675,7 @@ int GameEngine::IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iE
 //
 // Return the number of empires requesting pause in a given game
 
-int GameEngine::GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, int* piNumEmpires) {
+int GameEngine::GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, unsigned int* piNumEmpires) {
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
@@ -858,7 +849,7 @@ int GameEngine::IsEmpireRequestingDraw (int iGameClass, int iGameNumber, int iEm
 //
 // Return the number of empires requesting draw in a given game
 
-int GameEngine::GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, int* piNumEmpires) {
+int GameEngine::GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, unsigned int* piNumEmpires) {
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 

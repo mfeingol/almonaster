@@ -182,6 +182,11 @@ int Table::InsertRow (const Variant* pvColVal, unsigned int* piKey) {
     return m_wTable.InsertRow (pvColVal, piKey);
 }
 
+int Table::InsertRow (const Variant* pvColVal, unsigned int iKey) {
+
+    return m_wTable.InsertRow (pvColVal, iKey);
+}
+
 int Table::InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumRows) {
 
     return m_wTable.InsertDuplicateRows (pvColVal, iNumRows);
@@ -224,14 +229,10 @@ int Table::GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bCaseI
     return m_wTable.GetEqualKeys (iColumn, vData, bCaseInsensitive, ppiKey, piNumKeys);
 }
 
-int Table::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piColumn, const unsigned int* piFlags,
-                          const Variant* pvData, const Variant* pvData2, 
-                          unsigned int iStartKey, unsigned int iSkipHits, 
-                          unsigned int iMaxNumHits, unsigned int** ppiKey, 
+int Table::GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
                           unsigned int* piNumHits, unsigned int* piStopKey) {
 
-    return m_wTable.GetSearchKeys (iNumColumns, piColumn, piFlags, pvData, pvData2, iStartKey, iSkipHits, iMaxNumHits, 
-        ppiKey, piNumHits, piStopKey);
+    return m_wTable.GetSearchKeys (sdSearch, ppiKey, piNumHits, piStopKey);
 }
 
 int Table::ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& vData, bool bCaseInsensitive, 

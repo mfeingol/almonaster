@@ -1821,13 +1821,13 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     }
 
     // Make sure empire isn't halted
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vHalted);
+    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vEmpireOptions);
     if (iErrCode != OK) {
-        iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
+        Assert (false);
         goto OnError;
     }
     
-    if (vHalted.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
+    if (vEmpireOptions.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
         iErrCode = ERROR_EMPIRE_IS_HALTED;
         goto OnError;
     }
@@ -2424,18 +2424,6 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         SYSTEM_DATA, 
         SystemData::DefaultMaxNumGameMessages, 
         &pvGameEmpireData[GameEmpireData::MaxNumGameMessages]
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
-        goto OnError;
-    }
-
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::Options, 
-        &vEmpireOptions
         );
 
     if (iErrCode != OK) {
@@ -3523,7 +3511,6 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
     const char* pszMessage;
 
     IWriteTable* pGameData = NULL;
-
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Get the time

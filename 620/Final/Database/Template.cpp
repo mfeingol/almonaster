@@ -44,6 +44,7 @@ Template::Template (Database* pDatabase) {
     m_pDataBlock = NULL;
 
     HasVariableLengthData = false;
+    HasUniqueDataIndex = false;
 
     m_oBaseOffset = NO_OFFSET;
 }
@@ -359,6 +360,14 @@ int Template::FinalConstruct (size_t stBlockSize, const char* pszName, size_t st
             }
 
             RowSize += TemplateData.Size[i];
+        }
+    }
+
+    for (i = 0; i < TemplateData.NumIndexes; i ++) {
+
+        if (TemplateData.IndexFlags[i] & INDEX_UNIQUE_DATA) {
+            HasUniqueDataIndex = true;
+            break;
         }
     }
 

@@ -64,25 +64,11 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         Assert (false);
         return iErrCode;
     }
-/*
-#ifdef _DEBUG
-    iErrCode = VerifyUpdatedEmpireCount (iGameClass, iGameNumber);
-    Assert (iErrCode == OK);
-    iErrCode = OK;
-#endif
-*/
-    NamedMutex nmMutex;
-    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
 
     // Get empire's game options
     iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
         Assert (false);
-        UnlockEmpire (nmMutex);
         return iErrCode;
     }
 
@@ -134,23 +120,15 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     iErrCode = m_pGameData->GetFirstKey (strEmpires, GameEmpires::EmpireKey, iEmpireKey, false, &iKey);
     if (iKey == NO_KEY) {
         Assert (false);
-        UnlockEmpire (nmMutex);
         return ERROR_FAILURE;
     }
 
     iErrCode = m_pGameData->DeleteRow (strEmpires, iKey);
     if (iKey == NO_KEY) {
         Assert (false);
-        UnlockEmpire (nmMutex);
         return ERROR_FAILURE;
     }
-/*
-#ifdef _DEBUG
-    iErrCode = VerifyUpdatedEmpireCount (iGameClass, iGameNumber);
-    Assert (iErrCode == OK);
-    iErrCode = OK;
-#endif
-*/
+
     // If game started, add empire to dead empire list
     if (rReason != EMPIRE_GAME_ENDED && 
         rReason != EMPIRE_QUIT && 
@@ -290,27 +268,6 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         m_pGameData->FreeData (pvEmpireKey);
     }
     
-    // Delete game from personal list
-    SYSTEM_EMPIRE_ACTIVE_GAMES (strActiveGames, iEmpireKey);
-    
-    char pszData [MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
-    GetGameClassGameNumber (iGameClass, iGameNumber, pszData);
-
-    iErrCode = m_pGameData->GetFirstKey (
-        strActiveGames, 
-        SystemEmpireActiveGames::GameClassGameNumber, 
-        pszData,
-        true, 
-        &iKey
-        );
-
-    if (iErrCode == OK && iKey != NO_KEY) {
-        iErrCode = m_pGameData->DeleteRow (strActiveGames, iKey);
-        Assert (iErrCode == OK);
-    }
-
-    else Assert (false);
-    
     // Remove empire's ownership of planets from map
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
     
@@ -320,7 +277,7 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 
     // Set planets to the right ownership, 
     Variant vAg;
-    if (iNumKeys > 0) {
+    if (iErrCode == OK) {
 
         Variant vMin, vFuel, vPop, vMaxAgRatio;
 
@@ -390,7 +347,7 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
             }
         }
 
-        FreeKeys (piPlanetKey);
+        m_pGameData->FreeKeys (piPlanetKey);
     }
 
     // Set the empire's HW to non-HW status if the map already was generated
@@ -866,32 +823,49 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     iErrCode = m_pGameData->DeleteTable (pszTable);
     Assert (iErrCode == OK);
 
-    // Check if empire is to undergo deletion
-    Variant vDeleted;
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vDeleted);
-    Assert (iErrCode == OK);
-    
-    if (iErrCode == OK && (vDeleted.GetInteger() & EMPIRE_MARKED_FOR_DELETION)) {
+    // Delete game from personal list
+    SYSTEM_EMPIRE_ACTIVE_GAMES (strActiveGames, iEmpireKey);
 
-        unsigned int iGames;        
-        iErrCode = m_pGameData->GetNumRows (strActiveGames, &iGames);
+    unsigned int iGames = 1;
+    IWriteTable* pWrite = NULL;
+
+    iErrCode = m_pGameData->GetTableForWriting (strActiveGames, &pWrite);
+    Assert (iErrCode == OK);
+
+    if (iErrCode == OK) {
+
+        char pszData [MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
+        GetGameClassGameNumber (iGameClass, iGameNumber, pszData);
+
+        iErrCode = pWrite->GetFirstKey (SystemEmpireActiveGames::GameClassGameNumber, pszData, true, &iKey);
         Assert (iErrCode == OK);
 
-        if (iGames == 0) {
+        if (iErrCode == OK) {
+            iErrCode = pWrite->DeleteRow (iKey);
+            Assert (iErrCode == OK);
+        }
+
+        iErrCode = pWrite->GetNumRows (&iGames);
+        Assert (iErrCode == OK);
+
+        SafeRelease (pWrite);
+    }
+
+    // If last game, empire should be tested for deletion
+    if (iGames == 0) {
+
+        iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vOld);
+        Assert (iErrCode == OK);
+
+        if (iErrCode == OK && (vOld.GetInteger() & EMPIRE_MARKED_FOR_DELETION)) {
 
             // Fire at will
-            LockEmpires();
-
-            iErrCode = RemoveEmpire (iEmpireKey);
+            iErrCode = DeleteEmpire (iEmpireKey, NULL, false, false);
             Assert (iErrCode == OK);
-
-            UnlockEmpires();
         }
     }
 
-    UnlockEmpire (nmMutex);
-
-    return iErrCode;
+    return OK;
 }
 
 int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, 

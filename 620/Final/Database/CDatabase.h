@@ -269,8 +269,9 @@ public:
     unsigned int GetNumRows (const char* pszTableName, unsigned int* piNumRows);
     int DoesRowExist (const char* pszTableName, unsigned int iKey, bool* pbExists);
 
-    int InsertRow (const char* pszTableName, const Variant* pvColVal);
-    int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int* piKey);
+    int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int* piKey = NULL);
+    int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int iKey);
+
     int InsertRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows);
     int InsertDuplicateRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows);
     
@@ -300,10 +301,8 @@ public:
     int GetEqualKeys (const char* pszTableName, unsigned int iColumn, const Variant& vData, 
         bool bCaseInsensitive, unsigned int** ppiKey, unsigned int* piNumKeys);
     
-    int GetSearchKeys (const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
-        const unsigned int* piFlags, const Variant* pvData, const Variant* pvData2, unsigned int iStartKey, 
-        unsigned int iSkipHits, unsigned int iMaxNumHits, unsigned int** ppiKey, unsigned int* piNumHits, 
-        unsigned int* piStopKey);
+    int GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, 
+        unsigned int* piNumHits, unsigned int* piStopKey);
 
     int ReadColumnWhereEqual (const char* pszTableName, unsigned int iEqualColumn, const Variant& vData, 
         bool bCaseInsensitive, unsigned int iReadColumn, unsigned int** ppiKey, Variant** ppvData, 

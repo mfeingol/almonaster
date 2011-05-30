@@ -163,6 +163,7 @@ const char* ButtonText[] = {
     "Build",
     "+",
     "-",
+    "TOS",
     NULL
 };
 
@@ -311,6 +312,7 @@ const char* ButtonName[] = {
     "MiniBuild",
     "Plus",
     "Minus",
+    "TOS",
     NULL
 };
 
@@ -458,7 +460,8 @@ const char* ButtonImageName[] = {
     "ViewMiniMap.x",
     "MiniBuild.x",
     "Plus.x",
-    "Minux.x",
+    "Minus.x",
+    "TOS.x",
     NULL
 };
 
@@ -607,6 +610,7 @@ const char* ButtonFileName[] = {
     "Build.gif",
     "Plus.gif",
     "Minus.gif",
+    "TOS.gif",
     NULL
 };
 
@@ -643,6 +647,7 @@ const ButtonId PageButtonId[] = {
     BID_PROFILEVIEWER,
     BID_CONTRIBUTIONS,
     BID_CREDITS,
+    BID_TOS,
     BID_QUIT,
     BID_LATESTNUKES,
     BID_SPECTATORGAMES,
@@ -652,6 +657,7 @@ const ButtonId PageButtonId[] = {
     BID_TOURNAMENTADMINISTRATOR,
     BID_PERSONALTOURNAMENTS,
     BID_TOURNAMENTS,
+    BID_TOS,
     BID_LAST
 };
 
@@ -688,6 +694,7 @@ const char* PageName[] = {
     "Profile Viewer",
     "Contributions",
     "Credits",
+    "Terms of Service",
     "Info",
     "Latest Nukes",
     "Spectator Games",
@@ -697,6 +704,7 @@ const char* PageName[] = {
     "Tournament Administrator",
     "Personal Tournaments",
     "Tournaments",
+    "Terms of Service",
     NULL
 };
 

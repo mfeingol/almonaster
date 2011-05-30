@@ -1584,7 +1584,7 @@ int HtmlRenderer::WriteGameHeaderString() {
             
             OutputText ("Server time is <strong>");
             m_pHttpResponse->WriteText (pszDateString);
-            OutputText ("</strong><p>");
+            OutputText ("</strong>");
         }
     }
     
@@ -1610,9 +1610,26 @@ bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
     Assert (m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
     
     /*if (WasButtonPressed (PageButtonId[m_pgPageId])) {
-        return false;
+        goto False;
     }*/
-    
+
+    if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
+
+        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE) {
+            goto False;
+        }
+
+        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE) {
+            *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
+            goto True;
+        }
+        goto False;
+    }
+
+    if (m_bRedirection) {
+        goto False;
+    }
+
     if (WasButtonPressed (BID_INFO)) {
         *ppageRedirect = INFO;
         goto True;
@@ -1733,6 +1750,11 @@ bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
         *ppageRedirect = GAME_CREDITS;
         goto True;
     }
+
+    if (WasButtonPressed (BID_TOS)) {
+        *ppageRedirect = GAME_TERMS_OF_SERVICE;
+        goto True;
+    }
     
     pHttpForm = m_pHttpRequest->GetForm ("ProfileLink.x");
     if (pHttpForm != NULL) {
@@ -1786,6 +1808,11 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     bool bFlag;
     
     PageId pgSrcPageId;
+
+    if (m_iPrivilege <= GUEST) {
+        return ERROR_ACCESS_DENIED;
+    }
+
     IHttpForm* pHttpForm = m_pHttpRequest->GetForm ("PageId");
     
     pgSrcPageId = (pHttpForm != NULL) ? (PageId) pHttpForm->GetIntValue() : LOGIN;
@@ -2194,7 +2221,8 @@ void HtmlRenderer::CloseGamePage() {
 
     WriteButton (BID_CONTRIBUTIONS);
     WriteButton (BID_CREDITS);
-    
+    WriteButton (BID_TOS);
+
     MilliSeconds msTime = GetTimerCount();
     
     OnPageRender (msTime);
@@ -3789,10 +3817,22 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
 }
 
 
-
 bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
-    
-    if (WasButtonPressed (PageButtonId[m_pgPageId])) {
+
+    if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
+
+        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE) {
+            return false;
+        }
+
+        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE) {
+            *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
+            return true;
+        }
+        return false;
+    }
+
+    if (m_bRedirection || WasButtonPressed (PageButtonId[m_pgPageId])) {
         return false;
     }
     
@@ -3920,6 +3960,11 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
     
     if (WasButtonPressed (BID_CREDITS)) {
         *ppageRedirect = SYSTEM_CREDITS;
+        return true;
+    }
+
+    if (WasButtonPressed (BID_TOS)) {
+        *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
         return true;
     }
     
@@ -4081,6 +4126,7 @@ void HtmlRenderer::CloseSystemPage() {
 
         WriteButton (BID_CONTRIBUTIONS);
         WriteButton (BID_CREDITS);
+        WriteButton (BID_TOS);
     }
     
     OutputText ("<p><strong><font size=\"3\">");

@@ -29,7 +29,8 @@ INITIALIZE_GAME
 IHttpForm* pHttpForm;
 
 // Handle a submission
-int i, iErrCode, iOptionPage = 0, iGameClassOptions, iNumEmpires, iDiplomacy;
+int iErrCode, iOptionPage = 0, iGameClassOptions, iNumEmpires, iDiplomacy;
+unsigned int i;
 
 Variant vTemp;
 
@@ -912,13 +913,14 @@ if (m_bOwnPost && !m_bRedirection) {
     case 1:
 
         {
-            int iNumTestMessages, iMessageKey, iDeletedMessages = 0;
+            int iMessageKey, iDeletedMessages = 0;
+            unsigned int iNumTestMessages;
 
             // Get number of messages
             if ((pHttpForm = m_pHttpRequest->GetForm ("NumSavedGameMessages")) == NULL) {
                 goto Redirection;
             }
-            iNumTestMessages = pHttpForm->GetIntValue();
+            iNumTestMessages = pHttpForm->GetUIntValue();
 
             // Check for delete all
             char pszForm [128];
@@ -1516,7 +1518,7 @@ case 0:
 
     %><tr><td>Game messages saved:<td valign="middle"><%
 
-    int iNumMessages;
+    unsigned int iNumMessages;
 
     GameCheck (g_pGameEngine->GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages)); 
     if (iNumMessages > 0) {
@@ -1529,10 +1531,13 @@ case 0:
     %></td></tr><%
 
     %><tr><td>Maximum saved game messages</td><td><select name="MaxSavedMessages"><%
+    
     Variant vMaxNumMessages;
+
     GameCheck (g_pGameEngine->GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages));
     GameCheck (g_pGameEngine->GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages));
-    int iMaxNumMessages = vMaxNumMessages.GetInteger();
+    
+    unsigned int iMaxNumMessages = vMaxNumMessages.GetInteger();
 
     for (i = 0; i < iMaxNumMessages; i += 10) {
         %><option <%
@@ -1699,8 +1704,9 @@ case 0:
 case 1:
 
     {
-    int* piMessageKey, iNumMessages;
-    Variant** ppvMessage;
+    unsigned int* piMessageKey = NULL, iNumMessages;
+    Variant** ppvMessage = NULL;
+
     GameCheck (g_pGameEngine->GetSavedGameMessages (
         m_iGameClass,
         m_iGameNumber,

@@ -1058,29 +1058,30 @@ bool GameEngine::ValidateEmpireKey (int iLoserKey, unsigned int iHashEmpireName)
 int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {
 
     int iErrCode;
-    Variant vRank, vIndex;
 
-    NamedMutex nmBridierLock;
-    iErrCode = LockEmpireBridier (iEmpireKey, &nmBridierLock);
+    IReadTable* pEmpires = NULL;
+
+    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierRank, &vRank);
-    if (iErrCode != OK) {
-        UnlockEmpireBridier (nmBridierLock);
         goto Cleanup;
     }
-    
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, &vIndex);
-    
-    UnlockEmpireBridier (nmBridierLock);
 
-    *piRank = vRank.GetInteger();
-    *piIndex = vIndex.GetInteger();
+    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::BridierRank, piRank);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::BridierIndex, piIndex);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
 
 Cleanup:
+
+    SafeRelease (pEmpires);
 
     return iErrCode;
 }
@@ -1129,6 +1130,12 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
 
     UTCTime tNow;
     Time::GetTime (&tNow);
+
+    iErrCode = m_pGameData->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tNow);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
     
     while (true) {
         

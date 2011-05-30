@@ -460,7 +460,7 @@ case 0:
     if (!bMapGenerated) {
 
         // Draw fake intro map
-        %><input type="hidden" name="MapSubPage" value="0"<%
+        %><input type="hidden" name="MapSubPage" value="0"><%
         %><p>Click on a planet for a closer view:<%
 
         %><p><table cellspacing="0" cellpadding="0"><%
