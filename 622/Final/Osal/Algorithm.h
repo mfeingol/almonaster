@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // OSAL - Operating System Abstraction Library
-// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Library General Public
@@ -661,6 +661,7 @@ recurse:
 
     OSAL_EXPORT void InitializeThreadRandom (int iRandFactor = 1);
     OSAL_EXPORT int GetRandomInteger (int iUpper);
+	OSAL_EXPORT char GetRandomASCIIChar();
 
     OSAL_EXPORT char* memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes);
 
@@ -694,6 +695,9 @@ recurse:
 
     OSAL_EXPORT unsigned int GetInt64HashValue (int64 i64Value, unsigned int iNumBuckets);
     OSAL_EXPORT unsigned int GetVariantHashValue (const Variant& vValue, unsigned int iNumBuckets, bool bCaseInsensitive);
+
+    OSAL_EXPORT unsigned int GetStandardDeviation(unsigned int* piValues, unsigned int iNumValues);
+    OSAL_EXPORT unsigned int GetArithmeticMean(unsigned int* piValues, unsigned int iNumValues);
 };
 
 #endif // !defined(AFX_ALGORITHM_H__A66A7C23_1ADB_11D2_9E30_0060083E8062__INCLUDED_)

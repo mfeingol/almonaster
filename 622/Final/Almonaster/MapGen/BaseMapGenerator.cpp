@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004-2001 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -23,8 +23,8 @@
 //////////////////////////////////////////////////////////////////////
 
 BaseMapGenerator::BaseMapGenerator (IGameEngine* pGameEngine) 
-: 
-m_htCoordinates (NULL, NULL) {
+    : 
+    m_htCoordinates (NULL, NULL) {
 
     m_iNumRefs = 1;
 
@@ -49,10 +49,6 @@ m_htCoordinates (NULL, NULL) {
     m_iNumPlanetsPerEmpire = 0;
     
     m_ppvNewPlanetData = NULL;
-    m_iTotalNumNewPlanets = 0;
-    m_iNumNewPlanetsCreated = 0;
-
-    ResetNewPlanetChain();
 }
 
 BaseMapGenerator::~BaseMapGenerator() {
@@ -114,15 +110,29 @@ int BaseMapGenerator::CreatePlanets (
     Assert(pvGameData != NULL);
     m_pvGameData = pvGameData;
 
+    // Initialize data
+    m_iTotalNumNewPlanets = 0;
+    m_iNumNewPlanetsCreated = 0;
+
+    ResetNewPlanetChain();
+
+    // Cleanup if needed
+    if (m_ppvNewPlanetData != NULL) {
+        FreePlanetData(m_ppvNewPlanetData);
+        m_ppvNewPlanetData = NULL;
+    }
+
     // Init hashtable
-    if (!m_htCoordinates.Initialize (
-        m_iNumExistingPlanets + 
-        iNumNewEmpires * m_pvGameClassData[SystemGameClassData::MaxNumPlanets].GetInteger())) {
-        return ERROR_OUT_OF_MEMORY;
+    if (m_htCoordinates.IsInitialized()) {
+        m_htCoordinates.Clear();
+    } else {
+        int iMaxNumNewPlanets = m_pvGameClassData[SystemGameClassData::MaxNumPlanets].GetInteger();
+        if (!m_htCoordinates.Initialize(m_iNumExistingPlanets + iNumNewEmpires * iMaxNumNewPlanets))
+            return ERROR_OUT_OF_MEMORY;
     }
 
     // Read map configuration
-    iErrCode = m_pGameEngine->GetMapConfiguration (&m_mcConfig);
+    iErrCode = m_pGameEngine->GetMapConfiguration(&m_mcConfig);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -162,6 +172,7 @@ void BaseMapGenerator::ResetNewPlanetChain() {
     m_iChainHomeWorldIndex = NO_KEY;
 
     m_iLinkedPlanetInPreviousChainIndex = NO_KEY;
+	m_iExistingPlanetLinkedToChain = NO_KEY;
     m_cpLinkedPlanetInPreviousChainDirection = NO_DIRECTION;
 }
 
@@ -238,40 +249,31 @@ void BaseMapGenerator::ChooseHomeworldForChain() {
     unsigned int iHWIndex;
     while (true) {
 
-        bool bHWLinked = false;
         iHWIndex = Algorithm::GetRandomInteger(m_iNumChainPlanetsCreated) + iFirstPlanetinChainIndex;
 
-        // If we chose the first planet in the chain, it's going to be linked to the map somewhere
-        // For maps with > 1 planet per empire, the two planets in question must not be HWs
-        if (iHWIndex == iFirstPlanetinChainIndex && m_iNumPlanetsPerEmpire > 1) {
+        // If we chose the first planet in the chain, it's going to be linked to the map somewhere unless
+		// the map is disconnected.
+        // So for connected maps with > 1 planet per empire, the two planets in question must not be HWs
+		if (!(m_iGameClassOptions & DISCONNECTED_MAP) &&
+			iHWIndex == iFirstPlanetinChainIndex && 
+			m_iNumPlanetsPerEmpire > 1) {
 
-            char pszCoord[MAX_COORDINATE_LENGTH + 1];
-            int iX, iY;
-            GetCoordinates(m_ppvNewPlanetData[iHWIndex], &iX, &iY);
+			// Check the linked planet from the previous chain
+			if (m_iLinkedPlanetInPreviousChainIndex != NO_KEY &&
+				m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::HomeWorld].GetInteger() == HOMEWORLD) {
+				// Try again
+				continue;
+			}
 
-            // Check all directions for a planet
-            int cpDir;
-            ENUMERATE_CARDINAL_POINTS (cpDir) {
+			// Check the linked planet from the map
+			if (m_iExistingPlanetLinkedToChain != NO_KEY &&
+				m_ppvExistingPlanetData[m_iExistingPlanetLinkedToChain][GameMap::HomeWorld].GetInteger() == HOMEWORLD) {
+				// Try again
+				continue;
+			}
+		}
 
-                int iNewX, iNewY;
-                AdvanceCoordinates(iX, iY, &iNewX, &iNewY, (CardinalPoint) cpDir);
-                m_pGameEngine->GetCoordinates(iNewX, iNewY, pszCoord);
-
-                Variant* pvPlanetData;
-                if (m_htCoordinates.FindFirst(pszCoord, &pvPlanetData)) {
-
-                    // Make sure planet isn't a homeworld
-                    if (pvPlanetData[GameMap::HomeWorld].GetInteger() == HOMEWORLD &&
-                        (pvPlanetData[GameMap::Link].GetInteger() & OPPOSITE_LINK_X[cpDir])) {
-                        bHWLinked = true;
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!bHWLinked)
-            break;
+		break;
     }
 
     // Mark the chosen planet as a homeworld
@@ -302,7 +304,7 @@ void BaseMapGenerator::CreateNonDefaultLinksForChain() {
             AdvanceCoordinates(iX, iY, &iNewX, &iNewY, (CardinalPoint) cpDir);
 
             char pszCoord[MAX_COORDINATE_LENGTH + 1];
-            m_pGameEngine->GetCoordinates(iNewX, iNewY, pszCoord);
+            GameEngine::GetCoordinates(iNewX, iNewY, pszCoord);
             
             Variant* pvNeighborPlanetData;
             if (!m_htCoordinates.FindFirst (pszCoord, &pvNeighborPlanetData))
@@ -621,7 +623,7 @@ int BaseMapGenerator::InsertIntoCoordinatesTable(unsigned int iPlanetIndex) {
 int BaseMapGenerator::SetCoordinates(unsigned int iPlanetIndex, int iX, int iY) {
 
     char pszCoord[MAX_COORDINATE_LENGTH + 1];
-    m_pGameEngine->GetCoordinates(iX, iY, pszCoord);
+    GameEngine::GetCoordinates(iX, iY, pszCoord);
 
     m_ppvNewPlanetData[iPlanetIndex][GameMap::Coordinates] = pszCoord;
     if (m_ppvNewPlanetData[iPlanetIndex][GameMap::Coordinates].GetCharPtr() == NULL)
@@ -892,6 +894,8 @@ int BaseMapGenerator::GetNewPlanetLocationFromMap(PlanetLocation* plLocation) {
                 plLocation->AddLinkedPlanet(NO_KEY, OPPOSITE_CARDINAL_POINT[cp]);
             }
 
+			m_iExistingPlanetLinkedToChain = iRand;
+
             return OK;
         }
 
@@ -932,7 +936,7 @@ void BaseMapGenerator::AdvanceCoordinates (int iX, int iY, int* piX, int* piY, C
 bool BaseMapGenerator::DoesPlanetExist (int iX, int iY) {
 
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
-    m_pGameEngine->GetCoordinates(iX, iY, pszCoord);
+    GameEngine::GetCoordinates(iX, iY, pszCoord);
 
     return m_htCoordinates.FindFirst (pszCoord, (Variant**) NULL);
 }
@@ -954,7 +958,7 @@ bool BaseMapGenerator::InsertMapCoordinates() {
 Variant* BaseMapGenerator::FindPlanet(int iX, int iY) {
 
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
-    m_pGameEngine->GetCoordinates(iX, iY, pszCoord);
+    GameEngine::GetCoordinates(iX, iY, pszCoord);
 
     Variant* pvPlanetData;
     if (!m_htCoordinates.FindFirst(pszCoord, &pvPlanetData))
@@ -1000,7 +1004,7 @@ bool BaseMapGenerator::AllocatePlanetData(unsigned int iNumPlanets) {
 
 void BaseMapGenerator::GetCoordinates(const Variant* pvPlanetData, int* piX, int* piY) {
 
-    m_pGameEngine->GetCoordinates(pvPlanetData[GameMap::Coordinates].GetCharPtr(), piX, piY);
+    GameEngine::GetCoordinates(pvPlanetData[GameMap::Coordinates].GetCharPtr(), piX, piY);
 }
 
 int BaseMapGenerator::CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData) {

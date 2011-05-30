@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -217,7 +217,8 @@ private:
     static int THREAD_CALL DeleteEmpireMsg (LongRunningQueryMessage* pMessage);
 
     // Planets
-    int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, bool* pbCommit);
+    int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, 
+        GameFairnessOption gfoFairness, bool* pbCommit);
 
     int CreateMapFromMapGeneratorData(int iGameClass, int iGameNumber, int* piNewEmpireKey, 
         unsigned int iNumNewEmpires, Variant* pvGameClassData, Variant* pvGameData, 
@@ -601,6 +602,8 @@ public:
     Chatroom* GetChatroom();
     IScoringSystem* GetScoringSystem (ScoringSystem ssScoringSystem);
 
+    IReport* GetReport();
+
     const char* GetSystemVersion();
 
     int GetNewSessionId (int64* pi64SessionId);
@@ -851,8 +854,10 @@ public:
     int HasGameStarted (int iGameClass, int iGameNumber, bool* pbStarted);
 
     int IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* pbProtected);
-    int GetGamePassword (int iGameClass, int iGameNumber, Variant* pvPassword);
     int SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword);
+
+    int GetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, Variant* pvProp);
+    int SetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, const Variant& vProp);
 
     int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber);
     int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword,
@@ -869,6 +874,7 @@ public:
     int GetFirstUpdateDelay (int iGameClass, int iGameNumber, Seconds* psDelay);
     
     int GetNumEmpiresInGame (int iGameClass, int iGameNumber, int* piEmpires);
+    int GetNumDeadEmpiresInGame (int iGameClass, int iGameNumber, unsigned int* piDeadEmpires);
     int GetNumEmpiresNeededForGame (int iGameClass, int* piNumEmpiresNeeded);
     int IsEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbInGame);
     int GetNumUpdatedEmpires (int iGameClass, int iGameNumber, int* piUpdatedEmpires);
@@ -1030,10 +1036,6 @@ public:
     int GetEmpirePartialMapData (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPartialMaps, 
         unsigned int* piCenterKey, unsigned int* piXRadius, unsigned int* piRadiusY);
 
-    int SetEmpirePartialMapCenter (int iGameClass, int iGameNumber, int iEmpireKey, int iCenterKey);
-    int SetEmpirePartialMapXRadius (int iGameClass, int iGameNumber, int iEmpireKey, int iXRadius);
-    int SetEmpirePartialMapYRadius (int iGameClass, int iGameNumber, int iEmpireKey, int iYRadius);
-
     int GetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, int iEmpireKey, 
         int* piDefaultBuildPlanet, int* piResolvedPlanetKey);
     int SetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iDefaultBuildPlanet);
@@ -1103,8 +1105,8 @@ public:
     int HasEmpireExploredPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
         bool* pbExplored);
 
-    void GetCoordinates (const char* pszCoord, int* piX, int* piY);
-    void GetCoordinates (int iX, int iY, char* pszCoord);
+    static void GetCoordinates (const char* pszCoord, int* piX, int* piY);
+    static void GetCoordinates (int iX, int iY, char* pszCoord);
 
     int GetLowestDiplomacyLevelForShipsOnPlanet (int iGameClass, int iGameNumber, int iEmpireKey, 
         int iPlanetKey, bool bVisibleBuilds, Variant* pvEmpireKey, unsigned int& iNumEmpires,

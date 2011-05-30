@@ -1,6 +1,6 @@
 #include "../Almonaster/GameEngine/GameEngineSchema.h"
 #include "../Almonaster/GameEngine/GameEngineConstants.h"
-#include "../Almonaster/GameEngine/IGameEngine.h"
+#include "../Almonaster/GameEngine/GameEngine.h"
 
 #include <stdio.h>
 
@@ -223,7 +223,7 @@ public:
 
 			for (i = 0; i < iNumPlanets; i ++) {
 
-				m_pGameEngine->GetCoordinates (pvCoord[i].GetCharPtr(), &iX, &iY);
+                GameEngine::GetCoordinates (pvCoord[i].GetCharPtr(), &iX, &iY);
 
 				if (iX < iMinX) {
 					iMinX = iX;

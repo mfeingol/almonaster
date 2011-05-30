@@ -12,7 +12,7 @@
 int HtmlRenderer::Render_SystemGameList() {
 
 	// Almonaster
-	// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+	// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 	//
 	// This program is free software; you can redistribute it and/or
 	// modify it under the terms of the GNU General Public License

@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -18,6 +18,7 @@
 
 #include "HtmlRenderer.h"
 
+#include "../MapGen/Dijkstra.h"
 
 int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bool bAdmin, 
                              const PartialMapInfo* pPartialMapInfo, bool bSpectators) {
@@ -51,7 +52,6 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     bool bLinkNorth, bLinkEast, bLinkSouth, bLinkWest, bVisible, bIndependence, bSensitive, bMapColoring, 
         bShipColoring, bHighlightShips;
     
-
     Assert (!(bSpectators && bAdmin));
 
     if (!bAdmin && !bSpectators) {

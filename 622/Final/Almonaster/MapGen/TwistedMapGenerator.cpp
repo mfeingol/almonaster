@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004-2001 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -27,9 +27,6 @@ TwistedMapGenerator::TwistedMapGenerator(IGameEngine* pGameEngine)
     MirroredMapGenerator(pGameEngine) {
 
     memset(m_ed, 0, sizeof(m_ed));
-
-    m_iBestJoinNumConnections = 0;
-    m_cpChosenEdge = NO_DIRECTION;
 }
 
 TwistedMapGenerator::~TwistedMapGenerator() {
@@ -46,6 +43,12 @@ IMapGenerator* TwistedMapGenerator::CreateInstance(IGameEngine* pGameEngine) {
 }
 
 int TwistedMapGenerator::CreatePlanetChains() {
+
+    // Initialize
+    memset(m_ed, 0, sizeof(m_ed));
+
+    m_iBestJoinNumConnections = 0;
+    m_cpChosenEdge = NO_DIRECTION;
 
     // The default twisted generator algorithm is as follows:
     // 1) Create planet chains for half the empires

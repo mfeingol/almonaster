@@ -1,6 +1,6 @@
 //
 // GameEngine.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -397,6 +397,16 @@ extern const int TECH_BITS[];
 #define GAME_BUSY (GAME_UPDATING | GAME_CREATING | GAME_ADDING_EMPIRE | GAME_DELETING | GAME_DELETING_EMPIRE)
 #define GAME_DELETION_REASON_MASK (PAUSED | ADMIN_PAUSED | STILL_OPEN | STARTED | GAME_WAITING_TO_UPDATE | GAME_MAP_GENERATED)
 
+// GameData::Fairness
+enum GameFairnessOption {
+
+    GAME_FAIRNESS_RANDOM,
+    GAME_FAIRNESS_VERY_FAIR,
+    GAME_FAIRNESS_SOMEWHAT_FAIR,
+    GAME_FAIRNESS_SOMEWHAT_UNFAIR,
+    GAME_FAIRNESS_VERY_UNFAIR,
+};
+
 // GameData::Options
 #define GAME_COUNT_FOR_BRIDIER              (0x00000001)
 #define GAME_LOG_HISTORY                    (0x00000002)
@@ -435,6 +445,8 @@ enum EntryRestrictions {
     RESTRICT_WINS,
 };
 
+#define NUM_ENTRY_SCORE_RESTRICTIONS (RESTRICT_WINS + 1)
+
 enum GameAccessDeniedReason {
     ACCESS_DENIED_NO_REASON,
     ACCESS_DENIED_IN_DEAD_EMPIRES_TABLE,
@@ -456,8 +468,6 @@ enum GameAccessDeniedReason {
     ACCESS_DENIED_IDLE_EMPIRE,
     ACCESS_DENIED_BLOCKED_EMPIRE,
 };
-
-#define NUM_ENTRY_SCORE_RESTRICTIONS (RESTRICT_WINS + 1)
 
 enum ReasonForRemoval {
     EMPIRE_UNKNOWN,

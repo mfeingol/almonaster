@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -2030,39 +2030,6 @@ Cleanup:
     SafeRelease (pGameEmpireData);
 
     return iErrCode;
-}
-
-int GameEngine::SetEmpirePartialMapCenter (int iGameClass, int iGameNumber, int iEmpireKey, int iCenterKey) {
-
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-    return m_pGameData->WriteData (
-        strGameEmpireData,
-        GameEmpireData::PartialMapCenter,
-        iCenterKey
-        );
-}
-
-int GameEngine::SetEmpirePartialMapXRadius (int iGameClass, int iGameNumber, int iEmpireKey, int iXRadius) {
-
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-    return m_pGameData->WriteData (
-        strGameEmpireData,
-        GameEmpireData::PartialMapXRadius,
-        iXRadius
-        );
-}
-
-int GameEngine::SetEmpirePartialMapYRadius (int iGameClass, int iGameNumber, int iEmpireKey, int iYRadius) {
-
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-    return m_pGameData->WriteData (
-        strGameEmpireData,
-        GameEmpireData::PartialMapYRadius,
-        iYRadius
-        );
 }
 
 int GameEngine::HasEmpireResignedFromGame (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbResigned) {

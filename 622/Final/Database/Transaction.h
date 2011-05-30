@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // Database.dll - A database cache and backing store library
-// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Library General Public

@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -147,13 +147,13 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         iSecondsSince, iSecondsUntil, iState, iGameOptions,
         iNumUpdatesBeforeGameCloses, iEmpireGameOptions, iNumUpdatedEmpires = 0;
 
+    GameFairnessOption gfoFairness;
     unsigned int iNumUnreadMessages;
 
     Seconds sFirstUpdateDelay = 0;
-    
     bool bReadyForUpdate, bOpen;
 
-    Variant* pvEmpireKey = NULL, pvMin [NUM_ENTRY_SCORE_RESTRICTIONS], pvMax [NUM_ENTRY_SCORE_RESTRICTIONS];
+    Variant* pvEmpireKey = NULL, pvMin [NUM_ENTRY_SCORE_RESTRICTIONS], pvMax [NUM_ENTRY_SCORE_RESTRICTIONS], vTemp;
 
     UTCTime tCreationTime;
 
@@ -170,6 +170,12 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     if (iErrCode != OK) {
         goto Cleanup;
     }
+
+    iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::MapFairness, &vTemp);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+    gfoFairness = (GameFairnessOption)vTemp.GetInteger();
 
     bReadyForUpdate = (iEmpireGameOptions & UPDATED) != 0;
 
@@ -518,6 +524,24 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     }
     else if (iGameOptions & GAME_TWISTED_MAP) {
         OutputText ("<br>Twisted map");
+    }
+
+    switch (gfoFairness) {
+    case GAME_FAIRNESS_RANDOM:
+        OutputText("<br>Random map");
+        break;
+    case GAME_FAIRNESS_VERY_FAIR:
+        OutputText("<br>Very fair map");
+        break;
+    case GAME_FAIRNESS_SOMEWHAT_FAIR:
+        OutputText("<br>Somewhat fair map");
+        break;
+    case GAME_FAIRNESS_SOMEWHAT_UNFAIR:
+        OutputText("<br>Somewhat unfair map");
+        break;
+    case GAME_FAIRNESS_VERY_UNFAIR:
+        OutputText("<br>Very unfair map");
+        break;
     }
 
     OutputText ("<br><strong>");
@@ -987,8 +1011,9 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
                                            int iNumEmpiresInGame, bool bAdmin, bool bSpectators) {
     
     int iErrCode, iGameOptions = 0;
+    GameFairnessOption gfoFairness = GAME_FAIRNESS_RANDOM;
 
-    if (iWhichList == OPEN_GAME_LIST) {
+    if (iWhichList == OPEN_GAME_LIST || iWhichList == ACTIVE_GAME_LIST) {
 
         Assert (iGameClass != NO_KEY);
 
@@ -996,6 +1021,13 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         if (iErrCode != OK) {
             return iErrCode;
         }
+
+        Variant vTemp;
+        iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::MapFairness, &vTemp);
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
+        gfoFairness = (GameFairnessOption)vTemp.GetInteger();
     }
 
     // Time 
@@ -1025,35 +1057,87 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
         );
 
-    OutputText ("<td align=\"center\"><font size=\"2\"><strong>");
-    
-    
     // Planets per empire
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger());
+    OutputText ("<td align=\"center\"><font size=\"2\">");
     
-    if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 
-        pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger()) {
-        
-        OutputText ("</strong> planet");
-        
-        if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 1) {
-            OutputText (" per empire");
-        } else {
-            OutputText ("s per empire");
+    if (bAdmin && (iGameState & GAME_MAP_GENERATED)) {
+
+        Variant vPlanets;
+        iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::NumPlanetsPerEmpire, &vPlanets);
+        if (iErrCode == OK) {
+
+            OutputText("<strong>");
+            m_pHttpResponse->WriteText(vPlanets.GetInteger());
+            OutputText("</strong> planet");
+            if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() != 1)
+                OutputText ("s");
+            OutputText(" per empire");
         }
-        
+    
     } else {
+    
+        OutputText("<strong>");
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger());
         
-        OutputText ("</strong> to <strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger());
-        OutputText ("</strong> planets per empire");
+        if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 
+            pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger()) {
+            
+            OutputText ("</strong> planet");
+            
+            if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 1) {
+                OutputText (" per empire");
+            } else {
+                OutputText ("s per empire");
+            }
+            
+        } else {
+            
+            OutputText("</strong> to <strong>");
+            m_pHttpResponse->WriteText(pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger());
+            OutputText("</strong> planets per empire");
+        }
     }
 
-    if (iGameOptions & GAME_MIRRORED_MAP) {
-        OutputText ("<p>Mirrored map");
-    }
-    else if (iGameOptions & GAME_TWISTED_MAP) {
-        OutputText ("<p>Twisted map");
+    if (iWhichList == OPEN_GAME_LIST || iWhichList == ACTIVE_GAME_LIST) {
+
+        if (iGameOptions & GAME_MIRRORED_MAP) {
+            OutputText ("<p>Mirrored map");
+        }
+        else if (iGameOptions & GAME_TWISTED_MAP) {
+            OutputText ("<p>Twisted map");
+        }
+
+        switch (gfoFairness) {
+        case GAME_FAIRNESS_RANDOM:
+            OutputText("<p>Random map");
+            break;
+        case GAME_FAIRNESS_VERY_FAIR:
+            OutputText("<p>Very fair map");
+            break;
+        case GAME_FAIRNESS_SOMEWHAT_FAIR:
+            OutputText("<p>Somewhat fair map");
+            break;
+        case GAME_FAIRNESS_SOMEWHAT_UNFAIR:
+            OutputText("<p>Somewhat unfair map");
+            break;
+        case GAME_FAIRNESS_VERY_UNFAIR:
+            OutputText("<p>Very unfair map");
+            break;
+        }
+
+        if (bAdmin && (iGameState & GAME_MAP_GENERATED) && gfoFairness != GAME_FAIRNESS_RANDOM) {
+
+            Variant vDev;
+            iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber,
+                                                      GameData::MapFairnessStandardDeviationPercentageOfMean,
+                                                      &vDev);
+            if (iErrCode == OK) {
+
+                OutputText("<br>(<strong>");
+                m_pHttpResponse->WriteText(vDev.GetInteger());
+                OutputText("</strong>% deviation from fairness)");
+            }
+        }
     }
 
     if (pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GENERATE_MAP_FIRST_UPDATE) {

@@ -4,7 +4,7 @@
 //
 // Asfpp 1.0
 // The Alajar Scripting Format Preprocessor
-// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -98,7 +98,7 @@ int main (int argc, char* argv[]) {
     iNumFiles = fEnum.GetNumFiles();
 
     printf ("asfpp v1.0\n");
-    printf ("(C) 1998-1999 Max Attar Feingold\n\n");
+    printf ("Copyright (c) 1998 Max Attar Feingold\n\n");
     printf ("Processing files...\n");
     for (i = 0; i < iNumFiles; i ++) {
         RunAsfpp (ppszFileName[i]);
@@ -431,13 +431,7 @@ void WriteHTMLBlock() {
     bool bEmpty;
     
     // Find next non-empty code block
-    while (true) {
-
-        pszCode = FindNextCodeBlock();
-
-        if (pszCode == NULL) {
-            break;
-        }
+    while ((pszCode = FindNextCodeBlock()) != NULL) {
 
         pszEndCode = strstr (pszCode + 1, g_pszClose);
         if (pszEndCode == NULL) {

@@ -1,5 +1,5 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Admin", "..\Admin\Admin.vcproj", "{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A5498F4E-4124-4680-B43A-D105AA64C814} = {A5498F4E-4124-4680-B43A-D105AA64C814}

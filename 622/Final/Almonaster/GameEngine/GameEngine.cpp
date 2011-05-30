@@ -1,6 +1,6 @@
 //
 // GameEngine.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -418,7 +418,6 @@ int GameEngine::Initialize() {
 IDatabase* GameEngine::GetDatabase() {
 
     Assert (m_pGameData != NULL);
-
     m_pGameData->AddRef(); 
     return m_pGameData;
 }
@@ -435,6 +434,13 @@ IScoringSystem* GameEngine::GetScoringSystem (ScoringSystem ssScoringSystem) {
 
     m_ppScoringSystem[ssScoringSystem]->AddRef();
     return m_ppScoringSystem[ssScoringSystem];
+}
+
+IReport* GameEngine::GetReport() {
+
+    Assert (m_pReport != NULL);
+    m_pReport->AddRef(); 
+    return m_pReport;
 }
 
 int GameEngine::GetGameConfiguration (GameConfiguration* pgcConfig) {
@@ -977,7 +983,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 622 Beta 1.2";
+    return "Almonaster Build 622 Beta 3";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

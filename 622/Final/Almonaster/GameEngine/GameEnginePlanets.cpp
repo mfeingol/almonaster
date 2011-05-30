@@ -1,6 +1,6 @@
 //
 // GameEngine.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -23,6 +23,7 @@
 #include "../MapGen/DefaultMapGenerator.h"
 #include "../MapGen/MirroredMapGenerator.h"
 #include "../MapGen/TwistedMapGenerator.h"
+#include "../MapGen/FairMapGenerator.h"
 
 // Input:
 // iGameClass -> Gameclass
@@ -197,7 +198,7 @@ void GameEngine::AdvanceCoordinates (int iX, int iY, int* piX, int* piY, int cpD
 
 
 int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, 
-                                 bool* pbCommit) {
+                                 GameFairnessOption gfoFairness, bool* pbCommit) {
 
     int iErrCode, iMinNumPlanets, iMaxNumPlanets, i, iGameClassOptions;
 
@@ -254,6 +255,11 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
         iErrCode = ERROR_OUT_OF_MEMORY;
         goto Cleanup;
     }
+
+    // Wrap map generator in a fair map generator
+    IMapGenerator* pRelease = pMapGen;
+    pMapGen = FairMapGenerator::CreateInstance(this, pMapGen, gfoFairness);
+    pRelease->Release();
 
     // Get existing map
     iErrCode = m_pGameData->ReadColumns (

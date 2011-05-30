@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004-2001 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -25,10 +25,6 @@
 MirroredMapGenerator::MirroredMapGenerator(IGameEngine* pGameEngine) 
     :
     BaseMapGenerator(pGameEngine) {
-
-    m_cpMirroredEdge = NO_DIRECTION;
-    m_iEdgeCoordinate = 0;
-    m_iNumEdgePlanets = 0;
 }
 
 IMapGenerator* MirroredMapGenerator::CreateInstance(IGameEngine* pGameEngine) {
@@ -37,6 +33,11 @@ IMapGenerator* MirroredMapGenerator::CreateInstance(IGameEngine* pGameEngine) {
 }
 
 int MirroredMapGenerator::CreatePlanetChains() {
+
+    // Initialize
+    m_cpMirroredEdge = NO_DIRECTION;
+    m_iEdgeCoordinate = 0;
+    m_iNumEdgePlanets = 0;
 
     // The default map generator algorithm is as follows:
     // 1) Create planet chains for half the empires

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="Alajar"
 	ProjectGUID="{98AF9BC4-B62A-4237-A539-103D0426D6BD}"
 	RootNamespace="Alajar"
@@ -9,6 +9,7 @@
 	SccAuxPath="SAK"
 	SccLocalPath="SAK"
 	SccProvider="SAK"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -54,7 +55,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalIncludeDirectories="C:\Users\mfeingol\Desktop\Home\Dev\622\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				IgnoreStandardIncludePath="false"
 				GeneratePreprocessedFile="0"
@@ -108,7 +109,8 @@
 				Version=""
 				LinkIncremental="0"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="C:\Users\mfeingol\Desktop\Home\Dev\622\Include"
+				GenerateManifest="true"
 				GenerateDebugInformation="true"
 				GenerateMapFile="false"
 				MapExports="false"
@@ -116,10 +118,12 @@
 				SwapRunFromCD="false"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				SetChecksum="true"
-				TargetMachine="1"
+				RandomizedBaseAddress="2"
 				FixedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -138,9 +142,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -184,7 +185,7 @@
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="false"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\622\Include"
+				AdditionalIncludeDirectories="..\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -232,7 +233,7 @@
 				OutputFile=".\Debug/Alajar.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="..\Include"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Alajar.pdb"
 				SubSystem="1"
@@ -240,8 +241,10 @@
 				SwapRunFromCD="false"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				SetChecksum="false"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="0"
 			/>
 			<Tool
@@ -261,9 +264,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"

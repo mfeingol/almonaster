@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004-2001 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -35,6 +35,12 @@ public:
     static bool Equals (const char* pszLeft, const char* pszRight, const void* pEqualsHint) {
         return strcmp (pszLeft, pszRight) == 0;
     }
+};
+
+template <class CData> class CoordinateHashTable : public HashTable<const char*, CData, CoordHashValue, CoordEquals>
+{
+public:
+    CoordinateHashTable(void* pEqualsHint, void* pHashHint) : HashTable(pEqualsHint, pHashHint) {}
 };
 
 struct PlanetLocation {
@@ -96,7 +102,7 @@ protected:
     unsigned int m_iTotalNumNewPlanets;
 
     // Hashtable for fast coordinate lookups
-    HashTable<const char*, Variant*, CoordHashValue, CoordEquals> m_htCoordinates;
+    CoordinateHashTable<Variant*> m_htCoordinates;
 
     //
     // Volatile data
@@ -115,6 +121,9 @@ protected:
     // Index of planet chosen to be empire's homeworld
     unsigned int m_iChainHomeWorldIndex;
 
+	// Index of planet from existing map chosen to start off new chain (if any)
+	unsigned int m_iExistingPlanetLinkedToChain;
+
     // Index of planet from previous chain chosen to start off new chain (if any)
     unsigned int m_iLinkedPlanetInPreviousChainIndex;
     CardinalPoint m_cpLinkedPlanetInPreviousChainDirection;
@@ -124,7 +133,6 @@ protected:
     //
 
     void ComputeGameResources();
-    void AdvanceCoordinates (int iX, int iY, int* piX, int* piY, CardinalPoint cpDirection);
     bool DoesPlanetExist (int iX, int iY);
     bool IsPlanetInCurrentChain(const Variant* pvPlanetData);
 
@@ -187,6 +195,8 @@ public:
         );
 
     void FreePlanetData(Variant** ppvNewPlanetData);
+
+    static void AdvanceCoordinates (int iX, int iY, int* piX, int* piY, CardinalPoint cpDirection);
 };
 
 #endif // !defined(AFX_BASEMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8.00"
+	Version="9.00"
 	Name="Asfpp"
 	ProjectGUID="{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}"
 	RootNamespace="Asfpp"
@@ -9,6 +9,7 @@
 	SccAuxPath="SAK"
 	SccLocalPath="SAK"
 	SccProvider="SAK"
+	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
 		<Platform
@@ -54,7 +55,7 @@
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="false"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\622\Include"
+				AdditionalIncludeDirectories="..\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -102,7 +103,7 @@
 				OutputFile=".\Debug/Asfpp.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="..\Include"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Asfpp.pdb"
 				SubSystem="1"
@@ -110,8 +111,10 @@
 				SwapRunFromCD="false"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				SetChecksum="false"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
 				TargetMachine="0"
 			/>
 			<Tool
@@ -131,9 +134,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -177,7 +177,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalIncludeDirectories="C:\Users\mfeingol\Desktop\Home\Dev\622\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				IgnoreStandardIncludePath="false"
 				GeneratePreprocessedFile="0"
@@ -231,7 +231,9 @@
 				Version=""
 				LinkIncremental="0"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="C:\Users\mfeingol\Desktop\Home\Dev\622\Include"
+				GenerateManifest="true"
+				UACUIAccess="false"
 				GenerateDebugInformation="true"
 				GenerateMapFile="false"
 				MapExports="false"
@@ -239,10 +241,16 @@
 				SwapRunFromCD="false"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
-				OptimizeForWindows98="1"
+				OptimizeForWindows98="0"
 				SetChecksum="true"
-				TargetMachine="1"
+				RandomizedBaseAddress="2"
 				FixedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TurnOffAssemblyGeneration="false"
+				TargetMachine="1"
+				AllowIsolation="true"
+				Profile="false"
+				CLRImageType="0"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -261,9 +269,6 @@
 			/>
 			<Tool
 				Name="VCAppVerifierTool"
-			/>
-			<Tool
-				Name="VCWebDeploymentTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"

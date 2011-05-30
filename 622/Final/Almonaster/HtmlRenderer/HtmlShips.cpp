@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -1213,7 +1213,12 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                         );
 
                     if (iErrCode != OK && iErrCode != ERROR_FLEET_DOES_NOT_EXIST) {
-                        AddMessage ("At least one ship in the fleet could not be moved to the new planet");
+
+                        if (iErrCode == ERROR_CANNOT_NUKE) {
+                            AddMessage("The fleet cannot be set to nuke");
+                        } else {
+                            AddMessage("At least one ship in the fleet could not be moved to the new planet");
+                        }
                     }
                     iErrCode = OK;
                 }

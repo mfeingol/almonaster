@@ -11,7 +11,7 @@
 int HtmlRenderer::Render_Map() {
 
 	// Almonaster
-	// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+	// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 	//
 	// This program is free software; you can redistribute it and/or
 	// modify it under the terms of the GNU General Public License
@@ -103,10 +103,11 @@ int HtmlRenderer::Render_Map() {
 	                        }
 	                    }
 
-	                    iErrCode = g_pGameEngine->SetEmpirePartialMapCenter (
+	                    iErrCode = g_pGameEngine->SetEmpireGameProperty(
 	                        m_iGameClass,
 	                        m_iGameNumber,
 	                        m_iEmpireKey,
+	                        GameEmpireData::PartialMapCenter,
 	                        iNewValue
 	                        );
 
@@ -180,7 +181,13 @@ int HtmlRenderer::Render_Map() {
 	                        }
 	                    }
 
-	                    if ((iErrCode = g_pGameEngine->SetEmpirePartialMapXRadius (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue)) == OK) {
+	                    if ((iErrCode = g_pGameEngine->SetEmpireGameProperty(
+	                            m_iGameClass,
+	                            m_iGameNumber,
+	                            m_iEmpireKey,
+	                            GameEmpireData::PartialMapXRadius,
+	                            iNewValue)
+	                            ) == OK) {
 	                        AddMessage ("Your X radius was updated");
 	                    } else {
 	                        AddMessage ("Your X radius could not be updated");
@@ -249,7 +256,13 @@ int HtmlRenderer::Render_Map() {
 	                        }
 	                    }
 
-	                    if ((iErrCode = g_pGameEngine->SetEmpirePartialMapYRadius (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue)) == OK) {
+	                    if ((iErrCode = g_pGameEngine->SetEmpireGameProperty(
+	                                m_iGameClass,
+	                                m_iGameNumber,
+	                                m_iEmpireKey,
+	                                GameEmpireData::PartialMapYRadius,
+	                                iNewValue)
+	                                ) == OK) {
 	                        AddMessage ("Your Y radius was updated");
 	                    } else {
 	                        AddMessage ("Your Y radius could not be updated");

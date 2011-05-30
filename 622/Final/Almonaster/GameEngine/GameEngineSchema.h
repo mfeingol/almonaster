@@ -1,6 +1,6 @@
 //
 // Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -1760,6 +1760,8 @@ namespace GameData {
         MinBridierRankLoss,
         MaxBridierRankLoss,
         RealLastUpdateTime,
+        MapFairness,
+        MapFairnessStandardDeviationPercentageOfMean
     };
 
     static const VariantType Types[] = {
@@ -1806,6 +1808,8 @@ namespace GameData {
         V_INT,
         V_INT,
         V_TIME,
+        V_INT,
+        V_INT,
     };
 
     static const size_t Sizes[] = {
@@ -1852,9 +1856,11 @@ namespace GameData {
         0,
         0,
         0,
+        0,
+        0,
     };
     
-    static const unsigned int NumColumns = RealLastUpdateTime + 1;
+    static const unsigned int NumColumns = MapFairnessStandardDeviationPercentageOfMean + 1;
 
     static const TemplateDescription Template = {
         "GameData",
@@ -2230,6 +2236,7 @@ namespace GameEmpireData {
         InitialBridierIndex,
         GameRatios,
         MiniMaps,
+        MapFairnessResourcesClaimed,
     };
     
     static const VariantType Types[] = {
@@ -2275,6 +2282,7 @@ namespace GameEmpireData {
         V_INT,
         V_INT,
         V_STRING,
+        V_INT,
         V_INT,
         V_INT,
         V_INT,
@@ -2342,9 +2350,10 @@ namespace GameEmpireData {
         0,
         0,
         0,
+        0,
     };
 
-    static const unsigned int NumColumns = MiniMaps + 1;
+    static const unsigned int NumColumns = MapFairnessResourcesClaimed + 1;
     
     static const TemplateDescription Template = {
         "GameEmpireData",

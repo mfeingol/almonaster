@@ -1,6 +1,6 @@
 //
 // GameEngine.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -2069,6 +2069,26 @@ int GameEngine::SetupDefaultSystemTables() {
     pvColVal[SystemThemes::BadColor] = "E80700";                // Sharp red
     pvColVal[SystemThemes::PrivateMessageColor] = "9090FF";     // Brigher light blue
     pvColVal[SystemThemes::BroadcastMessageColor] = "90A0CC";   // Light blue
+
+    iErrCode = CreateTheme (pvColVal, &iKey);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+	// Iceberg Theme II
+    pvColVal[SystemThemes::Name] = "Iceberg Theme II";
+    pvColVal[SystemThemes::AuthorName] = "Aleksandr Sidorenko";
+    pvColVal[SystemThemes::Version] = "1.0";
+    pvColVal[SystemThemes::AuthorEmail] = "aleksandr@videotron.ca";
+    pvColVal[SystemThemes::Description] = "Look inspired by Alexia's Iceberg server";
+    pvColVal[SystemThemes::FileName] = "iceberg2.zip";
+    pvColVal[SystemThemes::Options] = ALL_THEME_OPTIONS & ~(THEME_BUTTONS | THEME_HORZ | THEME_VERT);
+    pvColVal[SystemThemes::TableColor] = "101020";              // Dark blue, almost black
+    pvColVal[SystemThemes::TextColor] = "90A0D0";               // Light blue
+    pvColVal[SystemThemes::GoodColor] = "4070F0";               // Dark blue
+    pvColVal[SystemThemes::BadColor] = "E80700";                // Sharp red
+    pvColVal[SystemThemes::PrivateMessageColor] = "B0B0B0";     // Gray
+    pvColVal[SystemThemes::BroadcastMessageColor] = "E0F0E0";   // Light green
 
     iErrCode = CreateTheme (pvColVal, &iKey);
     if (iErrCode != OK) {

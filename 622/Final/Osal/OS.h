@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // OSAL - Operating System Abstraction Library
-// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Library General Public
@@ -90,7 +90,9 @@ typedef unsigned long long int uint64;
 #if defined WIN32 || defined _WIN32
 
 // Compile for NT4SP3 or later
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0403
+#endif
 
 #define __WIN32__
 

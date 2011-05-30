@@ -1,6 +1,6 @@
 //
 // GameEngine.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -867,23 +867,6 @@ int GameEngine::IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* 
 // Input:
 // iGameClass -> Integer key of gameclass
 // iGameNumber -> Game number
-//
-// Output:
-// *pvPassword -> The game's password; blank if there is none
-//
-// Return a game's password
-
-int GameEngine::GetGamePassword (int iGameClass, int iGameNumber, Variant* pvPassword) {
-
-    GAME_DATA (pszGameData, iGameClass, iGameNumber);
-
-    return m_pGameData->ReadData (pszGameData, GameData::Password, pvPassword);
-}
-
-
-// Input:
-// iGameClass -> Integer key of gameclass
-// iGameNumber -> Game number
 // pszPassword -> The game's new password; can be blank
 //
 // Change a game's password
@@ -891,8 +874,38 @@ int GameEngine::GetGamePassword (int iGameClass, int iGameNumber, Variant* pvPas
 int GameEngine::SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword) {
 
     GAME_DATA (pszGameData, iGameClass, iGameNumber);
-
     return m_pGameData->WriteData (pszGameData, GameData::Password, pszNewPassword);
+}
+
+// Input:
+// iGameClass -> Integer key of gameclass
+// iGameNumber -> Game number
+// iProp -> GameData column name
+//
+// Output:
+// *pvProp -> The game property
+//
+// Return a game property
+
+int GameEngine::GetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, Variant* pvProp) {
+
+    GAME_DATA(pszGameData, iGameClass, iGameNumber);
+    return m_pGameData->ReadData(pszGameData, iProp, pvProp);
+}
+
+
+// Input:
+// iGameClass -> Integer key of gameclass
+// iGameNumber -> Game number
+// iProp -> GameData column name
+// vProp -> The game's new property
+//
+// Change a game property
+
+int GameEngine::SetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, const Variant& vProp) {
+
+    GAME_DATA (pszGameData, iGameClass, iGameNumber);
+    return m_pGameData->WriteData (pszGameData, iProp, vProp);
 }
 
 
@@ -1226,7 +1239,9 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
             0,                                  // NumRequestingDraw
             goGameOptions.iMinBridierRankLoss,  // MinBridierRankLoss
             goGameOptions.iMaxBridierRankLoss,  // MaxBridierRankLoss
-            tTime,
+            tTime,                              // RealLastUpdateTime
+            goGameOptions.gfoFairness,          // MapFairness
+            0                                   // MapFairnessStandardDeviationPercentageOfMean
         };
 
         iErrCode = m_pGameData->InsertRow (strGameData, pvGameData);
@@ -1801,6 +1816,8 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
 
     bool bEmpireLocked = false, bGenerateMapForAllEmpires = false;
 
+    GameFairnessOption gfoFairness;
+
     Variant pvGameEmpireData [GameEmpireData::NumColumns];
 
     NamedMutex nmEmpireMutex;
@@ -1861,11 +1878,18 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         goto OnError;
     }
 
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::Options, &vGameOptions);
+    iErrCode = m_pGameData->ReadData(strGameData, GameData::Options, &vGameOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto OnError;
     }
+
+    iErrCode = m_pGameData->ReadData(strGameData, GameData::MapFairness, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto OnError;
+    }
+    gfoFairness = (GameFairnessOption)vTemp.GetInteger();
 
     // Make sure we still exist, kill game if not and we just created it and we're alone
     iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, &vEmpireName);
@@ -2559,6 +2583,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     }
 
     pvGameEmpireData[GameEmpireData::MiniMaps] = MINIMAPS_NEVER;
+    pvGameEmpireData[GameEmpireData::MapFairnessResourcesClaimed] = 0;
 
     ///////////////////////////////
     // Insert GameEmpireData row //
@@ -2682,7 +2707,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         // Add new empire to map if the map has been generated already
         if (iGameState & GAME_MAP_GENERATED) {
 
-            iErrCode = AddEmpiresToMap(iGameClass, iGameNumber, &iEmpireKey, 1, &bFlag);
+            iErrCode = AddEmpiresToMap(iGameClass, iGameNumber, &iEmpireKey, 1, gfoFairness, &bFlag);
             if (iErrCode != OK) {
 
                 Assert (false);
@@ -2849,7 +2874,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         }
 
         // Add empires to map
-        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, piEmpKey, iNumKeys, &bFlag);
+        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, piEmpKey, iNumKeys, gfoFairness, &bFlag);
         if (iErrCode != OK) {
             
             Assert (false);
@@ -2858,8 +2883,6 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
             int iErrCode2 = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE);
             Assert (iErrCode2 == OK);
 
-            
-            
             if (!bCreatingGame) {
                 SignalGameWriter (iGameClass, iGameNumber);
             }
@@ -3232,6 +3255,22 @@ int GameEngine::GetNumEmpiresInGame (int iGameClass, int iGameNumber, int* piNum
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
 
     return m_pGameData->GetNumRows (strGameEmpires, (unsigned int*) piNumEmpires);
+}
+
+
+// Input:
+// iGameClass -> Gameclass
+// iGameNumber - > Gamenumber
+//
+// Output:
+// *piNumDeadEmpires -> Number of dead empires in game
+//
+// Return the number of empires still remaining a given game
+
+int GameEngine::GetNumDeadEmpiresInGame (int iGameClass, int iGameNumber, unsigned int* piNumDeadEmpires) {
+    
+    GAME_DEAD_EMPIRES(strGameDeadEmpires, iGameClass, iGameNumber);
+    return m_pGameData->GetNumRows(strGameDeadEmpires, piNumDeadEmpires);
 }
 
 

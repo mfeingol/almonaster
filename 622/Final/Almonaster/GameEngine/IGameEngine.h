@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -144,6 +144,8 @@ struct GameOptions {
     int iMaxBridierRankLoss;
     int iMinWins;
     int iMaxWins;
+
+    GameFairnessOption gfoFairness;
 
     unsigned int iNumSecurityEntries;
     GameSecurityEntry* pSecurity;
@@ -508,6 +510,8 @@ public:
     virtual IDatabase* GetDatabase() = 0;
     virtual IScoringSystem* GetScoringSystem (ScoringSystem ssScoringSystem) = 0;
 
+    virtual IReport* GetReport() = 0;
+
     virtual const char* GetSystemVersion() = 0;
     virtual int GetNewSessionId (int64* pi64SessionId) = 0;
 
@@ -702,8 +706,10 @@ public:
     virtual int HasGameStarted (int iGameClass, int iGameNumber, bool* pbStarted) = 0;
 
     virtual int IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* pbProtected) = 0;
-    virtual int GetGamePassword (int iGameClass, int iGameNumber, Variant* pvPassword) = 0;
     virtual int SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword) = 0;
+
+    virtual int GetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, Variant* pvProp) = 0;
+    virtual int SetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, const Variant& vProp) = 0;
 
     virtual int DoesGameExist (int iGameClass, int iGameNumber, bool* pbExists) = 0;
     virtual int GetNumUpdates (int iGameClass, int iGameNumber, int* piNumUpdates) = 0;
@@ -713,6 +719,7 @@ public:
     virtual int GetFirstUpdateDelay (int iGameClass, int iGameNumber, Seconds* psDelay) = 0;
 
     virtual int GetNumEmpiresInGame (int iGameClass, int iGameNumber, int* piEmpires) = 0;
+    virtual int GetNumDeadEmpiresInGame (int iGameClass, int iGameNumber, unsigned int* piDeadEmpires) = 0;
     virtual int GetNumEmpiresNeededForGame (int iGameClass, int* piNumEmpiresNeeded) = 0;
     virtual int IsEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbInGame) = 0;
     virtual int GetNumUpdatedEmpires (int iGameClass, int iGameNumber, int* piUpdatedEmpires) = 0;
@@ -836,10 +843,6 @@ public:
     virtual int GetEmpirePartialMapData (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPartialMaps, 
         unsigned int* piCenterKey, unsigned int* piXRadius, unsigned int* piRadiusY) = 0;
 
-    virtual int SetEmpirePartialMapCenter (int iGameClass, int iGameNumber, int iEmpireKey, int iCenterKey) = 0;
-    virtual int SetEmpirePartialMapXRadius (int iGameClass, int iGameNumber, int iEmpireKey, int iXRadius) = 0;
-    virtual int SetEmpirePartialMapYRadius (int iGameClass, int iGameNumber, int iEmpireKey, int iYRadius) = 0;
-
     virtual int GetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, int iEmpireKey, 
         int* piDefaultBuildPlanet, int* piResolvedPlanetKey) = 0;
     virtual int SetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iDefaultBuildPlanet) = 0;
@@ -848,6 +851,12 @@ public:
 
     virtual int GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTarget) = 0;
     virtual int SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarget) = 0;
+
+    virtual int GetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iColumn,
+        Variant* pvProperty) = 0;
+
+    virtual int SetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iColumn,
+        const Variant& vProperty) = 0;
 
     // Messages
     virtual int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, int iFlags) = 0;
@@ -860,9 +869,6 @@ public:
         int* piPlanetKey) = 0;
     virtual int HasEmpireExploredPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
         bool* pbExplored) = 0;
-
-    virtual void GetCoordinates (const char* pszCoord, int* piX, int* piY) = 0;
-    virtual void GetCoordinates (int iX, int iY, char* pszCoord) = 0;
 
     virtual int GetLowestDiplomacyLevelForShipsOnPlanet (int iGameClass, int iGameNumber, int iEmpireKey, 
         int iPlanetKey, bool bVisibleBuilds, Variant* pvEmpireKey, unsigned int& iNumEmpires, 

@@ -1,6 +1,6 @@
 //
 // GameEngine.dll:  a component of Almonaster 2.x
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -208,9 +208,15 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         (iGameClassOptions & GENERATE_MAP_FIRST_UPDATE) &&
         !(iGameState & GAME_MAP_GENERATED)) {
 
-        bool bCommit;
+        iErrCode = m_pGameData->ReadData(strGameData, GameData::MapFairness, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        GameFairnessOption gfoFairness = (GameFairnessOption)vTemp.GetInteger();
 
-        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, (int*) piEmpireKey, iNumEmpires, &bCommit);
+        bool bCommit;
+        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, (int*) piEmpireKey, iNumEmpires, gfoFairness, &bCommit);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -4278,8 +4284,8 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
     int** ppiBattleShipKey = (int**) ppvPtrBlock;
     int** ppiBattleShipType = (int**) ppiBattleShipKey + iNumAdjustedEmpires;
-    float** ppfBattleShipBR = (float**) ppiBattleShipType + iNumAdjustedEmpires;
-    float** ppfRealBR = (float**) ppfBattleShipBR + iNumAdjustedEmpires;
+    float** ppfBattleShipBP = (float**) ppiBattleShipType + iNumAdjustedEmpires;
+    float** ppfRealBR = (float**) ppfBattleShipBP + iNumAdjustedEmpires;
     int** ppiCloakerKey = (int**)  ppfRealBR + iNumAdjustedEmpires;
     bool** ppbAlive = (bool**) ppiCloakerKey + iNumAdjustedEmpires;
     bool** ppbSweep = (bool**) ppbAlive + iNumAdjustedEmpires;
@@ -4436,7 +4442,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
                     ppiBattleShipKey[iNumBattleEmpires] = NULL;
                     ppiBattleShipType[iNumBattleEmpires] = NULL;
-                    ppfBattleShipBR[iNumBattleEmpires] = NULL;
+                    ppfBattleShipBP[iNumBattleEmpires] = NULL;
                     ppbAlive[iNumBattleEmpires] = NULL;
                     ppbSweep[iNumBattleEmpires] = NULL;
                     ppiCloakerKey[iNumBattleEmpires] = NULL;
@@ -4456,7 +4462,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
                     ppiBattleShipKey[iNumBattleEmpires] = NULL;
                     ppiBattleShipType[iNumBattleEmpires] = NULL;
-                    ppfBattleShipBR[iNumBattleEmpires] = NULL;
+                    ppfBattleShipBP[iNumBattleEmpires] = NULL;
                     ppbAlive[iNumBattleEmpires] = NULL;
                     ppbSweep[iNumBattleEmpires] = NULL;
                     ppiCloakerKey[iNumBattleEmpires] = NULL;
@@ -4548,7 +4554,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
                     ppiBattleShipKey[iNumBattleEmpires] = NULL;
                     ppiBattleShipType[iNumBattleEmpires] = NULL;
-                    ppfBattleShipBR[iNumBattleEmpires] = NULL;
+                    ppfBattleShipBP[iNumBattleEmpires] = NULL;
                     ppbAlive[iNumBattleEmpires] = NULL;
                     ppbSweep[iNumBattleEmpires] = NULL;
                     ppiCloakerKey[iNumBattleEmpires] = NULL;
@@ -4566,7 +4572,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
             ppiBattleShipKey[iNumBattleEmpires] = NULL;
             ppiBattleShipType[iNumBattleEmpires] = NULL;
-            ppfBattleShipBR[iNumBattleEmpires] = NULL;
+            ppfBattleShipBP[iNumBattleEmpires] = NULL;
             ppbAlive[iNumBattleEmpires] = NULL;
             ppbSweep[iNumBattleEmpires] = NULL;
             ppiCloakerKey[iNumBattleEmpires] = NULL;
@@ -4653,8 +4659,8 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
             ppiBattleShipType[j] = ppiBattleShipKey[j] + iNumShips;
             ppiCloakerKey[j] = ppiBattleShipType[j] + iNumShips;
 
-            ppfBattleShipBR[j] = new float [iNumShips * 2];
-            ppfRealBR[j] = ppfBattleShipBR[j] + iNumShips;
+            ppfBattleShipBP[j] = new float [iNumShips * 2];
+            ppfRealBR[j] = ppfBattleShipBP[j] + iNumShips;
 
             ppbAlive[j] = new bool [iNumShips * 2];
             ppbSweep[j] = ppbAlive[j] + iNumShips;
@@ -4701,7 +4707,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                     ppfRealBR[j][piNumBattleShips[j]] = fBR;
 
                     fFactor = fBR * fBR;
-                    ppfBattleShipBR[j][piNumBattleShips[j]] = fFactor;
+                    ppfBattleShipBP[j][piNumBattleShips[j]] = fFactor;
                     pfBP[j] += fFactor;
                     piNumBattleShips[j] ++;
 
@@ -4728,7 +4734,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
                     // Apply to individual ships
                     for (l = 0; l < piNumBattleShips[j]; l ++) {
-                        ppfBattleShipBR[j][l] *= pfFuelRatio[piBattleEmpireIndex[j]];
+                        ppfBattleShipBP[j][l] *= pfFuelRatio[piBattleEmpireIndex[j]];
                     }
                 }
 
@@ -4839,7 +4845,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                             piBattleShipsDestroyed[j] ++;
 
                             // Reduce empire's battle points
-                            pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
+                            pfBP[j] -= ppfBattleShipBP[j][iCurrentShip];
 
                         } else {
 
@@ -4853,7 +4859,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                     case CARRIER:
 
                         // A capable carrier?
-                        if (fDest >= ppfBattleShipBR[j][iCurrentShip] &&
+                        if (fDest >= ppfBattleShipBP[j][iCurrentShip] &&
                             ppfRealBR[j][iCurrentShip] >= gcConfig.fCarrierCost) {
 
                                 float fAbsorbed = GetCarrierDESTAbsorption (ppfRealBR[j][iCurrentShip]);
@@ -4874,7 +4880,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                     piBattleShipsDestroyed[j] ++;
 
                                     // Reduce empire's battle points
-                                    pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
+                                    pfBP[j] -= ppfBattleShipBP[j][iCurrentShip];
 
                                 } else {
 
@@ -4905,14 +4911,15 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                         goto OnError;
                                     }
 
-                                    // Adjust BR, battle points
-                                    ppfRealBR[j][iCurrentShip] -= gcConfig.fCarrierCost;
-                                    ppfBattleShipBR[j][iCurrentShip] = 
-                                        ppfRealBR[j][iCurrentShip] * ppfRealBR[j][iCurrentShip];
+									float fNewBP = fNewBR * fNewBR;
 
-                                    // Reduce empire's battle points
-                                    pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
-                                    pfBP[j] += fNewBR * fNewBR;
+									// Reduce empire's battle points
+                                    pfBP[j] -= ppfBattleShipBP[j][iCurrentShip];
+                                    pfBP[j] += fNewBP;
+
+                                    // Adjust ship's BR, battle points
+                                    ppfRealBR[j][iCurrentShip] = fNewBR;
+                                    ppfBattleShipBP[j][iCurrentShip] = fNewBP;
                                 }
                             }
                             break;
@@ -4924,17 +4931,17 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
                     default:
 
-                        if (fDest >= ppfBattleShipBR[j][iCurrentShip]) {
+                        if (fDest >= ppfBattleShipBP[j][iCurrentShip]) {
 
                             // Kill ship
                             ppbAlive[j][iCurrentShip] = false;
                             piBattleShipsDestroyed[j] ++;
 
                             // Reduce empire's battle points
-                            pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
+                            pfBP[j] -= ppfBattleShipBP[j][iCurrentShip];
 
                             // Reduce DEST
-                            fDest -= ppfBattleShipBR[j][iCurrentShip];
+                            fDest -= ppfBattleShipBP[j][iCurrentShip];
                         }
                         break;
 
@@ -5458,11 +5465,11 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
         for (j = 0; j < iNumBattleEmpires; j ++) {
 
             delete [] ppiBattleShipKey[j];
-            delete [] ppfBattleShipBR[j];
+            delete [] ppfBattleShipBP[j];
             delete [] ppbAlive[j];
 
             ppiBattleShipKey[j] = NULL;
-            ppfBattleShipBR[j] = NULL;
+            ppfBattleShipBP[j] = NULL;
             ppbAlive[j] = NULL;
         }
 
@@ -5489,8 +5496,8 @@ OnError:
             delete [] ppiBattleShipKey[i];
         }
 
-        if (ppfBattleShipBR[i] != NULL) {
-            delete [] ppfBattleShipBR[i];
+        if (ppfBattleShipBP[i] != NULL) {
+            delete [] ppfBattleShipBP[i];
         }
 
         if (ppbAlive[i] != NULL) {

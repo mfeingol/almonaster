@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 //
 // OSAL - Operating System Abstraction Library
-// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Library General Public
@@ -97,6 +97,15 @@ void Algorithm::InitializeThreadRandom (int iRandFactor) {
 
 int Algorithm::GetRandomInteger (int iUpper) {
     return iUpper ? rand() % iUpper : 0;
+}
+
+char Algorithm::GetRandomASCIIChar() {
+
+	// Relatively arbitrary range
+	const char MIN_CHAR = '0';
+	const char MAX_CHAR = '[';
+
+	return MIN_CHAR + (char) GetRandomInteger(MAX_CHAR - MIN_CHAR);
 }
 
 char* Algorithm::memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes) {
@@ -701,6 +710,33 @@ unsigned int Algorithm::GetVariantHashValue (const Variant& vValue, unsigned int
         Assert (false);
         return 0;
     }
+}
+
+unsigned int Algorithm::GetStandardDeviation(unsigned int* piValues, unsigned int iNumValues) {
+
+    unsigned int iMean = GetArithmeticMean(piValues, iNumValues);
+
+    uint64 total = 0;
+
+    for (unsigned int i = 0; i < iNumValues; i ++) {
+     
+        int diff = piValues[i] - iMean;
+        total += diff * diff;
+    }
+
+    double dMeanDeviation = (double) (total / iNumValues);
+    return (unsigned int) sqrt(dMeanDeviation);
+}
+
+unsigned int Algorithm::GetArithmeticMean(unsigned int* piValues, unsigned int iNumValues) {
+
+    uint64 total = 0;
+
+    for (unsigned int i = 0; i < iNumValues; i ++) {
+        total += piValues[i];
+    }
+
+    return (unsigned int) (total / iNumValues);
 }
 
 /* Base64 test code

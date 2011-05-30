@@ -104,6 +104,10 @@ public:
         return m_pBuckets != NULL;
     }
 
+    bool IsInitialized() {
+        return m_pBuckets != NULL;
+    }
+
     bool Insert (CKey key, CData data) {
 
         unsigned int iBucket = HashValue::GetHashValue (key, m_iNumBuckets, m_pHashHint);

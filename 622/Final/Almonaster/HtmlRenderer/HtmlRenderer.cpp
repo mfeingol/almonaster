@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -16,13 +16,15 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#include "HtmlRenderer.h"
+#include <stdio.h>
+#include <math.h>
 
 #include "Osal/File.h"
 #include "Osal/TempFile.h"
 
-#include <stdio.h>
-#include <math.h>
+#include "HtmlRenderer.h"
+
+#include "../MapGen/MapFairnessEvaluator.h"
 
 /*
 
@@ -474,22 +476,75 @@ void HtmlRenderer::WriteBodyString (Seconds iSecondsUntil) {
 
 void HtmlRenderer::WriteContactLine() {
 
-    Variant vEmail;
-    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
-    if (iErrCode == OK) {
+	OutputText ("<p><strong>Contact the ");
 
-        String strFilter;
+    Variant vEmail;
+	String strFilter;
+    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
+	
+	if (iErrCode == OK && 
+		!String::IsBlank(vEmail.GetCharPtr()) &&
+		HTMLFilter(vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
         
-        OutputText ("<p><strong>Contact the <a href=\"mailto:");
-        if (HTMLFilter (vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
-            m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
-        }
-        OutputText ("\">administrator</a> if you have problems or suggestions</strong><p>");
+		int i;
+		const int cLength = strFilter.GetLength();
+
+		// Use XOR 'encryption' to hide the admin's email address from spam harvesters.
+		// We do this only on the login screen which can be accessed without authentication
+
+		if (m_pgPageId == LOGIN) {
+
+			const char* pszPlainText = strFilter.GetCharPtr();
+			char* pszKey = (char*)StackAlloc(cLength + 1);
+			char* pszCypherText = (char*)StackAlloc(cLength + 1);
+			
+			for (i = 0; i < cLength; i ++) {
+				pszKey[i] = Algorithm::GetRandomASCIIChar();
+			}
+			pszKey[i] = '\0';
+
+			for (i = 0; i < cLength; i ++) {
+				pszCypherText[i] = (char) pszPlainText[i] ^ pszKey[i];
+			}
+			pszCypherText[i] = '\0';
+
+			OutputText("<script type='text/javascript'><!--\n");
+
+			OutputText("var key=\"");
+			m_pHttpResponse->WriteText(pszKey);
+			OutputText("\";");
+
+			OutputText("var txt=new Array(");
+			for (i = 0; i < cLength; i ++) {
+				m_pHttpResponse->WriteText((int)pszCypherText[i]);
+				if (i < cLength - 1)
+					OutputText(",");
+			}
+			OutputText("); var e=\"\"; for(var i=0;i<");
+
+			m_pHttpResponse->WriteText(cLength);
+
+			OutputText(
+				";i++){" \
+				"e+=String.fromCharCode(key.charCodeAt(i)^txt[i]);}" \
+				"document.write('<a href=\"javascript:void(0)\" " \
+				"onclick=\"window.location=\\'m\\u0061il\\u0074o\\u003a'+e+'?subject=Almonaster'+'\\'\">'" \
+				"+'administrator<\\/a>');" \
+				"\n--></script><noscript>administrator</noscript>"
+				);
+		} else {
+
+			OutputText("<a href=\"mailto:");
+			m_pHttpResponse->WriteText(strFilter.GetCharPtr());
+			OutputText("?subject=Almonaster\">administrator</a>");
+		}
+
+	} else {
+
+		OutputText("administrator");
+	}
         
-    } else {
-        
-        OutputText ("<p>Could not read the administrator's email address<p>");
-    }
+    OutputText(" if you have problems or suggestions</strong><p>");
 }
 
 void HtmlRenderer::OpenForm() {
@@ -3013,7 +3068,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
     }
 
     if ((pHttpForm = m_pHttpRequest->GetForm ("MapExposed")) != NULL) {
-        iSelMapExposed = pHttpForm->GetIntValue() != 0;
+        iSelMapExposed = pHttpForm->GetIntValue();
     } else {
         iSelMapExposed = 0;
     }
@@ -6730,6 +6785,7 @@ static const char* const g_pszEmpireInfoHeadersAdmin[] = {
     "Tech",
     "Planets",
     "Ships",
+    "Initial map",
     "War",
     "Truce",
     "Trade",
@@ -6795,8 +6851,8 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
     piOptions = piNumUpdatesIdle + iNumEmpires;
 
     iIdleEmpires = iResignedEmpires = 0;
-    for (i = 0; i < iNumEmpires; i ++)
-    {
+    for (i = 0; i < iNumEmpires; i ++) {
+
 #ifdef _DEBUG
         g_pGameEngine->CheckTargetPop (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 #endif
@@ -7001,6 +7057,27 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             OutputText ("<td align=\"center\">");
             m_pHttpResponse->WriteText (iValue);
             OutputText ("</td>");
+
+            Variant vProp;
+            iErrCode = g_pGameEngine->GetEmpireGameProperty(
+                iGameClass, 
+                iGameNumber, 
+                pvEmpireKey[i].GetInteger(),
+                GameEmpireData::MapFairnessResourcesClaimed,
+                &vProp
+                );
+            if (iErrCode != OK) {
+                goto Cleanup;
+            }
+
+            OutputText ("<td align=\"center\">");
+            if (vProp.GetInteger() == 0) {
+                OutputText("N/A");
+            } else {
+                m_pHttpResponse->WriteText(vProp.GetInteger());
+                OutputText(" resources");
+            }
+            OutputText("</td>");
 
             iKey = NO_KEY;
             iWar = iTruce = iTrade = iAlliance = iUnmet = 0;
@@ -7878,7 +7955,7 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             g_pGameEngine->DoesGameExist (piGameClass[i], piGameNumber[i], &bExists) != OK || !bExists ||
             g_pGameEngine->GetGameClassName (piGameClass[i], pszGameClassName) != OK ||
             g_pGameEngine->GetGameClassUpdatePeriod (piGameClass[i], &iSeconds) != OK ||
-            g_pGameEngine->GetGamePassword (piGameClass[i], piGameNumber[i], &vGamePassword) != OK ||
+            g_pGameEngine->GetGameProperty(piGameClass[i], piGameNumber[i], GameData::Password, &vGamePassword) != OK ||
             g_pGameEngine->GetGameCreationTime (piGameClass[i], piGameNumber[i], &tCreationTime) != OK ||
             g_pGameEngine->GetEmpiresInGame (piGameClass[i], piGameNumber[i], &pvEmpireKey, 
                 &iNumActiveEmpires) != OK ||
@@ -7953,7 +8030,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bExists) != OK || !bExists ||
         g_pGameEngine->GetGameClassName (iGameClass, pszGameClassName) != OK ||
         g_pGameEngine->GetGameClassUpdatePeriod (iGameClass, &iSeconds) != OK ||
-        g_pGameEngine->GetGamePassword (iGameClass, iGameNumber, &vGamePassword) != OK ||
+        g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::Password, &vGamePassword) != OK ||
         g_pGameEngine->GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires) != OK ||
         g_pGameEngine->GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime) != OK ||
         g_pGameEngine->GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iSecondsUntil, 

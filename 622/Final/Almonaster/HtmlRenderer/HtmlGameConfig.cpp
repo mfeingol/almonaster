@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -44,6 +44,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         iRestrictBridierRankLossMax = 0;
 
     MapGeneration mgSelectedMapGen;
+    GameFairnessOption gfoFairness;
 
     Variant vMaxUpdatesBeforeGameCloses;
 
@@ -102,6 +103,22 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         }
     } else {
         mgSelectedMapGen = MAPGEN_STANDARD;
+    }
+
+    // GameFairness
+    if ((pHttpForm = m_pHttpRequest->GetForm("MapFairness")) != NULL) {
+ 
+        gfoFairness = (GameFairnessOption)pHttpForm->GetIntValue();
+        if (gfoFairness != GAME_FAIRNESS_RANDOM &&
+            gfoFairness != GAME_FAIRNESS_SOMEWHAT_FAIR &&
+            gfoFairness != GAME_FAIRNESS_VERY_FAIR &&
+            gfoFairness != GAME_FAIRNESS_SOMEWHAT_UNFAIR &&
+            gfoFairness != GAME_FAIRNESS_VERY_UNFAIR
+            ) {
+            gfoFairness = GAME_FAIRNESS_RANDOM;
+        }
+    } else {
+        gfoFairness = GAME_FAIRNESS_RANDOM;
     }
     
     // Bridier
@@ -490,15 +507,13 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         }
     }
 
+    OutputText("<tr><td>Map generation:</td><td>");
+
     if (mgSupportedMapGen != MAPGEN_STANDARD) {
 
+        OutputText("<select name=\"MapGenAlgo\">");
+
         Assert(mgSupportedMapGen != 0);
-
-        OutputText(
-            "<tr><td>Map generation algorithm:</td>"\
-            "<td><select name=\"MapGenAlgo\">"
-            );
-
         if (mgSupportedMapGen & MAPGEN_STANDARD) {
 
             OutputText("<option");
@@ -532,8 +547,52 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
             OutputText("\">Twisted map</option>");
         }
 
-        OutputText("</select></td></tr>");
+        OutputText("</select> ");
     }
+
+    OutputText("Map Fairness: <select name=\"MapFairness\">");
+
+    OutputText("<option");
+    if (gfoFairness == GAME_FAIRNESS_RANDOM) {
+        OutputText(" selected");
+    }
+    OutputText(" value=\"");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_RANDOM);
+    OutputText("\">Random</option>");
+
+    OutputText("<option");
+    if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_FAIR) {
+        OutputText(" selected");
+    }
+    OutputText(" value=\"");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_SOMEWHAT_FAIR);
+    OutputText("\">Somewhat fair</option>");
+
+    OutputText("<option");
+    if (gfoFairness == GAME_FAIRNESS_VERY_FAIR) {
+        OutputText(" selected");
+    }
+    OutputText(" value=\"");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_VERY_FAIR);
+    OutputText("\">Very fair</option>");
+
+    OutputText("<option");
+    if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_UNFAIR) {
+        OutputText(" selected");
+    }
+    OutputText(" value=\"");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_SOMEWHAT_UNFAIR);
+    OutputText("\">Somewhat unfair</option>");
+
+    OutputText("<option");
+    if (gfoFairness == GAME_FAIRNESS_VERY_UNFAIR) {
+        OutputText(" selected");
+    }
+    OutputText(" value=\"");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_VERY_UNFAIR);
+    OutputText("\">Very unfair</option>");
+
+    OutputText("</select></td></tr>");
     
     // Enter message
     OutputText (
@@ -1281,9 +1340,29 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         pgoOptions->iOptions |= GAME_TWISTED_MAP;
     }
 
+    // MapFairness
+    GameFairnessOption gfoFairness;
+    if ((pHttpForm = m_pHttpRequest->GetForm ("MapFairness")) != NULL) {
+ 
+        gfoFairness = (GameFairnessOption)pHttpForm->GetIntValue();
+        if (gfoFairness != GAME_FAIRNESS_RANDOM &&
+            gfoFairness != GAME_FAIRNESS_SOMEWHAT_FAIR &&
+            gfoFairness != GAME_FAIRNESS_VERY_FAIR &&
+            gfoFairness != GAME_FAIRNESS_SOMEWHAT_UNFAIR &&
+            gfoFairness != GAME_FAIRNESS_VERY_UNFAIR
+            ) {
+            AddMessage ("Wrong MapFairness option");
+            return ERROR_FAILURE;
+        }
+    } else {
+        gfoFairness = GAME_FAIRNESS_RANDOM;
+    }
+
+    pgoOptions->gfoFairness = gfoFairness;
+
+    // NamesListed
     if (iTournamentKey == NO_KEY) {
 
-        // NamesListed
         if ((pHttpForm = m_pHttpRequest->GetForm ("NamesListed")) == NULL) {
             AddMessage ("Missing NamesListed form");
             return ERROR_FAILURE;
