@@ -121,6 +121,7 @@ private:
 
     // Filecache
     FileCache* m_pFileCache;
+    bool m_bEnableMemoryCache;
 
     // Object caches
     ObjectCache<HttpRequest, HttpRequestAllocator>* m_pHttpRequestCache;

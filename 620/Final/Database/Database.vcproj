@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="Database"
 	SccProjectName="SAK"
 	SccAuxPath="SAK"
@@ -34,6 +34,7 @@
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;_USRDLL;Database_EXPORTS"
 				IgnoreStandardIncludePath="FALSE"
 				GeneratePreprocessedFile="0"
@@ -74,16 +75,20 @@
 				ShowProgress="0"
 				OutputFile=".\Release/Database.dll"
 				Version=""
-				LinkIncremental="1"
+				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
 				MapExports="FALSE"
+				SwapRunFromCD="FALSE"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				OptimizeForWindows98="1"
+				SetChecksum="TRUE"
 				ImportLibrary=".\Release/Database.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
@@ -109,7 +114,13 @@ copy release\Database.lib ..\sdk
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
@@ -134,7 +145,8 @@ copy release\Database.lib ..\sdk
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				StringPooling="FALSE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
 				BasicRuntimeChecks="1"
@@ -143,6 +155,7 @@ copy release\Database.lib ..\sdk
 				StructMemberAlignment="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				EnableEnhancedInstructionSet="0"
 				DisableLanguageExtensions="FALSE"
 				DefaultCharIsUnsigned="FALSE"
 				TreatWChar_tAsBuiltInType="TRUE"
@@ -157,7 +170,6 @@ copy release\Database.lib ..\sdk
 				SuppressStartupBanner="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"
-				CompileAsManaged="0"
 				ShowIncludes="FALSE"
 				UndefineAllPreprocessorDefinitions="FALSE"/>
 			<Tool
@@ -170,13 +182,15 @@ copy release\Database.lib ..\sdk
 				OutputFile=".\Debug/Database.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/Database.pdb"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				OptimizeForWindows98="0"
+				OptimizeForWindows98="1"
+				SetChecksum="FALSE"
 				ImportLibrary=".\Debug/Database.lib"
 				TargetMachine="0"/>
 			<Tool
@@ -204,9 +218,17 @@ copy debug\Database.pdb ..\Alajar
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Source Files"

@@ -934,6 +934,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         int iX = 0, iY = 0;
         unsigned int iCachedPlanetKey = NO_KEY;
         String strPlanetName;
+        bool bNoPop = false;
 
         for (i = 0; i < iNumLocations; i ++) {
 
@@ -943,7 +944,43 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 continue;
             }
 
-            if (iCachedPlanetKey != pblLocations[i].iPlanetKey) {
+            // If not the same as the planet in the previous loop, read some planet info
+            if (iCachedPlanetKey == pblLocations[i].iPlanetKey) {
+
+                if (bNoPop) continue;
+
+            } else {
+
+                // If the current ship is a colony, check the destination planet's population
+                if (iShipType == COLONY) {
+
+                    unsigned int iPop;
+                    iErrCode = GetPlanetPopulationWithColonyBuilds (
+                        iGameClass,
+                        iGameNumber,
+                        iEmpireKey,
+                        pblLocations[i].iPlanetKey,
+                        &iPop
+                        );
+
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+
+                    unsigned int iCost = GetColonyPopulationBuildCost (
+                        gcConfig.iShipBehavior, 
+                        gcConfig.fColonyMultipliedBuildFactor, 
+                        gcConfig.iColonySimpleBuildFactor, 
+                        fBR
+                        );
+
+                    if (iPop < iCost) {
+                        bNoPop = true;
+                        continue;
+                    }
+                }
+                bNoPop = false;
 
                 iErrCode = GetPlanetName (iGameClass, iGameNumber, pblLocations[i].iPlanetKey, &vTemp);
                 if (iErrCode != OK) {
@@ -2126,9 +2163,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         // We need the location of the destination fleet
         unsigned int iDestPlanet;
         iErrCode = GetFleetProperty (
-            iGameClass, iGameNumber, iEmpireKey, soOrder.iKey, 
-            GameEmpireFleets::CurrentPlanet, &vTemp
-            );
+            iGameClass, iGameNumber, iEmpireKey, soOrder.iKey, GameEmpireFleets::CurrentPlanet, &vTemp);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -3351,7 +3386,13 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 if (iShipType == STARGATE) {
 
                     // Make sure we own the planet
-                    if (iPlanetOwner != iEmpireKey) {
+                    iErrCode = m_pGameData->ReadData (strGameMap, iNewShipOrder, GameMap::Owner, &vTemp);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+
+                    if ((unsigned int) vTemp.GetInteger() != iEmpireKey) {
                         iErrCode = ERROR_CANNOT_GATE;
                         goto Cleanup;
                     }
@@ -4076,6 +4117,43 @@ int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int
         }
 
         SafeRelease (pShips);
+
+        // If the current ship is a colony, check the destination planet's population
+        if (iType == COLONY) {
+
+            unsigned int iPop;
+            iErrCode = GetPlanetPopulationWithColonyBuilds (
+                iGameClass,
+                iGameNumber,
+                iEmpireKey,
+                iPlanetKey,
+                &iPop
+                );
+
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            GameConfiguration gcConfig;
+            iErrCode = GetGameConfiguration (&gcConfig);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            unsigned int iCost = GetColonyPopulationBuildCost (
+                gcConfig.iShipBehavior, 
+                gcConfig.fColonyMultipliedBuildFactor, 
+                gcConfig.iColonySimpleBuildFactor, 
+                fBR
+                );
+
+            if (iPop < iCost) {
+                iErrCode = ERROR_INSUFFICIENT_POPULATION_FOR_COLONIES;
+                goto Cleanup;
+            }
+        }
 
         // Delete the old ship first, because of a possible build limit
         iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, iShipKey);

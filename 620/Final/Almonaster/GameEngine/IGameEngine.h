@@ -881,8 +881,6 @@ public:
     virtual int GetNumTechs (int iTechBitmap) = 0;
 
     // Options
-    virtual int SetEmpireAutoUpdate (int iGameClass, int iGameNumber, int iEmpireKey, bool bAutoUpdate) = 0;
-
     virtual int GetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool* pbIgnore) = 0;
     virtual int SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool bIgnore) = 0;
 
@@ -928,10 +926,6 @@ public:
     virtual int GetMapLimits (int iGameClass, int iGameNumber, int* piMinX, int* piMaxX, int* piMinY, int* piMaxY) = 0;
 
     virtual int HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, bool* pbVisited) = 0;
-
-    virtual int GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-        int iPlanetProxyKey, int iTotalNumShips, bool bVisibleBuilds, bool bIndependence, 
-        int** ppiShipOwnerData) = 0;
 
     virtual int GetPlanetName (int iGameClass, int iGameNumber, int iPlanetKey, Variant* pvPlanetName) = 0;
     virtual int GetPlanetNameWithSecurity (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey,  

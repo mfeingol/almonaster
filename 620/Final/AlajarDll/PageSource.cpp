@@ -175,7 +175,9 @@ PageSource::~PageSource() {
 void PageSource::Clean() {
 
     if (m_pPageSource != NULL) {
+        m_pPageSource->OnFinalize();
         m_pPageSource->Release();
+        m_pPageSource = NULL;
     }
 
     if (m_bSingleThreaded) {
@@ -1349,7 +1351,11 @@ int PageSource::STALoop() {
             }
             
             else if (pHttpResponse == ON_FINALIZE) {
+                
                 iErrCode = m_pPageSource->OnFinalize();
+                m_pPageSource->Release();
+                m_pPageSource = NULL;
+                
                 bStay = false;
                 break;
             }
@@ -1517,7 +1523,7 @@ int PageSource::OpenReport() {
     GetReportFileName (pszFileName);
 
     m_fReportFile.Close();
-    return m_fReportFile.OpenWrite (pszFileName);
+    return m_fReportFile.OpenAppend (pszFileName);
 }
 
 

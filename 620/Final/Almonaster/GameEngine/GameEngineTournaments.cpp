@@ -854,7 +854,6 @@ int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey,
 
         iErrCode = AddEmpireToTournament (iTournamentKey, iInviteKey);
         if (iErrCode != OK) {
-            Assert (false);
             goto Cleanup;
         }
     }

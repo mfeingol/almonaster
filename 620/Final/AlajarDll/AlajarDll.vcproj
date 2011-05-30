@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="AlajarDll"
 	SccProjectName="&quot;$/620&quot;, TWCAAAAA"
 	SccAuxPath=""
@@ -35,7 +35,8 @@
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				StringPooling="FALSE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
 				BasicRuntimeChecks="1"
@@ -44,6 +45,7 @@
 				StructMemberAlignment="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				EnableEnhancedInstructionSet="0"
 				DisableLanguageExtensions="FALSE"
 				DefaultCharIsUnsigned="FALSE"
 				TreatWChar_tAsBuiltInType="TRUE"
@@ -58,7 +60,6 @@
 				SuppressStartupBanner="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"
-				CompileAsManaged="0"
 				ShowIncludes="FALSE"
 				UndefineAllPreprocessorDefinitions="FALSE"/>
 			<Tool
@@ -71,13 +72,15 @@
 				OutputFile="Debug/Alajar.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
 				GenerateDebugInformation="TRUE"
 				SubSystem="2"
 				TerminalServerAware="0"
 				SwapRunFromCD="FALSE"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				OptimizeForWindows98="0"
+				OptimizeForWindows98="1"
+				SetChecksum="FALSE"
 				ImportLibrary=".\Debug/Alajar.lib"
 				TargetMachine="0"/>
 			<Tool
@@ -106,7 +109,13 @@ copy Alajar.h ..\Include
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -130,6 +139,7 @@ copy Alajar.h ..\Include
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				IgnoreStandardIncludePath="FALSE"
 				GeneratePreprocessedFile="0"
@@ -170,17 +180,21 @@ copy Alajar.h ..\Include
 				ShowProgress="0"
 				OutputFile="Release/Alajar.dll"
 				Version=""
-				LinkIncremental="1"
+				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
 				MapExports="FALSE"
 				SubSystem="2"
+				SwapRunFromCD="FALSE"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				OptimizeForWindows98="1"
+				SetChecksum="TRUE"
 				ImportLibrary=".\Release/Alajar.lib"
-				TargetMachine="1"/>
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				PreprocessorDefinitions="NDEBUG"
@@ -207,9 +221,17 @@ copy Alajar.h ..\sdk
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<Filter
 			Name="Source"

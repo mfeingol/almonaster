@@ -635,6 +635,11 @@ int GameEngine::CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey
         &iNumShips
         );
 
+    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+        iErrCode = OK;
+        goto Cleanup;
+    }
+
     if (iNumShips > 0) {
 
         for (i = 0; i < iNumShips; i ++) {
@@ -694,7 +699,6 @@ int GameEngine::GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, 
 
     // Search for matches
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
-
 
     SearchColumn sc[2];
     sc[0].iColumn = GameMap::Owner;

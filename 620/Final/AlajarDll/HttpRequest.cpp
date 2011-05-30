@@ -831,11 +831,16 @@ int HttpRequest::ParseHeaders() {
     
     // Set the timeout to 10 seconds, just in case
     // TODO:  this blocks reusing connections in HTTP 1.1
-    iErrCode = m_pSocket->SetRecvTimeOut (10000);
+    m_pSocket->SetRecvTimeOut (10000);
 
     // Recv as big a block of data as possible
     // This loop will terminate when the end of the headers is received
-    while ((iErrCode = m_pSocket->Recv (pszBuffer + stBeginRecv, MAX_REQUEST_LENGTH, &stNumBytes)) == OK) {
+    while (true) {
+
+        iErrCode = m_pSocket->Recv (pszBuffer + stBeginRecv, MAX_REQUEST_LENGTH, &stNumBytes);
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
 
         pszBuffer[stBeginRecv + stNumBytes] = '\0';
         pszBegin = pszBuffer;
@@ -912,18 +917,32 @@ int HttpRequest::ParseHeaders() {
 
         // Make sure they sent a content-length line
         if (m_stContentLength == 0) {
-            iErrCode = ERROR_MALFORMED_REQUEST;
-        } else {
-
-            Assert (stBeginRecv != 0 || pszBuffer[0] == '\0');
-
-            // What kind of forms?
-            if (m_pszSeparator == NULL || m_pszSeparator[0] == '\0') {
-                iErrCode = HandleSimpleForms (pszBuffer, MAX_REQUEST_LENGTH, stBeginRecv);
-            } else {
-                iErrCode = HandleMultipartForms (pszBuffer, stBeginRecv);
-            }
+            return ERROR_MALFORMED_REQUEST;
         }
+
+        Assert (stBeginRecv != 0 || pszBuffer[0] == '\0');
+
+        // What kind of forms?
+        if (m_pszSeparator == NULL || m_pszSeparator[0] == '\0') {
+            iErrCode = HandleSimpleForms (pszBuffer, MAX_REQUEST_LENGTH, stBeginRecv);
+        } else {
+            iErrCode = HandleMultipartForms (pszBuffer, stBeginRecv);
+        }
+
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
+    }
+
+    Assert (iErrCode == OK);
+
+    // Check results
+    if (m_iVersion == UNSUPPORTED_HTTP_VERSION) {
+        return ERROR_UNSUPPORTED_HTTP_VERSION;
+    }
+    
+    if (m_iMethod == UNSUPPORTED_HTTP_METHOD) {
+        return ERROR_UNSUPPORTED_HTTP_METHOD;
     }
 
     m_msParseTime = Time::GetTimerCount (tTimer);

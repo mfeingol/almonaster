@@ -18,6 +18,58 @@
 
 #include "HtmlRenderer.h"
 
+int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iShipPlanet,
+                                      ShipOrderPlanetInfo& planetInfo, String& strPlanetName) {
+
+    int iErrCode;
+    IReadTable* pMap = NULL;
+    const char* pszTemp;
+
+    GAME_MAP (strMap, iGameClass, iGameNumber);
+
+    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
+    if (pDatabase == NULL) {
+        Assert (false);
+        return ERROR_FAILURE;
+    }
+
+    iErrCode = pDatabase->GetTableForReading (strMap, &pMap);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Name, &pszTemp);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    if (String::AtoHtml (pszTemp, &strPlanetName, 0, false) == NULL) {
+        iErrCode = ERROR_OUT_OF_MEMORY;
+        goto Cleanup;
+    }
+    planetInfo.pszName = strPlanetName.GetCharPtr();
+    planetInfo.iPlanetKey = iShipPlanet;
+
+    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Owner, (int*) &planetInfo.iOwner);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Coordinates, &pszTemp);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    g_pGameEngine->GetCoordinates (pszTemp, &planetInfo.iX, &planetInfo.iY);
+
+Cleanup:
+
+    SafeRelease (pMap);
+    SafeRelease (pDatabase);
+
+    return iErrCode;
+}
+
 void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
                                 int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, 
                                 bool bInMapOrPlanets, unsigned int* piNumShips, unsigned int* piNumFleets) {
@@ -36,8 +88,6 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     int* piShipLoc = NULL, * piFleetLoc = NULL, iErrCode;
     
     unsigned int** ppiFleetShips = NULL, * piNumShipsInFleet = NULL, i, j, iNumOrders = 0;
-    
-    int iLastX = 0, iLastY = 0, iLastLocation = NO_KEY;
 
     Variant * pvFleetData = NULL, * pvShipData = NULL, vTemp;
 
@@ -49,17 +99,21 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     bool bOpenTableRow = bInMapOrPlanets;
     bool bCloseTableRow = false;
 
+    String strPlanetName;
     ShipOrderPlanetInfo planetInfo;
     ShipOrderShipInfo shipInfo;
     ShipOrderGameInfo gameInfo;
 
+    planetInfo.iOwner = NO_KEY;
     planetInfo.iPlanetKey = NO_KEY;
+    planetInfo.iX = 0;
+    planetInfo.iY = 0;
+    planetInfo.pszName = NULL;
 
     BuildLocation* pblLocations = NULL;
     Algorithm::AutoDelete<BuildLocation> autoDel (pblLocations, true);
     unsigned int iNumLocations = 0;
 
-    String strPlanetName;
     bool bReadLocations = false;
 
     char pszExpandButton [64];
@@ -310,28 +364,10 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 // ShipOrderPlanetInfo
                 unsigned int iShipPlanet = pvShipData[GameEmpireShips::CurrentPlanet].GetInteger();
                 if (iShipPlanet != planetInfo.iPlanetKey) {
-                    
-                    iErrCode = g_pGameEngine->GetPlanetName (m_iGameClass, m_iGameNumber, iShipPlanet, &vTemp);
-                    if (iErrCode != OK) {
-                        goto Cleanup;
-                    }
 
-                    if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
-                        iErrCode = ERROR_OUT_OF_MEMORY;
-                        goto Cleanup;
-                    }
+                    iErrCode = PopulatePlanetInfo (
+                        m_iGameClass, m_iGameNumber, iShipPlanet, planetInfo, strPlanetName);
 
-                    iErrCode = g_pGameEngine->GetPlanetProperty (
-                        m_iGameClass, m_iGameNumber, iShipPlanet, GameMap::Owner, &vTemp
-                        );
-
-                    planetInfo.pszName = strPlanetName.GetCharPtr();
-                    planetInfo.iPlanetKey = iShipPlanet;
-                    planetInfo.iOwner = vTemp.GetInteger();
-                    
-                    iErrCode = g_pGameEngine->GetPlanetCoordinates (
-                        m_iGameClass, m_iGameNumber, iShipPlanet, &planetInfo.iX, &planetInfo.iY
-                        );
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
@@ -347,6 +383,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                 if (shipInfo.bBuilding && !bReadLocations) {
 
+                    Assert (pblLocations == NULL);
+
                     iErrCode = g_pGameEngine->GetBuildLocations (
                         m_iGameClass,
                         m_iGameNumber,
@@ -360,6 +398,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                         Assert (false);
                         goto Cleanup;
                     }
+
+                    bReadLocations = true;
                 }
 
                 // Finally...
@@ -673,33 +713,22 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             m_pHttpResponse->WriteText (pfoOrders[iSelectedOrder].iKey);
             OutputText ("\"><td align=\"center\">");
             
-            if (pShipsInMap != NULL  || piFleetLoc[i] != iLastLocation) {
-                
-                iLastLocation = pShipsInMap == NULL ? piFleetLoc[i] : pShipsInMap->iPlanetKey;
-                
-                iErrCode = g_pGameEngine->GetPlanetName (m_iGameClass, m_iGameNumber, iLastLocation, &vTemp);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
+            unsigned int iLocation = pShipsInMap == NULL ? piFleetLoc[i] : pShipsInMap->iPlanetKey;
+            if (iLocation != planetInfo.iPlanetKey) {
 
-                if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
-                    iErrCode = ERROR_OUT_OF_MEMORY;
-                    goto Cleanup;
-                }
+                iErrCode = PopulatePlanetInfo (
+                    m_iGameClass, m_iGameNumber, iLocation, planetInfo, strPlanetName);
 
-                iErrCode = g_pGameEngine->GetPlanetCoordinates (m_iGameClass, m_iGameNumber, iLastLocation, &iLastX, &iLastY);
                 if (iErrCode != OK) {
-                    Assert (false);
                     goto Cleanup;
                 }
             }
-            
+
             m_pHttpResponse->WriteText (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
             OutputText (" (");
-            m_pHttpResponse->WriteText (iLastX);
+            m_pHttpResponse->WriteText (planetInfo.iX);
             OutputText (",");
-            m_pHttpResponse->WriteText (iLastY); 
+            m_pHttpResponse->WriteText (planetInfo.iY); 
             OutputText (")</td><td align=\"center\">");
             
             if (iNumOrders == 1) {
@@ -815,28 +844,10 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                         // ShipOrderPlanetInfo
                         unsigned int iShipPlanet = pvShipData[GameEmpireShips::CurrentPlanet].GetInteger();
                         if (iShipPlanet != planetInfo.iPlanetKey) {
-                            
-                            iErrCode = g_pGameEngine->GetPlanetName (m_iGameClass, m_iGameNumber, iShipPlanet, &vTemp);
-                            if (iErrCode != OK) {
-                                goto Cleanup;
-                            }
 
-                            if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
-                                iErrCode = ERROR_OUT_OF_MEMORY;
-                                goto Cleanup;
-                            }
+                            iErrCode = PopulatePlanetInfo (
+                                m_iGameClass, m_iGameNumber, iShipPlanet, planetInfo, strPlanetName);
 
-                            iErrCode = g_pGameEngine->GetPlanetProperty (
-                                m_iGameClass, m_iGameNumber, iShipPlanet, GameMap::Owner, &vTemp
-                                );
-
-                            planetInfo.pszName = strPlanetName.GetCharPtr();
-                            planetInfo.iPlanetKey = iShipPlanet;
-                            planetInfo.iOwner = vTemp.GetInteger();
-                            
-                            iErrCode = g_pGameEngine->GetPlanetCoordinates (
-                                m_iGameClass, m_iGameNumber, iShipPlanet, &planetInfo.iX, &planetInfo.iY
-                                );
                             if (iErrCode != OK) {
                                 goto Cleanup;
                             }
@@ -852,6 +863,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                         if (shipInfo.bBuilding && !bReadLocations) {
 
+                            Assert (pblLocations == NULL);
+
                             iErrCode = g_pGameEngine->GetBuildLocations (
                                 m_iGameClass,
                                 m_iGameNumber,
@@ -865,6 +878,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                                 Assert (false);
                                 goto Cleanup;
                             }
+
+                            bReadLocations = true;
                         }
 
                         // Finally...
@@ -1196,6 +1211,11 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                         iKey,
                         foOrder
                         );
+
+                    if (iErrCode != OK) {
+                        AddMessage ("At least one ship in the fleet could not be moved to the new planet");
+                    }
+                    iErrCode = OK;
                 }
             }
         }   // End fleets loop

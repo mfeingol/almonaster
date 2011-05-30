@@ -446,6 +446,7 @@ protected:
     bool ParseDateField (const char* pszField, UTCTime* ptTime);
     void RenderHiddenSearchVariant (const char* pszColName, const Variant& vData);
 
+    static bool ms_bLocksInitialized;
     static ReadWriteLock ms_mNewsFileLock;
     static ReadWriteLock ms_mIntroUpperFileLock;
     static ReadWriteLock ms_mIntroLowerFileLock;
@@ -656,7 +657,7 @@ public:
     void WriteDeadPlanetString (int iDeadPlanetKey);
     void WriteIndependentPlanetString();
 
-    int WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, int iLivePlanetKey, 
+    int WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, int iLivePlanetKey, 
         int iDeadPlanetKey, int iPlanetCounter, bool bVisibleBuilds, int iGoodAg, int iBadAg, int iGoodMin, 
         int iBadMin, int iGoodFuel, int iBadFuel, float fEmpireAgRatio, bool bIndependence, bool bAdmin, 
         bool bSpectator, const Variant* pvPlanetData, bool* pbOurPlanet);
@@ -704,6 +705,9 @@ public:
         int iGameNumber, Seconds iSeconds, Seconds iSecondsUntil, int iNumUpdates, bool bOpen, bool bPaused, 
         bool bAdminPaused, bool bStarted, const char* pszGamePassword, Variant* pvEmpireName, 
         int iNumActiveEmpires, const UTCTime& tCreationTime, bool bAdmin);
+
+    int PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iShipPlanet,
+        ShipOrderPlanetInfo& planetInfo, String& strPlanetName);
 
     int RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bool bAdmin,
         const PartialMapInfo* pPartialMapInfo, bool bSpectators);

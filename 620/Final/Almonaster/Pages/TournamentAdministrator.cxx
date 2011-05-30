@@ -619,10 +619,15 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iErrCode = g_pGameEngine->DeleteEmpireFromTournament (iTournamentKey, pHttpForm->GetIntValue());
-            if (iErrCode != OK) {
+            if (iErrCode == OK) {
+                AddMessage ("The empire was deleted from the tournament");
+            } else if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT) {
+                AddMessage ("The empire is not longer in the tournament");
+            } else if (iErrCode == ERROR_EMPIRE_IS_IN_GAMES) {
                 AddMessage ("The empire could not be deleted from the tournament because it is still in a tournament game");
             } else {
-                AddMessage ("The empire was deleted from the tournament");
+                AddMessage ("The empire was not deleted from the tournament. The error was ");
+                AppendMessage (iErrCode);
             }
         }
 

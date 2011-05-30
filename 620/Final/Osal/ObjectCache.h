@@ -68,22 +68,23 @@ public:
     bool Initialize (unsigned int iMaxNumElements) {
 
         m_iMaxNumElements = iMaxNumElements;
-        
-        Assert (m_iMaxNumElements > 0);
 
-        m_ppObjectCache = new T* [m_iMaxNumElements];
-        if (m_ppObjectCache == NULL) {
-            return false;
-        }
+        if (m_iMaxNumElements > 0) {
+
+            m_ppObjectCache = new T* [m_iMaxNumElements];
+            if (m_ppObjectCache == NULL) {
+                return false;
+            }
 
 #ifdef _DEBUG
-        memset (m_ppObjectCache, CACHE_DEBUG_VALUE_BYTE, m_iMaxNumElements * sizeof (T*));
+            memset (m_ppObjectCache, CACHE_DEBUG_VALUE_BYTE, m_iMaxNumElements * sizeof (T*));
 #endif
+        }
+
         return true;
     }
 
     bool IsEmpty() {
-
         return m_iNumFreeObjects == 0;
     }
 

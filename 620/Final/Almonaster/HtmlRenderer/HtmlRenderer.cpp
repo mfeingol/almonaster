@@ -45,6 +45,9 @@
 //
 // Static members
 //
+
+bool HtmlRenderer::ms_bLocksInitialized = false;
+
 ReadWriteLock HtmlRenderer::ms_mNewsFileLock;
 ReadWriteLock HtmlRenderer::ms_mIntroUpperFileLock;
 ReadWriteLock HtmlRenderer::ms_mIntroLowerFileLock;
@@ -125,28 +128,32 @@ HtmlRenderer::~HtmlRenderer() {
 
 int HtmlRenderer::Initialize() {
 
-    int iErrCode;
+    if (!ms_bLocksInitialized) {
 
-    iErrCode = ms_mNewsFileLock.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    iErrCode = ms_mIntroUpperFileLock.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    iErrCode = ms_mIntroLowerFileLock.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
+        int iErrCode;
+
+        iErrCode = ms_mNewsFileLock.Initialize();
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
+        iErrCode = ms_mIntroUpperFileLock.Initialize();
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
+        iErrCode = ms_mIntroLowerFileLock.Initialize();
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
+
+        iErrCode = m_slockEmpiresInGames.Initialize();
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
+
+        ms_bLocksInitialized = true;
     }
 
     m_stEmpiresInGamesCheck = NULL_TIME;
-    
-    iErrCode = m_slockEmpiresInGames.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
     m_siNumGamingEmpires = 0;
 
     return OK;
@@ -2077,6 +2084,8 @@ void HtmlRenderer::WriteGameButtons() {
 
 void HtmlRenderer::WriteGameNextUpdateString() {
 
+    int iErrCode;
+
     OutputText ("<p>");
     
     if (m_iNumNewUpdates > 0) {
@@ -2094,18 +2103,19 @@ void HtmlRenderer::WriteGameNextUpdateString() {
 
         OutputText ("First update ");
     }
+
+    int iNumEmpires;
+    iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
+    if (iErrCode != OK) {
+        Assert (false);
+        return;
+    }
     
     if (!(m_iGameOptions & COUNTDOWN) || (m_iGameState & PAUSED) || !(m_iGameState & STARTED)) {
         
         if (!(m_iGameState & STARTED)) {
             
-            int iNumEmpires, iNumNeeded, iTotal, 
-                
-            iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
-            if (iErrCode != OK) {
-                Assert (false);
-                return;
-            }
+            int iNumNeeded, iTotal, 
             
             iErrCode = g_pGameEngine->GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
             if (iErrCode != OK) {
@@ -2145,7 +2155,7 @@ void HtmlRenderer::WriteGameNextUpdateString() {
             "in <input name=\"jtimer\" size=\"22\"><script><!--\n"\
             "var t = (new Date()).getTime()/1000+");
         
-        m_pHttpResponse->WriteText (m_sSecondsUntil - 1);   
+        m_pHttpResponse->WriteText (m_sSecondsUntil - 1);
         OutputText (
             
             ";\n"\
@@ -2180,6 +2190,28 @@ void HtmlRenderer::WriteGameNextUpdateString() {
             "setTimeout('count()',500);\n"\
             "}\n"\
             "count(); // --></script>");
+    }
+
+    if (m_iGameState & STARTED) {
+
+        int iUpdated;
+        iErrCode = g_pGameEngine->GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
+        if (iErrCode != OK) {
+            Assert (false);
+            return;
+        }
+
+        if (m_iGameOptions & COUNTDOWN) {
+            OutputText (" ");
+        } else {
+            OutputText (", ");
+        }
+
+        OutputText ("<strong>");
+        m_pHttpResponse->WriteText (iUpdated);
+        OutputText ("</strong> of <strong>");
+        m_pHttpResponse->WriteText (iNumEmpires);
+        OutputText ("</strong> ready");
     }
     
     OutputText ("<p>");
@@ -2478,7 +2510,7 @@ void HtmlRenderer::WriteIndependentPlanetString() {
     OutputText ("<img src=\"" BASE_RESOURCE_DIR INDEPENDENT_PLANET_NAME "\">");
 }
 
-int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, 
+int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, 
                                             int iLivePlanetKey, int iDeadPlanetKey, 
                                             int iPlanetCounter, bool bVisibleBuilds, int iGoodAg, int iBadAg, 
                                             int iGoodMin, int iBadMin, int iGoodFuel, int iBadFuel, 
@@ -2486,7 +2518,8 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                                             bool bAdmin, bool bSpectator, const Variant* pvPlanetData,
                                             bool* pbOurPlanet) {
     
-    int iErrCode = OK, i, j;
+    int iErrCode = OK, i;
+    unsigned int j;
 
     bool bMapColoring = !bAdmin && !bSpectator; 
     const char* pszTableColor = m_vTableColor.GetCharPtr();
@@ -2572,12 +2605,11 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
     m_pHttpResponse->WriteText (pszTableColor);
     OutputText ("\">Jumps</th></tr><tr><td align=\"center\">");
     
-    int iData, iAlienKey, iOwner = pvPlanetData[GameMap::Owner].GetInteger();
-    int iAnnihilated = pvPlanetData[GameMap::Annihilated].GetInteger();
-    
+    int iData, iWeOffer, iTheyOffer, iCurrent, iAlienKey;
+    unsigned int iAnnihilated = pvPlanetData[GameMap::Annihilated].GetInteger();
+    unsigned int iOwner = pvPlanetData[GameMap::Owner].GetInteger();
+
     String strPlanet;
-    int iWeOffer, iTheyOffer, iCurrent;
-    
     Variant vEmpireName;
     
     if (iOwner == SYSTEM) {
@@ -2589,9 +2621,9 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
         } else {
             WriteDeadPlanetString (iDeadPlanetKey);
         }
-        
+
     } else {
-        
+
         if (iOwner == INDEPENDENT) {
             
             iCurrent = bMapColoring ? WAR : TRUCE;
@@ -3053,7 +3085,7 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
     
     if (iTotalNumShips > 0) {
         
-        int* piOwnerData;
+        unsigned int* piOwnerData = NULL;
         iErrCode = g_pGameEngine->GetPlanetShipOwnerData (
             m_iGameClass, 
             m_iGameNumber, 
@@ -3070,54 +3102,60 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
             Assert (false);
             return iErrCode;
         }
-        
+
         int iNumOwners = piOwnerData[0];
         if (iNumOwners > 0) {
             
             m_pHttpResponse->WriteText (
-                "<tr><td></td><td></td><td colspan=\"10\"><table><tr><td></td><td bgcolor=\""
-                );
-            
+                "<tr><td></td><td></td>"\
+                "<td colspan=\"10\">"\
+                "<table>"\
+                "<tr>"\
+                "<td></td>"\
+                "<th></th><th bgcolor=\"");
             m_pHttpResponse->WriteText (pszTableColor);
-            OutputText ("\" align=\"center\"><strong>Empire</strong></td>");
-            
+            OutputText ("\">Empire</th>");
+
             bool pbTech [NUM_SHIP_TYPES];
-            ENUMERATE_SHIP_TYPES (i) {
-                pbTech[i] = false;
-            }
+            memset (pbTech, 0, sizeof (pbTech));
+
             int** ppiNumTechsTable = (int**) StackAlloc (iNumOwners * sizeof (int*));
             int* piTemp = (int*) StackAlloc (iNumOwners * NUM_SHIP_TYPES * sizeof (int));
             for (i = 0; i < iNumOwners; i ++) {
-                ppiNumTechsTable[i] = &(piTemp [i * NUM_SHIP_TYPES]);
-                ENUMERATE_SHIP_TYPES (j) {
-                    ppiNumTechsTable[i][j] = 0;
-                }
+
+                ppiNumTechsTable[i] = piTemp + i * NUM_SHIP_TYPES;
+                memset (ppiNumTechsTable[i], 0, NUM_SHIP_TYPES * sizeof (int));
             }
-            int* piOwnerKey = (int*) StackAlloc (iNumOwners * sizeof (int));
-            
-            int iBase = 1, iNumOwnerTechs, iType;
-            
+            unsigned int* piOwnerKey = (unsigned int*) StackAlloc (2 * iNumOwners * sizeof (unsigned int));
+            unsigned int* piOwnerShips = piOwnerKey + iNumOwners;
+
+            unsigned int iBase = 1;
             for (i = 0; i < iNumOwners; i ++) {
-                
+
                 piOwnerKey[i] = piOwnerData [iBase];
-                iNumOwnerTechs = piOwnerData [iBase + 1];
+                piOwnerShips[i] = piOwnerData [iBase + 1];
+
+                unsigned int iNumOwnerTechs = piOwnerData [iBase + 2];
                 
                 for (j = 0; j < iNumOwnerTechs; j ++) {
-                    iType = piOwnerData [iBase + 2 + j * 2];
+
+                    unsigned int iBaseIndex = iBase + 3 + j * 2;
+                    unsigned int iType = piOwnerData [iBaseIndex];
+
+                    ppiNumTechsTable [i][iType] = piOwnerData [iBaseIndex + 1];
                     pbTech [iType] = true;
-                    ppiNumTechsTable [i][iType] = piOwnerData [iBase + 3 + j * 2];
                 }
                 
-                iBase += 2 + 2 * iNumOwnerTechs;
+                iBase += 3 + 2 * iNumOwnerTechs;
             }
             
             ENUMERATE_SHIP_TYPES (i) {
                 if (pbTech[i]) {
-                    OutputText ("<td bgcolor=\"");
+                    OutputText ("<th bgcolor=\"");
                     m_pHttpResponse->WriteText (pszTableColor);
-                    OutputText ("\" align=\"center\"><strong>");
+                    OutputText ("\">");
                     m_pHttpResponse->WriteText (SHIP_TYPE_STRING[i]);
-                    OutputText ("</strong></td>");
+                    OutputText ("</th>");
                 }
             }
             OutputText ("</tr>");
@@ -3145,7 +3183,7 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                             false,
                             false
                             );
-                        
+
                     } else {
                         
                         Variant vTemp;
@@ -3243,8 +3281,10 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                     OutputText ("<td align=\"center\"><font color=\"");
                     m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
                     OutputText ("\"><strong>");
+                    m_pHttpResponse->WriteText (piOwnerShips[i]);
+                    OutputText ("</strong></font></td><td align=\"center\"><strong>");
                     m_pHttpResponse->WriteText (pszEmpireName);
-                    OutputText ("</strong></font></td>");
+                    OutputText ("</strong></td>");
                     
                     ENUMERATE_SHIP_TYPES (j) {
                         if (pbTech[j]) {
@@ -3262,8 +3302,10 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                         OutputText ("<td align=\"center\"><font color=\"");
                         m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
                         OutputText ("\"><strong>");
+                        m_pHttpResponse->WriteText (piOwnerShips[i]);
+                        OutputText ("</strong></font></td><td align=\"center\"><strong>");
                         m_pHttpResponse->WriteText (pszEmpireName);
-                        OutputText ("</strong></font></td>");
+                        OutputText ("</strong></td>");
                         
                         ENUMERATE_SHIP_TYPES (j) {
                             if (pbTech[j]) {
@@ -3278,9 +3320,11 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                     } else {
                         
                         OutputText ("<td align=\"center\"><strong>");
+                        m_pHttpResponse->WriteText (piOwnerShips[i]);
+                        OutputText ("</strong></font></td><td align=\"center\"><strong>");
                         m_pHttpResponse->WriteText (pszEmpireName);
                         OutputText ("</strong></td>");
-                        
+
                         ENUMERATE_SHIP_TYPES (j) {
                             if (pbTech[j]) {
                                 OutputText ("<td align=\"center\">");
@@ -8414,7 +8458,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
                                        int iProxyPlanetKey, bool bVisibleBuilds, bool bIndependence,
                                        const Variant* pvPlanetData, String* pstrAltTag) {
     
-    int iErrCode = OK, iNumOwners;
+    int iErrCode = OK;
     
     int iTotalNumShips = 
         pvPlanetData[GameMap::NumUncloakedShips].GetInteger() + 
@@ -8428,7 +8472,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
         goto End;
     }
     
-    int* piOwnerData;
+    unsigned int* piOwnerData = NULL;
     iErrCode = g_pGameEngine->GetPlanetShipOwnerData (
         iGameClass,
         iGameNumber,
@@ -8446,12 +8490,10 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
         goto End;
     }
     
-    iNumOwners = piOwnerData[0];
-    
+    unsigned int iNumOwners = piOwnerData[0];
     if (iNumOwners > 0) {
-        
-        int i, j, iBase, iNumOwnerTechs, iType, iNumShips;
-        unsigned int iOwnerKey;
+
+        unsigned int i, j, iType, iNumShips, iOwnerKey, iBase, iNumOwnerTechs, iNumOwnerShips;
         Variant vEmpireName;
         
         iBase = 1;
@@ -8463,7 +8505,9 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
             }
             
             iOwnerKey = piOwnerData [iBase];
-            iNumOwnerTechs = piOwnerData [iBase + 1];
+            
+            iNumOwnerShips = piOwnerData [iBase + 1];
+            iNumOwnerTechs = piOwnerData [iBase + 2];
             
             Assert (iNumOwnerTechs > 0);
             
@@ -8490,8 +8534,8 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
             
             for (j = 0; j < iNumOwnerTechs; j ++) {
                 
-                iType = piOwnerData [iBase + 2 + j * 2];
-                iNumShips = piOwnerData [iBase + 3 + j * 2];
+                iType = piOwnerData [iBase + 3 + j * 2];
+                iNumShips = piOwnerData [iBase + 4 + j * 2];
                 
                 Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP);
                 Assert (iNumShips > 0);
@@ -8510,7 +8554,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
                 }
             }
             
-            iBase += 2 + 2 * iNumOwnerTechs;
+            iBase += 3 + 2 * iNumOwnerTechs;
         }
     }
     
@@ -9418,11 +9462,11 @@ int HtmlRenderer::ParseCreateTournamentForms (Variant* pvSubmitArray, int iEmpir
 void HtmlRenderer::WriteTournamentAdministrator (int iEmpireKey) {
 
     int iErrCode;
+    unsigned int i, iNumTournaments;
 
     Variant* pvTournamentName = NULL;
-    Algorithm::AutoDelete<Variant> autodel (pvTournamentName, true);
+    unsigned int* piTournamentKey = NULL;
 
-    unsigned int i, iNumTournaments, * piTournamentKey = NULL;
     iErrCode = g_pGameEngine->GetOwnedTournaments (iEmpireKey, &piTournamentKey, &pvTournamentName, &iNumTournaments);
     if (iErrCode != OK) {
         OutputText ("<p>Error reading tournament data");

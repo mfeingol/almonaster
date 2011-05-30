@@ -93,8 +93,6 @@ float GameEngine::GetAgRatio (int iAg, int iPop, float fMaxAgRatio) {
 float GameEngine::GetShipNextBR (float fBR, float fMaint) {
 
     Assert (fBR > 0);
-    Assert (fMaint > 0);
-
     return fBR * fMaint;
 }
 

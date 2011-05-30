@@ -596,7 +596,7 @@ void HtmlRenderer::AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, in
 
         AddMessage ("Planet ");
         AppendMessage (pszPlanetName);
-        AppendMessage (" lacks the population needed to build ships");
+        AppendMessage (" does not have the population needed to build ships");
         break;
 
     case ERROR_WRONG_TECHNOLOGY:
@@ -610,7 +610,7 @@ void HtmlRenderer::AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, in
 
         AddMessage ("Planet ");
         AppendMessage (pszPlanetName);
-        AppendMessage (" lacks the population level needed to build colony ships");
+        AppendMessage (" does not have the population needed to build colony ships");
         break;
 
     case ERROR_SHIP_LIMIT_REACHED:

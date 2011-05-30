@@ -220,7 +220,7 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 
 // GameEmpireData::Options
 #define UPDATED                             (0x00000001)
-#define AUTO_UPDATE                         (0x00000002)
+//#define AUTO_UPDATE                         (0x00000002) // Open
 #define LOGGED_IN_THIS_UPDATE               (0x00000004)
 #define GAME_REPEATED_BUTTONS               (0x00000008)
 #define REQUEST_DRAW                        (0x00000010)
@@ -762,8 +762,10 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 #define NEVER_WON_A_GAME                (0x00000002)
 #define ONLY_ONE_LOGIN                  (0x00000004)
 #define CLASSIC_SCORE_IS_ZERO_OR_LESS   (0x00000008)
-#define LAST_LOGGED_IN_A_MONTH_AGO      (0x00000010)
-#define TEST_PURGE_ONLY                 (0x00000020)
+#define LAST_LOGGED_IN_1_MONTH_AGO      (0x00000010)
+#define LAST_LOGGED_IN_3_MONTHS_AGO     (0x00000020)
+#define TEST_PURGE_ONLY                 (0x00000040)
+#define NOT_ON_TOP_LISTS                (0x00000080)
 
 // Diplomacy
 #define ALL_WAR (-6)

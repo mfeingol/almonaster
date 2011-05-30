@@ -622,17 +622,23 @@ recurse:
     template <class T> class AutoDelete {
     private:
         
-        T* m_pPtr;
+        T*& m_pPtr;
         bool m_bVector;
+
+        AutoDelete& operator= (AutoDelete& rhs) {
+
+            Assert (!"This should never be called");
+            m_pPtr = NULL;
+            return *this;
+        }
         
     public:
         
-        AutoDelete (T* pPtr, bool bVector = false) {
-            
-            m_pPtr = pPtr;
+        AutoDelete (T*& pPtr, bool bVector = false) : m_pPtr (pPtr) {
+
             m_bVector = bVector;
         }
-        
+
         ~AutoDelete() {
             
             if (m_pPtr != NULL) {
@@ -643,7 +649,7 @@ recurse:
                 }
             }
         }
-        
+
         T* GetPtr() {
             return m_pPtr;
         }

@@ -1070,6 +1070,9 @@ public:
         int iPlanetKey, bool bVisibleBuilds, Variant* pvEmpireKey, unsigned int& iNumEmpires,
         int* piNumForeignShipsOnPlanet, int* piDiplomacyLevel, Variant** ppvEmpireKey);
 
+    int GetPlanetPopulationWithColonyBuilds (unsigned int iGameClass, unsigned int iGameNumber,
+        unsigned int iEmpireKey, unsigned int iPlanetKey, unsigned int* piPop);
+
     // Score
     int GetNumEmpiresInNukeHistory (int iEmpireKey, int* piNumNukes, int* piNumNuked);
     int GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppvNukedData, int* piNumNukers, 
@@ -1139,8 +1142,6 @@ public:
     int GetNumTechs (int iTechBitmap);
 
     // Options
-    int SetEmpireAutoUpdate (int iGameClass, int iGameNumber, int iEmpireKey, bool bAutoUpdate);
-
     int GetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumMessages);
     int SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iNumMessages);
 
@@ -1213,8 +1214,8 @@ public:
     int HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, bool* pbVisited);
 
     int GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-        int iPlanetProxyKey, int iTotalNumShips, bool bVisibleBuilds, bool bIndependence, 
-        int** ppiShipOwnerData);
+        int iPlanetProxyKey, unsigned int iTotalNumShips, bool bVisibleBuilds, bool bIndependence, 
+        unsigned int** ppiShipOwnerData);
 
     int GetPlanetName (int iGameClass, int iGameNumber, int iPlanetKey, Variant* pvPlanetName);
     int GetPlanetNameWithSecurity (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey,  

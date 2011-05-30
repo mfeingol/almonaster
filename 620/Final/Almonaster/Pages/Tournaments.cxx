@@ -71,11 +71,15 @@ if (m_bOwnPost && !m_bRedirection) {
 
             iErrCode = g_pGameEngine->InviteSelfIntoTournament (iTournamentKey, m_iEmpireKey);
             if (iErrCode == OK) {
-                AddMessage ("A join request message has been sent to the tournament owner");
+                AddMessage ("A request to join the tournament was sent to the tournament owner");
+            } else if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
+                AddMessage ("You are already in the tournament");
+            } else if (iErrCode == ERROR_TOURNAMENT_DOES_NOT_EXIST) {
+                AddMessage ("That tournament no longer exists");
             } else {
                 AddMessage ("Error ");
                 AppendMessage (iErrCode);
-                AddMessage (" occurred");
+                AppendMessage (" occurred");
             }
 
             bRedirectTest = false;

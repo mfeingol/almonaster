@@ -415,8 +415,17 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         }
         Assert (vTemp.GetInteger() >= 0);
 
+        // If the time is greater than an update period, it means that 
+        // the game was paused on a weekend. In this case, we assume
+        // that the game has a full update remaining
+        Seconds sSecondsSinceLast = vTemp.GetInteger();
+        if (sSecondsSinceLast > sUpdatePeriod + (iNumUpdates == 0 ? sFirstUpdateDelay : 0)) {
+            Assert (!bWeekends);
+            sSecondsSinceLast = 1;  // 1 second
+        }
+
         // Calculate the simulated last update time
-        Time::SubtractSeconds (tNow, vTemp.GetInteger(), &tLastUpdateTime);
+        Time::SubtractSeconds (tNow, sSecondsSinceLast, &tLastUpdateTime);
 
         // Calculate hypothetical next update time
         GetNextUpdateTime (

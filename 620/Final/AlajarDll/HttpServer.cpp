@@ -63,6 +63,8 @@ HttpServer::HttpServer() {
     if (Socket::Initialize() != OK) {
         ReportEvent ("Could not initialize socket library!");
     }
+
+    m_bEnableMemoryCache = true;
 }
 
 HttpServer::~HttpServer() {
@@ -329,14 +331,14 @@ int HttpServer::StartServer() {
     // Open report file
     sprintf (pszReportFileName, "%s/Alajar.report", m_pszReportPath);
 
-    if (m_fReportFile.OpenWrite (pszReportFileName) != OK) {
+    if (m_fReportFile.OpenAppend (pszReportFileName) != OK) {
         ReportEvent ("Error: Could not open the report file");
         goto ErrorExit;
     }
         
     // Print intro screen
     ReportEvent (m_pszServerName);
-    ReportEvent ("Copyright (c) 1998-2002 Max Attar Feingold");
+    ReportEvent ("Copyright (c) 1998-2003 Max Attar Feingold");
     ReportEvent ("");
     ReportEvent ("Alajar comes with ABSOLUTELY NO WARRANTY.");
     ReportEvent ("This is free software, and you are welcome");
@@ -475,6 +477,13 @@ int HttpServer::StartServer() {
         goto ErrorExit;
     }
 
+    if (m_pConfigFile->GetParameter ("MemoryCache", &pszRhs) == OK && pszRhs != NULL) {
+         m_bEnableMemoryCache = atoi (pszRhs) == 1;
+    } else {
+        ReportEvent ("Error: Could not read MemoryCache flag from Alajar.conf");
+        goto ErrorExit;
+    }
+
     if (bFileCache) {
         ReportEvent ((String) "The file cache is on, optimized for " + iNumFiles + " files");
     } else {
@@ -574,12 +583,16 @@ int HttpServer::StartServer() {
     }
 
     // Calculate size of http object cache
-    iNumHttpObjects = iMaxNumThreads;
+    if (!m_bEnableMemoryCache) {
+        iNumHttpObjects = 0;
+    } else {
+        iNumHttpObjects = iMaxNumThreads;
 
-    while (m_pPageSourceTable->GetNextIterator (&htiPageSource)) {      
-        pPageSource = htiPageSource.GetData();
-        if (pPageSource->IsSingleThreaded()) {
-            iNumHttpObjects += 3;
+        while (m_pPageSourceTable->GetNextIterator (&htiPageSource)) {      
+            pPageSource = htiPageSource.GetData();
+            if (pPageSource->IsSingleThreaded()) {
+                iNumHttpObjects += 3;
+            }
         }
     }
 

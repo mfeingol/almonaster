@@ -520,20 +520,6 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     memset (pfoOrders, 0, iMaxNumOrders * sizeof (FleetOrder));
     Assert (FLEET_ORDER_NORMAL == 0);
 
-    ///////////////////
-    // Add "Standby" //
-    ///////////////////
-
-    sprintf (pszOrder, "Standby at %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
-
-    pfoOrders[0].iKey = STAND_BY;
-    pfoOrders[0].pszText = String::StrDup (pszOrder);
-    if (pfoOrders[0].pszText == NULL) {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto Cleanup;
-    }
-    iNumOrders = 1;
-
     ///////////////////////////////////////////
     // Add moves if fleet has no build ships //
     ///////////////////////////////////////////
@@ -542,8 +528,25 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     if (iErrCode != OK) {
         goto Cleanup;
     }
+    Assert (iNumBuildShips >= 0);
 
-    if (iNumBuildShips == 0) {
+    if (iNumBuildShips > 0) {
+
+        ///////////////////
+        // Add "Standby" //
+        ///////////////////
+
+        sprintf (pszOrder, "Build at %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
+        pfoOrders[0].iKey = STAND_BY;
+        pfoOrders[0].pszText = String::StrDup (pszOrder);
+        if (pfoOrders[0].pszText == NULL) {
+            iErrCode = ERROR_OUT_OF_MEMORY;
+            goto Cleanup;
+        }
+        iNumOrders = 1;
+
+    } else {
         
         GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
         GAME_EMPIRE_DIPLOMACY (strEmpireDip, iGameClass, iGameNumber, iEmpireKey);
@@ -564,6 +567,20 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
             iErrCode = ERROR_DATA_CORRUPTION;
             goto Cleanup;
         }
+
+        ///////////////////
+        // Add "Standby" //
+        ///////////////////
+
+        sprintf (pszOrder, "Standby at %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+
+        pfoOrders[0].iKey = STAND_BY;
+        pfoOrders[0].pszText = String::StrDup (pszOrder);
+        if (pfoOrders[0].pszText == NULL) {
+            iErrCode = ERROR_OUT_OF_MEMORY;
+            goto Cleanup;
+        }
+        iNumOrders = 1;
 
         ///////////////
         // Add moves //
@@ -1021,7 +1038,6 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
             break;
         }
     }
-    Assert (i < iNumOrders);
 
     *ppfoOrders = pfoOrders;
     pfoOrders = NULL;
@@ -1710,6 +1726,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
     //
     // Move
     //
+
     // Get proxy key for empire map
     iErrCode = m_pGameData->GetFirstKey (
         strEmpireMap, 
@@ -1864,6 +1881,7 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
 
     unsigned int* piShipKey = NULL, iNumSrcShips, i, iSrcPlanet, iDestPlanet;
     Variant vTemp, vSrcName;
+    int iSrcFlags = 0;
 
     IReadTable* pFleets = NULL;
 
@@ -1926,6 +1944,11 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
     } else if (iDestKey == NO_KEY) {
 
         iErrCode = pFleets->ReadData (iSrcKey, GameEmpireFleets::Name, &vSrcName);
+        if (iErrCode != OK) {
+            goto Cleanup;
+        }
+
+        iErrCode = pFleets->ReadData (iSrcKey, GameEmpireFleets::Flags, &iSrcFlags);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -2009,13 +2032,25 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
     }
 
     // Move each ship to the new planet/fleet combination
+    int iShipMoveErrorCode = OK;
     for (i = 0; i < iNumSrcShips; i ++) {
 
         iErrCode = MoveShip (iGameClass, iGameNumber, iEmpireKey, piShipKey[i], iDestPlanet, iDestKey);
         if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
+
+            Assert (
+                iErrCode == ERROR_INSUFFICIENT_POPULATION_FOR_COLONIES ||
+                iErrCode == ERROR_SHIP_ALREADY_BUILT);
+
+            if (iShipMoveErrorCode == OK) {
+                iShipMoveErrorCode = iErrCode;
+            }
         }
+    }
+
+    if (iShipMoveErrorCode != OK) {
+        iErrCode = iShipMoveErrorCode;
+        goto Cleanup;
     }
 
     // Delete the source fleet
@@ -2025,13 +2060,21 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
         goto Cleanup;
     }
 
-    // Rename the dest fleet if necessary
+    // Reset the dest fleet if necessary
     if (vSrcName.GetType() == V_STRING) {
 
-        iErrCode = UpdateFleetName (iGameClass, iGameNumber, iEmpireKey, iDestKey, vSrcName.GetCharPtr());
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
+        IWriteTable* pWriteNewFleet = NULL;
+
+        iErrCode = m_pGameData->GetTableForWriting (pszFleets, &pWriteNewFleet);
+        if (iErrCode == OK) {
+
+            iErrCode = pWriteNewFleet->WriteData (iDestKey, GameEmpireFleets::Name, vSrcName);
+            if (iErrCode == OK) {
+                iErrCode = pWriteNewFleet->WriteData (iDestKey, GameEmpireFleets::Flags, iSrcFlags);
+            }
+
+            pWriteNewFleet->Release();
+            pWriteNewFleet = NULL;
         }
     }
 

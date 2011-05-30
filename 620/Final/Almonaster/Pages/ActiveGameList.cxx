@@ -36,14 +36,25 @@ if (m_bOwnPost && !m_bRedirection) {
 
         // Make sure empire is in game
         bool bFlag;
-        Check (g_pGameEngine->IsEmpireInGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag));
+        iErrCode = g_pGameEngine->IsEmpireInGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag);
+        if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
+            AddMessage ("That game no longer exists");
+            return Redirect (ACTIVE_GAME_LIST);
+        }
+        Check (iErrCode);
 
         if (!bFlag) {
             AddMessage ("Your empire is not in that game");
             return Redirect (ACTIVE_GAME_LIST);
         }
 
-        Check (g_pGameEngine->HasEmpireResignedFromGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag));
+        g_pGameEngine->HasEmpireResignedFromGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag);
+        if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
+            AddMessage ("That game no longer exists");
+            return Redirect (ACTIVE_GAME_LIST);
+        }
+        Check (iErrCode);
+
         if (bFlag) {
             AddMessage ("Your empire has resigned from that game");
             return Redirect (ACTIVE_GAME_LIST);

@@ -2125,143 +2125,159 @@ int GameEngine::HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEm
 // **ppiShipOwnerData -> Data about the ships on a given planet.
 //  [0] -> Number of owners
 //  [1] -> Key of first owner
-//  [2] -> Number of ship types owner has
-//  [3] -> First type key
-//  [4] -> Number of ships of first type
-//  repeat 3-4
-//  repeat 1-4
+//  [2] -> Number of ships owner has
+//  [3] -> Number of ship types owner has
+//  [4] -> First type key
+//  [5] -> Number of ships of first type
+//  repeat 4-5
+//  repeat 1-5
 //
 // Returns data about a given visited planet
 
 int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-                                        int iPlanetProxyKey, int iTotalNumShips, bool bVisibleBuilds, 
-                                        bool bIndependence, int** ppiShipOwnerData) {
+                                        int iPlanetProxyKey, unsigned int iTotalNumShips, bool bVisibleBuilds, 
+                                        bool bIndependence, unsigned int** ppiShipOwnerData) {
+
+    int iErrCode;
+    Assert (iTotalNumShips > 0);
+
+    *ppiShipOwnerData = NULL;
 
     // Get number of empires
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
-    GAME_EMPIRE_DIPLOMACY (strDip, iGameClass, iGameNumber, iEmpireKey);
 
     unsigned int iNumEmpires;
-    Variant vDip, * pvKey;
-    int iErrCode = m_pGameData->ReadColumn (strEmpires, GameEmpires::EmpireKey, &pvKey, &iNumEmpires);
+    Variant* pvKey = NULL;
+    iErrCode = m_pGameData->ReadColumn (strEmpires, GameEmpires::EmpireKey, &pvKey, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
     char strTheirShips [256], strTheirEmpireMap [256];
-    Variant vType, vState, vBuilt, vNuked;
-    
-    bool bDisplay, bAdded;
-    unsigned int iNumKeys, iTotalShips, piIndex [NUM_SHIP_TYPES], * piShipKey = NULL, i, iCounter = 1, 
-        iOwnersFound = 0, j, iTemp, iTypes, iKey;
 
-    *ppiShipOwnerData = new int [(min (NUM_SHIP_TYPES, iTotalNumShips) + 1) * (iNumEmpires + 1) + 5];
-    if (*ppiShipOwnerData == NULL) {
+    IReadTable* pShips = NULL, * pMap = NULL;
+    int iType, iTemp;
+    unsigned int iNumShips, iTotalShips, * piShipKey = NULL, i, j;
+
+    unsigned int iSlotsAllocated = 1 + 
+        min (iNumEmpires + (bIndependence ? 1 : 0), iTotalNumShips) *
+        (3 + 2 * min (NUM_SHIP_TYPES, iTotalNumShips));
+
+    unsigned int* piShipOwnerData = new unsigned int [iSlotsAllocated];
+    if (piShipOwnerData == NULL) {
         iErrCode = ERROR_OUT_OF_MEMORY;
         goto Cleanup;
     }
+    piShipOwnerData[0] = 0;
+    unsigned int iCounter = 1;
+
+    unsigned int iCurrentPlanetCol = GameEmpireShips::CurrentPlanet;
+    unsigned int iTypeCol = GameEmpireShips::Type;
 
     // Scan through all players' ship lists
-    for (i = 0; i < iNumEmpires; i ++) {
+    for (i = 0; i <= iNumEmpires; i ++) {
 
-        GET_GAME_EMPIRE_MAP (strTheirEmpireMap, iGameClass, iGameNumber, pvKey[i].GetInteger());
+        iTotalShips = 0;
 
-        if (pvKey[i].GetInteger() == iEmpireKey && iPlanetProxyKey != NO_KEY) {
-            iKey = iPlanetProxyKey;
-        } else {
+        if (i != iNumEmpires) {
 
-            iErrCode = m_pGameData->GetFirstKey (
-                strTheirEmpireMap, 
-                GameEmpireMap::PlanetKey, 
-                iPlanetKey, 
-                false, 
-                &iKey
-                );
+            unsigned int iKey;
+            GET_GAME_EMPIRE_MAP (strTheirEmpireMap, iGameClass, iGameNumber, pvKey[i].GetInteger());
 
-            if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != OK) {
-                goto Cleanup;
-            }
-        }
-        
-        if (iKey == NO_KEY) {
-            
-            iTotalShips = 0;
-            iErrCode = OK;  // Not an error
-
-        } else {
-            
-            iErrCode = m_pGameData->ReadData (
-                strTheirEmpireMap, 
-                iKey, 
-                GameEmpireMap::NumUncloakedShips, 
-                &vBuilt
-                );
+            iErrCode = m_pGameData->GetTableForReading (strTheirEmpireMap, &pMap);
             if (iErrCode != OK) {
+                Assert (false);
                 goto Cleanup;
             }
-            
-            iTotalShips = vBuilt.GetInteger();
 
-            if (iEmpireKey == pvKey[i].GetInteger() || iEmpireKey == SYSTEM) {
+            if (pvKey[i].GetInteger() == iEmpireKey && iPlanetProxyKey != NO_KEY) {
+                iKey = iPlanetProxyKey;
+            } else {
 
-                iErrCode = m_pGameData->ReadData (
-                    strTheirEmpireMap, 
-                    iKey, 
-                    GameEmpireMap::NumCloakedShips, 
-                    &vBuilt
-                    );
-                if (iErrCode != OK) {
+                iErrCode = pMap->GetFirstKey (GameEmpireMap::PlanetKey, iPlanetKey, false, &iKey);
+                if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != OK) {
+                    Assert (false);
                     goto Cleanup;
                 }
-
-                iTotalShips += vBuilt.GetInteger();
-                
-                iErrCode = m_pGameData->ReadData (
-                    strTheirEmpireMap, 
-                    iKey, 
-                    GameEmpireMap::NumCloakedBuildShips, 
-                    &vBuilt
-                    );
-                if (iErrCode != OK) {
-                    goto Cleanup;
-                }
-
-                iTotalShips += vBuilt.GetInteger();
             }
 
-            if (bVisibleBuilds || iEmpireKey == pvKey[i]) {
+            if (iKey == NO_KEY) {
 
-                iErrCode = m_pGameData->ReadData (
-                    strTheirEmpireMap, 
-                    iKey, 
-                    GameEmpireMap::NumUncloakedBuildShips, 
-                    &vBuilt
-                    );
+                iErrCode = OK;  // Not an error
+
+            } else {
+
+                iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumUncloakedShips, &iTemp);
                 if (iErrCode != OK) {
+                    Assert (false);
                     goto Cleanup;
                 }
+                iTotalShips = iTemp;
 
-                iTotalShips += vBuilt.GetInteger();
+                if (iEmpireKey == pvKey[i].GetInteger() || iEmpireKey == SYSTEM) {
+
+                    iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumCloakedShips, &iTemp);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+                    iTotalShips += iTemp;
+
+                    iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumCloakedBuildShips, &iTemp);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+                    iTotalShips += iTemp;
+                }
+
+                if (bVisibleBuilds || iEmpireKey == pvKey[i]) {
+
+                    iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumUncloakedBuildShips, &iTemp);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+
+                    iTotalShips += iTemp;
+                }
+
+                if (iTotalShips > 0) {
+                    GET_GAME_EMPIRE_SHIPS (strTheirShips, iGameClass, iGameNumber, pvKey[i].GetInteger());
+                }
             }
+
+            SafeRelease (pMap);
+
+        } else if (bIndependence) {
+
+            GET_GAME_INDEPENDENT_SHIPS (strTheirShips, iGameClass, iGameNumber);
+
+            iErrCode = m_pGameData->GetNumRows (strTheirShips, &iTotalShips);
+            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                iErrCode = OK;
+            } else if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            iCurrentPlanetCol = GameIndependentShips::CurrentPlanet;
+            iTypeCol = GameIndependentShips::Type;
         }
 
         if (iTotalShips > 0) {
 
-            GET_GAME_EMPIRE_SHIPS (strTheirShips, iGameClass, iGameNumber, pvKey[i].GetInteger());
+            unsigned int iNumDisplayShips = 0;
             
-            bAdded = false;
-            
+            iErrCode = m_pGameData->GetTableForReading (strTheirShips, &pShips);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+
             // Scan through ship list
-            iErrCode = m_pGameData->GetEqualKeys (
-                strTheirShips, 
-                GameEmpireShips::CurrentPlanet, 
-                iPlanetKey, 
-                false, 
-                &piShipKey, 
-                &iNumKeys
-                );
-            
+            iErrCode = pShips->GetEqualKeys (iCurrentPlanetCol, iPlanetKey, false, &piShipKey, &iNumShips);
             if (iErrCode != OK) {
 
                 if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -2270,200 +2286,119 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                     Assert (false);
                     goto Cleanup;
                 }
-            
+
             } else {
-            
+
+                unsigned int piIndex [NUM_SHIP_TYPES];
                 memset (piIndex, 0, NUM_SHIP_TYPES * sizeof (unsigned int));
-                
-                for (j = 0; j < iNumKeys; j ++) {           
+
+                for (j = 0; j < iNumShips; j ++) {           
                     
-                    bDisplay = true;
-                    
+                    bool bDisplay = true;
+
                     // Read ship type
-                    iErrCode = m_pGameData->ReadData (
-                        strTheirShips, 
-                        piShipKey[j], 
-                        GameEmpireShips::Type, 
-                        &vType
-                        );
+                    iErrCode = pShips->ReadData (piShipKey[j], iTypeCol, &iType);
                     if (iErrCode != OK) {
+                        Assert (false);
                         goto Cleanup;
                     }
 
                     // Invisible builds?
-                    if (!bVisibleBuilds && pvKey[i].GetInteger() != iEmpireKey) {
+                    if (i != iNumEmpires && !bVisibleBuilds && pvKey[i].GetInteger() != iEmpireKey) {
                         
-                        iErrCode = m_pGameData->ReadData (
-                            strTheirShips,
-                            piShipKey[j], 
-                            GameEmpireShips::BuiltThisUpdate,
-                            &vBuilt
-                            );
+                        iErrCode = pShips->ReadData (piShipKey[j], GameEmpireShips::BuiltThisUpdate, &iTemp);
                         if (iErrCode != OK) {
+                            Assert (false);
                             goto Cleanup;
                         }
-                        
-                        if (vBuilt.GetInteger() == 1) {
+                        if (iTemp != 0) {
                             bDisplay = false;
                         }
                     }
-                    
+
                     // If ship is cloaked and doesn't belong to empire, don't show it
-                    if (bDisplay && pvKey[i] != iEmpireKey) {
-                        
-                        iErrCode = m_pGameData->ReadData (
-                            strTheirShips, 
-                            piShipKey[j], 
-                            GameEmpireShips::State, 
-                            &vState
-                            );
+                    if (i != iNumEmpires && bDisplay && pvKey[i].GetInteger() != iEmpireKey) {
+
+                        iErrCode = pShips->ReadData (piShipKey[j], GameEmpireShips::State, &iTemp);
                         if (iErrCode != OK) {
+                            Assert (false);
                             goto Cleanup;
                         }
                         
-                        if (vState.GetInteger() & CLOAKED) {
+                        if (iTemp & CLOAKED) {
                             bDisplay = false;
                         }
                     }
                     
                     if (bDisplay) {
-                        
-                        if (!bAdded) {
-                            
-                            bAdded = true;
-                            
-                            // Increment number of owners
-                            iOwnersFound ++;
-                            
-                            // Get owner's key
-                            (*ppiShipOwnerData)[iCounter] = pvKey[i];
-                            iCounter ++;
-                        }
-                        
-                        piIndex[vType.GetInteger()] ++;
+                        iNumDisplayShips ++;
+                        piIndex [iType] ++;
                     }
-                    
-                }
                 
-                if (bAdded) {
-                    
-                    iTemp = iCounter;
-                    iCounter ++;
-                    iTypes = 0;
-                    
-                    ENUMERATE_SHIP_TYPES (j) {
+                }   // End ships on planet loop
 
-                        if (piIndex[j] > 0) {
-                            
-                            iTypes ++;
-                            
-                            (*ppiShipOwnerData)[iCounter] = j;
+                if (iNumDisplayShips > 0) {
+
+                    // Increment number of owners
+                    piShipOwnerData[0] ++;
+
+                    // Write owner's key
+                    Assert (iCounter < iSlotsAllocated);
+                    piShipOwnerData[iCounter] = (i == iNumEmpires) ? INDEPENDENT : pvKey[i].GetInteger();
+                    iCounter ++;
+
+                    // Write number of ships owner has
+                    Assert (iCounter < iSlotsAllocated);
+                    piShipOwnerData[iCounter] = iNumDisplayShips;
+                    iCounter ++;
+
+                    // Start off type count at zero
+                    unsigned int iTypeCountIndex = iCounter;
+
+                    Assert (iCounter < iSlotsAllocated);
+                    piShipOwnerData[iCounter] = 0;
+                    iCounter ++;
+
+                    ENUMERATE_SHIP_TYPES (iType) {
+
+                        if (piIndex[iType] > 0) {
+
+                            // Increment type count
+                            piShipOwnerData[iTypeCountIndex] ++;
+
+                            // Add type and count
+                            Assert (iCounter < iSlotsAllocated);
+                            piShipOwnerData[iCounter] = iType;
                             iCounter ++;
-                            
-                            (*ppiShipOwnerData)[iCounter] = piIndex[j];
+
+                            Assert (iCounter < iSlotsAllocated);
+                            piShipOwnerData[iCounter] = piIndex[iType];
                             iCounter ++;
                         }
                     }
-                    
-                    (*ppiShipOwnerData)[iTemp] = iTypes;
                 }
-                
+
                 m_pGameData->FreeKeys (piShipKey);
                 piShipKey = NULL;
-            }
 
-        }   // End if ships on planet
+            }   // End if ships on planet
+
+            SafeRelease (pShips);
+
+        }   // End if empire has ships
 
     }   // End empire loop
 
-    // Independent ships
-    if (bIndependence) {
-
-        GET_GAME_INDEPENDENT_SHIPS (strTheirShips, iGameClass, iGameNumber);
-        
-        bAdded = false;
-        
-        // Scan through ship list
-        iErrCode = m_pGameData->GetEqualKeys (
-            strTheirShips, 
-            GameEmpireShips::CurrentPlanet, 
-            iPlanetKey, 
-            false, 
-            &piShipKey, 
-            &iNumKeys
-            );
-        
-        if (iErrCode != OK) {
-
-            if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                iErrCode = OK;
-            } else {
-                Assert (false);
-                goto Cleanup;
-            }
-
-        } else {
-            
-            memset (piIndex, 0, NUM_SHIP_TYPES * sizeof (unsigned int));
-            
-            for (j = 0; j < iNumKeys; j ++) {           
-                
-                bDisplay = true;
-                
-                // Read ship type
-                iErrCode = m_pGameData->ReadData (strTheirShips, piShipKey[j], GameEmpireShips::Type, &vType);
-                
-                if (!bAdded) {
-                    
-                    bAdded = true;
-                    
-                    // Increment number of owners
-                    iOwnersFound ++;
-                    
-                    // Get owner's key
-                    (*ppiShipOwnerData)[iCounter] = INDEPENDENT;
-                    iCounter ++;
-                }
-                
-                piIndex[vType.GetInteger()] ++;
-            }
-            
-            if (bAdded) {
-                
-                iTemp = iCounter;
-                iCounter ++;
-                iTypes = 0;
-                
-                ENUMERATE_SHIP_TYPES (j) {
-                    
-                    if (piIndex[j] > 0) {
-                        
-                        iTypes ++;
-                        
-                        (*ppiShipOwnerData)[iCounter] = j;
-                        iCounter ++;
-                        
-                        (*ppiShipOwnerData)[iCounter] = piIndex[j];
-                        iCounter ++;
-                    }
-                }
-                
-                (*ppiShipOwnerData)[iTemp] = iTypes;
-            }
-
-            m_pGameData->FreeKeys (piShipKey);
-            piShipKey = NULL;
-        }
-
-    }   // End if independence
-
-    (*ppiShipOwnerData)[0] = iOwnersFound;
+    *ppiShipOwnerData = piShipOwnerData;
+    piShipOwnerData = NULL;
 
 Cleanup:
 
-    if (iErrCode != OK) {
-        delete [] (*ppiShipOwnerData);
-        *ppiShipOwnerData = NULL;
+    SafeRelease (pShips);
+    SafeRelease (pMap);
+
+    if (piShipOwnerData != NULL) {
+        delete [] piShipOwnerData;
     }
 
     if (pvKey != NULL) {
@@ -3237,6 +3172,7 @@ int GameEngine::GetLowestDiplomacyLevelForShipsOnPlanet (int iGameClass, int iGa
     unsigned int i, iProxyDipKey;
     Variant vDipLevel;
 
+    bool bLowestDipSet = false;
     int iLowestDip = ALLIANCE;
     
     if (pvEmpireKey == NULL) {
@@ -3340,10 +3276,16 @@ int GameEngine::GetLowestDiplomacyLevelForShipsOnPlanet (int iGameClass, int iGa
                 }
             }
 
-            if (vDipLevel.GetInteger() < iLowestDip) {
+            if (vDipLevel.GetInteger() <= iLowestDip) {
                 iLowestDip = vDipLevel.GetInteger();
+                bLowestDipSet = true;
             }
         }
+    }
+
+    if (!bLowestDipSet && (*piNumForeignShipsOnPlanet) > 0) {
+        // Must be independent ships
+        iLowestDip = WAR;
     }
 
     *piDiplomacyLevel = iLowestDip;
@@ -3438,6 +3380,49 @@ int GameEngine::SetNewMinMaxIfNecessary (int iGameClass, int iGameNumber, int iE
     }
 
 Cleanup:
+
+    return iErrCode;
+}
+
+int GameEngine::GetPlanetPopulationWithColonyBuilds (unsigned int iGameClass, unsigned int iGameNumber,
+                                                     unsigned int iEmpireKey, unsigned int iPlanetKey,
+                                                     unsigned int* piPop) {
+
+    int iErrCode, iPop, iCost;
+    IReadTable* pTable = NULL;
+
+    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+
+    iErrCode = m_pGameData->GetTableForReading (strGameMap, &pTable);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pTable->ReadData (iPlanetKey, GameMap::Pop, &iPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pTable->ReadData (iPlanetKey, GameMap::PopLostToColonies, &iCost);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    SafeRelease (pTable);
+
+    Assert (iPop >= 0);
+    Assert (iCost >= 0);
+    iPop -= iCost;
+    Assert (iPop >= 0);
+
+    *piPop = iPop;
+
+Cleanup:
+
+    SafeRelease (pTable);
 
     return iErrCode;
 }

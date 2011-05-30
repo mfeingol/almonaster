@@ -783,7 +783,7 @@ void HtmlRenderer::WriteServerRules() {
     OutputText ("</strong></li></ul><p><center><h2>Planets and maps</h2></center>"\
         "<ul><li>Planets that have been nuked <strong>");
     m_pHttpResponse->WriteText (gcConfig.iNukesForQuarantine);
-    OutputText ("</strong> or more times are automatically be quarantined for <strong>");
+    OutputText ("</strong> or more times are automatically quarantined for <strong>");
     
     m_pHttpResponse->WriteText (gcConfig.iUpdatesInQuarantine);
     OutputText ("</strong> updates after each nuke and have their agriculture reduced to zero</li>"\
@@ -814,10 +814,11 @@ void HtmlRenderer::WriteServerRules() {
         "<p><center><h2>Gameplay</h2></center>"\
         "<ul><li>Empires can quit from a game at any time before the game starts</li>"\
         "<li>When an empire enters or quits from a game, its name is broadcast to everyone else in the game</li>"\
-        "<li>The IP addresses that appear in the diplomacy and profile pages are not real addresses.  However,"\
-        " two empires played from the same IP address will have the same value.  But beware of accusing"\
-        " players of multi-emping when they're simply behind the same firewall, as there are"\
-        "several ISPs, including WebTV, whose users appear to be coming from the same IP address.</li>"\
+        "<li>The IP addresses that appear in the diplomacy and profile pages are not real addresses.  However, "\
+        "two empires played from the same IP address will have the same value.  But beware of accusing "\
+        "players of multi-emping when they're simply behind the same firewall, as some "\
+        "ISPs such as WebTV use proxy servers for web traffic, which causes their users "\
+        "to appear to be coming from the same IP address.</li>"\
         "<li>The tech level of empires who join a game late is determined by adding to the initial BR for "\
         "the game <strong>");
     

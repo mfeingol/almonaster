@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="DBConv"
 	SccProjectName="SAK"
 	SccAuxPath="SAK"
@@ -35,7 +35,8 @@
 				EnableFiberSafeOptimizations="FALSE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="FALSE"
-				StringPooling="FALSE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
 				BasicRuntimeChecks="1"
@@ -44,6 +45,7 @@
 				StructMemberAlignment="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				EnableEnhancedInstructionSet="0"
 				DisableLanguageExtensions="FALSE"
 				DefaultCharIsUnsigned="FALSE"
 				TreatWChar_tAsBuiltInType="TRUE"
@@ -58,7 +60,6 @@
 				SuppressStartupBanner="TRUE"
 				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="4"
-				CompileAsManaged="0"
 				ShowIncludes="FALSE"
 				UndefineAllPreprocessorDefinitions="FALSE"/>
 			<Tool
@@ -71,6 +72,7 @@
 				OutputFile=".\Debug/DBConv.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/DBConv.pdb"
 				SubSystem="1"
@@ -78,7 +80,8 @@
 				SwapRunFromCD="FALSE"
 				OptimizeReferences="0"
 				EnableCOMDATFolding="0"
-				OptimizeForWindows98="0"
+				OptimizeForWindows98="1"
+				SetChecksum="FALSE"
 				TargetMachine="0"/>
 			<Tool
 				Name="VCMIDLTool"
@@ -99,7 +102,13 @@ copy debug\DBConv.pdb ..\alajar
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
@@ -123,6 +132,7 @@ copy debug\DBConv.pdb ..\alajar
 				EnableFiberSafeOptimizations="TRUE"
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
 				IgnoreStandardIncludePath="FALSE"
 				GeneratePreprocessedFile="0"
@@ -163,16 +173,20 @@ copy debug\DBConv.pdb ..\alajar
 				ShowProgress="0"
 				OutputFile=".\Release/DBConv.exe"
 				Version=""
-				LinkIncremental="1"
+				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
 				MapExports="FALSE"
 				SubSystem="1"
+				SwapRunFromCD="FALSE"
 				OptimizeReferences="2"
 				EnableCOMDATFolding="2"
 				OptimizeForWindows98="1"
-				TargetMachine="1"/>
+				SetChecksum="TRUE"
+				TargetMachine="1"
+				FixedBaseAddress="1"/>
 			<Tool
 				Name="VCMIDLTool"
 				TypeLibraryName=".\Release/DBConv.tlb"/>
@@ -193,9 +207,17 @@ copy dbconv.conf ..\release
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<File
 			RelativePath=".\DBConv.conf">

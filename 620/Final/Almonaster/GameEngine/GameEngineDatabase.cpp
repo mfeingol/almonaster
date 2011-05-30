@@ -564,21 +564,64 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             }
             
             // Last logged in a while ago
-            if (iCriteria & LAST_LOGGED_IN_A_MONTH_AGO) {
+            if (iCriteria & LAST_LOGGED_IN_1_MONTH_AGO) {
 
                 iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
                 if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < sThirtyDays) {
                     continue;
                 }
             }
+            if (iCriteria & LAST_LOGGED_IN_3_MONTHS_AGO) {
 
-            // Secret key
+                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
+                if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < 3 * sThirtyDays) {
+                    continue;
+                }
+            }
+
+            // Read secret key
             iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::SecretKey, &i64SecretKey);
             if (iErrCode != OK) {
                 continue;
             }
 
             SafeRelease (pEmpires);
+
+            // Not on top lists
+            if (iCriteria & NOT_ON_TOP_LISTS) {
+
+                bool bOnTopList = false;
+                int i;
+                ENUMERATE_SCORING_SYSTEMS (i) {
+
+                    ScoringSystem ssTopList = (ScoringSystem) i;
+                    if (HasTopList (ssTopList)) {
+
+                        const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
+
+                        unsigned int iKey;
+                        iErrCode = m_pGameData->GetFirstKey (
+                            pszTableName,
+                            TopList::EmpireKey,
+                            iEmpireKey,
+                            false,
+                            &iKey
+                            );
+
+                        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                            iErrCode = OK;
+                        } else {
+                            Assert (iErrCode == OK);
+                            bOnTopList = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (bOnTopList) {
+                    continue;
+                }
+            }
 
             GET_SYSTEM_EMPIRE_ACTIVE_GAMES (pszText, iEmpireKey);
 

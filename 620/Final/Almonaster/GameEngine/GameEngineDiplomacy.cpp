@@ -819,7 +819,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                             return iErrCode;
                         }
                         
-                        if (vCount.GetInteger() & ONCE_ALLIED_WITH) {               
+                        if (vCount.GetInteger() & ONCE_ALLIED_WITH) {
 #ifdef _DEBUG
                             // Make sure we have at least one leaked alliance
                             iErrCode = m_pGameData->ReadData (

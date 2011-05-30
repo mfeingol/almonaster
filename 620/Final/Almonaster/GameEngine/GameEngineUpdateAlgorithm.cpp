@@ -56,7 +56,8 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     char strIndependentShips [256];
 
     String strMessage;
-    Variant vTemp, vBR, vShipName, vPlanetKey, vOptions, vGameState;
+    Variant vTemp, vBR, vShipName, vPlanetKey, vGameState;
+    int iGameClassOptions;
 
     GameConfiguration gcConfig;
     
@@ -76,17 +77,18 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
-        &vOptions
+        &vTemp
         );
 
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    iGameClassOptions = vTemp.GetInteger();
 
     bool bIndependence;
 
-    if ((vOptions.GetInteger() & INDEPENDENCE) != 0) {
+    if (iGameClassOptions & INDEPENDENCE) {
         bIndependence = true;
         GET_GAME_INDEPENDENT_SHIPS (strIndependentShips, iGameClass, iGameNumber);
     } else {
@@ -214,7 +216,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     bool bMapGenerated = false;
 
     if (iNewUpdateCount == 1 && 
-        (vOptions.GetInteger() & GENERATE_MAP_FIRST_UPDATE) &&
+        (iGameClassOptions & GENERATE_MAP_FIRST_UPDATE) &&
         !(vGameState.GetInteger() & GAME_MAP_GENERATED)) {
 
         bool bCommit;
@@ -285,7 +287,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
     float fTechDelta;
 
-    unsigned int iNumObliterations = 0, iNumSurrenders = 0, iNumRuins = 0, 
+    unsigned int iNumObliterations = 0, iNumSurrenders = 0, iNumRuins = 0, iNumNewDraws = 0,
         * piOriginalPlanetOwner = NULL, * piOriginalNumObliterations;
 
     Variant vMaxBR, vTechLevel, vTechDevs, vNumOwnShips, vMaint, vBuild, vFuel, vTheme;
@@ -741,7 +743,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
     iErrCode = MoveShips (iGameClass, iGameNumber, iNumEmpires, piEmpireKey, pbAlive, pvEmpireName, 
         pfMaintRatio, strGameMap, pstrEmpireShips, pstrEmpireDip, pstrEmpireMap, pstrEmpireFleets, 
-        pstrEmpireData, pstrUpdateMessage, pvGoodColor, pvBadColor, gcConfig, vOptions.GetInteger());
+        pstrEmpireData, pstrUpdateMessage, pvGoodColor, pvBadColor, gcConfig, iGameClassOptions);
 
     if (iErrCode != OK) {
         Assert (false);
@@ -801,7 +803,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         pstrEmpireShips, pstrEmpireData, pstrEmpireMap, 
         pstrUpdateMessage, strGameMap, strGameData, piTotalAg, piTotalMin, piTotalFuel, pstrEmpireDip, 
         piObliterator, 
-        piObliterated, &iNumObliterations, pszGameClassName, iNewUpdateCount, vOptions.GetInteger(),
+        piObliterated, &iNumObliterations, pszGameClassName, iNewUpdateCount, iGameClassOptions,
         ppiShipNukeKey, ppiEmpireNukeKey, piNukedPlanetKey, piNumNukingShips, &iNumNukedPlanets, gcConfig);
 
     if (iErrCode != OK) {
@@ -827,7 +829,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     iErrCode = ProcessGates (iGameClass, iGameNumber, iNumEmpires, piEmpireKey, pbAlive, 
         pstrUpdateMessage, pvGoodColor, pvBadColor, pvEmpireName, piOriginalPlanetOwner,
         piOriginalNumObliterations, pstrEmpireShips, pstrEmpireFleets, 
-        pstrEmpireMap, pstrEmpireData, pstrEmpireDip, strGameMap, gcConfig, vOptions.GetInteger());
+        pstrEmpireMap, pstrEmpireData, pstrEmpireDip, strGameMap, gcConfig, iGameClassOptions);
     
     if (iErrCode != OK) {
         Assert (false);
@@ -882,7 +884,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Process subjective views //
     //////////////////////////////
 
-    if (vOptions.GetInteger() & SUBJECTIVE_VIEWS) {
+    if (iGameClassOptions & SUBJECTIVE_VIEWS) {
         
         iErrCode = ProcessSubjectiveViews (
             iGameClass, iGameNumber, iNumEmpires, piEmpireKey, pbAlive, strGameMap, pstrEmpireMap, 
@@ -970,15 +972,15 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     //////////////
     {
         unsigned int iNumUpdatedEmpires = 0, iSurvivorIndex = NO_KEY, iGameRuinIdlers = 0, 
-            iAwake = 0, iNotIdle = 0, iNumIdleEmpires = 0;
-        Variant vEmpireOptions, vNumIdleUpdates, vNumIdleUpdatesForRuin, vRuinFlags;
+            iAwake = 0, iNumIdleEmpires = 0;
+        Variant vRuinFlags;
 
-        bool* pbPauseCandidate = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
+        bool* pbIdle = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
 
         int* piRuinEmpire = (int*) StackAlloc (iNumEmpires * sizeof (int));
         bool* pbRuinEmpireUpdated = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
 
-        int iNumUpdatesIdle, iGameState;
+        int iNumUpdatesIdle, iNumIdleUpdatesForRuin, iNumUpdatesForIdle, iGameState;
 
         memset (pbRuinEmpireUpdated, false, iNumEmpires * sizeof (bool));
 
@@ -987,26 +989,29 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
             SYSTEM_GAMECLASS_DATA,
             iGameClass,
             SystemGameClassData::NumUpdatesForIdle,
-            &vNumIdleUpdates
+            &vTemp
             );
 
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
+
+        iNumUpdatesForIdle = vTemp.GetInteger();
 
         // Get idle updates for ruin
         iErrCode = m_pGameData->ReadData (
             SYSTEM_GAMECLASS_DATA,
             iGameClass,
             SystemGameClassData::NumUpdatesForRuin,
-            &vNumIdleUpdatesForRuin
+            &vTemp
             );
 
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
+        iNumIdleUpdatesForRuin = vTemp.GetInteger();
 
         // Get ruin behavior
         iErrCode = m_pGameData->ReadData (
@@ -1032,28 +1037,28 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         char pszMessage [128 + MAX_FULL_GAME_CLASS_NAME_LENGTH] = "";
         
         for (i = 0; i < iNumEmpires; i ++) {
-            
-            pbPauseCandidate[i] = false;
+
+            pbIdle[i] = false;
             
             if (!pbAlive[i]) {
                 continue;
             }
             
             // Get empire options
-            iErrCode = m_pGameData->ReadData (pstrEmpireData[i], GameEmpireData::Options, &vEmpireOptions);
+            iErrCode = m_pGameData->ReadData (pstrEmpireData[i], GameEmpireData::Options, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
+            int iEmpireOptions = vTemp.GetInteger();
 
-            if (!(vEmpireOptions.GetInteger() & LOGGED_IN_THIS_UPDATE) && iNewUpdateCount > 1) {
+            if (!(iEmpireOptions & LOGGED_IN_THIS_UPDATE) && iNewUpdateCount > 1) {
                 
                 iErrCode = m_pGameData->Increment (pstrEmpireData[i], GameEmpireData::NumUpdatesIdle, 1, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
-
                 iNumUpdatesIdle = vTemp.GetInteger() + 1;
 
                 if (iNumUpdatesIdle >= NUM_UPDATES_FOR_GAME_RUIN) {
@@ -1061,27 +1066,23 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 }
 
                 // Check for idle empire
-                if (iNumUpdatesIdle >= vNumIdleUpdates.GetInteger() || 
-                    (vEmpireOptions.GetInteger() & AUTO_UPDATE) != 0) {
+                if (iNumUpdatesIdle >= iNumUpdatesForIdle) {
                     
                     iErrCode = m_pGameData->WriteOr (pstrEmpireData[i], GameEmpireData::Options, UPDATED);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
                     }
-                    
+
                     iNumUpdatedEmpires ++;
                     iNumIdleEmpires ++;
-                    
-                    // Request pause if not requesting already
-                    if (!(vEmpireOptions.GetInteger() & REQUEST_PAUSE)) {
-                        pbPauseCandidate[i] = true;
-                    }
-                    
+
+                    pbIdle[i] = true;
+
                 } else {
-                    
+
                     // The empire is only mildly idle
-                    if (vEmpireOptions.GetInteger() & UPDATED) {
+                    if (iEmpireOptions & UPDATED) {
 
                         iErrCode = m_pGameData->WriteAnd (pstrEmpireData[i], GameEmpireData::Options, ~UPDATED);
                         if (iErrCode != OK) {
@@ -1094,16 +1095,14 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 }
 
                 // Check for simple ruin
-                if (iNumUpdatesIdle >= vNumIdleUpdatesForRuin.GetInteger()) {
+                if (iNumUpdatesIdle >= iNumIdleUpdatesForRuin) {
 
                     if (bSimpleRuins) {
                         
                         piRuinEmpire[iNumRuins ++] = i;
 
                         // Decrement num updated empires if necessary
-                        if (iNumUpdatesIdle >= vNumIdleUpdates.GetInteger() || 
-                            (vEmpireOptions.GetInteger() & AUTO_UPDATE) != 0) {
-
+                        if (iNumUpdatesIdle >= iNumUpdatesForIdle) {
                             iNumUpdatedEmpires --;
                         }
                     }
@@ -1117,26 +1116,12 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
                 iSurvivorIndex = i;
                 iAwake ++;
-                iNotIdle ++;
-                
-                if (vEmpireOptions.GetInteger() & AUTO_UPDATE) {
-                    
-                    iErrCode = m_pGameData->WriteOr (pstrEmpireData[i], GameEmpireData::Options, UPDATED);
+
+                if (iEmpireOptions & UPDATED) {
+                    iErrCode = m_pGameData->WriteAnd (pstrEmpireData[i], GameEmpireData::Options, ~UPDATED);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
-                    }
-                    
-                    iNumUpdatedEmpires ++;
-                    
-                } else {
-                    
-                    if (vEmpireOptions.GetInteger() & UPDATED) {
-                        iErrCode = m_pGameData->WriteAnd (pstrEmpireData[i], GameEmpireData::Options, ~UPDATED);
-                        if (iErrCode != OK) {
-                            Assert (false);
-                            goto Cleanup;
-                        }
                     }
                 }
 
@@ -1268,36 +1253,49 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
         }   // End if ruins occurred
 
-        // Logic:
-        // If an empire is idle and is not requesting pause, 
-        // he should request pause iff there is at least one other non-idle empire
-        // This prevents games from pausing if all empires are idle
+        // Newly idle empires request pause and draw
+        for (i = 0; i < iNumEmpires; i ++) {
 
-        if (iNotIdle > 0) {
+            if (!pbIdle[i] || !pbAlive[i]) {
+                continue;
+            }
 
-            for (i = 0; i < iNumEmpires; i ++) {
+            if (iGameClassOptions & ALLOW_DRAW) {
 
-                if (!pbPauseCandidate[i] || !pbAlive[i]) {
-                    continue;
-                }
-
-                iErrCode = RequestPauseQuietly (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
+                bool bDraw;
+                iErrCode = IsEmpireRequestingDraw (iGameClass, iGameNumber, piEmpireKey[i], &bDraw);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
-                
-                if (iGameState & PAUSED) {
-                    
-                    for (j = 0; j < iNumEmpires; j ++) {
-                        if (pbAlive[j]) {
-                            pstrUpdateMessage[j] += "The game is now paused\n";
-                        }
+
+                if (!bDraw) {
+
+                    iErrCode = RequestDraw (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
                     }
-                    
-                    // No reason to continue scanning empires
-                    break;
+                    iNumNewDraws ++;
                 }
+            }
+
+            iErrCode = RequestPauseQuietly (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+            
+            if (iGameState & PAUSED) {
+                
+                for (j = 0; j < iNumEmpires; j ++) {
+                    if (pbAlive[j]) {
+                        pstrUpdateMessage[j] += "The game is now paused\n";
+                    }
+                }
+                
+                // No reason to continue scanning empires
+                break;
             }
         }
 
@@ -1333,7 +1331,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Check for ally out and draw out if someone died and the game has closed //
     /////////////////////////////////////////////////////////////////////////////
 
-    if (!(vGameState.GetInteger() & STILL_OPEN) && iNumObliterations + iNumRuins > 0) {
+    if (!(vGameState.GetInteger() & STILL_OPEN) && iNumObliterations + iNumRuins + iNumNewDraws > 0) {
 
         iErrCode = CheckGameForEndConditions (iGameClass, iGameNumber, NULL, pbGameOver);
         if (iErrCode != OK) {
@@ -5246,36 +5244,54 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                     // Add to update messages
                     if (iCounter > 0) {
 
+                        String strBattleMessage;
+
                         if (piBattleEmpireIndex[j] == INDEPENDENT) {
 
-                            strList = BEGIN_STRONG;
-                            strList += iCounter;
-                            strList += " Independent" END_STRONG " ship";
+                            strBattleMessage = BEGIN_STRONG;
+                            strBattleMessage += iCounter;
+                            strBattleMessage += " Independent" END_STRONG " ship";
 
                             if (iCounter == 1) {
-                                strList += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                                strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
                             } else {
-                                strList += "s were " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                                strBattleMessage += "s were " BEGIN_STRONG "destroyed" END_STRONG " at ";
                             }
+
+                            strBattleMessage.AppendHtml (pszPlanetName, 0, false);
+                            strBattleMessage += "\n";
 
                         } else {
-    
-                            strList += " of " BEGIN_STRONG;
-                            strList += pvEmpireName[piBattleEmpireIndex[j]].GetCharPtr();
-                            strList += END_STRONG;
+
+                            strBattleMessage = BEGIN_STRONG;
+                            strBattleMessage += iCounter;
 
                             if (iCounter == 1) {
-                                strList += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                                strBattleMessage += END_STRONG " ship";
                             } else {
-                                strList += " were " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                                strBattleMessage += END_STRONG " ships";
                             }
+
+                            strBattleMessage += " of " BEGIN_STRONG;
+                            strBattleMessage += pvEmpireName[piBattleEmpireIndex[j]].GetCharPtr();
+                            strBattleMessage += END_STRONG;
+
+                            if (iCounter == 1) {
+                                strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                            } else {
+                                strBattleMessage += " were " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                            }
+
+                            strBattleMessage.AppendHtml (pszPlanetName, 0, false);
+
+                            strBattleMessage += ": ";
+                            strBattleMessage += strList;
+
+                            strBattleMessage += "\n";
                         }
-                        
-                        strList.AppendHtml (pszPlanetName, 0, false);
-                        strList += "\n";
 
                         for (k = 0; k < iNumWatchers; k ++) {
-                            pstrUpdateMessage[piWatcherIndex[k]] += strList;
+                            pstrUpdateMessage[piWatcherIndex[k]] += strBattleMessage;
                         }
                     }
                 }   // End battle empire loop
@@ -5747,7 +5763,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
             
             if (bSweep) {
                 
-                strPrefix += END_STRONG " was " BEGIN_STRONG "defused" END_STRONG " by a ";
+                strPrefix += END_STRONG " was " BEGIN_STRONG "defused" END_STRONG " and destroyed by a ";
                 strPrefix += SHIP_TYPE_STRING_LOWERCASE [MINESWEEPER];
                 strPrefix += " at ";
 
@@ -5769,13 +5785,6 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                     Assert (false);
                     goto Cleanup;
                 }
-
-                strPrefix.AppendHtml (vShipName.GetCharPtr(), 0, false);
-                strPrefix += " of " BEGIN_STRONG;
-                strPrefix += pvEmpireName[i].GetCharPtr();
-                strPrefix += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
-                AddPlanetNameAndCoordinates (strPrefix, vPlanetName.GetCharPtr(), iX, iY);
-                strPrefix += "\n";
 
             } else {
         
@@ -5945,7 +5954,7 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
     int iErrCode = OK;
 
     unsigned int i, j, k, iNumWatchers, iProxyKey, iNumAdjustedEmpires, * piShipKey = NULL, iNumShips, 
-        iStateColumn, iNameColumn, iNumVisibleShips;
+        iStateColumn, iNumVisibleShips;
 
     unsigned int* piWatcherIndex = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
     memset (piWatcherIndex, NO_KEY, iNumEmpires * sizeof (unsigned int));
@@ -6027,7 +6036,6 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
 
                     pszShips = strIndependentShips;
                     iStateColumn = GameIndependentShips::State;
-                    iNameColumn = GameIndependentShips::Name;
                 
                 } else {
 
@@ -6056,7 +6064,6 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
                     
                     pszShips = pstrEmpireShips[j];
                     iStateColumn = GameEmpireShips::State;
-                    iNameColumn = GameEmpireShips::Name;
                 }
 
                 if (iNumShips > 0) {
@@ -6080,25 +6087,29 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
                             Assert (false);
                             goto Cleanup;
                         }
-                        
-                        if (!(vState.GetInteger() & CLOAKED)) {
-                            
-                            iErrCode = m_pGameData->ReadData (
-                                pszShips, 
-                                piShipKey[k], 
-                                iNameColumn, 
-                                &vName
-                                );
 
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                goto Cleanup;
-                            }
+                        if (!(vState.GetInteger() & CLOAKED)) {
+
+                            if (j < iNumEmpires) {
                             
-                            if (iNumVisibleShips > 0) {
-                                strList += ", ";
+                                iErrCode = m_pGameData->ReadData (
+                                    pstrEmpireShips[j], 
+                                    piShipKey[k], 
+                                    GameEmpireShips::Name, 
+                                    &vName
+                                    );
+
+                                if (iErrCode != OK) {
+                                    Assert (false);
+                                    goto Cleanup;
+                                }
+                                
+                                if (iNumVisibleShips > 0) {
+                                    strList += ", ";
+                                }
+                                strList.AppendHtml (vName.GetCharPtr(), 0, false);
                             }
-                            strList.AppendHtml (vName.GetCharPtr(), 0, false);
+
                             iNumVisibleShips ++;
                         }
 
@@ -6109,6 +6120,8 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
 
 
                     if (iNumVisibleShips > 0) {
+
+                        String shipSighting;
                         
                         iErrCode = GetPlanetNameWithCoordinates (strGameMap, piPlanetKey[i], pszPlanetName);
                         if (iErrCode != OK) {
@@ -6117,34 +6130,52 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
                             iErrCode = OK;
                         }
 
+                        shipSighting = BEGIN_STRONG;
+                        shipSighting += iNumVisibleShips;
+
                         if (j < iNumEmpires) {
 
-                            strList += " of " BEGIN_STRONG;
-                            strList += pvEmpireName[j].GetCharPtr();
+                            shipSighting += END_STRONG " ship";
+                            if (iNumVisibleShips != 1) {
+                                shipSighting += "s of " BEGIN_STRONG;
+                            } else {
+                                shipSighting += " of " BEGIN_STRONG;
+                            }
+
+                            shipSighting += pvEmpireName[j].GetCharPtr();
                         
                             if (iNumVisibleShips == 1) {
-                                strList += END_STRONG " was";
+                                shipSighting += END_STRONG " was";
                             } else {
-                                strList += END_STRONG " were";
+                                shipSighting += END_STRONG " were";
                             }
+
+                            shipSighting += " sighted at ";
+                            shipSighting.AppendHtml (pszPlanetName, 0, false);
+                            shipSighting += ": ";
+                            shipSighting += strList;
+                            shipSighting += "\n";
 
                         } else {
 
-                            if (iNumVisibleShips == 1) {
-                                strList = BEGIN_STRONG "Independent" END_STRONG " ship " + strList + " was ";
-                            } else {
-                                strList = BEGIN_STRONG "Independent" END_STRONG " ships " + strList + " were ";
-                            }
-                        }
+                            // Independent
+                            Assert (j == iNumEmpires);
 
-                        strList += " sighted at ";
-                        strList.AppendHtml (pszPlanetName, 0, false);
-                        strList += "\n";
+                            if (iNumVisibleShips == 1) {
+                                shipSighting += " Independent" END_STRONG " ship was ";
+                            } else {
+                                shipSighting += " Independent" END_STRONG " ships were ";
+                            }
+
+                            shipSighting += " sighted at ";
+                            shipSighting.AppendHtml (pszPlanetName, 0, false);
+                            shipSighting += "\n";
+                        }
                         
                         for (k = 0; k < iNumWatchers; k ++) {
 
                             if (piWatcherIndex[k] != j) {
-                                pstrUpdateMessage[piWatcherIndex[k]] += strList;
+                                pstrUpdateMessage[piWatcherIndex[k]] += shipSighting;
                             }
                         }
 
@@ -7864,7 +7895,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         /////////////////////
                         // Invasion failed //
                         /////////////////////
-                        
+
                         // Reduce pop
                         iTemp = GetTroopshipFailurePopDecrement (
                             gcConfig.fTroopshipFailureFactor,

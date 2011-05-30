@@ -3673,6 +3673,20 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
+    // Get gameclass update period
+    iErrCode = m_pGameData->ReadData (
+        SYSTEM_GAMECLASS_DATA, 
+        iGameClass, 
+        SystemGameClassData::NumSecPerUpdate, 
+        &vTemp
+        );
+
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+    Seconds sUpdatePeriod = vTemp.GetInteger();
+
     unsigned int iNumEmpires;
     iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
@@ -3743,6 +3757,13 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
+    }
+
+    // If the time is greater than an update period, it means that 
+    // the game was paused on a weekend. In this case, we assume
+    // that the game has a full update remaining
+    if (iSecsSince > sUpdatePeriod) {
+        //iSecsSince = 1;  // 1 second
     }
 
     // Get time

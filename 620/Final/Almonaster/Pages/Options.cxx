@@ -88,63 +88,6 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
             }
 
-#ifdef PRIVATE_DEBUG_ONLY
-
-            // AutoUpdate
-            if (bGameStarted) {
-
-                if ((pHttpForm = m_pHttpRequest->GetForm ("AutoUpdate")) == NULL) {
-                    goto Redirection;
-                }
-                iNewValue = pHttpForm->GetIntValue();
-
-                if ((pHttpForm = m_pHttpRequest->GetForm ("OldAutoUpdate")) == NULL) {
-                    goto Redirection;
-                }
-                iOldValue = pHttpForm->GetIntValue();
-
-                if (iOldValue != iNewValue) {
-
-                    bUpdate = iNewValue != 0;
-
-                    iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, AUTO_UPDATE, bUpdate);
-                    if (iErrCode == OK) {
-
-                        if (bUpdate) {
-
-                            m_iGameOptions |= AUTO_UPDATE;
-
-                            AddMessage ("You are now in automatic update mode");
-                            PageId pageRedirect;
-
-                            if (RedirectOnSubmitGame (&pageRedirect)) {
-                                return Redirect (pageRedirect);
-                            }
-                             
-                            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                            m_pgeLock = NULL;
-
-                            return Redirect (m_pgPageId);
-
-                        } else {
-
-                            m_iGameOptions &= ~AUTO_UPDATE;
-                            AddMessage ("You are no longer in automatic update mode");
-                        }
-
-                    } else {
-
-                        if (iErrCode == ERROR_LAST_EMPIRE_CANNOT_AUTOUPDATE) {
-                            AddMessage ("All the other empires are auto-updating. You are not allowed to enter autoupdate mode");
-                        } else {
-                            AddMessage ("Your autoupdate setting could not be updated");
-                        }
-                    }
-                }
-            }
-
-#endif
-
             // RepeatedButtons
             if ((pHttpForm = m_pHttpRequest->GetForm ("RepeatButtons")) == NULL) {
                 goto Redirection;
@@ -1112,23 +1055,6 @@ case 0:
 
     %><input type="hidden" name="OptionPage" value="0"><p><%
     %><p><table width="80%"><%
-
-#ifdef PRIVATE_DEBUG_ONLY
-
-    if (bGameStarted) {
-        %><tr><td>Automatically ready for updates:</td><%
-        %><td><select name="AutoUpdate"><%
-
-        bool bAutoUpdate = (m_iGameOptions & AUTO_UPDATE) != 0;
-        if (bAutoUpdate) {
-            %><option selected value="1">Yes</option><option value="0">No</option><%
-        } else {
-            %><option value="1">Yes</option><option selected value="0">No</option><%
-        }
-            %></select><input type="hidden" name="OldAutoUpdate" value="<% Write (bAutoUpdate ? 1:0);
-        %>"></td></tr><%
-    }
-#endif
 
     %><tr><td>Placement of command buttons:</td><td><select name="RepeatButtons"><%
     if (m_bRepeatedButtons) { 

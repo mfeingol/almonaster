@@ -187,6 +187,8 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
             
             if (iErrCode == OK) {
 
+                Variant vState;
+
                 GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
                 
                 // Collect info for dip counts
@@ -194,6 +196,9 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
                 Assert (iErrCode == OK);
 
                 iErrCode = m_pGameData->ReadData (strOtherEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
+                Assert (iErrCode == OK);
+
+                iErrCode = m_pGameData->ReadData (strOtherEmpireDip, iKey, GameEmpireDiplomacy::State, &vState);
                 Assert (iErrCode == OK);
 
                 // Nuke the row
@@ -214,29 +219,31 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 
                 case ALLIANCE:
 
-                    // Decrement if alliances aren't permanent or we're not at alliance anyway
-                    if (vDipStatus.GetInteger() != ALLIANCE || !bPermanentAlliances) {
-                        
-                        iErrCode = m_pGameData->Increment (
-                            strGameEmpireData,
-                            GameEmpireData::NumAlliances,
-                            -1
-                            );
+                    if (!bPermanentAlliances) {
+
+                        // Decrement, since alliances aren't permanent
+                        iErrCode = m_pGameData->Increment (strGameEmpireData, GameEmpireData::NumAlliances, -1);
                         Assert (iErrCode == OK);
                     }
                     
-                    else if (bPermanentAlliances && vDipStatus.GetInteger() == ALLIANCE) {
+                    else if (vDipStatus.GetInteger() == ALLIANCE) {
 
                         // Increment leaked count
-                        iErrCode = m_pGameData->Increment (
-                            strGameEmpireData,
-                            GameEmpireData::NumAlliancesLeaked,
-                            1
-                            );
+                        iErrCode = m_pGameData->Increment (strGameEmpireData, GameEmpireData::NumAlliancesLeaked, 1);
                         Assert (iErrCode == OK);
                     }
 
-                    // Fall through...
+                    else {
+
+                        // If we weren't once allied with this empire, decrement
+                        if (iErrCode == OK && !(vState.GetInteger() & ONCE_ALLIED_WITH)) {
+
+                            iErrCode = m_pGameData->Increment (strGameEmpireData, GameEmpireData::NumAlliances, -1);
+                            Assert (iErrCode == OK);
+                        }
+                    }
+
+                    // Always fall through...
 
                 case TRADE:
 
@@ -1316,13 +1323,6 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 
     bool bResigned = false;
 
-    // Set empire to autoupdate
-    iErrCode = SetEmpireAutoUpdate (iGameClass, iGameNumber, iEmpireKey, true);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    
     // Set empire to paused
     iErrCode = RequestPause (iGameClass, iGameNumber, iEmpireKey, &iGameState);
     if (iErrCode != OK) {
@@ -1437,13 +1437,6 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
         GAME_DATA (strGameData, iGameClass, iGameNumber);
 
         char pszMessage [2 * MAX_EMPIRE_NAME_LENGTH + 128];
-
-        // No more auto-update
-        iErrCode = SetEmpireOption (iGameClass, iGameNumber, iEmpireKey, AUTO_UPDATE, false);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
 
         // No more pause
         iErrCode = RequestNoPause (iGameClass, iGameNumber, iEmpireKey, &iGameState);

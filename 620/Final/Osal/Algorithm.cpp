@@ -345,6 +345,8 @@ unsigned int Algorithm::GetStringHashValue (const char* pszString, unsigned int 
 }
 
 
+// string hash: { while (*psz)  h=h*101+*psz++; }
+
 #define GOLDEN_RATIO 0.6180339887
 
 unsigned int Algorithm::GetStringHashValue (const char* pszString, size_t stStringLen, unsigned int iNumBuckets, 

@@ -1048,8 +1048,16 @@ if (m_bOwnPost && !m_bRedirection) {
                     iCriteria |= CLASSIC_SCORE_IS_ZERO_OR_LESS;
                 }
 
-                if (m_pHttpRequest->GetForm ("XLastLogin") != NULL) {
-                    iCriteria |= LAST_LOGGED_IN_A_MONTH_AGO;
+                if (m_pHttpRequest->GetForm ("XLastLogin1Month") != NULL) {
+                    iCriteria |= LAST_LOGGED_IN_1_MONTH_AGO;
+                }
+
+                if (m_pHttpRequest->GetForm ("XLastLogin3Months") != NULL) {
+                    iCriteria |= LAST_LOGGED_IN_3_MONTHS_AGO;
+                }
+
+                if (m_pHttpRequest->GetForm ("XNotOnTopLists") != NULL) {
+                    iCriteria |= NOT_ON_TOP_LISTS;
                 }
 
                 if (iCriteria == 0) {
@@ -1878,8 +1886,18 @@ case 5:
 
     %><tr><td><dd>and</td></tr><%
 
-    %><tr><td><input type="checkbox" name="XLastLogin"><%
-    %> Last logged in more than a month ago</td></tr><%
+    %><tr><td><input type="checkbox" name="XLastLogin1Month"><%
+    %> Last logged in more than 1 month ago</td></tr><%
+
+     %><tr><td><dd>and</td></tr><%
+
+    %><tr><td><input type="checkbox" name="XLastLogin3Months"><%
+    %> Last logged in more than 3 months ago</td></tr><%
+
+    %><tr><td><dd>and</td></tr><%
+
+    %><tr><td><input type="checkbox" name="XNotOnTopLists"><%
+    %> Not on a Top List</td></tr><%
 
     %></table><p><%
 
