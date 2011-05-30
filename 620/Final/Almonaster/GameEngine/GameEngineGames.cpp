@@ -3545,7 +3545,7 @@ Cleanup:
 
 int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast) {
 
-    int iErrCode, iSecondsSince, iSecondsUntil, iNumUpdates, iState;
+    int iErrCode, iSecondsSince, iTempUntil, iNumUpdates, iState;
 
     bool bFlag;
     const char* pszMessage;
@@ -3587,7 +3587,7 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         iGameClass, 
         iGameNumber, 
         &iSecondsSince, 
-        &iSecondsUntil, 
+        &iTempUntil, 
         &iNumUpdates, 
         &iState
         );
@@ -3626,37 +3626,16 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         goto Cleanup;
     }
 
+    //
     // Pause the game
+    //
 
-    // Normalize for weekend delays
-    if (iSecondsUntil > vSecPerUpdate.GetInteger()) {
-
-        if (iNumUpdates == 0) {
-
-            int iDelay;
-            iErrCode = pGameData->ReadData (GameData::FirstUpdateDelay, &iDelay);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-
-            int iNext = vSecPerUpdate.GetInteger() + iDelay;
-            if (iSecondsUntil > iNext) {
-                iSecondsUntil = iNext;
-            }
-
-        } else {
-
-            iSecondsUntil = vSecPerUpdate.GetInteger();
-        }
-    }
-    
     iErrCode = pGameData->WriteOr (GameData::State, PAUSED);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
-    
+
     // Write down remaining seconds
     iErrCode = pGameData->WriteData (GameData::SecondsSinceLastUpdateWhilePaused, iSecondsSince);
     if (iErrCode != OK) {

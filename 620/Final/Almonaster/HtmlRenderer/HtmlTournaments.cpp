@@ -528,7 +528,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
     OutputText ("<p>");
     WriteTournamentTeamIcon (pvData [SystemTournamentTeams::Icon].GetInteger(), iTournamentKey, iTeamKey, NULL, false);
 
-    OutputText ("<font size=\"+1\"><strong>Administer the ");
+    OutputText (" <font size=\"+1\"><strong>Administer the ");
     m_pHttpResponse->WriteText (pvData [SystemTournamentTeams::Name].GetCharPtr());
     OutputText (
         " team:</strong></font>"\
@@ -1677,7 +1677,8 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 
                 // Allow empire to invite himself
                 OutputText (
-                    "<p><table width=\"60%\"><tr><td>If you wish to quit the tournament, press the following button. "\
+                    "<p><table width=\"60%\"><tr><td>"\
+                    "If you wish to quit from the tournament, press the following button. "\
                     "</td></tr><tr><td align=\"center\"><br>"
                     );
                 

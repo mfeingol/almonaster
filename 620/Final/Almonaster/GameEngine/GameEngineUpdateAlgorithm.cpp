@@ -726,7 +726,6 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     memset (piOriginalPlanetOwner, NO_KEY, iNumPlanets * sizeof (unsigned int));
     memset (piOriginalNumObliterations, ANNIHILATED_UNKNOWN, iNumPlanets * sizeof (unsigned int));
 
-    //
     iErrCode = UpdatePlanetPopulations (iNumEmpires, piEmpireKey, pbAlive, pfAgRatio, strGameMap, 
         pstrEmpireData, pstrEmpireMap, pstrUpdateMessage, piPlanetKey, iNumPlanets, piTotalMin, piTotalFuel,
         pvGoodColor, pvBadColor, vMaxAgRatio.GetFloat());
@@ -2750,6 +2749,7 @@ int GameEngine::UpdatePlanetPopulations (int iNumEmpires, unsigned int* piEmpire
                     GameEmpireData::TotalPop, 
                     iNewPop - vPop.GetInteger()
                     );
+
                 if (iErrCode != OK) {
                     Assert (false);
                     return iErrCode;
@@ -5749,7 +5749,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                 
                 strPrefix += END_STRONG " was " BEGIN_STRONG "defused" END_STRONG " by a ";
                 strPrefix += SHIP_TYPE_STRING_LOWERCASE [MINESWEEPER];
-                strPrefix += " and could not detonate at ";
+                strPrefix += " at ";
 
             } else {
                 
@@ -5769,6 +5769,13 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                     Assert (false);
                     goto Cleanup;
                 }
+
+                strPrefix.AppendHtml (vShipName.GetCharPtr(), 0, false);
+                strPrefix += " of " BEGIN_STRONG;
+                strPrefix += pvEmpireName[i].GetCharPtr();
+                strPrefix += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                AddPlanetNameAndCoordinates (strPrefix, vPlanetName.GetCharPtr(), iX, iY);
+                strPrefix += "\n";
 
             } else {
         

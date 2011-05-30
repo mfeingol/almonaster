@@ -127,15 +127,20 @@ int HttpForm::Initialize (HttpFormType ftType, const char* pszFormName, const ch
         m_pszFormValue = (char*) m_mmfFile.GetAddress();
 
         // Convert the text
-        iErrCode = Algorithm::UnescapeString (
-            (const char*) mmfWWWFile.GetAddress(),
-            m_pszFormValue,
-            mmfWWWFile.GetSize()
-            );
+        if (bMultipart) { 
+            memcpy (m_pszFormValue, (const char*) mmfWWWFile.GetAddress(), mmfWWWFile.GetSize());
+        } else {
 
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
+            iErrCode = Algorithm::UnescapeString (
+                (const char*) mmfWWWFile.GetAddress(),
+                m_pszFormValue,
+                mmfWWWFile.GetSize()
+                );
+
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
         }
 
 Cleanup:
@@ -169,17 +174,15 @@ Cleanup:
         return ERROR_OUT_OF_MEMORY;
     }
     
-    if (bMultipart) {
-        
+    if (bMultipart) { 
         memcpy (m_pszFormName, pszFormName, stLen1);
-
     } else {
 
         iErrCode = Algorithm::UnescapeString (pszFormName, m_pszFormName, stLen1);
         if (iErrCode != OK) {
             return iErrCode;
         }
-    } 
+    }
 
     if (pszFormValue != NULL) {
 

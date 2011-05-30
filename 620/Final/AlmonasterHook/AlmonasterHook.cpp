@@ -41,16 +41,6 @@ public:
         int iErrCode;
         unsigned int iKey;
 
-        /*// Falcon only
-        UTCTime tShutdownTime;
-        Time::GetTime (0, 0, 23, 29, 11, 2001, &tShutdownTime);
-
-        char pszShutdownTime [OS::MaxDateLength];
-        Time::GetDateString (tShutdownTime, pszShutdownTime);
-
-        iErrCode = m_pDatabase->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tShutdownTime);
-		Assert (iErrCode == OK);*/
-
         // Beta 1
 		// Create new templates
 		iErrCode = m_pDatabase->CreateTemplate (SystemLatestGames::Template);
@@ -845,8 +835,6 @@ public:
 			Assert (iErrCode == OK);
 		}
 
-		FixFuelAndMaintenanceUseCounts (iGameClass, iGameNumber);
-
 		FixTargetPopTotals (iGameClass, iGameNumber);
 
 		// Beta 2
@@ -1075,6 +1063,8 @@ public:
 				Assert (iErrCode == OK);
 			}
 		}
+
+        FixFuelAndMaintenanceUseCounts (iGameClass, iGameNumber);
 	}
 
 	void UpgradeEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey) {

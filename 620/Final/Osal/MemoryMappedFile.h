@@ -36,8 +36,6 @@
 class OSAL_EXPORT MemoryMappedFile {
 private:
 
-    char* m_pszFileName;
-
 #ifdef __LINUX__
 	int m_hFile;
 #else if defined __WIN32__

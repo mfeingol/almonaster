@@ -517,32 +517,35 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
             );
     }
 
-    OutputText (
+    if (iTournamentKey == NO_KEY) {
 
-        "<tr>"\
-        "<td>Empire names exposed:</td>"\
-        "<td><select name=\"NamesListed\">"\
-        "<option"
-        );
+        OutputText (
 
-    if (bNamesListed) {
-        OutputText (" selected");
+            "<tr>"\
+            "<td>Empire names exposed:</td>"\
+            "<td><select name=\"NamesListed\">"\
+            "<option"
+            );
+
+        if (bNamesListed) {
+            OutputText (" selected");
+        }
+
+        OutputText (
+            " value=\"1\">Empire names exposed on game lists and broadcast on game entry</option>"\
+            "<option"
+            );
+
+        if (!bNamesListed) {
+            OutputText (" selected");
+        }
+            
+        OutputText (
+            " value=\"0\">Empire names not exposed</option>"\
+            "</select></td>"\
+            "</tr>"
+            );
     }
-
-    OutputText (
-        " value=\"1\">Empire names exposed on game lists and broadcast on game entry</option>"\
-        "<option"
-        );
-
-    if (!bNamesListed) {
-        OutputText (" selected");
-    }
-        
-    OutputText (
-        " value=\"0\">Empire names not exposed</option>"\
-        "</select></td>"\
-        "</tr>"
-        );
 
     if (iGameClass == NO_KEY || (iGameClassOptions & EXPOSED_SPECTATORS) == EXPOSED_SPECTATORS) {
 
@@ -1162,12 +1165,20 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     }
     pgoOptions->sFirstUpdateDelay += pHttpForm->GetIntValue();
 
-    // NamesListed
-    if ((pHttpForm = m_pHttpRequest->GetForm ("NamesListed")) == NULL) {
-        AddMessage ("Missing NamesListed form");
-        return ERROR_FAILURE;
-    }
-    if (pHttpForm->GetIntValue() != 0) {
+    if (iTournamentKey == NO_KEY) {
+
+        // NamesListed
+        if ((pHttpForm = m_pHttpRequest->GetForm ("NamesListed")) == NULL) {
+            AddMessage ("Missing NamesListed form");
+            return ERROR_FAILURE;
+        }
+        if (pHttpForm->GetIntValue() != 0) {
+            pgoOptions->iOptions |= GAME_NAMES_LISTED;
+        }
+
+    } else {
+
+        // Tournament games always have exposed names
         pgoOptions->iOptions |= GAME_NAMES_LISTED;
     }
 

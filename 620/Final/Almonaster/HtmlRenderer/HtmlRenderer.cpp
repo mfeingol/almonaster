@@ -7279,7 +7279,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
         int iOptions = pvSubmitArray[SystemGameClassData::Options].GetInteger();
         
         if (iOptions & PERMANENT_ALLIANCES) {
-            AddMessage ("Permanent alliances have been unselected");
+            AddMessage ("There are no alliance limits, so alliances will not count for the entire game");
             iOptions &= ~PERMANENT_ALLIANCES;
             pvSubmitArray[SystemGameClassData::Options] = iOptions;
         }
@@ -8713,7 +8713,8 @@ static const bool g_bDeadEmpireHeadersColspan[] = {
 
 void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, bool bAdmin) {
 
-    int i, iErrCode, iNumEmpires, iValue, iFoeKey, iWar, iTruce, iTrade, iAlliance, iUnmet, iNumTopHeaders;
+    int i, iErrCode, iNumEmpires, iValue, iFoeKey, iWar, iTruce, iTrade, iAlliance, iUnmet, iNumTopHeaders,
+        * piNumUpdatesIdle, * piOptions, iIdleEmpires, iResignedEmpires;
     unsigned int iKey, iNumRows;
     float fValue;
     bool bUpdated;
@@ -8737,9 +8738,66 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         goto Cleanup;
     }
 
+    piNumUpdatesIdle = (int*) StackAlloc (2 * iNumEmpires * sizeof (int));
+    piOptions = piNumUpdatesIdle + iNumEmpires;
+
+    iIdleEmpires = iResignedEmpires = 0;
+    for (i = 0; i < iNumEmpires; i ++)
+    {
+        GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+
+        iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vValue);
+        if (iErrCode != OK) {
+            goto Cleanup;
+        }
+        piNumUpdatesIdle[i] = vValue.GetInteger();
+
+        iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
+        if (iErrCode != OK) {
+            goto Cleanup;
+        }
+        piOptions[i] = vValue.GetInteger();
+
+        if (piOptions[i] & RESIGNED) {
+            iResignedEmpires ++;
+        }
+        
+        else if (piNumUpdatesIdle[i] > 0) {
+            iIdleEmpires ++;
+        }
+    }
+
     OutputText (
         "<p><table width=\"90%\">"\
-        "<tr><td colspan=\"14\" align=\"center\">Active empires:</td></tr>"\
+        "<tr><td colspan=\"14\" align=\"center\">There are <strong>"
+        );
+
+    m_pHttpResponse->WriteText (iNumEmpires);
+
+    OutputText ("</strong> empires in the game");
+
+    if (iResignedEmpires > 0 || iIdleEmpires > 0) {
+
+        OutputText (" (<strong>");
+
+        if (iResignedEmpires > 0) {
+            m_pHttpResponse->WriteText (iResignedEmpires);
+            OutputText ("</strong> resigned");
+        }
+
+        if (iIdleEmpires > 0) {
+
+            if (iResignedEmpires > 0) {
+                OutputText (", <strong>");
+            }
+            m_pHttpResponse->WriteText (iIdleEmpires);
+            OutputText ("</strong> idle");
+        }
+        OutputText (")");
+    }
+
+    OutputText (        
+        ":</td></tr>"\
         "<tr><td>&nbsp</td></tr>"\
         "<tr>"
         );
@@ -8777,11 +8835,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         OutputText ("<tr>");
 
         // Options
-        iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-        iOptions = vValue.GetInteger();
+        iOptions = piOptions[i];
 
         // Name
         iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i].GetInteger(), &vValue);
@@ -9042,12 +9096,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         WriteTime (Time::GetSecondDifference (tCurrentTime, tValue));
         OutputText (" ago");
 
-        iErrCode = pDatabase->ReadData (strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vValue);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-        iValue = vValue.GetInteger();
-
+        iValue = piNumUpdatesIdle[i];
         if (iValue > 0) {
 
             OutputText ("<br>(<strong>");

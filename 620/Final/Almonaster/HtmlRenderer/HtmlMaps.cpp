@@ -352,7 +352,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         }
         iVertKey = vValue.GetInteger();
 
-        iErrCode = g_pGameEngine->GetEmpirePlanetIcons (iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        iErrCode = g_pGameEngine->GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;

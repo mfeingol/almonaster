@@ -398,7 +398,7 @@ if (!(iOptions & LOGINS_ENABLED)) {
     %></table><%
     %><p><%
 
-    %><input type="image" src="<% Write (BASE_RESOURCE_DIR TRANSPARENT_DOT); %>" name="TransDot"><%
+    %><input border="0" type="image" src="<% Write (BASE_RESOURCE_DIR TRANSPARENT_DOT); %>" name="TransDot"><%
 
     if (iOptions & NEW_EMPIRES_ENABLED) {
         WriteButton (BID_CREATEEMPIRE); %> <%

@@ -1477,6 +1477,9 @@ int HttpRequest::HandleMultipartForms (char* pszBuffer, size_t stNumBytes) {
 
             // Send the new data in to be processed
             iErrCode = HandleMultiPartFormsInBuffer (stNumRemaining, pszBuffer, &stNumProcessed, &stNumRemaining);
+            if (iErrCode != OK) {
+                return iErrCode;
+            }
 
             // If nothing happened, then we have a big form in our hands
             if (stNumProcessed != 0) {

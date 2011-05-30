@@ -224,7 +224,7 @@ int HttpResponse::SetStatusCode (HttpStatus sStatus) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    if (m_bNoBuffering) {
+    if (m_bHeadersSent) {
         return ERROR_FAILURE;
     }
 
@@ -256,12 +256,7 @@ int HttpResponse::SetNoBuffering() {
 
     m_bNoBuffering = true;
 
-    // Write headers
-    if (!m_bHeadersSent) {
-        Check (Send());
-    }
-
-    // Send chunk
+    // Check to see if we need to send a chunk
     if (m_stLength >= CHUNK_SIZE) {
         Check (SendChunkFromBuffer());
     }
@@ -271,7 +266,7 @@ int HttpResponse::SetNoBuffering() {
 
 int HttpResponse::Clear() {
 
-    if (m_bNoBuffering || m_bHeadersSent) {
+    if (m_bHeadersSent) {
         return ERROR_FAILURE;
     }
 
@@ -284,16 +279,16 @@ int HttpResponse::Flush() {
 
     int iErrCode;
 
-    if (m_bNoBuffering || m_pHttpRequest->GetVersion() < HTTP11 || m_iResponseHttpVersion < HTTP11) {
+    if (!m_bNoBuffering || m_pHttpRequest->GetVersion() < HTTP11 || m_iResponseHttpVersion < HTTP11) {
         return ERROR_FAILURE;
     }
 
-    // Write headers
+    // Write headers if necessary
     if (!m_bHeadersSent) {
         Check (Send());
     }
 
-    // Send chunk?
+    // Send remaining chunk
     Check (SendChunkFromBuffer());
 
     return OK;
@@ -303,8 +298,15 @@ int HttpResponse::SendChunkFromBuffer() {
 
     int iErrCode;
 
+    Assert (m_bNoBuffering);
+
     if (m_stLength == 0) {
         return OK;
+    }
+
+    // Write headers if necessary
+    if (!m_bHeadersSent) {
+        Check (Send());
     }
 
     Assert (m_pszResponseData != NULL);
@@ -653,7 +655,7 @@ int HttpResponse::SetRedirect (const char* pszUri) {
 int HttpResponse::CreateCookie (const char* pszCookieName, const char* pszCookieValue, Seconds iTTLinSeconds, 
                                 const char* pszCookiePath) {
 
-    if (pszCookieName == NULL || pszCookieValue == NULL || m_bNoBuffering) {
+    if (pszCookieName == NULL || pszCookieValue == NULL || (m_bHeadersSent)) {
         return ERROR_FAILURE;
     }
 
@@ -733,7 +735,7 @@ int HttpResponse::CreateCookie (const char* pszCookieName, const char* pszCookie
 
 int HttpResponse::DeleteCookie (const char* pszCookieName, const char* pszCookiePath) {
 
-    if (pszCookieName == NULL || m_bNoBuffering) {
+    if (pszCookieName == NULL || m_bHeadersSent) {
         return ERROR_FAILURE;
     }
 
@@ -946,7 +948,7 @@ int HttpResponse::RespondPrivate() {
                 &bAuthenticated
                 ) != OK) {
                 
-                if (!m_bNoBuffering) {
+                if (!m_bHeadersSent) {
                     SetStatusCodeOnError (HTTP_500);
                 }
                 
@@ -1009,6 +1011,10 @@ int HttpResponse::SendResponse() {
     // Finish up
     Check (Send());
 
+    if (m_bNoBuffering) {
+        Check (SendChunkFromBuffer());
+    }
+
     return OK;
 }
 
@@ -1028,7 +1034,7 @@ int HttpResponse::ProcessErrors() {
             if (m_pPageSource->OnError (m_pHttpRequest, this) != OK) {
                 
                 // Internal error
-                if (!m_bNoBuffering) {
+                if (!m_bHeadersSent) {
                     SetStatusCodeOnError (HTTP_500);
                 }
             }
@@ -1054,7 +1060,7 @@ int HttpResponse::ProcessInconsistencies() {
     if (m_sStatus == HTTP_200 &&
         m_pCachedFile == NULL &&
         m_stLength == 0 &&
-        !m_bNoBuffering
+        !m_bHeadersSent
         ) {
 
         SetStatusCodeOnError (HTTP_500);
@@ -1341,6 +1347,9 @@ int HttpResponse::Send() {
         }
     }
 
+    // We've now officially sent headers
+    m_bHeadersSent = true;
+
     ///////////////
     // Send data //
     ///////////////
@@ -1350,7 +1359,6 @@ int HttpResponse::Send() {
 
     // Send
     size_t stSend = strlen (pszBuffer), stSent;
-    
     Check (m_pSocket->Send (pszBuffer, stSend, &stSent));
 
     m_stResponseLength += stSent;
@@ -1358,52 +1366,53 @@ int HttpResponse::Send() {
     Assert (m_bNoBuffering && m_rType == RESPONSE_BUFFER || !m_bNoBuffering);
 
     // Send data
-    if (m_pHttpRequest->GetMethod() != HEAD && !m_bNoBuffering) {
+    if (m_pHttpRequest->GetMethod() != HEAD) {
 
-        switch (m_rType) {
-        
-        case RESPONSE_FILE:
+        if (!m_bNoBuffering) {
 
-            Assert (m_pCachedFile != NULL);
-
-            // Send data from file
-            Check (m_pSocket->Send (m_pCachedFile->GetData(), m_pCachedFile->GetSize(), &stSent));
-
-            m_stResponseLength += stSent;
-            break;
-        
-        case RESPONSE_BUFFER:
+            switch (m_rType) {
             
-            // Send data from response buffer
-            Check (m_pSocket->Send (m_pszResponseData, m_stLength, &stSent));
+            case RESPONSE_FILE:
 
-            m_stResponseLength += stSent;
-            break;
+                Assert (m_pCachedFile != NULL);
 
-        case RESPONSE_ERROR:
+                // Send data from file
+                Check (m_pSocket->Send (m_pCachedFile->GetData(), m_pCachedFile->GetSize(), &stSent));
 
-            Assert (m_sStatus > HTTP_200 && m_sStatus < UNSUPPORTED_HTTP_STATUS);
+                m_stResponseLength += stSent;
+                break;
+            
+            case RESPONSE_BUFFER:
+                
+                // Send data from response buffer
+                Check (m_pSocket->Send (m_pszResponseData, m_stLength, &stSent));
 
-            // Send default error text
-            Check (m_pSocket->Send (HttpStatusErrorText[m_sStatus], HttpStatusErrorTextLength[m_sStatus], &stSent));
+                m_stResponseLength += stSent;
+                break;
 
-            m_stResponseLength += stSent;
-            break;
+            case RESPONSE_ERROR:
 
-        case RESPONSE_REDIRECT:
+                Assert (m_sStatus > HTTP_200 && m_sStatus < UNSUPPORTED_HTTP_STATUS);
 
-            // No data to send
-            break;
+                // Send default error text
+                Check (m_pSocket->Send (HttpStatusErrorText[m_sStatus], HttpStatusErrorTextLength[m_sStatus], &stSent));
 
-        default:
+                m_stResponseLength += stSent;
+                break;
 
-            // Huh?
-            Assert (false);
-            return ERROR_FAILURE;
+            case RESPONSE_REDIRECT:
+
+                // No data to send
+                break;
+
+            default:
+
+                // Huh?
+                Assert (false);
+                return ERROR_FAILURE;
+            }
         }
     }
-
-    m_bHeadersSent = true;
 
     return OK;
 }
@@ -1473,7 +1482,7 @@ int HttpResponse::ProcessGet() {
         // Call the page source
         if (m_pPageSource->OnGet (m_pHttpRequest, this) != OK) {
             
-            if (!m_bNoBuffering) {
+            if (!m_bHeadersSent) {
                 SetStatusCodeOnError (HTTP_500);
             }
             return OK;
@@ -2032,7 +2041,7 @@ int HttpResponse::ProcessPost() {
         // Call the pagesource function
         if (m_pPageSource->OnPost (m_pHttpRequest, this) != OK) {
             
-            if (!m_bNoBuffering) {
+            if (!m_bHeadersSent) {
                 SetStatusCodeOnError (HTTP_500);
             }
             return OK;
