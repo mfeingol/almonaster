@@ -1,0 +1,32 @@
+GameEngine::CreateGame
+
+	LockEmpire in order of empirekey
+	LockGameClass
+
+GameEngine::CreateGameClass
+
+	LockGameClasses
+	LockSuperClasses
+	SystemTournaments for read
+
+GameEngine::GetGames
+
+	SystemActiveGames for read
+	GameEmpires(I) for read
+
+GameEngine::CreateTournament
+
+	LockTournaments
+	SystemTournaments for write
+
+GameEngine::DeleteTournament
+
+	LockGameClasses
+	LockTournaments
+	SystemTournaments for write
+	SystemGameClasses for read
+
+GameEngine::DeleteEmpireFromTournament
+
+	SystemTournamentEmpires for write
+	SystemTournamentActiveGames for read

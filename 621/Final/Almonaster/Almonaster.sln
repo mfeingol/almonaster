@@ -1,0 +1,166 @@
+Microsoft Visual Studio Solution File, Format Version 8.00
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Admin", "..\Admin\Admin.vcproj", "{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A5498F4E-4124-4680-B43A-D105AA64C814} = {A5498F4E-4124-4680-B43A-D105AA64C814}
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Alajar", "..\Alajar\Alajar.vcproj", "{98AF9BC4-B62A-4237-A539-103D0426D6BD}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A5498F4E-4124-4680-B43A-D105AA64C814} = {A5498F4E-4124-4680-B43A-D105AA64C814}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarDll", "..\AlajarDll\AlajarDll.vcproj", "{A5498F4E-4124-4680-B43A-D105AA64C814}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarSvc", "..\AlajarSvc\AlajarSvc.vcproj", "{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A5498F4E-4124-4680-B43A-D105AA64C814} = {A5498F4E-4124-4680-B43A-D105AA64C814}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster.vcproj", "{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A5498F4E-4124-4680-B43A-D105AA64C814} = {A5498F4E-4124-4680-B43A-D105AA64C814}
+		{208D5299-BDCB-4479-BD23-B544474E8772} = {208D5299-BDCB-4479-BD23-B544474E8772}
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "..\AlmonasterHook\AlmonasterHook.vcproj", "{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}"
+	ProjectSection(ProjectDependencies) = postProject
+		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4} = {270BC0D9-0681-47F1-A7D1-155ADCF51DE4}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asfpp", "..\Asfpp\Asfpp.vcproj", "{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBConv", "..\DBConv\DBConv.vcproj", "{8681FDA2-A273-4026-8677-D250904920C5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{208D5299-BDCB-4479-BD23-B544474E8772} = {208D5299-BDCB-4479-BD23-B544474E8772}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "..\Database\Database.vcproj", "{208D5299-BDCB-4479-BD23-B544474E8772}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OldDatabase", "..\OldDatabase\OldDatabase.vcproj", "{E6366E90-92F6-488D-8AC4-50EA225217D5}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcproj", "{E57B328E-DC3B-4030-8B96-058326205BD5}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 12
+		SccProjectName0 = \u0022$/620\u0022,\u0020TWCAAAAA
+		SccLocalPath0 = ..
+		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection0 = Almonaster\\
+		SolutionUniqueID = {FF88DBDC-C759-45C5-8F7E-C183C35AF1F5}
+		SccProjectUniqueName1 = ..\\Admin\\Admin.vcproj
+		SccLocalPath1 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection1 = Admin\\
+		SccProjectUniqueName2 = ..\\Alajar\\Alajar.vcproj
+		SccLocalPath2 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection2 = Alajar\\
+		SccProjectUniqueName3 = ..\\AlajarDll\\AlajarDll.vcproj
+		SccLocalPath3 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection3 = AlajarDll\\
+		SccProjectUniqueName4 = ..\\AlajarSvc\\AlajarSvc.vcproj
+		SccLocalPath4 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection4 = AlajarSvc\\
+		SccProjectUniqueName5 = Almonaster.vcproj
+		SccLocalPath5 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection5 = Almonaster\\
+		SccProjectUniqueName6 = ..\\AlmonasterHook\\AlmonasterHook.vcproj
+		SccLocalPath6 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection6 = AlmonasterHook\\
+		SccProjectUniqueName7 = ..\\Asfpp\\Asfpp.vcproj
+		SccLocalPath7 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection7 = Asfpp\\
+		SccProjectUniqueName8 = ..\\Database\\Database.vcproj
+		SccLocalPath8 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection8 = Database\\
+		SccProjectUniqueName9 = ..\\DBConv\\DBConv.vcproj
+		SccLocalPath9 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection9 = DBConv\\
+		SccProjectUniqueName10 = ..\\OldDatabase\\OldDatabase.vcproj
+		SccLocalPath10 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection10 = OldDatabase\\
+		SccProjectUniqueName11 = ..\\Osal\\Osal.vcproj
+		SccLocalPath11 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection11 = Osal\\
+	EndGlobalSection
+	GlobalSection(SolutionConfiguration) = preSolution
+		Debug = Debug
+		Release = Release
+	EndGlobalSection
+	GlobalSection(ProjectConfiguration) = postSolution
+		{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}.Debug.ActiveCfg = Debug|Win32
+		{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}.Debug.Build.0 = Debug|Win32
+		{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}.Release.ActiveCfg = Release|Win32
+		{CDD170D2-2C57-4851-AFD5-4B7DA9BC6A81}.Release.Build.0 = Release|Win32
+		{98AF9BC4-B62A-4237-A539-103D0426D6BD}.Debug.ActiveCfg = Debug|Win32
+		{98AF9BC4-B62A-4237-A539-103D0426D6BD}.Debug.Build.0 = Debug|Win32
+		{98AF9BC4-B62A-4237-A539-103D0426D6BD}.Release.ActiveCfg = Release|Win32
+		{98AF9BC4-B62A-4237-A539-103D0426D6BD}.Release.Build.0 = Release|Win32
+		{A5498F4E-4124-4680-B43A-D105AA64C814}.Debug.ActiveCfg = Debug|Win32
+		{A5498F4E-4124-4680-B43A-D105AA64C814}.Debug.Build.0 = Debug|Win32
+		{A5498F4E-4124-4680-B43A-D105AA64C814}.Release.ActiveCfg = Release|Win32
+		{A5498F4E-4124-4680-B43A-D105AA64C814}.Release.Build.0 = Release|Win32
+		{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}.Debug.ActiveCfg = Debug|Win32
+		{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}.Debug.Build.0 = Debug|Win32
+		{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}.Release.ActiveCfg = Release|Win32
+		{F1C3C0D2-E462-4955-B58C-01ADBF8F3810}.Release.Build.0 = Release|Win32
+		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Debug.ActiveCfg = Debug|Win32
+		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Debug.Build.0 = Debug|Win32
+		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Release.ActiveCfg = Release|Win32
+		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Release.Build.0 = Release|Win32
+		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug.ActiveCfg = Debug|Win32
+		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug.Build.0 = Debug|Win32
+		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release.ActiveCfg = Release|Win32
+		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release.Build.0 = Release|Win32
+		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Debug.ActiveCfg = Debug|Win32
+		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Debug.Build.0 = Debug|Win32
+		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Release.ActiveCfg = Release|Win32
+		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Release.Build.0 = Release|Win32
+		{8681FDA2-A273-4026-8677-D250904920C5}.Debug.ActiveCfg = Debug|Win32
+		{8681FDA2-A273-4026-8677-D250904920C5}.Debug.Build.0 = Debug|Win32
+		{8681FDA2-A273-4026-8677-D250904920C5}.Release.ActiveCfg = Release|Win32
+		{8681FDA2-A273-4026-8677-D250904920C5}.Release.Build.0 = Release|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug.ActiveCfg = Debug|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug.Build.0 = Debug|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release.ActiveCfg = Release|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release.Build.0 = Release|Win32
+		{E6366E90-92F6-488D-8AC4-50EA225217D5}.Debug.ActiveCfg = Debug|Win32
+		{E6366E90-92F6-488D-8AC4-50EA225217D5}.Debug.Build.0 = Debug|Win32
+		{E6366E90-92F6-488D-8AC4-50EA225217D5}.Release.ActiveCfg = Release|Win32
+		{E6366E90-92F6-488D-8AC4-50EA225217D5}.Release.Build.0 = Release|Win32
+		{E57B328E-DC3B-4030-8B96-058326205BD5}.Debug.ActiveCfg = Debug|Win32
+		{E57B328E-DC3B-4030-8B96-058326205BD5}.Debug.Build.0 = Debug|Win32
+		{E57B328E-DC3B-4030-8B96-058326205BD5}.Release.ActiveCfg = Release|Win32
+		{E57B328E-DC3B-4030-8B96-058326205BD5}.Release.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+	EndGlobalSection
+	GlobalSection(ExtensibilityAddIns) = postSolution
+	EndGlobalSection
+EndGlobal
