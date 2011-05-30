@@ -117,6 +117,7 @@ int HttpThreadPool::Start() {
 
             // Stop the threads we've started
             for (j = 0; j < i; j ++) {
+                // TODO - really?
                 m_ppThreads[i]->Terminate();
             }
             break;

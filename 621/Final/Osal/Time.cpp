@@ -264,14 +264,14 @@ int Time::GetGMTDateString (const UTCTime& tTime, char pszGMTDateString[OS::MaxG
 
     sprintf (
         pszGMTDateString,
-        "%.2d:%.2d:%.2d %s, %.2d %s %.4d GMT",
-        ptmTime->tm_hour,
-        ptmTime->tm_min,
-        ptmTime->tm_sec,
+        "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
         pszDay [ptmTime->tm_wday],
         ptmTime->tm_mday,
         pszMonth[ptmTime->tm_mon],
-        ptmTime->tm_year + 1900
+        ptmTime->tm_year + 1900,
+        ptmTime->tm_hour,
+        ptmTime->tm_min,
+        ptmTime->tm_sec
         );
 
     return OK;

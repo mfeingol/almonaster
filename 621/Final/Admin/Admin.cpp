@@ -128,6 +128,8 @@ int Admin::OnFinalize() {
         m_pszPassword = NULL;
     }
 
+    SafeRelease(m_pConfig);
+
     return OK;
 }
 

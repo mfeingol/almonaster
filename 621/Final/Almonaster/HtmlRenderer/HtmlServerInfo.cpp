@@ -96,13 +96,36 @@ void HtmlRenderer::WriteServerRules() {
     
     OutputText ("<p><h2>Server information</h2></center><ul><li>The web server is <strong>");
     m_pHttpResponse->WriteText (g_pHttpServer->GetServerName());
-    OutputText ("</strong>, running on <strong>");
+    OutputText ("</strong>, running at <strong>");
     m_pHttpResponse->WriteText (g_pHttpServer->GetIPAddress());
-    OutputText ("</strong> port <strong>");
-    m_pHttpResponse->WriteText (g_pHttpServer->GetPort());
+    OutputText ("</strong> on ");
+
+    short httpPort = g_pHttpServer->GetHttpPort();
+    short httpsPort = g_pHttpServer->GetHttpsPort();
+
+    if (httpPort != 0) {
+        OutputText ("HTTP port <strong>");
+        m_pHttpResponse->WriteText(httpPort);
+        OutputText ("</strong>");
+    }
+
+    if (httpsPort != 0) {
+
+        if (httpPort != 0)
+            OutputText (" and ");
+
+        OutputText ("HTTPS port <strong>");
+        m_pHttpResponse->WriteText(httpsPort);
+        OutputText ("</strong>");
+    }
+
+    unsigned int iNumThreads = g_pHttpServer->GetNumThreads();
     OutputText ("</strong></li><li>The web server is using <strong>");
-    m_pHttpResponse->WriteText (g_pHttpServer->GetNumThreads());
-    OutputText ("</strong> threads in its threadpool</li>");
+    m_pHttpResponse->WriteText (iNumThreads);
+    OutputText ("</strong> thread");
+    if (iNumThreads != 1)
+        OutputText("s");
+    OutputText (" in its thread pool</li>");
     
     if (OS::GetProcessMemoryStatistics (&iTotalPhysicalMemory, &iTotalVirtualMemory) == OK) {
         OutputText ("<li>The server process' working set size is <strong>");
@@ -549,17 +572,16 @@ void HtmlRenderer::WriteServerRules() {
         
         OutputText ("<strong>");
         m_pHttpResponse->WriteText (gcConfig.iColonySimpleBuildFactor);
-        OutputText ("</strong> population unit");
-        
-        if (gcConfig.iColonySimpleBuildFactor != 1) {
-            OutputText ("s");
-        }
         
     } else {
         
         OutputText ("BR * <strong>");
         m_pHttpResponse->WriteText (gcConfig.fColonyMultipliedBuildFactor);
-        OutputText ("</strong>");
+    }
+
+    OutputText ("</strong> population unit");
+    if (gcConfig.iColonySimpleBuildFactor != 1) {
+        OutputText ("s");
     }
     OutputText (" each to build</li>");
     

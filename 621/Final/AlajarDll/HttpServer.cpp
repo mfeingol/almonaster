@@ -53,19 +53,22 @@ HttpServer::HttpServer() {
     m_pSslContext = NULL;
     m_pSslSocket = NULL;
 
-    m_pszServerName = "Alajar 1.70";
-    m_stServerNameLength = countof ("Alajar 1.70") - 1;
+    m_pszServerName = "Alajar 1.80";
+    m_stServerNameLength = countof ("Alajar 1.80") - 1;
 
     Time::GetTime (&m_tLogDate);
 
-    Initialize();
+    m_bExit = false;
+    m_bLogExit = false;
+    m_bRestart = false;
+
+    m_siPort = 0;
+    m_siSslPort = 0;
 
     // Initialize winsock library
     if (Socket::Initialize() != OK) {
         ReportEvent ("Could not initialize socket library!");
     }
-
-    m_bEnableMemoryCache = true;
 }
 
 HttpServer::~HttpServer() {
@@ -129,16 +132,6 @@ int HttpServer::QueryInterface (const Uuid& iidInterface, void** ppInterface) {
     return ERROR_NO_INTERFACE;
 }
 
-void HttpServer::Initialize() {
-
-    m_siPort = 0;
-    m_siSslPort = 0;
-
-    m_bExit = false;
-    m_bLogExit = false;
-    m_bRestart = false;
-}
-
 void HttpServer::Clean() {
 
     // Delete thread pool
@@ -167,14 +160,14 @@ void HttpServer::Clean() {
         m_pPageSourceTable = NULL;
     }
 
-    if (m_pSocket != NULL) {
-        delete m_pSocket;
-        m_pSocket = NULL;
-    }
-
     if (m_pSslContext != NULL) {
         delete m_pSslContext;
         m_pSslContext = NULL;
+    }
+
+    if (m_pSocket != NULL) {
+        delete m_pSocket;
+        m_pSocket = NULL;
     }
 
     if (m_pSslSocket != NULL) {
@@ -191,6 +184,8 @@ void HttpServer::Clean() {
         delete m_pHttpResponseCache;
         m_pHttpResponseCache = NULL;
     }
+
+    Assert(m_pDefaultPageSource == NULL);
 }
 
 HttpServer* HttpServer::CreateInstance() {
@@ -275,23 +270,13 @@ PageSource* HttpServer::GetPageSource (const char* pszPageSourceName) {
 // Server operations //
 ///////////////////////
 
-int HttpServer::StartServer (void* pvServer) {
+int HttpServer::StartServer(void* pvServer) {
     
     HttpServer* pThis = (HttpServer*) pvServer;
+
     int iErrCode = pThis->StartServer();
-    
     if (iErrCode != OK) {
 
-        // Shut down the logging thread
-        pThis->ReportEvent ("Shutting down the logging thread");
-    
-        pThis->m_bLogExit = true;
-        pThis->m_evLogEvent.Signal();
-        pThis->m_tLogThread.WaitForTermination();
-        
-        // Flush messages
-        pThis->LogLoop();
-        
         // Notify starter of problems
         if (pThis->m_pStartupSink != NULL) {
             pThis->m_pStartupSink->OnStartup (iErrCode);
@@ -299,7 +284,19 @@ int HttpServer::StartServer (void* pvServer) {
             pThis->m_pStartupSink = NULL;
         }
     }
-    
+
+    // Restart loop
+    while (iErrCode == WARNING) {
+        iErrCode = pThis->StartServer();
+    }
+
+    IShutdownSink* pShutdownSink = pThis->m_pShutdownSink;
+    if (pShutdownSink != NULL) {
+        pShutdownSink->OnShutdown(iErrCode);
+        pShutdownSink->Release();
+    }
+    pThis->m_pShutdownSink = NULL;
+
     return iErrCode;
 }
 
@@ -308,16 +305,13 @@ int HttpServer::StartServer() {
     int iErrCode;
     char* pszRhs;
 
-    bool bFileCache;
+    bool bFileCache, bMemoryCache;
 
     char pszReportFileName [OS::MaxFileNameLength];
     char pszCertificateFile [OS::MaxFileNameLength];
     char pszPrivateKeyFile [OS::MaxFileNameLength];
 
-    unsigned int iNumHttpObjects, iInitNumThreads, iMaxNumThreads;
-    PageSource* pPageSource;
-
-    HashTableIterator<const char*, PageSource*> htiPageSource;
+    unsigned int iInitNumThreads, iMaxNumThreads;
     
     // First, get report
     if (m_pConfigFile->GetParameter ("ReportPath", &pszRhs) == OK && pszRhs != NULL) {
@@ -351,7 +345,7 @@ int HttpServer::StartServer() {
         
     // Print intro screen
     ReportEvent (m_pszServerName);
-    ReportEvent ("Copyright (c) 1998-2004 Max Attar Feingold");
+    ReportEvent ("Copyright (c) 1998-2006 Max Attar Feingold");
     ReportEvent ("");
     ReportEvent ("Alajar comes with ABSOLUTELY NO WARRANTY.");
     ReportEvent ("This is free software, and you are welcome");
@@ -461,68 +455,68 @@ int HttpServer::StartServer() {
     }
     
     bool bEnableNonSSLPort;
-    if (m_pConfigFile->GetParameter ("EnableNonSSLPort", &pszRhs) == OK && pszRhs != NULL) {
+    if (m_pConfigFile->GetParameter ("EnableHttpPort", &pszRhs) == OK && pszRhs != NULL) {
         bEnableNonSSLPort = (atoi (pszRhs) == 1);
     } else {
-        ReportEvent ("Error: Could not read the EnableNonSSLPort flag from Alajar.conf");
+        ReportEvent ("Error: Could not read the EnableHttpPort flag from Alajar.conf");
         goto ErrorExit;
     }
 
     if (bEnableNonSSLPort) {
-        if (m_pConfigFile->GetParameter ("Port", &pszRhs) == OK && pszRhs != NULL) {
+        if (m_pConfigFile->GetParameter ("HttpPort", &pszRhs) == OK && pszRhs != NULL) {
             m_siPort = (short) atoi (pszRhs);
         } else {
-            ReportEvent ("Error: Could not read the Port from Alajar.conf");
+            ReportEvent ("Error: Could not read the HttpPort from Alajar.conf");
             goto ErrorExit;
         }
     }
 
     bool bEnableSSLPort;
-    if (m_pConfigFile->GetParameter ("EnableSSLPort", &pszRhs) == OK && pszRhs != NULL) {
+    if (m_pConfigFile->GetParameter ("EnableHttpsPort", &pszRhs) == OK && pszRhs != NULL) {
         bEnableSSLPort = (atoi (pszRhs) == 1);
     } else {
-        ReportEvent ("Error: Could not read the EnableSSLPort flag from Alajar.conf");
+        ReportEvent ("Error: Could not read the EnableHttpsPort flag from Alajar.conf");
         goto ErrorExit;
     }
 
     if (bEnableSSLPort) {
 
-        if (m_pConfigFile->GetParameter ("SSLPort", &pszRhs) == OK && pszRhs != NULL) {
+        if (m_pConfigFile->GetParameter ("HttpsPort", &pszRhs) == OK && pszRhs != NULL) {
             m_siSslPort = (short) atoi (pszRhs);
         } else {
-            ReportEvent ("Error: Could not read the SSLPort from Alajar.conf");
+            ReportEvent ("Error: Could not read the HttpsPort from Alajar.conf");
             goto ErrorExit;
         }
 
-        if (m_pConfigFile->GetParameter ("SSLCertificateFile", &pszRhs) == OK && pszRhs != NULL) {
+        if (m_pConfigFile->GetParameter ("HttpsPublicKeyFile", &pszRhs) == OK && pszRhs != NULL) {
         
             if (File::ResolvePath (pszRhs, pszCertificateFile) != OK) {
-                ReportEvent ((String) "Error: The SSLCertificateFile value was invalid: " + pszRhs);
+                ReportEvent ((String) "Error: The HttpsPublicKeyFile value was invalid: " + pszRhs);
                 goto ErrorExit;
             }
             
             if (!File::DoesFileExist (pszCertificateFile)) {
-                ReportEvent ((String) "Error: the SSLCertificateFile file does not exist" + pszCertificateFile);
+                ReportEvent ((String) "Error: the HttpsPublicKeyFile file does not exist" + pszCertificateFile);
                 goto ErrorExit;
             }
         } else {
-            ReportEvent ("Error: Could not read the SSLCertificateFile from Alajar.conf");
+            ReportEvent ("Error: Could not read the HttpsPublicKeyFile from Alajar.conf");
             goto ErrorExit;
         }
 
-        if (m_pConfigFile->GetParameter ("SSLPrivateKeyFile", &pszRhs) == OK && pszRhs != NULL) {
+        if (m_pConfigFile->GetParameter ("HttpsPrivateKeyFile", &pszRhs) == OK && pszRhs != NULL) {
         
             if (File::ResolvePath (pszRhs, pszPrivateKeyFile) != OK) {
-                ReportEvent ((String) "Error: The SSLPrivateKeyFile value was invalid: " + pszRhs);
+                ReportEvent ((String) "Error: The HttpsPrivateKeyFile value was invalid: " + pszRhs);
                 goto ErrorExit;
             }
 
             if (!File::DoesFileExist (pszPrivateKeyFile)) {
-                ReportEvent ((String) "Error: the SSLPrivateKeyFile file does not exist" + pszPrivateKeyFile);
+                ReportEvent ((String) "Error: the HttpsPrivateKeyFile file does not exist" + pszPrivateKeyFile);
                 goto ErrorExit;
             }
         } else {
-            ReportEvent ("Error: Could not read the SSLPrivateKeyFile from Alajar.conf");
+            ReportEvent ("Error: Could not read the HttpsPrivateKeyFile from Alajar.conf");
             goto ErrorExit;
         }
     }
@@ -540,6 +534,13 @@ int HttpServer::StartServer() {
         bFileCache = (atoi (pszRhs) == 1);
     } else {
         ReportEvent ("Error: Could not read FileCache flag from Alajar.conf");
+        goto ErrorExit;
+    }
+
+    if (m_pConfigFile->GetParameter ("MemoryCache", &pszRhs) == OK && pszRhs != NULL) {
+        bMemoryCache = (atoi (pszRhs) == 1);
+    } else {
+        ReportEvent ("Error: Could not read MemoryCache flag from Alajar.conf");
         goto ErrorExit;
     }
 
@@ -635,11 +636,19 @@ int HttpServer::StartServer() {
         goto ErrorExit;
     }
 
-    // Needed for reports
+    // Needed for reports during pagesource init
     if (m_pLogMessageCache == NULL) {
 
+        // Calculate size of log message cache
+        unsigned int iNumLogMessageObjects;
+        if (!bMemoryCache) {
+            iNumLogMessageObjects = 0;
+        } else {
+            iNumLogMessageObjects = iMaxNumThreads * 5;
+        }
+
         m_pLogMessageCache = new ObjectCache<LogMessage, LogMessageAllocator>();
-        if (m_pLogMessageCache == NULL || !m_pLogMessageCache->Initialize (iMaxNumThreads)) {
+        if (m_pLogMessageCache == NULL || !m_pLogMessageCache->Initialize (iNumLogMessageObjects)) {
             ReportEvent ("The server is out of memory");
             goto ErrorExit;
         }
@@ -653,14 +662,11 @@ int HttpServer::StartServer() {
     }
 
     // Calculate size of http object cache
-    if (!m_bEnableMemoryCache) {
+    unsigned int iNumHttpObjects;
+    if (!bMemoryCache) {
         iNumHttpObjects = 0;
     } else {
-        iNumHttpObjects = iMaxNumThreads;
-
-        while (m_pPageSourceTable->GetNextIterator (&htiPageSource)) {      
-            pPageSource = htiPageSource.GetData();
-        }
+        iNumHttpObjects = iMaxNumThreads * m_pPageSourceTable->GetNumElements();
     }
 
     // Initialize caches
@@ -669,6 +675,12 @@ int HttpServer::StartServer() {
 
     if (m_pHttpRequestCache == NULL || m_pHttpResponseCache == NULL) {
         ReportEvent ("Could not create HTTP object caches");
+        goto ErrorExit;
+    }
+
+    if (!m_pHttpRequestCache->Initialize(iNumHttpObjects) ||
+        !m_pHttpResponseCache->Initialize(iNumHttpObjects)) {
+        ReportEvent ("Could not initialize HTTP object caches");
         goto ErrorExit;
     }
 
@@ -716,7 +728,7 @@ int HttpServer::StartServer() {
             delete m_pSslContext;
             m_pSslContext = NULL;
 
-            ReportEvent ("Failed to initialize SSL context: OpenSSL may not be installed correctly.");
+            ReportEvent ("Failed to initialize SSL context: check the configured certificates");
             goto ErrorExit;
         }
 
@@ -774,6 +786,11 @@ int HttpServer::Run() {
     m_bLogExit = false;
     m_bRestart = false;
 
+    // Set our priority higher than average
+    Thread tSelf;
+    Thread::GetCurrentThread (&tSelf);
+    tSelf.SetPriority (Thread::HigherPriority);
+
     ReportEvent ("");
     ReportEvent ("Initializing page sources");
 
@@ -790,7 +807,7 @@ int HttpServer::Run() {
     iErrCode = m_tLogThread.Start (HttpServer::LogThread, this, Thread::LowerPriority);
     if (iErrCode != OK) {
         ReportEvent ("Unable to start logging thread");
-        return iErrCode;
+        goto ErrorExit;
     }
 
     // Loop until we receive the order to finish
@@ -802,11 +819,6 @@ int HttpServer::Run() {
         m_pStartupSink->Release();
         m_pStartupSink = NULL;
     }
-
-    // Set priority higher than average
-    Thread tSelf;
-    Thread::GetCurrentThread (&tSelf);
-    tSelf.SetPriority (Thread::HigherPriority);
 
     // Loop forever
     while (true) {
@@ -836,7 +848,7 @@ int HttpServer::Run() {
                     iErrCode = m_pThreadPool->QueueTask (pRequestSocket);
                     if (iErrCode != OK) {
                         ReportEvent ("Error enqueuing a socket in the task queue");
-                        Socket::FreeSocket (pRequestSocket);
+                        Socket::FreeSocket(pRequestSocket);
                     }
                 }
             }
@@ -850,66 +862,49 @@ int HttpServer::Run() {
         }
     }
 
+ErrorExit:
+
     // Shut down the thread pool
     ReportEvent ("Shutting down the threadpool");
     
     unsigned int iRetries = 0;
-    while (m_pThreadPool->Stop() != OK && iRetries < 10) {
-        iRetries ++;
-        OS::Sleep (1000);
-    }
-
-    if (iRetries == 10) {
-        ReportEvent ("Could not shut down the thread pool");
+    while (m_pThreadPool->Stop() != OK) {
+        if (iRetries ++ == 100) {
+            ReportEvent ("Could not shut down the thread pool");
+        }
+        OS::Sleep(100);
     }
 
     // Write statistics
     ReportEvent ("Writing statistics file");
     WriteStatistics (m_tLogDate);
 
-    // Close down listener socket, if necessary
-    if (m_pSocket->IsConnected()) {
+    // Close down listener sockets, if necessary
+    if (m_pSocket != NULL && m_pSocket->IsConnected()) {
         m_pSocket->Close();
     }
 
-    if (m_bRestart) {
+    if (m_pSslSocket != NULL && m_pSslSocket->IsConnected()) {
+        m_pSslSocket->Close();
+    }
 
-        // We're being asked to restart
-        Clean();
-        Initialize();
+    Clean();
 
-        m_fReportFile.Close();
-        m_pConfigFile->Refresh();
-
-        // Shut down the logging thread
+    // Shut down the logging thread
+    if (m_tLogThread.IsAlive()) {
         ReportEvent ("Shutting down the logging thread");
-    
         m_bLogExit = true;
         m_evLogEvent.Signal();
         m_tLogThread.WaitForTermination();
 
-        iErrCode = StartServer();
+        // Flush messages
+        LogLoop();
+    }
 
-        if (iErrCode == OK) {
+    if (m_bRestart) {
 
-            m_bRunning = true;
-            m_bRestart = false;
-
-        } else {
-            
-            // Shouldn't happen...
-            Assert (false);
-            Clean();
-            
-            // Shut down
-            IShutdownSink* pShutdownSink = m_pShutdownSink;
-            m_pShutdownSink = NULL;
-            
-            if (pShutdownSink != NULL) {
-                pShutdownSink->OnShutdown (OK);
-                pShutdownSink->Release();
-            }
-        }
+        m_bRunning = true;
+        m_pConfigFile->Refresh();
 
         if (m_pRestartSink != NULL) {
             m_pRestartSink->OnRestart (iErrCode);
@@ -917,24 +912,7 @@ int HttpServer::Run() {
             m_pRestartSink = NULL;
         }
 
-    } else {
-
-        Clean();
-
-        // Shut down the logging thread
-        ReportEvent ("Shutting down the logging thread");
-    
-        m_bLogExit = true;
-        m_evLogEvent.Signal();
-        m_tLogThread.WaitForTermination();
-
-        IShutdownSink* pShutdownSink = m_pShutdownSink;
-        m_pShutdownSink = NULL;
-
-        if (pShutdownSink != NULL) {
-            pShutdownSink->OnShutdown (OK);
-            pShutdownSink->Release();
-        }
+        return WARNING; // Tell the caller that we should be restarted
     }
 
     return iErrCode;
@@ -1008,9 +986,6 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         // Negotiate the connection.  If this fails, we drop the connection and continue
         iErrCode = pSocket->Negotiate();
         if (iErrCode != OK) {
-    
-            ReportEvent ("Socket::Negotiate failed");
-
             pSocket->Close();
             Socket::FreeSocket (pSocket);
             continue;
@@ -1059,13 +1034,7 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         }
 
         // Best effort response
-        iErrCode = pHttpResponse->Respond();
-        if (iErrCode != OK) {
-            char pszBuffer [64];
-            sprintf (pszBuffer, "Error responding: %d", iErrCode);
-            ReportEvent (pszBuffer);
-        }
-        iErrCode = OK;
+        pHttpResponse->Respond();
 
         FinishRequest (pHttpRequest, pHttpResponse, pSocket, &sThreadStats, iErrCode);
 
@@ -1106,16 +1075,8 @@ void HttpServer::FinishRequest (HttpRequest* pHttpRequest, HttpResponse* pHttpRe
 
 int HttpServer::ConfigurePageSources() {
 
-    // Clean up previous PageSources if necessary
-    if (m_pPageSourceTable != NULL) {
-        delete m_pPageSourceTable;
-        m_pPageSourceTable = NULL;
-    }
-
-    if (m_pDefaultPageSource != NULL) {
-        delete m_pDefaultPageSource;
-        m_pDefaultPageSource = NULL;
-    }
+    Assert(m_pPageSourceTable == NULL);
+    Assert(m_pDefaultPageSource == NULL);
 
     // Read config files
     char pszConfigFilePath [OS::MaxFileNameLength];
@@ -1469,8 +1430,12 @@ int HttpServer::ClosePageSource (void* pVoid) {
     return OK;
 }
 
-short HttpServer::GetPort() {
+short HttpServer::GetHttpPort() {
     return m_siPort;
+}
+
+short HttpServer::GetHttpsPort() {
+    return m_siSslPort;
 }
 
 const char* HttpServer::GetHostName() {
@@ -1565,11 +1530,13 @@ int HttpServer::Start (IConfigFile* pConfigFile, IStartupSink* pStartupSink, ISh
 int HttpServer::Restart (IRestartSink* pRestartSink) {
 
     m_mShutdown.Wait();
+
     if (m_bRestart) {
         m_mShutdown.Signal();
         return WARNING;
     }
     m_bRestart = true;
+
     m_mShutdown.Signal();
 
     Assert (m_pRestartSink == NULL);
@@ -1578,9 +1545,13 @@ int HttpServer::Restart (IRestartSink* pRestartSink) {
         pRestartSink->AddRef();
     }
 
-    // Close the main socket
+    // Close the main sockets
     if (m_pSocket != NULL) {
         m_pSocket->Close();
+    }
+
+    if (m_pSslSocket != NULL) {
+        m_pSslSocket->Close();
     }
 
     // Tell the main thread to exit and restart
@@ -1599,9 +1570,13 @@ int HttpServer::Shutdown() {
         return WARNING;
     }
 
-    // Close the main socket
+    // Close the main sockets
     if (m_pSocket != NULL) {
         m_pSocket->Close();
+    }
+
+    if (m_pSslSocket != NULL) {
+        m_pSslSocket->Close();
     }
 
     // Tell the main thread to exit

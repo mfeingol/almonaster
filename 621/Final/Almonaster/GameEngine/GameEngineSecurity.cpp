@@ -733,7 +733,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             // Check empire secret key
             if (vEmpireSecretKey.GetInteger64() == i64SecretKey) {
                 *prAccessDeniedReason = ACCESS_DENIED_BLOCKED_EMPIRE;
-                break;
+                goto Cleanup;
             }
             
             // Check session id match
@@ -752,7 +752,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 // Check
                 if (i64EmpireSessionId == i64SessionId || i64EmpireSessionId == i64SessionId2) {
                     *prAccessDeniedReason = ACCESS_DENIED_BLOCKED_EMPIRE;
-                    break;
+                    goto Cleanup;
                 }
             }
 
@@ -773,7 +773,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 if (String::StrCmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress) == 0 ||
                     String::StrCmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress2) == 0) {
                     *prAccessDeniedReason = ACCESS_DENIED_BLOCKED_EMPIRE;
-                    break;
+                    goto Cleanup;
                 }
             }
 
@@ -802,6 +802,8 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
     // Grant access
     *pbAccess = true;
+
+    Assert(*prAccessDeniedReason == ACCESS_DENIED_NO_REASON);
 
 Cleanup:
 

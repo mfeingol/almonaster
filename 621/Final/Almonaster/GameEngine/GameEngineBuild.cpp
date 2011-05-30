@@ -42,8 +42,7 @@
 // 
 // Build ships of a given specification
 
-// TODO: use transaction
-
+// Note - not idempotent on failure
 int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, int iTechKey, int iNumShips, 
                                const char* pszShipName, float fBR, int iPlanetKey, int iFleetKey, 
                                int* piNumShipsBuilt, bool* pbBuildReduced) {

@@ -158,8 +158,6 @@ int Socket::Accept (Socket* pSocket) {
 
 Socket* Socket::Accept() {
 
-    Assert (m_Socket != INVALID_SOCKET);
-
     // Create a new Socket for the incoming connection
     Socket* pSocket = new Socket();
     if (pSocket == NULL) {
@@ -249,22 +247,6 @@ int Socket::Recv (void* pData, size_t stNumBytes, size_t* pstNumBytesRecvd) {
     return OK;
 }
 
-int Socket::Peek (void* pData, size_t stNumBytes, size_t* pstNumBytesPeeked) {
-    
-    *pstNumBytesPeeked = 0;
-
-    Assert (stNumBytes == (size_t) (int) stNumBytes);
-    size_t stNumBytesPeeked = SocketPeek (pData, stNumBytes);
-    
-    if (stNumBytesPeeked == SOCKET_ERROR || stNumBytesPeeked == 0) {
-        return ERROR_FAILURE;
-    }
-
-    *pstNumBytesPeeked = stNumBytesPeeked;
-
-    return OK;
-}
-
 int Socket::Send (const char* pszData, size_t* pstNumBytesSent) {
 
     return Send (pszData, strlen (pszData), pstNumBytesSent);
@@ -329,12 +311,8 @@ size_t Socket::SocketSend (const void* pData, size_t cbSend) {
     return send (m_Socket, (const char*) pData, (int) cbSend, 0);
 }
 
-size_t Socket::SocketRecv (void* pData, size_t stNumBytes) {
-    return recv (m_Socket, (char*) pData, (int) stNumBytes, 0);
-}
-
-size_t Socket::SocketPeek (void* pData, size_t stNumBytes) {
-    return recv (m_Socket, (char*) pData, (int) stNumBytes, MSG_PEEK);
+size_t Socket::SocketRecv (void* pData, size_t cbRecv) {
+    return recv (m_Socket, (char*) pData, (int) cbRecv, 0);
 }
 
 int Socket::Send (int iData, size_t* pstNumBytesSent) {
@@ -411,7 +389,7 @@ int Socket::Close() {
     char pszBuf [512];
     while (true) {
 
-        stNumBytesRecvd = SocketRecv (pszBuf, sizeof (pszBuf));
+        stNumBytesRecvd = Socket::SocketRecv (pszBuf, sizeof (pszBuf));
         if (stNumBytesRecvd == 0 || stNumBytesRecvd == SOCKET_ERROR) {
             break;
         }

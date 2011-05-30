@@ -2450,7 +2450,7 @@ int GameEngine::RenamePlanet (int iGameClass, int iGameNumber, int iEmpireKey, i
 //
 // Updates the max pop of a planet
 
-// TODO: transactions?
+// Note - not idempotent on failure
 
 int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
                                  int iNewMaxPop) {

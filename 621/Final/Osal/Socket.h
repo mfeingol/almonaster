@@ -66,7 +66,6 @@ protected:
 
     virtual size_t SocketSend (const void* pData, size_t cbSend);
     virtual size_t SocketRecv (void* pData, size_t stNumBytes);
-    virtual size_t SocketPeek (void* pData, size_t stNumBytes);
 
 public:
 
@@ -119,9 +118,6 @@ public:
     // (which must be pre-allocated).
     // *piNumBytesRecvd returns with the number of bytes actually received.
     int Recv (void* pData, size_t stNumBytes, size_t* pstNumBytesRecvd);
-
-    // Same as Recv, but doesn't remove data from the buffer
-    int Peek (void* pData, size_t stNumBytes, size_t* pstNumBytesPeeked);
 
     // Return true if the socket hasn't been closed yet
     bool IsConnected();

@@ -127,7 +127,6 @@ private:
 
     // Filecache
     FileCache* m_pFileCache;
-    bool m_bEnableMemoryCache;
 
     // Object caches
     ObjectCache<HttpRequest, HttpRequestAllocator>* m_pHttpRequestCache;
@@ -184,8 +183,6 @@ private:
     ~HttpServer();
 
     void Clean();
-    void Initialize();
-
     int Init();
 
     void ReadStatistics();
@@ -227,7 +224,8 @@ public:
     // IHttpServer
     DECLARE_IOBJECT;
 
-    short GetPort();
+    short GetHttpPort();
+    short GetHttpsPort();
     
     const char* GetHostName();
     const char* GetIPAddress();

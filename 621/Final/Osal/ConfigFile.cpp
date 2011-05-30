@@ -116,7 +116,7 @@ int ConfigFile::Open (const char* pszFileName) {
         return ERROR_OUT_OF_MEMORY;
     }
 
-    m_ppszParameterValues =m_ppszParameterNames + DEFAULT_NUM_PARAMETERS_LOW;
+    m_ppszParameterValues = m_ppszParameterNames + DEFAULT_NUM_PARAMETERS_LOW;
 
     // Save the file name
     m_pszFileName = String::StrDup (pszFileName);

@@ -642,7 +642,7 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
         }
     }
 
-    // Null cap, in case
+    // Null cap, in any case
     pszFilePath [OS::MaxFileNameLength] = '\0';
 
     // Canonicalize if possible
@@ -1036,7 +1036,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'I':
     case 'i':
 
-        // TODO - if the method is overriden, this might be a bit ambitious
+        // TODO - if the method is overridden, this might be a bit ambitious
         if (_stricmp (pszHeader, "If-Modified-Since") == 0 && !String::IsBlank (pszValue)) {
             m_bCached = !File::WasFileModifiedAfter (m_pszFileName, pszValue, &tLastModified);
         }

@@ -339,14 +339,13 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
     // Display pagesource config file values
     OutputText ("<p><h2>PageSource Parameters</h2>");
     
-    IConfigFile* pConfig;
     for (i = 0; i < iNumPageSources; i ++) {
         
         OutputText ("<p><h3>");
         pHttpResponse->WriteText (ppPageSource[i]->GetName());
         OutputText (" Parameters</h3><table width=\"80%\">");
 
-        pConfig = ppPageSource[i]->GetConfigFile();
+        IConfigFile* pConfig = ppPageSource[i]->GetConfigFile();
         iNumParameters = pConfig->GetNumParameters();
         
         for (j = 0; j < iNumParameters; j ++) {
@@ -371,6 +370,8 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
         OutputText ("PageSourceParams\" value=\"Update ");
         pHttpResponse->WriteText (ppPageSource[i]->GetName());
         OutputText (" Parameters\">");
+
+        SafeRelease(pConfig);
     }
 
     // Close form, page

@@ -462,7 +462,8 @@ public:
 class IHttpServer : virtual public IObject {
 public:
 
-    virtual short GetPort() = 0;
+    virtual short GetHttpPort() = 0;
+    virtual short GetHttpsPort() = 0;
 
     virtual const char* GetHostName() = 0;
     virtual const char* GetIPAddress() = 0;

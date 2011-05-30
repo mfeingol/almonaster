@@ -1159,7 +1159,7 @@ int HttpResponse::Send() {
     strcat (pszBuffer, HttpStatusText[m_sStatus]);
 
     // Date, server name, connection
-    strcat (pszBuffer, "\r\nServer: Alajar/1.70\r\nDate: ");
+    strcat (pszBuffer, "\r\nServer: Alajar/1.80\r\nDate: ");
     strcat (pszBuffer, pszGMTDateString);
 
     //////////////////////////////////
@@ -1267,7 +1267,7 @@ int HttpResponse::Send() {
 
             strcat (pszBuffer, pszTime);
 
-            // Cache-control is private
+            // Cache-control is public
             strcat (pszBuffer, "\r\nCache-Control: public");
 
         } else {

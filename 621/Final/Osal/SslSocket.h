@@ -24,18 +24,88 @@
 #define AFX_SSLSOCKET_H__E0FAE59D_A3F7_11D1_9C48_0060083E8062__INCLUDED_
 
 #include "Socket.h"
-#include "openssl/ssl.h"
+
+#ifdef __WIN32__
+
+#include <schnlsp.h>
+#define SECURITY_WIN32
+#include <security.h>
 
 class OSAL_EXPORT SslContext {
+    
+    friend class SslSocket;
+
 private:
-    SSL_CTX* m_pCtx;
+    CredHandle m_serverCreds;
+    unsigned long m_ulMaxInitialChunkSize;
+
+    BYTE* ReadFile(const char* pszFileName, size_t* pcbFile);
 
 public:
     SslContext();
     ~SslContext();
 
     int Initialize (const char* pszCertFile, const char* pszKeyFile);
+};
+
+class OSAL_EXPORT SslSocket : public Socket {
+
+private:
+
+    SslContext* m_pSslContext;
+
+    CtxtHandle m_ctxHandle;
+
+    bool m_bConnected;
+    size_t m_cbMaxChunkSize;
+    size_t m_cbHeaderSize;
+    size_t m_cbTrailerSize;
+
+    BYTE* m_pIncompleteData;
+    size_t m_cbIncompleteData;
+
+    BYTE* m_pLeftoverPlainText;
+    size_t m_cbLeftoverPlainText;
+
+    void Clear();
+    int SendSecBuffer(const SecBuffer& secBuffer);
+    size_t PlainTextSocketSend(const void* pData, size_t cbData);
+    size_t SocketSendChunk(const void* pData, size_t cbSend);
+    int DecryptMessageWrapper(BYTE* pbData, size_t cbCypherData, size_t* pcbPlainData);
+
+    virtual size_t SocketSend (const void* pData, size_t cbSend);
+    virtual size_t SocketRecv (void* pData, size_t stNumBytes);
+
+public:
+
+    SslSocket (SslContext* pSslContext);
+    virtual ~SslSocket();
+
+    virtual int Close();
+
+    virtual Socket* Accept();
+    virtual int Negotiate();
+
+    virtual int Connect (const char* pszAddress, short siPort);
+};
+
+#else
+
+#include "openssl/ssl.h"
+
+class OSAL_EXPORT SslContext {
+
+    friend class SslSocket;
+
+private:
+    SSL_CTX* m_pCtx;
     SSL_CTX* GetContext();
+
+public:
+    SslContext();
+    ~SslContext();
+
+    int Initialize (const char* pszCertFile, const char* pszKeyFile);
 };
 
 class OSAL_EXPORT SslSocket : public Socket {
@@ -45,7 +115,6 @@ private:
 
     virtual size_t SocketSend (const void* pData, size_t cbSend);
     virtual size_t SocketRecv (void* pData, size_t stNumBytes);
-    virtual size_t SocketPeek (void* pData, size_t stNumBytes);
 
 public:
 
@@ -60,5 +129,7 @@ public:
 
     virtual int Connect (const char* pszAddress, short siPort);
 };
+
+#endif
 
 #endif

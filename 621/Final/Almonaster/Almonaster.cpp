@@ -514,6 +514,13 @@ int Almonaster::OnFinalize() {
     g_pReport->WriteReport ("Finished shutting down objects and cleaning up data");
     g_pReport->WriteReport ("===================================================");
 
+    SafeRelease(g_pFileCache);
+
+    g_pReport = NULL;
+    g_pLog = NULL;
+
+    SafeRelease(g_pConfig);
+
     return OK;
 }
 

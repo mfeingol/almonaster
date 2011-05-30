@@ -457,6 +457,8 @@ Seconds PageSource::GetDigestAuthenticationNonceLifetime() {
 }
 
 const char* PageSource::GetAuthenticationRealm (IHttpRequest* pHttpRequest) {
+    if (m_pPageSource == NULL)
+        return NULL;
     return m_pPageSource->GetAuthenticationRealm (pHttpRequest);
 }
 
@@ -623,9 +625,7 @@ int PageSource::OnFinalize() {
     }
 
     int iErrCode = m_pPageSource->OnFinalize();
-
     SafeRelease (m_pPageSource);
-
     return iErrCode;
 }
 
@@ -667,6 +667,9 @@ int PageSource::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
 
 int PageSource::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
     
+    if (m_pPageSource == NULL)
+        return OK;
+
     bool bLocked = Enter();
     int iErrCode = m_pPageSource->OnError (pHttpRequest, pHttpResponse);
 
@@ -803,7 +806,7 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
         }
     }
 
-    // 401File
+    // 500File
     if (m_pcfConfig->GetParameter ("500File", &pszRhs) == OK && pszRhs == NULL) {
 
         *pstrErrorMessage = "The 500File value could not be read";
@@ -926,14 +929,16 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
     }
         
     // UseSSI
+    /*
     if (m_pcfConfig->GetParameter ("UseSSI", &pszRhs) == OK && pszRhs != NULL) {
         
         m_bUseSSI = atoi (pszRhs) != 0;
 
     } else {
-        *pstrErrorMessage = "The UseDefaultFile value could not be read";
+        *pstrErrorMessage = "The UseSSI value could not be read";
         return ERROR_FAILURE;
     }
+    */
 
     // Set up counter file
     sprintf (pszErrorFile, "%s/%s.counters", m_pHttpServer->GetCounterPath(), m_pszName);
@@ -1075,7 +1080,6 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
         return ERROR_FAILURE;
     }
         
-    // PageSourceLibrary, PageSourceClsid
     if (m_bUsePageSourceLibrary) {
         
         // OverrideGet
@@ -1460,14 +1464,16 @@ int PageSource::WriteReport (const char* pszMessage) {
 
     plmMessage->lmtMessageType = REPORT_MESSAGE;
     plmMessage->pPageSource = this;
+
     AddRef();
 
     memcpy (plmMessage->pszText, pszMessage, stLength + 1);
-
     int iErrCode = m_pHttpServer->PostMessage (plmMessage);
     if (iErrCode != OK) {
 
+        // Otherwise, the LogMessage instance owns the reference
         Release();
+
         m_pHttpServer->FreeLogMessage (plmMessage);
     }
 

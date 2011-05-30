@@ -27,7 +27,7 @@
 // GameEmpireFleets(I.I.I)
 // GameEmpireDiplomacy(I.I.I)
 
-// TODO: use transaction
+// Note - not idempotent on failure
 
 int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, ReasonForRemoval rReason,
                                       const GameUpdateInformation* pguInfo) {
