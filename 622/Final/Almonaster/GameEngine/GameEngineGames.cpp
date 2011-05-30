@@ -542,7 +542,10 @@ int GameEngine::CleanupGame (int iGameClass, int iGameNumber, GameResult grResul
     if (vGameClassOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION) {
     
         bool bDeleted;
-        int iErrCode2 = DeleteGameClass (iGameClass, &bDeleted);
+#ifdef _DEBUG
+        int iErrCode2 = 
+#endif
+        DeleteGameClass (iGameClass, &bDeleted);
         Assert (iErrCode2 == OK || iErrCode2 == ERROR_GAMECLASS_DOES_NOT_EXIST);
     }
 
@@ -567,7 +570,7 @@ int GameEngine::GetGameCreationTime (int iGameClass, int iGameNumber, UTCTime* p
     int iErrCode = m_pGameData->ReadData (pszGameData, GameData::CreationTime, &vTime);
 
     if (iErrCode == OK) {
-        *ptCreationTime = vTime.GetUTCTime();
+        *ptCreationTime = vTime.GetInteger64();
     }
 
     return iErrCode;
@@ -1704,7 +1707,6 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
             );
 
         for (i = 0; i < iNumEmpires; i ++) {
-
             int iErrCode2 = SendSystemMessage (piEmpireKey[i], pszMessage, SYSTEM, MESSAGE_SYSTEM);
             Assert (iErrCode2 == OK);
         }
@@ -2710,11 +2712,12 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
             iErrCode = AddEmpiresToMap(iGameClass, iGameNumber, &iEmpireKey, 1, gfoFairness, &bFlag);
             if (iErrCode != OK) {
 
-                Assert (false);
-
                 if (bFlag) {
                     
                     // Catastrophic - delete the game
+#ifdef _DEBUG
+                    Assert(false);
+#endif
                     int iErrCode2 = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE);
                     Assert (iErrCode2 == OK);
                 
@@ -2876,9 +2879,9 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         // Add empires to map
         iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, piEmpKey, iNumKeys, gfoFairness, &bFlag);
         if (iErrCode != OK) {
-            
-            Assert (false);
-            
+#ifdef _DEBUG
+            Assert(false);
+#endif
             // Abort: this is catastrophic
             int iErrCode2 = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE);
             Assert (iErrCode2 == OK);

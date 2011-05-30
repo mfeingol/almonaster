@@ -104,7 +104,6 @@ class Win32AutoInit
 public:
 
     Win32AutoInit() {
-
         BOOL f = CryptAcquireContext (&g_hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
         Assert (f);
     }

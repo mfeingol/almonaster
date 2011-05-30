@@ -168,8 +168,7 @@ int TableContext::Reload (Offset oTable) {
         ALIGN ((m_oBaseOffset + stTableNameLen + strlen (pszTemplateName) + 1), 8);
 
     // Get first row offset
-    m_oFirstRow = 
-        ALIGN ((m_oTableHeader + sizeof (TableHeader) + sizeof (Offset) * (GetNumIndexColumns() - 1)), 8);
+    m_oFirstRow = ALIGN(m_oTableHeader + sizeof (TableHeader) + sizeof (Offset) * GetNumIndexColumns() - sizeof (Offset), 8);
 
     return OK;
 }
@@ -202,10 +201,10 @@ int TableContext::Create (const char* pszTableName, Template* pTemplate) {
     size_t stTemplateNameLen = strlen (pszTemplateName) + 1;
 
     // Add space for names
-    size_t stSize = ALIGN ((stTableNameLen + stTemplateNameLen), 8);
+    Size stSize = ALIGN ((stTableNameLen + stTemplateNameLen), 8);
     
-    // Add space for 
-    stSize += ALIGN ((sizeof (TableHeader) + sizeof (Offset) * (GetNumIndexColumns() - 1)), 8);
+    // Add space for headers
+    stSize += ALIGN (sizeof (TableHeader) + sizeof (Offset) * GetNumIndexColumns() - sizeof (Offset), 8);
 
     // One row is all we need for starters
     stSize += GetRowSize();
@@ -221,7 +220,7 @@ int TableContext::Create (const char* pszTableName, Template* pTemplate) {
 
     // Compute other offsets
     m_oTableHeader = ALIGN ((m_oBaseOffset + stTableNameLen + stTemplateNameLen), 8);
-    m_oFirstRow = ALIGN ((m_oTableHeader + sizeof (TableHeader) + sizeof (Offset) * (iNumIndexCols - 1)), 8);
+    m_oFirstRow = ALIGN (m_oTableHeader + sizeof (TableHeader) + sizeof (Offset) * iNumIndexCols - sizeof (Offset), 8);
 
     // Write table name
     memcpy (
@@ -258,9 +257,9 @@ int TableContext::Create (const char* pszTableName, Template* pTemplate) {
 
 int TableContext::Resize (unsigned int iNumNewRows) {
 
-    size_t stNewSize;
-    size_t stOldSize = GetTableHeap()->GetBlockSize (m_oBaseOffset);
-    size_t stRowSize = GetRowSize();
+    Size stNewSize;
+    Size stOldSize = GetTableHeap()->GetBlockSize (m_oBaseOffset);
+    Size stRowSize = GetRowSize();
 
     // Heuristic:
     // Add 1/3 to our size, or add iNumNewRows + ten rows, whichever is smallest
@@ -284,7 +283,7 @@ int TableContext::Resize (unsigned int iNumNewRows) {
 }
 
 
-#define BITS_PER_BITMAP_ELEMENT (sizeof (size_t) * 8)
+#define BITS_PER_BITMAP_ELEMENT (sizeof(unsigned int) * 8)
 #define INITIAL_BITMAP_ELEMENTS (5)
 
 int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
@@ -293,14 +292,14 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
     Offset oBitmapOffset = pTableHeader->oRowBitmapOffset;
 
     //
-    // Bitmap
+    // Row bitmap
     //
 
     if (oBitmapOffset == NO_OFFSET) {
 
-        Size sNewSize = 
-            max (iMaxNumRows / BITS_PER_BITMAP_ELEMENT, INITIAL_BITMAP_ELEMENTS) * sizeof (size_t);
-        
+        // We have no row bitmap, so allocate a new one...
+        unsigned int iNumElements = max (iMaxNumRows / BITS_PER_BITMAP_ELEMENT, INITIAL_BITMAP_ELEMENTS);
+        Size sNewSize = iNumElements * sizeof (unsigned int);
         FileHeap* pMetaHeap = GetMetaDataHeap();
 
         Unlock();
@@ -312,12 +311,13 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
             return ERROR_OUT_OF_DISK_SPACE;
         }
 
+        // Get the table header pointer again, after reacquiring the lock
         pTableHeader = GetTableHeader();
         pTableHeader->oRowBitmapOffset = oNewOffset;
-        pTableHeader->iNumBitmapElements = INITIAL_BITMAP_ELEMENTS;
+        pTableHeader->iNumBitmapElements = iNumElements;
 
         // Zero new space
-        memset (pMetaHeap->GetAddress (oNewOffset), 0, sNewSize);
+        memset (pMetaHeap->GetAddress (oNewOffset), 0, (size_t)sNewSize);
     
     } else {
 
@@ -331,7 +331,7 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
             
             // Reallocate space
             Unlock();
-            Offset oNewOffset = pMetaHeap->Reallocate (oBitmapOffset, iNewSize * sizeof (size_t));
+            Offset oNewOffset = pMetaHeap->Reallocate (oBitmapOffset, iNewSize * sizeof (unsigned int));
             Lock();
 
             if (oNewOffset == NO_OFFSET) {
@@ -341,9 +341,9 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
 
             // Zero new space
             memset (
-                (char*) pMetaHeap->GetAddress (oNewOffset) + iSize * sizeof (size_t), 
+                (char*) pMetaHeap->GetAddress (oNewOffset) + iSize * sizeof (unsigned int), 
                 0, 
-                (iNewSize - iSize) * sizeof (size_t)
+                (iNewSize - iSize) * sizeof (unsigned int)
                 );
 
             pTableHeader->oRowBitmapOffset = oNewOffset;
@@ -364,8 +364,7 @@ int TableContext::ExpandMetaDataIfNecessary (unsigned int iMaxNumRows) {
 }
 
 
-// Will need to be reworked for 64 bit
-const size_t SignificantBit[BITS_PER_BITMAP_ELEMENT] = {
+const unsigned int SignificantBit[BITS_PER_BITMAP_ELEMENT] = {
     0x00000001,0x00000002,0x00000004,0x00000008,
     0x00000010,0x00000020,0x00000040,0x00000080,
     0x00000100,0x00000200,0x00000400,0x00000800,
@@ -376,14 +375,14 @@ const size_t SignificantBit[BITS_PER_BITMAP_ELEMENT] = {
     0x10000000,0x20000000,0x40000000,0x80000000,
 };
 
-size_t* TableContext::GetRowBitmap() {
+unsigned int* TableContext::GetRowBitmap() {
 
     Offset oBitmap = GetTableHeader()->oRowBitmapOffset;
     if (oBitmap == NO_OFFSET) {
         return NULL;
     }
 
-    return (size_t*) GetMetaDataHeap()->GetAddress (oBitmap);
+    return (unsigned int*) GetMetaDataHeap()->GetAddress (oBitmap);
 }
 
 bool TableContext::IsValidRow (unsigned int iKey) {
@@ -392,40 +391,40 @@ bool TableContext::IsValidRow (unsigned int iKey) {
         return false;
     }
 
-    size_t* pstBits = GetRowBitmap();
-    if (pstBits == NULL) {
+    unsigned int* piBits = GetRowBitmap();
+    if (piBits == NULL) {
         return false;
     }
 
-    size_t stBit = iKey % BITS_PER_BITMAP_ELEMENT;
-    size_t stIndex = iKey / BITS_PER_BITMAP_ELEMENT;
+    unsigned int iBit = iKey % BITS_PER_BITMAP_ELEMENT;
+    unsigned int iIndex = iKey / BITS_PER_BITMAP_ELEMENT;
 
-    Assert (stIndex < GetTableHeader()->iNumBitmapElements);
+    Assert (iIndex < GetTableHeader()->iNumBitmapElements);
 
-    return (pstBits[stIndex] & SignificantBit[stBit]) != 0;
+    return (piBits[iIndex] & SignificantBit[iBit]) != 0;
 }
 
 void TableContext::SetRowValidity (unsigned int iKey, bool bValid) {
 
     Assert (iKey < GetTerminatorRowKey());
 
-    size_t* pstBits = GetRowBitmap();
-    Assert (pstBits != NULL);
+    unsigned int* piBits = GetRowBitmap();
+    Assert (piBits != NULL);
 
-    size_t stBit = iKey % BITS_PER_BITMAP_ELEMENT;
-    size_t stIndex = iKey / BITS_PER_BITMAP_ELEMENT;
+    unsigned int iBit = iKey % BITS_PER_BITMAP_ELEMENT;
+    unsigned int iIndex = iKey / BITS_PER_BITMAP_ELEMENT;
 
-    Assert (stIndex < GetTableHeader()->iNumBitmapElements);
+    Assert (iIndex < GetTableHeader()->iNumBitmapElements);
 
     if (bValid) {
 
-        Assert (!(pstBits[stIndex] & SignificantBit[stBit]));
-        pstBits[stIndex] |= SignificantBit[stBit];
+        Assert (!(piBits[iIndex] & SignificantBit[iBit]));
+        piBits[iIndex] |= SignificantBit[iBit];
     
     } else {
     
-        Assert (pstBits[stIndex] & SignificantBit[stBit]);
-        pstBits[stIndex] &= ~(SignificantBit[stBit]);
+        Assert (piBits[iIndex] & SignificantBit[iBit]);
+        piBits[iIndex] &= ~(SignificantBit[iBit]);
     }
 }
 
@@ -446,14 +445,12 @@ void TableContext::SetAllRowsInvalid() {
 
 unsigned int TableContext::FindNextInvalidRow (unsigned int iKey) {
 
-    size_t* pstBits = GetRowBitmap();
-    if (pstBits == NULL) {
+    unsigned int* piBits = GetRowBitmap();
+    if (piBits == NULL) {
         return NO_KEY;
     }
 
-    size_t i, j, stCompBits, stLastBit;
-
-    unsigned int iTerminatorKey = GetTerminatorRowKey();
+    unsigned int i, j, iCompBits, iLastBit, iTerminatorKey = GetTerminatorRowKey();
 
     if (iKey == NO_KEY) {
         iKey = 0;
@@ -465,49 +462,49 @@ unsigned int TableContext::FindNextInvalidRow (unsigned int iKey) {
         Assert (iKey < iTerminatorKey);
     }
 
-    size_t stIndex = iKey / BITS_PER_BITMAP_ELEMENT;
-    size_t stBit = iKey % BITS_PER_BITMAP_ELEMENT;
-    size_t stLastIndex = iTerminatorKey / BITS_PER_BITMAP_ELEMENT;
+    unsigned int iIndex = iKey / BITS_PER_BITMAP_ELEMENT;
+    unsigned int iBit = iKey % BITS_PER_BITMAP_ELEMENT;
+    unsigned int iLastIndex = iTerminatorKey / BITS_PER_BITMAP_ELEMENT;
 
     // Exhaust the current block if necessary
-    if (stBit != 0) {
+    if (iBit != 0) {
 
-        stCompBits = pstBits[stIndex];
-        if (stCompBits != 0xffffffff) {
+        iCompBits = piBits[iIndex];
+        if (iCompBits != 0xffffffff) {
 
-            if (stIndex == stLastIndex) {
-                stLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
+            if (iIndex == iLastIndex) {
+                iLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
             } else {
-                stLastBit = BITS_PER_BITMAP_ELEMENT;
+                iLastBit = BITS_PER_BITMAP_ELEMENT;
             }
             
-            for (j = stBit; j < stLastBit; j ++) {
+            for (j = iBit; j < iLastBit; j ++) {
                 
-                if (!(stCompBits & SignificantBit[j])) {
-                    return (unsigned int) (stIndex * BITS_PER_BITMAP_ELEMENT + j);
+                if (!(iCompBits & SignificantBit[j])) {
+                    return iIndex * BITS_PER_BITMAP_ELEMENT + j;
                 }
             }
         }
 
-        stIndex ++;
+        iIndex ++;
     }
 
     // Now, search the rest of the bits
-    for (i = stIndex; i <= stLastIndex; i ++) {
+    for (i = iIndex; i <= iLastIndex; i ++) {
 
-        stCompBits = pstBits[i];
-        if (stCompBits != 0xffffffff) {
+        iCompBits = piBits[i];
+        if (iCompBits != 0xffffffff) {
 
-            if (i == stLastIndex) {
-                stLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
+            if (i == iLastIndex) {
+                iLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
             } else {
-                stLastBit = BITS_PER_BITMAP_ELEMENT;
+                iLastBit = BITS_PER_BITMAP_ELEMENT;
             }
 
-            for (j = 0; j < stLastBit; j ++) {
+            for (j = 0; j < iLastBit; j ++) {
 
-                if (!(stCompBits & SignificantBit[j])) {
-                    return (unsigned int) (i * BITS_PER_BITMAP_ELEMENT + j);
+                if (!(iCompBits & SignificantBit[j])) {
+                    return i * BITS_PER_BITMAP_ELEMENT + j;
                 }
             }
         }
@@ -519,14 +516,12 @@ unsigned int TableContext::FindNextInvalidRow (unsigned int iKey) {
 
 unsigned int TableContext::FindNextValidRow (unsigned int iKey) {
 
-    size_t* pstBits = GetRowBitmap();
-    if (pstBits == NULL) {
+    unsigned int* piBits = GetRowBitmap();
+    if (piBits == NULL) {
         return NO_KEY;
     }
 
-    size_t i, j, stCompBits, stLastBit;
-
-    unsigned int iTerminatorKey = GetTerminatorRowKey();
+    unsigned int i, j, iCompBits, iLastBit, iTerminatorKey = GetTerminatorRowKey();
 
     if (iKey == NO_KEY) {
         iKey = 0;
@@ -538,49 +533,49 @@ unsigned int TableContext::FindNextValidRow (unsigned int iKey) {
         Assert (iKey < iTerminatorKey);
     }
 
-    size_t stIndex = iKey / BITS_PER_BITMAP_ELEMENT;
-    size_t stBit = iKey % BITS_PER_BITMAP_ELEMENT;
-    size_t stLastIndex = iTerminatorKey / BITS_PER_BITMAP_ELEMENT;
+    unsigned int iIndex = iKey / BITS_PER_BITMAP_ELEMENT;
+    unsigned int iBit = iKey % BITS_PER_BITMAP_ELEMENT;
+    unsigned int iLastIndex = iTerminatorKey / BITS_PER_BITMAP_ELEMENT;
 
     // Exhaust the current block if necessary
-    if (stBit != 0) {
+    if (iBit != 0) {
 
-        stCompBits = pstBits[stIndex];
-        if (stCompBits != 0) {
+        iCompBits = piBits[iIndex];
+        if (iCompBits != 0) {
 
-            if (stIndex == stLastIndex) {
-                stLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
+            if (iIndex == iLastIndex) {
+                iLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
             } else {
-                stLastBit = BITS_PER_BITMAP_ELEMENT;
+                iLastBit = BITS_PER_BITMAP_ELEMENT;
             }
             
-            for (j = stBit; j < stLastBit; j ++) {
+            for (j = iBit; j < iLastBit; j ++) {
                 
-                if (stCompBits & SignificantBit[j]) {
-                    return (unsigned int) (stIndex * BITS_PER_BITMAP_ELEMENT + j);
+                if (iCompBits & SignificantBit[j]) {
+                    return iIndex * BITS_PER_BITMAP_ELEMENT + j;
                 }
             }
         }
 
-        stIndex ++;
+        iIndex ++;
     }
 
     // Now, search the rest of the bits
-    for (i = stIndex; i <= stLastIndex; i ++) {
+    for (i = iIndex; i <= iLastIndex; i ++) {
 
-        stCompBits = pstBits[i];
-        if (stCompBits != 0) {
+        iCompBits = piBits[i];
+        if (iCompBits != 0) {
 
-            if (i == stLastIndex) {
-                stLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
+            if (i == iLastIndex) {
+                iLastBit = iTerminatorKey % BITS_PER_BITMAP_ELEMENT;
             } else {
-                stLastBit = BITS_PER_BITMAP_ELEMENT;
+                iLastBit = BITS_PER_BITMAP_ELEMENT;
             }
 
-            for (j = 0; j < stLastBit; j ++) {
+            for (j = 0; j < iLastBit; j ++) {
 
-                if (stCompBits & SignificantBit[j]) {
-                    return (unsigned int) (i * BITS_PER_BITMAP_ELEMENT + j);
+                if (iCompBits & SignificantBit[j]) {
+                    return i * BITS_PER_BITMAP_ELEMENT + j;
                 }
             }
         }

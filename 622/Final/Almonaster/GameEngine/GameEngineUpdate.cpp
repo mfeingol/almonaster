@@ -372,7 +372,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         Assert (false);
         return iErrCode;
     }
-    tLastUpdateTime = vTemp.GetUTCTime();
+    tLastUpdateTime = vTemp.GetInteger64();
 
     UTCTime tRealLastUpdateTime;
     iErrCode = m_pGameData->ReadData (strGameData, GameData::RealLastUpdateTime, &vTemp);
@@ -380,7 +380,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         Assert (false);
         return iErrCode;
     }
-    tRealLastUpdateTime = vTemp.GetUTCTime();
+    tRealLastUpdateTime = vTemp.GetInteger64();
 
     // Get options
     iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);

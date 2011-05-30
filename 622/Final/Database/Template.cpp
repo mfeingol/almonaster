@@ -111,7 +111,7 @@ bool Template::IsEqual (const TemplateDescription& ttTemplate) {
             
             } else {
 
-                if (TemplateData.Size[i] != ALIGN (ttTemplate.Size[i], 8)) {
+                if ((size_t)TemplateData.Size[i] != ALIGN (ttTemplate.Size[i], 8)) {
                     return false;
                 }
             }
@@ -138,7 +138,7 @@ int Template::Reload (Offset oTemplate) {
 
     unsigned int* piIndices = NULL, * piIndexFlags = NULL;
     VariantType* pvtTypes;
-    size_t* pstSizes;
+    int64* pcbSizes;
 
     // Save input offset
     Assert (oTemplate != NO_OFFSET);
@@ -199,7 +199,7 @@ int Template::Reload (Offset oTemplate) {
 
     if (TemplateData.NumColumns == 0) {
         pvtTypes = NULL;
-        pstSizes = NULL;
+        pcbSizes = NULL;
     } else {
 
         // Types
@@ -213,13 +213,13 @@ int Template::Reload (Offset oTemplate) {
         stBlockSize += stLen;
 
         // Sizes
-        pAddress = (char*) ALIGN (pAddress, sizeof (size_t));
-        stLen = TemplateData.NumColumns * sizeof (size_t);
+        pAddress = (char*) ALIGN (pAddress, sizeof (int64));
+        stLen = TemplateData.NumColumns * sizeof (int64);
 
-        pstSizes = (size_t*) pAddress;
+        pcbSizes = (int64*) pAddress;
         pAddress += stLen;
 
-        stBlockSize = ALIGN (stBlockSize, sizeof (size_t));
+        stBlockSize = ALIGN (stBlockSize, sizeof (int64));
         stBlockSize += stLen;
     }
 
@@ -235,7 +235,7 @@ int Template::Reload (Offset oTemplate) {
         piIndices,
         piIndexFlags,
         pvtTypes,
-        pstSizes
+        pcbSizes
         );
 
 Cleanup:
@@ -248,7 +248,7 @@ Cleanup:
 
 int Template::FinalConstruct (size_t stBlockSize, const char* pszName, size_t stNameLen,
                               unsigned int* piIndices, unsigned int* piIndexFlags, VariantType* pvtTypes, 
-                              size_t* pstSizes) {
+                              int64* pcbSizes) {
 
     int iErrCode = OK;
     unsigned int i;
@@ -257,8 +257,8 @@ int Template::FinalConstruct (size_t stBlockSize, const char* pszName, size_t st
     size_t stLen;
 
     // Add space for column offsets
-    stBlockSize = ALIGN (stBlockSize, sizeof (size_t));
-    stBlockSize += TemplateData.NumColumns * sizeof (size_t);
+    stBlockSize = ALIGN (stBlockSize, sizeof (int64));
+    stBlockSize += TemplateData.NumColumns * sizeof (int64);
 
     // Allocate the size block
     // We do this because the on-disk block might change its address,
@@ -312,20 +312,18 @@ int Template::FinalConstruct (size_t stBlockSize, const char* pszName, size_t st
 
         pAddress += stLen;
 
-        pAddress = (char*) ALIGN (pAddress, sizeof (size_t));
-        stLen = TemplateData.NumColumns * sizeof (size_t);
+        pAddress = (char*) ALIGN (pAddress, sizeof (int64));
+        stLen = TemplateData.NumColumns * sizeof (int64);
 
-        TemplateData.Size = (size_t*) pAddress;
-        memcpy (TemplateData.Size, pstSizes, stLen);
-
+        TemplateData.Size = (int64*) pAddress;
         for (i = 0; i < TemplateData.NumColumns; i ++) {
 
-            if (TemplateData.Type[i] == V_STRING &&
-                TemplateData.Size[i] != VARIABLE_LENGTH_STRING) {
-                TemplateData.Size[i] = ALIGN (TemplateData.Size[i], 8);
+            if (TemplateData.Type[i] == V_STRING && pcbSizes[i] != VARIABLE_LENGTH_STRING) {
+                TemplateData.Size[i] = ALIGN (pcbSizes[i], 8);
+            } else {
+                TemplateData.Size[i] = pcbSizes[i];
             }
         }
-
         pAddress += stLen;
     }
 
@@ -336,7 +334,7 @@ int Template::FinalConstruct (size_t stBlockSize, const char* pszName, size_t st
     }
 
     // Calculate Offsets and RowSize
-    ColOffset = (size_t*) ALIGN (pAddress, sizeof (size_t));
+    ColOffset = (Offset*) ALIGN (pAddress, sizeof (Offset));
 
     RowSize = 0;
     for (i = 0; i < TemplateData.NumColumns; i ++) {
@@ -380,7 +378,8 @@ Cleanup:
 int Template::Create (const TemplateDescription& ttTemplate) {
 
     unsigned int i;
-    size_t stSize = 0, stNameLen, stLen, * pstSize;
+    size_t stSize = 0, stNameLen, stLen;
+    int64* pcbSizes;
 
     // Verify data
     int iErrCode = VerifyTemplate (ttTemplate);
@@ -402,13 +401,13 @@ int Template::Create (const TemplateDescription& ttTemplate) {
     stSize += ttTemplate.NumIndexes * sizeof (unsigned int) * 2;
 
     // Sizes
-    stSize += ttTemplate.NumColumns * sizeof (size_t);
+    stSize += ttTemplate.NumColumns * sizeof (int64);
 
     // Types
     stSize += ttTemplate.NumColumns * sizeof (VariantType);
 
     // Create size array
-    pstSize = (size_t*) StackAlloc (ttTemplate.NumColumns * sizeof (size_t));
+    pcbSizes = (int64*) StackAlloc (ttTemplate.NumColumns * sizeof(int64));
 
     for (i = 0; i < ttTemplate.NumColumns; i ++) {
 
@@ -417,26 +416,25 @@ int Template::Create (const TemplateDescription& ttTemplate) {
         case V_STRING:
 
             if (ttTemplate.Size[i] == VARIABLE_LENGTH_STRING) {
-                pstSize[i] = VARIABLE_LENGTH_STRING;
+                pcbSizes[i] = VARIABLE_LENGTH_STRING;
             } else {
-                pstSize[i] = ttTemplate.Size[i];
+                pcbSizes[i] = ttTemplate.Size[i];
             }
             break;
 
         case V_INT64:
-
-            pstSize[i] = sizeof (int64);
+            pcbSizes[i] = sizeof (int64);
             break;
 
         case V_INT:
-        case V_FLOAT:
-        case V_TIME:
+            pcbSizes[i] = sizeof (int);
+            break;
 
-            pstSize[i] = DEFAULT_ELEMENT_SIZE;
+        case V_FLOAT:
+            pcbSizes[i] = sizeof (float);
             break;
 
         default:
-
             Assert (false);
             return ERROR_TYPE_MISMATCH;
         }
@@ -450,7 +448,7 @@ int Template::Create (const TemplateDescription& ttTemplate) {
         ttTemplate.IndexColumn,
         ttTemplate.IndexFlags,
         ttTemplate.Type,
-        pstSize
+        pcbSizes
         );
 
     if (iErrCode != OK) {
@@ -509,9 +507,9 @@ int Template::Create (const TemplateDescription& ttTemplate) {
         memcpy (pAddress, TemplateData.Type, stLen);
         pAddress += stLen;
 
-        pAddress = (char*) ALIGN (pAddress, sizeof (size_t));
+        pAddress = (char*) ALIGN (pAddress, sizeof (int64));
 
-        stLen = TemplateData.NumColumns * sizeof (size_t);
+        stLen = TemplateData.NumColumns * sizeof (int64);
         memcpy (pAddress, TemplateData.Size, stLen);
         pAddress += stLen;
     }

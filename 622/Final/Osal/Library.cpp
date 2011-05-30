@@ -48,7 +48,7 @@ int Library::Open (const char* pszLibrary) {
 
 #ifdef __LINUX__
     m_hLibrary = dlopen(pszLibrary, RTLD_NOW | RTLD_GLOBAL);
-	return m_hLibrary == NULL ? ERROR_FAILURE : OK;
+    return m_hLibrary == NULL ? ERROR_FAILURE : OK;
 #else if defined __WIN32__
     m_hLibrary = ::LoadLibrary (pszLibrary);
     return m_hLibrary == NULL ? ERROR_FAILURE : OK;
@@ -63,7 +63,7 @@ int Library::Close() {
 #ifdef __LINUX__
     dlclose(m_hLibrary);
 #else if defined __WIN32__
-	::FreeLibrary (m_hLibrary);
+    ::FreeLibrary (m_hLibrary);
 #endif
 
     m_hLibrary = NULL;
@@ -82,8 +82,8 @@ void* Library::GetExport (const char* pszExport) {
     }
 
 #ifdef __LINUX__
-	return dlsym(m_hLibrary, pszExport);
+    return dlsym(m_hLibrary, pszExport);
 #else if defined __WIN32__
-	return ::GetProcAddress (m_hLibrary, pszExport);
+    return ::GetProcAddress (m_hLibrary, pszExport);
 #endif
 }

@@ -156,7 +156,6 @@ public:
     void FreeData (int* piData);
     void FreeData (float* ppfData);
     void FreeData (char** ppszData);
-    void FreeData (UTCTime* ptData);
 
     void FreeKeys (unsigned int* piKeys);
 */

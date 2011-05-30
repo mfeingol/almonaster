@@ -643,23 +643,26 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
                             switch (iCol) {
                                 
                             case SystemEmpireData::Privilege:
-                                
                                 m_pHttpResponse->WriteText (PRIVILEGE_STRING[vData.GetInteger()]);
                                 break;
                                 
                             case SystemEmpireData::WebPage:
-
                                 RenderUnsafeHyperText (vData.GetCharPtr(), vData.GetCharPtr());
                                 break;
 
                             case SystemEmpireData::Gender:
-
-                                Assert (vData.GetInteger() > 0 && vData.GetInteger() < EMPIRE_NUM_GENDERS);
+                                Assert (vData.GetInteger() >= EMPIRE_GENDER_UNKNOWN && 
+                                        vData.GetInteger() <= EMPIRE_GENDER_FEMALE);
                                 m_pHttpResponse->WriteText (EMPIRE_GENDER_STRING[vData.GetInteger()]);
+                                break;
+
+                            case SystemEmpireData::LastLoginTime:
+                            case SystemEmpireData::CreationTime:
+                            case SystemEmpireData::LastBridierActivity:
+                                m_pHttpResponse->WriteDate (vData.GetInteger64());
                                 break;
                                 
                             default:
-                                
                                 m_pHttpResponse->WriteText (vData);
                                 break;
                             }
@@ -705,10 +708,10 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
             m_pHttpResponse->WriteText (pszFormName[i]);
             OutputText ("\" value=\"1\">");
 
-            RenderHiddenSearchVariant (pszColName1[i], sc.vData);
+            RenderHiddenSearchVariant (sc.iColumn, pszColName1[i], sc.vData);
             
             if (pszColName2[i] != NULL) {
-                RenderHiddenSearchVariant (pszColName2[i], sc.vData2);
+                RenderHiddenSearchVariant (sc.iColumn, pszColName2[i], sc.vData2);
             }
         }
     }
@@ -717,16 +720,18 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
     WriteButton (BID_CANCEL);
 }
 
-void HtmlRenderer::RenderHiddenSearchVariant (const char* pszColName, const Variant& vData) {
+void HtmlRenderer::RenderHiddenSearchVariant (unsigned int iColumn, const char* pszColName, const Variant& vData) {
 
-    switch (vData.GetType()) {
+    switch (iColumn) {
 
-    case V_TIME:
+    case SystemEmpireData::LastLoginTime:
+    case SystemEmpireData::CreationTime:
+    case SystemEmpireData::LastBridierActivity:
 
         int iSec, iMin, iHour, iDay, iMonth, iYear;
         DayOfWeek dayOfWeek;
 
-        Time::GetDate (vData.GetUTCTime(), &iSec, &iMin, &iHour, &dayOfWeek, &iDay, &iMonth, &iYear);
+        Time::GetDate (vData.GetInteger64(), &iSec, &iMin, &iHour, &dayOfWeek, &iDay, &iMonth, &iYear);
 
         // Year
         OutputText ("<input type=\"hidden\" name=\"");

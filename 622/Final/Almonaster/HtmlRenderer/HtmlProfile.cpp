@@ -69,12 +69,12 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
     char pszLoginTime [OS::MaxDateLength], pszCreationTime [OS::MaxDateLength];
     
-    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::LastLoginTime].GetUTCTime(), pszLoginTime);
+    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::LastLoginTime].GetInteger64(), pszLoginTime);
     if (iErrCode != OK) {
         goto OnError;
     }
     
-    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::CreationTime].GetUTCTime(), pszCreationTime);
+    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::CreationTime].GetInteger64(), pszCreationTime);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -171,7 +171,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
             Time::GetTime (&tNow);
 
             Seconds sTimeSpent = Time::GetSecondDifference (
-                tNow, pvEmpireData[SystemEmpireData::LastBridierActivity].GetUTCTime()
+                tNow, pvEmpireData[SystemEmpireData::LastBridierActivity].GetInteger64()
                 );
 
             sBridierSecondsLeft = 3 * 30 * DAY_LENGTH_IN_SECONDS - sTimeSpent;

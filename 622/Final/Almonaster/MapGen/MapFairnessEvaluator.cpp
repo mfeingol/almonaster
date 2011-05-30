@@ -120,7 +120,7 @@ int MapFairnessEvaluator::EvaluateEmpireClaims(unsigned int iEmpireIndex) {
 //
 // Ag is worth 25% more than other resources
 // Resources per planet are given out as an inverse factor of slightly supra-linear distance
-// Claims that have no actual relevant to the planet (e.g. distances 10 with another having 2) are discarded
+// Claims that have no realistic relevance to the empire (e.g. distance of 10 to one empire, and distance of 2 to another) are discarded
 
 void MapFairnessEvaluator::ProcessClaims() {
 

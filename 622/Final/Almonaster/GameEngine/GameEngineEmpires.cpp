@@ -451,7 +451,6 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
 
         ScoringSystem ss = (ScoringSystem) i;
         if (HasTopList (ss)) {
-
             int iErrCode2 = UpdateTopListOnIncrease (ss, iKey);
             Assert (iErrCode2 == OK);
         }
@@ -2575,7 +2574,7 @@ int GameEngine::GetEmpireLastBridierActivity (int iEmpireKey, UTCTime* ptTime) {
 
     iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::LastBridierActivity, &vTemp);
     if (iErrCode == OK) {
-        *ptTime = vTemp.GetUTCTime();
+        *ptTime = vTemp.GetInteger64();
     }
 
     return iErrCode;

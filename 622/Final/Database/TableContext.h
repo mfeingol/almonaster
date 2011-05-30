@@ -73,7 +73,7 @@ protected:
     //
 
     void SetRowValidity (unsigned int iKey, bool bValid);
-    size_t* GetRowBitmap();
+    unsigned int* GetRowBitmap();
 
     //
     // Index utils
@@ -171,7 +171,7 @@ public:
         return m_pTemplate->TemplateData.OneRow;
     }
 
-    inline size_t GetRowSize() {
+    inline Size GetRowSize() {
         return m_pTemplate->RowSize;
     }
 
@@ -180,12 +180,12 @@ public:
         return m_pTemplate->TemplateData.Type[iColumn];
     }
     
-    inline size_t GetColumnOffset (unsigned int iColumn) {
+    inline Offset GetColumnOffset (unsigned int iColumn) {
         Assert (iColumn < GetNumColumns());
         return m_pTemplate->ColOffset[iColumn];
     }
 
-    inline size_t GetColumnSize (unsigned int iColumn) {
+    inline int64 GetColumnSize (unsigned int iColumn) {
         Assert (iColumn < GetNumColumns());
         return m_pTemplate->TemplateData.Size[iColumn];
     }
@@ -396,14 +396,12 @@ public:
     int IndexWriteData (unsigned int iKey, unsigned int iColumn, int iData);
     int IndexWriteData (unsigned int iKey, unsigned int iColumn, float fData);
     int IndexWriteData (unsigned int iKey, unsigned int iColumn, const char* pszData);
-    int IndexWriteData (unsigned int iKey, unsigned int iColumn, const UTCTime& tData);
     int IndexWriteData (unsigned int iKey, unsigned int iColumn, int64 i64Data);
 
     int IndexGetFirstKey (unsigned int iColumn, int iData, unsigned int* piKey);
     int IndexGetFirstKey (unsigned int iColumn, float fData, unsigned int* piKey);
     int IndexGetFirstKey (unsigned int iColumn, const char* pszData, bool bCaseInsensitive, 
         unsigned int* piKey);
-    int IndexGetFirstKey (unsigned int iColumn, const UTCTime& tData, unsigned int* piKey);
     int IndexGetFirstKey (unsigned int iColumn, int64 i64Data, unsigned int* piKey);
 
     int IndexGetEqualKeys (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, 
@@ -411,7 +409,6 @@ public:
 
     int IndexWriteColumn (unsigned int iColumn, int iData);
     int IndexWriteColumn (unsigned int iColumn, float fData);
-    int IndexWriteColumn (unsigned int iColumn, const UTCTime& tData);
     int IndexWriteColumn (unsigned int iColumn, int64 i64Data);
 
     int IndexInsertRow (unsigned int iKey, const Variant* pvData);

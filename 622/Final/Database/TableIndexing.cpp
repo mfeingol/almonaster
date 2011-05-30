@@ -152,51 +152,6 @@ int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, const
     return iErrCode;
 }
 
-int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, const UTCTime& tData) {
-    
-    int iErrCode;
-    unsigned int iNewHash, iOldHash, iNumBuckets, iIndex;
-    UTCTime tOldData;
-
-    iIndex = GetIndexForColumn (iColumn);
-    if (iIndex == NO_KEY) {
-        return ERROR_COLUMN_NOT_INDEXED;
-    }
-
-    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_TIME);
-
-    iErrCode = IndexCheckUniqueData<const UTCTime&> (tData, iIndex, iKey, iColumn);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
-    tOldData = *(UTCTime*) GetData (iKey, iColumn);
-    Assert (tOldData != tData);
-
-    iNumBuckets = GetNumIndexBuckets();
-
-    // Hash data
-    iNewHash = Time::GetHashValue (tData, iNumBuckets);
-    iOldHash = Time::GetHashValue (tOldData, iNumBuckets);
-
-    if (iOldHash == iNewHash) {
-        return OK;
-    }
-
-    // Insert new hash
-    iErrCode = CreateHash (iIndex, iNewHash, iKey);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-    
-    // Delete old hash - this should always succeed
-    int iIgnoreErrCode = DeleteHash (iIndex, iOldHash, iKey);
-    Assert (iIgnoreErrCode == OK);
-
-    return iErrCode;
-}
-
 int TableContext::IndexWriteData (unsigned int iKey, unsigned int iColumn, int64 i64Data) {
     
     int iErrCode;
@@ -305,7 +260,6 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, int iData) {
                 // Hash old data
                 iOldHash = Algorithm::GetIntHashValue (iOldData, iNumBuckets);
                 if (iOldHash != iHash) {
-
                     int iIgnoreErrCode = DeleteHash (iIndex, iHash, iDelKey);
                     Assert (iIgnoreErrCode == OK);
                 }
@@ -328,7 +282,6 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, int iData) {
             // Hash old data
             iOldHash = Algorithm::GetIntHashValue (iOldData, iNumBuckets);
             if (iOldHash != iHash) {
-            
                 int iIgnoreErrCode = DeleteHash (iIndex, iHash, iKey);
                 Assert (iIgnoreErrCode == OK);
             }
@@ -401,7 +354,6 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, float fData) {
                 // Hash old data
                 iOldHash = Algorithm::GetFloatHashValue (fOldData, iNumBuckets);
                 if (iOldHash != iHash) {
-
                     int iIgnoreErrCode = DeleteHash (iIndex, iHash, iDelKey);
                     Assert (iIgnoreErrCode == OK);
                 }
@@ -424,103 +376,6 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, float fData) {
             // Hash old data
             iOldHash = Algorithm::GetFloatHashValue (fOldData, iNumBuckets);
             if (iOldHash != iHash) {
-
-                int iIgnoreErrCode = DeleteHash (iIndex, iHash, iKey);
-                Assert (iIgnoreErrCode == OK);
-            }
-        }
-    }
-    
-    return OK;
-}
-
-int TableContext::IndexWriteColumn (unsigned int iColumn, const UTCTime& tData) {
-    
-    int iErrCode = OK;
-    unsigned int iHash, iOldHash, iNumBuckets, iKey = NO_KEY, iIndex;
-    UTCTime tOldData;
-
-    iIndex = GetIndexForColumn (iColumn);
-    if (iIndex == NO_KEY) {
-        return ERROR_COLUMN_NOT_INDEXED;
-    }
-
-    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_TIME);
-
-    // If the column has a unique-data index, forget it
-    if (GetIndexFlags (iIndex) & INDEX_UNIQUE_DATA) {
-        return ERROR_DUPLICATE_DATA;
-    }
-
-    iNumBuckets = GetNumIndexBuckets();
-
-    // Get new hash
-    iHash = Time::GetHashValue (tData, iNumBuckets);
-
-    while (true) {
-
-        iKey = FindNextValidRow (iKey);
-        if (iKey == NO_KEY) {
-            break;
-        }
-
-        tOldData = *(UTCTime*) GetData (iKey, iColumn);
-        if (tOldData != tData) {
-
-            // Hash old data
-            iOldHash = Time::GetHashValue (tOldData, iNumBuckets);
-            if (iOldHash != iHash) {
-
-                iErrCode = CreateHash (iIndex, iHash, iKey);
-                if (iErrCode != OK) {
-                    break;
-                }
-            }
-        }
-    }
-
-    if (iErrCode != OK) {
-
-        Assert (false);
-
-        unsigned int iDelKey = NO_KEY;
-        while (true) {
-
-            iDelKey = FindNextValidRow (iKey);
-            if (iDelKey == NO_KEY || iDelKey >= iKey) {
-                break;
-            }
-
-            tOldData = *(UTCTime*) GetData (iDelKey, iColumn);
-            if (tOldData != tData) {
-
-                // Hash old data
-                iOldHash = Time::GetHashValue (tOldData, iNumBuckets);
-                if (iOldHash != iHash) {
-
-                    int iIgnoreErrCode = DeleteHash (iIndex, iHash, iDelKey);
-                    Assert (iIgnoreErrCode == OK);
-                }
-            }
-        }
-
-        return iErrCode;
-    }
-
-    while (true) {
-        
-        iKey = FindNextValidRow (iKey);
-        if (iKey == NO_KEY) {
-            break;
-        }
-        
-        tOldData = *(UTCTime*) GetData (iKey, iColumn);
-        if (tOldData != tData) {
-            
-            // Hash old data
-            iOldHash = Time::GetHashValue (tOldData, iNumBuckets);
-            if (iOldHash != iHash) {
-
                 int iIgnoreErrCode = DeleteHash (iIndex, iHash, iKey);
                 Assert (iIgnoreErrCode == OK);
             }
@@ -593,7 +448,6 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, int64 i64Data) {
                 // Hash old data
                 iOldHash = Algorithm::GetInt64HashValue (i64OldData, iNumBuckets);
                 if (iOldHash != iHash) {
-
                     int iIgnoreErrCode = DeleteHash (iIndex, iHash, iDelKey);
                     Assert (iIgnoreErrCode == OK);
                 }
@@ -616,7 +470,6 @@ int TableContext::IndexWriteColumn (unsigned int iColumn, int64 i64Data) {
             // Hash old data
             iOldHash = Algorithm::GetInt64HashValue (i64OldData, iNumBuckets);
             if (iOldHash != iHash) {
-
                 int iIgnoreErrCode = DeleteHash (iIndex, iHash, iKey);
                 Assert (iIgnoreErrCode == OK);
             }
@@ -654,10 +507,6 @@ int TableContext::IndexInsertRow (unsigned int iKey, const Variant* pvData) {
 
             case V_INT:
                 iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetInteger(), &iDupKey);
-                break;
-
-            case V_TIME:
-                iErrCode = IndexGetFirstKey (iColumn, pvData[iColumn].GetUTCTime(), &iDupKey);
                 break;
 
             case V_FLOAT:
@@ -713,7 +562,6 @@ int TableContext::IndexInsertRow (unsigned int iKey, const Variant* pvData) {
 
             iColumn = m_pTemplate->TemplateData.IndexColumn[i];
             iHash = Algorithm::GetVariantHashValue (pvData [iColumn], iNumBuckets, bCaseInsensitive);
-
             int iIgnoreErrorCode = DeleteHash (i, iHash, iKey);
             Assert (iIgnoreErrorCode == OK);
         }
@@ -791,12 +639,7 @@ int TableContext::IndexDeleteRow (int iKey, const Variant* pvData) {
                 break;
 
             case V_STRING:
-
                 iHash = Algorithm::GetStringHashValue (GetStringData (iKey, iColumn), iNumBuckets, bCaseInsensitive);
-                break;
-
-            case V_TIME:
-                iHash = Time::GetHashValue (*(UTCTime*) GetData (iKey, iColumn), iNumBuckets);
                 break;
 
             case V_INT64:
@@ -809,7 +652,6 @@ int TableContext::IndexDeleteRow (int iKey, const Variant* pvData) {
                 break;
             }
         }
-
         int iIgnoreErrorCode = DeleteHash (i, iHash, iKey);
         Assert (iIgnoreErrorCode == OK);
     }
@@ -974,49 +816,6 @@ int TableContext::IndexGetFirstKey (unsigned int iColumn, const char* pszData, b
     return ERROR_DATA_NOT_FOUND;
 }
 
-int TableContext::IndexGetFirstKey (unsigned int iColumn, const UTCTime& tData, unsigned int* piKey) {
-    
-    unsigned int i, iHash, iIndex;
-
-    iIndex = GetIndexForColumn (iColumn);
-    if (iIndex == NO_KEY) {
-        return ERROR_COLUMN_NOT_INDEXED;
-    }
-
-    Assert (m_pTemplate->TemplateData.Type[iColumn] == V_TIME);
-    
-    Offset oOffset = GetIndexOffset (iIndex);
-
-    iHash = Time::GetHashValue (tData, GetNumIndexBuckets());
-
-    FileHeap* pMetaHeap = GetMetaDataHeap();
-    IndexHeader* pIndexHeader = GetIndexHeader (oOffset);
-    Offset oChain = pIndexHeader->pBucket[iHash].oChain;
-
-    while (oChain != NO_OFFSET) {
-
-        IndexNode* pNode = (IndexNode*) pMetaHeap->GetAddress (oOffset + oChain);
-        Assert (pNode->oNext != oChain);
-
-        for (i = 0; i < KEYS_PER_INDEX_NODE; i ++) {
-
-            unsigned int iKey = pNode->piKey[i];
-            if (iKey != NO_KEY) {
-
-                if (*(UTCTime*) GetData (iKey, iColumn) == tData) { // Test data equality
-                    *piKey = iKey;
-                    return OK;
-                }
-            }
-        }
-
-        oChain = pNode->oNext;  // Next node
-    }
-
-    *piKey = NO_KEY;
-    return ERROR_DATA_NOT_FOUND;
-}
-
 int TableContext::IndexGetFirstKey (unsigned int iColumn, int64 i64Data, unsigned int* piKey) {
     
     unsigned int i, iHash, iIndex;
@@ -1117,10 +916,6 @@ int TableContext::IndexGetEqualKeys (unsigned int iColumn, const Variant& vData,
 
                 case V_FLOAT:
                     bHit = *(float*) GetData (iKey, iColumn) == vData.GetFloat();
-                    break;
-
-                case V_TIME:
-                    bHit = *(UTCTime*) GetData (iKey, iColumn) == vData.GetUTCTime();
                     break;
 
                 case V_INT64:
@@ -1681,7 +1476,7 @@ Offset TableContext::AllocateIndexNode (unsigned int iIndex) {
         pIndexHeader = GetIndexHeader (oBaseOffset);
 
         // Format the new nodes
-        size_t stNumNewNodes = (sNewHeapSize - sOldHeapSize) / sizeof (IndexNode);
+        size_t stNumNewNodes = (size_t)(sNewHeapSize - sOldHeapSize) / sizeof (IndexNode);
         Offset oNewFreeList = (Offset) sBucketSize + sOldHeapSize;
 
         FormatIndexNodes (oBaseOffset, oNewFreeList, stNumNewNodes);

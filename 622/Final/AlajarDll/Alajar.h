@@ -441,11 +441,9 @@ public:
     virtual int WriteText (int iData) = 0;
     virtual int WriteText (unsigned int uiData) = 0;
     virtual int WriteText (float fData) = 0;
-    virtual int WriteText (double dData) = 0;
-    virtual int WriteText (const UTCTime& tTime) = 0;
     virtual int WriteText (const Variant& vData) = 0;
     virtual int WriteText (int64 iData) = 0;
-    virtual int WriteText (uint64 iData) = 0;
+    virtual int WriteDate (const UTCTime& tTime) = 0;
 
     virtual int WriteTextFile (ICachedFile* pCachedFile) = 0;
     virtual int WriteDataFile (ICachedFile* pCachedFile) = 0;

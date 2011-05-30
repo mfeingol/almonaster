@@ -229,10 +229,6 @@ public:
 
     bool IsTemplateEqual (const char* pszTemplateName, const TemplateDescription& ttTemplate);
     
-    // TODO - delete when upgrades from old database are finished
-    void Obsolete1() {}
-    void Obsolete2() {}
-
     int Flush();
     int Check();
 
@@ -332,7 +328,7 @@ public:
     void FreeData (unsigned int* puiData);
     void FreeData (float* ppfData);
     void FreeData (char** ppszData);
-    void FreeData (UTCTime* ptData);
+    void FreeData (int64* pi64Data);
 
     void FreeKeys (unsigned int* piKeys);
 

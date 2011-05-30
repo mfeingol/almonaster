@@ -132,7 +132,9 @@ public:
             }
 
 #ifdef __WIN32__
+#ifdef _DEBUG
             Assert (m_ppObjectCache [m_iFreeIndex] == CACHE_DEBUG_VALUE_PTR);
+#endif
 #endif
             m_ppObjectCache [m_iFreeIndex] = pObject;
             m_iNumFreeObjects ++;

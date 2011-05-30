@@ -133,9 +133,9 @@ int Socket::Accept (Socket* pSocket) {
 
     // Accept the connection
 #ifdef __LINUX__
-	socklen_t iAddrLen = (socklen_t) sizeof (m_saTheirAddr);
+    socklen_t iAddrLen = (socklen_t) sizeof (m_saTheirAddr);
 #else if defined __WIN32__
-	int iAddrLen = sizeof (m_saTheirAddr);
+    int iAddrLen = sizeof (m_saTheirAddr);
 #endif
 
     SOCKET socket = accept (
@@ -209,9 +209,9 @@ int Socket::Connect (const char* pszAddress, short siPort) {
     m_saTheirAddr.sin_family = AF_INET;
     m_saTheirAddr.sin_port = htons (siPort);
 #ifdef __LINUX__
-	m_saTheirAddr.sin_addr.s_addr = ulAddr;
+    m_saTheirAddr.sin_addr.s_addr = ulAddr;
 #else if defined __WIN32__
-	m_saTheirAddr.sin_addr.S_un.S_addr = ulAddr;
+    m_saTheirAddr.sin_addr.S_un.S_addr = ulAddr;
 #endif
 
     return (connect (m_Socket, (struct sockaddr*) &m_saTheirAddr, sizeof (m_saTheirAddr)) == SOCKET_ERROR) ? ERROR_FAILURE : OK;
@@ -321,7 +321,7 @@ int Socket::Send (int iData, size_t* pstNumBytesSent) {
 #ifdef __LINUX__
     snprintf(pszData, sizeof(pszData), "%d", iData);
 #else if defined __WIN32__
-	_itoa (iData, pszData, 10);
+    _itoa (iData, pszData, 10);
 #endif
 
     return Send (pszData, strlen (pszData), pstNumBytesSent);
@@ -375,7 +375,7 @@ int Socket::Close() {
 #ifdef __LINUX__
         close(m_Socket);
 #else if defined __WIN32__
-		closesocket (m_Socket);
+        closesocket (m_Socket);
 #endif
         m_Socket = INVALID_SOCKET;
         return ERROR_FAILURE;
@@ -401,9 +401,9 @@ int Socket::Close() {
 
     // Close down the socket
 #ifdef __LINUX__
-	stNumBytesRecvd = close(m_Socket);
+    stNumBytesRecvd = close(m_Socket);
 #else if defined __WIN32__
-	stNumBytesRecvd = closesocket (m_Socket);
+    stNumBytesRecvd = closesocket (m_Socket);
 #endif
 
     // Set socket and port to invalid values
@@ -464,8 +464,8 @@ int Socket::SetBlockingMode() {
     long flags = fcntl(m_Socket, F_GETFL, 0);
     return (fcntl(m_Socket, F_SETFL, flags & ~O_NONBLOCK) == 0) ? OK : ERROR_FAILURE;
 #else if defined __WIN32__
-	unsigned long lZero = 0;
-	return (ioctlsocket (m_Socket, FIONBIO, &lZero) == 0) ? OK : ERROR_FAILURE;
+    unsigned long lZero = 0;
+    return (ioctlsocket (m_Socket, FIONBIO, &lZero) == 0) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -474,8 +474,8 @@ int Socket::SetNonBlockingMode() {
     long flags = fcntl(m_Socket, F_GETFL, 0);
     return (fcntl(m_Socket, F_SETFL, flags | O_NONBLOCK) == 0) ? OK : ERROR_FAILURE;
 #else if defined __WIN32__
-	unsigned long lOne = 1;
-	return (ioctlsocket (m_Socket, FIONBIO, &lOne) == 0) ? OK : ERROR_FAILURE;
+    unsigned long lOne = 1;
+    return (ioctlsocket (m_Socket, FIONBIO, &lOne) == 0) ? OK : ERROR_FAILURE;
 #endif
 }
 

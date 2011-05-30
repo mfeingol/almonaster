@@ -226,7 +226,7 @@ int Time::GetDateString (char pszDateString[OS::MaxDateLength]) {
 
 int Time::GetDateString (const UTCTime& tTime, char pszDateString[OS::MaxDateLength]) {
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime ((const time_t*)&tTime);
     if (ptmTime == NULL || ptmTime->tm_wday > 6 || ptmTime->tm_mon > 11) {
         return ERROR_INVALID_ARGUMENT;
     }
@@ -257,7 +257,7 @@ int Time::GetGMTDateString (char pszGMTDateString[OS::MaxGMTDateLength]) {
 
 int Time::GetGMTDateString (const UTCTime& tTime, char pszGMTDateString[OS::MaxGMTDateLength]) {
 
-    tm* ptmTime = gmtime (&tTime);
+    tm* ptmTime = gmtime ((const time_t*)&tTime);
     if (ptmTime == NULL || ptmTime->tm_wday > 6 || ptmTime->tm_mon > 11) {
         return ERROR_INVALID_ARGUMENT;
     }
@@ -287,7 +287,7 @@ int Time::GetCookieDateString (char pszCookieDateString[OS::MaxCookieDateLength]
 
 int Time::GetCookieDateString (const UTCTime& tTime, char pszCookieDateString[OS::MaxCookieDateLength]) {
 
-    tm* ptmTime = gmtime (&tTime);
+    tm* ptmTime = gmtime((const time_t*)&tTime);
     if (ptmTime == NULL) {
         return ERROR_INVALID_ARGUMENT;
     }
@@ -317,14 +317,14 @@ int Time::GetCookieDateString (const UTCTime& tTime, char pszCookieDateString[OS
 int Time::GetSmtpDateString (char pszCookieDateString[OS::MaxSmtpDateLength]) {
 
     UTCTime tTime;
-    GetTime (&tTime);
+    GetTime(&tTime);
 
     return GetSmtpDateString (tTime, pszCookieDateString);
 }
 
 int Time::GetSmtpDateString (const UTCTime& tTime, char pszCookieDateString[OS::MaxSmtpDateLength]) {
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     if (ptmTime == NULL) {
         return ERROR_INVALID_ARGUMENT;
     }
@@ -376,7 +376,7 @@ int Time::GetDay() {
 
 int Time::GetDay (const UTCTime& tTime) {
 
-    tm* ptmTime = localtime ((time_t*) &tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     return ptmTime->tm_mday;
 }
 
@@ -419,7 +419,7 @@ DayOfWeek Time::GetDayOfWeek() {
 
 DayOfWeek Time::GetDayOfWeek (const UTCTime& tTime) {
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     return (DayOfWeek) ptmTime->tm_wday;
 }
 
@@ -451,7 +451,7 @@ const char* Time::GetMonthName (int iMonth) {
 
 const char* Time::GetMonthName (const UTCTime& tTime) {
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     if (ptmTime == NULL) {
         return "Invalid month";
     }
@@ -476,7 +476,7 @@ const char* Time::GetAbbreviatedMonthName (int iMonth) {
 
 const char* Time::GetAbbreviatedMonthName (const UTCTime& tTime) {
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     return GetAbbreviatedMonthName (ptmTime->tm_mon + 1);
 }
 
@@ -490,7 +490,7 @@ bool Time::IsWeekendTime() {
 
 bool Time::IsWeekendTime (const UTCTime& tTime) {
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     if (ptmTime == NULL) {
         return false;
     }
@@ -509,7 +509,7 @@ Seconds Time::GetRemainingWeekendSeconds (const UTCTime& tTime) {
 
     Seconds sSeconds;
 
-    tm* ptmTime = localtime (&tTime);
+    tm* ptmTime = localtime((const time_t*)&tTime);
     if (ptmTime == NULL) {
         return 0;
     }
@@ -582,7 +582,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
         sThisWeekend += ((60 - ptmStart->tm_sec));
 
         time_t tEndOfWeekend = tRealStart + sThisWeekend;
-        if (tEndOfWeekend > tEnd) {
+        if (tEndOfWeekend > (time_t)tEnd) {
 
             // We overshot, but we're done.  Just add the seconds between the two times
             sWeekend += (Seconds) (tEnd - tRealStart);
@@ -594,7 +594,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
     
        time_t tNextWeekendStart = tEndOfWeekend + 5 * 24 * 60 * 60;
 
-       if (tNextWeekendStart > tEnd) {
+       if (tNextWeekendStart > (time_t)tEnd) {
 
            // We're done, since the end is before the next weekend
            return sWeekend;
@@ -622,7 +622,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
 
         time_t tNextWeekendStart = tRealStart + sUntilWeekend;
 
-        if (tNextWeekendStart > tEnd) {
+        if (tNextWeekendStart > (time_t)tEnd) {
 
             // The end is before the next weekend, so we're done
             return sWeekend;
@@ -630,7 +630,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
 
         time_t tNextWeekendEnd = tNextWeekendStart + 2 * 24 * 60 * 60;
         
-        if (tNextWeekendEnd > tEnd) {
+        if (tNextWeekendEnd > (time_t)tEnd) {
  
             // The end falls inside the next weekend, so we're done
             sWeekend += (Seconds) (tEnd - tNextWeekendStart);
@@ -673,7 +673,7 @@ void Time::AtoUTCTime (const char* pszString, UTCTime* ptUtcTime) {
 }
 
 char* Time::UTCTimetoA (const UTCTime& tTime, char* pszString, int iRadix) {
-#ifdef __WIN64__
+#ifndef _USE_32_BIT_TIME_T
     return _i64toa ((__int64) tTime, pszString, iRadix);
 #else
     return _itoa ((int) tTime, pszString, iRadix);

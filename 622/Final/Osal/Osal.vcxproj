@@ -96,6 +96,7 @@
     <IgnoreImportLibrary Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</IgnoreImportLibrary>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'" />
     <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(ProjectName)</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Midl>
@@ -113,7 +114,7 @@
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -161,12 +162,11 @@
       <TargetMachine>MachineX86</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Message>Copying public files ...</Message>
+      <Message>Copying public files...</Message>
       <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
+copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
 copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
-</Command>
+copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -185,7 +185,7 @@ copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <MinimalRebuild>true</MinimalRebuild>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -233,13 +233,11 @@ copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
       <TargetMachine>MachineX64</TargetMachine>
     </Link>
     <PostBuildEvent>
-      <Message>Copying public files ...</Message>
+      <Message>Copying public files...</Message>
       <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-
+copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
 copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
-</Command>
+copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -258,7 +256,7 @@ copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
@@ -317,10 +315,9 @@ copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
     <PostBuildEvent>
       <Message>Copying public files...</Message>
       <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
+copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
 copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-</Command>
+copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -339,7 +336,7 @@ copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
@@ -398,10 +395,9 @@ copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
     <PostBuildEvent>
       <Message>Copying public files...</Message>
       <Command>copy $(OutDir)$(TargetFileName) ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
-copy $(OutDir)$(ProjectName).lib ..\Drop\$(Platform)\$(Configuration)\sdk
+copy $(OutDir)$(TargetName).pdb ..\Drop\$(Platform)\$(Configuration)\bin
 copy *.h ..\Drop\$(Platform)\$(Configuration)\sdk\Osal
-</Command>
+copy $(OutDir)$(TargetName).lib ..\Drop\$(Platform)\$(Configuration)\sdk</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

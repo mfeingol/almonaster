@@ -162,6 +162,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     unsigned int iNumRows;
 
     // SystemData
+    Assert(sizeof(SystemData::Types) / sizeof(SystemData::Types[0]) ==
+           sizeof(SystemData::Sizes) / sizeof(SystemData::Sizes[0]));
+
     pszBadTable = SYSTEM_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_DATA)) {
         bNewDatabase = true;
@@ -177,6 +180,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemEmpireData
+    Assert(sizeof(SystemEmpireData::Types) / sizeof(SystemEmpireData::Types[0]) ==
+           sizeof(SystemEmpireData::Sizes) / sizeof(SystemEmpireData::Sizes[0]));
+
     pszBadTable = SYSTEM_EMPIRE_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_EMPIRE_DATA) ||
         !m_pGameData->IsTemplateEqual (SystemEmpireData::Template.Name, SystemEmpireData::Template)) {
@@ -192,6 +198,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
 
     // SystemGameClassData
+    Assert(sizeof(SystemGameClassData::Types) / sizeof(SystemGameClassData::Types[0]) ==
+           sizeof(SystemGameClassData::Sizes) / sizeof(SystemGameClassData::Sizes[0]));
+
     pszBadTable = SYSTEM_GAMECLASS_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_GAMECLASS_DATA) ||
         !m_pGameData->IsTemplateEqual (SystemGameClassData::Template.Name, SystemGameClassData::Template)) {
@@ -201,6 +210,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemAlienIcons
+    Assert(sizeof(SystemAlienIcons::Types) / sizeof(SystemAlienIcons::Types[0]) ==
+           sizeof(SystemAlienIcons::Sizes) / sizeof(SystemAlienIcons::Sizes[0]));
+
     pszBadTable = SYSTEM_ALIEN_ICONS;
     if (!m_pGameData->DoesTableExist (SYSTEM_ALIEN_ICONS) ||
         !m_pGameData->IsTemplateEqual (SystemAlienIcons::Template.Name, SystemAlienIcons::Template)) {
@@ -216,6 +228,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }       
     
     // SystemSystemGameClassData
+    Assert(sizeof(SystemSystemGameClassData::Types) / sizeof(SystemSystemGameClassData::Types[0]) ==
+           sizeof(SystemSystemGameClassData::Sizes) / sizeof(SystemSystemGameClassData::Sizes[0]));
+
     pszBadTable = SYSTEM_SYSTEM_GAMECLASS_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_SYSTEM_GAMECLASS_DATA) ||
         !m_pGameData->IsTemplateEqual (SystemSystemGameClassData::Template.Name, 
@@ -226,6 +241,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemSuperClassData
+    Assert(sizeof(SystemSuperClassData::Types) / sizeof(SystemSuperClassData::Types[0]) ==
+           sizeof(SystemSuperClassData::Sizes) / sizeof(SystemSuperClassData::Sizes[0]));
+
     pszBadTable = SYSTEM_SUPERCLASS_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_SUPERCLASS_DATA) ||
         !m_pGameData->IsTemplateEqual (SystemSuperClassData::Template.Name, SystemSuperClassData::Template)) {
@@ -235,6 +253,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemThemes
+    Assert(sizeof(SystemThemes::Types) / sizeof(SystemThemes::Types[0]) ==
+           sizeof(SystemThemes::Sizes) / sizeof(SystemThemes::Sizes[0]));
+
     pszBadTable = SYSTEM_THEMES;
     if (!m_pGameData->DoesTableExist (SYSTEM_THEMES) ||
         !m_pGameData->IsTemplateEqual (SystemThemes::Template.Name, SystemThemes::Template)) {
@@ -244,6 +265,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemActiveGames
+    Assert(sizeof(SystemActiveGames::Types) / sizeof(SystemActiveGames::Types[0]) ==
+           sizeof(SystemActiveGames::Sizes) / sizeof(SystemActiveGames::Sizes[0]));
+
     pszBadTable = SYSTEM_ACTIVE_GAMES;
     if (!m_pGameData->DoesTableExist (SYSTEM_ACTIVE_GAMES) ||
         !m_pGameData->IsTemplateEqual (SystemActiveGames::Template.Name, SystemActiveGames::Template)) {
@@ -253,6 +277,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemAlmonasterScoreTopList
+    Assert(sizeof(SystemAlmonasterScoreTopList::Types) / sizeof(SystemAlmonasterScoreTopList::Types[0]) ==
+           sizeof(SystemAlmonasterScoreTopList::Sizes) / sizeof(SystemAlmonasterScoreTopList::Sizes[0]));
+
     pszBadTable = SYSTEM_ALMONASTER_SCORE_TOPLIST;
     if (!m_pGameData->DoesTableExist (SYSTEM_ALMONASTER_SCORE_TOPLIST) ||
         !m_pGameData->IsTemplateEqual (SystemAlmonasterScoreTopList::Template.Name, SystemAlmonasterScoreTopList::Template)) {
@@ -262,6 +289,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
     
     // SystemClassicScoreTopList
+    Assert(sizeof(SystemClassicScoreTopList::Types) / sizeof(SystemClassicScoreTopList::Types[0]) ==
+           sizeof(SystemClassicScoreTopList::Sizes) / sizeof(SystemClassicScoreTopList::Sizes[0]));
+
     pszBadTable = SYSTEM_CLASSIC_SCORE_TOPLIST;
     if (!m_pGameData->DoesTableExist (SYSTEM_CLASSIC_SCORE_TOPLIST) ||
         !m_pGameData->IsTemplateEqual (SystemClassicScoreTopList::Template.Name, SystemClassicScoreTopList::Template)) {
@@ -271,6 +301,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
 
     // SystemBridierScoreTopList
+    Assert(sizeof(SystemBridierScoreTopList::Types) / sizeof(SystemBridierScoreTopList::Types[0]) ==
+           sizeof(SystemBridierScoreTopList::Sizes) / sizeof(SystemBridierScoreTopList::Sizes[0]));
+
     pszBadTable = SYSTEM_BRIDIER_SCORE_TOPLIST;
     if (!m_pGameData->DoesTableExist (SYSTEM_BRIDIER_SCORE_TOPLIST) ||
         !m_pGameData->IsTemplateEqual (SystemBridierScoreTopList::Template.Name, SystemBridierScoreTopList::Template)) {
@@ -280,6 +313,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
 
     // SystemBridierScoreEstablishedTopList
+    Assert(sizeof(SystemBridierScoreEstablishedTopList::Types) / sizeof(SystemBridierScoreEstablishedTopList::Types[0]) ==
+           sizeof(SystemBridierScoreEstablishedTopList::Sizes) / sizeof(SystemBridierScoreEstablishedTopList::Sizes[0]));
+
     pszBadTable = SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST;
     if (!m_pGameData->DoesTableExist (SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST) ||
         !m_pGameData->IsTemplateEqual (SystemBridierScoreEstablishedTopList::Template.Name, SystemBridierScoreEstablishedTopList::Template)) {
@@ -289,6 +325,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
 
     // SystemChatroomData
+    Assert(sizeof(SystemChatroomData::Types) / sizeof(SystemChatroomData::Types[0]) ==
+           sizeof(SystemChatroomData::Sizes) / sizeof(SystemChatroomData::Sizes[0]));
+
     pszBadTable = SYSTEM_CHATROOM_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_CHATROOM_DATA) ||
         !m_pGameData->IsTemplateEqual (SystemChatroomData::Template.Name, SystemChatroomData::Template)) {
@@ -298,6 +337,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
 
     // SystemTournaments
+    Assert(sizeof(SystemTournaments::Types) / sizeof(SystemTournaments::Types[0]) ==
+           sizeof(SystemTournaments::Sizes) / sizeof(SystemTournaments::Sizes[0]));
+
     pszBadTable = SYSTEM_TOURNAMENTS;
     if (!m_pGameData->DoesTableExist (SYSTEM_TOURNAMENTS) ||
         !m_pGameData->IsTemplateEqual (SystemTournaments::Template.Name, SystemTournaments::Template)) {
@@ -306,12 +348,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
 
+    Assert(sizeof(SystemEmpireMessages::Types) / sizeof(SystemEmpireMessages::Types[0]) ==
+           sizeof(SystemEmpireMessages::Sizes) / sizeof(SystemEmpireMessages::Sizes[0]));
+
     pszBadTable = SystemEmpireMessages::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireMessages::Template.Name, SystemEmpireMessages::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(SystemEmpireNukeList::Types) / sizeof(SystemEmpireNukeList::Types[0]) ==
+           sizeof(SystemEmpireNukeList::Sizes) / sizeof(SystemEmpireNukeList::Sizes[0]));
 
     pszBadTable = SystemEmpireNukeList::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireNukeList::Template.Name, SystemEmpireNukeList::Template)) {
@@ -320,12 +368,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
 
+    Assert(sizeof(SystemNukeList::Types) / sizeof(SystemNukeList::Types[0]) ==
+           sizeof(SystemNukeList::Sizes) / sizeof(SystemNukeList::Sizes[0]));
+
     pszBadTable = SystemNukeList::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemNukeList::Template.Name, SystemNukeList::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(SystemLatestGames::Types) / sizeof(SystemLatestGames::Types[0]) ==
+           sizeof(SystemLatestGames::Sizes) / sizeof(SystemLatestGames::Sizes[0]));
 
     pszBadTable = SystemLatestGames::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemLatestGames::Template.Name, SystemLatestGames::Template)) {
@@ -334,12 +388,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
 
+    Assert(sizeof(SystemEmpireActiveGames::Types) / sizeof(SystemEmpireActiveGames::Types[0]) ==
+           sizeof(SystemEmpireActiveGames::Sizes) / sizeof(SystemEmpireActiveGames::Sizes[0]));
+
     pszBadTable = SystemEmpireActiveGames::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireActiveGames::Template.Name, SystemEmpireActiveGames::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(SystemTournamentTeams::Types) / sizeof(SystemTournamentTeams::Types[0]) ==
+           sizeof(SystemTournamentTeams::Sizes) / sizeof(SystemTournamentTeams::Sizes[0]));
 
     pszBadTable = SystemTournamentTeams::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemTournamentTeams::Template.Name, SystemTournamentTeams::Template)) {
@@ -348,6 +408,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
 
+    Assert(sizeof(SystemTournamentEmpires::Types) / sizeof(SystemTournamentEmpires::Types[0]) ==
+           sizeof(SystemTournamentEmpires::Sizes) / sizeof(SystemTournamentEmpires::Sizes[0]));
+
     pszBadTable = SystemTournamentEmpires::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemTournamentEmpires::Template.Name, SystemTournamentEmpires::Template)) {
         bGoodDatabase = false;
@@ -355,12 +418,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
 
+    Assert(sizeof(SystemTournamentActiveGames::Types) / sizeof(SystemTournamentActiveGames::Types[0]) ==
+           sizeof(SystemTournamentActiveGames::Sizes) / sizeof(SystemTournamentActiveGames::Sizes[0]));
+
     pszBadTable = SystemTournamentActiveGames::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemTournamentActiveGames::Template.Name, SystemTournamentActiveGames::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(SystemEmpireTournaments::Types) / sizeof(SystemEmpireTournaments::Types[0]) ==
+           sizeof(SystemEmpireTournaments::Sizes) / sizeof(SystemEmpireTournaments::Sizes[0]));
 
     pszBadTable = SystemEmpireTournaments::Template.Name;
     if (!m_pGameData->IsTemplateEqual (SystemEmpireTournaments::Template.Name, SystemEmpireTournaments::Template)) {
@@ -370,6 +439,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
     }
 
     // Check game templates
+    Assert(sizeof(GameData::Types) / sizeof(GameData::Types[0]) ==
+           sizeof(GameData::Sizes) / sizeof(GameData::Sizes[0]));
+    
     pszBadTable = GameData::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameData::Template.Name, GameData::Template)) {
         bGoodDatabase = false;
@@ -377,12 +449,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
     
+    Assert(sizeof(GameEmpires::Types) / sizeof(GameEmpires::Types[0]) ==
+           sizeof(GameEmpires::Sizes) / sizeof(GameEmpires::Sizes[0]));
+
     pszBadTable = GameEmpires::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpires::Template.Name, GameEmpires::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(GameDeadEmpires::Types) / sizeof(GameDeadEmpires::Types[0]) ==
+           sizeof(GameDeadEmpires::Sizes) / sizeof(GameDeadEmpires::Sizes[0]));
 
     pszBadTable = GameDeadEmpires::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameDeadEmpires::Template.Name, GameDeadEmpires::Template)) {
@@ -391,12 +469,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
     
+    Assert(sizeof(GameMap::Types) / sizeof(GameMap::Types[0]) ==
+           sizeof(GameMap::Sizes) / sizeof(GameMap::Sizes[0]));
+
     pszBadTable = GameMap::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameMap::Template.Name, GameMap::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(GameEmpireData::Types) / sizeof(GameEmpireData::Types[0]) ==
+           sizeof(GameEmpireData::Sizes) / sizeof(GameEmpireData::Sizes[0]));
 
     pszBadTable = GameEmpireData::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireData::Template.Name, GameEmpireData::Template)) {
@@ -405,12 +489,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
     
+    Assert(sizeof(GameEmpireMessages::Types) / sizeof(GameEmpireMessages::Types[0]) ==
+           sizeof(GameEmpireMessages::Sizes) / sizeof(GameEmpireMessages::Sizes[0]));
+
     pszBadTable = GameEmpireMessages::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireMessages::Template.Name, GameEmpireMessages::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(GameEmpireMap::Types) / sizeof(GameEmpireMap::Types[0]) ==
+           sizeof(GameEmpireMap::Sizes) / sizeof(GameEmpireMap::Sizes[0]));
     
     pszBadTable = GameEmpireMap::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireMap::Template.Name, GameEmpireMap::Template)) {
@@ -419,6 +509,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
     
+    Assert(sizeof(GameEmpireDiplomacy::Types) / sizeof(GameEmpireDiplomacy::Types[0]) ==
+           sizeof(GameEmpireDiplomacy::Sizes) / sizeof(GameEmpireDiplomacy::Sizes[0]));
+
     pszBadTable = GameEmpireDiplomacy::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireDiplomacy::Template.Name, GameEmpireDiplomacy::Template)) {
         bGoodDatabase = false;
@@ -426,6 +519,9 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
     
+    Assert(sizeof(GameEmpireShips::Types) / sizeof(GameEmpireShips::Types[0]) ==
+           sizeof(GameEmpireShips::Sizes) / sizeof(GameEmpireShips::Sizes[0]));
+
     pszBadTable = GameEmpireShips::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireShips::Template.Name, GameEmpireShips::Template)) {
         bGoodDatabase = false;
@@ -433,12 +529,18 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
     
+    Assert(sizeof(GameEmpireFleets::Types) / sizeof(GameEmpireFleets::Types[0]) ==
+           sizeof(GameEmpireFleets::Sizes) / sizeof(GameEmpireFleets::Sizes[0]));
+
     pszBadTable = GameEmpireFleets::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameEmpireFleets::Template.Name, GameEmpireFleets::Template)) {
         bGoodDatabase = false;
         Assert (false);
         goto Cleanup;
     }
+
+    Assert(sizeof(GameSecurity::Types) / sizeof(GameSecurity::Types[0]) ==
+           sizeof(GameSecurity::Sizes) / sizeof(GameSecurity::Sizes[0]));
 
     pszBadTable = GameSecurity::Template.Name;
     if (!m_pGameData->IsTemplateEqual (GameSecurity::Template.Name, GameSecurity::Template)) {
@@ -704,7 +806,7 @@ int GameEngine::VerifyEmpires() {
         Assert (false);
         goto Cleanup;
     }
-    tLastShutdownTime = vTemp.GetUTCTime();
+    tLastShutdownTime = vTemp.GetInteger64();
 
     sDiff = Time::GetSecondDifference (tNow, tLastShutdownTime);
 
@@ -974,7 +1076,7 @@ int GameEngine::VerifyActiveGames() {
             Assert (false);
             goto Cleanup;
         }
-        tLastCheckTime = vTemp.GetUTCTime();
+        tLastCheckTime = vTemp.GetInteger64();
         
         // Reset state
         iErrCode = m_pGameData->WriteAnd (strGameData, GameData::State, ~GAME_BUSY);
@@ -1003,7 +1105,7 @@ int GameEngine::VerifyActiveGames() {
             Assert (false);
             goto Cleanup;
         }
-        tLastUpdateTime = vTemp.GetUTCTime();
+        tLastUpdateTime = vTemp.GetInteger64();
 
         // If started and not paused, reset last update time to current time minus 
         // (last shutdown time minus last update time)
@@ -1054,13 +1156,13 @@ int GameEngine::VerifyActiveGames() {
                 Assert (false);
                 goto Cleanup;
             }
-            tLastLoginTime = vTemp.GetUTCTime();
+            tLastLoginTime = vTemp.GetInteger64();
             
             sConsumedTime = Time::GetSecondDifference (tLastCheckTime, tLastLoginTime);
             if (sConsumedTime < 0) {
                 sConsumedTime = 0;
             }
-            tLastLoginTime = vTemp.GetUTCTime();
+            tLastLoginTime = vTemp.GetInteger64();
             
             Time::SubtractSeconds (tCurrentTime, sConsumedTime, &tNewTime);
             
@@ -2075,7 +2177,7 @@ int GameEngine::SetupDefaultSystemTables() {
         Assert (false);
         return iErrCode;
     }
-	// Iceberg Theme II
+    // Iceberg Theme II
     pvColVal[SystemThemes::Name] = "Iceberg Theme II";
     pvColVal[SystemThemes::AuthorName] = "Aleksandr Sidorenko";
     pvColVal[SystemThemes::Version] = "1.0";

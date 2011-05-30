@@ -117,7 +117,7 @@ int Chatroom::InitializeFromDatabase() {
     
     for (unsigned int i = 0; i < iNumMessages; i ++) {
         piIndex[i] = i;
-        ptTime[i] = ppvMessage[i][SystemChatroomData::Time].GetUTCTime();
+        ptTime[i] = ppvMessage[i][SystemChatroomData::Time].GetInteger64();
     }
 
     Algorithm::QSortTwoAscending<UTCTime, unsigned int> (ptTime, piIndex, iNumMessages);
@@ -129,7 +129,7 @@ int Chatroom::InitializeFromDatabase() {
 
         const char* pszSpeaker = ppvMessage[iIndex][SystemChatroomData::Speaker].GetCharPtr();
         const char* pszMessage = ppvMessage[iIndex][SystemChatroomData::Message].GetCharPtr();
-        UTCTime tTime = ppvMessage[iIndex][SystemChatroomData::Time].GetUTCTime();
+        UTCTime tTime = ppvMessage[iIndex][SystemChatroomData::Time].GetInteger64();
         int iFlags = ppvMessage[iIndex][SystemChatroomData::Flags].GetInteger();
 
         iErrCode = PostMessageWithTime(pszSpeaker, pszMessage, tTime, iFlags, piKey[iIndex]);
@@ -399,7 +399,6 @@ int Chatroom::PostMessageWithTime (const char* pszSpeakerName, const char* pszMe
     pMessage = NULL;
 
     if (m_mqMessageQueue.GetNumElements() > m_ccConf.iMaxNumMessages) {
-
         bool bRetVal = m_mqMessageQueue.Pop (&pMessage);
         Assert (bRetVal);
 

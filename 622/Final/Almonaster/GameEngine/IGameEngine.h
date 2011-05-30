@@ -494,7 +494,7 @@ public:
     virtual void FreeData (int* piData) = 0;
     virtual void FreeData (float* ppfData) = 0;
     virtual void FreeData (char** ppszData) = 0;
-    virtual void FreeData (UTCTime* ptData) = 0;
+    virtual void FreeData (int64* pi64Data) = 0;
     virtual void FreeKeys (unsigned int* piKeys) = 0;
     virtual void FreeKeys (int* piKeys) = 0;
 

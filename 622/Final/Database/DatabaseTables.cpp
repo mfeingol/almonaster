@@ -205,50 +205,36 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
         // Type coerce data, if necessary
         for (j = 0; j < iMinNumCols; j ++) {
             
-            if (ttDestTemplate.Type[j] == pvSrcRow[j].GetType()) {
-
+            switch (ttDestTemplate.Type[j]) {
+                    
+            case V_INT:
+                pvDestRow[j] = (int) pvSrcRow[j];
+                break;
+                    
+            case V_FLOAT:
+                pvDestRow[j] = (float) pvSrcRow[j];
+                break;
+                    
+            case V_STRING:
                 pvDestRow[j] = pvSrcRow[j];
+                Assert(pvDestRow[j].GetType() == V_STRING);
+                break;
 
-            } else {
-                
-                switch (ttDestTemplate.Type[j]) {
+            case V_INT64:
+                pvDestRow[j].m_iType = V_INT64;
+                // Migrating from old databases, some source rows could be V_TIMEs
+                //if (pvSrcRow[j].GetType() == V_TIME)
+                //    pvDestRow[j].m_vArg.i64Arg = (int64)pvSrcRow[j].m_vArg.iArg;
+                //else
+                pvDestRow[j].m_vArg.i64Arg = pvSrcRow[j].m_vArg.i64Arg;
+                break;
                     
-                case V_INT:
-                    
-                    pvDestRow[j] = (int) pvSrcRow[j];
-                    break;
-                    
-                case V_FLOAT:
-                    
-                    pvDestRow[j] = (float) pvSrcRow[j];
-                    break;
-                    
-                case V_TIME:
-                    
-                    pvDestRow[j] = (UTCTime) pvSrcRow[j];
-                    break;
-                    
-                case V_STRING:
-                    
-                    // Let's not even try this
-                    Assert (!"Unsupported conversion");
-                    iErrCode = ERROR_FAILURE;
-                    goto Cleanup;
-                    break;
-
-                case V_INT64:
-
-                    pvDestRow[j] = (int64) pvSrcRow[j];
-                    break;
-                    
-                default:
-                    
-                    Assert (false);
-                    iErrCode = ERROR_INVALID_TYPE;
-                    goto Cleanup;
-                }
+            default:
+                Assert (false);
+                iErrCode = ERROR_INVALID_TYPE;
+                goto Cleanup;
             }
-        }   // End for
+        }   // End for each column
 
         // Insert row with correct key
         iErrCode = pWriteTable->InsertRow (pvDestRow, piRowKey[i]);
@@ -286,58 +272,40 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
 
         for (j = 0; j < iMinNumCols; j ++) {
 
-            if (ttDestTemplate.Type[j] == pvSrcRow[j].GetType()) {
+            switch (ttDestTemplate.Type[j]) {
+                    
+            case V_INT:
+                vTest = (int) pvSrcRow[j];
+                break;
+                    
+            case V_FLOAT:
+                vTest = (float) pvSrcRow[j];
+                break;
 
-                if (pvTestDestRow[j] != pvSrcRow[j]) {
-                    Assert (false);
-                    iErrCode = ERROR_DATA_CORRUPTION;
-                    goto Cleanup;
-                }
+            case V_STRING:
+                vTest = pvSrcRow[j];
+                Assert(vTest.GetType() == V_STRING);
+                break;
 
-            } else {
-                
-                switch (ttDestTemplate.Type[j]) {
-                    
-                case V_INT:
-                    
-                    vTest = (int) pvSrcRow[j];
-                    break;
-                    
-                case V_FLOAT:
-                    
-                    vTest = (float) pvSrcRow[j];
-                    break;
-                    
-                case V_TIME:
-                    
-                    vTest = (UTCTime) pvSrcRow[j];
-                    break;
-                    
-                case V_STRING:
-                    
-                    // Let's not even try this
-                    Assert (!"Unsupported conversion");
-                    iErrCode = ERROR_FAILURE;
-                    goto Cleanup;
-                    break;
+            case V_INT64:
+                // Migrating from old databases, some source rows could be V_TIMEs
+                vTest.m_iType = V_INT64;
+                //if (pvSrcRow[j].GetType() == V_TIME)
+                //    vTest.m_vArg.i64Arg = (int64)pvSrcRow[j].m_vArg.iArg;
+                //else
+                vTest.m_vArg.i64Arg = pvSrcRow[j].m_vArg.i64Arg;
+                break;
 
-                case V_INT64:
+            default:
+                Assert (false);
+                iErrCode = ERROR_INVALID_TYPE;
+                goto Cleanup;
+            }
 
-                    vTest = (int64) pvSrcRow[j];
-                    break;
-                    
-                default:
-                    
-                    Assert (false);
-                    iErrCode = ERROR_INVALID_TYPE;
-                    goto Cleanup;
-                }
-
-                if (pvTestDestRow[j] != vTest) {
-                    Assert (false);
-                    iErrCode = ERROR_DATA_CORRUPTION;
-                    goto Cleanup;
-                }
+            if (pvTestDestRow[j] != vTest) {
+                Assert (false);
+                iErrCode = ERROR_DATA_CORRUPTION;
+                goto Cleanup;
             }
         }   // End for each column in common
 
@@ -485,32 +453,26 @@ int Database::InitializeBlankData (Variant* pvVariant, VariantType vtType) {
     switch (vtType) {
 
     case V_INT:
-        
-        *pvVariant = 0;
+        pvVariant->m_iType = V_INT;
+        pvVariant->m_vArg.iArg = 0;
         break;
         
     case V_FLOAT:
-        
-        *pvVariant = (float) 0.0;
+        pvVariant->m_iType = V_FLOAT;
+        pvVariant->m_vArg.fArg = 0;
         break;
-        
-    case V_TIME:
-        
-        *pvVariant = (UTCTime) 0;
-        break;
-        
-    case V_STRING:
 
-        *pvVariant = "";
+    case V_STRING:
+        pvVariant->m_iType = V_STRING;
+        pvVariant->m_vArg.pszArg = NULL;
         break;
 
     case V_INT64:
-
-        *pvVariant = (int64) 0;
+        pvVariant->m_iType = V_INT64;
+        pvVariant->m_vArg.i64Arg = 0;
         break;
         
     default:
-
         return ERROR_INVALID_TYPE;
     }
 

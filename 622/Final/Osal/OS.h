@@ -23,6 +23,8 @@
 #if !defined(AFX_OS_H__CB52E516_F346_11D1_9DAF_0060083E8062__INCLUDED_)
 #define AFX_OS_H__CB52E516_F346_11D1_9DAF_0060083E8062__INCLUDED_
 
+#include <stdio.h>
+
 //
 // Linux specific
 //
@@ -37,7 +39,6 @@
 #include <pthread.h>
 #include <errno.h>
 #include <assert.h>
-#include <stdio.h>
 
 #define WINAPI 
 #define _MAX_PATH PATH_MAX
@@ -51,7 +52,7 @@ typedef unsigned long DWORD;
 
 #define _DEBUG
 #define Assert(x) \
-	do { if (!(x)) { fprintf(stderr, "Assertion %s failed at %s:%d: in function %s\n", #x, __FILE__, __LINE__, __FUNCTION__); } } while (0)
+    do { if (!(x)) { fprintf(stderr, "Assertion %s failed at %s:%d: in function %s\n", #x, __FILE__, __LINE__, __FUNCTION__); } } while (0)
 
 #define INVALID_SOCKET (~0)
 #define ERROR_WRONG_PASSWORD 1323
@@ -89,11 +90,6 @@ typedef unsigned long long int uint64;
 //
 #if defined WIN32 || defined _WIN32
 
-// Compile for NT4SP3 or later
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0403
-#endif
-
 #define __WIN32__
 
 #ifdef _WIN64
@@ -115,8 +111,6 @@ typedef unsigned __int64 uint64;
 
 #define CONTROL_CALL WINAPI
 #define THREAD_CALL WINAPI
-
-#define Assert(x) _ASSERT(x)
 
 #endif  // WIN32
 
@@ -162,6 +156,10 @@ typedef char Byte;
 #define StackAlloc(stNumBytes) alloca (stNumBytes)
 
 #define countof(x) (sizeof (x) / sizeof (x[0]))
+
+// TODO - Use variadic macros instead of AssertE
+#define Assert(expr) OS::InvariantAssert(!!(expr), #expr, __FILE__, __LINE__)
+#define AssertE(expr, msg) OS::InvariantAssert(!!(expr), msg, __FILE__, __LINE__)
 
 //
 // Errors
@@ -233,7 +231,9 @@ namespace OS {
     OSAL_EXPORT int CreateUuid (Uuid* puuidUuid);
 #endif
 
-    OSAL_EXPORT void* HeapAlloc (size_t stNumBytes);
+    OSAL_EXPORT void InvariantAssert(bool condition, const char* const pszMessage, const char* const pszFile, const int iLine);
+
+    OSAL_EXPORT void* HeapAlloc (size_t cbNumBytes);
     OSAL_EXPORT void HeapFree (void* pMemory);
 };
 

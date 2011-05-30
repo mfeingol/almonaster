@@ -983,7 +983,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 622 Beta 3";
+    return "Almonaster Build 622";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {
@@ -1027,8 +1027,8 @@ void GameEngine::FreeData (char** ppszData) {
     m_pGameData->FreeData (ppszData);
 }
 
-void GameEngine::FreeData (UTCTime* ptData) {
-    m_pGameData->FreeData (ptData);
+void GameEngine::FreeData (int64* pi64Data) {
+    m_pGameData->FreeData (pi64Data);
 }
 
 void GameEngine::FreeKeys (unsigned int* piKeys) {

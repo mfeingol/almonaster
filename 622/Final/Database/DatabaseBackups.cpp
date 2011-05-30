@@ -52,7 +52,7 @@ int Database::Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) 
     int iErrCode;
 
     MemoryMappedFile mmfTemplates, mmfVarLenData, mmfTables, mmfMetaData;
-    size_t stTemplateSize, stVarLenSize, stTableSize, stMetaDataSize;
+    Size stTemplateSize, stVarLenSize, stTableSize, stMetaDataSize;
 
     char pszBackupDir [OS::MaxFileNameLength];
     char pszFileName [OS::MaxFileNameLength];
@@ -111,7 +111,7 @@ int Database::Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) 
 
     // Backup templates
     sprintf (pszFileName, "%s/" TEMPLATE_DATA_FILE, pszBackupDir);
-    iErrCode = mmfTemplates.OpenNew (pszFileName, stTemplateSize, MEMMAP_WRITETHROUGH);
+    iErrCode = mmfTemplates.OpenNew (pszFileName, (size_t)stTemplateSize, MEMMAP_WRITETHROUGH);
     if (iErrCode != OK) {
         goto Aborted;
     }
@@ -122,7 +122,7 @@ int Database::Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) 
     }
 
     // Copy data
-    memcpy (mmfTemplates.GetAddress(), m_fhTemplateData.GetBaseAddress(), stTemplateSize);
+    memcpy (mmfTemplates.GetAddress(), m_fhTemplateData.GetBaseAddress(), (size_t)stTemplateSize);
 
     // Sink event
     if (pSink != NULL) {
@@ -131,19 +131,19 @@ int Database::Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) 
 
     // Backup table data
     sprintf (pszFileName, "%s/" TABLE_DATA_FILE, pszBackupDir);
-    iErrCode = mmfTables.OpenNew (pszFileName, stTableSize, MEMMAP_WRITETHROUGH);
+    iErrCode = mmfTables.OpenNew (pszFileName, (size_t)stTableSize, MEMMAP_WRITETHROUGH);
     if (iErrCode != OK) {
         goto Aborted;
     }
 
     sprintf (pszFileName, "%s/" VARIABLE_DATA_FILE, pszBackupDir);
-    iErrCode = mmfVarLenData.OpenNew (pszFileName, stVarLenSize, MEMMAP_WRITETHROUGH);
+    iErrCode = mmfVarLenData.OpenNew (pszFileName, (size_t)stVarLenSize, MEMMAP_WRITETHROUGH);
     if (iErrCode != OK) {
         goto Aborted;
     }
 
     sprintf (pszFileName, "%s/" META_DATA_FILE, pszBackupDir);
-    iErrCode = mmfMetaData.OpenNew (pszFileName, stMetaDataSize, MEMMAP_WRITETHROUGH);
+    iErrCode = mmfMetaData.OpenNew (pszFileName, (size_t)stMetaDataSize, MEMMAP_WRITETHROUGH);
     if (iErrCode != OK) {
         goto Aborted;
     }
@@ -154,21 +154,21 @@ int Database::Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) 
     }
 
     // Copy data
-    memcpy (mmfTables.GetAddress(), m_fhTableData.GetBaseAddress(), stTableSize);
+    memcpy (mmfTables.GetAddress(), m_fhTableData.GetBaseAddress(), (size_t)stTableSize);
 
     if (pSink != NULL) {
         pSink->EndTableBackup();
         pSink->BeginVariableLengthDataBackup();
     }
 
-    memcpy (mmfVarLenData.GetAddress(), m_fhVariableData.GetBaseAddress(), stVarLenSize);
+    memcpy (mmfVarLenData.GetAddress(), m_fhVariableData.GetBaseAddress(), (size_t)stVarLenSize);
 
     if (pSink != NULL) {
         pSink->EndVariableLengthDataBackup();
         pSink->BeginMetaDataBackup();
     }
 
-    memcpy (mmfMetaData.GetAddress(), m_fhMetaData.GetBaseAddress(), stMetaDataSize);
+    memcpy (mmfMetaData.GetAddress(), m_fhMetaData.GetBaseAddress(), (size_t)stMetaDataSize);
 
     if (pSink != NULL) {
         pSink->EndMetaDataBackup();

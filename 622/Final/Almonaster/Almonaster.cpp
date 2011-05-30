@@ -498,8 +498,12 @@ int Almonaster::OnFinalize() {
 
     // Delete game engine object
     if (g_pGameEngine != NULL) {
+#ifdef _DEBUG
         int iRefs = g_pGameEngine->Release();
         Assert (iRefs == 0);
+#else
+        g_pGameEngine->Release();
+#endif
         g_pGameEngine = NULL;
     }
 

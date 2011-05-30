@@ -452,7 +452,7 @@ protected:
     void RenderSearchField (const SearchField& sfField, bool fAdvanced);
     void RenderDateField (const char* pszField);
     bool ParseDateField (const char* pszField, UTCTime* ptTime);
-    void RenderHiddenSearchVariant (const char* pszColName, const Variant& vData);
+    void RenderHiddenSearchVariant (unsigned int iColumn, const char* pszColName, const Variant& vData);
 
     static bool ms_bLocksInitialized;
     static ReadWriteLock ms_mTextFileLock;

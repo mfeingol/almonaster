@@ -168,14 +168,14 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const char* 
 #endif
 
     // Get length of string
-    size_t stNewLength = String::StrLen (pszData) + 1;
+    int64 stNewLength = String::StrLen (pszData) + 1;
 
     // Get address of data
     void* pData = m_pCtx->GetData (iKey, iColumn);
     Offset* poOrigData = NULL;
 
     // Check length
-    size_t stSize = m_pCtx->GetColumnSize (iColumn);
+    int64 stSize = m_pCtx->GetColumnSize (iColumn);
     if (stSize == VARIABLE_LENGTH_STRING) {
 
         // Get offset into varlen data heap
@@ -255,7 +255,7 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const char* 
 
     // Finally, copy the string
     if (pData != NULL) {
-        String::StrnCpy ((char*) pData, pszData, stNewLength);
+        String::StrnCpy ((char*) pData, pszData, (size_t)stNewLength);
     }
 
     // Set new offset if necessary
@@ -267,43 +267,6 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const char* 
     if (oFreeOffset != NO_OFFSET) {
         m_pCtx->FreeVarLen (oFreeOffset);
     }
-
-    return OK;
-}
-
-int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const UTCTime& tData) {
-
-    int iErrCode;
-
-    Assert ((m_pCtx->IsOneRow() && iKey == 0) || !m_pCtx->IsOneRow());
-
-    if (!m_rTable.IsValidKey (iKey)) {
-        Assert (false);
-        return ERROR_UNKNOWN_ROW_KEY;
-    }
-
-    if (!m_rTable.IsValidColumn (iColumn)) {
-        Assert (false);
-        return ERROR_UNKNOWN_COLUMN_INDEX;
-    }
-
-    if (m_pCtx->GetColumnType (iColumn) != V_TIME) {
-        Assert (false);
-        return ERROR_TYPE_MISMATCH;
-    }
-
-    UTCTime* ptData = (UTCTime*) m_pCtx->GetData (iKey, iColumn);
-    if (*ptData == tData) {
-        return OK;
-    }
-
-    iErrCode = m_pCtx->IndexWriteData (iKey, iColumn, tData);
-    if (iErrCode != OK && iErrCode != ERROR_COLUMN_NOT_INDEXED) {
-        Assert (false);
-        return iErrCode;
-    }
-
-    *ptData = tData;
 
     return OK;
 }
@@ -352,27 +315,18 @@ int WriteTable::WriteData (unsigned int iKey, unsigned int iColumn, const Varian
     switch (vData.GetType()) {
 
     case V_INT:
-
         return WriteData (iKey, iColumn, vData.GetInteger());
 
     case V_INT64:
-
         return WriteData (iKey, iColumn, vData.GetInteger64());
 
-    case V_TIME:
-
-        return WriteData (iKey, iColumn, vData.GetUTCTime());
-
     case V_FLOAT:
-
         return WriteData (iKey, iColumn, vData.GetFloat());
 
     case V_STRING:
-
         return WriteData (iKey, iColumn, vData.GetCharPtr());
 
     default:
-
         Assert (false);
         return ERROR_TYPE_MISMATCH;
     }
@@ -394,12 +348,6 @@ int WriteTable::WriteData (unsigned int iColumn, const char* pszData) {
 
     Assert (m_pCtx->IsOneRow());
     return WriteData (0, iColumn, pszData);
-}
-
-int WriteTable::WriteData (unsigned int iColumn, const UTCTime& tData) {
-
-    Assert (m_pCtx->IsOneRow());
-    return WriteData (0, iColumn, tData);
 }
 
 int WriteTable::WriteData (unsigned int iColumn, int64 i64Data) {
@@ -544,8 +492,8 @@ int WriteTable::WriteColumn (unsigned int iColumn, const char* pszData) {
 #endif
 
     // Check length
-    size_t stSize = m_pCtx->GetColumnSize (iColumn);
-    size_t stNewLength = String::StrLen (pszData);
+    int64 stSize = m_pCtx->GetColumnSize (iColumn);
+    int64 stNewLength = String::StrLen (pszData);
     
     if (stSize != VARIABLE_LENGTH_STRING && stNewLength >= stSize) {
         Assert (false);
@@ -568,45 +516,6 @@ int WriteTable::WriteColumn (unsigned int iColumn, const char* pszData) {
         }
 
         // Can't do much if we fail...
-    }
-
-    return iErrCode;
-}
-
-int WriteTable::WriteColumn (unsigned int iColumn, const UTCTime& tData) {
-
-    int iErrCode;
-
-    if (!m_rTable.IsValidColumn (iColumn)) {
-        Assert (false);
-        return ERROR_UNKNOWN_COLUMN_INDEX;
-    }
-
-    if (m_pCtx->GetColumnType (iColumn) != V_INT) {
-        Assert (false);
-        return ERROR_TYPE_MISMATCH;
-    }
-
-    iErrCode = m_pCtx->IndexWriteColumn (iColumn, tData);
-    if (iErrCode != OK) {
-        if (iErrCode == ERROR_COLUMN_NOT_INDEXED) {
-            iErrCode = OK;
-        } else {
-            Assert (false);
-            return iErrCode;
-        }
-    }
-
-    unsigned int iRowKey = NO_KEY;
-    while (true) {
-        
-        iRowKey = m_pCtx->FindNextValidRow (iRowKey);
-        if (iRowKey == NO_KEY) {
-            break;
-        }
-        
-        // Set data
-        *(UTCTime*) m_pCtx->GetData (iRowKey, iColumn) = tData;
     }
 
     return iErrCode;
@@ -657,27 +566,18 @@ int WriteTable::WriteColumn (unsigned int iColumn, const Variant& vData) {
     switch (vData.GetType()) {
 
     case V_INT:
-
         return WriteColumn (iColumn, vData.GetInteger());
 
     case V_INT64:
-
         return WriteColumn (iColumn, vData.GetInteger64());
 
-    case V_TIME:
-
-        return WriteColumn (iColumn, vData.GetUTCTime());
-
     case V_FLOAT:
-
         return WriteColumn (iColumn, vData.GetFloat());
 
     case V_STRING:
-
         return WriteData (iColumn, vData.GetCharPtr());
 
     default:
-
         Assert (false);
         return ERROR_TYPE_MISMATCH;
     }
@@ -761,23 +661,6 @@ int WriteTable::Increment (unsigned int iKey, unsigned int iColumn, const Varian
         }
         break;
 
-    case V_TIME:
-
-        if (vIncrement.GetType() == V_INT) {
-
-            UTCTime tFinal;
-            Time::AddSeconds (pvOldValue->GetUTCTime(), vIncrement.GetInteger(), &tFinal);
-
-            return WriteData (iKey, iColumn, tFinal);
-        }
-
-        if (vIncrement.GetType() == V_TIME) {
-            return WriteData (iKey, iColumn, pvOldValue->GetUTCTime() + vIncrement.GetUTCTime());
-        }
-
-        Assert (false);
-        return ERROR_TYPE_MISMATCH;
-
     case V_INT64:
         {
             int64 i64Increment;
@@ -806,7 +689,8 @@ int WriteTable::Increment (unsigned int iKey, unsigned int iColumn, const Varian
                 }
 
                 if (pvOldValue != NULL) {
-                    *pvOldValue = i64OldValue;
+                    pvOldValue->m_iType = V_INT64;
+                    pvOldValue->m_vArg.i64Arg = i64OldValue;
                 }
 
                 return WriteData (iKey, iColumn, i64OldValue + i64Increment);
@@ -832,7 +716,7 @@ int WriteTable::Increment (unsigned int iKey, unsigned int iColumn, const Varian
             size_t stNewLen = String::StrLen (vIncrement.GetCharPtr()) + 1;
             if (stNewLen > 1) {
 
-                size_t stSize = m_pCtx->GetColumnSize (iColumn);
+                int64 stSize = m_pCtx->GetColumnSize (iColumn);
                 char* pszData = (char*) m_pCtx->GetData (iKey, iColumn);
 
                 if (stSize == VARIABLE_LENGTH_STRING) {
@@ -1046,7 +930,7 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
 #endif
 
     // Get row size
-    size_t stRowSize = m_pCtx->GetRowSize();
+    Size stRowSize = m_pCtx->GetRowSize();
 
     // Get terminator key
     unsigned int iTerminatorRowKey = m_pCtx->GetTerminatorRowKey();
@@ -1118,17 +1002,6 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
             *((float*) m_pCtx->GetData (iKey, i)) = pvColVal[i].GetFloat();
             break;
 
-        case V_TIME:
-
-            if (m_pCtx->GetColumnType (i) != V_TIME) {
-                Assert (false);
-                iErrCode = ERROR_TYPE_MISMATCH;
-                goto OnError;
-            }
-
-            *((UTCTime*) m_pCtx->GetData (iKey, i)) = pvColVal[i].GetUTCTime();
-            break;
-
         case V_STRING:
 
             {
@@ -1141,8 +1014,8 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
                 goto OnError;
             }
 
-            size_t stColSize = m_pCtx->GetColumnSize (i);
-            size_t stNewSize = String::StrLen (pvColVal[i].GetCharPtr()) + 1;
+            int64 stColSize = m_pCtx->GetColumnSize (i);
+            int64 stNewSize = String::StrLen (pvColVal[i].GetCharPtr()) + 1;
 
             if (stColSize == VARIABLE_LENGTH_STRING) {
 
@@ -1182,7 +1055,7 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
             }
 
             if (pData != NULL) {
-                String::StrnCpy ((char*) pData, pvColVal[i].GetCharPtr(), stNewSize);
+                String::StrnCpy ((char*) pData, pvColVal[i].GetCharPtr(), (size_t)stNewSize);
             }
 
             }
@@ -1229,7 +1102,6 @@ int WriteTable::InsertRow (const Variant* pvColVal, unsigned int iKey, unsigned 
     return OK;
 
 OnError:
-
     int iIgnoreErrorCode = m_pCtx->IndexDeleteRow (iKey, pvColVal);
     Assert (iIgnoreErrorCode == OK || iIgnoreErrorCode == ERROR_COLUMN_NOT_INDEXED);
 
@@ -1321,8 +1193,8 @@ int WriteTable::InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumR
 
         if (m_pCtx->GetColumnType (i) == V_STRING) {
 
-            size_t stSize = m_pCtx->GetColumnSize (i);
-            if (stSize != VARIABLE_LENGTH_STRING && String::StrLen (pvColVal[i].GetCharPtr()) >= stSize) {
+            int64 stSize = m_pCtx->GetColumnSize (i);
+            if (stSize != VARIABLE_LENGTH_STRING && (int64)String::StrLen (pvColVal[i].GetCharPtr()) >= stSize) {
                 Assert (false);
                 return ERROR_STRING_IS_TOO_LONG;
             }
@@ -1338,7 +1210,7 @@ int WriteTable::InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumR
     // Get keys for insertions
     unsigned int* piNewKey = (unsigned int*) StackAlloc (iNumRows * sizeof (unsigned int));
 
-    size_t stRowSize = m_pCtx->GetRowSize();
+    Size stRowSize = m_pCtx->GetRowSize();
     for (i = 0; i < iNumRows; i ++) {
 
         piNewKey[i] = m_pCtx->FindNextInvalidRow (i == 0 ? NO_KEY : piNewKey[i - 1]);
@@ -1381,17 +1253,10 @@ int WriteTable::InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumR
             }
             break;
 
-        case V_TIME:
-
-            for (j = 0; j < iNumRows; j ++) {
-                *((UTCTime*) m_pCtx->GetData (piNewKey[j], i)) = pvColVal[i].GetUTCTime();
-            }
-            break;
-
         case V_STRING:
             {
 
-            size_t stColLen = m_pCtx->GetColumnSize (i);
+            int64 stColLen = m_pCtx->GetColumnSize (i);
             size_t stNewLen = String::StrLen (pvColVal[i].GetCharPtr()) + 1;
 
             if (stColLen == VARIABLE_LENGTH_STRING) {

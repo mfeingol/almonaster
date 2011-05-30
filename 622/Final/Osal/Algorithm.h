@@ -661,7 +661,7 @@ recurse:
 
     OSAL_EXPORT void InitializeThreadRandom (int iRandFactor = 1);
     OSAL_EXPORT int GetRandomInteger (int iUpper);
-	OSAL_EXPORT char GetRandomASCIIChar();
+    OSAL_EXPORT char GetRandomASCIIChar();
 
     OSAL_EXPORT char* memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes);
 
@@ -686,6 +686,18 @@ recurse:
 
     OSAL_EXPORT unsigned int AtomicIncrement (unsigned int* piValue, int iValue);
     OSAL_EXPORT unsigned int AtomicDecrement (unsigned int* piValue, int iValue);
+
+    OSAL_EXPORT int64 AtomicIncrement(int64* piValue);
+    OSAL_EXPORT int64 AtomicDecrement(int64* piValue);
+
+    OSAL_EXPORT int64 AtomicIncrement(int64* piValue, int64 iValue);
+    OSAL_EXPORT int64 AtomicDecrement(int64* piValue, int64 iValue);
+
+    OSAL_EXPORT uint64 AtomicIncrement(uint64* piValue);
+    OSAL_EXPORT uint64 AtomicDecrement(uint64* piValue);
+
+    OSAL_EXPORT uint64 AtomicIncrement(uint64* piValue, int64 iValue);
+    OSAL_EXPORT uint64 AtomicDecrement(uint64* piValue, int64 iValue);
 
     OSAL_EXPORT unsigned int GetIntHashValue (int iValue, unsigned int iNumBuckets);
     OSAL_EXPORT unsigned int GetFloatHashValue (float fValue, unsigned int iNumBuckets);

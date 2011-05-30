@@ -325,7 +325,6 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
                     SystemSuperClassData::NumGameClasses, 
                     1
                     );
-
                 Assert (iErrCode2 == OK);
 
                 goto Cleanup;

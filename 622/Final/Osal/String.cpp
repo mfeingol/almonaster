@@ -670,7 +670,7 @@ void String::StrLwr (char* pszString) {
             *ptr = tolower(*ptr);
         }
 #else if defined __WIN32__
-		_strlwr (pszString);
+        _strlwr (pszString);
 #endif
     }
 }

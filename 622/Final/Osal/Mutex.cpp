@@ -99,7 +99,7 @@ int Mutex::Wait (const char* pszLockName, NamedMutex* pNamedMutex) {
     if (pNamedMutex == NULL)
         return ERROR_FAILURE;
     (*pNamedMutex)->Wait();
-	return OK;
+    return OK;
 
 #else if defined __WIN32__
 
@@ -141,7 +141,7 @@ int Mutex::Signal (const NamedMutex& nmMutex) {
 
 #ifdef __LINUX__
     nmMutex->Signal();
-	return OK;
+    return OK;
 
 #else if defined __WIN32__
 

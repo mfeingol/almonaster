@@ -411,7 +411,7 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
             goto Cleanup;
         }
 
-        ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetUTCTime();
+        ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetInteger64();
 
         if (ppvMessage[i][SystemEmpireMessages::Type].GetInteger() == MESSAGE_NORMAL) {
 
@@ -912,7 +912,7 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
             goto Cleanup;
         }
 
-        ptTime[i] = ppvMessage[i][GameEmpireMessages::TimeStamp].GetUTCTime();
+        ptTime[i] = ppvMessage[i][GameEmpireMessages::TimeStamp].GetInteger64();
 
         iErrCode = pMessages->WriteData (piKey[i], GameEmpireMessages::Unread, MESSAGE_READ);
         if (iErrCode != OK) {

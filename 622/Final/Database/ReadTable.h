@@ -61,7 +61,6 @@ public:
     int GetFirstKey (unsigned int iColumn, int iData, unsigned int* piKey);
     int GetFirstKey (unsigned int iColumn, float fData, unsigned int* piKey);
     int GetFirstKey (unsigned int iColumn, const char* pszData, bool bCaseInsensitive, unsigned int* piKey);
-    int GetFirstKey (unsigned int iColumn, const UTCTime& tData, unsigned int* piKey);
     int GetFirstKey (unsigned int iColumn, int64 i64Data, unsigned int* piKey);
     int GetFirstKey (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int* piKey);
 
@@ -77,28 +76,24 @@ public:
     int ReadData (unsigned int iKey, unsigned int iColumn, int* piData);
     int ReadData (unsigned int iKey, unsigned int iColumn, float* pfData);
     int ReadData (unsigned int iKey, unsigned int iColumn, const char** ppszData);
-    int ReadData (unsigned int iKey, unsigned int iColumn, UTCTime* ptData);
     int ReadData (unsigned int iKey, unsigned int iColumn, int64* pi64Data);
     int ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvData);
 
     int ReadData (unsigned int iColumn, int* piData);
     int ReadData (unsigned int iColumn, float* pfData);
     int ReadData (unsigned int iColumn, const char** ppszData);
-    int ReadData (unsigned int iColumn, UTCTime* ptData);
     int ReadData (unsigned int iColumn, int64* pi64Data);
     int ReadData (unsigned int iColumn, Variant* pvData);
 
     int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, float** ppfData, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows);
-    int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, UTCTime** pptData, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);
 
     int ReadColumn (unsigned int iColumn, int** ppiData, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, float** ppfData, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, char*** ppszData, unsigned int* piNumRows);
-    int ReadColumn (unsigned int iColumn, UTCTime** pptData, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, int64** ppi64Data, unsigned int* piNumRows);
     int ReadColumn (unsigned int iColumn, Variant** ppvData, unsigned int* piNumRows);
 

@@ -31,24 +31,72 @@
 // Public definitions
 //
 
-typedef size_t Offset;
-typedef size_t Size;
-
-#ifdef __WIN64__
 typedef int64 Count;
-#else
-typedef int Count;
-#endif
-
-#define NO_OFFSET ((Offset) 0xffffffff)
-#define NO_SIZE ((Size) 0xffffffff)
+typedef unsigned __int64 Offset;
+typedef unsigned __int64 Size;
+#define NO_OFFSET (0xffffffffffffffff)
+#define NO_SIZE   (0xffffffffffffffff)
 
 //
 // Private definitions
 //
 
-#define NUM_BUCKETS (24)
-extern const Size BUCKET_SIZE [NUM_BUCKETS];
+static const Size BUCKET_SIZE[] = {
+    0x0000000000000010,
+    0x0000000000000020,
+    0x0000000000000040,
+    0x0000000000000080,
+    0x0000000000000100,
+    0x0000000000000200,
+    0x0000000000000400,
+    0x0000000000000800,
+    0x0000000000001000,
+    0x0000000000002000,
+    0x0000000000004000,
+    0x0000000000008000,
+    0x0000000000010000,
+    0x0000000000020000,
+    0x0000000000040000,
+    0x0000000000080000,
+    0x0000000000100000,
+    0x0000000000200000,
+    0x0000000000400000,
+    0x0000000000800000,
+    0x0000000001000000,
+    0x0000000002000000,
+    0x0000000004000000,
+    0x0000000008000000,
+    0x0000000100000000,
+    0x0000000200000000,
+    0x0000000400000000,
+    0x0000000800000000,
+    0x0000001000000000,
+    0x0000002000000000,
+    0x0000004000000000,
+    0x0000008000000000,
+    0x0000010000000000,
+    0x0000020000000000,
+    0x0000040000000000,
+    0x0000080000000000,
+    0x0000100000000000,
+    0x0000200000000000,
+    0x0000400000000000,
+    0x0000800000000000,
+    0x0001000000000000,
+    0x0002000000000000,
+    0x0004000000000000,
+    0x0008000000000000,
+    0x0010000000000000,
+    0x0020000000000000,
+    0x0040000000000000,
+    0x0080000000000000,
+    0x0100000000000000,
+    0x0200000000000000,
+    0x0400000000000000,
+    0x0800000000000000,
+};
+
+const unsigned int NUM_BUCKETS = sizeof(BUCKET_SIZE) / sizeof(BUCKET_SIZE[0]);
 
 const unsigned int BLOCK_SIGNATURE = 0x87654321;
 const unsigned char BLOCK_FILLER = (unsigned char) 0xbf;
@@ -61,8 +109,8 @@ typedef unsigned int Bucket;
 struct BlockHeader {
     Offset oPrevBlock;
     Offset oPadding;
-    Size sSize;
-    Size sUserSize;
+    Size cbSize;
+    Size cbUserSize;
     Offset oNextInChain;
     Offset oPrevInChain;
     bool bFree;
@@ -72,19 +120,19 @@ struct BlockHeader {
 struct FileHeapHeader {
     Count cNumAllocatedBlocks;
     Count cNumFreeBlocks;
-    Count cNumUsedBytes;
-    Count cNumSlackBytes;
+    Size cbNumUsedBytes;
+    Size cbNumSlackBytes;
     Offset oLastBlock;
     Offset oPadding;
     Offset oChainEntry[NUM_BUCKETS];
 };
 
 struct FileHeapStatistics {
-    size_t stSize;
-    size_t stNumAllocatedBlocks;
-    size_t stNumFreeBlocks;
-    size_t stNumUsedBytes;
-    size_t stNumSlackBytes;
+    Size cbSize;
+    Count cNumAllocatedBlocks;
+    Count cNumFreeBlocks;
+    Size cbNumUsedBytes;
+    Size cbNumSlackBytes;
 };
 
 //
@@ -123,7 +171,7 @@ protected:
     // Utility
     //
 
-    Bucket GetBucket (Size sSize);
+    Bucket GetBucket (Size cbSize);
 
     BlockHeader* GetBlockHeader (Offset oBlock);
     BlockHeader* GetBlockHeaderFromUserOffset (Offset oUserBlock);
@@ -160,7 +208,7 @@ public:
     // Initialization
     int Initialize();
 
-    int OpenNew (const char* pszFileName, Size sSize, unsigned int iFlags);
+    int OpenNew (const char* pszFileName, Size cbSize, unsigned int iFlags);
     int OpenExisting (const char* pszFileName, unsigned int iFlags);
 
     // General operations
@@ -172,8 +220,8 @@ public:
     //
 
     // Heap operations
-    Offset Allocate (Size sSize);
-    Offset Reallocate (Offset oBlock, Size sSize);
+    Offset Allocate (Size cbSize);
+    Offset Reallocate (Offset oBlock, Size cbSize);
 
     //
     // Must hold the lock
@@ -188,9 +236,9 @@ public:
     void* GetAddress (Offset oOffset);
     Offset GetOffset (const void* pAddress);
 
-    void MemCopy (Offset oSrc, Offset oDest, Size sSize);
-    void MemMove (Offset oSrc, Offset oDest, Size sSize);
-    void MemSet (Offset oSrc, char cByte, Size sSize);
+    void MemCopy (Offset oSrc, Offset oDest, Size cbSize);
+    void MemMove (Offset oSrc, Offset oDest, Size cbSize);
+    void MemSet (Offset oSrc, char cByte, Size cbSize);
 
     // Metadata
     void GetStatistics (FileHeapStatistics* pfhsStats);

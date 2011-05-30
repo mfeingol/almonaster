@@ -476,73 +476,73 @@ void HtmlRenderer::WriteBodyString (Seconds iSecondsUntil) {
 
 void HtmlRenderer::WriteContactLine() {
 
-	OutputText ("<p><strong>Contact the ");
+    OutputText ("<p><strong>Contact the ");
 
     Variant vEmail;
-	String strFilter;
+    String strFilter;
     int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
-	
-	if (iErrCode == OK && 
-		!String::IsBlank(vEmail.GetCharPtr()) &&
-		HTMLFilter(vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
+    
+    if (iErrCode == OK && 
+        !String::IsBlank(vEmail.GetCharPtr()) &&
+        HTMLFilter(vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
         
-		int i;
-		const int cLength = strFilter.GetLength();
+        size_t i;
+        const size_t cLength = strFilter.GetLength();
 
-		// Use XOR 'encryption' to hide the admin's email address from spam harvesters.
-		// We do this only on the login screen which can be accessed without authentication
+        // Use XOR 'encryption' to hide the admin's email address from spam harvesters.
+        // We do this only on the login screen which can be accessed without authentication
 
-		if (m_pgPageId == LOGIN) {
+        if (m_pgPageId == LOGIN) {
 
-			const char* pszPlainText = strFilter.GetCharPtr();
-			char* pszKey = (char*)StackAlloc(cLength + 1);
-			char* pszCypherText = (char*)StackAlloc(cLength + 1);
-			
-			for (i = 0; i < cLength; i ++) {
-				pszKey[i] = Algorithm::GetRandomASCIIChar();
-			}
-			pszKey[i] = '\0';
+            const char* pszPlainText = strFilter.GetCharPtr();
+            char* pszKey = (char*)StackAlloc(cLength + 1);
+            char* pszCypherText = (char*)StackAlloc(cLength + 1);
+            
+            for (i = 0; i < cLength; i ++) {
+                pszKey[i] = Algorithm::GetRandomASCIIChar();
+            }
+            pszKey[i] = '\0';
 
-			for (i = 0; i < cLength; i ++) {
-				pszCypherText[i] = (char) pszPlainText[i] ^ pszKey[i];
-			}
-			pszCypherText[i] = '\0';
+            for (i = 0; i < cLength; i ++) {
+                pszCypherText[i] = (char) pszPlainText[i] ^ pszKey[i];
+            }
+            pszCypherText[i] = '\0';
 
-			OutputText("<script type='text/javascript'><!--\n");
+            OutputText("<script type='text/javascript'><!--\n");
 
-			OutputText("var key=\"");
-			m_pHttpResponse->WriteText(pszKey);
-			OutputText("\";");
+            OutputText("var key=\"");
+            m_pHttpResponse->WriteText(pszKey);
+            OutputText("\";");
 
-			OutputText("var txt=new Array(");
-			for (i = 0; i < cLength; i ++) {
-				m_pHttpResponse->WriteText((int)pszCypherText[i]);
-				if (i < cLength - 1)
-					OutputText(",");
-			}
-			OutputText("); var e=\"\"; for(var i=0;i<");
+            OutputText("var txt=new Array(");
+            for (i = 0; i < cLength; i ++) {
+                m_pHttpResponse->WriteText((int)pszCypherText[i]);
+                if (i < cLength - 1)
+                    OutputText(",");
+            }
+            OutputText("); var e=\"\"; for(var i=0;i<");
 
-			m_pHttpResponse->WriteText(cLength);
+            m_pHttpResponse->WriteText((int)cLength);
 
-			OutputText(
-				";i++){" \
-				"e+=String.fromCharCode(key.charCodeAt(i)^txt[i]);}" \
-				"document.write('<a href=\"javascript:void(0)\" " \
-				"onclick=\"window.location=\\'m\\u0061il\\u0074o\\u003a'+e+'?subject=Almonaster'+'\\'\">'" \
-				"+'administrator<\\/a>');" \
-				"\n--></script><noscript>administrator</noscript>"
-				);
-		} else {
+            OutputText(
+                ";i++){" \
+                "e+=String.fromCharCode(key.charCodeAt(i)^txt[i]);}" \
+                "document.write('<a href=\"javascript:void(0)\" " \
+                "onclick=\"window.location=\\'m\\u0061il\\u0074o\\u003a'+e+'?subject=Almonaster'+'\\'\">'" \
+                "+'administrator<\\/a>');" \
+                "\n--></script><noscript>administrator</noscript>"
+                );
+        } else {
 
-			OutputText("<a href=\"mailto:");
-			m_pHttpResponse->WriteText(strFilter.GetCharPtr());
-			OutputText("?subject=Almonaster\">administrator</a>");
-		}
+            OutputText("<a href=\"mailto:");
+            m_pHttpResponse->WriteText(strFilter.GetCharPtr());
+            OutputText("?subject=Almonaster\">administrator</a>");
+        }
 
-	} else {
+    } else {
 
-		OutputText("administrator");
-	}
+        OutputText("administrator");
+    }
         
     OutputText(" if you have problems or suggestions</strong><p>");
 }
@@ -1574,6 +1574,12 @@ void HtmlRenderer::WriteGameNextUpdateString() {
         OutputText ("</strong> of <strong>");
         m_pHttpResponse->WriteText (iNumEmpires);
         OutputText ("</strong> ready");
+    }
+
+    if (m_iGameState & PAUSED && 
+        m_iGameState & STILL_OPEN && 
+        !(m_iGameState & ADMIN_PAUSED)) {
+        OutputText("<p>(The game is still open, and will unpause if another empire joins)");
     }
     
     OutputText ("<p>");
@@ -5822,7 +5828,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                 
                 // Sort by timestamp
                 for (i = 0; i < iNumNuked; i ++) {
-                    ptTime[i] = ppvNukedData[i][SystemEmpireNukeList::TimeStamp].GetUTCTime();
+                    ptTime[i] = ppvNukedData[i][SystemEmpireNukeList::TimeStamp].GetInteger64();
                     ppvData[i] = ppvNukedData[i];
                 }
                 
@@ -5861,7 +5867,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     OutputText ("</td><td align=\"center\">");
                     
                     iErrCode = Time::GetDateString (
-                        ppvData[i][SystemEmpireNukeList::TimeStamp].GetUTCTime(), 
+                        ppvData[i][SystemEmpireNukeList::TimeStamp].GetInteger64(), 
                         pszDateString
                         );
                     
@@ -5896,7 +5902,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                 
                 // Sort by timestamp
                 for (i = 0; i < iNumNukers; i ++) {
-                    ptTime[i] = ppvNukerData[i][SystemEmpireNukeList::TimeStamp].GetUTCTime();
+                    ptTime[i] = ppvNukerData[i][SystemEmpireNukeList::TimeStamp].GetInteger64();
                     ppvData[i] = ppvNukerData[i];
                 }
                 Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumNukers);
@@ -5929,7 +5935,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     OutputText ("</td><td align=\"center\">");
                     
                     iErrCode = Time::GetDateString (
-                        ppvData[i][SystemEmpireNukeList::TimeStamp].GetUTCTime(), 
+                        ppvData[i][SystemEmpireNukeList::TimeStamp].GetInteger64(), 
                         pszDateString
                         );
                     
@@ -7231,7 +7237,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         if (iErrCode != OK) {
             goto Cleanup;
         }
-        tValue = vValue.GetUTCTime();
+        tValue = vValue.GetInteger64();
 
         OutputText ("<td align=\"center\">");
         WriteTime (Time::GetSecondDifference (tCurrentTime, tValue));

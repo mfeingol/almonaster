@@ -72,7 +72,7 @@ int HtmlRenderer::LoginEmpire() {
         AddMessage ("Login failed: the empire's last login time could not be read");
         return iErrCode;
     }
-    UTCTime lastLoginTime = vValue.GetUTCTime();
+    UTCTime lastLoginTime = vValue.GetInteger64();
 
     // We're authenticated, so register a login
     iErrCode = g_pGameEngine->LoginEmpire (m_iEmpireKey, m_pHttpRequest->GetBrowserName(), m_pHttpRequest->GetClientIP());
@@ -315,7 +315,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
                     AddMessage ("The password was not salted");
                     return ERROR_FAILURE;
                 }
-                m_tOldSalt = (UTCTime) pHttpForm->GetUInt64Value();
+                m_tOldSalt = pHttpForm->GetUInt64Value();
 
                 // Make sure salt is valid
                 if (Time::GetSecondDifference (m_tNewSalt, m_tOldSalt) >= DAY_LENGTH_IN_SECONDS) {

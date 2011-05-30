@@ -1452,7 +1452,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessary() {
         return iErrCode;
     }
 
-    if (Time::GetSecondDifference (tNow, vLastScan.GetUTCTime()) > vFrequency.GetInteger()) {
+    if (Time::GetSecondDifference (tNow, vLastScan.GetInteger64()) > vFrequency.GetInteger()) {
         iErrCode = SendLongRunningQueryMessage (TriggerBridierTimeBombIfNecessaryMsg, NULL);
     }
 
@@ -1500,7 +1500,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
             continue;
         }
 
-        Seconds sActivityDiff = Time::GetSecondDifference (tNow, vLastAct.GetUTCTime());
+        Seconds sActivityDiff = Time::GetSecondDifference (tNow, vLastAct.GetInteger64());
         if (sActivityDiff > 3 * 30 * DAY_LENGTH_IN_SECONDS) {
             
             Seconds sDiff;
@@ -1525,7 +1525,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
             }
             
             iFinalIndex = vIndex.GetInteger();
-            sDiff = Time::GetSecondDifference (tNow, vLastAct.GetUTCTime());
+            sDiff = Time::GetSecondDifference (tNow, vLastAct.GetInteger64());
             
             if (sDiff > 3 * 30 * DAY_LENGTH_IN_SECONDS) {
                 

@@ -214,6 +214,7 @@ VOID WINAPI service_ctrl(DWORD dwCtrlCode)
         // which may result in a 1053 - The Service did not respond...
         // error.
         case SERVICE_CONTROL_STOP:
+        case SERVICE_CONTROL_SHUTDOWN:
             ReportStatusToSCMgr(SERVICE_STOP_PENDING, NO_ERROR, 0);
             ServiceStop();
             return;
@@ -263,9 +264,9 @@ BOOL ReportStatusToSCMgr(DWORD dwCurrentState,
     if ( !bDebug ) // when debugging we don't report to the SCM
     {
         if (dwCurrentState == SERVICE_START_PENDING)
-            ssStatus.dwControlsAccepted = 0;
+            ssStatus.dwControlsAccepted = SERVICE_ACCEPT_SHUTDOWN;
         else
-            ssStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP;
+			ssStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP | SERVICE_ACCEPT_SHUTDOWN;
 
         ssStatus.dwCurrentState = dwCurrentState;
         ssStatus.dwWin32ExitCode = dwWin32ExitCode;

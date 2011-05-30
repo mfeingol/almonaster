@@ -585,7 +585,7 @@ public:
     void FreeData (unsigned int* piData);
     void FreeData (float* ppfData);
     void FreeData (char** ppszData);
-    void FreeData (UTCTime* ptData);
+    void FreeData (int64* pi64Data);
     void FreeKeys (unsigned int* piKeys);
     void FreeKeys (int* piKeys);
 

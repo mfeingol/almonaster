@@ -51,7 +51,7 @@ else {
 
     // Sort by timestamp of end
     for (i = 0; i < iNumGames; i ++) {
-        ptTime[i] = ppvGameData[i][SystemLatestGames::Ended].GetUTCTime();
+        ptTime[i] = ppvGameData[i][SystemLatestGames::Ended].GetInteger64();
         ppvData[i] = ppvGameData[i];
     }
 
@@ -110,7 +110,7 @@ else {
         %><td align="center"><%
 
         Time::GetDate (
-            ppvData[i][SystemLatestGames::Created].GetUTCTime(),
+            ppvData[i][SystemLatestGames::Created].GetInteger64(),
             &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
@@ -125,7 +125,7 @@ else {
         %><td align="center"><%
 
         Time::GetDate (
-            ppvData[i][SystemLatestGames::Ended].GetUTCTime(),
+            ppvData[i][SystemLatestGames::Ended].GetInteger64(),
             &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 

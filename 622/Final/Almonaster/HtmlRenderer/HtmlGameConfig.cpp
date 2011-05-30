@@ -553,12 +553,12 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     OutputText("Map Fairness: <select name=\"MapFairness\">");
 
     OutputText("<option");
-    if (gfoFairness == GAME_FAIRNESS_RANDOM) {
+    if (gfoFairness == GAME_FAIRNESS_VERY_FAIR) {
         OutputText(" selected");
     }
     OutputText(" value=\"");
-    m_pHttpResponse->WriteText(GAME_FAIRNESS_RANDOM);
-    OutputText("\">Random</option>");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_VERY_FAIR);
+    OutputText("\">Very fair</option>");
 
     OutputText("<option");
     if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_FAIR) {
@@ -569,12 +569,12 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     OutputText("\">Somewhat fair</option>");
 
     OutputText("<option");
-    if (gfoFairness == GAME_FAIRNESS_VERY_FAIR) {
+    if (gfoFairness == GAME_FAIRNESS_RANDOM) {
         OutputText(" selected");
     }
     OutputText(" value=\"");
-    m_pHttpResponse->WriteText(GAME_FAIRNESS_VERY_FAIR);
-    OutputText("\">Very fair</option>");
+    m_pHttpResponse->WriteText(GAME_FAIRNESS_RANDOM);
+    OutputText("\">Random</option>");
 
     OutputText("<option");
     if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_UNFAIR) {

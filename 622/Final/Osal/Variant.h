@@ -24,21 +24,18 @@
 #define AFX_VARIANT_H__C5833FE7_CE47_11D1_9D09_0060083E8062__INCLUDED_
 
 #include "String.h"
-#include "Time.h"
 
 union VariantArg {
     int iArg;
     float fArg;
     char* pszArg;
-    UTCTime tArg;
     int64 i64Arg;
 };
 
-enum VariantType { V_STRING, V_INT, V_FLOAT, V_TIME, V_INT64 };
+enum VariantType { V_STRING, V_INT, V_FLOAT, V_RESERVED, V_INT64 };
 
 class OSAL_EXPORT Variant {
-
-protected:
+public:
     
     VariantArg m_vArg;
     VariantType m_iType;
@@ -54,7 +51,6 @@ public:
     Variant (float fVal);
     Variant (double dVal);
     Variant (const char* pszString);
-    Variant (const UTCTime& tTime);
     Variant (int64 i64Val);
 
     ~Variant();
@@ -65,7 +61,6 @@ public:
     Variant& operator= (unsigned int iVal);
     Variant& operator= (float fVal);
     Variant& operator= (const char* pszString);
-    Variant& operator= (const UTCTime& tTime);
     Variant& operator= (int64 i64Val);
 
     // +=
@@ -121,7 +116,6 @@ public:
     operator String() const;
     operator const char*() const;
     operator float() const;
-    operator const UTCTime&() const;
     operator int64() const;
 
     // Public interface
@@ -135,7 +129,6 @@ public:
     float GetFloat() const;
     String GetString() const;
     const char* GetCharPtr() const;
-    const UTCTime& GetUTCTime() const;
     int64 GetInteger64() const;
     
     OSAL_EXPORT friend bool operator== (const Variant& vLhs, const Variant& vRhs);
@@ -145,8 +138,6 @@ public:
     OSAL_EXPORT friend bool operator== (const Variant& vVariant, float fFloat);
     OSAL_EXPORT friend bool operator== (const Variant& vVariant, const char* pszChar);
     OSAL_EXPORT friend bool operator== (const char* pszChar, const Variant& vVariant);
-    OSAL_EXPORT friend bool operator== (const Variant& vVariant, const UTCTime& tTime);
-    OSAL_EXPORT friend bool operator== (const UTCTime& tTime, const Variant& vVariant);
     OSAL_EXPORT friend bool operator== (const Variant& vVariant, unsigned int iInt);
     OSAL_EXPORT friend bool operator== (unsigned int iInt, const Variant& vVariant);
     OSAL_EXPORT friend bool operator== (const Variant& vVariant, int64 i64Int);
@@ -159,8 +150,6 @@ public:
     OSAL_EXPORT friend bool operator!= (const Variant& vVariant, float fFloat);
     OSAL_EXPORT friend bool operator!= (const Variant& vVariant, const char* pszChar);
     OSAL_EXPORT friend bool operator!= (const char* pszChar, const Variant& vVariant);
-    OSAL_EXPORT friend bool operator!= (const Variant& vVariant, const UTCTime& tTime);
-    OSAL_EXPORT friend bool operator!= (const UTCTime& tTime, const Variant& vVariant);
     OSAL_EXPORT friend bool operator!= (const Variant& vVariant, unsigned int iInt);
     OSAL_EXPORT friend bool operator!= (unsigned int iInt, const Variant& vVariant);
     OSAL_EXPORT friend bool operator!= (int64 i64Int, const Variant& vVariant);
@@ -173,8 +162,6 @@ public:
     OSAL_EXPORT friend bool operator> (const Variant& vVariant, unsigned int iInt);
     OSAL_EXPORT friend bool operator> (float fFloat, const Variant& vVariant);
     OSAL_EXPORT friend bool operator> (const Variant& vVariant, float fFloat);
-    OSAL_EXPORT friend bool operator> (const Variant& vVariant, const UTCTime& tTime);
-    OSAL_EXPORT friend bool operator> (const UTCTime& tTime, const Variant& vVariant);
     OSAL_EXPORT friend bool operator> (int64 i64Int, const Variant& vVariant);
     OSAL_EXPORT friend bool operator> (const Variant& vVariant, int64 i64Int);
     
@@ -185,8 +172,6 @@ public:
     OSAL_EXPORT friend bool operator>= (const Variant& vVariant, unsigned int iInt);
     OSAL_EXPORT friend bool operator>= (float fFloat, const Variant& vVariant);
     OSAL_EXPORT friend bool operator>= (const Variant& vVariant, float fFloat);
-    OSAL_EXPORT friend bool operator>= (const Variant& vVariant, const UTCTime& tTime);
-    OSAL_EXPORT friend bool operator>= (const UTCTime& tTime, const Variant& vVariant);
     OSAL_EXPORT friend bool operator>= (int64 i64Int, const Variant& vVariant);
     OSAL_EXPORT friend bool operator>= (const Variant& vVariant, int64 i64Int);
     
@@ -197,8 +182,6 @@ public:
     OSAL_EXPORT friend bool operator< (const Variant& vVariant, unsigned int iInt);
     OSAL_EXPORT friend bool operator< (float fFloat, const Variant& vVariant);
     OSAL_EXPORT friend bool operator< (const Variant& vVariant, float fFloat);
-    OSAL_EXPORT friend bool operator< (const Variant& vVariant, const UTCTime& tTime);
-    OSAL_EXPORT friend bool operator< (const UTCTime& tTime, const Variant& vVariant);
     OSAL_EXPORT friend bool operator< (int64 i64Int, const Variant& vVariant);
     OSAL_EXPORT friend bool operator< (const Variant& vVariant, int64 i64Int);
     
@@ -207,8 +190,6 @@ public:
     OSAL_EXPORT friend bool operator<= (const Variant& vVariant, int iInt);
     OSAL_EXPORT friend bool operator<= (float fFloat, const Variant& vVariant);
     OSAL_EXPORT friend bool operator<= (const Variant& vVariant, float fFloat);
-    OSAL_EXPORT friend bool operator<= (const Variant& vVariant, const UTCTime& tTime);
-    OSAL_EXPORT friend bool operator<= (const UTCTime& tTime, const Variant& vVariant);
     OSAL_EXPORT friend bool operator<= (unsigned int iInt, const Variant& vVariant);
     OSAL_EXPORT friend bool operator<= (const Variant& vVariant, unsigned int iInt);
     OSAL_EXPORT friend bool operator<= (int64 i64Int, const Variant& vVariant);

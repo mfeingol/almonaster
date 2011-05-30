@@ -101,7 +101,7 @@ int TempFile::Delete() {
     close(m_hFile);
     return (unlink(m_pszFileName) == 0) ? OK : ERROR_FAILURE;
 #else if defined __WIN32__
-	Close();
-	return ::DeleteFile (m_pszFileName) ? OK : ERROR_FAILURE;
+    Close();
+    return ::DeleteFile (m_pszFileName) ? OK : ERROR_FAILURE;
 #endif
 }

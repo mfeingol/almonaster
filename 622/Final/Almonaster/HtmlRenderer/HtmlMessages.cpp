@@ -88,7 +88,7 @@ void HtmlRenderer::WriteGameMessages() {
                 }
             }
             
-            iErrCode = Time::GetDateString (ppvMessage[i][GameEmpireMessages::TimeStamp].GetUTCTime(), pszDate);
+            iErrCode = Time::GetDateString (ppvMessage[i][GameEmpireMessages::TimeStamp].GetInteger64(), pszDate);
             if (iErrCode != OK) {
                 StrNCpy (pszDate, "The server is out of memory");
             }
@@ -278,7 +278,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
     Variant vTemp;
 
     // Get date
-    iErrCode = Time::GetDateString (pvMessage[SystemEmpireMessages::TimeStamp].GetUTCTime(), pszDate);
+    iErrCode = Time::GetDateString (pvMessage[SystemEmpireMessages::TimeStamp].GetInteger64(), pszDate);
     if (iErrCode != OK) {
         StrNCpy (pszDate, "The server is out of memory");
         iMessageKey = NO_KEY;

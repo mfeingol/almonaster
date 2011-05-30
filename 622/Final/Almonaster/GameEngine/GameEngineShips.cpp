@@ -3630,8 +3630,9 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
     // Set ship as cloaked
     if (bCloaked) {
 
+#ifdef _DEBUG
         Assert (!(vOldState.GetInteger() & CLOAKED));
-
+#endif
         iErrCode = m_pGameData->WriteOr (
             strEmpireShips,
             iShipKey, 
@@ -3644,7 +3645,9 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
     
     } else {
 
+#ifdef _DEBUG
         Assert (vOldState.GetInteger() & CLOAKED);
+#endif
 
         iErrCode = m_pGameData->WriteAnd (
             strEmpireShips,

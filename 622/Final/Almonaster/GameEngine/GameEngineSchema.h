@@ -154,7 +154,7 @@ namespace SystemData {
         V_FLOAT,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_STRING,
         V_STRING,
         V_STRING,
@@ -181,7 +181,7 @@ namespace SystemData {
         V_INT,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_INT,
         V_STRING,
@@ -247,7 +247,7 @@ namespace SystemData {
         V_FLOAT,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_SERVER_NAME_LENGTH,
         0,
@@ -354,13 +354,13 @@ namespace SystemData {
         0,
     };
 
-    static const unsigned int NumColumns = BuilderBRDampener + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         true,
         0,
         NULL,
@@ -468,7 +468,7 @@ namespace SystemEmpireData {
         V_INT,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_INT,
         V_INT,
@@ -502,7 +502,7 @@ namespace SystemEmpireData {
         V_STRING,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_STRING,
         V_STRING,
@@ -521,7 +521,7 @@ namespace SystemEmpireData {
         V_STRING,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_STRING,
         V_STRING,
         V_STRING,
@@ -533,7 +533,7 @@ namespace SystemEmpireData {
         V_STRING,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_EMPIRE_NAME_LENGTH,
         MAX_PASSWORD_LENGTH,
         0,
@@ -619,13 +619,13 @@ namespace SystemEmpireData {
         INDEX_UNIQUE_DATA,
     };
 
-    static const unsigned int NumColumns = Associations + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemEmpireData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -818,7 +818,7 @@ namespace SystemGameClassData {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_GAME_CLASS_NAME_LENGTH,
         0,
         0,
@@ -874,13 +874,13 @@ namespace SystemGameClassData {
         0,
     };
 
-    static const unsigned int NumColumns = NumInitialTechDevs + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemGameClassData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -908,7 +908,7 @@ namespace SystemAlienIcons {
         V_STRING
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_ALIEN_AUTHOR_NAME_LENGTH
     };
@@ -921,13 +921,13 @@ namespace SystemAlienIcons {
         0,
     };
 
-    static const unsigned int NumColumns = AuthorName + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemAlienIcons",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -953,7 +953,7 @@ namespace SystemSystemGameClassData {
         V_INT
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0
     };
 
@@ -962,8 +962,8 @@ namespace SystemSystemGameClassData {
     static const TemplateDescription Template = {
         "SystemSystemGameClassData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -991,18 +991,18 @@ namespace SystemSuperClassData {
         V_INT
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_SUPER_CLASS_NAME_LENGTH,
         0
     };
 
-    static const unsigned int NumColumns = NumGameClasses + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemSuperClassData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1051,7 +1051,7 @@ namespace SystemThemes {
         V_STRING
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_THEME_NAME_LENGTH,
         MAX_THEME_AUTHOR_NAME_LENGTH,
         MAX_THEME_VERSION_LENGTH,
@@ -1067,13 +1067,13 @@ namespace SystemThemes {
         MAX_COLOR_LENGTH
     };
 
-    static const unsigned int NumColumns = BroadcastMessageColor + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemThemes",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1101,7 +1101,7 @@ namespace SystemActiveGames {
         V_INT
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         VARIABLE_LENGTH_STRING,
         0
     };
@@ -1114,13 +1114,13 @@ namespace SystemActiveGames {
         INDEX_CASE_SENSITIVE,
     };
 
-    static const unsigned int NumColumns = State + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemActiveGames",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -1158,14 +1158,14 @@ namespace SystemEmpireMessages {
     static const VariantType Types[] = {
         V_INT,
         V_STRING,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_STRING,
         V_INT,
         V_STRING,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1175,13 +1175,13 @@ namespace SystemEmpireMessages {
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = Data + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemEmpireMessages",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1230,10 +1230,10 @@ namespace SystemEmpireNukeList {
         V_INT,
         V_STRING,
         V_INT,
-        V_TIME
+        V_INT64
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1242,13 +1242,13 @@ namespace SystemEmpireNukeList {
         0
     };
 
-    static const unsigned int NumColumns = TimeStamp + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemEmpireNukeList",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1286,10 +1286,10 @@ namespace SystemNukeList {
         V_INT,
         V_STRING,
         V_INT,
-        V_TIME
+        V_INT64
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1301,13 +1301,13 @@ namespace SystemNukeList {
         0
     };
 
-    static const unsigned int NumColumns = TimeStamp + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemNukeList",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1339,15 +1339,15 @@ namespace SystemLatestGames {
     static const VariantType Types[] = {
         V_STRING,
         V_INT,
-        V_TIME,
-        V_TIME,
+        V_INT64,
+        V_INT64,
         V_INT,
         V_INT,
         V_STRING,
         V_STRING,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         VARIABLE_LENGTH_STRING,
         0,
         0,
@@ -1358,13 +1358,13 @@ namespace SystemLatestGames {
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = Losers + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemLatestGames",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1396,17 +1396,17 @@ namespace SystemEmpireActiveGames {
         V_STRING
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         VARIABLE_LENGTH_STRING
     };
 
-    static const unsigned int NumColumns = GameClassGameNumber + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemEmpireActiveGames",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1443,7 +1443,7 @@ namespace SystemTournaments {
         V_STRING,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_TOURNAMENT_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -1461,13 +1461,13 @@ namespace SystemTournaments {
         0,
     };
 
-    static const unsigned int NumColumns = OwnerName + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemTournaments",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         IndexColumns,
@@ -1515,7 +1515,7 @@ namespace SystemTournamentTeams {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_TOURNAMENT_TEAM_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -1527,13 +1527,13 @@ namespace SystemTournamentTeams {
         0,
     };
 
-    static const unsigned int NumColumns = Ruins + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemTournamentTeams",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1577,7 +1577,7 @@ namespace SystemTournamentEmpires {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
@@ -1587,13 +1587,13 @@ namespace SystemTournamentEmpires {
         0,
     };
 
-    static const unsigned int NumColumns = Ruins + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemTournamentEmpires",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1625,17 +1625,17 @@ namespace SystemTournamentActiveGames {
         V_STRING,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = GameClassGameNumber + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemTournamentActiveGames",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1682,17 +1682,17 @@ namespace SystemEmpireTournaments {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
     };
 
-    static const unsigned int NumColumns = SystemEmpireTournaments::TournamentKey + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemEmpireTournaments",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1767,7 +1767,7 @@ namespace GameData {
     static const VariantType Types[] = {
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_INT,
         V_INT,
@@ -1777,8 +1777,8 @@ namespace GameData {
         V_INT,
         V_INT,
         V_INT,
-        V_TIME,
-        V_TIME,
+        V_INT64,
+        V_INT64,
         V_INT,
         V_INT,
         V_INT,
@@ -1807,12 +1807,12 @@ namespace GameData {
         V_INT,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
@@ -1860,13 +1860,13 @@ namespace GameData {
         0,
     };
     
-    static const unsigned int NumColumns = MapFairnessStandardDeviationPercentageOfMean + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         true,
         0,
         NULL,
@@ -1909,7 +1909,7 @@ namespace GameSecurity {
         V_INT64,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1918,13 +1918,13 @@ namespace GameSecurity {
         0,
     };
 
-    static const unsigned int NumColumns = SecretKey + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameSecurity",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -1956,7 +1956,7 @@ namespace GameEmpires {
         V_INT
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0
     };
     
@@ -1968,13 +1968,13 @@ namespace GameEmpires {
         0,
     };
 
-    static const unsigned int NumColumns = EmpireKey + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameEmpires",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -2016,7 +2016,7 @@ namespace GameDeadEmpires {
         V_INT64,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_EMPIRE_NAME_LENGTH,
         0,
         0,
@@ -2025,13 +2025,13 @@ namespace GameDeadEmpires {
         0,
     };
 
-    static const unsigned int NumColumns = SecretKey + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameDeadEmpires",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2112,7 +2112,7 @@ namespace GameMap {
         V_FLOAT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_PLANET_NAME_LENGTH,
         0,
         0,
@@ -2122,8 +2122,6 @@ namespace GameMap {
         0,
         0,
         MAX_COORDINATE_LENGTH,
-        0,
-        0,
         0,
         0,
         0,
@@ -2152,13 +2150,13 @@ namespace GameMap {
         INDEX_CASE_SENSITIVE,
     };
     
-    static const unsigned int NumColumns = SurrenderAlmonasterScore + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameMap",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         countof (IndexColumns),
         IndexColumns,
@@ -2249,7 +2247,7 @@ namespace GameEmpireData {
         V_INT,
         V_INT,
         V_INT,
-        V_TIME,
+        V_INT64,
         V_STRING,
         V_INT,
         V_INT,
@@ -2296,7 +2294,7 @@ namespace GameEmpireData {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
@@ -2353,13 +2351,13 @@ namespace GameEmpireData {
         0,
     };
 
-    static const unsigned int NumColumns = MapFairnessResourcesClaimed + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
     
     static const TemplateDescription Template = {
         "GameEmpireData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         true,
         0,
         NULL,
@@ -2395,12 +2393,12 @@ namespace GameEmpireMessages {
     static const VariantType Types[] = {
         V_INT,
         V_STRING,
-        V_TIME,
+        V_INT64,
         V_INT,
         V_STRING
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -2408,13 +2406,13 @@ namespace GameEmpireMessages {
         VARIABLE_LENGTH_STRING
     };
 
-    static const unsigned int NumColumns = Text + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameEmpireMessages",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2463,7 +2461,7 @@ namespace GameEmpireMap {
         V_INT
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
@@ -2483,13 +2481,13 @@ namespace GameEmpireMap {
         0,
     };
 
-    static const unsigned int NumColumns = NumCloakedShips + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameEmpireMap",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -2536,7 +2534,7 @@ namespace GameEmpireDiplomacy {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
@@ -2557,13 +2555,13 @@ namespace GameEmpireDiplomacy {
         0,
     };
 
-    static const unsigned int NumColumns = LastMessageTargetFlag + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
     
     static const TemplateDescription Template = {
         "GameEmpireDiplomacy",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         sizeof (IndexColumns) / sizeof (IndexColumns[0]),
         IndexColumns,
@@ -2616,7 +2614,7 @@ namespace GameEmpireShips {
         V_INT,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_SHIP_NAME_LENGTH,
         0,
         0,
@@ -2640,13 +2638,13 @@ namespace GameEmpireShips {
         0,
     };
 
-    static const unsigned int NumColumns = ColonyBuildCost + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
     
     static const TemplateDescription Template = {
         "GameEmpireShips",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         2,
         IndexColumns,
@@ -2693,10 +2691,8 @@ namespace GameEmpireFleets {
         V_INT,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_FLEET_NAME_LENGTH,
-        0,
-        0,
         0,
         0,
         0,
@@ -2714,13 +2710,13 @@ namespace GameEmpireFleets {
         0,
     };
 
-    static const unsigned int NumColumns = Flags + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameEmpireFleets",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         1,
         IndexColumns,
@@ -2771,7 +2767,7 @@ namespace GameIndependentShips {
         V_INT
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         MAX_SHIP_NAME_LENGTH,
         0,
         0,
@@ -2784,13 +2780,13 @@ namespace GameIndependentShips {
         0,
     };
 
-    static const unsigned int NumColumns = GateDestination + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "GameIndependentShips",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2824,18 +2820,18 @@ namespace SystemAlmonasterScoreTopList {
         V_FLOAT,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0
     };
 
-    static const unsigned int NumColumns = 2;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemAlmonasterScoreTopList",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2854,18 +2850,18 @@ namespace SystemClassicScoreTopList {
         V_FLOAT,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0
     };
 
-    static const unsigned int NumColumns = 2;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemClassicScoreTopList",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2890,19 +2886,19 @@ namespace SystemBridierScoreTopList {
         V_INT,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
     };
 
-    static const unsigned int NumColumns = 3;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemBridierScoreTopList",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2927,19 +2923,19 @@ namespace SystemBridierScoreEstablishedTopList {
         V_INT,
     };
     
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         0,
     };
 
-    static const unsigned int NumColumns = 3;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemBridierScoreEstablishedTopList",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,
@@ -2965,25 +2961,25 @@ namespace SystemChatroomData {
     
     static const VariantType Types[] = {
         V_INT,
-        V_TIME,
+        V_INT64,
         V_STRING,
         V_STRING,
     };
 
-    static const size_t Sizes[] = {
+    static const int64 Sizes[] = {
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = Message + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemChatroomData",
         NumColumns,
-        (VariantType*) Types,
-        (size_t*) Sizes,
+        (VariantType*)Types,
+        (int64*)Sizes,
         false,
         0,
         NULL,

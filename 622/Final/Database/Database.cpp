@@ -20,8 +20,6 @@
 #include "CDatabase.h"
 #include "Table.h"
 
-#include "Osal/Time.h"
-
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
@@ -398,8 +396,8 @@ void Database::FreeData (char** ppszData) {
     delete [] ppszData;
 }
 
-void Database::FreeData (UTCTime* ptData) {
-    delete [] ptData;
+void Database::FreeData (int64* pi64Data) {
+    delete [] pi64Data;
 }
 
 int Database::GetStatistics (DatabaseStatistics* pdsStats) {

@@ -92,7 +92,7 @@ char HexDataToHexChar (char szData) {
 //
 
 void Algorithm::InitializeThreadRandom (int iRandFactor) {
-    srand ((unsigned int) (time (NULL) * iRandFactor));
+    srand((unsigned int) (time(NULL) * iRandFactor));
 }
 
 int Algorithm::GetRandomInteger (int iUpper) {
@@ -101,11 +101,11 @@ int Algorithm::GetRandomInteger (int iUpper) {
 
 char Algorithm::GetRandomASCIIChar() {
 
-	// Relatively arbitrary range
-	const char MIN_CHAR = '0';
-	const char MAX_CHAR = '[';
+    // Relatively arbitrary range
+    const char MIN_CHAR = '0';
+    const char MAX_CHAR = '[';
 
-	return MIN_CHAR + (char) GetRandomInteger(MAX_CHAR - MIN_CHAR);
+    return MIN_CHAR + (char) GetRandomInteger(MAX_CHAR - MIN_CHAR);
 }
 
 char* Algorithm::memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes) {
@@ -599,6 +599,37 @@ unsigned int Algorithm::GetStringHashValue (const char* pszString, unsigned int 
     return GetStringHashValue (pszString, String::StrLen (pszString), iNumBuckets, bCaseInsensitive);
 }
 
+int64 Algorithm::AtomicIncrement(int64* piValue) {
+    return ::InterlockedIncrement64(piValue) + 1;
+}
+
+int64 Algorithm::AtomicDecrement(int64* piValue) {
+    return ::InterlockedDecrement64(piValue) - 1;
+}
+
+int64 Algorithm::AtomicIncrement(int64* piValue, int64 iValue) {
+    return ::InterlockedExchangeAdd64(piValue, iValue) + iValue;
+}
+
+int64 Algorithm::AtomicDecrement(int64* piValue, int64 iValue) {
+    return ::InterlockedExchangeAdd64(piValue, -iValue) - iValue;
+}
+
+uint64 Algorithm::AtomicIncrement(uint64* piValue) {
+    return ::InterlockedIncrement64((LONG64*)piValue) + 1;
+}
+
+uint64 Algorithm::AtomicDecrement(uint64* piValue) {
+    return ::InterlockedDecrement64((LONG64*)piValue) - 1;
+}
+
+uint64 Algorithm::AtomicIncrement(uint64* piValue, int64 iValue) {
+    return ::InterlockedExchangeAdd64((LONG64*)piValue, iValue) + iValue;
+}
+
+uint64 Algorithm::AtomicDecrement(uint64* piValue, int64 iValue) {
+    return ::InterlockedExchangeAdd64((LONG64*)piValue, -iValue) - iValue;
+}
 
 // string hash: { while (*psz)  h=h*101+*psz++; }
 
@@ -702,9 +733,6 @@ unsigned int Algorithm::GetVariantHashValue (const Variant& vValue, unsigned int
 
     case V_STRING:
         return Algorithm::GetStringHashValue (vValue.GetCharPtr(), iNumBuckets, bCaseInsensitive);
-        
-    case V_TIME:
-        return Time::GetHashValue (vValue.GetUTCTime(), iNumBuckets);
 
     default:
         Assert (false);

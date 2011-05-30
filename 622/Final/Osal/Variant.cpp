@@ -103,11 +103,6 @@ Variant::Variant (double dVal) {
     m_vArg.fArg = (float) dVal;
 }
 
-Variant::Variant (const UTCTime& tTime) {
-    m_iType = V_TIME;
-    m_vArg.tArg = tTime;
-}
-
 Variant::Variant (int64 i64Val) {
     m_iType = V_INT64;
     m_vArg.i64Arg = i64Val;
@@ -223,20 +218,6 @@ Variant& Variant::operator= (float fVal) {
 
     return *this;
 }
-
-
-Variant& Variant::operator= (const UTCTime& tTime) {
-    
-    // Clean up old string
-    DeleteString();
-
-    // Copy data
-    m_iType = V_TIME;
-    m_vArg.tArg = tTime;
-
-    return *this;
-}
-
 
 Variant& Variant::operator= (int64 i64Val) {
     
@@ -388,15 +369,7 @@ Variant& Variant::operator+= (const Variant& vRhs) {
         m_iType = V_STRING;
         m_vArg.pszArg = pszTemp;
     }
-        
-    else if (m_iType == V_TIME && vRhs.m_iType == V_INT) {
-        Time::AddSeconds (m_vArg.tArg, (Seconds) vRhs.m_vArg.iArg, &m_vArg.tArg);
-    }
 
-    else if (m_iType == V_TIME && vRhs.m_iType == V_INT64) {
-        Time::AddSeconds (m_vArg.tArg, (Seconds) vRhs.m_vArg.i64Arg, &m_vArg.tArg);
-    }
-        
     else Assert (false);
 
     return *this;
@@ -412,10 +385,6 @@ Variant& Variant::operator+= (int iRhs) {
         m_vArg.i64Arg += iRhs;
     }
 
-    else if (m_iType == V_TIME) {
-        Time::AddSeconds (m_vArg.tArg, iRhs, &m_vArg.tArg);
-    }
-
     else Assert (false);
 
     return *this;
@@ -429,10 +398,6 @@ Variant& Variant::operator+= (unsigned int iRhs) {
 
     else if (m_iType == V_INT64) {
         m_vArg.i64Arg += iRhs;
-    }
-
-    else if (m_iType == V_TIME) {
-        Time::AddSeconds (m_vArg.tArg, iRhs, &m_vArg.tArg);
     }
 
     else Assert (false);
@@ -492,10 +457,6 @@ Variant& Variant::operator+= (int64 i64Rhs) {
 
     else if (m_iType == V_INT64) {
         m_vArg.i64Arg += i64Rhs;
-    }
-
-    else if (m_iType == V_TIME) {
-        Time::AddSeconds (m_vArg.tArg, (Seconds) i64Rhs, &m_vArg.tArg);
     }
 
     else Assert (false);
@@ -589,10 +550,6 @@ Variant& Variant::operator-= (int iRhs) {
         m_vArg.i64Arg -= iRhs;
     }
 
-    else if (m_iType == V_TIME) {
-        Time::AddSeconds (m_vArg.tArg, -iRhs, &m_vArg.tArg);
-    }
-
     else Assert (false);
 
     return *this;
@@ -619,10 +576,6 @@ Variant& Variant::operator-= (int64 i64Rhs) {
         m_vArg.i64Arg -= i64Rhs;
     }
 
-    else if (m_iType == V_TIME) {
-        Time::AddSeconds (m_vArg.tArg, (Seconds) -i64Rhs, &m_vArg.tArg);
-    }
-
     else Assert (false);
 
     return *this;
@@ -646,7 +599,8 @@ Variant Variant::operator-() {
         return vRetVal;
 
     case V_INT64:
-        vRetVal = -m_vArg.i64Arg;
+        vRetVal.m_iType = V_INT64;
+        vRetVal.m_vArg.i64Arg = -m_vArg.i64Arg;
         return vRetVal;
     
     case V_FLOAT:
@@ -878,8 +832,6 @@ Variant::operator int() const {
         return (int) m_vArg.fArg;
     case V_STRING:
         return m_vArg.pszArg == NULL ? 0 : atoi (m_vArg.pszArg);
-    case V_TIME:
-        return (int) m_vArg.tArg;
     default:
         Assert (false);
         return -1;
@@ -897,8 +849,6 @@ Variant::operator unsigned int() const {
         return (unsigned int) m_vArg.fArg;
     case V_STRING:
         return m_vArg.pszArg == NULL ? 0 : (unsigned int) atoi (m_vArg.pszArg);
-    case V_TIME:
-        return (unsigned int) m_vArg.tArg;
     default:
         Assert (false);
         return 0;
@@ -914,10 +864,6 @@ Variant::operator String() const {
         return String (m_vArg.fArg);
     case V_STRING:
         return m_vArg.pszArg;
-    case V_TIME:
-        char pszTime [512];
-        Time::UTCTimetoA (m_vArg.tArg, pszTime, 10);
-        return String (pszTime);
     default:
         Assert (false);
         return "Error";
@@ -944,21 +890,6 @@ Variant::operator float() const {
     }
 }
 
-Variant::operator const UTCTime&() const {
-
-    switch (m_iType) {
-    case V_INT:
-        return (UTCTime&) m_vArg.iArg;
-    case V_INT64:
-        return (UTCTime&) m_vArg.i64Arg;
-    case V_TIME:
-        return m_vArg.tArg;
-    default:
-        Assert (false);
-        return (UTCTime&) m_vArg.tArg;
-    }
-}
-
 Variant::operator int64() const {
 
     switch (m_iType) {
@@ -970,8 +901,6 @@ Variant::operator int64() const {
         return (int64) m_vArg.fArg;
     case V_STRING:
         return m_vArg.pszArg == NULL ? 0 : String::AtoI64 (m_vArg.pszArg);
-    case V_TIME:
-        return (int64) m_vArg.tArg;
     default:
         Assert (false);
         return -1;
@@ -1044,11 +973,6 @@ const char* Variant::GetCharPtr() const {
     return m_vArg.pszArg;
 }
 
-const UTCTime& Variant::GetUTCTime() const {
-    Assert (m_iType == V_TIME); 
-    return m_vArg.tArg;
-}
-
 int64 Variant::GetInteger64() const {
     Assert (m_iType == V_INT64);
     return m_vArg.i64Arg;
@@ -1082,9 +1006,6 @@ bool operator== (const Variant& vLhs, const Variant& vRhs) {
         }
         return strcmp (vLhs.m_vArg.pszArg, vRhs.m_vArg.pszArg) == 0;
 
-    case V_TIME:
-        return vLhs.m_vArg.tArg == vRhs.m_vArg.tArg;
-
     case V_INT64:
         return vLhs.m_vArg.i64Arg == vRhs.m_vArg.i64Arg;
 
@@ -1116,14 +1037,6 @@ bool operator== (const Variant& vVariant, const char* pszChar) {
 
 bool operator== (const char* pszChar, const Variant& vVariant) {
     return (strcmp (vVariant.GetCharPtr(), pszChar) == 0);
-}
-
-bool operator== (const Variant& vVariant, const UTCTime& tTime) {
-    return vVariant.GetUTCTime() == tTime;
-}
-
-bool operator== (const UTCTime& tTime, const Variant& vVariant) {
-    return tTime == vVariant.GetUTCTime();
 }
 
 bool operator== (const Variant& vVariant, unsigned int iInt) {
@@ -1171,14 +1084,6 @@ bool operator!= (const char* pszChar, const Variant& vVariant) {
     return (strcmp (vVariant.GetCharPtr(), pszChar) != 0);
 }
 
-bool operator!= (const Variant& vVariant, const UTCTime& tTime) {
-    return vVariant.GetUTCTime() != tTime;
-}
-
-bool operator!= (const UTCTime& tTime, const Variant& vVariant) {
-    return tTime != vVariant.GetUTCTime();
-}
-
 bool operator!= (const Variant& vVariant, unsigned int iInt) {
     return iInt != (unsigned int) vVariant.GetInteger();
 }
@@ -1221,14 +1126,6 @@ bool operator> (const Variant& vVariant, float fFloat) {
     return vVariant.GetFloat() > fFloat;
 }
 
-bool operator> (const Variant& vVariant, const UTCTime& tTime) {
-    return vVariant.GetUTCTime() > tTime;
-}
-
-bool operator> (const UTCTime& tTime, const Variant& vVariant) {
-    return tTime > vVariant.GetUTCTime();
-}
-
 bool operator> (int64 i64Int, const Variant& vVariant) {
     return i64Int > vVariant.GetInteger64();
 }
@@ -1261,14 +1158,6 @@ bool operator>= (float fFloat, const Variant& vVariant) {
 
 bool operator>= (const Variant& vVariant, float fFloat) {
     return vVariant.GetFloat() >= fFloat;
-}
-
-bool operator>= (const Variant& vVariant, const UTCTime& tTime) {
-    return vVariant.GetUTCTime() >= tTime;
-}
-
-bool operator>= (const UTCTime& tTime, const Variant& vVariant) {
-    return tTime >= vVariant.GetUTCTime();
 }
 
 bool operator>= (int64 i64Int, const Variant& vVariant) {
@@ -1305,14 +1194,6 @@ bool operator< (const Variant& vVariant, float fFloat) {
     return vVariant.GetFloat() < fFloat;
 }
 
-bool operator< (const Variant& vVariant, const UTCTime& tTime) {
-    return vVariant.GetUTCTime() < tTime;
-}
-
-bool operator< (const UTCTime& tTime, const Variant& vVariant) {
-    return tTime < vVariant.GetUTCTime();
-}
-
 bool operator< (int64 i64Int, const Variant& vVariant) {
     return i64Int < vVariant.GetInteger64();
 }
@@ -1336,14 +1217,6 @@ bool operator<= (float fFloat, const Variant& vVariant) {
 
 bool operator<= (const Variant& vVariant, float fFloat) {
     return vVariant.GetFloat() <= fFloat;
-}
-
-bool operator<= (const Variant& vVariant, const UTCTime& tTime) {
-    return vVariant.GetUTCTime() <= tTime;
-}
-
-bool operator<= (const UTCTime& tTime, const Variant& vVariant) {
-    return tTime <= vVariant.GetUTCTime();
 }
 
 bool operator<= (unsigned int iInt, const Variant& vVariant) {
@@ -1377,9 +1250,6 @@ bool operator> (const Variant& vLhs, const Variant& vRhs) {
     case V_FLOAT:
         return vLhs.m_vArg.fArg > vRhs.m_vArg.fArg;
 
-    case V_TIME:
-        return vLhs.m_vArg.tArg > vRhs.m_vArg.tArg;
-    
     case V_STRING:
         return String::StrCmp (vLhs.m_vArg.pszArg, vLhs.m_vArg.pszArg) > 0;
     }
@@ -1402,9 +1272,6 @@ bool operator< (const Variant& vLhs, const Variant& vRhs) {
     case V_FLOAT:
         return vLhs.m_vArg.fArg < vRhs.m_vArg.fArg;
     
-    case V_TIME:
-        return vLhs.m_vArg.tArg < vRhs.m_vArg.tArg;
-
     case V_STRING:
         return String::StrCmp (vLhs.m_vArg.pszArg, vLhs.m_vArg.pszArg) < 0;
     }
@@ -1428,9 +1295,6 @@ bool operator>= (const Variant& vLhs, const Variant& vRhs) {
     case V_FLOAT:
         return vLhs.m_vArg.fArg >= vRhs.m_vArg.fArg;
 
-    case V_TIME:
-        return vLhs.m_vArg.tArg >= vRhs.m_vArg.tArg;
-
     case V_STRING:
         return String::StrCmp (vLhs.m_vArg.pszArg, vLhs.m_vArg.pszArg) >= 0;
     }
@@ -1453,9 +1317,6 @@ bool operator<= (const Variant& vLhs, const Variant& vRhs) {
 
     case V_FLOAT:
         return vLhs.m_vArg.fArg <= vRhs.m_vArg.fArg;
-
-    case V_TIME:
-        return vLhs.m_vArg.tArg <= vRhs.m_vArg.tArg;
 
     case V_STRING:
         return String::StrCmp (vLhs.m_vArg.pszArg, vLhs.m_vArg.pszArg) <= 0;

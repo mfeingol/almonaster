@@ -56,7 +56,7 @@ else {
 
     // Sort by timestamp
     for (i = 0; i < iNumNukes; i ++) {
-        ptTime[i] = ppvNukeData[i][SystemNukeList::TimeStamp].GetUTCTime();
+        ptTime[i] = ppvNukeData[i][SystemNukeList::TimeStamp].GetInteger64();
         ppvData[i] = ppvNukeData[i];
     }
 
@@ -147,7 +147,7 @@ else {
         %><td align="center"><%
 
         iErrCode = Time::GetDateString (
-            ppvData[i][SystemNukeList::TimeStamp].GetUTCTime(), 
+            ppvData[i][SystemNukeList::TimeStamp].GetInteger64(), 
             pszDateString
             );
 

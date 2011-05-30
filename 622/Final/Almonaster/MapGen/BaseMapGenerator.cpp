@@ -179,7 +179,8 @@ void BaseMapGenerator::ResetNewPlanetChain() {
 void BaseMapGenerator::RestartPlanetChain() {
 
     // Remove old link to existing chain if necessary
-    if (m_iLinkedPlanetInPreviousChainIndex != NO_KEY) {
+    if (m_iLinkedPlanetInPreviousChainIndex != NO_KEY && 
+        !(m_iGameClassOptions & DISCONNECTED_MAP)) {
 
         Assert(m_cpLinkedPlanetInPreviousChainDirection != NO_DIRECTION);
 

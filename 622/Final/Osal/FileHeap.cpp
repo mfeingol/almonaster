@@ -25,37 +25,10 @@
 #include "Algorithm.h"
 #undef OSAL_BUILD
 
-#define SIZE_OF_BLOCK_HEADER (sizeof (BlockHeader))
 #define SIZE_OF_MANAGER_HEADER (sizeof (FileHeapHeader))
+#define SIZE_OF_BLOCK_HEADER (sizeof (BlockHeader))
 
 #define ALIGNMENT_BASE (8)
-
-const size_t BUCKET_SIZE [NUM_BUCKETS] = {
-    0x00000010,
-    0x00000020,
-    0x00000040,
-    0x00000080,
-    0x00000100,
-    0x00000200,
-    0x00000400,
-    0x00000800,
-    0x00001000,
-    0x00002000,
-    0x00004000,
-    0x00008000,
-    0x00010000,
-    0x00020000,
-    0x00040000,
-    0x00080000,
-    0x00100000,
-    0x00200000,
-    0x00400000,
-    0x00800000,
-    0x01000000,
-    0x02000000,
-    0x04000000,
-    0x08000000,
-};
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -97,12 +70,12 @@ int FileHeap::Initialize() {
     return OK;
 }
 
-int FileHeap::OpenNew (const char* pszFileName, Size sSize, unsigned int iFlags) {
+int FileHeap::OpenNew (const char* pszFileName, Size cbSize, unsigned int iFlags) {
 
     int iErrCode;
     Bucket i, iBucket;
 
-    Size sRealSize = sSize;
+    Size sRealSize = cbSize;
 
     if (sRealSize == 0) {
         Assert (!"Initial size cannot be zero");
@@ -112,7 +85,7 @@ int FileHeap::OpenNew (const char* pszFileName, Size sSize, unsigned int iFlags)
     sRealSize += SIZE_OF_BLOCK_HEADER;
     if (sRealSize > MAX_BLOCK_SIZE) {
         Assert (!"Initial size cannot be that large");
-        return NO_OFFSET;
+        return ERROR_INVALID_ARGUMENT;
     }
 
     iBucket = GetBucket (sRealSize);
@@ -125,28 +98,24 @@ int FileHeap::OpenNew (const char* pszFileName, Size sSize, unsigned int iFlags)
         );
 
     if (iErrCode != OK) {
-        Assert (!"Could not open file, or size was wrong");
+        Assert (!"Could not open file, or size was too large");
         return iErrCode;
     }
-
-    // Init header
-    m_pHeader = (FileHeapHeader*) m_mmfData.GetAddress();
-    Assert (m_pHeader != NULL);
 
     //
     // Format fresh header
     //
 
-    m_pHeader->cNumFreeBlocks = 1;
-    m_pHeader->cNumAllocatedBlocks = 0;
-    
-    m_pHeader->cNumUsedBytes = 0;
-    m_pHeader->cNumSlackBytes = 0;
-
-    m_pHeader->oLastBlock = SIZE_OF_MANAGER_HEADER;
-
     Assert (SIZE_OF_MANAGER_HEADER % ALIGNMENT_BASE == 0);
 
+    m_pHeader = (FileHeapHeader*) m_mmfData.GetAddress();
+    Assert (m_pHeader != NULL);
+
+    m_pHeader->cNumFreeBlocks = 1;
+    m_pHeader->cNumAllocatedBlocks = 0;
+    m_pHeader->cbNumUsedBytes = 0;
+    m_pHeader->cbNumSlackBytes = 0;
+    m_pHeader->oLastBlock = SIZE_OF_MANAGER_HEADER;
     m_pHeader->oPadding = BLOCK_SIGNATURE;
 
     for (i = 0; i < NUM_BUCKETS; i ++) {
@@ -201,9 +170,10 @@ bool FileHeap::Check() {
     
     bool bGood = true;
 
-    Count cNumFreeBlocks = 0, cNumAllocatedBlocks = 0, cUsedBytes = 0, cSlackBytes = 0;
+    Count cNumFreeBlocks = 0, cNumAllocatedBlocks = 0;
+    Size cbUsedBytes = 0, cbSlackBytes = 0;
     Count pcNumFreeBlocks [NUM_BUCKETS] = {0};
-    Size sTotalSize = 0;
+    Size cbTotalSize = 0;
 
     Bucket i, iBucket;
     Offset oBlock, oPrevBlock;
@@ -227,16 +197,16 @@ bool FileHeap::Check() {
             goto Cleanup;
         }
         
-        sTotalSize += pBlock->sSize;
+        cbTotalSize += pBlock->cbSize;
         
-        iBucket = GetBucket (pBlock->sSize);
+        iBucket = GetBucket (pBlock->cbSize);
         if (!IsValidBucket (iBucket)) {
             Assert (!"Invalid bucket");
             bGood = false;
             goto Cleanup;
         }
         
-        if (pBlock->sSize != BUCKET_SIZE[iBucket]) {
+        if (pBlock->cbSize != BUCKET_SIZE[iBucket]) {
             Assert (!"Block is in wrong bucket");
             bGood = false;
             goto Cleanup;
@@ -247,22 +217,22 @@ bool FileHeap::Check() {
             cNumFreeBlocks ++;
             pcNumFreeBlocks [iBucket] ++;
 
-            if (pBlock->sUserSize != NO_SIZE) {
+            if (pBlock->cbUserSize != NO_SIZE) {
                 Assert (!"User size not nulled out properly");
                 goto Cleanup;
             }
             
         } else {
 
-            Count cSlack = (Count) (pBlock->sSize - SIZE_OF_BLOCK_HEADER - pBlock->sUserSize);
+            Count cSlack = (Count) (pBlock->cbSize - SIZE_OF_BLOCK_HEADER - pBlock->cbUserSize);
             
-            if (pBlock->sUserSize > pBlock->sSize - SIZE_OF_BLOCK_HEADER) {
+            if (pBlock->cbUserSize > pBlock->cbSize - SIZE_OF_BLOCK_HEADER) {
                 Assert (!"Invalid user size");
                 bGood = false;
                 goto Cleanup;
             }
 
-            if (pBlock->sUserSize == 0 || pBlock->sUserSize == NO_SIZE) {
+            if (pBlock->cbUserSize == 0 || pBlock->cbUserSize == NO_SIZE) {
                 Assert (!"User size should not be zero");
                 bGood = false;
                 goto Cleanup;
@@ -270,22 +240,20 @@ bool FileHeap::Check() {
             
             cNumAllocatedBlocks ++;
 
-            cUsedBytes += (Count) pBlock->sUserSize;
-            cSlackBytes += cSlack;
+            cbUsedBytes += (Count) pBlock->cbUserSize;
+            cbSlackBytes += cSlack;
         }
         
         pBlock = GetNextBlockHeader (pBlock);
     }
     
     if (cNumFreeBlocks != m_pHeader->cNumFreeBlocks || cNumAllocatedBlocks != m_pHeader->cNumAllocatedBlocks) {
-
         Assert (!"Block counts don't match");
         bGood = false;
         goto Cleanup;
     }
 
-    if (cUsedBytes != m_pHeader->cNumUsedBytes || cSlackBytes != m_pHeader->cNumSlackBytes) {
-
+    if (cbUsedBytes != m_pHeader->cbNumUsedBytes || cbSlackBytes != m_pHeader->cbNumSlackBytes) {
         Assert (!"Byte counts don't match");
         bGood = false;
         goto Cleanup;
@@ -318,7 +286,7 @@ bool FileHeap::Check() {
             pBlock = GetBlockHeader (oBlock);
             Assert (pBlock != NULL);
             
-            if (pBlock->sSize != BUCKET_SIZE[i]) {
+            if (pBlock->cbSize != BUCKET_SIZE[i]) {
                 Assert (!"Block is in wrong bucket");
                 bGood = false;
                 goto Cleanup;
@@ -345,7 +313,7 @@ bool FileHeap::Check() {
     //
     // Check size
     //
-    if (sTotalSize + SIZE_OF_MANAGER_HEADER != GetSize()) {
+    if (cbTotalSize + SIZE_OF_MANAGER_HEADER != GetSize()) {
         Assert (!"Size is wrong");
         bGood = false;
         goto Cleanup;
@@ -361,12 +329,12 @@ Cleanup:
     return bGood;
 }
 
-Offset FileHeap::Allocate (Size sSize) {
+Offset FileHeap::Allocate (Size cbSize) {
 
     Bucket iBucket;
     Offset oOffset = NO_OFFSET;
 
-    Size sRealSize = sSize;
+    Size sRealSize = cbSize;
 
     m_rwGlobalLock.WaitReader();
 
@@ -399,22 +367,19 @@ Offset FileHeap::Allocate (Size sSize) {
         BlockHeader* pBlock = GetBlockHeaderFromUserOffset (oOffset);
         Assert (pBlock != NULL);
 
-        pBlock->sUserSize = sSize;
-        Assert (sSize != 0 && sSize != NO_SIZE);
+        pBlock->cbUserSize = cbSize;
+        Assert (cbSize != 0 && cbSize != NO_SIZE);
 
         // More allocated bytes, more slack bytes
-        // TODO: use AtomicIncrement64 when available
-        Algorithm::AtomicIncrement (&m_pHeader->cNumUsedBytes,  (int) pBlock->sUserSize);
-        Algorithm::AtomicIncrement (&m_pHeader->cNumSlackBytes, (int) (pBlock->sSize - pBlock->sUserSize - SIZE_OF_BLOCK_HEADER));
+        Algorithm::AtomicIncrement(&m_pHeader->cbNumUsedBytes,  pBlock->cbUserSize);
+        Algorithm::AtomicIncrement(&m_pHeader->cbNumSlackBytes, pBlock->cbSize - pBlock->cbUserSize - SIZE_OF_BLOCK_HEADER);
 
 #ifdef _DEBUG
-
         // Mark up the allocated space
-        memset (GetAddress (oOffset), BLOCK_FILLER, pBlock->sSize - SIZE_OF_BLOCK_HEADER);
+        memset (GetAddress (oOffset), BLOCK_FILLER, (size_t)pBlock->cbSize - SIZE_OF_BLOCK_HEADER);
 #endif
 
     }
-
     else Assert (!"Out of disk space");
 
 Cleanup:
@@ -425,13 +390,12 @@ Cleanup:
 }
 
 
-Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
+Offset FileHeap::Reallocate (Offset oBlock, Size cbSize) {
 
     BlockHeader* pOldHeader;
     Bucket iBucket, iNewBucket, iWantBucket;
 
-    Size sRealSize = sSize, sOldSize, sOldUserSize;
-
+    Size sRealSize = cbSize, sOldSize, sOldUserSize;
     Offset oNewBlock = NO_OFFSET, oRealBlock;
 
     m_rwGlobalLock.WaitReader();
@@ -443,8 +407,9 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
 
     oRealBlock = GetOffsetFromUserOffset (oBlock);
     Assert (IsValidBlock (oRealBlock));
+#ifdef _DEBUG
     Assert (IsSlackSpaceIntact (oRealBlock));
-
+#endif
     pOldHeader = GetBlockHeader (oRealBlock);
     Assert (pOldHeader != NULL);
 
@@ -462,35 +427,33 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
         goto Cleanup;
     }
 
-    sOldSize = pOldHeader->sSize;
-    sOldUserSize = pOldHeader->sUserSize;
+    sOldSize = pOldHeader->cbSize;
+    sOldUserSize = pOldHeader->cbUserSize;
 
     // Return same block if size requested is less than actual size
     if (sRealSize <= sOldSize) {
 
         // Calculate the difference in size
-        Count cDiff = (Count) (sSize - sOldUserSize);
+        Count cDiff = (Count) (cbSize - sOldUserSize);
 
         // Return the same block
         oNewBlock = oRealBlock;
 
         // Set the new user size
-        pOldHeader->sUserSize = sSize;
-        Assert (sSize != 0 && sSize != NO_SIZE);
+        pOldHeader->cbUserSize = cbSize;
+        Assert (cbSize != 0 && cbSize != NO_SIZE);
 
 #ifdef _DEBUG
-
         // If the user block shrunk, mark up the newly freed space
         if (cDiff < 0) {
-            Size sSlackSpace;
-            void* pSlackSpace = GetSlackSpace (oRealBlock, &sSlackSpace);
-            memset (pSlackSpace, BLOCK_FILLER, sSlackSpace);
+            Size cbSlackSpace;
+            void* pSlackSpace = GetSlackSpace (oRealBlock, &cbSlackSpace);
+            memset (pSlackSpace, BLOCK_FILLER, (size_t)cbSlackSpace);
         }
 #endif
-
         // More allocated bytes, less slack bytes
-        Algorithm::AtomicIncrement (&m_pHeader->cNumUsedBytes, cDiff);
-        Algorithm::AtomicDecrement (&m_pHeader->cNumSlackBytes, cDiff);
+        Algorithm::AtomicIncrement(&m_pHeader->cbNumUsedBytes, cDiff);
+        Algorithm::AtomicDecrement(&m_pHeader->cbNumSlackBytes, cDiff);
 
         goto Cleanup;
     }
@@ -502,7 +465,7 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
     Assert (IsValidBucket (iBucket));
     Assert (IsValidBucket (iWantBucket));
     Assert (BUCKET_SIZE[iWantBucket] >= sRealSize);
-    Assert (BUCKET_SIZE[iBucket] == pOldHeader->sSize);
+    Assert (BUCKET_SIZE[iBucket] == pOldHeader->cbSize);
 
     // Try to coalesce with the next blocks
     iNewBucket = CoalesceBlock (oRealBlock, iBucket, iWantBucket, false);
@@ -517,12 +480,11 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
 
             // We got lucky with our coalesce
             // Adjust space usage counts accordingly
-            // TODO: use AtomicIncrement64 when available
-            Algorithm::AtomicIncrement (&m_pHeader->cNumUsedBytes, (int) (sSize - pOldHeader->sUserSize));
-            Algorithm::AtomicDecrement (&m_pHeader->cNumSlackBytes, (int) (sSize - sOldUserSize));
-
-            pOldHeader->sUserSize = sSize;
-            Assert (sSize != 0 && sSize != NO_SIZE);
+            Algorithm::AtomicIncrement(&m_pHeader->cbNumUsedBytes, cbSize - pOldHeader->cbUserSize);
+            Algorithm::AtomicDecrement(&m_pHeader->cbNumSlackBytes, cbSize - sOldUserSize);
+     
+            pOldHeader->cbUserSize = cbSize;
+            Assert (cbSize != 0 && cbSize != NO_SIZE);
 
             oNewBlock = GetOffsetFromUserOffset (oBlock);
             goto Cleanup;
@@ -532,7 +494,7 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
     m_rwGlobalLock.SignalReader();
 
     // At this point, we'll just have to allocate a new block of the desired size
-    oNewBlock = Allocate (sSize);
+    oNewBlock = Allocate (cbSize);
     if (oNewBlock == NO_OFFSET) {
         Assert (!"Out of disk space");
         return NO_OFFSET;
@@ -545,7 +507,7 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
     pOldHeader = GetBlockHeader (oRealBlock);
     Assert (pOldHeader != NULL);
 
-    MemCopy (oNewBlock, oBlock, pOldHeader->sUserSize);
+    MemCopy (oNewBlock, oBlock, pOldHeader->cbUserSize);
     Free (oBlock);
 
     m_rwGlobalLock.SignalReader();
@@ -581,22 +543,21 @@ void FileHeap::Free (Offset oBlock) {
         Assert (!"Free block being double-freed");
         goto Cleanup;
     }
-
+#ifdef _DEBUG
     Assert (IsSlackSpaceIntact (oRealBlock));
-
+#endif
     // Get bucket
-    iBucket = GetBucket (pBlock->sSize);
+    iBucket = GetBucket (pBlock->cbSize);
     Assert (IsValidBucket (iBucket));
-    Assert (pBlock->sSize == BUCKET_SIZE[iBucket]);
+    Assert (pBlock->cbSize == BUCKET_SIZE[iBucket]);
 
     // Less allocated and slack bytes
-    // TODO: use AtomicIncrement64 when available
-    Algorithm::AtomicDecrement (&m_pHeader->cNumUsedBytes, (int) pBlock->sUserSize);
-    Algorithm::AtomicDecrement (&m_pHeader->cNumSlackBytes, (int) (pBlock->sSize - pBlock->sUserSize - SIZE_OF_BLOCK_HEADER));
+    Algorithm::AtomicDecrement(&m_pHeader->cbNumUsedBytes, pBlock->cbUserSize);
+    Algorithm::AtomicDecrement(&m_pHeader->cbNumSlackBytes, pBlock->cbSize - pBlock->cbUserSize - SIZE_OF_BLOCK_HEADER);
 
     // Free the block
     pBlock->bFree = true;
-    pBlock->sUserSize = NO_SIZE;
+    pBlock->cbUserSize = NO_SIZE;
 
     // Coalesce the block
     iBucket = CoalesceBlock (oRealBlock, iBucket, NUM_BUCKETS, true);
@@ -646,12 +607,11 @@ void FileHeap::GetStatistics (FileHeapStatistics* pfhsStats) {
 
     memset (pfhsStats, 0, sizeof (FileHeapStatistics));
 
-    pfhsStats->stSize = m_mmfData.GetSize();
-
-    pfhsStats->stNumAllocatedBlocks = m_pHeader->cNumAllocatedBlocks;
-    pfhsStats->stNumFreeBlocks = m_pHeader->cNumFreeBlocks;
-    pfhsStats->stNumSlackBytes = m_pHeader->cNumSlackBytes;
-    pfhsStats->stNumUsedBytes  = m_pHeader->cNumUsedBytes;
+    pfhsStats->cbSize = m_mmfData.GetSize();
+    pfhsStats->cNumAllocatedBlocks = m_pHeader->cNumAllocatedBlocks;
+    pfhsStats->cNumFreeBlocks = m_pHeader->cNumFreeBlocks;
+    pfhsStats->cbNumSlackBytes = m_pHeader->cbNumSlackBytes;
+    pfhsStats->cbNumUsedBytes  = m_pHeader->cbNumUsedBytes;
 }
 
 
@@ -684,7 +644,7 @@ Size FileHeap::GetBlockSize (Offset oBlock) {
 
     Assert (!pHeader->bFree && "GetBlockSize should never be called on a free block");
 
-    return pHeader->sUserSize;
+    return pHeader->cbUserSize;
 }
 
 bool FileHeap::IsBlockFree (Offset oBlock) {
@@ -706,13 +666,13 @@ bool FileHeap::IsBlockFree (Offset oBlock) {
 // Utility
 //
 
-Bucket FileHeap::GetBucket (Size sSize) {
+Bucket FileHeap::GetBucket (Size cbSize) {
 
     // TODO - optimize
     unsigned int i;
-    size_t sShift = sSize - 1;
+    Size sShift = cbSize - 1;
 
-    for (i = 0; i < sizeof (Size) * 8 && sShift > 0; i ++) {
+    for (i = 0; i < sizeof(Size)*8 && sShift > 0; i ++) {
         sShift = sShift >> 1;
     }
 
@@ -767,7 +727,7 @@ BlockHeader* FileHeap::GetNextBlockHeader (const BlockHeader* pBlockHeader) {
 
     Assert (pBlockHeader != NULL);
 
-    BlockHeader* pNextBlock = (BlockHeader*) ((char*) pBlockHeader + pBlockHeader->sSize);
+    BlockHeader* pNextBlock = (BlockHeader*) ((char*) pBlockHeader + pBlockHeader->cbSize);
 
     char* pszLastAddress = (char*) m_mmfData.GetAddress() + m_mmfData.GetSize();
 
@@ -796,8 +756,8 @@ BlockHeader* FileHeap::GetPrevBlockHeader (const BlockHeader* pBlockHeader) {
 void FileHeap::InitFreeBlock (BlockHeader* pBlockHeader, Offset oPrevBlock, Bucket iBucket) {
 
     pBlockHeader->oPrevBlock = oPrevBlock;
-    pBlockHeader->sSize = BUCKET_SIZE[iBucket];
-    pBlockHeader->sUserSize = NO_SIZE;
+    pBlockHeader->cbSize = BUCKET_SIZE[iBucket];
+    pBlockHeader->cbUserSize = NO_SIZE;
     pBlockHeader->bFree = true;
     pBlockHeader->iSignature = BLOCK_SIGNATURE;
     pBlockHeader->oPadding = (Offset) BLOCK_SIGNATURE;  // Not 64-bit clean
@@ -808,28 +768,28 @@ Offset FileHeap::GetBlockOffset (const BlockHeader* pBlockHeader) {
     return (Offset) pBlockHeader - (Offset) m_mmfData.GetAddress();
 }
 
-void FileHeap::MemCopy (Offset oSrc, Offset oDest, Size sSize) {
+void FileHeap::MemCopy (Offset oSrc, Offset oDest, Size cbSize) {
 
-    Assert (oSrc != NO_OFFSET && oDest != NO_OFFSET && sSize != 0);
+    Assert (oSrc != NO_OFFSET && oDest != NO_OFFSET && cbSize != 0);
 
     char* pszBase = (char*) GetBaseAddress();
-    memcpy (pszBase + oSrc, pszBase + oDest, sSize);
+    memcpy (pszBase + oSrc, pszBase + oDest, (size_t)cbSize);
 }
 
-void FileHeap::MemMove (Offset oSrc, Offset oDest, Size sSize) {
+void FileHeap::MemMove (Offset oSrc, Offset oDest, Size cbSize) {
 
-    Assert (oSrc != NO_OFFSET && oDest != NO_OFFSET && sSize != 0);
+    Assert (oSrc != NO_OFFSET && oDest != NO_OFFSET && cbSize != 0);
 
     char* pszBase = (char*) GetBaseAddress();
-    memmove (pszBase + oSrc, pszBase + oDest, sSize);
+    memmove (pszBase + oSrc, pszBase + oDest, (size_t)cbSize);
 }
 
-void FileHeap::MemSet (Offset oSrc, char cByte, Size sSize) {
+void FileHeap::MemSet (Offset oSrc, char cByte, Size cbSize) {
 
-    Assert (oSrc != NO_OFFSET && sSize != 0);
+    Assert (oSrc != NO_OFFSET && cbSize != 0);
 
     char* pszBase = (char*) GetBaseAddress();
-    memset (pszBase + oSrc, cByte, sSize);
+    memset (pszBase + oSrc, cByte, (size_t)cbSize);
 }
 
 #ifdef _DEBUG
@@ -854,10 +814,10 @@ void* FileHeap::GetSlackSpace (Offset oBlock, Size* psSlackSize) {
 
     BlockHeader* pBlock = GetBlockHeader (oBlock);
 
-    *psSlackSize = pBlock->sSize - SIZE_OF_BLOCK_HEADER - pBlock->sUserSize;
+    *psSlackSize = pBlock->cbSize - SIZE_OF_BLOCK_HEADER - pBlock->cbUserSize;
     Assert (*psSlackSize >= 0);
 
-    return GetAddress (oBlock + SIZE_OF_BLOCK_HEADER + pBlock->sUserSize);
+    return GetAddress (oBlock + SIZE_OF_BLOCK_HEADER + pBlock->cbUserSize);
 }
 
 #endif
@@ -1017,7 +977,7 @@ Offset FileHeap::AllocateBlockFromBucket (Bucket iBucket) {
 
     // If we got a block, mark it up as not free
     Assert (pBlock != NULL);
-    Assert (pBlock->sSize == BUCKET_SIZE [iBucket]);
+    Assert (pBlock->cbSize == BUCKET_SIZE [iBucket]);
     Assert (pBlock->iSignature == BLOCK_SIGNATURE);
     Assert (pBlock->oPadding == (Offset) BLOCK_SIGNATURE);
 
@@ -1040,10 +1000,10 @@ void FileHeap::DivideBlock (Offset oBlock, Bucket iSmallBucket, Bucket iBigBucke
     BlockHeader* pBlock = GetBlockHeader (oBlock);
 
     Assert (pBlock != NULL);
-    Assert (pBlock->sSize == BUCKET_SIZE [iBigBucket]);
+    Assert (pBlock->cbSize == BUCKET_SIZE [iBigBucket]);
 
     // Mark up the new little chunk with its new size
-    pBlock->sSize = BUCKET_SIZE [iSmallBucket];
+    pBlock->cbSize = BUCKET_SIZE [iSmallBucket];
 
     // If we're splitting the last block, then the second half is now the last
 //  if (m_pHeader->oLastBlock == oBlock) {
@@ -1077,7 +1037,7 @@ void FileHeap::RemoveBlockFromBucket (Offset oBlock, Bucket iBucket) {
 
     BlockHeader* pBlock = GetBlockHeader (oBlock);
     Assert (pBlock != NULL);
-    Assert (pBlock->sSize == BUCKET_SIZE [iBucket]);
+    Assert (pBlock->cbSize == BUCKET_SIZE [iBucket]);
 
     Offset oNext = pBlock->oNextInChain;
     Offset oPrev = pBlock->oPrevInChain;
@@ -1116,7 +1076,7 @@ void FileHeap::AddBlockToBucket (Offset oBlock, Bucket iBucket) {
 
     BlockHeader* pBlock = GetBlockHeader (oBlock);
     Assert (pBlock != NULL);
-    Assert (pBlock->sSize == BUCKET_SIZE [iBucket]);
+    Assert (pBlock->cbSize == BUCKET_SIZE [iBucket]);
 
     pBlock->oPrevInChain = NO_OFFSET;
     pBlock->oNextInChain = oHead;
@@ -1176,12 +1136,12 @@ Bucket FileHeap::CoalesceNext (Offset oBlock, Bucket iBucket, bool bFree) {
     // Optimize concurrency
     m_prwBucketLock[iBucket].WaitReader();
 
-    if (pNextBlock->sSize == BUCKET_SIZE[iBucket] && pNextBlock->bFree) {
+    if (pNextBlock->cbSize == BUCKET_SIZE[iBucket] && pNextBlock->bFree) {
 
         m_prwBucketLock[iBucket].SignalReader();
         m_prwBucketLock[iBucket].WaitWriter();
 
-        if (pNextBlock->sSize == BUCKET_SIZE[iBucket] && pNextBlock->bFree) {
+        if (pNextBlock->cbSize == BUCKET_SIZE[iBucket] && pNextBlock->bFree) {
 
             // Remove the next block from the bucket
             RemoveBlockFromBucket (oNextBlock, iBucket);
@@ -1201,7 +1161,7 @@ Bucket FileHeap::CoalesceNext (Offset oBlock, Bucket iBucket, bool bFree) {
 
             // Mark up the coalesced space
             BlockHeader* pDeadBlock = GetBlockHeader (oNextBlock);
-            memset (pDeadBlock, BLOCK_FILLER, pDeadBlock->sSize);
+            memset (pDeadBlock, BLOCK_FILLER, (size_t)pDeadBlock->cbSize);
 #endif
             // One less free block
             Algorithm::AtomicDecrement (&m_pHeader->cNumFreeBlocks);
@@ -1210,11 +1170,11 @@ Bucket FileHeap::CoalesceNext (Offset oBlock, Bucket iBucket, bool bFree) {
 
                 // A free block was coalesced into an allocated block
                 // No more space is in use, but there's a lot more slack
-                // TODO: use AtomicIncrement64 when available
-                Algorithm::AtomicIncrement (&m_pHeader->cNumSlackBytes, (int) pBlock->sSize);
+                // TODO: use AtomicIncrement when available
+                Algorithm::AtomicIncrement (&m_pHeader->cbNumSlackBytes, (int) pBlock->cbSize);
             }
 
-            pBlock->sSize *= 2;
+            pBlock->cbSize *= 2;
 
             return iBucket + 1;
 
@@ -1234,7 +1194,7 @@ Bucket FileHeap::CoalesceNext (Offset oBlock, Bucket iBucket, bool bFree) {
 int FileHeap::Resize (Bucket iBucket) {
 
     int iErrCode;
-    size_t stOldSize;
+    Size cbOldSize;
 
     // Add enough space for sixteen new buckets
     iBucket += 4;
@@ -1242,17 +1202,17 @@ int FileHeap::Resize (Bucket iBucket) {
         iBucket = NUM_BUCKETS - 1;
     }
 
-    Size sAddedSize = BUCKET_SIZE [iBucket];
+    Size cbAddedSize = BUCKET_SIZE [iBucket];
 
     // Lock for real
     m_rwGlobalLock.SignalReader();
     m_rwGlobalLock.WaitWriter();
 
     // Get old size
-    stOldSize = m_mmfData.GetSize();
+    cbOldSize = m_mmfData.GetSize();
     
     // Expand
-    iErrCode = m_mmfData.Expand (sAddedSize);
+    iErrCode = m_mmfData.Expand((size_t)cbAddedSize);
     if (iErrCode == OK) {
 
         // Re-init header
@@ -1263,13 +1223,13 @@ int FileHeap::Resize (Bucket iBucket) {
         Offset oLastBlock = m_pHeader->oLastBlock;
 
         // Get new space header
-        BlockHeader* pHeader = GetBlockHeader (stOldSize);
+        BlockHeader* pHeader = GetBlockHeader (cbOldSize);
 
         // Format new space
         InitFreeBlock (pHeader, oLastBlock, iBucket);
         
         // We're now the last block
-        m_pHeader->oLastBlock = stOldSize;
+        m_pHeader->oLastBlock = cbOldSize;
 
         // One more free block in the world
         m_pHeader->cNumFreeBlocks ++;
@@ -1277,7 +1237,7 @@ int FileHeap::Resize (Bucket iBucket) {
         m_rwGlobalLock.SignalWriter();
 
         // Add new space to appropriate bucket
-        AddBlockToBucket (stOldSize, iBucket);
+        AddBlockToBucket (cbOldSize, iBucket);
 
     } else {
 

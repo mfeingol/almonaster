@@ -61,7 +61,7 @@ int ConfigFile::Reset() {
 void ConfigFile::Clean() {
 
     if (m_pszFileName != NULL) {
-        delete [] m_pszFileName;
+        OS::HeapFree(m_pszFileName);
     }
 
     CleanParameters();
@@ -69,6 +69,7 @@ void ConfigFile::Clean() {
 
 void ConfigFile::CleanParameters() {
 
+    // The actual strings are cleaned up from the hash table
     if (m_ppszParameterNames != NULL) {
         delete [] m_ppszParameterNames;
     }

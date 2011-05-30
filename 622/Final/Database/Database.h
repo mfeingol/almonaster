@@ -45,7 +45,7 @@ struct TemplateDescription {
     char* Name;
     unsigned int NumColumns;
     VariantType* Type;
-    size_t* Size;
+    int64* Size;
     bool OneRow;
     unsigned int NumIndexes;
     unsigned int* IndexColumn;
@@ -97,7 +97,8 @@ struct SearchDefinition {
 #define SEARCH_NOTAND           (0x00000020)
 
 // Miscellaneous constants
-#define VARIABLE_LENGTH_STRING  (0xffffffff)
+const int64 VARIABLE_LENGTH_STRING = 0xffffffffffffffff;
+
 #define MAX_NUM_INDEX_BUCKETS   (100000)
 
 // Initialization flags
@@ -209,7 +210,7 @@ public:
     virtual int GetFirstKey (unsigned int iColumn, int iData, unsigned int* piKey) = 0;
     virtual int GetFirstKey (unsigned int iColumn, float fData, unsigned int* piKey) = 0;
     virtual int GetFirstKey (unsigned int iColumn, const char* pszData, bool bCaseInsensitive, unsigned int* piKey) = 0;
-    virtual int GetFirstKey (unsigned int iColumn, const UTCTime& tData, unsigned int* piKey) = 0;
+
     virtual int GetFirstKey (unsigned int iColumn, int64 i64Data, unsigned int* piKey) = 0;
     virtual int GetFirstKey (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int* piKey) = 0;
 
@@ -225,28 +226,30 @@ public:
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, int* piData) = 0;
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, float* pfData) = 0;
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, const char** ppszData) = 0;
-    virtual int ReadData (unsigned int iKey, unsigned int iColumn, UTCTime* ptData) = 0;
+
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, int64* pi64Data) = 0;
     virtual int ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvData) = 0;
 
     virtual int ReadData (unsigned int iColumn, int* piData) = 0;
     virtual int ReadData (unsigned int iColumn, float* pfData) = 0;
     virtual int ReadData (unsigned int iColumn, const char** ppszData) = 0;
-    virtual int ReadData (unsigned int iColumn, UTCTime* ptData) = 0;
+    
     virtual int ReadData (unsigned int iColumn, int64* pi64Data) = 0;
+
     virtual int ReadData (unsigned int iColumn, Variant* pvData) = 0;
 
     virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows) = 0;
     virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, float** ppfData, unsigned int* piNumRows) = 0;
     virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, UTCTime** pptData, unsigned int* piNumRows) = 0;
+
     virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows) = 0;
+
     virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
 
     virtual int ReadColumn (unsigned int iColumn, int** ppiData, unsigned int* piNumRows) = 0;
     virtual int ReadColumn (unsigned int iColumn, float** ppfData, unsigned int* piNumRows) = 0;
     virtual int ReadColumn (unsigned int iColumn, char*** ppszData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, UTCTime** pptData, unsigned int* piNumRows) = 0;
+    
     virtual int ReadColumn (unsigned int iColumn, int64** ppi64Data, unsigned int* piNumRows) = 0;
     virtual int ReadColumn (unsigned int iColumn, Variant** ppvData, unsigned int* piNumRows) = 0;
 
@@ -266,14 +269,14 @@ public:
     virtual int WriteData (unsigned int iKey, unsigned int iColumn, int iData) = 0;
     virtual int WriteData (unsigned int iKey, unsigned int iColumn, float fData) = 0;
     virtual int WriteData (unsigned int iKey, unsigned int iColumn, const char* pszData) = 0;
-    virtual int WriteData (unsigned int iKey, unsigned int iColumn, const UTCTime& tData) = 0;
+
     virtual int WriteData (unsigned int iKey, unsigned int iColumn, int64 i64Data) = 0;
     virtual int WriteData (unsigned int iKey, unsigned int iColumn, const Variant& vData) = 0;
 
     virtual int WriteData (unsigned int iColumn, int iData) = 0;
     virtual int WriteData (unsigned int iColumn, float fData) = 0;
     virtual int WriteData (unsigned int iColumn, const char* pszData) = 0;
-    virtual int WriteData (unsigned int iColumn, const UTCTime& tData) = 0;
+
     virtual int WriteData (unsigned int iColumn, int64 i64Data) = 0;
     virtual int WriteData (unsigned int iColumn, const Variant& vData) = 0;
 
@@ -292,7 +295,7 @@ public:
     virtual int WriteColumn (unsigned int iColumn, int iData) = 0;
     virtual int WriteColumn (unsigned int iColumn, float fData) = 0;
     virtual int WriteColumn (unsigned int iColumn, const char* pszData) = 0;
-    virtual int WriteColumn (unsigned int iColumn, const UTCTime& tData) = 0;
+    
     virtual int WriteColumn (unsigned int iColumn, int64 i64Data) = 0;
     virtual int WriteColumn (unsigned int iColumn, const Variant& vData) = 0;
 
@@ -356,10 +359,6 @@ public:
     virtual ITemplateEnumerator* GetTemplateEnumerator() = 0;
 
     virtual bool IsTemplateEqual (const char* pszTemplateName, const TemplateDescription& ttTemplate) = 0;
-
-    // TODO - delete when upgrades from old database are finished
-    virtual void Obsolete1() = 0;
-    virtual void Obsolete2() = 0;
 
     virtual int Flush() = 0;
 
@@ -447,7 +446,7 @@ public:
     virtual void FreeData (unsigned int* puiData) = 0;
     virtual void FreeData (float* ppfData) = 0;
     virtual void FreeData (char** ppszData) = 0;
-    virtual void FreeData (UTCTime* ptData) = 0;
+    virtual void FreeData (int64* pi64Data) = 0;
 
     virtual void FreeKeys (unsigned int* piKeys) = 0;
 

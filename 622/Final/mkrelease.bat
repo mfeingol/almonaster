@@ -1,18 +1,24 @@
 @setlocal
 @set DEFOPT=-ST8!n .zip:.jpg:.mp3
 
-cd release
-zip %DEFOPT% -r -D -X -S ..\alajar-win32.zip . -x *.counters -x *.log -x *.dat -x *.report -x *.stat -x *.vcc
-cd ..
+@set PLAT=%1
+@set VERSION=622
+@set PLATDIR=Drop\%PLAT%\Release\bin
 
-gpg --openpgp --local-user D79C1F6B --print-md md5 alajar-win32.zip > alajar-win32.md5
-gpg --openpgp --output alajar-win32.md5.asc --local-user D79C1F6B --clearsign alajar-win32.md5
-gpg --openpgp --verify alajar-win32.md5.asc
+pushd %PLATDIR%
+zip %DEFOPT% -r -D -X -S %temp%\alajar-%PLAT%.zip . -x *.counters -x *.log -x *.dat -x *.report -x *.stat -x *.vcc -x *.scc
+popd
 
-zip %DEFOPT% -D alajar-win32-%1.zip alajar-win32.zip alajar-win32.md5 alajar-win32.md5.asc
+move %temp%\alajar-%PLAT%.zip .
 
-del alajar-win32.zip
-del alajar-win32.md5
-del alajar-win32.md5.asc
+gpg --openpgp --local-user 48A9C666 --print-md md5 alajar-%PLAT%.zip > alajar-%PLAT%.md5
+gpg --openpgp --output alajar-%PLAT%.md5.asc --local-user D79C1F6B --clearsign alajar-%PLAT%.md5
+gpg --openpgp --verify alajar-%PLAT%.md5.asc
+
+zip %DEFOPT% -D alajar-%PLAT%-%VERSION%.zip alajar-%PLAT%.zip alajar-%PLAT%.md5 alajar-%PLAT%.md5.asc
+
+del alajar-%PLAT%.zip
+del alajar-%PLAT%.md5
+del alajar-%PLAT%.md5.asc
 
 @endlocal

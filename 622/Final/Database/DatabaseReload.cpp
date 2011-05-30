@@ -46,7 +46,7 @@ int Database::ReloadTemplates() {
     Template* pTemplate, * pOldTemplate;
 
     // Get number of templates needed
-    size_t stNumTemplates = m_fhTemplateData.GetNumAllocatedBlocks();
+    Count stNumTemplates = m_fhTemplateData.GetNumAllocatedBlocks();
 
     m_pTemplates = new TemplateHashTable (NULL, NULL);
     if (m_pTemplates == NULL || !m_pTemplates->Initialize (max ((unsigned int) stNumTemplates, 20))) {
@@ -121,7 +121,7 @@ int Database::ReloadTables() {
     Table* pTable, * pOldTable;
 
     // Get number of tables needed
-    size_t stNumTables = m_fhTableData.GetNumAllocatedBlocks();
+    Count stNumTables = m_fhTableData.GetNumAllocatedBlocks();
 
     m_pTables = new TableHashTable (NULL, NULL);
     if (m_pTables == NULL || !m_pTables->Initialize (max ((unsigned int) stNumTables, 100))) {

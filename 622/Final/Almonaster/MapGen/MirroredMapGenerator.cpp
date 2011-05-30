@@ -39,7 +39,7 @@ int MirroredMapGenerator::CreatePlanetChains() {
     m_iEdgeCoordinate = 0;
     m_iNumEdgePlanets = 0;
 
-    // The default map generator algorithm is as follows:
+    // The mirrored map generator algorithm works as follows:
     // 1) Create planet chains for half the empires
     // 2) Pick the edge with the most connectivity of the four
     // 3) Mirror the map on that edge, adding a layer of buffer planets

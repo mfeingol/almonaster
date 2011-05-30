@@ -194,11 +194,9 @@ public:
     int WriteText (int iData);
     int WriteText (unsigned int iData);
     int WriteText (float fData);
-    int WriteText (double dData);
-    int WriteText (const UTCTime& tTime);
     int WriteText (const Variant& vData);
     int WriteText (int64 iData);
-    int WriteText (uint64 iData);
+    int WriteDate (const UTCTime& tTime);
 
     int WriteData (const void* pszData, size_t stNumBytes);
 

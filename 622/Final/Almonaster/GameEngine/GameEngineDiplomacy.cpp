@@ -1129,7 +1129,8 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
     if (iErrCode != OK) {
 
         // Try to reset previous value
-        int iErrCode2 = m_pGameData->WriteData (
+        int iErrCode2 = 
+            m_pGameData->WriteData (
             strGameEmpireDiplomacy, 
             iKey, 
             GameEmpireDiplomacy::DipOffer, 

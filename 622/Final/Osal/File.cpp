@@ -67,7 +67,7 @@ int File::OpenRead (const char* pszFileName) {
     }
 
 #ifdef __LINUX__
-	m_hFile = open(pszFileName, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
+    m_hFile = open(pszFileName, O_CREAT | O_RDONLY, S_IRUSR | S_IWUSR);
 #else if defined __WIN32__
     m_hFile = ::CreateFile (
         pszFileName,
@@ -91,8 +91,8 @@ int File::OpenWrite (const char* pszFileName) {
     }
 
 #ifdef __LINUX__
-	m_hFile = open(pszFileName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | O_TRUNC);
-	return (m_hFile == INVALID_HANDLE_VALUE) ? ERROR_FAILURE : OK;
+    m_hFile = open(pszFileName, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR | O_TRUNC);
+    return (m_hFile == INVALID_HANDLE_VALUE) ? ERROR_FAILURE : OK;
 #else if defined __WIN32__
 
     m_hFile = ::CreateFile (
@@ -126,8 +126,8 @@ int File::OpenAppend (const char* pszFileName) {
     }
 
 #ifdef __LINUX__
-	m_hFile = open(pszFileName, O_CREAT | O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
-	return (m_hFile == INVALID_HANDLE_VALUE) ? ERROR_FAILURE : OK;
+    m_hFile = open(pszFileName, O_CREAT | O_RDWR | O_APPEND, S_IRUSR | S_IWUSR);
+    return (m_hFile == INVALID_HANDLE_VALUE) ? ERROR_FAILURE : OK;
 #else if defined __WIN32__
 
     m_hFile = ::CreateFile (
@@ -189,7 +189,7 @@ int File::GetFilePointer (size_t* pstLocation) {
 #ifdef __LINUX__
     off_t offset = lseek(m_hFile, 0, SEEK_CUR);
     if (offset == (off_t)-1)
-		return ERROR_FAILURE;
+        return ERROR_FAILURE;
 
     *pstLocation = (size_t) offset;
     return OK;
@@ -238,9 +238,9 @@ int File::GetSize (size_t* pstSize) {
     struct stat st;
     if (fstat(m_hFile, &st) < 0)
     {
-		*pstSize = 0;
-		return ERROR_FAILURE;
-	}
+        *pstSize = 0;
+        return ERROR_FAILURE;
+    }
 
     *pstSize = st.st_size;
     return OK;
@@ -391,8 +391,8 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
     while ((dirent = readdir(dir)) != NULL)
     {
         filename = dirent->d_name;
-		if (strcmp (filename, ".") == 0 ||
-			strcmp (filename, "..") == 0)
+        if (strcmp (filename, ".") == 0 ||
+            strcmp (filename, "..") == 0)
         {
             continue;
         }
@@ -471,9 +471,9 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
             }
 
 #ifdef __LINUX__
-			pEnum->m_ppszFileName[pEnum->m_iNumFiles] = String::StrDup (dirent->d_name);
+            pEnum->m_ppszFileName[pEnum->m_iNumFiles] = String::StrDup (dirent->d_name);
 #else if defined __WIN32__
-			pEnum->m_ppszFileName[pEnum->m_iNumFiles] = String::StrDup (fdFileData.cFileName);
+            pEnum->m_ppszFileName[pEnum->m_iNumFiles] = String::StrDup (fdFileData.cFileName);
 #endif
             if (pEnum->m_ppszFileName[pEnum->m_iNumFiles] == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -624,7 +624,7 @@ FileType File::GetFileType (const char* pszFileName) {
 
     struct stat st;
     if (stat(pszFileName, &st) < 0)
-		return FILETYPE_ERROR;
+        return FILETYPE_ERROR;
     return S_ISDIR(st.st_mode) ? FILETYPE_DIRECTORY : FILETYPE_FILE;
 
 #else if defined __WIN32__
@@ -676,7 +676,7 @@ int File::GetFileSize (const char* pszFileName, size_t* pstSize) {
 #ifdef __LINUX__
     struct stat st;
     if (stat(pszFileName, &st) < 0)
-		return ERROR_FAILURE;
+        return ERROR_FAILURE;
 
     *pstSize = st.st_size;
     return OK;
@@ -702,17 +702,17 @@ int File::GetFileSize (const char* pszFileName, size_t* pstSize) {
 
 int File::DeleteFile (const char* pszFileName) {
 #ifdef __LINUX__
-	return (unlink(pszFileName) == 0) ? OK : ERROR_FAILURE;
+    return (unlink(pszFileName) == 0) ? OK : ERROR_FAILURE;
 #else if defined __WIN32__
-	return ::DeleteFile (pszFileName) ? OK : ERROR_FAILURE;
+    return ::DeleteFile (pszFileName) ? OK : ERROR_FAILURE;
 #endif
 }
 
 int File::RenameFile (const char* pszOldName, const char* pszNewName) {
 #ifdef __LINUX__
-	return (rename(pszOldName, pszNewName) == 0) ? OK : ERROR_FAILURE;
+    return (rename(pszOldName, pszNewName) == 0) ? OK : ERROR_FAILURE;
 #else if defined __WIN32__
-	return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
+    return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -743,7 +743,7 @@ int File::CopyFile (const char* pszOldName, const char* pszNewName) {
     else
         return OK;
 #else if defined __WIN32__
-	return ::CopyFile (pszOldName, pszNewName, FALSE) ? OK : ERROR_FAILURE;
+    return ::CopyFile (pszOldName, pszNewName, FALSE) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -757,7 +757,7 @@ int File::MoveFile (const char* pszOldName, const char* pszNewName) {
     DeleteFile(pszOldName);
 
 #else
-	return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
+    return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -999,9 +999,9 @@ bool File::WasFileModifiedAfter (const char* pszFileName, const char* pszGMTDate
 
 int File::CreateDirectory (const char* pszDirName) {
 #ifdef __LINUX__
-	return mkdir(pszDirName, 0700) == 0 ? OK : ERROR_FAILURE;
+    return mkdir(pszDirName, 0700) == 0 ? OK : ERROR_FAILURE;
 #else if defined __WIN32__
-	return ::CreateDirectory (pszDirName, NULL) ? OK : ERROR_FAILURE;
+    return ::CreateDirectory (pszDirName, NULL) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -1094,7 +1094,7 @@ int File::RenameDirectory (const char* pszOldName, const char* pszNewName) {
 #ifdef __LINUX__
     return RenameFile(pszOldName, pszNewName);
 #else if defined __WIN32__
-	return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
+    return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -1102,7 +1102,7 @@ int File::MoveDirectory (const char* pszOldName, const char* pszNewName) {
 #ifdef __LINUX__
     return RenameFile(pszOldName, pszNewName);
 #else if defined __WIN32__
-	return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
+    return ::MoveFile (pszOldName, pszNewName) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -1112,28 +1112,28 @@ int File::ResolvePath (const char* pszPath, char pszResolvedPath [OS::MaxFileNam
 
     size_t i, stLength = strlen (pszPath);
 
-	// Check for path too long
-	if (stLength >= OS::MaxFileNameLength) {
-		return ERROR_FAILURE;
-	}
+    // Check for path too long
+    if (stLength >= OS::MaxFileNameLength) {
+        return ERROR_FAILURE;
+    }
 
     if (*pszPath == '/')
     {
         // absolute path
-		memcpy (pszResolvedPath, pszPath, stLength + 1);
+        memcpy (pszResolvedPath, pszPath, stLength + 1);
     }
     else
     {
         // relative
-		int iErrCode = OS::GetApplicationDirectory (pszResolvedPath);
-		if (iErrCode != OK)
-			return iErrCode;
+        int iErrCode = OS::GetApplicationDirectory (pszResolvedPath);
+        if (iErrCode != OK)
+            return iErrCode;
 
-		if (stLength + strlen (pszResolvedPath) + 1 >= OS::MaxFileNameLength)
-			return ERROR_FAILURE;
+        if (stLength + strlen (pszResolvedPath) + 1 >= OS::MaxFileNameLength)
+            return ERROR_FAILURE;
 
-		strcat (pszResolvedPath, "/");
-		strcat (pszResolvedPath, pszPath);
+        strcat (pszResolvedPath, "/");
+        strcat (pszResolvedPath, pszPath);
     }
 
     return OK;
@@ -1173,7 +1173,7 @@ void FileEnumerator::Clean() {
         for (unsigned int i = 0; i < m_iNumFiles; i ++) {
             
             if (m_ppszFileName[i] != NULL) {
-                delete [] m_ppszFileName[i];
+                OS::HeapFree(m_ppszFileName[i]);
             }
         }
 

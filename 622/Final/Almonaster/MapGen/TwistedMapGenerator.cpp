@@ -50,7 +50,7 @@ int TwistedMapGenerator::CreatePlanetChains() {
     m_iBestJoinNumConnections = 0;
     m_cpChosenEdge = NO_DIRECTION;
 
-    // The default twisted generator algorithm is as follows:
+    // The twisted generator algorithm works as follows:
     // 1) Create planet chains for half the empires
     // 2) Create a copy of the half-map and rotate it 180 degrees
     // 3) Find the location for the second half-map that maximizes connectivity, without

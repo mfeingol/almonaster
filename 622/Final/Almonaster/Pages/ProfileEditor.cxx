@@ -2009,11 +2009,11 @@ Quote:
             AddMessage ("Your empire's statistics have been blanked");
 
             SystemConfiguration scConfig;
-	        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-	            char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-	            sprintf (pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
+            if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+                char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+                sprintf (pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
                 g_pReport->WriteReport (pszText);
-	        }
+            }
 
             break;
 
@@ -2159,7 +2159,7 @@ case 0:
     %><tr><td align="left">Recase empire name:</td><%
     %><td align="left"><input type="text" name="RecasedEmpireName" size="<%
     stLen = strlen (m_vEmpireName.GetCharPtr());
-    Write ((uint64) stLen); %>" maxlength="<% Write ((uint64) stLen); 
+    Write ((int64)stLen); %>" maxlength="<% Write ((int64)stLen); 
     %>" value="<% Write (m_vEmpireName.GetCharPtr()); %>"></td></tr><%
 
     if (m_iEmpireKey != GUEST_KEY) {
@@ -3130,7 +3130,7 @@ case 2:
 
         for (i = 0; i < (int) iNumMessages; i ++) {
             piIndex[i] = i;
-            ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetUTCTime();
+            ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetInteger64();
         }
 
         Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
@@ -3165,7 +3165,7 @@ case 2:
 
                 %><tr><td>Time: <% 
 
-                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::TimeStamp], pszDate);
+                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::TimeStamp].GetInteger64(), pszDate);
                 if (iErrCode != OK) {
                     %>Unknown date<%
                 } else {

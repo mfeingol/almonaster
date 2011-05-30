@@ -151,7 +151,7 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
         }
         
         OutputText (", totalling ");
-        pHttpResponse->WriteText ((uint64) stSize / 1024);
+        pHttpResponse->WriteText((int64)stSize / 1024);
         OutputText (" KB</td></tr>");
 
         pHttpResponse->WriteText (
@@ -284,7 +284,7 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
             OutputText ("</td><td align=\"center\">");
             pHttpResponse->WriteText (stats.NumFileForms);
             OutputText ("</td><td align=\"center\">");
-            pHttpResponse->WriteText ((uint64) (stats.NumBytesInFileForms / 1024));
+            pHttpResponse->WriteText ((int64)(stats.NumBytesInFileForms / 1024));
             OutputText (" KB</td></tr><tr></table><h3>Data Flow</h3><table width=\"80%\" border=\"2\">");
             
             OutputText (
@@ -295,19 +295,19 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
                 "</tr><tr><td align=\"center\">"
                 );
             
-            pHttpResponse->WriteText (stats.NumBytesSent);
+            pHttpResponse->WriteText((int64)stats.NumBytesSent);
             OutputText (" (");
-            pHttpResponse->WriteText ((uint64) (stats.NumBytesSent / 1024));
+            pHttpResponse->WriteText((int64)(stats.NumBytesSent / 1024));
             OutputText (" KB)");
             OutputText ("</td><td align=\"center\">");
-            pHttpResponse->WriteText (stats.NumBytesReceived);
+            pHttpResponse->WriteText((int64)stats.NumBytesReceived);
             OutputText (" (");
-            pHttpResponse->WriteText ((uint64) (stats.NumBytesReceived / 1024));
+            pHttpResponse->WriteText((int64)(stats.NumBytesReceived / 1024));
             OutputText (" KB)");
             OutputText ("</td><td align=\"center\">");
-            pHttpResponse->WriteText (stats.AverageRequestParseTime);
+            pHttpResponse->WriteText(stats.AverageRequestParseTime);
             OutputText (" ms</td><td align=\"center\">");
-            pHttpResponse->WriteText (stats.AverageResponseTime);
+            pHttpResponse->WriteText(stats.AverageResponseTime);
             OutputText (" ms</td></tr>");
         }
     }

@@ -1,193 +1,257 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.10"
+	Version="9.00"
 	Name="Test"
 	ProjectGUID="{6E4E401B-9710-4A68-8B3A-0ADA340EE2A9}"
-	SccProjectName=""
-	SccLocalPath="">
+	TargetFrameworkVersion="131072"
+	>
 	<Platforms>
 		<Platform
-			Name="Win32"/>
+			Name="Win32"
+		/>
 	</Platforms>
+	<ToolFiles>
+	</ToolFiles>
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory=".\Debug"
 			IntermediateDirectory=".\Debug"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
 			UseOfATL="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
+			ATLMinimizesCRunTimeLibraryUsage="false"
 			CharacterSet="2"
-			ManagedExtensions="FALSE"
-			WholeProgramOptimization="TRUE">
+			ManagedExtensions="0"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+				ExcludedFromBuild="true"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TypeLibraryName=".\Debug/Test.tlb"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/vmg"
 				Optimization="0"
-				GlobalOptimizations="FALSE"
 				InlineFunctionExpansion="0"
-				EnableIntrinsicFunctions="FALSE"
-				ImproveFloatingPointConsistency="FALSE"
+				EnableIntrinsicFunctions="false"
 				FavorSizeOrSpeed="0"
-				OmitFramePointers="FALSE"
-				EnableFiberSafeOptimizations="FALSE"
-				OptimizeForProcessor="2"
-				OptimizeForWindowsApplication="FALSE"
+				OmitFramePointers="false"
+				EnableFiberSafeOptimizations="false"
 				AdditionalIncludeDirectories="D:\mfeingol\dev\620\include"
 				PreprocessorDefinitions="WIN32,_DEBUG,_CONSOLE"
-				StringPooling="TRUE"
-				MinimalRebuild="TRUE"
-				ExceptionHandling="FALSE"
+				StringPooling="true"
+				MinimalRebuild="true"
+				ExceptionHandling="0"
 				BasicRuntimeChecks="2"
-				SmallerTypeCheck="FALSE"
+				SmallerTypeCheck="false"
 				RuntimeLibrary="3"
 				StructMemberAlignment="0"
-				BufferSecurityCheck="TRUE"
-				EnableFunctionLevelLinking="TRUE"
-				DisableLanguageExtensions="FALSE"
-				DefaultCharIsUnsigned="FALSE"
-				TreatWChar_tAsBuiltInType="TRUE"
-				ForceConformanceInForLoopScope="TRUE"
-				RuntimeTypeInfo="FALSE"
+				BufferSecurityCheck="true"
+				EnableFunctionLevelLinking="true"
+				DisableLanguageExtensions="false"
+				DefaultCharIsUnsigned="false"
+				TreatWChar_tAsBuiltInType="true"
+				ForceConformanceInForLoopScope="true"
+				RuntimeTypeInfo="false"
 				PrecompiledHeaderFile=".\Debug/Test.pch"
 				AssemblerListingLocation=".\Debug/"
 				ObjectFile=".\Debug/"
 				ProgramDataBaseFileName=".\Debug/"
 				WarningLevel="4"
-				WarnAsError="TRUE"
-				SuppressStartupBanner="TRUE"
-				Detect64BitPortabilityProblems="FALSE"
+				WarnAsError="true"
+				SuppressStartupBanner="true"
+				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="3"
-				ShowIncludes="FALSE"
-				UndefineAllPreprocessorDefinitions="FALSE"/>
+				ShowIncludes="false"
+				UndefineAllPreprocessorDefinitions="false"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="_DEBUG"
+				Culture="1033"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+				ExcludedFromBuild="true"
+			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="FALSE"
+				IgnoreImportLibrary="false"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib osal.lib database.lib"
 				OutputFile=".\Debug/Test.exe"
 				LinkIncremental="0"
-				SuppressStartupBanner="TRUE"
+				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="D:\mfeingol\dev\620\include"
-				GenerateDebugInformation="TRUE"
+				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Test.pdb"
 				SubSystem="1"
 				TerminalServerAware="0"
-				SwapRunFromCD="FALSE"
-				TargetMachine="0"/>
+				SwapRunFromCD="false"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+				TargetMachine="0"
+			/>
 			<Tool
-				Name="VCMIDLTool"
-				TypeLibraryName=".\Debug/Test.tlb"/>
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
+			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				ExcludedFromBuild="TRUE"/>
-			<Tool
-				Name="VCPreBuildEventTool"
-				ExcludedFromBuild="TRUE"/>
-			<Tool
-				Name="VCPreLinkEventTool"
-				ExcludedFromBuild="TRUE"/>
-			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="_DEBUG"
-				Culture="1033"/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				ExcludedFromBuild="true"
+			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
 			OutputDirectory=".\Release"
 			IntermediateDirectory=".\Release"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC71.vsprops"
 			UseOfMFC="0"
-			ATLMinimizesCRunTimeLibraryUsage="FALSE"
-			CharacterSet="2">
+			ATLMinimizesCRunTimeLibraryUsage="false"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TypeLibraryName=".\Release/Test.tlb"
+			/>
 			<Tool
 				Name="VCCLCompilerTool"
 				InlineFunctionExpansion="2"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
-				StringPooling="TRUE"
-				RuntimeLibrary="4"
-				EnableFunctionLevelLinking="TRUE"
-				UsePrecompiledHeader="2"
+				StringPooling="true"
+				RuntimeLibrary="0"
+				EnableFunctionLevelLinking="true"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/Test.pch"
 				AssemblerListingLocation=".\Release/"
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="3"
-				SuppressStartupBanner="TRUE"/>
+				SuppressStartupBanner="true"
+			/>
 			<Tool
-				Name="VCCustomBuildTool"/>
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+				PreprocessorDefinitions="NDEBUG"
+				Culture="1033"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
 			<Tool
 				Name="VCLinkerTool"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib wsock32.lib osal.lib"
 				OutputFile=".\Release/Test.exe"
 				LinkIncremental="1"
-				SuppressStartupBanner="TRUE"
-				GenerateDebugInformation="TRUE"
+				SuppressStartupBanner="true"
+				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Release/Test.pdb"
-				SubSystem="1"/>
+				SubSystem="1"
+				RandomizedBaseAddress="1"
+				DataExecutionPrevention="0"
+			/>
 			<Tool
-				Name="VCMIDLTool"
-				TypeLibraryName=".\Release/Test.tlb"/>
+				Name="VCALinkTool"
+			/>
 			<Tool
-				Name="VCPostBuildEventTool"/>
+				Name="VCManifestTool"
+			/>
 			<Tool
-				Name="VCPreBuildEventTool"/>
+				Name="VCXDCMakeTool"
+			/>
 			<Tool
-				Name="VCPreLinkEventTool"/>
+				Name="VCBscMakeTool"
+			/>
 			<Tool
-				Name="VCResourceCompilerTool"
-				PreprocessorDefinitions="NDEBUG"
-				Culture="1033"/>
+				Name="VCFxCopTool"
+			/>
 			<Tool
-				Name="VCWebServiceProxyGeneratorTool"/>
+				Name="VCAppVerifierTool"
+			/>
 			<Tool
-				Name="VCXMLDataGeneratorTool"/>
-			<Tool
-				Name="VCWebDeploymentTool"/>
-			<Tool
-				Name="VCManagedWrapperGeneratorTool"/>
-			<Tool
-				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
+				Name="VCPostBuildEventTool"
+			/>
 		</Configuration>
 	</Configurations>
 	<References>
 	</References>
 	<Files>
 		<File
-			RelativePath=".\Main.cpp">
+			RelativePath=".\Main.cpp"
+			>
 		</File>
 		<File
-			RelativePath="RWLocks.cpp">
+			RelativePath="RWLocks.cpp"
+			>
 		</File>
 		<File
-			RelativePath="RWLocks.h">
+			RelativePath="RWLocks.h"
+			>
 		</File>
 		<File
-			RelativePath=".\Sorting.cpp">
+			RelativePath=".\Sorting.cpp"
+			>
 		</File>
 		<File
-			RelativePath=".\Sorting.h">
+			RelativePath=".\Sorting.h"
+			>
 		</File>
 		<File
-			RelativePath=".\TestDatabase.cpp">
+			RelativePath=".\TestDatabase.cpp"
+			>
 		</File>
 		<File
-			RelativePath=".\TestDatabase.h">
+			RelativePath=".\TestDatabase.h"
+			>
 		</File>
 	</Files>
 	<Globals>

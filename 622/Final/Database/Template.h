@@ -24,9 +24,6 @@
 
 #include "CDatabase.h"
 
-#define DEFAULT_ELEMENT_SIZE 4
-#define MAX_ELEMENT_SIZE 8
-
 class Database;
 
 class Template : public ITemplate {
@@ -44,7 +41,7 @@ private:
     static bool HasBadTypes (unsigned int iNumColumns, VariantType* pvtType);
 
     int FinalConstruct (size_t stBlockSize, const char* pszName, size_t stNameLen,
-        unsigned int* piIndices, unsigned int* piIndexFlags, VariantType* pvtTypes, size_t* pstSizes);
+        unsigned int* piIndices, unsigned int* piIndexFlags, VariantType* pvtTypes, int64* pcbSizes);
 
 public:
 
@@ -70,8 +67,8 @@ public:
     TemplateDescription TemplateData;
 
     // Extra Data
-    size_t RowSize;
-    size_t* ColOffset;
+    Size RowSize;
+    Offset* ColOffset;
 
     bool HasVariableLengthData;
     bool HasUniqueDataIndex;

@@ -1482,12 +1482,8 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
         // Decrement num resigned
         iErrCode = m_pGameData->Increment (strGameData, GameData::NumEmpiresResigned, -1);
         if (iErrCode != OK) {
-
-            Assert (false);
-            
             int iErrCode2 = m_pGameData->WriteOr (strEmpireData, GameEmpireData::Options, RESIGNED);
             Assert (iErrCode2 == OK);
-
             goto Cleanup;
         }
 
@@ -2391,7 +2387,9 @@ int GameEngine::WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpir
         iNextFuel += min (vFuel.GetInteger(), iNewPop) - min (vFuel.GetInteger(), vPop.GetInteger());
     }
 
+#ifdef _DEBUG
     Assert (iTotalMaxPop == vTargetPop.GetInteger());
+#endif
 
     // Write nextpop, nextmin, next fuel
     iErrCode = m_pGameData->WriteData (strEmpireData, GameEmpireData::NextTotalPop, iNextPop);

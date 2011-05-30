@@ -129,9 +129,9 @@ void HtmlRenderer::WriteServerRules() {
     
     if (OS::GetProcessMemoryStatistics (&iTotalPhysicalMemory, &iTotalVirtualMemory) == OK) {
         OutputText ("<li>The server process' working set size is <strong>");
-        m_pHttpResponse->WriteText ((uint64) iTotalPhysicalMemory / 1024); 
+        m_pHttpResponse->WriteText ((int64) iTotalPhysicalMemory / 1024); 
         OutputText (" KB</strong> and its virtual memory size is <strong>");
-        m_pHttpResponse->WriteText ((uint64) iTotalVirtualMemory / 1024); 
+        m_pHttpResponse->WriteText ((int64) iTotalVirtualMemory / 1024); 
         OutputText (" KB</strong></li>");
     } else {
         OutputText ("<li>Process memory usage information is not available</li>");
@@ -160,7 +160,7 @@ void HtmlRenderer::WriteServerRules() {
     }
     if (iNumFiles != 0) {
         OutputText (", totalling <strong>");
-        m_pHttpResponse->WriteText ((uint64) (stFileCacheSize / 1024));
+        m_pHttpResponse->WriteText ((int64) (stFileCacheSize / 1024));
         OutputText ("</strong> KB");
     }
     OutputText ("</li>");
@@ -172,9 +172,9 @@ void HtmlRenderer::WriteServerRules() {
         OutputText ("<li>The server has handled <strong>");
         m_pHttpResponse->WriteText (stats.NumRequests);
         OutputText ("</strong> requests today, totalling <strong>");
-        m_pHttpResponse->WriteText (stats.NumBytesReceived / 1024);
+        m_pHttpResponse->WriteText((int64)stats.NumBytesReceived / 1024);
         OutputText ("</strong> KB received and <strong>");
-        m_pHttpResponse->WriteText (stats.NumBytesSent / 1024);
+        m_pHttpResponse->WriteText((int64)stats.NumBytesSent / 1024);
         OutputText ("</strong> KB sent</li>");
     }
     
@@ -201,11 +201,11 @@ void HtmlRenderer::WriteServerRules() {
         m_pHttpResponse->WriteText (dsStats.iNumTemplates);
         OutputText ("</strong> templates and occupies <strong>");
         
-        m_pHttpResponse->WriteText ((uint64)
-            (dsStats.fhsMetaStats.stSize + 
-            dsStats.fhsTableStats.stSize + 
-            dsStats.fhsTemplateStats.stSize + 
-            dsStats.fhsVarlenStats.stSize) / 1024
+        m_pHttpResponse->WriteText ((int64)
+            (dsStats.fhsMetaStats.cbSize + 
+            dsStats.fhsTableStats.cbSize + 
+            dsStats.fhsTemplateStats.cbSize + 
+            dsStats.fhsVarlenStats.cbSize) / 1024
             );
 
         OutputText ("</strong> KB on disk");
@@ -217,85 +217,85 @@ void HtmlRenderer::WriteServerRules() {
                 "<li>Tables: <strong>"
                 );
             
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTableStats.stNumAllocatedBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumAllocatedBlocks);
             OutputText ("</strong> allocated block");
-            if (dsStats.fhsTableStats.stNumAllocatedBlocks != 1) OutputText ("s");
+            if (dsStats.fhsTableStats.cNumAllocatedBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTableStats.stNumFreeBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumFreeBlocks);
             OutputText ("</strong> free block");
-            if (dsStats.fhsTableStats.stNumFreeBlocks != 1) OutputText ("s");
+            if (dsStats.fhsTableStats.cNumFreeBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTableStats.stNumUsedBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumUsedBytes / 1024);
             OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTableStats.stNumSlackBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumSlackBytes / 1024);
             OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64)
-                (dsStats.fhsTableStats.stSize - 
-                dsStats.fhsTableStats.stNumUsedBytes - 
-                dsStats.fhsTableStats.stNumSlackBytes) / 1024
+            m_pHttpResponse->WriteText ((int64)
+                (dsStats.fhsTableStats.cbSize - 
+                dsStats.fhsTableStats.cbNumUsedBytes - 
+                dsStats.fhsTableStats.cbNumSlackBytes) / 1024
                 );
             OutputText ("</strong> free KB</li>");
 
 
             OutputText ("<li>Metadata: <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsMetaStats.stNumAllocatedBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumAllocatedBlocks);
             OutputText ("</strong> allocated block");
-            if (dsStats.fhsMetaStats.stNumAllocatedBlocks != 1) OutputText ("s");
+            if (dsStats.fhsMetaStats.cNumAllocatedBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsMetaStats.stNumFreeBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumFreeBlocks);
             OutputText ("</strong> free block");
-            if (dsStats.fhsMetaStats.stNumFreeBlocks != 1) OutputText ("s");
+            if (dsStats.fhsMetaStats.cNumFreeBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsMetaStats.stNumUsedBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumUsedBytes / 1024);
             OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsMetaStats.stNumSlackBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumSlackBytes / 1024);
             OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64)
-                (dsStats.fhsMetaStats.stSize - 
-                dsStats.fhsMetaStats.stNumUsedBytes - 
-                dsStats.fhsMetaStats.stNumSlackBytes) / 1024
+            m_pHttpResponse->WriteText ((int64)
+                (dsStats.fhsMetaStats.cbSize - 
+                dsStats.fhsMetaStats.cbNumUsedBytes - 
+                dsStats.fhsMetaStats.cbNumSlackBytes) / 1024
                 );
             OutputText ("</strong> free KB</li>");
 
 
             OutputText ("<li>Varlen data: <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsVarlenStats.stNumAllocatedBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumAllocatedBlocks);
             OutputText ("</strong> allocated block");
-            if (dsStats.fhsVarlenStats.stNumAllocatedBlocks != 1) OutputText ("s");
+            if (dsStats.fhsVarlenStats.cNumAllocatedBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsVarlenStats.stNumFreeBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumFreeBlocks);
             OutputText ("</strong> free block");
-            if (dsStats.fhsVarlenStats.stNumFreeBlocks != 1) OutputText ("s");
+            if (dsStats.fhsVarlenStats.cNumFreeBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsVarlenStats.stNumUsedBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumUsedBytes / 1024);
             OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsVarlenStats.stNumSlackBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumSlackBytes / 1024);
             OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64)
-                (dsStats.fhsVarlenStats.stSize - 
-                dsStats.fhsVarlenStats.stNumUsedBytes - 
-                dsStats.fhsVarlenStats.stNumSlackBytes) / 1024
+            m_pHttpResponse->WriteText ((int64)
+                (dsStats.fhsVarlenStats.cbSize - 
+                dsStats.fhsVarlenStats.cbNumUsedBytes - 
+                dsStats.fhsVarlenStats.cbNumSlackBytes) / 1024
                 );
             OutputText ("</strong> free KB</li>");
 
 
             OutputText ("<li>Templates: <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTemplateStats.stNumAllocatedBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumAllocatedBlocks);
             OutputText ("</strong> allocated block");
-            if (dsStats.fhsTemplateStats.stNumAllocatedBlocks != 1) OutputText ("s");
+            if (dsStats.fhsTemplateStats.cNumAllocatedBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTemplateStats.stNumFreeBlocks);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumFreeBlocks);
             OutputText ("</strong> free block");
-            if (dsStats.fhsTemplateStats.stNumFreeBlocks != 1) OutputText ("s");
+            if (dsStats.fhsTemplateStats.cNumFreeBlocks != 1) OutputText ("s");
             OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTemplateStats.stNumUsedBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumUsedBytes / 1024);
             OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64) dsStats.fhsTemplateStats.stNumSlackBytes / 1024);
+            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumSlackBytes / 1024);
             OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((uint64)
-                (dsStats.fhsTemplateStats.stSize - 
-                dsStats.fhsTemplateStats.stNumUsedBytes - 
-                dsStats.fhsTemplateStats.stNumSlackBytes) / 1024
+            m_pHttpResponse->WriteText ((int64)
+                (dsStats.fhsTemplateStats.cbSize - 
+                dsStats.fhsTemplateStats.cbNumUsedBytes - 
+                dsStats.fhsTemplateStats.cbNumSlackBytes) / 1024
                 );
             OutputText ("</strong> free KB</li>");
 
@@ -536,13 +536,13 @@ void HtmlRenderer::WriteServerRules() {
         ) == OK) {
         
         OutputText ("<li>The server machine has <strong>");
-        m_pHttpResponse->WriteText ((uint64) iTotalPhysicalMemory / 1024);
+        m_pHttpResponse->WriteText ((int64) iTotalPhysicalMemory / 1024);
         OutputText (" KB</strong> of physical memory, of which <strong>");
-        m_pHttpResponse->WriteText ((uint64) (iTotalPhysicalMemory - iTotalFreePhysicalMemory) / 1024);
+        m_pHttpResponse->WriteText ((int64) (iTotalPhysicalMemory - iTotalFreePhysicalMemory) / 1024);
         OutputText (" KB</strong> are in use</li><li>The server machine has <strong>");
-        m_pHttpResponse->WriteText ((uint64) iTotalSwapMemory / 1024);
+        m_pHttpResponse->WriteText ((int64) iTotalSwapMemory / 1024);
         OutputText (" KB</strong> of swap memory, of which <strong>");
-        m_pHttpResponse->WriteText ((uint64) (iTotalSwapMemory - iTotalFreeSwapMemory) / 1024);
+        m_pHttpResponse->WriteText ((int64) (iTotalSwapMemory - iTotalFreeSwapMemory) / 1024);
         OutputText (" KB</strong> are in use</li>");
     }
     

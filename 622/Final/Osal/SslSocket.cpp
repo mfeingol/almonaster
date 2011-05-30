@@ -91,7 +91,7 @@ public:
     }
 };
 
-int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile) {
+int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile, const char* pszKeyFilePassword) {
 
     DWORD cbData;
 
@@ -106,7 +106,7 @@ int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile) {
     PCCERT_CONTEXT phPublicKey = CertCreateCertificateContext(
         X509_ASN_ENCODING | PKCS_7_ASN_ENCODING, 
         pbCert, 
-        cbCert);
+        (DWORD)cbCert);
     if (phPublicKey == NULL)
         return ERROR_FAILURE;
 
@@ -124,7 +124,29 @@ int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile) {
     pfxBlob.cbData = (DWORD)cbPfx;
     pfxBlob.pbData = pbPfx;
 
-    HCERTSTORE hTempStore = PFXImportCertStore(&pfxBlob, NULL, 0);
+    HCERTSTORE hTempStore = NULL;
+    if (pszKeyFilePassword == NULL) {
+        // MSDN: If the password used to encrypt the packet is blank, 
+        // call the PFXImportCertStore function twice, passing both 
+        // an empty string and NULL for the value of this parameter 
+        // because applications treat blank password entries differently.
+        hTempStore = PFXImportCertStore(&pfxBlob, NULL, 0);
+        if (hTempStore == NULL) {
+            hTempStore = PFXImportCertStore(&pfxBlob, L"", 0);
+        }
+    } else {
+        // Convert to unicode
+        int len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pszKeyFilePassword, -1, NULL, 0);
+        if (len > 0) {
+            LPWSTR pwszPassword = (LPWSTR)StackAlloc(len*sizeof(WCHAR));
+            len = MultiByteToWideChar(CP_UTF8, MB_ERR_INVALID_CHARS, pszKeyFilePassword, -1, pwszPassword, len);
+            if (len > 0) {
+                hTempStore = PFXImportCertStore(&pfxBlob, pwszPassword, 0);
+                memset(pwszPassword, 0, len*sizeof(WCHAR));
+            }
+        }
+    }
+    
     if (hTempStore == NULL)
         return ERROR_FAILURE;
 
@@ -180,14 +202,14 @@ int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile) {
 
     SECURITY_STATUS ss = AcquireCredentialsHandle(
         NULL,
-		UNISP_NAME,
-		SECPKG_CRED_INBOUND,
-		NULL,
-		&sChannelCred,
-		NULL,
-		NULL,
+        UNISP_NAME,
+        SECPKG_CRED_INBOUND,
+        NULL,
+        &sChannelCred,
+        NULL,
+        NULL,
         &m_serverCreds,
-		NULL);       
+        NULL);       
 
     if (ss != SEC_E_OK)
         return ERROR_FAILURE;
@@ -394,7 +416,6 @@ int SslSocket::Negotiate() {
                 Assert(outSecBuffer.BufferType == SECBUFFER_TOKEN);
                 iErrCode = SendSecBuffer(outSecBuffer);
             }
-            else Assert(outSecBuffer.BufferType == SECBUFFER_EMPTY);
 
             // Compute max sizes
             SecPkgContext_StreamSizes sizes;
@@ -464,8 +485,6 @@ int SslSocket::Negotiate() {
             } else {
 
                 Assert(outSecBuffer.BufferType == SECBUFFER_TOKEN);
-                Assert(outSecBuffer.cbBuffer != 0);
-                Assert(outSecBuffer.pvBuffer != NULL);
 
                 // Send a buffer back to the client and try that again
                 iErrCode = SendSecBuffer(outSecBuffer);
@@ -572,15 +591,15 @@ size_t SslSocket::SocketSendChunk(const void* pData, size_t cbPlainTextSend) {
     SecBuffer secBuffers[4];
 
     secBuffers[0].BufferType = SECBUFFER_STREAM_HEADER;
-    secBuffers[0].cbBuffer = m_cbHeaderSize;
+    secBuffers[0].cbBuffer = (ULONG)m_cbHeaderSize;
     secBuffers[0].pvBuffer = pbHeader;
 
     secBuffers[1].BufferType = SECBUFFER_DATA;
-    secBuffers[1].cbBuffer = cbPlainTextSend;
+    secBuffers[1].cbBuffer = (ULONG)cbPlainTextSend;
     secBuffers[1].pvBuffer = pbChunk;
 
     secBuffers[2].BufferType = SECBUFFER_STREAM_TRAILER;
-    secBuffers[2].cbBuffer = m_cbTrailerSize;
+    secBuffers[2].cbBuffer = (ULONG)m_cbTrailerSize;
     secBuffers[2].pvBuffer = pbTrailer;
 
     secBuffers[3].BufferType = SECBUFFER_EMPTY;
@@ -756,7 +775,7 @@ int SslSocket::DecryptMessageWrapper(BYTE* pbData, size_t cbCypherData, size_t* 
 
     SecBuffer secBuffers[4];
     secBuffers[0].BufferType = SECBUFFER_DATA;
-    secBuffers[0].cbBuffer = cbCypherData;
+    secBuffers[0].cbBuffer = (ULONG)cbCypherData;
     secBuffers[0].pvBuffer = pbData;
 
     for (int i = 1; i < countof(secBuffers); i ++) {
@@ -994,7 +1013,7 @@ SSL_CTX* SslContext::GetContext() {
     return m_pCtx;
 }
 
-int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile) {
+int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile, const char* pszKeyFilePassword) {
 
     if (!Ssl.IsEnabled()) {
         return ERROR_FAILURE;
@@ -1009,6 +1028,8 @@ int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile) {
     if (pCtx == NULL) {
         return ERROR_FAILURE;
     }
+
+    // TODO: use SSL_CTX_set_default_passwd_cb if pszKeyFilePassword is non-null
 
     if (SSL_CTX_use_certificate_file (pCtx, pszCertFile, SSL_FILETYPE_PEM) != 1) {
         SSL_CTX_free (pCtx);

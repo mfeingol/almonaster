@@ -22,6 +22,7 @@
 #include "HttpResponse.h"
 #include "HttpServer.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -527,27 +528,30 @@ int HttpResponse::WriteText (unsigned int iData) {
     return WriteText (String::UItoA (iData, pszData, 10));
 }
 
+#define FLOAT_DIFF ((float)0.0005)
+
 int HttpResponse::WriteText (float fData) {
 
+    // Prevent rendering 3.9995 as 4.000
+    float fRender, fDataPlus = fData + FLOAT_DIFF;
+    if (floor(fData * 1000) != floor(fDataPlus * 1000)) {
+        fRender = fData - FLOAT_DIFF;
+    } else {
+        fRender = fData;
+    }
+
     char pszData [128];
-    sprintf (pszData, "%.3f", fData);
-    return WriteText (pszData);
+    sprintf(pszData, "%.3f", fRender);
+    return WriteText(pszData);
 }
 
-int HttpResponse::WriteText (double dData) {
-
-    char pszData [128];
-    sprintf (pszData, "%.3f", dData);
-    return WriteText (pszData);
-}
-
-int HttpResponse::WriteText (const UTCTime& tTime) {
-
-    char pszBuffer[128];
-    Time::UTCTimetoA (tTime, pszBuffer, 10);
-
-    return WriteText (pszBuffer);
-}
+//int HttpResponse::WriteText (const UTCTime& tTime) {
+//
+//    char pszBuffer[128];
+//    Time::UTCTimetoA (tTime, pszBuffer, 10);
+//
+//    return WriteText (pszBuffer);
+//}
 
 int HttpResponse::WriteText (const Variant& vData) {
 
@@ -565,15 +569,8 @@ int HttpResponse::WriteText (const Variant& vData) {
     case V_FLOAT:
         return WriteText (vData.GetFloat());
     
-    case V_TIME:
-        {
-            // Get date
-            char pszDateString [OS::MaxDateLength];
-            Time::GetDateString (vData.GetUTCTime(), pszDateString);
-            return WriteText (pszDateString);
-        }
-    
     default:
+        Assert(false);
         return ERROR_INVALID_ARGUMENT;
     }
 }
@@ -584,10 +581,11 @@ int HttpResponse::WriteText (int64 iData) {
     return WriteText (String::I64toA (iData, pszData, 10));
 }
 
-int HttpResponse::WriteText (uint64 iData) {
+int HttpResponse::WriteDate (const UTCTime& tTime) {
 
-    char pszData [128];
-    return WriteText (String::UI64toA (iData, pszData, 10));
+    char pszDateString [OS::MaxDateLength];
+    Time::GetDateString (tTime, pszDateString);
+    return WriteText (pszDateString);
 }
 
 int HttpResponse::WriteTextFile (ICachedFile* pCachedFile) {
@@ -1159,7 +1157,7 @@ int HttpResponse::Send() {
     strcat (pszBuffer, HttpStatusText[m_sStatus]);
 
     // Date, server name, connection
-    strcat (pszBuffer, "\r\nServer: Alajar/1.81\r\nDate: ");
+    strcat (pszBuffer, "\r\nServer: Alajar/1.82\r\nDate: ");
     strcat (pszBuffer, pszGMTDateString);
 
     //////////////////////////////////

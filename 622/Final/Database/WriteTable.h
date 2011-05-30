@@ -60,11 +60,7 @@ public:
                                  unsigned int* piKey) {                                                     
         return m_rTable.GetFirstKey (iColumn, pszData, bCaseInsensitive, piKey);                            
     }                                                                                                       
-                                                                                                            
-    inline int GetFirstKey (unsigned int iColumn, const UTCTime& tData, unsigned int* piKey) {          
-        return m_rTable.GetFirstKey (iColumn, tData, piKey);                                                
-    }                                                                                                       
-                                                                                                            
+                                                          
     inline int GetFirstKey (unsigned int iColumn, int64 i64Data, unsigned int* piKey) {             
         return m_rTable.GetFirstKey (iColumn, i64Data, piKey);                                          
     }                                                                                                       
@@ -98,10 +94,6 @@ public:
     inline int ReadData (unsigned int iKey, unsigned int iColumn, const char** ppszData) {              
         return m_rTable.ReadData (iKey, iColumn, ppszData);                                             
     }                                                                                                       
-                                                                                                            
-    inline int ReadData (unsigned int iKey, unsigned int iColumn, UTCTime* ptData) {                    
-        return m_rTable.ReadData (iKey, iColumn, ptData);                                                   
-    }                           
                                 
     inline int ReadData (unsigned int iKey, unsigned int iColumn, int64* pi64Data) {                    
         return m_rTable.ReadData (iKey, iColumn, pi64Data);                                             
@@ -122,11 +114,7 @@ public:
     inline int ReadData (unsigned int iColumn, const char** ppszData) {                             
         return m_rTable.ReadData (0, iColumn, ppszData);                                                    
     }                           
-                                
-    inline int ReadData (unsigned int iColumn, UTCTime* ptData) {                                       
-        return m_rTable.ReadData (0, iColumn, ptData);                                                  
-    }                           
-                                
+                               
     inline int ReadData (unsigned int iColumn, int64* pi64Data) {                                       
         return m_rTable.ReadData (0, iColumn, pi64Data);                                                    
     }                           
@@ -150,11 +138,6 @@ public:
         return m_rTable.ReadColumn (iColumn, ppiKey, ppszData, piNumRows);                              
     }                           
                                 
-    inline int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, UTCTime** pptData,          
-                                unsigned int* piNumRows) {                                                  
-        return m_rTable.ReadColumn (iColumn, ppiKey, pptData, piNumRows);                                   
-    }                           
-                                
     inline int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int64** ppi64Data,          
                                 unsigned int* piNumRows) {                                                  
         return m_rTable.ReadColumn (iColumn, ppiKey, ppi64Data, piNumRows);                             
@@ -176,11 +159,7 @@ public:
     inline int ReadColumn (unsigned int iColumn, char*** ppszData, unsigned int* piNumRows) {           
         return m_rTable.ReadColumn (iColumn, NULL, ppszData, piNumRows);                                    
     }                           
-                                
-    inline int ReadColumn (unsigned int iColumn, UTCTime** pptData, unsigned int* piNumRows) {          
-        return m_rTable.ReadColumn (iColumn, NULL, pptData, piNumRows);                                 
-    }                           
-                                
+                                 
     inline int ReadColumn (unsigned int iColumn, int64** ppi64Data, unsigned int* piNumRows) {          
         return m_rTable.ReadColumn (iColumn, NULL, ppi64Data, piNumRows);                                   
     }                           
@@ -220,14 +199,12 @@ public:
     int WriteData (unsigned int iKey, unsigned int iColumn, int iData);
     int WriteData (unsigned int iKey, unsigned int iColumn, float fData);
     int WriteData (unsigned int iKey, unsigned int iColumn, const char* pszData);
-    int WriteData (unsigned int iKey, unsigned int iColumn, const UTCTime& tData);
     int WriteData (unsigned int iKey, unsigned int iColumn, int64 i64Data);
     int WriteData (unsigned int iKey, unsigned int iColumn, const Variant& vData);
 
     int WriteData (unsigned int iColumn, int iData);
     int WriteData (unsigned int iColumn, float fData);
     int WriteData (unsigned int iColumn, const char* pszData);
-    int WriteData (unsigned int iColumn, const UTCTime& tData);
     int WriteData (unsigned int iColumn, int64 i64Data);
     int WriteData (unsigned int iColumn, const Variant& vData);
 
@@ -246,7 +223,6 @@ public:
     int WriteColumn (unsigned int iColumn, int iData);
     int WriteColumn (unsigned int iColumn, float fData);
     int WriteColumn (unsigned int iColumn, const char* pszData);
-    int WriteColumn (unsigned int iColumn, const UTCTime& tData);
     int WriteColumn (unsigned int iColumn, int64 i64Data);
     int WriteColumn (unsigned int iColumn, const Variant& vData);
 
@@ -280,10 +256,6 @@ int CClassName::WriteData (unsigned int iKey, unsigned int iColumn, const char* 
     return WriteTable::WriteData (iKey, iColumn, pszData);                                                  \
 }                                                                                                           \
                                                                                                             \
-int CClassName::WriteData (unsigned int iKey, unsigned int iColumn, const UTCTime& tData) {                 \
-    return WriteTable::WriteData (iKey, iColumn, tData);                                                    \
-}                                                                                                           \
-                                                                                                            \
 int CClassName::WriteData (unsigned int iKey, unsigned int iColumn, int64 i64Data) {                        \
     return WriteTable::WriteData (iKey, iColumn, i64Data);                                                  \
 }                                                                                                           \
@@ -302,10 +274,6 @@ int CClassName::WriteData (unsigned int iColumn, float fData) {                 
                                                                                                             \
 int CClassName::WriteData (unsigned int iColumn, const char* pszData) {                                     \
     return WriteTable::WriteData (0, iColumn, pszData);                                                     \
-}                                                                                                           \
-                                                                                                            \
-int CClassName::WriteData (unsigned int iColumn, const UTCTime& tData) {                                    \
-    return WriteTable::WriteData (0, iColumn, tData);                                                       \
 }                                                                                                           \
                                                                                                             \
 int CClassName::WriteData (unsigned int iColumn, int64 i64Data) {                                           \

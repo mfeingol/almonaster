@@ -53,8 +53,8 @@ HttpServer::HttpServer() {
     m_pSslContext = NULL;
     m_pSslSocket = NULL;
 
-    m_pszServerName = "Alajar 1.81";
-    m_stServerNameLength = countof ("Alajar 1.81") - 1;
+    m_pszServerName = "Alajar 1.82";
+    m_stServerNameLength = countof ("Alajar 1.82") - 1;
 
     Time::GetTime (&m_tLogDate);
 
@@ -311,6 +311,9 @@ int HttpServer::StartServer() {
     char pszCertificateFile [OS::MaxFileNameLength];
     char pszPrivateKeyFile [OS::MaxFileNameLength];
 
+	char* pszPrivateKeyFilePassword = NULL;
+	Algorithm::AutoDelete<char> autoDeletePrivateKeyFilePassword(pszPrivateKeyFilePassword, true);
+
     unsigned int iInitNumThreads, iMaxNumThreads;
     
     // First, get report
@@ -515,6 +518,16 @@ int HttpServer::StartServer() {
                 ReportEvent ((String) "Error: the HttpsPrivateKeyFile file does not exist" + pszPrivateKeyFile);
                 goto ErrorExit;
             }
+
+			if (m_pConfigFile->GetParameter ("HttpsPrivateKeyFilePassword", &pszRhs) == OK && pszRhs != NULL) {
+				pszPrivateKeyFilePassword = new char[strlen(pszRhs) + 1];
+				if (pszPrivateKeyFilePassword == NULL) {
+					ReportEvent ("The server is out of memory");
+			        goto ErrorExit;
+				}
+				strcpy(pszPrivateKeyFilePassword, pszRhs);
+			}
+
         } else {
             ReportEvent ("Error: Could not read the HttpsPrivateKeyFile from Alajar.conf");
             goto ErrorExit;
@@ -722,7 +735,7 @@ int HttpServer::StartServer() {
             goto ErrorExit;
         }
 
-        iErrCode = m_pSslContext->Initialize (pszCertificateFile, pszPrivateKeyFile);
+        iErrCode = m_pSslContext->Initialize (pszCertificateFile, pszPrivateKeyFile, pszPrivateKeyFilePassword);
         if (iErrCode != OK) {
 
             delete m_pSslContext;

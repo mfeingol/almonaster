@@ -164,7 +164,7 @@ int OS::GetMemoryStatistics (size_t* pstTotalPhysicalMemory, size_t* pstTotalFre
     totalVirtual = availVirtual = 0;
     while (fgets(buffer, sizeof(buffer), meminfo))
     {
-	    /* old style /proc/meminfo ... */
+        /* old style /proc/meminfo ... */
         if (sscanf(buffer, "Mem: %d %d %d %d %d %d", &total, &used, &free, &shared, &buffers, &cached))
         {
             totalPhys += total;
@@ -176,19 +176,19 @@ int OS::GetMemoryStatistics (size_t* pstTotalPhysicalMemory, size_t* pstTotalFre
             availVirtual += free;
         }
 
-	    /* new style /proc/meminfo ... */
-	    if (sscanf(buffer, "MemTotal: %d", &total))
-	    	totalPhys = total*1024;
-	    if (sscanf(buffer, "MemFree: %d", &free))
-	    	availPhys = free*1024;
-	    if (sscanf(buffer, "SwapTotal: %d", &total))
-	        totalVirtual = total*1024;
-	    if (sscanf(buffer, "SwapFree: %d", &free))
-	        availVirtual = free*1024;
-	    if (sscanf(buffer, "Buffers: %d", &buffers))
-	        availPhys += buffers*1024;
-	    if (sscanf(buffer, "Cached: %d", &cached))
-	        availPhys += cached*1024;
+        /* new style /proc/meminfo ... */
+        if (sscanf(buffer, "MemTotal: %d", &total))
+            totalPhys = total*1024;
+        if (sscanf(buffer, "MemFree: %d", &free))
+            availPhys = free*1024;
+        if (sscanf(buffer, "SwapTotal: %d", &total))
+            totalVirtual = total*1024;
+        if (sscanf(buffer, "SwapFree: %d", &free))
+            availVirtual = free*1024;
+        if (sscanf(buffer, "Buffers: %d", &buffers))
+            availPhys += buffers*1024;
+        if (sscanf(buffer, "Cached: %d", &cached))
+            availPhys += cached*1024;
     }
     fclose(meminfo);
 
@@ -255,34 +255,34 @@ int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLe
 
     while (fgets(line, sizeof(line), cpuinfo) != NULL)
     {
-		char	*s,*value;
+        char	*s,*value;
 
-		/* NOTE: the ':' is the only character we can rely on */
-		if (!(value = strchr(line,':')))
-			continue;
-		/* terminate the valuename */
-		*value++ = '\0';
-		/* skip any leading spaces */
-		while (*value==' ') value++;
-		if ((s=strchr(value,'\n')))
-			*s='\0';
+        /* NOTE: the ':' is the only character we can rely on */
+        if (!(value = strchr(line,':')))
+            continue;
+        /* terminate the valuename */
+        *value++ = '\0';
+        /* skip any leading spaces */
+        while (*value==' ') value++;
+        if ((s=strchr(value,'\n')))
+            *s='\0';
 
-		if (!strncasecmp(line, "model name", strlen("model name")))
+        if (!strncasecmp(line, "model name", strlen("model name")))
         {
             strncpy(pszProcessorInformation, value, MaxProcessorInfoLength);
         }
-		if (!strncasecmp(line, "cpu MHz", strlen("cpu MHz")))
+        if (!strncasecmp(line, "cpu MHz", strlen("cpu MHz")))
         {
             *piMHz = atoi(value);
         }
-		if (!strncasecmp(line,"processor",strlen("processor"))) {
-			/* processor number counts up... */
-			unsigned int x;
+        if (!strncasecmp(line,"processor",strlen("processor"))) {
+            /* processor number counts up... */
+            unsigned int x;
 
-			if (sscanf(value,"%d",&x))
+            if (sscanf(value,"%d",&x))
                 *piNumProcessors = x+1;
-		}
-	}
+        }
+    }
 
     fclose(cpuinfo);
     return OK;
@@ -392,7 +392,7 @@ void OS::Sleep (MilliSeconds iMs) {
 #ifdef __LINUX__
     usleep(iMs * 1000);
 #else if defined __WIN32__
-	::Sleep (iMs);
+    ::Sleep (iMs);
 #endif
 }
 
@@ -465,7 +465,7 @@ int OS::GetProcessMemoryStatistics (size_t* pstPhysicalMemoryInUse, size_t* pstV
 
     close(fd);
 
-	return OK;
+    return OK;
 
 #else if defined __WIN32__
 
@@ -526,7 +526,7 @@ int OS::GetApplicationFileName (char pszFileName[OS::MaxFileNameLength]) {
     read(fd, pszFileName, OS::MaxFileNameLength);
 
     close(fd);
-	return OK;
+    return OK;
 
 #else if defined __WIN32__
 
@@ -603,7 +603,7 @@ int OS::SetBreakHandler (ControlFunction pfxnBreakHandler) {
     signal(SIGINT, ControlHandler);
     signal(SIGTERM, ControlHandler);
 #else if defined __WIN32__
-	return ::SetConsoleCtrlHandler (ControlHandler, TRUE) ? OK : ERROR_FAILURE;
+    return ::SetConsoleCtrlHandler (ControlHandler, TRUE) ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -630,7 +630,7 @@ int OS::UuidFromString (const char* pszUuid, Uuid* puuidUuid) {
     return OK;
 
 #else if defined __WIN32__
-	return ::UuidFromString ((unsigned char*) pszUuid, (UUID*) puuidUuid) == RPC_S_OK ? OK : ERROR_FAILURE;
+    return ::UuidFromString ((unsigned char*) pszUuid, (UUID*) puuidUuid) == RPC_S_OK ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -656,14 +656,29 @@ int OS::CreateUuid (Uuid* puuidUuid) {
     return ::UuidCreate ((GUID*) puuidUuid) == RPC_S_OK ? OK : ERROR_FAILURE;
 }
 
-#endif
+void OS::InvariantAssert(bool condition, const char* const pszMessage, const char* const pszFile, const int iLine) {
 
-void* OS::HeapAlloc (size_t stNumBytes) {
+    if (!condition) {
 
-    return new char [stNumBytes];
+        char* pszBuf = (char*)_alloca(strlen(pszFile) + 256);
+        sprintf(pszBuf, "Assertion failed on thread %d at %s line %d\n", GetCurrentThreadId(), pszFile, iLine);
+        OutputDebugStringA(pszBuf);
+
+        if (pszMessage) {
+            pszBuf = (char*)_alloca(strlen(pszMessage) + 256);
+            sprintf(pszBuf, "Assertion failed on thread %d: %s\n", GetCurrentThreadId(), pszMessage);
+            OutputDebugStringA(pszBuf);
+        }
+        DebugBreak();
+    }
+}
+
+void* OS::HeapAlloc (size_t cbNumBytes) {
+    return ::HeapAlloc(GetProcessHeap(), 0, cbNumBytes);
 }
 
 void OS::HeapFree (void* pMemory) {
-
-    delete [] ((char*) pMemory);
+    ::HeapFree(GetProcessHeap(), 0, pMemory);
 }
+
+#endif

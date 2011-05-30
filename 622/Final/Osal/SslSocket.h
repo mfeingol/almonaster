@@ -45,7 +45,7 @@ public:
     SslContext();
     ~SslContext();
 
-    int Initialize (const char* pszCertFile, const char* pszKeyFile);
+    int Initialize (const char* pszCertFile, const char* pszKeyFile, const char* pszKeyFilePassword);
 };
 
 class OSAL_EXPORT SslSocket : public Socket {

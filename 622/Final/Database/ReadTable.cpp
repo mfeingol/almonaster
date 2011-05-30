@@ -90,11 +90,6 @@ int ReadTable::ReadData (unsigned int iColumn, const char** ppszData) {
     return ReadTable::ReadData (0, iColumn, ppszData);
 }
 
-int ReadTable::ReadData (unsigned int iColumn, UTCTime* ptData) {
-    Assert (m_tcContext.IsOneRow());
-    return ReadTable::ReadData (0, iColumn, ptData);
-}
-
 int ReadTable::ReadData (unsigned int iColumn, int64* pi64Data) {
     Assert (m_tcContext.IsOneRow());
     return ReadTable::ReadData (0, iColumn, pi64Data);
@@ -149,30 +144,6 @@ int ReadTable::ReadData (unsigned int iKey, unsigned int iColumn, float* pfData)
     }
 
     *pfData = *((float*) m_tcContext.GetData (iKey, iColumn));
-
-    return OK;
-}
-
-int ReadTable::ReadData (unsigned int iKey, unsigned int iColumn, UTCTime* ptData) {
-
-    Assert ((m_tcContext.IsOneRow() && iKey == 0) || !m_tcContext.IsOneRow());
-
-    if (!IsValidKey (iKey)) {
-        Assert (false);
-        return ERROR_UNKNOWN_ROW_KEY;
-    }
-
-    if (!IsValidColumn (iColumn)) {
-        Assert (false);
-        return ERROR_UNKNOWN_COLUMN_INDEX;
-    }
-
-    if (m_tcContext.GetColumnType (iColumn) != V_TIME) {
-        Assert (false);
-        return ERROR_TYPE_MISMATCH;
-    }
-
-    *ptData = *((UTCTime*) m_tcContext.GetData (iKey, iColumn));
 
     return OK;
 }
@@ -232,7 +203,6 @@ int ReadTable::ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvDat
     int iData;
     int64 i64Data;
     float fData;
-    UTCTime tData;
     const char* pszData;
 
     if (!IsValidKey (iKey)) {
@@ -257,14 +227,6 @@ int ReadTable::ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvDat
         }
         break;
 
-    case V_TIME:
-        
-        iErrCode = ReadData (iKey, iColumn, &tData);
-        if (iErrCode == OK) {
-            *pvData = tData;
-        }
-        break;
-
     case V_FLOAT:
         
         iErrCode = ReadData (iKey, iColumn, &fData);
@@ -285,7 +247,8 @@ int ReadTable::ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvDat
 
         iErrCode = ReadData (iKey, iColumn, &i64Data);
         if (iErrCode == OK) {
-            *pvData = i64Data;
+            pvData->m_iType = V_INT64;
+            pvData->m_vArg.i64Arg = i64Data;
         }
         break;
 
@@ -478,66 +441,6 @@ int ReadTable::ReadColumn (unsigned int iColumn, unsigned int** ppiKey, char*** 
     return OK;
 }
 
-int ReadTable::ReadColumn (unsigned int iColumn, unsigned int** ppiKey, UTCTime** pptData, unsigned int* piNumRows) {
-    
-    unsigned int iNumRows;
-
-    *piNumRows = 0;
-    if (ppiKey != NULL) {
-        *ppiKey = NULL;
-    }
-    *pptData = NULL;
-
-    iNumRows = m_tcContext.GetNumRows();
-    if (iNumRows == 0) {
-        return ERROR_DATA_NOT_FOUND;
-    }
-
-    if (!IsValidColumn (iColumn)) {
-        Assert (false);
-        return ERROR_UNKNOWN_COLUMN_INDEX;
-    }
-
-    if (m_tcContext.GetColumnType (iColumn) != V_TIME) {
-        Assert (false);
-        return ERROR_TYPE_MISMATCH;
-    }
-
-    // Allocate space
-    *pptData = new UTCTime [iNumRows];
-    if (*pptData == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    if (ppiKey != NULL) {
-        *ppiKey = new unsigned int [iNumRows];
-        if (*ppiKey == NULL) {
-            delete [] (*pptData);
-            *pptData = NULL;
-            return ERROR_OUT_OF_MEMORY;
-        }
-    }
-
-    unsigned int i, iTerminatorKey = m_tcContext.GetTerminatorRowKey();
-
-    for (i = 0; i < iTerminatorKey; i ++) {
-
-        if (m_tcContext.IsValidRow (i)) {
-
-            Assert (*piNumRows < iNumRows);
-            (*pptData)[*piNumRows] = *((UTCTime*) m_tcContext.GetData (i, iColumn));
-            if (ppiKey != NULL) {
-                (*ppiKey)[*piNumRows] = i;
-            }
-            (*piNumRows) ++;
-        }
-    }
-
-    Assert (*piNumRows == iNumRows);
-
-    return OK;
-}
-
 int ReadTable::ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows) {
 
     unsigned int iNumRows;
@@ -653,21 +556,6 @@ int ReadTable::ReadColumn (unsigned int iColumn, unsigned int** ppiKey, Variant*
         }
         break;
 
-    case V_TIME:
-
-        for (i = 0; i < iTerminatorKey; i ++) {
-            if (m_tcContext.IsValidRow (i)) {
-
-                Assert (*piNumRows < iNumRows);
-                (*ppvData)[*piNumRows] = *((UTCTime*) m_tcContext.GetData (i, iColumn));
-                if (ppiKey != NULL) {
-                    (*ppiKey)[*piNumRows] = i;
-                }
-                (*piNumRows) ++;
-            }
-        }
-        break;
-
     case V_FLOAT:
 
         for (i = 0; i < iTerminatorKey; i ++) {
@@ -704,7 +592,8 @@ int ReadTable::ReadColumn (unsigned int iColumn, unsigned int** ppiKey, Variant*
             if (m_tcContext.IsValidRow (i)) {
 
                 Assert (*piNumRows < iNumRows);
-                (*ppvData)[*piNumRows] = *((int64*) m_tcContext.GetData (i, iColumn));
+                (*ppvData)[*piNumRows].m_iType = V_INT64;
+                (*ppvData)[*piNumRows].m_vArg.i64Arg = *((int64*) m_tcContext.GetData (i, iColumn));
                 if (ppiKey != NULL) {
                     (*ppiKey)[*piNumRows] = i;
                 }
@@ -737,10 +626,6 @@ int ReadTable::ReadColumn (unsigned int iColumn, float** ppfData, unsigned int* 
 
 int ReadTable::ReadColumn (unsigned int iColumn, char*** ppszData, unsigned int* piNumRows) {
     return ReadTable::ReadColumn (iColumn, NULL, ppszData, piNumRows);
-}
-
-int ReadTable::ReadColumn (unsigned int iColumn, UTCTime** pptData, unsigned int* piNumRows) {
-    return ReadTable::ReadColumn (iColumn, NULL, pptData, piNumRows);
 }
 
 int ReadTable::ReadColumn (unsigned int iColumn, int64** ppi64Data, unsigned int* piNumRows) {
@@ -809,11 +694,6 @@ int ReadTable::ReadRow (unsigned int iKey, Variant** ppvData) {
             (*ppvData)[i] = *((int*) m_tcContext.GetData (iKey, i));
             break;
             
-        case V_TIME:
-            
-            (*ppvData)[i] = *((UTCTime*) m_tcContext.GetData (iKey, i));
-            break;
-            
         case V_FLOAT:
             
             (*ppvData)[i] = *((float*) m_tcContext.GetData (iKey, i));
@@ -825,8 +705,8 @@ int ReadTable::ReadRow (unsigned int iKey, Variant** ppvData) {
             break;
 
         case V_INT64:
-            
-            (*ppvData)[i] = *((int64*) m_tcContext.GetData (iKey, i));
+            (*ppvData)[i].m_iType = V_INT64;
+            (*ppvData)[i].m_vArg.i64Arg = *((int64*) m_tcContext.GetData (iKey, i));
             break;
             
         default:
@@ -956,44 +836,6 @@ int ReadTable::GetFirstKey (unsigned int iColumn, float fData, unsigned int* piK
     return ERROR_DATA_NOT_FOUND;
 }
 
-int ReadTable::GetFirstKey (unsigned int iColumn, const UTCTime& tData, unsigned int* piKey) {
-
-    int iErrCode;
-
-    *piKey = NO_KEY;
-
-    if (m_tcContext.GetNumRows() == 0) {
-        return ERROR_DATA_NOT_FOUND;
-    }
-
-    if (m_tcContext.GetColumnType (iColumn) != V_TIME) {
-        Assert (false);
-        return ERROR_TYPE_MISMATCH;
-    }
-
-    iErrCode = m_tcContext.IndexGetFirstKey (iColumn, tData, piKey);
-    if (iErrCode != ERROR_COLUMN_NOT_INDEXED) {
-        return iErrCode;
-    }
-
-    unsigned int iRowKey = NO_KEY;
-    while (true) {
-
-        iRowKey = m_tcContext.FindNextValidRow (iRowKey);
-        if (iRowKey == NO_KEY) {
-            break;
-        }
-
-        if (*(UTCTime*) m_tcContext.GetData (iRowKey, iColumn) == tData) {
-            *piKey = iRowKey;
-            return OK;
-        }
-    }
-
-    return ERROR_DATA_NOT_FOUND;
-}
-
-
 int ReadTable::GetFirstKey (unsigned int iColumn, const char* pszData, bool bCaseInsensitive, 
                             unsigned int* piKey) {
 
@@ -1058,11 +900,6 @@ int ReadTable::GetFirstKey (unsigned int iColumn, const Variant& vData, bool bCa
     case V_INT:
 
         return ReadTable::GetFirstKey (iColumn, vData.GetInteger(), piKey);
-        break;
-
-    case V_TIME:
-
-        return ReadTable::GetFirstKey (iColumn, vData.GetUTCTime(), piKey);
         break;
 
     case V_FLOAT:
@@ -1222,34 +1059,6 @@ int ReadTable::GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bC
         }
         break;
         
-    case V_TIME:
-        {
-
-        UTCTime tData = vData.GetUTCTime();
-
-        while (true) {
-            
-            iRowKey = m_tcContext.FindNextValidRow (iRowKey);
-            if (iRowKey == NO_KEY) {
-                break;
-            }
-            
-            if (*(UTCTime*) m_tcContext.GetData (iRowKey, iColumn) == tData) {
-
-                if (ppiKey != NULL) {
-                    iErrCode = AppendKey (piKey, iNumKeys, iKeySpace, iRowKey);
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        return iErrCode;
-                    }                   
-                }
-                iNumKeys ++;
-            }
-        }
-
-        }
-        break;
-
     case V_STRING:
         {
         const char* pszData = vData.GetCharPtr();
@@ -1537,15 +1346,6 @@ int ReadTable::GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** p
                 }
                 break;
 
-            case V_TIME:
-                {
-                    UTCTime tData = *((UTCTime*) m_tcContext.GetData (iRow, scColumn.iColumn));
-                    if (tData < scColumn.vData.GetUTCTime() || tData > scColumn.vData2.GetUTCTime()) {
-                        bHit = false;
-                    }
-                }
-                break;
-                
             case V_STRING:
 
                 switch (scColumn.iFlags) {
@@ -1818,17 +1618,14 @@ int ReadTable::ReadColumns (unsigned int iNumColumns, const unsigned int* piColu
                 case V_FLOAT:
                     (*pppvData)[*piNumRows][j] = *((float*) m_tcContext.GetData (i, piColumn[j]));
                     break;
-
-                case V_TIME:
-                    (*pppvData)[*piNumRows][j] = *((UTCTime*) m_tcContext.GetData (i, piColumn[j]));
-                    break;
-
+                    
                 case V_STRING:
                     (*pppvData)[*piNumRows][j] = m_tcContext.GetStringData (i, piColumn[j]);
                     break;
 
                 case V_INT64:
-                    (*pppvData)[*piNumRows][j] = *((int64*) m_tcContext.GetData (i, piColumn[j]));
+                    (*pppvData)[*piNumRows][j].m_iType = V_INT64;
+                    (*pppvData)[*piNumRows][j].m_vArg.i64Arg = *((int64*) m_tcContext.GetData (i, piColumn[j]));
                     break;
                     
                 default:
