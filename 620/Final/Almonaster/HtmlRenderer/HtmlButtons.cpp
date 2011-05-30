@@ -1,3 +1,21 @@
+//
+// Almonaster.dll:  a component of Almonaster 2.0
+// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+
 #include "HtmlRenderer.h"
 
 const char* ButtonText[] = {
@@ -142,6 +160,7 @@ const char* ButtonText[] = {
     "Rebuild",
     "Lookup",
     "View Mini-Map",
+    "Build",
     NULL
 };
 
@@ -287,6 +306,7 @@ const char* ButtonName[] = {
     "Rebuild",
     "Lookup",
     "ViewMiniMap",
+    "MiniBuild",
     NULL
 };
 
@@ -432,6 +452,7 @@ const char* ButtonImageName[] = {
     "Rebuild.x",
     "Lookup.x",
     "ViewMiniMap.x",
+    "MiniBuild.x",
     NULL
 };
 
@@ -577,6 +598,7 @@ const char* ButtonFileName[] = {
     "Rebuild.gif",
     "Lookup.gif",
     "ViewMiniMap.gif",
+    "Build.gif",
     NULL
 };
 
@@ -669,3 +691,115 @@ const char* PageName[] = {
     "Tournaments",
     NULL
 };
+
+void HtmlRenderer::WriteButtonString (int iButtonKey, const char* pszButtonFileName, 
+                                      const char* pszButtonText, const char* pszButtonName) {
+    
+    if (iButtonKey == NULL_THEME) {
+        OutputText ("<input type=\"submit\" name=\"");
+        m_pHttpResponse->WriteText (pszButtonName);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (pszButtonText);
+        OutputText ("\">");
+        return;
+    }
+    
+    else if (iButtonKey == ALTERNATIVE_PATH) {
+        
+        OutputText ("<input type=\"image\" border=\"0\" alt=\"");
+        m_pHttpResponse->WriteText (pszButtonText);
+        OutputText ("\" src=\"");
+        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
+        OutputText ("/");
+        m_pHttpResponse->WriteText (pszButtonFileName);
+        OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
+        m_pHttpResponse->WriteText (pszButtonName);
+        OutputText ("\">");
+        return;
+    }
+    
+    OutputText ("<input type=\"image\" border=\"0\" alt=\"");
+    m_pHttpResponse->WriteText (pszButtonText);
+    OutputText ("\" src=\"" BASE_RESOURCE_DIR);
+    m_pHttpResponse->WriteText (iButtonKey);
+    OutputText ("/");
+    m_pHttpResponse->WriteText (pszButtonFileName);
+    OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
+    m_pHttpResponse->WriteText (pszButtonName);
+    OutputText ("\">");
+}
+
+int HtmlRenderer::GetButtonName (const char* pszFormName, int iButtonKey, String* pstrButtonName) {
+    
+    if (iButtonKey == NO_KEY || iButtonKey == NULL_THEME) {
+        *pstrButtonName = pszFormName;
+    } else {
+        *pstrButtonName = pszFormName;
+        *pstrButtonName += ".x";
+    }
+    
+    return pstrButtonName->GetCharPtr() != NULL ? OK : ERROR_OUT_OF_MEMORY;
+}
+
+bool HtmlRenderer::IsLegalButtonId (ButtonId bidButton) {
+    
+    return bidButton > BID_FIRST && bidButton < BID_LAST;
+}
+
+
+bool HtmlRenderer::WasButtonPressed (ButtonId bidButton) {
+    
+    Assert (IsLegalButtonId (bidButton));
+    
+    if (m_iButtonKey == NULL_THEME) {   
+        return m_pHttpRequest->GetForm (ButtonName[bidButton]) != NULL;
+    }
+    
+    return m_pHttpRequest->GetForm (ButtonImageName[bidButton]) != NULL;
+}
+
+void HtmlRenderer::WriteButton (ButtonId bidButton) {
+    
+    Assert (IsLegalButtonId (bidButton));
+    
+    switch (m_iButtonKey) {
+        
+    case NULL_THEME:
+        
+        OutputText ("<input type=\"submit\" name=\"");
+        m_pHttpResponse->WriteText (ButtonName[bidButton]);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (ButtonText[bidButton]);
+        OutputText ("\">");
+        
+        break;
+        
+    case ALTERNATIVE_PATH:
+        
+        OutputText ("<input type=\"image\" border=\"0\" alt=\"");
+        m_pHttpResponse->WriteText (ButtonText[bidButton]);
+        OutputText ("\" src=\"");
+        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
+        OutputText ("/");
+        m_pHttpResponse->WriteText (ButtonFileName[bidButton]);
+        OutputText ("\" name=\"");
+        m_pHttpResponse->WriteText (ButtonName[bidButton]);
+        OutputText ("\">");
+        
+        break;
+        
+    default:
+        
+        OutputText ("<input type=\"image\" alt=\"");
+        m_pHttpResponse->WriteText (ButtonText[bidButton]);
+        OutputText ("\" src=\"" BASE_RESOURCE_DIR);
+        m_pHttpResponse->WriteText (m_iButtonKey);
+        OutputText ("/");
+        m_pHttpResponse->WriteText (ButtonFileName[bidButton]);
+        OutputText ("\" name=\"");
+        m_pHttpResponse->WriteText (ButtonName[bidButton]);
+        OutputText ("\">");
+        
+        break;
+    }
+}

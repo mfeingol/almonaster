@@ -1754,6 +1754,7 @@ int ReadTable::ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& v
                                      unsigned int* piNumKeys) {
 
     int iErrCode;
+    unsigned int* piKey = NULL;
 
     *piNumKeys = 0;
     if (ppiKey != NULL) {
@@ -1761,7 +1762,7 @@ int ReadTable::ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& v
     }
     *ppvData = NULL;
 
-    iErrCode = GetEqualKeys (iEqualColumn, vData, bCaseInsensitive, ppiKey, piNumKeys);
+    iErrCode = GetEqualKeys (iEqualColumn, vData, bCaseInsensitive, &piKey, piNumKeys);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1778,11 +1779,16 @@ int ReadTable::ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& v
 
         for (i = 0; i < *piNumKeys; i ++) {
 
-            iErrCode = ReadData ((*ppiKey)[i], iReadColumn, (*ppvData) + i);
+            iErrCode = ReadData (piKey[i], iReadColumn, (*ppvData) + i);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
         }
+    }
+
+    if (ppiKey != NULL) {
+        *ppiKey = piKey;
+        piKey = NULL;
     }
 
 Cleanup:
@@ -1798,6 +1804,10 @@ Cleanup:
             delete [] (*ppvData);
             *ppvData = NULL;
         }
+    }
+
+    if (piKey != NULL) {
+        delete [] piKey;
     }
 
     return iErrCode;

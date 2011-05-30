@@ -57,7 +57,7 @@ if (m_pHttpRequest->GetMethod() == GET) {
 
         if (iAutoLogonKey != NO_KEY && i64SubmittedPasswordHash != -1) {
 
-            iErrCode = g_pGameEngine->DoesEmpireExist (iAutoLogonKey, &bFlag);
+            iErrCode = g_pGameEngine->DoesEmpireExist (iAutoLogonKey, &bFlag, NULL);
             if (iErrCode == OK && bFlag) {
 
                 iErrCode = g_pGameEngine->GetEmpirePassword (iAutoLogonKey, &m_vPassword);
@@ -243,13 +243,16 @@ if (m_strMessage.IsBlank()) {
 
 // Get a cookie for last empire used's graphics
 ICookie* pCookie = m_pHttpRequest->GetCookie (LAST_EMPIRE_USED_COOKIE);
-
 if (pCookie != NULL && pCookie->GetValue() != NULL) {
 
     m_iEmpireKey = pCookie->GetIntValue();
-    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag);
+    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, &m_vEmpireName);
     if (!bFlag || iErrCode != OK) {
         m_iEmpireKey = NO_KEY;
+    }
+
+    if (pszPrintEmpireName == NULL) {
+        pszPrintEmpireName = m_vEmpireName.GetCharPtr();
     }
 }
 

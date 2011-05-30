@@ -90,13 +90,19 @@ int Event::Wait (MilliSeconds iWait) {
 
 #ifdef __LINUX__
 
+    int retval;
     struct timespec ts;
     time_t now = time(NULL);
     ts.tv_nsec = iWait % 1000 * 1000000;
     ts.tv_sec = now + iWait / 1000;
     pthread_mutex_lock(&m_Lock);
-    pthread_cond_timedwait(&m_hEvent, &m_Lock, &ts);
+    retval = pthread_cond_timedwait(&m_hEvent, &m_Lock, &ts);
     pthread_mutex_unlock(&m_Lock);
+
+    if (retval == ETIMEDOUT)
+        return WARNING;
+    else
+        return OK;
 
 #else if defined __WIN32__
 

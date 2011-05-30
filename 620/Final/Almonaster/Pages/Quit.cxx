@@ -66,8 +66,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
                     // Make sure we still exist after quitting
                     bool bFlag;
-                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag);
-
+                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
                     if (iErrCode != OK || !bFlag) {
                         pageRedirect = LOGIN;
                         AddMessage ("The empire ");
@@ -118,7 +117,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
                     // Make sure we still exist after quitting
                     bool bFlag;
-                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag);
+                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
 
                     if (iErrCode != OK || !bFlag) {
                         pageRedirect = LOGIN;
@@ -185,7 +184,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
                     // Make sure we still exist after surrendering
                     bool bFlag;
-                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag);
+                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
 
                     if (iErrCode != OK || !bFlag) {
                         pageRedirect = LOGIN;

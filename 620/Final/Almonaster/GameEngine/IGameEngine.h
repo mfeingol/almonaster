@@ -194,6 +194,11 @@ struct RatioInformation {
     int iNextBR;
 };
 
+struct BuildLocation {
+    unsigned int iPlanetKey;
+    unsigned int iFleetKey;
+};
+
 class IAlmonasterUIEventSink : virtual public IObject {
 public:
 
@@ -749,7 +754,6 @@ public:
     virtual int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire) = 0;
 
     virtual int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName) = 0;
-    virtual int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists) = 0;
 
     virtual int DoesEmpireKeyMatchName (int iEmpireKey, const char* pszEmpireName, bool* pbMatch) = 0;
     virtual int IsPasswordCorrect (int iEmpireKey, const char* pszPassword) = 0;
@@ -774,9 +778,6 @@ public:
     virtual int GetEmpireDataColumn (int iEmpireKey, unsigned int iColumn, Variant* pvData) = 0;
 
     virtual int GetNumLogins (int iEmpireKey, int* piNumLogins) = 0;
-
-    virtual int GetEmpireMaxNumShipsBuiltAtOnce (int iEmpireKey, int* piMaxNumShipsBuiltAtOnce) = 0;
-    virtual int SetEmpireMaxNumShipsBuiltAtOnce (int iEmpireKey, int iMaxNumShipsBuiltAtOnce) = 0;
 
     virtual int GetEmpireIPAddress (int iEmpireKey, Variant* pvIPAddress) = 0;
     virtual int SetEmpireIPAddress (int iEmpireKey, const char* pszIPAddress) = 0;
@@ -1006,9 +1007,6 @@ public:
         int* piMinX, int* piMaxX, int* piMinY, int* piMaxY) = 0;
 
     // Build
-    virtual int GetBuilderPlanetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiBuilderKey, 
-        int* piNumBuilders) = 0;
-
     virtual int BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, int iTechKey, int iNumShips, 
         const char* pszShipName, float fBR, int iPlanetKey, int iFleetKey, int* piNumShipsBuilt, 
         bool* pbBuildReduced) = 0;
@@ -1036,16 +1034,8 @@ public:
     virtual int GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiLocationKey, 
         int* piNumLocations) = 0;
 
-    virtual int CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszFleetName, 
-        int iPlanetKey) = 0;
-
-    virtual int GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int** ppiOrderKey, 
-        String** ppstrOrderText, int* piSelected, int* piNumOrders) = 0;
-
     virtual int UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
         const char* pszNewName) = 0;
-
-    virtual int UpdateFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iOrderKey) = 0;
 
     virtual int GetNumShipsInFleet (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int* piNumShips) = 0;
 

@@ -229,9 +229,23 @@ private:
     int ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bCloaked, 
         const char* strEmpireShips, const char* strEmpireMap, const char* strGameMap);
 
+    int GetColonyOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+        unsigned int iPlanetKey, bool* pbColonize, bool* pbSettle);
+        
+    int GetTerraformerOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+        unsigned int iPlanetKey, const GameConfiguration& gcConfig, bool* pbTerraform, 
+        bool* pbTerraformAndDismantle);
+
+    int GetTroopshipOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+        unsigned int iPlanetKey, const GameConfiguration& gcConfig, bool* pbInvade, 
+        bool* pbInvadeAndDismantle);
+
+    int GetDoomsdayOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+        unsigned int iPlanetKey, const GameConfiguration& gcConfig, int iGameClassOptions, bool* pbAnnihilate);
+
     // Fleets
     int GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
-        unsigned int iFleetKey, int* piMask);
+        unsigned int iFleetKey, const GameConfiguration& gcConfig, int* piMask);
 
     // Score
     int UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* pszNukerName, 
@@ -906,7 +920,7 @@ public:
     int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire);
 
     int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName);
-    int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists);
+    int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName);
 
     int DoesEmpireKeyMatchName (int iEmpireKey, const char* pszEmpireName, bool* pbMatch);
 
@@ -936,9 +950,6 @@ public:
     int GetEmpireDataColumn (int iEmpireKey, unsigned int iColumn, Variant* pvData);
 
     int GetNumLogins (int iEmpireKey, int* piNumLogins);
-
-    int GetEmpireMaxNumShipsBuiltAtOnce (int iEmpireKey, int* piMaxNumShipsBuiltAtOnce);
-    int SetEmpireMaxNumShipsBuiltAtOnce (int iEmpireKey, int iMaxNumShipsBuiltAtOnce);
 
     int GetEmpireIPAddress (int iEmpireKey, Variant* pvIPAddress);
     int SetEmpireIPAddress (int iEmpireKey, const char* pszIPAddress);
@@ -1226,8 +1237,8 @@ public:
     // Build
     int GetRatioInformation (int iGameClass, int iGameNumber, int iEmpireKey, RatioInformation* pRatInfo);
 
-    int GetBuilderPlanetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiBuilderKey, 
-        int* piNumBuilders);
+    int GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int** ppiBuilderKey, unsigned int* piNumBuilders);
 
     int BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, int iTechKey, int iNumShips, 
         const char* pszShipName, float fBR, int iPlanetKey, int iFleetKey, int* piNumShipsBuilt, 
@@ -1235,6 +1246,12 @@ public:
 
     int GetNumBuilds (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumBuilds);
     int CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey);
+
+    int GetBuildLocations (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iPlanetKey, BuildLocation** ppblBuildLocation, unsigned int* piNumLocations);
+
+    int IsPlanetBuilder (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+        unsigned int iPlanetKey, bool* pbBuilder);
 
     // Ships
     int GetShipOrders (int iGameClass, int iGameNumber, int iEmpireKey, const GameConfiguration& gcConfig,
@@ -1258,9 +1275,10 @@ public:
         int* piNumLocations);
 
     int CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszFleetName, 
-        int iPlanetKey);
+        int iPlanetKey, unsigned int* piFleetKey);
 
-    int GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int** ppiOrderKey, 
+    int GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
+        const GameConfiguration& gcConfig, int** ppiOrderKey, 
         String** ppstrOrderText, int* piSelected, int* piNumOrders);
 
     int UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 

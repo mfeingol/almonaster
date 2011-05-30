@@ -94,6 +94,27 @@ const char* const SHIP_TYPE_DESCRIPTION[] = {
     "Teleports ships to other planets within range",            // Jumpgate
 };
 
+const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES] = {
+    NO_KEY,
+    NO_KEY,
+    COLONIZE,
+    NO_KEY,
+    NO_KEY,
+    NO_KEY,
+    TERRAFORM,
+    INVADE,
+    ANNIHILATE,
+    NO_KEY,
+    NO_KEY,
+    NO_KEY,
+    NO_KEY,
+    NO_KEY,
+    NO_KEY,
+    NO_KEY,
+};
+
+
+
 const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN [] = {
 
     SystemData::DefaultAttackName,

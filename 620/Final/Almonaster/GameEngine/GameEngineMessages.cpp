@@ -49,7 +49,7 @@ int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int i
     
     // Make sure empire exists
     bool bFlag;
-    iErrCode = DoesEmpireExist (iEmpireKey, &bFlag);
+    iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, NULL);
     if (iErrCode != OK || !bFlag) {
         return ERROR_EMPIRE_DOES_NOT_EXIST;
     }
@@ -1173,7 +1173,7 @@ int GameEngine::SendFatalUpdateMessage (int iGameClass, int iGameNumber, int iEm
 
     bool bAlive;
 
-    int iErrCode = DoesEmpireExist (iEmpireKey, &bAlive);
+    int iErrCode = DoesEmpireExist (iEmpireKey, &bAlive, NULL);
     if (iErrCode != OK || !bAlive) {
         return ERROR_EMPIRE_DOES_NOT_EXIST;
     }

@@ -855,57 +855,7 @@ void HtmlRenderer::WriteSeparatorString (int iSeparatorKey) {
 }
 
 
-void HtmlRenderer::WriteButtonString (int iButtonKey, const char* pszButtonFileName, 
-                                      const char* pszButtonText, const char* pszButtonName) {
-    
-    if (iButtonKey == NULL_THEME) {
-        OutputText ("<input type=\"submit\" name=\"");
-        m_pHttpResponse->WriteText (pszButtonName);
-        OutputText ("\" value=\"");
-        m_pHttpResponse->WriteText (pszButtonText);
-        OutputText ("\">");
-        return;
-    }
-    
-    else if (iButtonKey == ALTERNATIVE_PATH) {
-        
-        OutputText ("<input type=\"image\" border=\"0\" alt=\"");
-        m_pHttpResponse->WriteText (pszButtonText);
-        OutputText ("\" src=\"");
-        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
-        OutputText ("/");
-        m_pHttpResponse->WriteText (pszButtonFileName);
-        OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
-        m_pHttpResponse->WriteText (pszButtonName);
-        OutputText ("\">");
-        return;
-    }
-    
-    OutputText ("<input type=\"image\" border=\"0\" alt=\"");
-    m_pHttpResponse->WriteText (pszButtonText);
-    OutputText ("\" src=\"" BASE_RESOURCE_DIR);
-    m_pHttpResponse->WriteText (iButtonKey);
-    OutputText ("/");
-    m_pHttpResponse->WriteText (pszButtonFileName);
-    OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
-    m_pHttpResponse->WriteText (pszButtonName);
-    OutputText ("\">");
-}
-
-int HtmlRenderer::GetButtonName (const char* pszFormName, int iButtonKey, String* pstrButtonName) {
-    
-    if (iButtonKey == NO_KEY || iButtonKey == NULL_THEME) {
-        *pstrButtonName = pszFormName;
-    } else {
-        *pstrButtonName = pszFormName;
-        *pstrButtonName += ".x";
-    }
-    
-    return pstrButtonName->GetCharPtr() != NULL ? OK : ERROR_OUT_OF_MEMORY;
-}
-
-
-void HtmlRenderer::OpenForm () {
+void HtmlRenderer::OpenForm() {
     
     OutputText ("<form method=\"post\"><input type=\"hidden\" name=\"PageId\" value=\"");
     m_pHttpResponse->WriteText ((int) m_pgPageId);
@@ -1537,68 +1487,6 @@ void HtmlRenderer::WriteStringByDiplomacy (const char* pszString, int iDiplomacy
     }
 }
 
-bool HtmlRenderer::IsLegalButtonId (ButtonId bidButton) {
-    
-    return bidButton > BID_FIRST && bidButton < BID_LAST;
-}
-
-
-bool HtmlRenderer::WasButtonPressed (ButtonId bidButton) {
-    
-    Assert (IsLegalButtonId (bidButton));
-    
-    if (m_iButtonKey == NULL_THEME) {   
-        return m_pHttpRequest->GetForm (ButtonName[bidButton]) != NULL;
-    }
-    
-    return m_pHttpRequest->GetForm (ButtonImageName[bidButton]) != NULL;
-}
-
-void HtmlRenderer::WriteButton (ButtonId bidButton) {
-    
-    Assert (IsLegalButtonId (bidButton));
-    
-    switch (m_iButtonKey) {
-        
-    case NULL_THEME:
-        
-        OutputText ("<input type=\"submit\" name=\"");
-        m_pHttpResponse->WriteText (ButtonName[bidButton]);
-        OutputText ("\" value=\"");
-        m_pHttpResponse->WriteText (ButtonText[bidButton]);
-        OutputText ("\">");
-        
-        break;
-        
-    case ALTERNATIVE_PATH:
-        
-        OutputText ("<input type=\"image\" border=\"0\" alt=\"");
-        m_pHttpResponse->WriteText (ButtonText[bidButton]);
-        OutputText ("\" src=\"");
-        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
-        OutputText ("/");
-        m_pHttpResponse->WriteText (ButtonFileName[bidButton]);
-        OutputText ("\" name=\"");
-        m_pHttpResponse->WriteText (ButtonName[bidButton]);
-        OutputText ("\">");
-        
-        break;
-        
-    default:
-        
-        OutputText ("<input type=\"image\" alt=\"");
-        m_pHttpResponse->WriteText (ButtonText[bidButton]);
-        OutputText ("\" src=\"" BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (m_iButtonKey);
-        OutputText ("/");
-        m_pHttpResponse->WriteText (ButtonFileName[bidButton]);
-        OutputText ("\" name=\"");
-        m_pHttpResponse->WriteText (ButtonName[bidButton]);
-        OutputText ("\">");
-        
-        break;
-    }
-}
 
 bool HtmlRenderer::VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash) {
     
@@ -8223,7 +8111,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         m_pHttpResponse->WriteText (pvThemeData[SystemThemes::Name].GetCharPtr());
         OutputText ("<p>");
         
-        sprintf (pszForm, "ThemeInfo%i", piThemeKey[i]);
+        snprintf (pszForm, sizeof (pszForm), "ThemeInfo%i", piThemeKey[i]);
         WriteButtonString (m_iButtonKey, "Info", "Theme Info", pszForm); 
         
         OutputText ("</td>");

@@ -63,10 +63,6 @@ int Crypto::GetRandomData (void* pbRand, size_t cbRand) {
 Crypto::Hash::Hash (ALG_ID idHash) {
 
     m_hHash = NULL;
-    m_bHaveData = false;
-    m_hData.cbData = 0;
-    m_hData.pbData = NULL;
-
     BOOL f = CryptCreateHash (g_hProv, idHash, NULL, 0, &m_hHash);
     Assert (f);
 }
@@ -75,10 +71,6 @@ Crypto::Hash::~Hash() {
 
     if (m_hHash != NULL) {
         CryptDestroyHash (m_hHash);
-    }
-
-    if (m_bHaveData) {
-        delete [] m_hData.pbData;
     }
 }
 
@@ -91,44 +83,38 @@ int Crypto::Hash::HashData (const void* pbData, size_t cbData) {
     if (!CryptHashData (m_hHash, (BYTE*) pbData, (DWORD) cbData, 0)) {
         return ERROR_FAILURE;
     }
-
-    if (m_bHaveData) {
-        delete [] m_hData.pbData;
-        m_bHaveData = false;
-        m_hData.cbData = 0;
-        m_hData.pbData = NULL;
-    }
-
     return OK;
 }
 
-int Crypto::Hash::GetHash (Crypto::HashData* phdData) {
+int Crypto::Hash::GetHashSize (size_t* pstSize) {
 
-    Assert (phdData != NULL);
-
-    if (!m_bHaveData) {
-
-        DWORD dwHashLen = 0;
-        if (!CryptGetHashParam (m_hHash, HP_HASHVAL, NULL, &dwHashLen, 0)) {
-            return ERROR_FAILURE;
-        }
-
-        Byte* pbData = new Byte [dwHashLen];
-        if (pbData == NULL) {
-            return ERROR_OUT_OF_MEMORY;
-        }
-
-        if (!CryptGetHashParam (m_hHash, HP_HASHVAL, (BYTE*) pbData, &dwHashLen, 0)) {
-            delete [] pbData;
-            return ERROR_FAILURE;
-        }
-
-        m_hData.cbData = dwHashLen;
-        m_hData.pbData = pbData;
-        m_bHaveData = true;
+    if (m_hHash == NULL) {
+        return ERROR_OUT_OF_MEMORY;
     }
 
-    *phdData = m_hData;
+    DWORD dwHashLen = 0, dwSize = sizeof (dwHashLen);
+    if (!CryptGetHashParam (m_hHash, HP_HASHSIZE, (BYTE*) &dwHashLen, &dwSize, 0)) {
+        return ERROR_FAILURE;
+    }
+
+    *pstSize = dwHashLen;
+    return OK;
+}
+
+int Crypto::Hash::GetHash (void* pbData, size_t stSize) {
+
+    if (m_hHash == NULL) {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    DWORD dwHashLen = (DWORD) stSize;
+    if (!CryptGetHashParam (m_hHash, HP_HASHVAL, (BYTE*) pbData, &dwHashLen, 0)) {
+
+        if (GetLastError() == ERROR_MORE_DATA) {
+            return ERROR_SMALL_BUFFER;
+        }
+        return ERROR_FAILURE;
+    }
     return OK;
 }
 
@@ -137,7 +123,6 @@ int Crypto::Hash::GetHash (Crypto::HashData* phdData) {
 //
 
 Crypto::HashMD5::HashMD5() : Hash (CALG_MD5) {}
-Crypto::HashSHA::HashSHA() : Hash (CALG_SHA) {}
 Crypto::HashRC4::HashRC4() : Hash (CALG_RC4) {}
 
 #endif // __WIN32__

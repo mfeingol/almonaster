@@ -186,7 +186,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
         if (m_bAuthenticated) {
 
             Assert (m_iEmpireKey != NO_KEY);
-            iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists);
+            iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
             if (iErrCode != OK || !bExists) {       
                 AddMessage ("That empire no longer exists");
                 return ERROR_FAILURE;
@@ -203,11 +203,8 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
                 m_iEmpireKey = pHttpForm->GetIntValue();
                 
                 // Make sure empire key exists
-                iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists);
-                if (iErrCode != OK || 
-                    !bExists || 
-                    g_pGameEngine->GetEmpireName (m_iEmpireKey, &m_vEmpireName) != OK) {
-                    
+                iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists, &m_vEmpireName);
+                if (iErrCode != OK || !bExists) {
                     AddMessage ("That empire no longer exists");
                     return ERROR_FAILURE;
                 }
@@ -434,7 +431,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
     } else {
         
         bool bExists;
-        iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists);
+        iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
         if (iErrCode != OK || !bExists) {
             AddMessage ("That empire no longer exists");
             return ERROR_FAILURE;
@@ -473,7 +470,7 @@ int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
 
     int iErrCode;
     Crypto::HashMD5 hash;
-    Crypto::HashData hd;
+    size_t stHashLen;
 
     // Password
     const char* pszPassword = m_vPassword.GetCharPtr();
@@ -497,13 +494,19 @@ int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
     }
 
     // Done
-    iErrCode = hash.GetHash (&hd);
+    iErrCode = hash.GetHashSize (&stHashLen);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    Assert (hd.cbData >= sizeof (int64));
-    *pi64Hash = *(int64*) hd.pbData;
+    void* pbHashData = StackAlloc (stHashLen);
+    iErrCode = hash.GetHash (pbHashData, stHashLen);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    Assert (stHashLen >= sizeof (int64));
+    *pi64Hash = *(int64*) pbHashData;
 
     return OK;
 }
@@ -512,7 +515,7 @@ int HtmlRenderer::GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64H
 
     int iErrCode;
     Crypto::HashMD5 hash;
-    Crypto::HashData hd;
+    size_t stHashLen;
 
     // Password
     const char* pszPassword = m_vPassword.GetCharPtr();
@@ -562,13 +565,19 @@ int HtmlRenderer::GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64H
     }
 
     // Done
-    iErrCode = hash.GetHash (&hd);
+    iErrCode = hash.GetHashSize (&stHashLen);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    Assert (hd.cbData >= sizeof (int64));
-    *pi64Hash = *(int64*) hd.pbData;
+    void* pbHashData = StackAlloc (stHashLen);
+    iErrCode = hash.GetHash (pbHashData, stHashLen);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    Assert (stHashLen >= sizeof (int64));
+    *pi64Hash = *(int64*) pbHashData;
 
     return OK;
 }
@@ -577,7 +586,7 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
 
     int iErrCode;
     Crypto::HashMD5 hash;
-    Crypto::HashData hd;
+    size_t stHashLen;
 
     // Password
     const char* pszPassword = m_vPassword.GetCharPtr();
@@ -608,13 +617,19 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
     }
 
     // Done
-    iErrCode = hash.GetHash (&hd);
+    iErrCode = hash.GetHashSize (&stHashLen);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    Assert (hd.cbData >= sizeof (int64));
-    *pi64Hash = *(int64*) hd.pbData;
+    void* pbHashData = StackAlloc (stHashLen);
+    iErrCode = hash.GetHash (pbHashData, stHashLen);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    Assert (stHashLen >= sizeof (int64));
+    *pi64Hash = *(int64*) pbHashData;
 
     return OK;
 }

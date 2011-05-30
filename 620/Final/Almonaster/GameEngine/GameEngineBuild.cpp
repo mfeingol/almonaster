@@ -65,6 +65,26 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     NamedMutex nmShipMutex, nmFleetMutex;
     bool bLockedShips = false, bLockedFleets = false;
 
+    *piNumShipsBuilt = 0;
+    *pbBuildReduced = false;
+
+    // Validate input
+    if (iTechKey < FIRST_SHIP || iTechKey > LAST_SHIP) {
+        return ERROR_INVALID_ARGUMENT;
+    }
+
+    if (iNumShips < 0) {
+        return ERROR_INVALID_ARGUMENT;
+    }
+
+    if (fBR < 1.0) {
+        return ERROR_INVALID_ARGUMENT;
+    }
+
+    if (iFleetKey != NO_KEY && !IsMobileShip (iTechKey)) {
+        return ERROR_SHIP_CANNOT_JOIN_FLEET;
+    }
+
     // Make sure game has started
     iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vGameState);
     if (iErrCode != OK) {
@@ -76,9 +96,6 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         iErrCode = ERROR_GAME_HAS_NOT_STARTED;
         goto Cleanup;
     }
-
-    *piNumShipsBuilt = 0;
-    *pbBuildReduced = false;
 
     // Make sure planet belongs to empire
     iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
@@ -189,21 +206,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         }
     }
 
-    // Make sure that planet is on our map
-    iErrCode = m_pGameData->GetFirstKey (strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, false, &iProxyPlanetKey);
-    if (iErrCode != OK) {
-        Assert (false);
-        iErrCode = ERROR_WRONG_OWNER;
-        goto Cleanup;
-    }
-
     // Lock everything
     LockEmpireShips (iGameClass, iGameNumber, iEmpireKey, &nmShipMutex);
     LockEmpireFleets (iGameClass, iGameNumber, iEmpireKey, &nmFleetMutex);
 
     bLockedShips = bLockedFleets = true;
 
-    // Make sure fleet exists
+    // Make sure fleet exists and is at same planet
     if (iFleetKey != NO_KEY) {
 
         bool bExists;
@@ -211,6 +220,17 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         iErrCode = m_pGameData->DoesRowExist (strEmpireFleets, iFleetKey, &bExists);
         if (iErrCode != OK || !bExists) {
             iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
+            goto Cleanup;
+        }
+
+        iErrCode = m_pGameData->ReadData (strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentPlanet, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (vTemp.GetInteger() != iPlanetKey) {
+            iErrCode = ERROR_FLEET_NOT_ON_PLANET;
             goto Cleanup;
         }
     }
@@ -268,12 +288,6 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         goto Cleanup;
     }
 
-    // Make sure BR is legal
-    if (fBR < 1.0) {
-        iErrCode = ERROR_INVALID_TECH_LEVEL;
-        goto Cleanup;
-    }
-
     iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::TechLevel, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
@@ -302,6 +316,16 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         iPopLostToColoniesPerShip
     };
 
+    if (pszShipName == NULL) {
+
+        // Use default
+        iErrCode = GetDefaultEmpireShipName (iEmpireKey, iTechKey, pvColVal + GameEmpireShips::Name);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+    }
+
     // If ships are cloaked, set cloaked to true
     if (iTechKey == CLOAKER && (vShipBehavior.GetInteger() & CLOAKER_CLOAK_ON_BUILD)) {
         pvColVal[GameEmpireShips::State] = pvColVal[GameEmpireShips::State].GetInteger() | CLOAKED;
@@ -320,6 +344,15 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     iErrCode = m_pGameData->Increment (strEmpireData, GameEmpireData::NumBuilds, iNumShips);
     if (iErrCode != OK) {
         Assert (false);
+        goto Cleanup;
+    }
+
+    // Make sure that planet is on our map
+    // We know this already, but we need the proxy key
+    iErrCode = m_pGameData->GetFirstKey (strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, false, &iProxyPlanetKey);
+    if (iErrCode != OK) {
+        Assert (false);
+        iErrCode = ERROR_WRONG_OWNER;
         goto Cleanup;
     }
 
@@ -630,6 +663,264 @@ Cleanup:
     if (piShipKey != NULL) {
         m_pGameData->FreeKeys (piShipKey);
     }
+
+    return iErrCode;
+}
+
+
+// Input:
+// iGameClass -> Gameclass
+// iGameNumber -> Gamenumber
+// iEmpireKey -> Integer key of empire
+//
+// Output:
+// **ppiBuilderKey -> Integer keys of builders
+// *piNumBuilders -> Number of builders
+//
+// Returns the names of the builder planets a given empire has
+
+int GameEngine::GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+                                      unsigned int** ppiBuilderKey, unsigned int* piNumBuilders) {
+
+    int iErrCode;
+    unsigned int iStopKey;
+    Variant vBuilderPopLevel;
+
+    *ppiBuilderKey = NULL;
+    *piNumBuilders = 0;
+
+    // Get builder level
+    iErrCode = m_pGameData->ReadData (
+        SYSTEM_GAMECLASS_DATA, 
+        iGameClass, 
+        SystemGameClassData::BuilderPopLevel, 
+        &vBuilderPopLevel
+        );
+
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    // Search for matches
+    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+
+    const unsigned int piColumns[] = {
+        GameMap::Owner,
+        GameMap::Pop
+    };
+    const unsigned int piFlags[] = {
+        0,
+        0
+    };
+    const Variant pvData[] = {
+        iEmpireKey,
+        vBuilderPopLevel.GetInteger()
+    };
+    const Variant pvData2[] = {
+        iEmpireKey,
+        MAX_POPULATION
+    };
+
+    iErrCode = m_pGameData->GetSearchKeys (
+        strGameMap,
+        2,
+        piColumns,
+        piFlags,
+        pvData,
+        pvData2,
+        NO_KEY,
+        0,
+        0,
+        ppiBuilderKey,
+        piNumBuilders,
+        &iStopKey
+        );
+
+    if (iErrCode != OK) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+        else Assert (false);
+    }
+
+    return iErrCode;
+}
+
+
+int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+                                   unsigned int iPlanetKey, BuildLocation** ppblBuildLocation,
+                                   unsigned int* piNumLocations) {
+
+    int iErrCode;
+    unsigned int* piBuilderKey = NULL, iNumBuilders, iNumFleets, iNumLocations, i, iRemainingFleets,
+        iNumLocationsAllocated;
+
+    BuildLocation* pblBuildLocation = NULL;
+
+    GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+
+    // Multi-planet scenario
+    if (iPlanetKey == NO_KEY) {
+
+        iErrCode = GetBuilderPlanetKeys (iGameClass, iGameNumber, iEmpireKey, &piBuilderKey, &iNumBuilders);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        if (iNumBuilders == 0) {
+            // We're done
+            goto Cleanup;
+        }
+
+    } else {
+
+        // Single-planet scenario
+        iNumBuilders = 1;
+        piBuilderKey = &iPlanetKey;
+    }
+
+    // Get number of fleets
+    // (For the single-planet case, we could query for the exact number
+    // as done below, but it's less code this way. Besides, no one uses that many fleets...)
+    iErrCode = m_pGameData->GetNumRows (pszFleets, &iNumFleets);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Heuristic: we can't have more locations than builders * 2 + fleets
+    iNumLocationsAllocated = iNumBuilders  * 2 + iNumFleets;
+
+    pblBuildLocation = new BuildLocation [iNumLocationsAllocated];
+    if (pblBuildLocation == NULL) {
+        iErrCode = ERROR_OUT_OF_MEMORY;
+        goto Cleanup;
+    }
+
+    iNumLocations = 0;
+    iRemainingFleets = iNumFleets;
+    for (i = 0; i < iNumBuilders; i ++) {
+
+        unsigned int *piFleetKey = NULL, iNumFleetsOnPlanet, j;
+
+        // Add self, no fleet
+        Assert (iNumLocations < iNumLocationsAllocated);
+        pblBuildLocation [iNumLocations].iPlanetKey = piBuilderKey[i];
+        pblBuildLocation [iNumLocations].iFleetKey = NO_KEY;
+        iNumLocations ++;
+
+        // Add self, new fleet
+        Assert (iNumLocations < iNumLocationsAllocated);
+        pblBuildLocation [iNumLocations].iPlanetKey = piBuilderKey[i];
+        pblBuildLocation [iNumLocations].iFleetKey = FLEET_NEWFLEETKEY;
+        iNumLocations ++;
+
+        // Find all fleets on this planet
+        if (iRemainingFleets > 0) {
+
+            // This is accelerated by an index, thankfully
+            iErrCode = m_pGameData->GetEqualKeys (
+                pszFleets,
+                GameEmpireFleets::CurrentPlanet,
+                piBuilderKey[i],
+                false,
+                &piFleetKey,
+                &iNumFleetsOnPlanet
+                );
+
+            if (iErrCode == OK) {
+
+                Assert (iNumFleetsOnPlanet > 0);
+                iRemainingFleets -= iNumFleetsOnPlanet;
+                Assert (iRemainingFleets < iNumFleets);
+
+                for (j = 0; j < iNumFleetsOnPlanet; j ++) {
+
+                    Assert (iNumLocations < iNumLocationsAllocated);
+                    pblBuildLocation [iNumLocations].iPlanetKey = piBuilderKey[i];
+                    pblBuildLocation [iNumLocations].iFleetKey = piFleetKey[j];
+                    iNumLocations ++;
+                }
+
+                m_pGameData->FreeKeys (piFleetKey);
+            }
+
+            else if (iErrCode != ERROR_DATA_NOT_FOUND) {
+                Assert (false);
+                goto Cleanup;
+            }
+
+            else iErrCode = OK;
+        }
+    }
+
+    *ppblBuildLocation = pblBuildLocation;
+    pblBuildLocation = NULL;
+
+    *piNumLocations = iNumLocations;
+
+Cleanup:
+
+    if (pblBuildLocation != NULL) {
+        delete [] pblBuildLocation;
+    }
+
+    if (piBuilderKey != NULL && piBuilderKey != &iPlanetKey) {
+        m_pGameData->FreeKeys (piBuilderKey);
+    }
+
+    return iErrCode;
+}
+
+int GameEngine::IsPlanetBuilder (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+                                 unsigned int iPlanetKey, bool* pbBuilder) {
+
+    int iErrCode;
+    Variant vTemp, vPop;
+
+    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+
+    *pbBuilder = false;
+
+    // Make sure planet belongs to empire
+    iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if ((unsigned int) vTemp.GetInteger() != iEmpireKey) {
+        goto Cleanup;
+    }
+
+    // Make sure planet has enough pop to build
+    iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Pop, &vPop);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->ReadData (
+        SYSTEM_GAMECLASS_DATA, 
+        iGameClass, 
+        SystemGameClassData::BuilderPopLevel, 
+        &vTemp
+        );
+
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (vPop.GetInteger() < vTemp.GetInteger()) {
+        goto Cleanup;
+    }
+
+    *pbBuilder = true;
+
+Cleanup:
 
     return iErrCode;
 }

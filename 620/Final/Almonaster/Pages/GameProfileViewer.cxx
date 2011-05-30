@@ -456,7 +456,7 @@ case 1:
     %><input type="hidden" name="ProfilePage" value="1"><%
 
     bool bExists;
-    iErrCode = g_pGameEngine->DoesEmpireExist (iTargetEmpireKey, &bExists);
+    iErrCode = g_pGameEngine->DoesEmpireExist (iTargetEmpireKey, &bExists, NULL);
     if (iErrCode != OK || !bExists) {
         %><p>That empire no longer exists<%
     } else {

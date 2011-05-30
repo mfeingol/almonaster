@@ -328,10 +328,9 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iNewValue != iVerify) {
 
-                Variant vLimit;
-                EmpireCheck (g_pGameEngine->GetSystemProperty (SystemData::MaxNumSystemMessages, &vLimit));
+                EmpireCheck (g_pGameEngine->GetSystemProperty (SystemData::MaxNumSystemMessages, &vValue));
 
-                if (iNewValue > vLimit.GetInteger()) {
+                if (iNewValue > vValue.GetInteger()) {
                     AddMessage ("Illegal maximum number of saved system messages");
                 } else {
                     EmpireCheck (g_pGameEngine->SetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, iNewValue));
@@ -345,14 +344,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (g_pGameEngine->GetEmpireMaxNumShipsBuiltAtOnce (m_iEmpireKey, &iVerify));
+            EmpireCheck (g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vValue));
 
-            if (iNewValue != iVerify) {
+            if (iNewValue != vValue.GetInteger()) {
 
                 if (iNewValue > 100) {
                     AddMessage ("Illegal maximum number of ships built at once");
                 } else {
-                    EmpireCheck (g_pGameEngine->SetEmpireMaxNumShipsBuiltAtOnce (m_iEmpireKey, iNewValue));
+                    EmpireCheck (g_pGameEngine->SetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, iNewValue));
                     AddMessage ("Your maximum number of ships built at once was updated");
                 }
             }
@@ -922,11 +921,11 @@ Quote:
             iNewValue = pHttpForm->GetIntValue();
 
             bValue = (m_iSystemOptions & SHIPS_ON_MAP_SCREEN) != 0;
-            if (bValue != ((iNewValue & SHIPS_ON_MAP_SCREEN)!= 0)) {
+            if (bValue != ((iNewValue & SHIPS_ON_MAP_SCREEN) != 0)) {
 
                 EmpireCheck (g_pGameEngine->SetEmpireOption (m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bValue));
                 AddMessage ("Ship menus will ");
-                if (iNewValue == 0) {
+                if (!(iNewValue & SHIPS_ON_MAP_SCREEN)) {
                     m_iSystemOptions &= ~SHIPS_ON_MAP_SCREEN;
                     AppendMessage ("no longer");
                 } else {
@@ -941,11 +940,47 @@ Quote:
 
                 EmpireCheck (g_pGameEngine->SetEmpireOption (m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bValue));
                 AddMessage ("Ship menus will ");
-                if (iNewValue == 0) {
+                if (!(iNewValue & SHIPS_ON_PLANETS_SCREEN)) {
                     m_iSystemOptions &= ~SHIPS_ON_PLANETS_SCREEN;
                     AppendMessage ("no longer");
                 } else {
                     m_iSystemOptions |= SHIPS_ON_PLANETS_SCREEN;
+                    AppendMessage ("now");
+                }
+                AppendMessage (" be displayed by default on the planets page");
+            }
+
+            // UpCloseBuilds
+            if ((pHttpForm = m_pHttpRequest->GetForm ("UpCloseBuilds")) == NULL) {
+                goto Redirection;
+            }
+            iNewValue = pHttpForm->GetIntValue();
+
+            bValue = (m_iSystemOptions & BUILD_ON_MAP_SCREEN) != 0;
+            if (bValue != ((iNewValue & BUILD_ON_MAP_SCREEN)!= 0)) {
+
+                EmpireCheck (g_pGameEngine->SetEmpireOption (m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bValue));
+                AddMessage ("Build menus will ");
+                if (!(iNewValue & BUILD_ON_MAP_SCREEN)) {
+                    m_iSystemOptions &= ~BUILD_ON_MAP_SCREEN;
+                    AppendMessage ("no longer");
+                } else {
+                    m_iSystemOptions |= BUILD_ON_MAP_SCREEN;
+                    AppendMessage ("now");
+                }
+                AppendMessage (" be displayed by default in map page planet views");
+            }
+
+            bValue = (m_iSystemOptions & BUILD_ON_PLANETS_SCREEN) != 0;
+            if (bValue != ((iNewValue & BUILD_ON_PLANETS_SCREEN)!= 0)) {
+
+                EmpireCheck (g_pGameEngine->SetEmpireOption (m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bValue));
+                AddMessage ("Build menus will ");
+                if (!(iNewValue & BUILD_ON_PLANETS_SCREEN)) {
+                    m_iSystemOptions &= ~BUILD_ON_PLANETS_SCREEN;
+                    AppendMessage ("no longer");
+                } else {
+                    m_iSystemOptions |= BUILD_ON_PLANETS_SCREEN;
                     AppendMessage ("now");
                 }
                 AppendMessage (" be displayed by default on the planets page");
@@ -2376,13 +2411,6 @@ case 0:
     } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
 
 
-    iOptions = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SHIPS_ON_MAP_SCREEN) != 0 ? SHIPS_ON_MAP_SCREEN : 0;
-
-    if ((pvEmpireData[SystemEmpireData::Options].GetInteger() & SHIPS_ON_PLANETS_SCREEN) != 0) {
-        iOptions |= SHIPS_ON_PLANETS_SCREEN;
-    }
-
-
     %><tr><td>Display local maps in up-close map views:</td><td><select name="LocalMaps"><option<%
 
     bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
@@ -2397,6 +2425,9 @@ case 0:
 
 
     %><tr><td>Display ship menus in planet views:</td><td><select name="UpCloseShips"><%
+
+    iOptions = pvEmpireData[SystemEmpireData::Options].GetInteger() & 
+        (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN);
 
     %><option <% if (iOptions == (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN)) { %>selected <% }
     %>value="<% Write (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN); %>"><%
@@ -2413,6 +2444,30 @@ case 0:
     %><option <% if (iOptions == 0) { %>selected <% }
     %>value="0"><%
     %>No ship menus in planet views by default</option><%
+
+    %></select></td></tr><%
+
+
+    %><tr><td>Display build menus in planet views:</td><td><select name="UpCloseBuilds"><%
+
+    iOptions = pvEmpireData[SystemEmpireData::Options].GetInteger() & 
+        (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN);
+
+    %><option <% if (iOptions == (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN)) { %>selected <% }
+    %>value="<% Write (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN); %>"><%
+    %>Build menus on both map and planets screens by default</option><%
+
+    %><option <% if (iOptions == BUILD_ON_MAP_SCREEN) { %>selected <% }
+    %>value="<% Write (BUILD_ON_MAP_SCREEN); %>"><%
+    %>Build menus on map screens by default</option><%
+
+    %><option <% if (iOptions == BUILD_ON_PLANETS_SCREEN) { %>selected <% }
+    %>value="<% Write (BUILD_ON_PLANETS_SCREEN); %>"><%
+    %>Build menus on planets screen by default</option><%
+
+    %><option <% if (iOptions == 0) { %>selected <% }
+    %>value="0"><%
+    %>No build menus in planet views by default</option><%
 
     %></select></td></tr><%
 

@@ -350,7 +350,7 @@ ICookie* pCookie = m_pHttpRequest->GetCookie ("LastEmpireUsed");
 if (pCookie != NULL && pCookie->GetValue() != NULL) {
 
     iEmpireKey = pCookie->GetIntValue();
-    iErrCode = g_pGameEngine->DoesEmpireExist (iEmpireKey, &bFlag);
+    iErrCode = g_pGameEngine->DoesEmpireExist (iEmpireKey, &bFlag, NULL);
     if (!bFlag || iErrCode != OK) {
         iEmpireKey = NO_KEY;
     }

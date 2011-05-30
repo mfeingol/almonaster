@@ -1144,6 +1144,9 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			Name="HtmlRenderer"
 			Filter="">
 			<File
+				RelativePath="HtmlRenderer\HtmlBuild.cpp">
+			</File>
+			<File
 				RelativePath="HtmlRenderer\HtmlButtons.cpp">
 			</File>
 			<File

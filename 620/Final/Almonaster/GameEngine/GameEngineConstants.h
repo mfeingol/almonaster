@@ -29,7 +29,7 @@
 #define TEST_ERROR(x) iErrCode = x;  if (iErrCode != OK) return iErrCode;
 
 // Ship types
-enum ShipTypes {
+enum ShipType {
     ATTACK,
     SCIENCE,
     COLONY,
@@ -112,10 +112,10 @@ enum SurrenderType {
 // Graphical themes
 enum Graphics {
     INDIVIDUAL_ELEMENTS = -10,
-    ALTERNATIVE_PATH = -20,
-    NULL_THEME = -30,
-    CUSTOM_COLORS = -40,
-    UPLOADED_ICON = -50
+    ALTERNATIVE_PATH    = -20,
+    NULL_THEME          = -30,
+    CUSTOM_COLORS       = -40,
+    UPLOADED_ICON       = -50,
 };
 
 // Default builder planets
@@ -131,6 +131,9 @@ enum GameRatioSetting {
     RATIOS_DISPLAY_ON_RELEVANT_SCREENS,
     RATIOS_DISPLAY_ALWAYS,
 };
+
+// New fleet key
+#define FLEET_NEWFLEETKEY (0xffffabab)
 
 // Cardinal points
 #define NUM_CARDINAL_POINTS 4
@@ -156,22 +159,24 @@ extern const int CREATE_PLANET_LINK[];
 // SystemData::ShipBehavior
 #define COLONY_USE_MULTIPLIED_BUILD_COST            (0x00000001)
 #define COLONY_USE_MULTIPLIED_POPULATION_DEPOSIT    (0x00000002)
-//#define COLONY_DISABLE_SETTLES                        (0x00000004)    Reuse
-//#define COLONY_DISABLE_SURVIVAL                       (0x00000008)    Reuse
+//#define COLONY_DISABLE_SETTLES                    (0x00000004)    Reuse
+//#define COLONY_DISABLE_SURVIVAL                   (0x00000008)    Reuse
 #define CLOAKER_CLOAK_ON_BUILD                      (0x00000010)
 #define TERRAFORMER_DISABLE_FRIENDLY                (0x00000020)
 #define TERRAFORMER_DISABLE_SURVIVAL                (0x00000040)
-//#define TROOPSHIP_DISABLE_IF_SUCCESSFUL               (0x00000080)    Reuse
+//#define TROOPSHIP_DISABLE_IF_SUCCESSFUL           (0x00000080)    Reuse
 #define TROOPSHIP_DISABLE_SURVIVAL                  (0x00000100)
 #define STARGATE_LIMIT_RANGE                        (0x00000200)
 #define JUMPGATE_LIMIT_RANGE                        (0x00000400)
 #define MORPHER_CLOAK_ON_CLOAKER_MORPH              (0x00000800)
 #define TERRAFORMER_DISABLE_MULTIPLE                (0x00001000)
-//#define DOOMSDAY_DISABLE_QUARANTINE                   (0x00002000)    Reuse
+//#define DOOMSDAY_DISABLE_QUARANTINE               (0x00002000)    Reuse
 #define MINEFIELD_DISABLE_DETONATE                  (0x00004000)
 
 #define ALL_SHIP_BEHAVIOR_OPTIONS                   (0x00007fff)
 
+// GameMap::Pop
+#define MAX_POPULATION      (0x7fffffff)
 
 // GameMap::Annihilated
 #define NOT_ANNIHILATED     (0)
@@ -179,10 +184,10 @@ extern const int CREATE_PLANET_LINK[];
 #define ANNIHILATED_UNKNOWN (0xfefefefe)    // Only used during update algorithm
 
 // GameEmpireMap::Explored
-#define EXPLORED_NORTH (0x00000001)
-#define EXPLORED_EAST  (0x00000002)
-#define EXPLORED_SOUTH (0x00000004)
-#define EXPLORED_WEST  (0x00000008)
+#define EXPLORED_NORTH      (0x00000001)
+#define EXPLORED_EAST       (0x00000002)
+#define EXPLORED_SOUTH      (0x00000004)
+#define EXPLORED_WEST       (0x00000008)
 
 extern const int EXPLORED_X[];
 extern const int OPPOSITE_EXPLORED_X[];
@@ -237,6 +242,8 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 //#define SEND_SCORE_MESSAGE_ON_NUKE        (0x01000000)    // Open
 //#define SHOW_TECH_DESCRIPTIONS            (0x02000000)    // Open
 #define DISPLACE_ENDTURN_BUTTON             (0x04000000)
+#define BUILD_ON_MAP_SCREEN                 (0x08000000)
+#define BUILD_ON_PLANETS_SCREEN             (0x10000000)
 
 // SystemEmpireData::Options
 #define SYSTEM_DISPLAY_TIME                 (0x00000001)
@@ -266,6 +273,8 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 #define SEND_SCORE_MESSAGE_ON_NUKE          (0x01000000)
 #define SHOW_TECH_DESCRIPTIONS              (0x02000000)
 //#define DISPLACE_ENDTURN_BUTTON           (0x04000000)
+//#define BUILD_ON_MAP_SCREEN               (0x08000000)
+//#define BUILD_ON_PLANETS_SCREEN           (0x10000000)
 
 // SystemEmpireData::Options2
 #define ADMINISTRATOR_FIXED_PRIVILEGE       (0x00000001)
@@ -808,6 +817,7 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 #define MORPH_JUMPGATE      (MORPH_BASETECH - JUMPGATE)
 
 #define MORPH_TECH(x) (MORPH_BASETECH - x)
+#define IS_MORPH_ACTION(x) ((x) <= MORPH_ATTACK && (x) >= MORPH_JUMPGATE)
 
 // Gate
 #define GATE_SHIPS (-100)
@@ -822,26 +832,12 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 #define FLEET_STANDBY_NUM_ACTIONS       (4)
 #define FLEET_STANDBY_TECHMASK          (TECH_COLONY | TECH_TERRAFORMER | TECH_TROOPSHIP | TECH_DOOMSDAY)
 
-#define FLEET_STANDBY_TECH(x) (MORPH_BASETECH - x)
+#define FLEET_STANDBY_ORDER_FROM_TECH(x) (FLEET_STANDBY_BASE - x)
+#define FLEET_STANDBY_TECH_FROM_ORDER(x) (FLEET_STANDBY_BASE - x)
 
+#define IS_FLEET_STANDBY_ACTION(x) ((x) <= FLEET_STANDBY_AND_COLONIZE && (x) >= FLEET_STANDBY_AND_ANNIHILATE)
 
-#define TECH_ATTACK                         (0x00000001)
-#define TECH_SCIENCE                        (0x00000002)
-#define TECH_COLONY                         (0x00000004)
-#define TECH_STARGATE                       (0x00000008)
-#define TECH_CLOAKER                        (0x00000010)
-#define TECH_SATELLITE                      (0x00000020)
-#define TECH_TERRAFORMER                    (0x00000040)
-#define TECH_TROOPSHIP                      (0x00000080)
-#define TECH_DOOMSDAY                       (0x00000100)
-#define TECH_MINEFIELD                      (0x00000200)
-#define TECH_MINESWEEPER                    (0x00000400)
-#define TECH_ENGINEER                       (0x00000800)
-#define TECH_CARRIER                        (0x00001000)
-#define TECH_BUILDER                        (0x00002000)
-#define TECH_MORPHER                        (0x00004000)
-#define TECH_JUMPGATE                       (0x00008000)
-
+extern const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES];
 
 ////////////
 // Errors //
@@ -965,5 +961,8 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 #define ERROR_EMPIRE_IS_UNAVAILABLE_FOR_TOURNAMENTS (-1115)
 #define ERROR_TOO_MANY_TOURNAMENTS (-1116)
 #define ERROR_TOO_MANY_GAMECLASSES_IN_TOURNAMENT (-1117)
+#define ERROR_INVALID_FLEET_ORDER (-1118)
+#define ERROR_FLEET_NOT_ON_PLANET (-1119)
+#define ERROR_SHIP_CANNOT_JOIN_FLEET (-1120)
 
 #endif

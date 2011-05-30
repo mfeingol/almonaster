@@ -98,7 +98,12 @@ if (!(m_iGameState & STARTED)) {
             %> technologies:<% 
         }
     } else {
-        %><p>You cannot develop any new technologies at the moment<%
+
+        if (iNumUndevKeys > 0) {
+            %><p>You cannot develop any new technologies at the moment:<%
+        } else {
+            %><p>You have developed all possible technologies:<%
+        }
     }
 
     char pszTech[64];

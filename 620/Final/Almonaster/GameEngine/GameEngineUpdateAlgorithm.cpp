@@ -2626,6 +2626,10 @@ int GameEngine::UpdatePlanetPopulations (int iNumEmpires, unsigned int* piEmpire
             // Only update on population change
             if (iNewPop != vPop.GetInteger()) {
 
+                if (iNewPop > MAX_POPULATION) {
+                    iNewPop = MAX_POPULATION;
+                }
+
                 iErrCode = m_pGameData->WriteData (strGameMap, piPlanetKey[i], GameMap::Pop, iNewPop);
                 if (iErrCode != OK) {
                     Assert (false);
@@ -2702,6 +2706,10 @@ int GameEngine::UpdatePlanetPopulations (int iNumEmpires, unsigned int* piEmpire
 
             // Only update on population change
             if (iNewPop != vPop.GetInteger()) {
+
+                if (iNewPop > MAX_POPULATION) {
+                    iNewPop = MAX_POPULATION;
+                }
                 
                 // Write the new population
                 iErrCode = m_pGameData->WriteData (strGameMap, piPlanetKey[i], GameMap::Pop, iNewPop);
@@ -2960,38 +2968,47 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                 }
 
                 // Special case for standby and ...
-                if (vAction.GetInteger() <= FLEET_STANDBY_AND_COLONIZE && 
-                    vAction.GetInteger() >= FLEET_STANDBY_AND_ANNIHILATE) {
+                if (IS_FLEET_STANDBY_ACTION (vAction.GetInteger())) {
 
-                    if (vType.GetInteger() == FLEET_STANDBY_TECH (vAction.GetInteger())) {
+                    if (vType.GetInteger() == FLEET_STANDBY_TECH_FROM_ORDER (vAction.GetInteger())) {
 
-                        switch (vType.GetInteger()) {
-                        
-                        case COLONY:
-                            vAction = COLONIZE;
-                            break;
+                        vAction = FLEET_ACTION_FOR_TECH [vType.GetInteger()];
+                        Assert (vAction.GetInteger() != NO_KEY);
 
-                        case TERRAFORMER:
-                            vAction = TERRAFORM;
-                            break;
+                        // Fix up terraformers
+                        if (vType.GetInteger() == TERRAFORMER) {
 
-                        case TROOPSHIP:
-                            vAction = INVADE;
-                            break;
-
-                        case DOOMSDAY:
-                            vAction = ANNIHILATE;
-                            break;
-
-                        default:
-                            Assert (false);
-                            break;
+                            if (gcConfig.iShipBehavior & TERRAFORMER_DISABLE_FRIENDLY) {
+                                vAction = TERRAFORM_AND_DISMANTLE;
+                            }
                         }
-                    
+
+                        // Fix up troopships
+                        else if (vType.GetInteger() == TROOPSHIP) {
+
+                            if (gcConfig.iShipBehavior & TROOPSHIP_DISABLE_SURVIVAL) {
+                                vAction = INVADE_AND_DISMANTLE;
+                            }
+                        }
+
                     } else {
 
                         vAction = STAND_BY;
                     }
+
+                    iErrCode = m_pGameData->WriteData (
+                        pstrEmpireShips[i], 
+                        piShipKey[j],
+                        GameEmpireShips::Action,
+                        vAction
+                        );
+
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+
+                    continue;
                 }
                 
                 // Special case for nuke
@@ -3905,8 +3922,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
             default:
                 
                 // Special case for morphers
-                if (vAction.GetInteger() <= (MORPH_TECH (FIRST_SHIP)) && 
-                    vAction.GetInteger() >= (MORPH_TECH (LAST_SHIP))) {
+                if (IS_MORPH_ACTION (vAction.GetInteger())) {
 
                     bool bDied = false;
 
@@ -7241,6 +7257,10 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                             vBR.GetFloat());
 
                         // Deposit population
+                        if (iTemp > MAX_POPULATION) {
+                            iTemp = MAX_POPULATION;
+                        }
+
                         iErrCode = m_pGameData->WriteData (strGameMap, vPlanetKey, GameMap::Pop, iTemp);
                         if (iErrCode != OK) {
                             Assert (false);
@@ -7366,6 +7386,10 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         //////////////////////////////////////////////////
                         // Deposit all population and delete the colony //
                         //////////////////////////////////////////////////
+
+                        if (vPop.GetInteger() + iTemp > MAX_POPULATION) {
+                            iTemp = MAX_POPULATION - vPop.GetInteger();
+                        }
                         
                         iErrCode = m_pGameData->Increment (strGameMap, vPlanetKey, GameMap::Pop, iTemp);
                         if (iErrCode != OK) {

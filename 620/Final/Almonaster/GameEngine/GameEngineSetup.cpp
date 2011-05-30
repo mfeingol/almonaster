@@ -3037,7 +3037,7 @@ int GameEngine::VerifyTournaments() {
         // Check for tournament without empire
         else if (iOwner != SYSTEM) {
 
-            iErrCode = DoesEmpireExist (iOwner, &bExists);
+            iErrCode = DoesEmpireExist (iOwner, &bExists, NULL);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;

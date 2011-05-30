@@ -39,7 +39,8 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 
     const char* pszOldPlanetName, * pszNewPlanetName;
-    int iOldMaxPop, iNewMaxPop, iUpdatePlanetKey;
+    int iOldMaxPop, iNewMaxPop;
+    unsigned int iUpdatePlanetKey;
 
     switch (pHttpForm->GetIntValue()) {
 
@@ -282,7 +283,11 @@ EndPartialMaps:
                 break;
             }
 
-            iUpdatePlanetKey = NO_KEY;
+            // Get planet key
+            if ((pHttpForm = m_pHttpRequest->GetForm ("KeyPlanet0")) == NULL) {
+                goto Redirection;
+            }
+            iUpdatePlanetKey = pHttpForm->GetUIntValue();
 
             // Get original name
             if ((pHttpForm = m_pHttpRequest->GetForm ("OldPlanetName0")) != NULL) {
@@ -304,12 +309,6 @@ EndPartialMaps:
                     if (strlen (pszNewPlanetName) > MAX_PLANET_NAME_LENGTH) {
                         AddMessage ("The submitted planet name was too long");
                     } else {
-
-                        // Get planet key
-                        if ((pHttpForm = m_pHttpRequest->GetForm ("KeyPlanet0")) == NULL) {
-                            goto Redirection;
-                        }
-                        iUpdatePlanetKey = pHttpForm->GetIntValue();
 
                         iErrCode = g_pGameEngine->RenamePlanet (
                             m_iGameClass,
@@ -340,15 +339,6 @@ EndPartialMaps:
 
                 if (iOldMaxPop != iNewMaxPop) {
 
-                    // Get planet key
-                    if (iUpdatePlanetKey == NO_KEY) {
-
-                        if ((pHttpForm = m_pHttpRequest->GetForm ("KeyPlanet0")) == NULL) {
-                            goto Redirection;
-                        }
-                        iUpdatePlanetKey = pHttpForm->GetIntValue();
-                    }
-
                     iErrCode = g_pGameEngine->SetPlanetMaxPop (
                         m_iGameClass,
                         m_iGameNumber,
@@ -367,6 +357,22 @@ EndPartialMaps:
                         break;
                     }
                 }
+            }
+
+            // Build click
+            if (WasButtonPressed (BID_MINIBUILD)) {
+
+                HandleMiniBuild (iUpdatePlanetKey);
+
+                iMapSubPage = 1;
+                bRedirectTest = false;
+                break;
+            }
+
+            if (WasButtonPressed (BID_UPDATE)) {
+                iMapSubPage = 1;
+                bRedirectTest = false;
+                break;
             }
 
             // Planet click
@@ -546,8 +552,6 @@ case 1:
         Variant* pvPlanetData = NULL;
         float fAgRatio;
 
-        bool bFlag;
-
         Variant vOptions;
 
         GAME_MAP (pszGameMap, m_iGameClass, m_iGameNumber);
@@ -624,65 +628,48 @@ case 1:
             );
 
         pDatabase->FreeData (pvPlanetData);
+        SafeRelease (pDatabase);
 
         if (iErrCode != OK) {
             %>Error rendering up-close planet view. The error was <% Write (iErrCode);
-            pDatabase->Release();
             break;
         }
 
         // Render ships
-        bFlag = (m_iGameOptions & SHIPS_ON_MAP_SCREEN) != 0;
-        if (bFlag) {
+        if (m_iGameOptions & SHIPS_ON_MAP_SCREEN) {
 
             ShipsInMapScreen simShipsInMap = { iClickedPlanetKey, 0, 0 };
 
             int iBR;
             float fMaintRatio;
 
-            GAME_EMPIRE_SHIPS (pszGameEmpireShips, m_iGameClass, m_iGameNumber, m_iEmpireKey);
-            GAME_EMPIRE_FLEETS (pszGameEmpireFleets, m_iGameClass, m_iGameNumber, m_iEmpireKey);
-
-            iErrCode = g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-
-            iErrCode = g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-
-            %><tr></tr><tr><td></td><td align="center" colspan="10"><%
+            GameCheck (g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
+            GameCheck (g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
 
             // Render ships
             RenderShips (
-                pszGameEmpireShips,
-                pszGameEmpireFleets,
+                m_iGameClass,
+                m_iGameNumber,
+                m_iEmpireKey,
                 iBR,
                 fMaintRatio,
-                &simShipsInMap
+                &simShipsInMap,
+                true
                 );
 
-Cleanup:
-
-            if (iErrCode == OK) {
-
-                %><input type="hidden" name="NumShips" value="<% Write (simShipsInMap.iCurrentShip); %>"><%
-                %><input type="hidden" name="NumFleets" value="<% Write (simShipsInMap.iCurrentFleet); %>"><%
-            }
-
-            %></td></tr><%
+            %><input type="hidden" name="NumShips" value="<% Write (simShipsInMap.iCurrentShip); %>"><%
+            %><input type="hidden" name="NumFleets" value="<% Write (simShipsInMap.iCurrentFleet); %>"><%
         }
 
-        SafeRelease (pDatabase);
+        // Render build
+        if (m_iGameOptions & BUILD_ON_MAP_SCREEN) {  
+            RenderMiniBuild (iClickedPlanetKey, true);
+        }
 
-        bFlag = (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
-        if (bFlag) {
+        if (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) {
 
-            %><tr></tr><tr><td></td><td align="center" colspan="10"><%
+            %><tr><td>&nbsp;</td></tr><%
+            %><tr><td></td><td align="center" colspan="10"><%
 
             // Render local map
             PartialMapInfo pmiPartialMapInfo = { iClickedPlanetKey, 1, 1, true };
@@ -708,6 +695,7 @@ Cleanup:
     %></table><p><%
 
     WriteButton (BID_CANCEL);
+    WriteButton (BID_UPDATE);
 
     }
     break;

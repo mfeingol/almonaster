@@ -323,19 +323,26 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
     unsigned int iSpace, iNewSpace;
     char** ppszTemp;
 
+    pEnum->Clean();
+
 #ifdef __LINUX__
-    // we assume very specific form for pszSpec which is fine for this application
-    // pszSpec should be a directory part followed by a file part. The file part
-    // can contain at most one '*' at the beginning and one '*' at the end.
-    // The characters in the middle will be matched literally
+    // we assume a * character in pszSpec means to match any number
+    // of characters except the character following it
+    // thus *ab* would match xxabxx but not aabxx
+    // This works for this application and is easier than making
+    // a general regex parser
 
     // extract directory part
     char *ptr = strrchr(pszSpec, '/');
     if (!ptr)
         return ERROR_FAILURE;
 
-    bool starBegin = false, starEnd = false;
+    char *fileSpec;
+    char *filename;
     char *dirName = new char[ptr - pszSpec + 1];
+    if (!dirName)
+        return ERROR_OUT_OF_MEMORY;
+
     strncpy(dirName, pszSpec, ptr - pszSpec);
     dirName[ptr-pszSpec] = '\0';
 
@@ -346,37 +353,17 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
         return ERROR_FAILURE;
     }
 
-    ptr++;                      // description of files
-    if (*ptr == '*')
-    {
-        starBegin = true;
-        ptr++;
-    }
-
-    char *fileSpec = new char[strlen(ptr) + 1];
-    strncpy(fileSpec, ptr, strlen(ptr)+1);
-    if (strlen(ptr) > 0 && fileSpec[strlen(ptr)-1] == '*')
-    {
-        starEnd = true;
-        fileSpec[strlen(ptr)-1] = '\0';
-    }
+    fileSpec = ptr+1;                      // description of files
 
 #else if defined __WIN32__
 
     WIN32_FIND_DATA fdFileData;
     HANDLE hHandle = ::FindFirstFile (pszSpec, &fdFileData);
-
     if (hHandle == INVALID_HANDLE_VALUE) {
         return ERROR_FAILURE;
     }
 
-    if (strcmp (fdFileData.cFileName, ".") != 0 &&
-        strcmp (fdFileData.cFileName, "..") != 0) {
-        pEnum->m_iNumFiles = 1;
-    }
 #endif
-
-    pEnum->Clean();
 
     iSpace = 10;
     pEnum->m_ppszFileName = new char* [iSpace];
@@ -386,30 +373,64 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
     }
 
 #ifdef __LINUX__
+
     struct dirent *dirent;
 
     while ((dirent = readdir(dir)) != NULL)
     {
-		if (strcmp (dirent->d_name, ".") == 0 ||
-			strcmp (dirent->d_name, "..") == 0)
+        filename = dirent->d_name;
+		if (strcmp (filename, ".") == 0 ||
+			strcmp (filename, "..") == 0)
         {
             continue;
         }
 
-        char *match = strstr(dirent->d_name, fileSpec);
+        bool matched = false;
 
-        // if length of fileSpec == 0, then we match anything
-        if (strlen(fileSpec) != 0 && !match)
+        // try to match filename with the fileSpec
+        ptr = fileSpec;
+        while (true)
+        {
+            if (*ptr == '\0')
+            {
+                // must have used up all of the file name to match
+                if (*filename == '\0')
+                    matched = true;
+                break;
+            }
+
+            if (*ptr == '*')
+            {
+                ptr++;
+
+                // if end of string, then we can match rest
+                if (*ptr == '\0')
+                {
+                    matched = true;
+                    break;
+                }
+
+                // otherwise, need to match character after the *
+                filename = strchr(filename, *ptr);
+                if (!filename)
+                    break;
+            }
+            else
+            {
+                // must match exactly
+                if (*filename != *ptr)
+                    break;
+            }
+
+            filename++;
+            ptr++;
+        }
+
+        if (!matched)
             continue;
 
-        if ((strlen(fileSpec) == 0) ||
-            (starBegin && starEnd) ||
-            (starBegin && !starEnd && (dirent->d_name + strlen(dirent->d_name) - match == strlen(fileSpec))) ||
-            (!starBegin && starEnd && (match == dirent->d_name)) ||
-            (!starBegin && !starEnd && (match == dirent->d_name) && (strlen(fileSpec) == strlen(dirent->d_name))))
-        {
-                // matched
-                // drop through to the code below
+        // matched this filename
+        // drop through to the code below
 
 #else if defined __WIN32__
 
@@ -421,14 +442,16 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
             if (pEnum->m_iNumFiles == iSpace) {
                 
                 iNewSpace = iSpace * 2;
-                
+
                 ppszTemp = new char* [iNewSpace];
                 if (ppszTemp == NULL) {
                     iErrCode = ERROR_OUT_OF_MEMORY;
                     goto Cleanup;
                 }
-                memcpy (ppszTemp, pEnum->m_ppszFileName, sizeof (char*) * iSpace);
-                
+
+                memset (ppszTemp, 0, iNewSpace * sizeof (char*));
+                memcpy (ppszTemp, pEnum->m_ppszFileName, iSpace * sizeof (char*));
+
                 delete [] pEnum->m_ppszFileName;
                 pEnum->m_ppszFileName = ppszTemp;
                 
@@ -449,10 +472,7 @@ int File::EnumerateFiles (const char* pszSpec, FileEnumerator* pEnum) {
         }       
 
 #ifdef __LINUX__
-    }
-
     closedir(dir);
-    delete [] fileSpec;
     delete [] dirName;
 
 #else if defined __WIN32__
@@ -464,6 +484,10 @@ Cleanup:
 #ifdef __WIN32__
     ::FindClose (hHandle);
 #endif
+
+    if (iErrCode != OK) {
+        pEnum->Clean();
+    }
 
     return iErrCode;
 }

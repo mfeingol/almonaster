@@ -84,16 +84,15 @@ if (!bMapGenerated) {
         GameCheck (g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
     }
 
-    GAME_EMPIRE_SHIPS (pszGameEmpireShips, m_iGameClass, m_iGameNumber, m_iEmpireKey);
-    GAME_EMPIRE_FLEETS (pszGameEmpireFleets, m_iGameClass, m_iGameNumber, m_iEmpireKey);
-
     // Render ships
     RenderShips (
-        pszGameEmpireShips,
-        pszGameEmpireFleets,
+        m_iGameClass,
+        m_iGameNumber,
+        m_iEmpireKey,
         iBR,
         fMaintRatio,
-        NULL
+        NULL,
+        false
         );
 
     pDatabase->Release();

@@ -1040,25 +1040,15 @@ Cleanup:
 bool GameEngine::ValidateEmpireKey (int iLoserKey, unsigned int iHashEmpireName) {
 
     bool bFlag;
+    Variant vEmpireName;
 
-    if (DoesEmpireExist (iLoserKey, &bFlag) == OK && bFlag) {
-        
-        Variant vEmpireName;
-        
-        if (GetEmpireName (iLoserKey, &vEmpireName) == OK) {
-            
-            if (Algorithm::GetStringHashValue (
-                vEmpireName.GetCharPtr(), 
-                EMPIRE_NAME_HASH_BUCKETS, 
-                true
-                ) == iHashEmpireName) {
-
-                return true;
-            }
-        }
-    }
-
-    return false;
+    return DoesEmpireExist (iLoserKey, &bFlag, &vEmpireName) == OK && 
+        bFlag &&
+        Algorithm::GetStringHashValue (
+        vEmpireName.GetCharPtr(), 
+        EMPIRE_NAME_HASH_BUCKETS, 
+        true
+        ) == iHashEmpireName;
 }
 
 int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {

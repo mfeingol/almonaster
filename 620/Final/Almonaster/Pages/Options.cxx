@@ -450,7 +450,47 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("Ship menus will no longer be displayed on the planets screen");
                     }
                 } else {
-                    AddMessage ("The planet screen ship menu setting could not be changed: the error code was ");
+                    AddMessage ("Your planet screen ship menu setting could not be changed: the error code was ");
+                    AppendMessage (iErrCode);
+                }
+            }
+
+            // UpCloseShips
+            if ((pHttpForm = m_pHttpRequest->GetForm ("UpCloseBuilds")) == NULL) {
+                goto Redirection;
+            }
+            iNewValue = pHttpForm->GetIntValue();
+
+            bFlag = (m_iGameOptions & BUILD_ON_MAP_SCREEN) != 0;
+            if (bFlag != ((iNewValue & BUILD_ON_MAP_SCREEN) != 0)) {
+
+                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bFlag)) == OK) {
+                    if (!bFlag) {
+                        m_iGameOptions |= BUILD_ON_MAP_SCREEN;
+                        AddMessage ("Build menus will now be displayed on map screen planet views");
+                    } else {
+                        m_iGameOptions &= ~BUILD_ON_MAP_SCREEN;
+                        AddMessage ("Build menus will no longer be displayed on map screen planet views");
+                    }
+                } else {
+                    AddMessage ("Your map screen build menu setting could not be changed: the error code was ");
+                    AppendMessage (iErrCode);
+                }
+            }
+
+            bFlag = (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) != 0;
+            if (bFlag != ((iNewValue & BUILD_ON_PLANETS_SCREEN) != 0)) {
+
+                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bFlag)) == OK) {
+                    if (!bFlag) {
+                        m_iGameOptions |= BUILD_ON_PLANETS_SCREEN;
+                        AddMessage ("Build menus will now be displayed on the planets screen");
+                    } else {
+                        m_iGameOptions &= ~BUILD_ON_PLANETS_SCREEN;
+                        AddMessage ("Build menus will no longer be displayed on the planets screen");
+                    }
+                } else {
+                    AddMessage ("Your planet screen ship menu setting could not be changed: the error code was ");
                     AppendMessage (iErrCode);
                 }
             }
@@ -1239,6 +1279,29 @@ case 0:
     %></select></td></tr><%
 
 
+    iValue = m_iGameOptions & (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN);
+
+    %><tr><td>Display build menus in planet views:</td><td><select name="UpCloseBuilds"><%
+
+    %><option <% if (iValue == (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN)) { %>selected <% }
+    %>value="<% Write (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN); %>"><%
+    %>Build menus on both map and planets screens</option><%
+
+    %><option <% if (iValue == BUILD_ON_MAP_SCREEN) { %>selected <% }
+    %>value="<% Write (BUILD_ON_MAP_SCREEN); %>"><%
+    %>Build menus on map screen</option><%
+
+    %><option <% if (iValue == BUILD_ON_PLANETS_SCREEN) { %>selected <% }
+    %>value="<% Write (BUILD_ON_PLANETS_SCREEN); %>"><%
+    %>Build menus on planets screen</option><%
+
+    %><option <% if (iValue == 0) { %>selected <% }
+    %>value="0"><%
+    %>No build menus in planet views</option><%
+
+    %></select></td></tr><%
+
+
     bFlag = (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
 
     %><tr><td>Display local maps in up-close map views:</td><td><select name="LocalMaps"><%
@@ -1311,7 +1374,7 @@ case 0:
     }
     %>value="<% Write (NO_DEFAULT_BUILDER_PLANET); %>">No default builder planet</option><%
 
-    int* piBuilderKey, iNumBuilderKey;
+    unsigned int* piBuilderKey = NULL, iNumBuilderKey;
 
     GameCheck (g_pGameEngine->GetBuilderPlanetKeys (
         m_iGameClass,
@@ -1326,9 +1389,7 @@ case 0:
         String strFilter;
         char pszPlanetName [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH];
 
-        Algorithm::AutoDelete<int> autopiBuilderKey (piBuilderKey, true);
-
-        for (i = 0; i < iNumBuilderKey; i ++) {
+        for (i = 0; (unsigned int) i < iNumBuilderKey; i ++) {
 
             iErrCode = g_pGameEngine->GetPlanetNameWithCoordinates (
                 m_iGameClass,
@@ -1342,7 +1403,7 @@ case 0:
                 if (HTMLFilter (pszPlanetName, &strFilter, 0, false) == OK) {
 
                     %><option <%
-                    if (iValue == piBuilderKey[i]) {
+                    if ((unsigned int) iValue == piBuilderKey[i]) {
                         %>selected <%
                     }
                     %>value="<% Write (piBuilderKey[i]); %>"><%
@@ -1351,6 +1412,9 @@ case 0:
                 }
             }
         }
+
+        g_pGameEngine->FreeKeys (piBuilderKey);
+        piBuilderKey = NULL;
     }
 
     GameCheck (g_pGameEngine->GetEmpireDefaultMessageTarget (

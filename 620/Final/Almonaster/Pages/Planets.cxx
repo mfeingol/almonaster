@@ -55,10 +55,16 @@ if (m_bOwnPost && !m_bRedirection) {
         int iOldMaxPop, iNewMaxPop, iUpdatePlanetKey;
 
         char pszForm [256];
+        bool bBuildTest = true;
 
         for (i = 0; i < iNumTestPlanets; i ++) {
 
-            iUpdatePlanetKey = NO_KEY;
+            // Get planet key
+            snprintf (pszForm, sizeof (pszForm), "KeyPlanet%i", i);
+            if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
+                goto Redirection;
+            }
+            iUpdatePlanetKey = pHttpForm->GetUIntValue();
 
             // Get original name
             sprintf (pszForm, "OldPlanetName%i", i);
@@ -88,21 +94,16 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("The submitted planet name was too long");
                 } else {
 
-                    // Get planet key
-                    sprintf (pszForm, "KeyPlanet%i", i);
-                    if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                        goto Redirection;
-                    }
-                    iUpdatePlanetKey = pHttpForm->GetIntValue();
-
                     // Best effort
-                    g_pGameEngine->RenamePlanet (
+                    if (g_pGameEngine->RenamePlanet (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
                         iUpdatePlanetKey, 
                         pszNewPlanetName
-                        );
+                        ) != OK) {
+
+                    }
                 }
             }
 
@@ -142,6 +143,26 @@ if (m_bOwnPost && !m_bRedirection) {
                     ) != OK
                     ) {
                     AddMessage ("The planet's Max Pop could not be set");
+                }
+            }
+
+            // Build
+            if (bBuildTest) {
+
+                if (m_iButtonKey == NULL_THEME) {
+                    snprintf (pszForm, sizeof (pszForm), "MiniBuild%i", iUpdatePlanetKey);
+                } else {
+                    snprintf (pszForm, sizeof (pszForm), "MiniBuild%i.x", iUpdatePlanetKey);
+                }
+
+                pHttpForm = m_pHttpRequest->GetForm (pszForm);
+                if (pHttpForm != NULL) {
+
+                    bBuildTest = false;
+                    bRedirectTest = false;
+
+                    // Do build
+                    HandleMiniBuild (iUpdatePlanetKey);
                 }
             }
         }
@@ -264,23 +285,22 @@ if (bMapGenerated) {
             // Render ships
             if (bShips) {
 
-                GAME_EMPIRE_SHIPS (pszGameEmpireShips, m_iGameClass, m_iGameNumber, m_iEmpireKey);
-                GAME_EMPIRE_FLEETS (pszGameEmpireFleets, m_iGameClass, m_iGameNumber, m_iEmpireKey);
-
-                %><tr></tr><tr><td></td><td align="center" colspan="10"><%
-
                 simShipsInMap.iPlanetKey = pvPlanetKey[i].GetInteger();
 
                 // Render ships
                 RenderShips (
-                    pszGameEmpireShips,
-                    pszGameEmpireFleets,
+                    m_iGameClass,
+                    m_iGameNumber,
+                    m_iEmpireKey,
                     iBR,
                     fMaintRatio,
-                    &simShipsInMap
+                    &simShipsInMap,
+                    true
                     );
+            }
 
-                %></td></tr><%
+            if (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) {  
+                RenderMiniBuild (pvPlanetKey[i].GetInteger(), false);
             }
 
             %></table><%

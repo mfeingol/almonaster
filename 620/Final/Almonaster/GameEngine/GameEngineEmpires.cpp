@@ -1413,8 +1413,27 @@ int GameEngine::DoesEmpireExist (const char* pszName, bool* pbExists, unsigned i
 //
 // Determines if a given empire key exists
 
-int GameEngine::DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists) {
-    return m_pGameData->DoesRowExist (SYSTEM_EMPIRE_DATA, iEmpireKey, pbExists);
+int GameEngine::DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName) {
+
+    int iErrCode;
+    IReadTable* pEmps = NULL;
+
+    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmps);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    iErrCode = pEmps->DoesRowExist (iEmpireKey, pbExists);
+    if (iErrCode == OK) {
+
+        if (pvEmpireName != NULL && *pbExists) {
+            iErrCode = pEmps->ReadData (iEmpireKey, SystemEmpireData::Name, pvEmpireName);
+        }
+    }
+
+    pEmps->Release();
+
+    return iErrCode;
 }
 
 
@@ -2225,49 +2244,6 @@ int GameEngine::GetNumLogins (int iEmpireKey, int* piNumLogins) {
     }
 
     return iErrCode;
-}
-
-
-// Input:
-// iEmpireKey -> Key of empire
-//
-// Output:
-// *piMaxNumShipsBuiltAtOnce -> Maximum number of ships the empire can build at once
-//
-// Get the maximum number of ships the empire can build at once
-
-int GameEngine::GetEmpireMaxNumShipsBuiltAtOnce (int iEmpireKey, int* piMaxNumShipsBuiltAtOnce) {
-
-    Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::MaxNumShipsBuiltAtOnce, 
-        &vTemp
-        );
-    
-    if (iErrCode == OK) {
-        *piMaxNumShipsBuiltAtOnce = vTemp.GetInteger();
-    }
-
-    return iErrCode;
-}
-
-
-// Input:
-// iEmpireKey -> Key of empire
-// iMaxNumShipsBuiltAtOnce -> Maximum number of ships the empire can build at once
-//
-// Set the maximum number of ships the empire can build at once
-
-int GameEngine::SetEmpireMaxNumShipsBuiltAtOnce (int iEmpireKey, int iMaxNumShipsBuiltAtOnce) {
-
-    return m_pGameData->WriteData (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::MaxNumShipsBuiltAtOnce, 
-        iMaxNumShipsBuiltAtOnce
-        );
 }
 
 

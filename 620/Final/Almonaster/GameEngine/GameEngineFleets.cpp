@@ -92,7 +92,19 @@ int GameEngine::GetFleetLocation (int iGameClass, int iGameNumber, int iEmpireKe
 int GameEngine::GetFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
                               Variant* pvFleetName) {
 
+    int iErrCode;
+    bool bFlag;
+
     GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
+
+    iErrCode = m_pGameData->DoesRowExist (strGameEmpireFleets, iFleetKey, &bFlag);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    if (!bFlag) {
+        return ERROR_FLEET_DOES_NOT_EXIST;
+    }
 
     return m_pGameData->ReadData (strGameEmpireFleets, iFleetKey, GameEmpireFleets::Name, pvFleetName);
 }
@@ -252,10 +264,12 @@ Cleanup:
 // Creates a new fleet at the given location
 
 int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszFleetName, 
-                                int iPlanetKey) {
+                                int iPlanetKey, unsigned int* piFleetKey) {
 
     bool bAccept = true;
     Variant vOwner;
+
+    *piFleetKey = NO_KEY;
 
     // Make sure that the name isn't null
     if (String::IsBlank (pszFleetName)) {
@@ -355,7 +369,7 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
         }
         
         // Insert row into fleets table
-        iErrCode = m_pGameData->InsertRow (strEmpireFleets, pvColVal);
+        iErrCode = m_pGameData->InsertRow (strEmpireFleets, pvColVal, piFleetKey);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -384,11 +398,13 @@ Cleanup:
 // Return the orders for a fleet
 
 int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
-                                int** ppiOrderKey, String** ppstrOrderText, int* piSelected, 
-                                int* piNumOrders) {
+                                const GameConfiguration& gcConfig,
+                                int** ppiOrderKey, String** ppstrOrderText, int* piSelected, int* piNumOrders) {
 
     int iErrCode, iX, iY, iNumShips;
-    Variant vTemp, vPlanetKey, vCoordinates, vPlanetName, vBuildShips;
+    Variant vTemp, vCoordinates, vBuildShips;
+    String strPlanetName;
+    unsigned int iPlanetKey;
 
     char pszOrder [128 + MAX_PLANET_NAME_LENGTH];
 
@@ -411,22 +427,29 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
     *piSelected = vTemp.GetInteger();
 
     // Get fleet location
-    iErrCode = m_pGameData->ReadData (strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentPlanet, &vPlanetKey);
+    iErrCode = m_pGameData->ReadData (strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentPlanet, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
+    iPlanetKey = vTemp.GetInteger();
 
     // Get planet coordinates and name
-    iErrCode = m_pGameData->ReadData (strGameMap, vPlanetKey, GameMap::Coordinates, &vCoordinates);
+    iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Coordinates, &vCoordinates);
     if (iErrCode != OK) {
         return iErrCode;
     }
     
     GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
     
-    iErrCode = m_pGameData->ReadData (strGameMap, vPlanetKey, GameMap::Name, &vPlanetName);
+    iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Name, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
+    }
+
+    // Filter planet name
+    if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
+        iErrCode = ERROR_OUT_OF_MEMORY;
+        goto Cleanup;
     }
 
     ////////////////////////////////
@@ -449,7 +472,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
     // Add "Standby" //
     ///////////////////
     
-    sprintf (pszOrder, "Standby at %s (%i,%i)", vPlanetName.GetCharPtr(), iX, iY);
+    sprintf (pszOrder, "Standby at %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
 
     (*ppiOrderKey)[0] = STAND_BY;
     (*ppstrOrderText)[0] = pszOrder;
@@ -481,7 +504,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
         iErrCode = m_pGameData->GetFirstKey (
             strEmpireMap, 
             GameEmpireMap::PlanetKey, 
-            vPlanetKey, 
+            iPlanetKey, 
             false, 
             &iPlanetProxyKey
             );
@@ -512,7 +535,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
 
         iExplored = vExplored.GetInteger();
 
-        iErrCode = m_pGameData->ReadData (strGameMap, vPlanetKey, GameMap::Link, &vExplored);
+        iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Link, &vExplored);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -526,7 +549,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
                 // Get neighbouring planet's key
                 iErrCode = m_pGameData->ReadData (
                     strGameMap, 
-                    vPlanetKey.GetInteger(), 
+                    iPlanetKey, 
                     GameMap::NorthPlanetKey + i,
                     &vNeighbourPlanetKey
                     );
@@ -567,7 +590,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
         // Nuke //
         //////////
         
-        iErrCode = m_pGameData->ReadData (strGameMap, vPlanetKey, GameMap::Owner, &vOwner);
+        iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -601,7 +624,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
                 
                 if (vDipStatus.GetInteger() == WAR) {
                     
-                    sprintf (pszOrder, "Nuke %s (%i,%i)", vPlanetName.GetCharPtr(), iX, iY);
+                    sprintf (pszOrder, "Nuke %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
                     
                     (*ppstrOrderText)[*piNumOrders] = pszOrder;
                     (*ppiOrderKey)[*piNumOrders] = NUKE;
@@ -616,8 +639,8 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
     }
 
     // Standby and ...
-    int iMask;
-    iErrCode = GetFleetSpecialActionMask (iGameClass, iGameNumber, iEmpireKey, iFleetKey, &iMask);
+    int iMask = 0;
+    iErrCode = GetFleetSpecialActionMask (iGameClass, iGameNumber, iEmpireKey, iFleetKey, gcConfig, &iMask);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -630,7 +653,7 @@ int GameEngine::GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey,
 
     if (iMask & TECH_TERRAFORMER) {
         (*ppiOrderKey)[*piNumOrders] = FLEET_STANDBY_AND_TERRAFORM;
-        (*ppstrOrderText)[*piNumOrders] = "Standby and terraformer";
+        (*ppstrOrderText)[*piNumOrders] = "Standby and terraform";
         (*piNumOrders) ++;
     }
 
@@ -679,27 +702,45 @@ Cleanup:
 }
 
 
-int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNumber, 
-                                           unsigned int iEmpireKey, unsigned int iFleetKey, int* piMask) {
-
-    int iErrCode;
-    unsigned int iNumShips, i;
-
-    Variant* pvType = NULL;
-
-    GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
+int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+                                           unsigned int iFleetKey, const GameConfiguration& gcConfig,
+                                           int* piMask) {
 
     *piMask = 0;
 
-    iErrCode = m_pGameData->ReadColumnWhereEqual (
-        pszShips,
+    int iErrCode;
+    Variant vPlanetKey;
+    unsigned int iNumShips, i, iStopKey, * piShipKey = NULL;
+
+    GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
+    GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+
+    const unsigned int piColumns[] = {
         GameEmpireShips::FleetKey,
+        GameEmpireShips::BuiltThisUpdate
+    };
+    const unsigned int piFlags[] = {
+        0,
+        0
+    };
+    const Variant pvData[] = {
         iFleetKey,
-        false,
-        GameEmpireShips::Type,
-        NULL,
-        &pvType,
-        &iNumShips
+        0
+    };
+
+    iErrCode = m_pGameData->GetSearchKeys (
+        pszShips,
+        2,
+        piColumns,
+        piFlags,
+        pvData,
+        pvData,
+        NO_KEY,
+        0,
+        0,
+        &piShipKey,
+        &iNumShips,
+        &iStopKey
         );
 
     if (iErrCode != OK) {
@@ -709,45 +750,167 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
         goto Cleanup;
     }
 
+    // Get planet key
+    iErrCode = m_pGameData->ReadData (pszFleets, iFleetKey, GameEmpireFleets::CurrentPlanet, &vPlanetKey);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Run tests
+    int iTestMask = 0;
+
     for (i = 0; i < iNumShips; i ++) {
 
         int iMask = 0;
+        Variant vType;
 
-        switch (pvType[i].GetInteger()) {
+        iErrCode = m_pGameData->ReadData (pszShips, piShipKey[i], GameEmpireShips::Type, &vType);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        switch (vType.GetInteger()) {
 
         case COLONY:
-            iMask |= TECH_COLONY;
+
+            if (!(iTestMask & TECH_COLONY)) {
+
+                bool bColonize, bSettle;
+                
+                iErrCode = GetColonyOrders (
+                    iGameClass, 
+                    iGameNumber, 
+                    iEmpireKey, 
+                    vPlanetKey.GetInteger(),
+                    &bColonize,
+                    &bSettle
+                    );
+
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+
+                if (bColonize) {
+                    iMask |= TECH_COLONY;
+                }
+
+                iTestMask |= TECH_COLONY;
+            }
             break;
 
         case TERRAFORMER:
-            iMask |= TECH_COLONY;
+
+            if (!(iTestMask & TECH_TERRAFORMER)) {
+
+                bool bTerraform, bTerraformAndDismantle;
+
+                iErrCode = GetTerraformerOrders (
+                    iGameClass,
+                    iGameNumber,
+                    iEmpireKey,
+                    vPlanetKey.GetInteger(),
+                    gcConfig,
+                    &bTerraform,
+                    &bTerraformAndDismantle
+                    );
+
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+
+                if (bTerraform || bTerraformAndDismantle) {
+                    iMask |= TECH_TERRAFORMER;
+                }
+
+                iTestMask |= TECH_TERRAFORMER;
+            }
             break;
 
         case TROOPSHIP:
-            iMask |= TECH_TROOPSHIP;
+            
+            if (!(iTestMask & TECH_TROOPSHIP)) {
+
+                bool bInvade, bInvadeAndDismantle;
+
+                iErrCode = GetTroopshipOrders (
+                    iGameClass,
+                    iGameNumber,
+                    iEmpireKey,
+                    vPlanetKey.GetInteger(),
+                    gcConfig,
+                    &bInvade,
+                    &bInvadeAndDismantle
+                    );
+
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+
+                if (bInvade || bInvadeAndDismantle) {
+                    iMask |= TECH_TROOPSHIP;
+                }
+
+                iTestMask |= TECH_TROOPSHIP;
+            }
             break;
 
         case DOOMSDAY:
-            iMask |= TECH_DOOMSDAY;
+            
+            if (!(iTestMask & TECH_DOOMSDAY)) {
+
+                bool bAnnihilate;
+                int iGameClassOptions;
+
+                iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+
+                iErrCode = GetDoomsdayOrders (
+                    iGameClass,
+                    iGameNumber,
+                    iEmpireKey,
+                    vPlanetKey.GetInteger(),
+                    gcConfig,
+                    iGameClassOptions,
+                    &bAnnihilate
+                    );
+
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+
+                if (bAnnihilate) {
+                    iMask |= TECH_DOOMSDAY;
+                }
+
+                iTestMask |= TECH_DOOMSDAY;
+            }
             break;
 
         default:
-            break;
+            continue;
         }
 
-        if (iMask) {
+        *piMask |= iMask;
 
-            *piMask |= iMask;
-            if (*piMask == FLEET_STANDBY_TECHMASK) {
-                goto Cleanup;
-            }
-
+        if (iTestMask == FLEET_STANDBY_TECHMASK) {
+            break;
         }
     }
 
 Cleanup:
 
-    m_pGameData->FreeData (pvType);
+    if (piShipKey != NULL) {
+        m_pGameData->FreeKeys (piShipKey);
+    }
 
     return iErrCode;
 }
@@ -831,7 +994,12 @@ int GameEngine::UpdateFleetOrders (int iGameClass, int iGameNumber, int iEmpireK
 
     // Check for standby
     if (iOrderKey == STAND_BY) {
+        
         iErrCode = m_pGameData->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
         goto Cleanup;
     }
 
@@ -1059,7 +1227,7 @@ int GameEngine::UpdateFleetOrders (int iGameClass, int iGameNumber, int iEmpireK
         iErrCode = m_pGameData->ReadData (strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vOwner);
         if (iErrCode != OK) {
             Assert (false);
-            return iErrCode;
+            goto Cleanup;
         }
 
         if (vOwner.GetInteger() != WAR) {
@@ -1068,12 +1236,53 @@ int GameEngine::UpdateFleetOrders (int iGameClass, int iGameNumber, int iEmpireK
         }
         
         iErrCode = m_pGameData->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, NUKE);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
         goto Cleanup;
     }
 
-    // TODO : check standby and ... orders
-    // 
+    // Check standby and ... orders
+    if (IS_FLEET_STANDBY_ACTION (iOrderKey)) {
+
+        GameConfiguration gcConfig;
+        iErrCode = GetGameConfiguration (&gcConfig);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        int iMask;
+        iErrCode = GetFleetSpecialActionMask (iGameClass, iGameNumber, iEmpireKey, iFleetKey, gcConfig, &iMask);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        ShipType iTech = (ShipType) FLEET_STANDBY_TECH_FROM_ORDER(iOrderKey);
+        int iBit = TECH_BITS [iTech];
+
+        if (!(iMask & iBit)) {
+
+            // We don't have that kind of ship, sorry.
+            iErrCode = ERROR_INVALID_FLEET_ORDER;
+            goto Cleanup;
+        }
+
+        iErrCode = m_pGameData->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, iOrderKey);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        goto Cleanup;
+    }
     
+    //
+    // Move
+    //
     // Get proxy key for empire map
     iErrCode = m_pGameData->GetFirstKey (
         strEmpireMap, 

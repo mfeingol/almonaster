@@ -1117,7 +1117,7 @@ int GameEngine::RemoveEmpireFromGameInternal (int iGameClass, int iGameNumber, i
     // If empire still exists, tell him what happened
     if (iKillerEmpire != NO_KEY) {
 
-        iErrCode = DoesEmpireExist (iEmpireKey, &bFlag);
+        iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, NULL);
         if (iErrCode == OK && bFlag) {
 
             sprintf (
@@ -1286,7 +1286,7 @@ Cleanup:
     if (iKillerEmpire != NO_KEY) {
         
         bool bFlag;
-        iErrCode = DoesEmpireExist (iEmpireKey, &bFlag);
+        iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, NULL);
         if (iErrCode == OK && bFlag) {
             
             sprintf (

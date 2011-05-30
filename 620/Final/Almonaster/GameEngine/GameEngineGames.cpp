@@ -1791,7 +1791,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
     }
 
     // Make sure we still exist, kill game if not and we just created it and we're alone
-    iErrCode = DoesEmpireExist (iEmpireKey, &bFlag);
+    iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, &vEmpireName);
     if (iErrCode != OK || !bFlag) {
         iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
         goto OnError;
@@ -1823,12 +1823,6 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         if (iErrCode == OK) {
             iErrCode = ERROR_ALREADY_IN_GAME;
         }
-        goto OnError;
-    }
-
-    // Get empire name
-    iErrCode = GetEmpireName (iEmpireKey, &vEmpireName);
-    if (iErrCode != OK) {
         goto OnError;
     }
 
@@ -2435,7 +2429,8 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         AUTO_REFRESH | COUNTDOWN | GAME_REPEATED_BUTTONS | MAP_COLORING | SHIP_MAP_COLORING |
         SHIP_MAP_HIGHLIGHTING | SENSITIVE_MAPS | PARTIAL_MAPS | SHIPS_ON_MAP_SCREEN | 
         SHIPS_ON_PLANETS_SCREEN | LOCAL_MAPS_IN_UPCLOSE_VIEWS | GAME_DISPLAY_TIME | 
-        REJECT_INDEPENDENT_SHIP_GIFTS | DISPLACE_ENDTURN_BUTTON
+        REJECT_INDEPENDENT_SHIP_GIFTS | DISPLACE_ENDTURN_BUTTON | BUILD_ON_MAP_SCREEN |
+        BUILD_ON_PLANETS_SCREEN
         );
 
     // Request pause if necessary

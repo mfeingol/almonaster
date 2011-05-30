@@ -288,7 +288,8 @@ enum ButtonId {
     BID_REBUILD,
     BID_LOOKUP,
     BID_VIEWMINIMAP,
-    BID_LAST
+    BID_MINIBUILD,
+    BID_LAST,
 };
 
 extern const char* ButtonText[];
@@ -696,12 +697,23 @@ public:
 
     int LoginEmpire();
 
-    void RenderShips (const char* pszShips, const char* pszFleets,
-        int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap);
+    void RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+        int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString);
 
     int HandleShipMenuSubmissions();
 
     bool VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash);
+    
+    // Build
+    void RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar);
+    void HandleMiniBuild (unsigned int iPlanetKey);
+
+    int CreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFleetKey);
+
+    void AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, int iBR, int iTechKey,
+        const char* pszPlanetName, int iX, int iY, const char* pszFleetName, bool bBuildReduced);
+
+    void AddCreateNewFleetMessage (int iErrCode, const char* pszFleetName);
 
     // New button system
     bool IsLegalButtonId (ButtonId bidButton);

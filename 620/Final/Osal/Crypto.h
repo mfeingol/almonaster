@@ -36,33 +36,22 @@ namespace Crypto {
     // Classes
     //
 
-    struct HashData {
-        void* pbData;
-        size_t cbData;
-    };
+#if defined __LINUX__
+#error Needs implementation
+#else if defined __WIN32__
 
     class OSAL_EXPORT Hash {
-
     private:
-#ifdef __WIN32__
         HCRYPTHASH m_hHash;
-#else if defined __LINUX__
-#error Needs implementation
-#endif
-        bool m_bHaveData;
-        HashData m_hData;
 
     public:
-
-#ifdef __WIN32__
         Hash (ALG_ID idHash);
-#else if defined __LINUX__
-#error Needs implementation
-#endif
         ~Hash();
 
         int HashData (const void* pbData, size_t cbData);
-        int GetHash (Crypto::HashData* phdData);
+
+        int GetHashSize (size_t* pstSize);
+        int GetHash (void* pbData, size_t stSize);
     };
 
     class OSAL_EXPORT HashMD5 : public Hash {
@@ -70,15 +59,11 @@ namespace Crypto {
         HashMD5();
     };
 
-    class OSAL_EXPORT HashSHA : public Hash {
-    public:
-        HashSHA();
-    };
-
     class OSAL_EXPORT HashRC4 : public Hash {
     public:
         HashRC4();
     };
+#endif
 };
 
 

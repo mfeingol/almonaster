@@ -18,9 +18,14 @@
 
 #include "HtmlRenderer.h"
 
-void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int iBR, float fMaintRatio, 
-                                ShipsInMapScreen* pShipsInMap) {
+void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+                                int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, 
+                                bool bInMapOrPlanets) {
     
+    GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
+    GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+
+
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
     Assert (pDatabase != NULL);
 
@@ -34,6 +39,14 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
     String* pstrOrderText = NULL;
     
     Variant vPlanetName, * pvFleetData = NULL;
+
+    const char* pszTableColor = m_vTableColor.GetCharPtr();
+    size_t stTableColorLen = strlen (pszTableColor);
+
+    bool bShipString = true;
+    bool bFleetString = true;
+    bool bOpenTableRow = bInMapOrPlanets;
+    bool bCloseTableRow = false;
     
     GameConfiguration gcConfig;
     iErrCode = g_pGameEngine->GetGameConfiguration (&gcConfig);
@@ -144,6 +157,16 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
             // Sort ships by location
             Algorithm::QSortTwoAscending<int, unsigned int> (piShipLoc, piShipKey, iNumShips);
         }
+
+        if (bOpenTableRow) {
+
+            bOpenTableRow = false;
+            bCloseTableRow = true;
+            OutputText (
+                "<tr><td>&nbsp;</td></tr>"\
+                "<tr><td></td><td align=\"center\" colspan=\"10\">"
+                );
+        }
         
         // Allocate space for fleet data
         if (iNumFleets > 0) {
@@ -183,20 +206,27 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
         
         if (iNumFleetShips < iNumShips) {
             
-            OutputText ("<p><table width=\"90%\"><tr><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-            OutputText ("\">Ship Name</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("<p><table width=\"90%\">");
+
+            if (bShipString) {
+                bShipString = false;
+                OutputText ("<tr><td align=\"center\" colspan=\"7\">Ships:</td></tr>");
+            }
+
+            OutputText ("<tr><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">Ship</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">BR</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-            OutputText ("\">Max BR</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Next BR</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">Max BR</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Location</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Type</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
             OutputText ("\">Orders</th></tr>");
         }
         
@@ -286,6 +316,16 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
     
     // Process fleets!
     if (iNumFleets > 0) {
+
+        if (bOpenTableRow) {
+
+            bOpenTableRow = false;
+            bCloseTableRow = true;
+            OutputText (
+                "<tr><td>&nbsp;</td></tr>"\
+                "<tr><td></td><td align=\"center\" colspan=\"10\">"
+                );
+        }
         
         unsigned int iNumShipsInFleet;
         int iPercentage, iIndex;
@@ -302,7 +342,7 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
             }
             
             iErrCode = g_pGameEngine->GetFleetOrders (m_iGameClass, m_iGameNumber, m_iEmpireKey, piFleetKey[i],
-                &piOrderKey, &pstrOrderText, &iSelectedOrder, (int*) &iNumOrders);
+                gcConfig, &piOrderKey, &pstrOrderText, &iSelectedOrder, (int*) &iNumOrders);
             
             if (iErrCode != OK) {
                 Assert (false);
@@ -311,18 +351,30 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
             
             Assert (iNumOrders > 1);
             
-            OutputText ("<p><table align=\"center\" cellspacing=\"2\" width=\"90%\" cellspacing=\"0\" cellpadding=\"0\""\
-                "<tr align=\"left\"><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
-            OutputText ("\" align=\"center\">Fleet Name</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-            OutputText ("\" align=\"center\">Ships</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-            OutputText ("\" align=\"center\" colspan=\"2\">Strength</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-            OutputText ("\" align=\"center\">Location</th><th bgcolor=\"");
-            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-            OutputText ("\" align=\"center\">Orders</th></tr>");
+            OutputText (
+                "<p>"\
+                "<table cellspacing=\"2\" width=\"90%\" cellspacing=\"0\" cellpadding=\"0\">"
+                );
+
+            if (bFleetString) {
+                bFleetString = false;
+                OutputText ("<tr><td align=\"center\" colspan=\"6\">Fleets:</td></tr>");
+            }
+
+            OutputText (
+                "<tr>"\
+                "<th align=\"left\" bgcolor=\""
+                );
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
+            OutputText ("\">Fleet</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">Ships</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\" colspan=\"2\">Strength</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">Location</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+            OutputText ("\">Orders</th></tr>");
             
             iErrCode = HTMLFilter (pvFleetData[GameEmpireFleets::Name].GetCharPtr(), &strHtml, 0, false);
             if (iErrCode != OK) {
@@ -457,18 +509,18 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
             if (iNumShipsInFleet > 0) {
                 
                 OutputText ("<tr><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
-                OutputText ("\" align=\"center\">Ship Name</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
-                OutputText ("\" align=\"center\">BR</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
-                OutputText ("\" align=\"center\">Max BR</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+                m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
+                OutputText ("\">Ship</th><th bgcolor=\"");
+                m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
+                OutputText ("\">BR</th><th bgcolor=\"");
+                m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
                 OutputText ("\">Next BR</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+                m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+                OutputText ("\">Max BR</th><th bgcolor=\"");
+                m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
                 OutputText ("\">Type</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Orders</th></tr>");
+                m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
+                OutputText ("\">Orders</th></tr>");
                 
                 for (j = 1; j < ppiFleetShips[i][0]; j ++) {
                     
@@ -522,6 +574,10 @@ void HtmlRenderer::RenderShips (const char* pszShips, const char* pszFleets, int
     }
     
 Cleanup:
+
+    if (bCloseTableRow) {
+        OutputText ("</td></tr>");
+    }
     
     if (pvFleetData != NULL) {
         pDatabase->FreeData (pvFleetData);
@@ -787,7 +843,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                     m_iGameClass, 
                     m_iGameNumber, 
                     m_iEmpireKey, 
-                    iKey, 
+                    iKey,
                     iNewOrderKey
                     );
             }
@@ -841,14 +897,6 @@ int HtmlRenderer::WriteShip (const GameConfiguration& gcConfig, const Variant* p
     }
     OutputText ("\">");
     m_pHttpResponse->WriteText (fCurrentBR);
-    OutputText ("</font></td><td align=\"center\"><font color=\"");
-    if (fMaxBR < (float) iBR) {
-        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
-    } else {
-        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
-    }
-    OutputText ("\">");
-    m_pHttpResponse->WriteText (fMaxBR);
     OutputText ("</font></td><td align=\"center\">");
 
     fNextBR = fMaintRatio * fCurrentBR;
@@ -863,6 +911,14 @@ int HtmlRenderer::WriteShip (const GameConfiguration& gcConfig, const Variant* p
         OutputText ("\">");
         m_pHttpResponse->WriteText (fMaxBR);
     }
+    OutputText ("</font></td><td align=\"center\"><font color=\"");
+    if (fMaxBR < (float) iBR) {
+        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+    } else {
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+    }
+    OutputText ("\">");
+    m_pHttpResponse->WriteText (fMaxBR);
     OutputText ("</font></td>");
     
     if (!bFleet) {
