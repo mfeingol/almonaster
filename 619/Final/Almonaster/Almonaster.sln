@@ -1,25 +1,47 @@
-Microsoft Visual Studio Solution File, Format Version 7.00
+Microsoft Visual Studio Solution File, Format Version 8.00
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Admin", "..\Admin\Admin.vcproj", "{3FD8A28F-5721-4CD7-AC0E-069C47343956}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Alajar", "..\Alajar\Alajar.vcproj", "{6D302AC7-6C46-4880-B303-CEDACC28AE68}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarDll", "..\AlajarDll\AlajarDll.vcproj", "{EBAD52D6-350F-4B82-A836-E65C54B2B882}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlajarSvc", "..\AlajarSvc\AlajarSvc.vcproj", "{1437C5BD-15EA-4E3A-819A-EB929F8F9E70}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster.vcproj", "{D1B2205C-CD5A-4552-938D-24FF760BBF36}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "..\AlmonasterHook\AlmonasterHook.vcproj", "{2879944E-D55F-411B-8284-1376B1849AD8}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asfpp", "..\Asfpp\Asfpp.vcproj", "{9F7403F4-9696-4EE8-A8F5-704418AD1BC9}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DBConv", "..\DBConv\DBConv.vcproj", "{D27A5907-40E0-4169-86AF-C678AA7465E2}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database", "..\Database\Database.vcproj", "{968B0B33-C857-4AEA-96FD-F914822FF811}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Database3", "..\Database3\Database3.vcproj", "{014C9713-25DA-4A4D-9F28-2631603ECF7F}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcproj", "{F1EEB914-4784-4A5A-82DD-D536FBE92372}"
+	ProjectSection(ProjectDependencies) = postProject
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SourceCodeControl) = preSolution
@@ -76,10 +98,8 @@ Global
 		SccProjectFilePathRelativizedFromConnection11 = Osal\\
 	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
-		ConfigName.0 = Debug
-		ConfigName.1 = Release
-	EndGlobalSection
-	GlobalSection(ProjectDependencies) = postSolution
+		Debug = Debug
+		Release = Release
 	EndGlobalSection
 	GlobalSection(ProjectConfiguration) = postSolution
 		{3FD8A28F-5721-4CD7-AC0E-069C47343956}.Debug.ActiveCfg = Debug|Win32

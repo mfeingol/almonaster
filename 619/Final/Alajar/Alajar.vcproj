@@ -1,10 +1,12 @@
-<?xml version="1.0" encoding = "Windows-1252"?>
+<?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="7.00"
+	Version="7.10"
 	Name="Alajar"
-	SccProjectName=""
-	SccLocalPath="">
+	SccProjectName="&quot;$/619&quot;, HGAAAAAA"
+	SccAuxPath=""
+	SccLocalPath=".."
+	SccProvider="MSSCCI:Microsoft Visual SourceSafe">
 	<Platforms>
 		<Platform
 			Name="Win32"/>
@@ -81,7 +83,13 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 		<Configuration
 			Name="Debug|Win32"
@@ -91,6 +99,7 @@
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="FALSE"
 			CharacterSet="2"
+			ManagedExtensions="FALSE"
 			WholeProgramOptimization="TRUE">
 			<Tool
 				Name="VCCLCompilerTool"
@@ -106,8 +115,7 @@
 				WarningLevel="4"
 				WarnAsError="TRUE"
 				SuppressStartupBanner="TRUE"
-				DebugInformationFormat="4"
-				CompileAsManaged="0"/>
+				DebugInformationFormat="4"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
@@ -138,9 +146,17 @@
 			<Tool
 				Name="VCWebServiceProxyGeneratorTool"/>
 			<Tool
+				Name="VCXMLDataGeneratorTool"/>
+			<Tool
 				Name="VCWebDeploymentTool"/>
+			<Tool
+				Name="VCManagedWrapperGeneratorTool"/>
+			<Tool
+				Name="VCAuxiliaryManagedWrapperGeneratorTool"/>
 		</Configuration>
 	</Configurations>
+	<References>
+	</References>
 	<Files>
 		<File
 			RelativePath=".\Config\Admin.conf">
