@@ -1,0 +1,152 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source">
+      <UniqueIdentifier>{9d2d255e-97e2-42d5-85d0-19b0daa2d367}</UniqueIdentifier>
+      <Extensions>cpp</Extensions>
+    </Filter>
+    <Filter Include="Headers">
+      <UniqueIdentifier>{fddff0b0-003b-4eef-9551-b8a431837cc2}</UniqueIdentifier>
+      <Extensions>h</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Algorithm.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigFile.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Crypto.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Event.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="File.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="FileHeap.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="IObject.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Library.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryMappedFile.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Mutex.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="OS.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadWriteLock.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Smtp.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Socket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="SslSocket.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="String.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="TempFile.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Thread.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Time.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Variant.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Algorithm.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ConfigFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Crypto.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Event.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FifoQueue.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="File.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="FileHeap.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="HashTable.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="IObject.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Library.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="LinkedList.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryMappedFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Mutex.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjectCache.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="OS.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadWriteLock.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Smtp.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Socket.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="SslSocket.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="String.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TempFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Thread.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Time.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Variant.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Vector.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
