@@ -1577,8 +1577,10 @@ int HttpResponse::CheckDigestAuthenticationNonce (bool* pbStale) {
     // If the nonce is not present, we just ignore this check
     // We'll send the right 401 challenge as a result of authenticating and failing
     const char* pszNonce = m_pHttpRequest->GetAuthenticationNonce();
-    if (pszNonce == NULL)
+    if (pszNonce == NULL) {
+        *pbStale = false;
         return OK;
+    }
 
     char pbNonce [sizeof (int64) + MD5_HASH_SIZE];
 
