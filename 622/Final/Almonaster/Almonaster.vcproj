@@ -5,7 +5,7 @@
 	Name="Almonaster"
 	ProjectGUID="{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}"
 	RootNamespace="Almonaster"
-	SccProjectName="&quot;$/621&quot;, TWCAAAAA"
+	SccProjectName="&quot;$/622&quot;, TWCAAAAA"
 	SccLocalPath=".."
 	SccProvider="MSSCCI:Microsoft Visual SourceSafe"
 	>
@@ -57,7 +57,7 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\622\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				IgnoreStandardIncludePath="false"
 				GeneratePreprocessedFile="0"
@@ -112,7 +112,7 @@
 				Version=""
 				LinkIncremental="0"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\622\Include"
 				GenerateDebugInformation="true"
 				GenerateMapFile="false"
 				MapExports="false"
@@ -193,7 +193,7 @@
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="false"
 				EnableFiberSafeOptimizations="false"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\622\Include"
 				PreprocessorDefinitions="_CRT_SECURE_NO_DEPRECATE;_USE_32BIT_TIME_T"
 				StringPooling="true"
 				MinimalRebuild="true"
@@ -241,7 +241,7 @@
 				OutputFile=".\Debug/Almonaster.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\622\Include"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\Debug/Almonaster.pdb"
 				SubSystem="2"
@@ -1715,11 +1715,35 @@
 			Name="MapGen"
 			>
 			<File
+				RelativePath=".\MapGen\BaseMapGenerator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MapGen\BaseMapGenerator.h"
+				>
+			</File>
+			<File
 				RelativePath=".\MapGen\DefaultMapGenerator.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\MapGen\DefaultMapGenerator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MapGen\MirroredMapGenerator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MapGen\MirroredMapGenerator.h"
+				>
+			</File>
+			<File
+				RelativePath=".\MapGen\TwistedMapGenerator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\MapGen\TwistedMapGenerator.h"
 				>
 			</File>
 		</Filter>

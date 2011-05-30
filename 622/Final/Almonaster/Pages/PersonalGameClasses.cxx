@@ -325,7 +325,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 GameOptions goOptions;
                 InitGameOptions (&goOptions);
 
-                iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, m_iEmpireKey, &goOptions);
+                iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
                 if (iErrCode != OK) {
                     iPersonalGameClassesPage = 1;
                     break;

@@ -86,6 +86,15 @@ HttpRequest::HttpRequest() {
     m_bMultiPartForms = false;
 
     m_bCanonicalPath = false;
+
+    m_bConnectionHeaderParsed = false;
+    m_bContentTypeHeaderParsed = false;
+    m_bContentLengthHeaderParsed = false;
+    m_bCookieHeaderParsed = false;
+    m_bIfModifiedSinceHeaderParsed = false;
+    m_bHostHeaderParsed = false;
+    m_bUserAgentHeaderParsed = false;
+    m_bRefererHeaderParsed = false;
 }
 
 
@@ -213,6 +222,15 @@ void HttpRequest::Recycle() {
     m_bMultiPartForms = false;
 
     m_bCanonicalPath = false;
+
+    m_bConnectionHeaderParsed = false;
+    m_bContentTypeHeaderParsed = false;
+    m_bContentLengthHeaderParsed = false;
+    m_bCookieHeaderParsed = false;
+    m_bIfModifiedSinceHeaderParsed = false;
+    m_bHostHeaderParsed = false;
+    m_bUserAgentHeaderParsed = false;
+    m_bRefererHeaderParsed = false;
 }
 
 MilliSeconds HttpRequest::GetRequestParseTime() const{
@@ -706,6 +724,12 @@ int HttpRequest::ParseHeader (char* pszLine) {
                 const size_t cchBasicSpaceLen = countof ("Basic ") - 1;
 
                 if (_strnicmp (pszValue, "Basic ", cchBasicSpaceLen)  == 0) {
+                    
+                    // Disallow duplicate headers
+                    if (m_atAuth != AUTH_NONE) {
+                        iErrCode = ERROR_MALFORMED_REQUEST;
+                        goto Cleanup;
+                    }
 
                     m_atAuth = AUTH_BASIC;
 
@@ -749,6 +773,12 @@ int HttpRequest::ParseHeader (char* pszLine) {
                 const size_t cchDigestSpaceLen = countof ("Digest ") - 1;
 
                 if (String::StrniCmp (pszValue, "Digest ", cchDigestSpaceLen) == 0) {
+
+                    // Disallow duplicate headers
+                    if (m_atAuth != AUTH_NONE) {
+                        iErrCode = ERROR_MALFORMED_REQUEST;
+                        goto Cleanup;
+                    }
 
                     m_atAuth = AUTH_DIGEST;
 
@@ -805,10 +835,22 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'c':
         
         if (_stricmp (pszHeader, "Connection:") == 0) {
+
+            if (m_bConnectionHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bConnectionHeaderParsed = true;
             m_bKeepAlive = (_stricmp (pszValue, "Keep-Alive") == 0);
         }
         else if (_stricmp (pszHeader, "Content-Type:") == 0) {
             
+            if (m_bContentTypeHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bContentTypeHeaderParsed = true;
+
             // Check for multipart
             if (strstr (pszValue, "multipart/form-data") != NULL) {
                 
@@ -871,9 +913,22 @@ int HttpRequest::ParseHeader (char* pszLine) {
             }
         }
         else if (_stricmp (pszHeader, "Content-Length:") == 0) {
+
+            if (m_bContentLengthHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bContentLengthHeaderParsed = true;
+
             m_stContentLength = atoi (pszValue);
         }
         else if (_stricmp (pszHeader, "Cookie:") == 0) {
+
+            if (m_bCookieHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bCookieHeaderParsed = true;
             
             // Count the number of semicolons
             unsigned int i, iNumSemicolons = 1;
@@ -1024,6 +1079,13 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'h':
         
         if (_stricmp (pszHeader, "Host:") == 0 && !String::IsBlank (pszValue)) {
+
+            if (m_bHostHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bHostHeaderParsed = true;
+
             m_strHostName = pszValue;
             if (m_strHostName.GetCharPtr() == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -1035,6 +1097,12 @@ int HttpRequest::ParseHeader (char* pszLine) {
         
     case 'I':
     case 'i':
+
+        if (m_bIfModifiedSinceHeaderParsed) {
+            iErrCode = ERROR_MALFORMED_REQUEST;
+            goto Cleanup;
+        }
+        m_bIfModifiedSinceHeaderParsed = true;
 
         // TODO - if the method is overridden, this might be a bit ambitious
         if (_stricmp (pszHeader, "If-Modified-Since") == 0 && !String::IsBlank (pszValue)) {
@@ -1048,6 +1116,13 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'u':
         
         if (_stricmp (pszHeader, "User-Agent:") == 0 && !String::IsBlank (pszValue)) {
+
+            if (m_bUserAgentHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bUserAgentHeaderParsed = true;
+
             m_strBrowserName = pszValue;
             if (m_strBrowserName.GetCharPtr() == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -1060,6 +1135,13 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'r':
 
         if (_stricmp (pszHeader, "Referer:") == 0 && !String::IsBlank (pszValue)) {
+
+            if (m_bRefererHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bRefererHeaderParsed = true;
+
             m_strReferer = pszValue;
             if (m_strReferer.GetCharPtr() == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -1075,9 +1157,8 @@ int HttpRequest::ParseHeader (char* pszLine) {
 
 Cleanup:
 
-    if (bFreeBuf) {
+    if (bFreeBuf)
         delete [] pszBuf;
-    }
 
     return iErrCode;
 }

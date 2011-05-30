@@ -2366,7 +2366,8 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
                             strGameMap, 
                             iNumEmpires, 
                             piEmpireKey, 
-                            iMapSharedDip
+                            iMapSharedDip,
+                            true
                             );
                         
                         if (iErrCode != OK) {
@@ -3605,7 +3606,8 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                                             vDipLevel.GetInteger(),
                                             NULL,
                                             NULL,
-                                            -1
+                                            -1,
+                                            true
                                             );
                                         
                                         if (iErrCode != OK) {
@@ -9724,7 +9726,8 @@ int GameEngine::SharePlanetsBetweenFriends (int iGameClass, int iGameNumber,
                                             unsigned int iEmpireIndex1, unsigned int iEmpireIndex2,
                                             const char** pstrEmpireMap, const char** pstrEmpireDip, const char** pstrEmpireData,
                                             const char* pszGameMap, unsigned int iNumEmpires, 
-                                            unsigned int* piEmpireKey, int iDipLevel) {
+                                            unsigned int* piEmpireKey, int iDipLevel, 
+                                            bool bShareWithFriendsClosure) {
     int iErrCode;
 
     unsigned int iNumPlanets1, iNumPlanets2, i, * piProxyKey1 = NULL, * piProxyKey2 = NULL, iNumAcquaintances1, 
@@ -9798,7 +9801,8 @@ int GameEngine::SharePlanetsBetweenFriends (int iGameClass, int iGameNumber,
             iDipLevel,
             pvAcquaintanceKey2, 
             piProxyKey2,
-            iNumAcquaintances2
+            iNumAcquaintances2,
+            bShareWithFriendsClosure
             );
         
         if (iErrCode != OK) {
@@ -9824,7 +9828,8 @@ int GameEngine::SharePlanetsBetweenFriends (int iGameClass, int iGameNumber,
             iDipLevel,
             pvAcquaintanceKey1, 
             piProxyKey1,
-            iNumAcquaintances1
+            iNumAcquaintances1,
+            bShareWithFriendsClosure
             );
         
         if (iErrCode != OK) {
@@ -9870,7 +9875,7 @@ int GameEngine::SharePlanetBetweenFriends (int iGameClass, int iGameNumber, unsi
                                            const char* pszGameMap, unsigned int iNumEmpires, 
                                            unsigned int* piEmpireKey, int iDipLevel,
                                            Variant* pvAcquaintanceKey, unsigned int* piProxyKey,
-                                           unsigned int iNumAcquaintances) {
+                                           unsigned int iNumAcquaintances, bool bShareWithFriendsClosure) {
 
     Assert ((pvAcquaintanceKey == NULL && piProxyKey == NULL) ||
             (pvAcquaintanceKey != NULL && piProxyKey != NULL && iNumAcquaintances > 0));
@@ -9983,66 +9988,70 @@ int GameEngine::SharePlanetBetweenFriends (int iGameClass, int iGameNumber, unsi
     }
 
     // Maybe empire has some friends to share with too?
-    if (pvPassedPtr == NULL && iNumAcquaintances != 0) {
-        
-        iErrCode = m_pGameData->ReadColumn (
-            pstrEmpireDip[iEmpireIndex], 
-            GameEmpireDiplomacy::EmpireKey, 
-            &piProxyKey, 
-            &pvAcquaintanceKey, 
-            &iNumAcquaintances
-            );
+    if (bShareWithFriendsClosure) {
 
-        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            Assert (false);
-            return iErrCode;
-        }
-    }
-    
-    if (iNumAcquaintances > 0) {
-
-        Variant vDipStatus;
-
-        for (i = 0; i < iNumAcquaintances; i ++) {
+        if (pvPassedPtr == NULL && iNumAcquaintances != 0) {
             
-            iErrCode = m_pGameData->ReadData (
+            iErrCode = m_pGameData->ReadColumn (
                 pstrEmpireDip[iEmpireIndex], 
-                piProxyKey[i], 
-                GameEmpireDiplomacy::CurrentStatus, 
-                &vDipStatus
+                GameEmpireDiplomacy::EmpireKey, 
+                &piProxyKey, 
+                &pvAcquaintanceKey, 
+                &iNumAcquaintances
                 );
-            if (iErrCode != OK) {
+
+            if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
                 Assert (false);
-                goto Cleanup;
+                return iErrCode;
             }
-            
-            if (vDipStatus.GetInteger() >= iDipLevel) {
+        }
+        
+        if (iNumAcquaintances > 0) {
+
+            Variant vDipStatus;
+
+            for (i = 0; i < iNumAcquaintances; i ++) {
                 
-                GetEmpireIndex (j, pvAcquaintanceKey[i]);
-                
-                iErrCode = SharePlanetBetweenFriends (
-                    iGameClass,
-                    iGameNumber,
-                    iPlanetKey, 
-                    j,
-                    pstrEmpireMap, 
-                    pstrEmpireDip,
-                    pstrEmpireData,
-                    pszGameMap,
-                    iNumEmpires, 
-                    piEmpireKey,
-                    iDipLevel,
-                    NULL,
-                    NULL,
-                    -1
+                iErrCode = m_pGameData->ReadData (
+                    pstrEmpireDip[iEmpireIndex], 
+                    piProxyKey[i], 
+                    GameEmpireDiplomacy::CurrentStatus, 
+                    &vDipStatus
                     );
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
-            }
-        }   // End acquaintance loop
-    
+                
+                if (vDipStatus.GetInteger() >= iDipLevel) {
+                    
+                    GetEmpireIndex (j, pvAcquaintanceKey[i]);
+                    
+                    iErrCode = SharePlanetBetweenFriends (
+                        iGameClass,
+                        iGameNumber,
+                        iPlanetKey, 
+                        j,
+                        pstrEmpireMap, 
+                        pstrEmpireDip,
+                        pstrEmpireData,
+                        pszGameMap,
+                        iNumEmpires, 
+                        piEmpireKey,
+                        iDipLevel,
+                        NULL,
+                        NULL,
+                        -1,
+                        bShareWithFriendsClosure
+                        );
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
+                }
+            }   // End acquaintance loop
+        }
+
 Cleanup:
 
         if (pvPassedPtr == NULL) {
@@ -11740,7 +11749,8 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
                         vDipLevel.GetInteger(),
                         NULL,
                         NULL,
-                        -1
+                        -1,
+                        true
                         );
                     
                     if (iErrCode != OK) {

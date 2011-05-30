@@ -182,7 +182,8 @@ public:
 							pszGameMap, 
 							iNumEmpires, 
 							piEmpireKey, 
-							iDipLevel
+							iDipLevel,
+                            true
 							);
 						Assert (iErrCode == OK);
 					}

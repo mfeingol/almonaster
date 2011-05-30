@@ -1390,12 +1390,18 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     for (i = 0; i < iNumEmpires; i ++) {
 
         bool bUnlocked = false;
-        iErrCode = EnterGame (
-            iGameClass, *piGameNumber, piEmpireKey[i], goGameOptions.pszPassword, &iNumUpdates, 
+        iErrCode = EnterGame(
+            iGameClass,
+            *piGameNumber,
+            piEmpireKey[i],
+            NULL,
+            &goGameOptions,
+            &iNumUpdates, 
             iEmpireCreator != TOURNAMENT, // Send messages
             true, // Creating game
             iEmpireCreator != TOURNAMENT, // Check security
-            pnmEmpireMutex + i, &bUnlocked
+            pnmEmpireMutex + i,
+            &bUnlocked
             );
 
         if (iErrCode != OK) {
@@ -1488,7 +1494,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
 
             if (iDipLevel & ALLIANCE) {
 
-                // Set each empire to alliance teammate's diplomacy table
+                // Set each empire to alliance in teammate's diplomacy table
                 for (i = 0; i < goGameOptions.iNumPrearrangedTeams; i ++) {
 
                     const PrearrangedTeam& aTeam = goGameOptions.paPrearrangedTeam[i];
@@ -1628,9 +1634,10 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
                                     (const char**) ppszDip,
                                     (const char**) ppszData, 
                                     pszMap,
-                                    iNumEmpires,
+                                    countof(piEmpireKey),
                                     piEmpireKey,
-                                    ALLIANCE
+                                    ALLIANCE,
+                                    false
                                     );
 
                                 if (iErrCode != OK) {
@@ -1763,8 +1770,9 @@ OnError:
 //
 // Make an empire enter an already created game.
 
-int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, 
-                           int* piNumUpdates, bool bSendMessages, bool bCreatingGame, bool bCheckSecurity, 
+int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword,
+                           const GameOptions* pgoGameOptions, int* piNumUpdates, 
+                           bool bSendMessages, bool bCreatingGame, bool bCheckSecurity, 
                            NamedMutex* pempireMutex, bool* pbUnlocked) {
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
@@ -1927,9 +1935,12 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         Assert (false);
         goto OnError;
     }
+
+    if (pszPassword == NULL && pgoGameOptions != NULL)
+        pszPassword = pgoGameOptions->pszPassword;
     
-    if (!String::IsBlank (vPassword.GetCharPtr()) &&
-         String::StrCmp (vPassword.GetCharPtr(), pszPassword) != 0) {
+    if (!String::IsBlank(vPassword.GetCharPtr()) &&
+         String::StrCmp(vPassword.GetCharPtr(), pszPassword) != 0) {
         iErrCode = ERROR_WRONG_PASSWORD;
         goto OnError;
     }
@@ -2671,7 +2682,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         // Add new empire to map if the map has been generated already
         if (iGameState & GAME_MAP_GENERATED) {
 
-            iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, &iEmpireKey, 1, &bFlag);
+            iErrCode = AddEmpiresToMap(iGameClass, iGameNumber, &iEmpireKey, 1, &bFlag);
             if (iErrCode != OK) {
 
                 Assert (false);
@@ -2792,25 +2803,52 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
 
     if (bGenerateMapForAllEmpires) {
 
-        Variant* pvKey;
         int* piEmpKey;
         unsigned int iNumKeys;
-        
-        iErrCode = m_pGameData->ReadColumn (strGameEmpires, GameEmpires::EmpireKey, &pvKey, &iNumKeys);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto OnError;
+
+        if (pgoGameOptions != NULL && pgoGameOptions->iNumPrearrangedTeams > 0) {
+
+            iNumKeys = pgoGameOptions->iNumEmpires;
+            piEmpKey = (int*)StackAlloc(iNumKeys * sizeof(int));
+
+            // Randomize team order
+            const unsigned int iNumTeams = pgoGameOptions->iNumPrearrangedTeams;
+            PrearrangedTeam* paRandomTeams = (PrearrangedTeam*)StackAlloc(iNumTeams * sizeof(PrearrangedTeam));
+
+            memcpy(paRandomTeams, pgoGameOptions->paPrearrangedTeam, iNumTeams * sizeof(PrearrangedTeam));
+            Algorithm::Randomize<PrearrangedTeam>(paRandomTeams, iNumTeams);
+
+            unsigned int iIndex = 0;
+            for (unsigned int i = 0; i < pgoGameOptions->iNumPrearrangedTeams; i ++) {
+                const PrearrangedTeam& team = paRandomTeams[i];
+                for (unsigned int j = 0; j < team.iNumEmpires; j ++)
+                    piEmpKey[iIndex ++] = team.piEmpireKey[j];
+
+                // Randomize team members
+                Algorithm::Randomize<int>(piEmpKey + iIndex - team.iNumEmpires, team.iNumEmpires);
+            }
+
+        } else {
+
+            Variant* pvKey;        
+            iErrCode = m_pGameData->ReadColumn (strGameEmpires, GameEmpires::EmpireKey, &pvKey, &iNumKeys);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto OnError;
+            }
+            
+            piEmpKey = (int*)StackAlloc(iNumKeys * sizeof(int));
+            for (i = 0; i < iNumKeys; i ++) {
+                piEmpKey[i] = pvKey[i].GetInteger();
+            }
+
+            m_pGameData->FreeData (pvKey);
+
+            // Randomize empires on the map
+            Algorithm::Randomize<int>(piEmpKey, iNumKeys);
         }
-        
+
         // Add empires to map
-        piEmpKey = (int*) StackAlloc (iNumKeys * sizeof (int));
-        for (i = 0; i < iNumKeys; i ++) {
-            piEmpKey[i] = pvKey[i].GetInteger();
-        }
-        
-        // Randomize empires
-        Algorithm::Randomize<int> (piEmpKey, iNumKeys);
-        
         iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, piEmpKey, iNumKeys, &bFlag);
         if (iErrCode != OK) {
             
@@ -2820,7 +2858,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
             int iErrCode2 = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE);
             Assert (iErrCode2 == OK);
 
-            m_pGameData->FreeData (pvKey);
+            
             
             if (!bCreatingGame) {
                 SignalGameWriter (iGameClass, iGameNumber);
@@ -2828,9 +2866,7 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
 
             return ERROR_COULD_NOT_CREATE_PLANETS;
         }
-        
-        m_pGameData->FreeData (pvKey);
-        
+
         iErrCode = m_pGameData->WriteOr (strGameData, GameData::State, GAME_MAP_GENERATED);
         if (iErrCode != OK) {
             Assert (false);

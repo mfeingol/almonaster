@@ -4412,7 +4412,7 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
         goto Cleanup;
     }
     
-    iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, iOwnerKey, &goOptions);
+    iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, &goOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -8197,13 +8197,16 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
         goto Cleanup;
     }
 
-    OutputText (
-        
-        "<tr>"\
-        
+    int iOptions;
+    iErrCode = g_pGameEngine->GetEmpireOptions2(iEmpireKey, &iOptions);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    bool bAvailable = !(iOptions & UNAVAILABLE_FOR_TOURNAMENTS);
+
     // Icon
-        "<td align=\"center\">"
-        );
+    OutputText("<tr><td align=\"center\">");
 
     sprintf (pszProfile, "View the profile of %s", pszName);
 
@@ -8227,7 +8230,13 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
         "<td align=\"center\">"
         );
 
-    m_pHttpResponse->WriteText (pszName);
+    if (!bAvailable)
+        OutputText("<strike>");
+
+    m_pHttpResponse->WriteText(pszName);
+
+    if (!bAvailable)
+        OutputText("</strike>");
 
     OutputText (
         "</td>"\
@@ -8274,11 +8283,12 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
 
     m_pHttpResponse->WriteText (pvTournamentEmpireData [SystemTournamentEmpires::Ruins].GetInteger());
     
-    OutputText (
-        "</td>"\
+    OutputText("</td><td>");
 
-        "</tr>"
-        );
+    if (!bAvailable)
+        OutputText("Unavailable");
+
+    OutputText("</td></tr>");
 
 Cleanup:
 

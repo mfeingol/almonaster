@@ -273,21 +273,57 @@ public:
 class IMapGenerator : virtual public IObject {
 public:
 
+    // Implementor must do the following:
+    //
+    // 1) If iNumExistingPlanets == 0, fill in the following columns in the pvGameData row:
+    //
+    // GameData::NumPlanetsPerEmpire,
+    // GameData::HWAg
+    // GameData::AvgAg
+    // GameData::HWMin
+    // GameData::AvgMin
+    // GameData::HWFuel
+    // GameData::AvgFuel
+    //
+    // 2) Allocate *piNumNewPlanets new rows into *pppvNewPlanetData, each with GameMap::NumColumns
+    // 3) Fill in the following columns for each new planet row:
+    //
+    // GameMap::Ag,
+    // GameMap::Minerals
+    // GameMap::Fuel
+    // GameMap::Coordinates
+    // GameMap::Link
+    // GameMap::HomeWorld
+    //
+    // GameMap::Owner -> Set to empire's chain, even if not fully-colonized map
+    //
+    // Everything else is taken care of by the caller
+    //
+    // Sanity rules apply:
+    // - Coordinates already in use on the map must not be used
+    // - Links must actually have a planet behind them
+    // - Exactly one homeworld per empire must be selected
+    // - etc.
+
     virtual int CreatePlanets (
         
-        int iGameClass, 
-        int iGameNumber, 
-        int iEmpireKey, 
-        
-        Variant** ppvPlanetData, 
-        unsigned int iNumPlanets,
+        int iGameClass,
+        int iGameNumber,
+
+        int* piNewEmpireKey,
+        unsigned int iNumNewEmpires,
+
+        Variant** ppvExistingPlanetData,
+        unsigned int iNumExistingPlanets,
 
         Variant* pvGameClassData,
         Variant* pvGameData,
-
-        Variant** ppvNewPlanetData,
-        unsigned int iNumNewPlanets
+        
+        Variant*** pppvNewPlanetData,
+        unsigned int* piNumNewPlanets
         ) = 0;
+
+    virtual void FreePlanetData(Variant** ppvNewPlanetData) = 0;
 };
 
 struct ScoringChanges {
@@ -835,7 +871,8 @@ public:
     virtual int SharePlanetsBetweenFriends (int iGameClass, int iGameNumber, 
         unsigned int iEmpireIndex1, unsigned int iEmpireIndex2,
         const char** pstrEmpireMap, const char** pstrEmpireDip, const char** pstrEmpireData, 
-        const char* pszGameMap, unsigned int iNumEmpires, unsigned int* piEmpireKey, int iDipLevel) = 0;
+        const char* pszGameMap, unsigned int iNumEmpires, unsigned int* piEmpireKey, int iDipLevel,
+        bool bShareWithFriendsClosure) = 0;
 
     // Score
     virtual int GetNumEmpiresInNukeHistory (int iEmpireKey, int* piNumNukes, int* piNumNuked) = 0;

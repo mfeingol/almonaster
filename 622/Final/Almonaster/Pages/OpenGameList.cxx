@@ -60,6 +60,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iGameNumber,
                 m_iEmpireKey,
                 pszPassword == NULL ? "" : pszPassword,
+                NULL,
                 &iNumUpdatesTranspired,
                 true,
                 false,
