@@ -1103,10 +1103,27 @@ if (m_bOwnPost && !m_bRedirection) {
         // Pause game
         if (WasButtonPressed (BID_PAUSEGAME)) {
 
-            iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+            // Flush remaining updates
+            bool bExists;
+            iErrCode = g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists);
+
+            // Best effort pause the game
             if (iErrCode == OK) {
-                iErrCode = g_pGameEngine->PauseGame (iGameClass, iGameNumber, true, true);
-                g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                
+                if (bExists) {
+                    iErrCode = g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bExists);
+                    if (iErrCode == OK && !bExists) {
+                        iErrCode = ERROR_GAME_DOES_NOT_EXIST;
+                    }
+                }
+
+                if (iErrCode == OK) {
+                    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                    if (iErrCode == OK) {
+                        iErrCode = g_pGameEngine->PauseGame (iGameClass, iGameNumber, true, true);
+                        g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                    }
+                }
             }
 
             if (iErrCode == OK) {
@@ -1292,7 +1309,7 @@ case 0:
     %><input type="hidden" name="TournamentAdminPage" value="0"><%
 
     WriteTournamentAdministrator (iOwnerKey);
-    if (iOwnerKey != NO_KEY) {
+    if (iOwnerKey != SYSTEM) {
         Assert (iOwnerKey == m_iEmpireKey);
         WritePersonalTournaments();
     }

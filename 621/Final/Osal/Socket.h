@@ -35,30 +35,62 @@
 
 #define NET_ADDRESS_SIZE 128
 
+class Socket;
+struct OSAL_EXPORT SocketSet {
+    unsigned int iNumSockets;
+    Socket* pSockets [64];
+};
+
 class OSAL_EXPORT Socket {
+protected:
+
+    // Internal socket
+    SOCKET m_Socket;
+    
+    // Ports
+    short m_siPort;
+
+    // Addresses
+    struct sockaddr_in m_saOurAddr;
+    struct sockaddr_in m_saTheirAddr;
+
+    // Their addresses
+    char m_pszTheirIP [NET_ADDRESS_SIZE];
+    char m_pszTheirHostName [NET_ADDRESS_SIZE];
+
+    // Accounting
+    size_t m_stNumBytesSent;
+    size_t m_stNumBytesRecvd;
+
+    int Accept (Socket* pSocket);
+
+    virtual size_t SocketSend (const void* pData, size_t cbSend);
+    virtual size_t SocketRecv (void* pData, size_t stNumBytes);
+    virtual size_t SocketPeek (void* pData, size_t stNumBytes);
 
 public:
 
     Socket();
-    ~Socket();
-
-    static void FreeSocket (Socket* pSocket);
+    virtual ~Socket();
 
     // Initialize the socket
     int Open();
+
+    // Close the socket and return its resources to the OS
+    virtual int Close();
 
     // Assign a socket to listen as the given port for a connection
     int Listen (short siPort);
     
     // After listening, wait until a connection is made and return a new socket object
     // that can be used to send data to and recv data from the client
-    Socket* Accept();
-    int Accept (Socket* pSocket);
+    virtual Socket* Accept();
+    virtual int Negotiate();
 
     // Connect to a computer at a given port.  The address can be an 
     // ip address ("127.0.0.1") or a domain name ("www.cs.cornell.edu").  
     // Domain names trigger DNS lookups, which may be slow
-    int Connect (const char* pszAddress, short siPort);
+    virtual int Connect (const char* pszAddress, short siPort);
 
     // Return the IP address of the computer the socket is connected to.
     // '\0' if not connected
@@ -91,20 +123,18 @@ public:
     // Same as Recv, but doesn't remove data from the buffer
     int Peek (void* pData, size_t stNumBytes, size_t* pstNumBytesPeeked);
 
-    // Close the socket and return its resources to the OS
-    int Close();
-
     // Return true if the socket hasn't been closed yet
     bool IsConnected();
+
+    int SetKeepAlive (bool bKeepAlive);
+    int SetRecvTimeOut (MilliSeconds iTimeOut);
+    int SetSendTimeOut (MilliSeconds iTimeOut);
 
     // Set the socket to block when recv'ing (this is the default behavior)
     int SetBlockingMode();
     
     // Set the socket to not block when recv-ing
     int SetNonBlockingMode();
-
-    // Set the timeout on recv, in milliseconds
-    int SetRecvTimeOut (MilliSeconds iTimeOut);
 
     // Get num bytes sent and recvd
     size_t GetNumBytesSent();
@@ -116,7 +146,7 @@ public:
     // Return the last error noticed by the OS sockets library
     static int GetLastError();
 
-    // Return an IP address, given a hos    t name
+    // Return an IP address, given a host name
     static int GetIPAddressFromHostName (const char* pszHostName, char* pszIP, size_t stLen);
 
     // Return a host name, given an IP address
@@ -125,11 +155,16 @@ public:
     // Return our host name
     static int GetOurHostName (char* pszHostName, size_t stLength);
 
+    static int Select (SocketSet* pSelectSet);
+
     // Initialize the OS sockets library
     static int Initialize();
     
     // Close down the OS sockets library
     static int Finalize();
+
+    // Free a socket returned from Accept()
+    static void FreeSocket (Socket* pSocket);
 
     /*
     int SendWithRunLengthCompression (void* pData, size_t stDataLength);
@@ -137,26 +172,6 @@ public:
         size_t* pstNumBytesRecvd);
     int GetSizeOfRunLengthCompressionBuffer (size_t* pstSize);
     */
-
-private:
-
-    // Internal socket
-    SOCKET m_Socket;
-    
-    // Ports
-    short m_siPort;
-
-    // Addresses
-    struct sockaddr_in m_saOurAddr;
-    struct sockaddr_in m_saTheirAddr;
-
-    // Their addresses
-    char m_pszTheirIP [NET_ADDRESS_SIZE];
-    char m_pszTheirHostName [NET_ADDRESS_SIZE];
-
-    // Accounting
-    size_t m_stNumBytesSent;
-    size_t m_stNumBytesRecvd;
 };
 
 #endif // !defined(AFX_SOCKET_H__E0FAE59D_A3F7_11D1_9C48_0060083E8062__INCLUDED_)

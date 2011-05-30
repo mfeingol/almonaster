@@ -361,6 +361,39 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
     return m_pGameData->WriteData (strGameEmpireData, GameEmpireData::DefaultMessageTarget, iMessageTarget);
 }
 
+int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int iEmpireKey) {
+
+    int iErrCode;
+
+    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GAME_DATA (strGameData, iGameClass, iGameNumber);
+
+#ifdef _DEBUG
+    Variant vTemp;
+    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    Assert (!(vTemp.GetInteger() & REQUEST_PAUSE));
+#endif
+
+    iErrCode = m_pGameData->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingPause, 1);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+Cleanup:
+
+    return OK;
+}
 
 // Input:
 // iGameClass -> Gameclass
@@ -373,14 +406,6 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
 // Request game pause
 
 int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
-    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, true, NULL, piGameState);
-}
-
-int GameEngine::RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbNewPause, int* piGameState) {
-    return RequestPauseInternal (iGameClass, iGameNumber, iEmpireKey, false, pbNewPause, piGameState);
-}
-
-int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, bool bBroadcast, bool* pbNewPause, int* piGameState) {
 
     int iErrCode, iGameState = 0, iOptions;
     unsigned int iNumEmpires;
@@ -390,10 +415,6 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
     Variant vTemp, vOldNum;
-
-    if (pbNewPause != NULL) {
-        *pbNewPause = false;
-    }
 
 #ifdef _DEBUG
     // Only call this function holding an exclusive lock
@@ -430,10 +451,6 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
         goto Cleanup;
     }
 
-    if (pbNewPause != NULL) {
-        *pbNewPause = true;
-    }
-
     iErrCode = m_pGameData->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
@@ -460,7 +477,7 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
 
             if (!bIdle) {
 
-                iErrCode = PauseGame (iGameClass, iGameNumber, false, bBroadcast);
+                iErrCode = PauseGame (iGameClass, iGameNumber, false, true);
                 Assert (iErrCode == OK);
 
                 if (iErrCode == OK) {
@@ -477,7 +494,7 @@ Cleanup:
     return iErrCode;
 }
 
-int GameEngine::CheckForDelayedPause (int iGameClass, int iGameNumber, bool* pbNewlyPaused) {
+int GameEngine::CheckForDelayedPause (int iGameClass, int iGameNumber, const UTCTime& tNow, bool* pbNewlyPaused) {
 
     int iErrCode;
 
@@ -517,7 +534,7 @@ int GameEngine::CheckForDelayedPause (int iGameClass, int iGameNumber, bool* pbN
 
             if (!bIdle) {
 
-                iErrCode = PauseGame (iGameClass, iGameNumber, false, false);
+                iErrCode = PauseGameAt (iGameClass, iGameNumber, tNow);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;

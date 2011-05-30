@@ -783,15 +783,13 @@ int GameEngine::InitializeEmptyTopList (ScoringSystem ssTopList) {
     unsigned int* piKey = NULL, iNumEmpires, iNumRowsFull = 0, i, j;
 
     Variant pvVariantData [TOPLIST_SIZE * TopList::MaxNumColumns], pvData [MAX_SCORING_SYSTEM_COLUMNS];
-
-    const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
-    unsigned int iNumColumns = TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [ssTopList];
+    const unsigned int iNumColumns = TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [ssTopList];
     
     IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
 
 #ifdef _DEBUG
-
+    const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
     iErrCode = m_pGameData->GetNumRows (pszTableName, &iNumRowsFull);
     Assert (iErrCode == OK && iNumRowsFull == 0);
 

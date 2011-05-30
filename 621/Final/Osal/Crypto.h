@@ -29,8 +29,10 @@
 #include <openssl/evp.h>
 #endif
 
-namespace Crypto {
+#define MD5_HASH_SIZE 16
 
+namespace Crypto {
+    
     //
     // Functions
     //
@@ -82,9 +84,9 @@ namespace Crypto {
         HashMD5();
     };
 
-    class OSAL_EXPORT HashRC4 : public Hash {
+    class OSAL_EXPORT HashSHA1 : public Hash {
     public:
-        HashRC4();
+        HashSHA1();
     };
 #endif
 };

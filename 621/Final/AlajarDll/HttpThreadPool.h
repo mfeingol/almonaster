@@ -28,7 +28,6 @@
 #include "Osal/Socket.h"
 #include "Osal/Event.h"
 
-#define SHUTDOWN_THREAD      ((Socket*) 0xfffffffe)
 #define SHUTDOWN_THREAD_POOL ((Socket*) 0xffffffff)
 
 class HttpServer;
@@ -37,10 +36,14 @@ class HttpPoolThread : public Thread {
 public:
     unsigned int iThreadIndex;
     HttpServer* pHttpServer;
+    bool bTimingOut;
+
+    HttpPoolThread() {
+        bTimingOut = false;
+    }
 };
 
 class HttpThreadPool {
-
 private:
 
     unsigned int m_iNumThreads;
@@ -49,6 +52,7 @@ private:
     unsigned int m_iNumIdleThreads;
 
     unsigned int m_iMaxNumTasksQueued;
+    unsigned int m_iNumTimingOutThreads;
 
     Mutex m_mThreadListLock;
 
@@ -61,6 +65,8 @@ private:
     HttpServer* m_pHttpServer;
 
     static int THREAD_CALL ThreadExec (void* pVoid);
+
+    int RunWorkerThread (HttpPoolThread* pThread);
 
 public:
 

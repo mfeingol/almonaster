@@ -36,6 +36,12 @@
 
 typedef int (*Fxn_CreateInstance) (const Uuid&, const Uuid&, void**);
 
+typedef enum HttpAuthenticationType {
+    AUTH_BASIC,
+    AUTH_DIGEST,
+    AUTH_NONE
+};
+
 class HttpServer;
 class HttpRequest;
 class HttpResponse;
@@ -78,7 +84,6 @@ private:
     // Configuration data
     bool m_bBrowsingAllowed;
     bool m_bDefaultFile;
-    bool m_bBasicAuthentication;
     bool m_bUseSSI;
     bool m_bUsePageSourceLibrary;
     bool m_bUseLogging;
@@ -86,6 +91,9 @@ private:
 
     bool m_bOverrideGet;
     bool m_bOverridePost;
+
+    HttpAuthenticationType m_atAuthType;
+    Seconds m_iDigestNonceLifetime;
 
     bool m_pbOverrideError [NUM_STATUS_CODES];
     CachedFile* m_ppCachedFile [NUM_STATUS_CODES];
@@ -150,13 +158,6 @@ private:
     bool m_bLocked;
     Mutex m_mLock;
 
-    // Single threaded
-    bool m_bSingleThreaded;
-
-    ThreadSafeFifoQueue<HttpResponse*> m_tsfqResponseQueue;
-    Thread m_tSTAThread;
-    Event m_eSTAEvent;
-
     // Utilities
     void Clean();
     void Reset();
@@ -195,8 +196,12 @@ public:
 
     bool AllowDirectoryBrowsing();
     bool UseDefaultFile();
-    bool UseBasicAuthentication();
-    
+
+    HttpAuthenticationType GetAuthenticationType();
+    Seconds GetDigestAuthenticationNonceLifetime();
+
+    const char* GetAuthenticationRealm (IHttpRequest* pHttpRequest);
+
     bool IsGetAllowed (HttpRequest* pHttpRequest);
 
     bool OverrideGet();
@@ -213,13 +218,6 @@ public:
     bool IsIPAddressAllowedAccess (const char* pszIPAddress);
     bool IsUserAgentAllowedAccess (const char* pszUserAgent);
 
-    bool IsSingleThreaded();
-    int QueueResponse (HttpResponse* pHttpResponse);
-    HttpResponse* DeQueueResponse();
-
-    static int THREAD_CALL ThreadSTALoop (void* pVoid);
-    int STALoop();
-
     void ReportMessage (const char* pszMessage);
     void LogMessage (const char* pszMessage);
 
@@ -232,10 +230,10 @@ public:
 
     int OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
     int OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-
-    int OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticated);
-
     int OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+
+    int OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
+    int OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
 
     // IPageSourceControl
     bool IsDefault();

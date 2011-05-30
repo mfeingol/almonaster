@@ -28,6 +28,7 @@
 
 #define ALAJAR_BUILD
 #include "Alajar.h"
+#include "PageSource.h"
 #undef ALAJAR_BUILD
 
 #include "HttpForm.h"
@@ -39,6 +40,7 @@
 #define ERROR_UNSUPPORTED_HTTP_METHOD (-70000002)
 
 #define MAX_URI_LEN (1024 * 4)
+#define DIGEST_HASH_TEXT_SIZE 33
 
 class PageSource;
 class PageSourceHashValue;
@@ -52,7 +54,8 @@ private:
 
     // Method, version, Uri
     HttpMethod m_iMethod;
-    HttpVersion m_iVersion;
+    HttpVersion m_vVersion;
+    HttpAuthenticationType m_atAuth;
     
     char* m_pszUri;
     size_t m_stUriLength;
@@ -88,8 +91,17 @@ private:
     size_t m_stContentLength;
 
     // Authorization
-    String m_strLogin;
-    String m_strPassword;
+    String m_strAuthUserName;        // Basic and Digest
+    String m_strAuthPassword;        // Basic
+    String m_strAuthRealm;           // Basic and Digest
+
+    String m_strAuthNonce;           // Digest
+    String m_strAuthDigestUri;       // Digest
+    String m_strAuthRequestResponse; // Digest
+
+    String m_strNonceCount;          // Digest
+    String m_strCNonce;              // Digest
+    String m_strQop;                 // Digest
 
     // Parse time
     MilliSeconds m_msParseTime;
@@ -140,6 +152,7 @@ private:
     bool m_bParsedUriForms;
     bool m_bMultiPartForms;
     
+    char* ParseAuthenticationAttribute (char* pszCursor, String* pstrValue);
     int ParseRequestHeader (char* pszLine);
     int ParseHeader (char* pszLine);
 
@@ -158,6 +171,11 @@ private:
 
     int AddHttpForm (HttpFormType ftFormType, const char* pszHttpFormName, const char* pszHttpFormValue, 
         const char* pszFileName);
+
+    int ComputeA1Hash (const char* pszPassword, char pszA1 [DIGEST_HASH_TEXT_SIZE]);
+    int ComputeA2Hash (char pszA2 [DIGEST_HASH_TEXT_SIZE]);
+    int ComputeFinalHash (
+        const char pszA1[DIGEST_HASH_TEXT_SIZE], const char pszA2[DIGEST_HASH_TEXT_SIZE], char pszFinal[DIGEST_HASH_TEXT_SIZE]);
 
 public:
 
@@ -212,8 +230,11 @@ public:
     ICookie* GetCookie (const char* pszName);
     ICookie* GetCookieBeginsWith (const char* pszName);
 
-    const char* GetLogin();
-    const char* GetPassword();
+    const char* GetAuthenticationUserName();
+    const char* GetAuthenticationNonce();
+
+    int BasicAuthenticate (const char* pszPassword, bool* pbAuthenticated);
+    int DigestAuthenticate (const char* pszPassword, bool* pbAuthenticated);
 
     const char* GetHeaders();
     size_t GetHeaderLength();

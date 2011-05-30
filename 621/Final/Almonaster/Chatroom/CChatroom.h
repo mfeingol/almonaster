@@ -24,6 +24,7 @@
 #include "Osal/FifoQueue.h"
 #include "Osal/HashTable.h"
 #include "Osal/ReadWriteLock.h"
+#include "Database.h"
 
 struct ChatroomConfig {
     size_t cchMaxSpeakerNameLen;
@@ -32,6 +33,7 @@ struct ChatroomConfig {
     unsigned int iMaxNumSpeakers;
     unsigned int iMaxMessageLength;
     bool bPostSystemMessages;
+    bool bStoreMessagesInDatabase;
 };
 
 struct ChatroomMessage {
@@ -39,6 +41,7 @@ struct ChatroomMessage {
     String strSpeaker;
     UTCTime tTime;
     int iFlags;
+    unsigned int iKey;
 };
 
 struct ChatroomSpeaker {
@@ -66,17 +69,24 @@ private:
     FifoQueue<ChatroomMessage*> m_mqMessageQueue;
     HashTable<const char*, ChatroomSpeaker*, SpeakerHashValue, SpeakerEquals> m_hSpeakerTable;
 
+    IDatabase* m_pDatabase;
+    int InitializeFromDatabase();
+
     // Locks
     ReadWriteLock m_rwMessageLock;
     ReadWriteLock m_rwSpeakerLock;
 
     // Rules
     ChatroomConfig m_ccConf;
-    int PostMessageWithTime (const char* pszSpeakerName, const char* pszMessage, const UTCTime& tTime, int iFlags);
+    int PostMessageWithTime (const char* pszSpeakerName,
+                             const char* pszMessage,
+                             const UTCTime& tTime, 
+                             int iFlags,
+                             unsigned int iKey);
 
 public:
 
-    Chatroom (const ChatroomConfig& ccConf);
+    Chatroom (const ChatroomConfig& ccConf, IDatabase* pDatabase);
     ~Chatroom();
 
     int Initialize();

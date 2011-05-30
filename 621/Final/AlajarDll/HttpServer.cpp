@@ -45,15 +45,16 @@ HttpServer::HttpServer() {
 
     m_pHttpRequestCache = NULL;
     m_pHttpResponseCache = NULL;
-    m_pSocketCache = NULL;
     m_pLogMessageCache = NULL;
 
     m_pFileCache = NULL;
 
     m_pSocket = NULL;
+    m_pSslContext = NULL;
+    m_pSslSocket = NULL;
 
-    m_pszServerName = "Alajar 1.59";
-    m_stServerNameLength = sizeof ("Alajar 1.59") - 1;
+    m_pszServerName = "Alajar 1.70";
+    m_stServerNameLength = countof ("Alajar 1.70") - 1;
 
     Time::GetTime (&m_tLogDate);
 
@@ -130,6 +131,9 @@ int HttpServer::QueryInterface (const Uuid& iidInterface, void** ppInterface) {
 
 void HttpServer::Initialize() {
 
+    m_siPort = 0;
+    m_siSslPort = 0;
+
     m_bExit = false;
     m_bLogExit = false;
     m_bRestart = false;
@@ -168,6 +172,16 @@ void HttpServer::Clean() {
         m_pSocket = NULL;
     }
 
+    if (m_pSslContext != NULL) {
+        delete m_pSslContext;
+        m_pSslContext = NULL;
+    }
+
+    if (m_pSslSocket != NULL) {
+        delete m_pSslSocket;
+        m_pSslSocket = NULL;
+    }
+
     if (m_pHttpRequestCache != NULL) {
         delete m_pHttpRequestCache;
         m_pHttpRequestCache = NULL;
@@ -176,11 +190,6 @@ void HttpServer::Clean() {
     if (m_pHttpResponseCache != NULL) {
         delete m_pHttpResponseCache;
         m_pHttpResponseCache = NULL;
-    }
-
-    if (m_pSocketCache != NULL) {
-        delete m_pSocketCache;
-        m_pSocketCache = NULL;
     }
 }
 
@@ -223,10 +232,6 @@ int HttpServer::Init() {
     if (iErrCode != OK) {
         return iErrCode;
     }
-    iErrCode = m_mSocketCacheLock.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
     iErrCode = m_mLogMessageCacheLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
@@ -237,6 +242,11 @@ int HttpServer::Init() {
     }
 
     iErrCode = m_rwPageSourceTableLock.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    iErrCode = Crypto::GetRandomData (&m_uuidUniqueIdentifier, sizeof (m_uuidUniqueIdentifier));
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -295,11 +305,14 @@ int HttpServer::StartServer (void* pvServer) {
 
 int HttpServer::StartServer() {
     
-    int iErrCode, iNumFiles;
+    int iErrCode;
     char* pszRhs;
 
     bool bFileCache;
+
     char pszReportFileName [OS::MaxFileNameLength];
+    char pszCertificateFile [OS::MaxFileNameLength];
+    char pszPrivateKeyFile [OS::MaxFileNameLength];
 
     unsigned int iNumHttpObjects, iInitNumThreads, iMaxNumThreads;
     PageSource* pPageSource;
@@ -309,7 +322,7 @@ int HttpServer::StartServer() {
     // First, get report
     if (m_pConfigFile->GetParameter ("ReportPath", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (File::ResolvePath (pszRhs, m_pszReportPath) == ERROR_FAILURE) {
+        if (File::ResolvePath (pszRhs, m_pszReportPath) != OK) {
             ReportEvent ((String) "Error: The ReportPath value was invalid:" + pszRhs);
             goto ErrorExit;
         }
@@ -338,7 +351,7 @@ int HttpServer::StartServer() {
         
     // Print intro screen
     ReportEvent (m_pszServerName);
-    ReportEvent ("Copyright (c) 1998-2003 Max Attar Feingold");
+    ReportEvent ("Copyright (c) 1998-2004 Max Attar Feingold");
     ReportEvent ("");
     ReportEvent ("Alajar comes with ABSOLUTELY NO WARRANTY.");
     ReportEvent ("This is free software, and you are welcome");
@@ -350,8 +363,8 @@ int HttpServer::StartServer() {
     // Counter path
     if (m_pConfigFile->GetParameter ("CounterPath", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (File::ResolvePath (pszRhs, m_pszCounterPath) == ERROR_FAILURE) {
-            ReportEvent ((String) "Error: The CounterPath value was invalid:" + pszRhs);
+        if (File::ResolvePath (pszRhs, m_pszCounterPath) != OK) {
+            ReportEvent ((String) "Error: The CounterPath value was invalid: " + pszRhs);
             goto ErrorExit;
         }
         
@@ -372,8 +385,8 @@ int HttpServer::StartServer() {
     // Log path
     if (m_pConfigFile->GetParameter ("LogPath", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (File::ResolvePath (pszRhs, m_pszLogPath) == ERROR_FAILURE) {
-            ReportEvent ((String) "Error: The LogPath value was invalid:" + pszRhs);
+        if (File::ResolvePath (pszRhs, m_pszLogPath) != OK) {
+            ReportEvent ((String) "Error: The LogPath value was invalid: " + pszRhs);
             goto ErrorExit;
         }
         
@@ -394,8 +407,8 @@ int HttpServer::StartServer() {
     // PageSourcePath
     if (m_pConfigFile->GetParameter ("PageSourcePath", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (File::ResolvePath (pszRhs, m_pszPageSourcePath) == ERROR_FAILURE) {
-            ReportEvent ((String) "Error: The PageSourcePath value was invalid:" + pszRhs);
+        if (File::ResolvePath (pszRhs, m_pszPageSourcePath) != OK) {
+            ReportEvent ((String) "Error: The PageSourcePath value was invalid: " + pszRhs);
             goto ErrorExit;
         }
         
@@ -415,8 +428,8 @@ int HttpServer::StartServer() {
     
     if (m_pConfigFile->GetParameter ("ConfigPath", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (File::ResolvePath (pszRhs, m_pszConfigPath) == ERROR_FAILURE) {
-            ReportEvent ((String) "Error: The ConfigPath value was invalid:" + pszRhs);
+        if (File::ResolvePath (pszRhs, m_pszConfigPath) != OK) {
+            ReportEvent ((String) "Error: The ConfigPath value was invalid: " + pszRhs);
             goto ErrorExit;
         }
         
@@ -433,8 +446,8 @@ int HttpServer::StartServer() {
 
     if (m_pConfigFile->GetParameter ("StatisticsPath", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (File::ResolvePath (pszRhs, m_pszStatisticsPath) == ERROR_FAILURE) {
-            ReportEvent ((String) "Error: The StatisticsPath value was invalid:" + pszRhs);
+        if (File::ResolvePath (pszRhs, m_pszStatisticsPath) != OK) {
+            ReportEvent ((String) "Error: The StatisticsPath value was invalid: " + pszRhs);
             goto ErrorExit;
         }
         
@@ -447,10 +460,75 @@ int HttpServer::StartServer() {
         goto ErrorExit;
     }
     
-    if (m_pConfigFile->GetParameter ("Port", &pszRhs) == OK && pszRhs != NULL) {
-        m_siPort = (short) atoi (pszRhs);
+    bool bEnableNonSSLPort;
+    if (m_pConfigFile->GetParameter ("EnableNonSSLPort", &pszRhs) == OK && pszRhs != NULL) {
+        bEnableNonSSLPort = (atoi (pszRhs) == 1);
     } else {
-        ReportEvent ("Error: Could not read the Port from Alajar.conf");
+        ReportEvent ("Error: Could not read the EnableNonSSLPort flag from Alajar.conf");
+        goto ErrorExit;
+    }
+
+    if (bEnableNonSSLPort) {
+        if (m_pConfigFile->GetParameter ("Port", &pszRhs) == OK && pszRhs != NULL) {
+            m_siPort = (short) atoi (pszRhs);
+        } else {
+            ReportEvent ("Error: Could not read the Port from Alajar.conf");
+            goto ErrorExit;
+        }
+    }
+
+    bool bEnableSSLPort;
+    if (m_pConfigFile->GetParameter ("EnableSSLPort", &pszRhs) == OK && pszRhs != NULL) {
+        bEnableSSLPort = (atoi (pszRhs) == 1);
+    } else {
+        ReportEvent ("Error: Could not read the EnableSSLPort flag from Alajar.conf");
+        goto ErrorExit;
+    }
+
+    if (bEnableSSLPort) {
+
+        if (m_pConfigFile->GetParameter ("SSLPort", &pszRhs) == OK && pszRhs != NULL) {
+            m_siSslPort = (short) atoi (pszRhs);
+        } else {
+            ReportEvent ("Error: Could not read the SSLPort from Alajar.conf");
+            goto ErrorExit;
+        }
+
+        if (m_pConfigFile->GetParameter ("SSLCertificateFile", &pszRhs) == OK && pszRhs != NULL) {
+        
+            if (File::ResolvePath (pszRhs, pszCertificateFile) != OK) {
+                ReportEvent ((String) "Error: The SSLCertificateFile value was invalid: " + pszRhs);
+                goto ErrorExit;
+            }
+            
+            if (!File::DoesFileExist (pszCertificateFile)) {
+                ReportEvent ((String) "Error: the SSLCertificateFile file does not exist" + pszCertificateFile);
+                goto ErrorExit;
+            }
+        } else {
+            ReportEvent ("Error: Could not read the SSLCertificateFile from Alajar.conf");
+            goto ErrorExit;
+        }
+
+        if (m_pConfigFile->GetParameter ("SSLPrivateKeyFile", &pszRhs) == OK && pszRhs != NULL) {
+        
+            if (File::ResolvePath (pszRhs, pszPrivateKeyFile) != OK) {
+                ReportEvent ((String) "Error: The SSLPrivateKeyFile value was invalid: " + pszRhs);
+                goto ErrorExit;
+            }
+
+            if (!File::DoesFileExist (pszPrivateKeyFile)) {
+                ReportEvent ((String) "Error: the SSLPrivateKeyFile file does not exist" + pszPrivateKeyFile);
+                goto ErrorExit;
+            }
+        } else {
+            ReportEvent ("Error: Could not read the SSLPrivateKeyFile from Alajar.conf");
+            goto ErrorExit;
+        }
+    }
+
+    if (!bEnableNonSSLPort && !bEnableSSLPort) {
+        ReportEvent ("Error: neither the non-SSL port nor the SSL port are enabled");
         goto ErrorExit;
     }
 
@@ -465,6 +543,7 @@ int HttpServer::StartServer() {
         goto ErrorExit;
     }
 
+    int iNumFiles;
     if (m_pConfigFile->GetParameter ("ApproxNumFilesInFileCache", &pszRhs) == OK && pszRhs != NULL) {
         iNumFiles = atoi (pszRhs);
         if (iNumFiles < 1) {
@@ -474,13 +553,6 @@ int HttpServer::StartServer() {
         m_pFileCache = FileCache::CreateInstance (iNumFiles, bFileCache);
     } else {
         ReportEvent ("Error: Could not read the ApproxNumFilesInFileCache from Alajar.conf");
-        goto ErrorExit;
-    }
-
-    if (m_pConfigFile->GetParameter ("MemoryCache", &pszRhs) == OK && pszRhs != NULL) {
-         m_bEnableMemoryCache = atoi (pszRhs) == 1;
-    } else {
-        ReportEvent ("Error: Could not read MemoryCache flag from Alajar.conf");
         goto ErrorExit;
     }
 
@@ -508,30 +580,29 @@ int HttpServer::StartServer() {
         ReportEvent ("MaxNumThreads cannot be less than InitNumThreads in Alajar.conf");
         goto ErrorExit;
     }
-
     
     ReportEvent ((String) "The threadpool is using " + iInitNumThreads + " to " + iMaxNumThreads + 
         " server thread" + (iMaxNumThreads != 1 ? "s" : ""));
     
     if (m_pConfigFile->GetParameter ("DefaultThreadPriority", &pszRhs) == OK && pszRhs != NULL) {
         
-        if (stricmp ("Lowest", pszRhs) == 0) {
+        if (_stricmp ("Lowest", pszRhs) == 0) {
             ReportEvent ("The server threads are running at the lowest priority");
             m_iDefaultPriority = Thread::LowestPriority;
         }
-        else if (stricmp ("Lower", pszRhs) == 0) {
+        else if (_stricmp ("Lower", pszRhs) == 0) {
             ReportEvent ("The server threads are running at a lower priority");
             m_iDefaultPriority = Thread::LowerPriority;
         }
-        else if (stricmp ("Normal", pszRhs) == 0) {
+        else if (_stricmp ("Normal", pszRhs) == 0) {
             ReportEvent ("The server threads are running at normal priority");
             m_iDefaultPriority = Thread::NormalPriority;
         }
-        else if (stricmp ("Higher", pszRhs) == 0) {
+        else if (_stricmp ("Higher", pszRhs) == 0) {
             ReportEvent ("The server threads are running at a higher priority");
             m_iDefaultPriority = Thread::HigherPriority;
         }
-        else if (stricmp ("Highest", pszRhs) == 0) {
+        else if (_stricmp ("Highest", pszRhs) == 0) {
             ReportEvent ("The server threads are running at the highest priority");
             m_iDefaultPriority = Thread::HighestPriority;
         }
@@ -569,7 +640,6 @@ int HttpServer::StartServer() {
 
         m_pLogMessageCache = new ObjectCache<LogMessage, LogMessageAllocator>();
         if (m_pLogMessageCache == NULL || !m_pLogMessageCache->Initialize (iMaxNumThreads)) {
-            
             ReportEvent ("The server is out of memory");
             goto ErrorExit;
         }
@@ -590,65 +660,105 @@ int HttpServer::StartServer() {
 
         while (m_pPageSourceTable->GetNextIterator (&htiPageSource)) {      
             pPageSource = htiPageSource.GetData();
-            if (pPageSource->IsSingleThreaded()) {
-                iNumHttpObjects += 3;
-            }
         }
     }
 
-    // Initialize objects
+    // Initialize caches
     m_pHttpRequestCache = new ObjectCache<HttpRequest, HttpRequestAllocator>();
     m_pHttpResponseCache = new ObjectCache<HttpResponse, HttpResponseAllocator>();
-    m_pSocketCache = new ObjectCache<Socket, SocketAllocator>();
 
-    m_pSocket = new Socket();
-
-    if (m_pHttpRequestCache == NULL ||
-        m_pHttpResponseCache == NULL ||
-        m_pSocketCache == NULL ||
-        m_pSocket == NULL ||
-
-        !m_pHttpRequestCache->Initialize (iNumHttpObjects) ||
-        !m_pHttpResponseCache->Initialize (iNumHttpObjects) ||
-        !m_pSocketCache->Initialize (iNumHttpObjects)
-
-        ) {
-
-        ReportEvent ("The server is out of memory");
+    if (m_pHttpRequestCache == NULL || m_pHttpResponseCache == NULL) {
+        ReportEvent ("Could not create HTTP object caches");
         goto ErrorExit;
     }
 
-    iErrCode = m_pSocket->Open();
-    if (iErrCode != OK) {
-        ReportEvent ((String) "Socket error " + Socket::GetLastError() + ": Unable to open socket");
-        goto ErrorExit;
+    // Initialize sockets
+    if (bEnableNonSSLPort) {
+
+        m_pSocket = new Socket();
+        if (m_pSocket == NULL) {
+            ReportEvent ("The server is out of memory");
+            goto ErrorExit;
+        }
+
+        iErrCode = m_pSocket->Open();
+        if (iErrCode != OK) {
+            char pszError [256];
+            sprintf (pszError, "Unable to open SSL socket: socket error %d", Socket::GetLastError());
+            ReportEvent (pszError);
+            goto ErrorExit;
+        }
+
+        char pszReport [64];
+        sprintf (pszReport, "Listening on port %d", m_siPort);
+        ReportEvent (pszReport);
+
+        iErrCode = m_pSocket->Listen (m_siPort);
+        if (iErrCode != OK) {           
+            char pszError [256];
+            sprintf (pszError, "Unable to listen on port %d: socket error %d", m_siPort, Socket::GetLastError());
+            ReportEvent (pszError);
+            goto ErrorExit;
+        }       
     }
 
-    // Set the socket to listen
-    ReportEvent ((String) "Listening on port " + (int) m_siPort);
-    
-    iErrCode = m_pSocket->Listen (m_siPort);
-    if (iErrCode != OK) {
-        
-        ReportEvent ((String) "Socket error " + Socket::GetLastError() + ": Could not listen at port " + 
-            (int) m_siPort);
-        
-        ShutdownPageSources();
-        
-        goto ErrorExit;
-        
+    if (bEnableSSLPort) {
+
+        m_pSslContext = new SslContext();
+        if (m_pSslContext == NULL) {
+            ReportEvent ("The server is out of memory");
+            goto ErrorExit;
+        }
+
+        iErrCode = m_pSslContext->Initialize (pszCertificateFile, pszPrivateKeyFile);
+        if (iErrCode != OK) {
+
+            delete m_pSslContext;
+            m_pSslContext = NULL;
+
+            ReportEvent ("Failed to initialize SSL context: OpenSSL may not be installed correctly.");
+            goto ErrorExit;
+        }
+
+        m_pSslSocket = new SslSocket (m_pSslContext);
+        if (m_pSslSocket == NULL) {
+            ReportEvent ("The server is out of memory");
+            goto ErrorExit;
+        }
+
+        iErrCode = m_pSslSocket->Open();
+        if (iErrCode != OK) {
+            char pszError [256];
+            sprintf (pszError, "Unable to open socket: socket error %d", Socket::GetLastError());
+            ReportEvent (pszError);
+            goto ErrorExit;
+        }
+
+        char pszReport [64];
+        sprintf (pszReport, "Listening on port %d", m_siSslPort);
+        ReportEvent (pszReport);
+
+        iErrCode = m_pSslSocket->Listen (m_siSslPort);
+        if (iErrCode != OK) {           
+            char pszError [256];
+            sprintf (pszError, "Unable to listen on port %d: socket error %d", m_siSslPort, Socket::GetLastError());
+            ReportEvent (pszError);
+            goto ErrorExit;
+        }
     }
-    
+
     // Let's go!
     return Run();
 
 ErrorExit:
 
-    m_pConfigFile->Release();
-    m_pConfigFile = NULL;
+    if (m_pPageSourceTable != NULL && m_pPageSourceTable->GetNumElements() > 0) {
+        ShutdownPageSources();
+    }
+
+    SafeRelease (m_pConfigFile);
 
     return ERROR_FAILURE;
-
 }
 
 /////////////
@@ -657,8 +767,7 @@ ErrorExit:
 
 int HttpServer::Run() {
 
-    int iErrCode = OK;
-    Socket* pRequestSocket;
+    int iErrCode;
 
     // Initialize exit notification environment
     m_bExit = false;
@@ -702,25 +811,38 @@ int HttpServer::Run() {
     // Loop forever
     while (true) {
 
-        // Get a socket
-        m_mSocketCacheLock.Wait();
-        pRequestSocket = m_pSocketCache->GetObject();
-        m_mSocketCacheLock.Signal();
+        SocketSet selectSet;
+        selectSet.iNumSockets = 0;
 
-        if (pRequestSocket == NULL) {
-            // Out of memory!
-            ReportEvent ("Server is out of memory!");
-            break;
+        if (m_pSocket != NULL) {
+            selectSet.pSockets [selectSet.iNumSockets ++] = m_pSocket;
         }
 
-        // Accept the incoming connection and put the socket into the task queue
-        if (m_pSocket->Accept (pRequestSocket) != OK ||
-            m_pThreadPool->QueueTask (pRequestSocket) != OK) {
-
-            m_mSocketCacheLock.Wait();
-            m_pSocketCache->ReleaseObject (pRequestSocket);
-            m_mSocketCacheLock.Signal();
+        if (m_pSslSocket != NULL) {
+            selectSet.pSockets [selectSet.iNumSockets ++] = m_pSslSocket;
         }
+
+        iErrCode = Socket::Select (&selectSet);
+        if (iErrCode == OK) {
+
+            for (unsigned int i = 0; i < selectSet.iNumSockets; i ++) {
+
+                // Accept the incoming connection and put the socket into the task queue
+                Socket* pRequestSocket = selectSet.pSockets[i]->Accept();
+                if (pRequestSocket == NULL) {
+                    ReportEvent ("Error accepting a new connection");
+                } else {
+                
+                    iErrCode = m_pThreadPool->QueueTask (pRequestSocket);
+                    if (iErrCode != OK) {
+                        ReportEvent ("Error enqueuing a socket in the task queue");
+                        Socket::FreeSocket (pRequestSocket);
+                    }
+                }
+            }
+        }
+
+        else if (!m_bExit) ReportEvent ("Select failed");
 
         // Check for exit
         if (m_bExit) {
@@ -849,13 +971,11 @@ int HttpServer::Run() {
 int HttpServer::WWWServe (HttpPoolThread* pSelf) {
 
     int iErrCode = OK;
-    bool bSingleThreaded;
 
     HttpRequest* pHttpRequest;
     HttpResponse* pHttpResponse;
 
-    Socket* pSocket;
-    PageSource* pPageSource;
+    Socket* pSocket = NULL;
 
     // Stats
     Timer tmTimer;
@@ -870,24 +990,44 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
     // Loop 'forever'
     while (true) {
 
-        // Get a new task
+        // Get a new task; a NULL socket means we should exit
         pSocket = m_pThreadPool->WaitForTask (pSelf);
-
-        // Check for exit
         if (pSocket == NULL) {
             break;
         }
 
-        // Best effort reset the socket's statistics
-        pSocket->ResetStatistics();
+        // Best effort set the send and receive timeouts to 15 seconds
+        if (pSocket->SetRecvTimeOut (15000) != OK) {
+            ReportEvent ("Socket::SetRecvTimeOut failed");
+        }
+
+        if (pSocket->SetSendTimeOut (15000) != OK) {
+            ReportEvent ("Socket::SetSendTimeOut failed");
+        }
+
+        // Negotiate the connection.  If this fails, we drop the connection and continue
+        iErrCode = pSocket->Negotiate();
+        if (iErrCode != OK) {
+    
+            ReportEvent ("Socket::Negotiate failed");
+
+            pSocket->Close();
+            Socket::FreeSocket (pSocket);
+            continue;
+        }
 
         // Get request, response objects
         iErrCode = GetHttpObjects (&pHttpRequest, &pHttpResponse);
         if (iErrCode != OK) {
-            goto OnError;
-        }
+
+            ReportEvent ("Could not allocate HTTP request and response objects");
             
-        // Set sockets
+            pSocket->Close();
+            Socket::FreeSocket (pSocket);
+            continue;
+        }
+
+        // Set socket pointers
         pHttpRequest->SetSocket (pSocket);
         pHttpResponse->SetSocket (pSocket);
         
@@ -917,40 +1057,27 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
             pHttpResponse->SetStatusCode (HTTP_400);
             break;
         }
-        
-        // Clean up if free threaded
-        pPageSource = pHttpRequest->GetPageSource();
-        bSingleThreaded = pPageSource != NULL && pPageSource->IsSingleThreaded();
-        
+
         // Best effort response
         iErrCode = pHttpResponse->Respond();
-        
-        if (!bSingleThreaded) {
+        if (iErrCode != OK) {
+            char pszBuffer [64];
+            sprintf (pszBuffer, "Error responding: %d", iErrCode);
+            ReportEvent (pszBuffer);
+        }
+        iErrCode = OK;
 
-            FinishRequest (pHttpRequest, pHttpResponse, pSocket, &sThreadStats, iErrCode);
+        FinishRequest (pHttpRequest, pHttpResponse, pSocket, &sThreadStats, iErrCode);
 
-            if (sThreadStats.NumRequests % COALESCE_REQUESTS == 0 ||
-                Time::GetTimerCount (tmTimer) > COALESCE_PERIOD_MS) {
-                
-                CoalesceStatistics (&sThreadStats);
-                Time::StartTimer (&tmTimer);
-            }
+        if (sThreadStats.NumRequests % COALESCE_REQUESTS == 0 ||
+            Time::GetTimerCount (tmTimer) > COALESCE_PERIOD_MS) {
+            
+            CoalesceStatistics (&sThreadStats);
+            Time::StartTimer (&tmTimer);
         }
     }
 
     CoalesceStatistics (&sThreadStats);
-
-    return OK;
-
-OnError:
-
-    pSocket->Close();
-    
-    m_mSocketCacheLock.Wait();
-    m_pSocketCache->ReleaseObject (pSocket);
-    m_mSocketCacheLock.Signal();
-    
-    ReportEvent ("Could not obtain a request or a response object. The server may be out of memory");
 
     return iErrCode;
 }
@@ -964,10 +1091,7 @@ void HttpServer::FinishRequest (HttpRequest* pHttpRequest, HttpResponse* pHttpRe
         
         // Free socket
         pSocket->Close();
-
-        m_mSocketCacheLock.Wait();
-        m_pSocketCache->ReleaseObject (pSocket);
-        m_mSocketCacheLock.Signal();
+        Socket::FreeSocket (pSocket);
 
     } else {
         
@@ -1055,7 +1179,7 @@ int HttpServer::ConfigurePageSources() {
 
             ReportEvent ((String) "\t" + pszPageSourceName);
             
-            if (stricmp (pPageSource->GetName(), "Default") == 0) {
+            if (_stricmp (pPageSource->GetName(), "Default") == 0) {
                 m_pDefaultPageSource = pPageSource;
             } else {
                 
@@ -1361,6 +1485,10 @@ const char* HttpServer::GetServerName() {
     return m_pszServerName;
 }
 
+const Uuid& HttpServer::GetUniqueIdentifier() {
+    return m_uuidUniqueIdentifier;
+}
+
 unsigned int HttpServer::GetNumThreads() {
     return m_pThreadPool->GetNumThreads();
 }
@@ -1486,8 +1614,8 @@ int HttpServer::Shutdown() {
 
 int HttpServer::DeletePageSource (const char* pszPageSourceName) {
 
-    if (stricmp (pszPageSourceName, "Default") == 0 ||
-        stricmp (pszPageSourceName, "Admin") == 0) {
+    if (_stricmp (pszPageSourceName, "Default") == 0 ||
+        _stricmp (pszPageSourceName, "Admin") == 0) {
         return ERROR_FAILURE;
     }
 
@@ -1534,7 +1662,7 @@ IPageSourceControl* HttpServer::GetPageSourceByName (const char* pszName) {
 
     PageSource* pPageSource = NULL;
 
-    if (stricmp (pszName, "Default") == 0) {
+    if (_stricmp (pszName, "Default") == 0) {
         m_pDefaultPageSource->AddRef();
         return m_pDefaultPageSource;
     }
@@ -1712,8 +1840,8 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
                     pszQ = "?";
                 }
                 
-                const char* pszUserName = pHttpRequest->GetLogin();
-                if (pszUserName == NULL || *pszUserName == '\0') {
+                const char* pszUserName = pHttpRequest->GetAuthenticationUserName();
+                if (String::IsBlank (pszUserName)) {
                     pszUserName = "-";
                 }
                 

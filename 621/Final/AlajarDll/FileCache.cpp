@@ -291,5 +291,5 @@ bool FileCache::FileCacheEquals::Equals (const char* pszLeft, const char* pszRig
         return false;
     }
 
-    return stricmp (pszResolvedPathLeft, pszResolvedPathRight) == 0;
+    return _stricmp (pszResolvedPathLeft, pszResolvedPathRight) == 0;
 }

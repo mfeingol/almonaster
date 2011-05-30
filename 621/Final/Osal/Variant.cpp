@@ -313,7 +313,7 @@ Variant& Variant::operator+= (const Variant& vRhs) {
         char pszBuffer [128];
         
         if (vRhs.m_iType == V_INT) {
-            itoa (vRhs.m_vArg.iArg, pszBuffer, 10);
+            _itoa (vRhs.m_vArg.iArg, pszBuffer, 10);
         } else if (vRhs.m_iType == V_INT64) {
             _i64toa (vRhs.m_vArg.i64Arg, pszBuffer, 10);
         } else {
@@ -353,7 +353,7 @@ Variant& Variant::operator+= (const Variant& vRhs) {
         char pszBuffer [128];
         
         if (m_iType == V_INT) {
-            itoa (m_vArg.iArg, pszBuffer, 10);
+            _itoa (m_vArg.iArg, pszBuffer, 10);
         } else if (m_iType == V_INT64) {
             _i64toa (vRhs.m_vArg.i64Arg, pszBuffer, 10);
         } else {

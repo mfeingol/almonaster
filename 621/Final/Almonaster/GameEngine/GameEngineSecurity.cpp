@@ -165,7 +165,7 @@ Cleanup:
 
 int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey, 
                                  const GameOptions* pgoGameOptions, GameAction gaAction, 
-                                 bool* pbAccess) {
+                                 bool* pbAccess, GameAccessDeniedReason* prAccessDeniedReason) {
 
     int iErrCode, iOptions, iPrivilege;
     unsigned int iKey;
@@ -181,6 +181,9 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
     IReadTable* pGameSec = NULL;
 
+    *pbAccess = false;
+    *prAccessDeniedReason = ACCESS_DENIED_NO_REASON;
+
     // Make sure empire wasn't nuked out of this game
     iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::SecretKey, &vEmpireSecretKey);
     if (iErrCode != OK) {
@@ -189,7 +192,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
     iErrCode = m_pGameData->GetFirstKey (pszDeadEmpires, GameDeadEmpires::SecretKey, vEmpireSecretKey, false, &iKey);
     if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != ERROR_UNKNOWN_TABLE_NAME) {
-        *pbAccess = false;
+        *prAccessDeniedReason = ACCESS_DENIED_IN_DEAD_EMPIRES_TABLE;
         goto Cleanup;
     }
 
@@ -205,7 +208,11 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     }
 
     if (iPrivilege == GUEST) {
-        *pbAccess = gaAction == VIEW_GAME;
+        if (gaAction == VIEW_GAME) {
+            *pbAccess = true;
+        } else {
+            *prAccessDeniedReason = ACCESS_DENIED_GUEST_ACCOUNT;
+        }
         goto Cleanup;
     }
 
@@ -245,9 +252,6 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
         iOptions = pgoGameOptions->iOptions;
     }
 
-    // Default to allow access
-    *pbAccess = true;
-
     // Almonaster
     if (iOptions & (GAME_RESTRICT_MIN_ALMONASTER_SCORE | GAME_RESTRICT_MAX_ALMONASTER_SCORE)) {
 
@@ -271,7 +275,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetFloat() < vGame.GetFloat()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MIN_ALMONASTER_SCORE;
                 goto Cleanup;
             }
         }
@@ -291,7 +295,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetFloat() > vGame.GetFloat()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MAX_ALMONASTER_SCORE;
                 goto Cleanup;
             }
         }
@@ -320,7 +324,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetFloat() < vGame.GetFloat()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MIN_CLASSIC_SCORE;
                 goto Cleanup;
             }
         }
@@ -340,7 +344,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetFloat() > vGame.GetFloat()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MAX_CLASSIC_SCORE;
                 goto Cleanup;
             }
         }
@@ -369,7 +373,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetInteger() < vGame.GetInteger()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MIN_BRIDIER_RANK;
                 goto Cleanup;
             }
         }
@@ -389,7 +393,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetInteger() > vGame.GetInteger()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MAX_BRIDIER_RANK;
                 goto Cleanup;
             }
         }
@@ -418,7 +422,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetInteger() < vGame.GetInteger()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MIN_BRIDIER_INDEX;
                 goto Cleanup;
             }
         }
@@ -438,7 +442,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetInteger() > vGame.GetInteger()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MAX_BRIDIER_INDEX;
                 goto Cleanup;
             }
         }
@@ -512,7 +516,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     }
                     
                     if (iNukerRankChange < vGame.GetInteger()) {
-                        *pbAccess = false;
+                        *prAccessDeniedReason = ACCESS_DENIED_MIN_BRIDIER_RANK_GAIN;
                         goto Cleanup;
                     }
                 }
@@ -525,7 +529,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     }
                     
                     if (iNukerRankChange > vGame.GetInteger()) {
-                        *pbAccess = false;
+                        *prAccessDeniedReason = ACCESS_DENIED_MAX_BRIDIER_RANK_GAIN;
                         goto Cleanup;
                     }
                 }
@@ -553,7 +557,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     }
                     
                     if (-iNukedRankChange < vGame.GetInteger()) {
-                        *pbAccess = false;
+                        *prAccessDeniedReason = ACCESS_DENIED_MIN_BRIDIER_RANK_LOSS;
                         goto Cleanup;
                     }
                 }
@@ -566,7 +570,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     }
                     
                     if (-iNukedRankChange > vGame.GetInteger()) {
-                        *pbAccess = false;
+                        *prAccessDeniedReason = ACCESS_DENIED_MAX_BRIDIER_RANK_LOSS;
                         goto Cleanup;
                     }
                 }
@@ -597,7 +601,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetInteger() < vGame.GetInteger()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MIN_WINS;
                 goto Cleanup;
             }
         }
@@ -617,23 +621,9 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (vEmpire.GetInteger() > vGame.GetInteger()) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_MAX_WINS;
                 goto Cleanup;
             }
-        }
-    }
-
-    // Check for idle filtering
-    if (iOptions & GAME_RESTRICT_IDLE_EMPIRES) {
-
-        iErrCode = IsEmpireIdleInSomeGame (iEmpireKey, &bFlag);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-
-        if (bFlag) {
-            *pbAccess = false;
-            goto Cleanup;
         }
     }
 
@@ -742,7 +732,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             
             // Check empire secret key
             if (vEmpireSecretKey.GetInteger64() == i64SecretKey) {
-                *pbAccess = false;
+                *prAccessDeniedReason = ACCESS_DENIED_BLOCKED_EMPIRE;
                 break;
             }
             
@@ -761,7 +751,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 
                 // Check
                 if (i64EmpireSessionId == i64SessionId || i64EmpireSessionId == i64SessionId2) {
-                    *pbAccess = false;
+                    *prAccessDeniedReason = ACCESS_DENIED_BLOCKED_EMPIRE;
                     break;
                 }
             }
@@ -782,19 +772,36 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 // Check
                 if (String::StrCmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress) == 0 ||
                     String::StrCmp (vEmpireIPAddress.GetCharPtr(), pszIPAddress2) == 0) {
-                    *pbAccess = false;
+                    *prAccessDeniedReason = ACCESS_DENIED_BLOCKED_EMPIRE;
                     break;
                 }
             }
 
             if (pvSec != NULL) {
-                    m_pGameData->FreeData (pvSec);
-                    pvSec = NULL;
-                }
+                m_pGameData->FreeData (pvSec);
+                pvSec = NULL;
+            }
 
         }   // End while loop
 
-    }   // End if enforce security
+    }   // End if enforce per-empire security
+
+    // Check for idle filtering
+    if (iOptions & GAME_RESTRICT_IDLE_EMPIRES) {
+
+        iErrCode = IsEmpireIdleInSomeGame (iEmpireKey, &bFlag);
+        if (iErrCode != OK) {
+            goto Cleanup;
+        }
+
+        if (bFlag) {
+            *prAccessDeniedReason = ACCESS_DENIED_IDLE_EMPIRE;
+            goto Cleanup;
+        }
+    }
+
+    // Grant access
+    *pbAccess = true;
 
 Cleanup:
 

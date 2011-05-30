@@ -653,6 +653,10 @@ recurse:
         T* GetPtr() {
             return m_pPtr;
         }
+
+        T* SetPtr (T*& pPtr) {
+            m_pPtr = pPtr;
+        }
     };
 
     OSAL_EXPORT void InitializeThreadRandom (int iRandFactor = 1);
@@ -668,7 +672,7 @@ recurse:
     OSAL_EXPORT size_t GetDecodeBase64Size (const char* pszBase64, size_t cchLength);
     OSAL_EXPORT int DecodeBase64 (const char* pszBase64, void* pbData, size_t cbLength, size_t* pcbDecoded);
 
-    OSAL_EXPORT int HexCharToDecimal (char szDigit);
+    OSAL_EXPORT int HexEncode (const void* pbData, size_t cbDataLength, char* pszHex, size_t cchLength);
 
     OSAL_EXPORT int AtomicIncrement (int* piValue);
     OSAL_EXPORT int AtomicDecrement (int* piValue);

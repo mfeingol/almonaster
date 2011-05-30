@@ -288,6 +288,15 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         goto Cleanup;
     }
 
+    // SystemChatroomData
+    pszBadTable = SYSTEM_CHATROOM_DATA;
+    if (!m_pGameData->DoesTableExist (SYSTEM_CHATROOM_DATA) ||
+        !m_pGameData->IsTemplateEqual (SystemChatroomData::Template.Name, SystemChatroomData::Template)) {
+        bGoodDatabase = false;
+        Assert (false);
+        goto Cleanup;
+    }
+
     // SystemTournaments
     pszBadTable = SYSTEM_TOURNAMENTS;
     if (!m_pGameData->DoesTableExist (SYSTEM_TOURNAMENTS) ||
@@ -1049,7 +1058,6 @@ int GameEngine::VerifyActiveGames() {
             
             sConsumedTime = Time::GetSecondDifference (tLastCheckTime, tLastLoginTime);
             if (sConsumedTime < 0) {
-                Assert (false);
                 sConsumedTime = 0;
             }
             tLastLoginTime = vTemp.GetUTCTime();
@@ -1449,6 +1457,12 @@ int GameEngine::CreateDefaultSystemTemplates() {
         return iErrCode;
     }
 
+    iErrCode = m_pGameData->CreateTemplate (SystemChatroomData::Template);
+    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
+        Assert (false);
+        return iErrCode;
+    }
+
     iErrCode = m_pGameData->CreateTemplate (GameSecurity::Template);
     if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
         Assert (false);
@@ -1566,6 +1580,13 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemTournaments table
     iErrCode = m_pGameData->CreateTable (SYSTEM_TOURNAMENTS, SystemTournaments::Template.Name);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    // Create SystemChatroomData table
+    iErrCode = m_pGameData->CreateTable (SYSTEM_CHATROOM_DATA, SystemChatroomData::Template.Name);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;

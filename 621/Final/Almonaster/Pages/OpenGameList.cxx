@@ -164,7 +164,7 @@ if (bConfirmPage) {
 
             // Fill in the table
             int iSuperClassKey;
-            bool bFlag;
+            bool bFlag, bIdle = false;
 
             for (i = 0; i < iNumOpenGames; i ++) {
 
@@ -176,40 +176,60 @@ if (bConfirmPage) {
                     g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
                     g_pGameEngine->IsGameOpen (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
                     g_pGameEngine->IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag) == OK && !bFlag &&
-                    g_pGameEngine->GameAccessCheck (iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag) == OK && bFlag &&
                     g_pGameEngine->GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
 
-                    for (j = 0; j < iNumSuperClasses; j ++) {
-                        if (piSuperClassKey[j] == iSuperClassKey) {
+                    GameAccessDeniedReason rReason;
+                    iErrCode = g_pGameEngine->GameAccessCheck (iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
+                    if (iErrCode == OK) {
 
-                            // We found a match, so write down the game in question
-                            ppiTable [j][ppiTable [j][iNumOpenGames]] = i;
+                        if (!bFlag) {
 
-                            ppiGameClass[j][ppiTable [j][iNumOpenGames]] = iGameClass;
-                            ppiGameNumber[j][ppiTable [j][iNumOpenGames]] = iGameNumber;
+                            if (rReason == ACCESS_DENIED_IDLE_EMPIRE) {
+                                bIdle = true;
+                            }
 
-                            ppiTable [j][iNumOpenGames] ++;
-                            bDraw = true;
-                            break;
+                        } else {
+
+                            for (j = 0; j < iNumSuperClasses; j ++) {
+                                if (piSuperClassKey[j] == iSuperClassKey) {
+
+                                    // We found a match, so write down the game in question
+                                    ppiTable [j][ppiTable [j][iNumOpenGames]] = i;
+
+                                    ppiGameClass[j][ppiTable [j][iNumOpenGames]] = iGameClass;
+                                    ppiGameNumber[j][ppiTable [j][iNumOpenGames]] = iGameNumber;
+
+                                    ppiTable [j][iNumOpenGames] ++;
+                                    bDraw = true;
+                                    break;
+                                }
+                            }
+
+                            if (j == iNumSuperClasses) {
+
+                                // No superclass was found, so it must be a personal game
+                                ppiTable [iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = i;
+
+                                ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameClass;
+                                ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameNumber;
+
+                                ppiTable [iNumSuperClasses][iNumOpenGames] ++;
+                                bDraw = true;
+                            }
                         }
-                    }
-
-                    if (j == iNumSuperClasses) {
-
-                        // No superclass was found, so it must be a personal game
-                        ppiTable [iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = i;
-
-                        ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameClass;
-                        ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameNumber;
-
-                        ppiTable [iNumSuperClasses][iNumOpenGames] ++;
-                        bDraw = true;
                     }
                 }
             }
 
+            if (bIdle) {
+                %><h3>Some open games are unavailable to your empire because it is idling in an active game</h3><%
+            }
+
             if (!bDraw) {
-                %><h3>There are no open games available to your empire</h3><%
+
+                if (!bIdle) {
+                    %><h3>There are no open games available to your empire</h3><%
+                }
             } else {
 
                 %><p><h3>Join an open game:</h3><%

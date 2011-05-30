@@ -924,15 +924,15 @@ void HtmlRenderer::WriteServerRules() {
         "<li>Empire names and user input are fully filtered for HTML content</li>"\
         "<li>The chatroom will allow a maximum of <strong>");
     
-    m_pHttpResponse->WriteText (g_pChatroom->GetMaxNumSpeakers());
+    m_pHttpResponse->WriteText (g_pGameEngine->GetChatroom()->GetMaxNumSpeakers());
     OutputText ("</strong> simultaneous empires</li>");
     
     OutputText ("<li>The chatroom will display the last <strong>");
-    m_pHttpResponse->WriteText (g_pChatroom->GetMaxNumMessages());
+    m_pHttpResponse->WriteText (g_pGameEngine->GetChatroom()->GetMaxNumMessages());
     OutputText ("</strong> messages</li>");
     
     OutputText ("<li>Empires time out of the chatroom when they are idle for ");
-    WriteTime (g_pChatroom->GetTimeOut());
+    WriteTime (g_pGameEngine->GetChatroom()->GetTimeOut());
     
     iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxIconSize, &vValue);
     if (iErrCode == OK) {

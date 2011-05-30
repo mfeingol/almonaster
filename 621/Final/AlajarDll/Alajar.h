@@ -123,6 +123,7 @@ typedef enum HttpStatusReason {
     HTTP_REASON_IPADDRESS_BLOCKED,
     HTTP_REASON_USER_AGENT_BLOCKED,
     HTTP_REASON_GET_REFERER_BLOCKED,
+    HTTP_REASON_STALE_NONCE,
 };
 
 #define NUM_STATUS_CODES ((unsigned int) UNSUPPORTED_HTTP_STATUS + 1)
@@ -406,8 +407,10 @@ public:
     virtual ICookie* GetCookie (const char* pszName) = 0;
     virtual ICookie* GetCookieBeginsWith (const char* pszName) = 0;
 
-    virtual const char* GetLogin() = 0;
-    virtual const char* GetPassword() = 0;
+    virtual const char* GetAuthenticationUserName() = 0;
+
+    virtual int BasicAuthenticate (const char* pszPassword, bool* pbAuthenticated) = 0;
+    virtual int DigestAuthenticate (const char* pszPassword, bool* pbAuthenticated) = 0;
 
     virtual const char* GetHeaders() = 0;
 };
@@ -491,10 +494,12 @@ public:
 
     virtual int OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) = 0;
     virtual int OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) = 0;
-
-    virtual int OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticated) = 0;
-
     virtual int OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) = 0;
+
+    virtual int OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) = 0;
+    virtual int OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) = 0;
+
+    virtual const char* GetAuthenticationRealm (IHttpRequest* pHttpRequest) = 0;
 };
 
 #endif

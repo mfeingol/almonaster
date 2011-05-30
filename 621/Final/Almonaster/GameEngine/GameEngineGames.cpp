@@ -1226,6 +1226,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
             0,                                  // NumRequestingDraw
             goGameOptions.iMinBridierRankLoss,  // MinBridierRankLoss
             goGameOptions.iMaxBridierRankLoss,  // MaxBridierRankLoss
+            tTime,
         };
 
         iErrCode = m_pGameData->InsertRow (strGameData, pvGameData);
@@ -1302,7 +1303,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
             }
 
             // Check name against string provided by creator
-            if (stricmp (
+            if (_stricmp (
                 pvGameSec[GameSecurity::Name].GetCharPtr(), 
                 goGameOptions.pSecurity[i].pszEmpireName
                 ) != 0) {
@@ -1935,7 +1936,8 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
 
     if (bCheckSecurity) {
 
-        iErrCode = GameAccessCheck (iGameClass, iGameNumber, iEmpireKey, NULL, ENTER_GAME, &bFlag);
+        GameAccessDeniedReason reason;
+        iErrCode = GameAccessCheck (iGameClass, iGameNumber, iEmpireKey, NULL, ENTER_GAME, &bFlag, &reason);
         if (iErrCode != OK) {
             Assert (false);
             goto OnError;
@@ -2773,6 +2775,18 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
             if (!(vGameClassOptions.GetInteger() & GENERATE_MAP_FIRST_UPDATE)) {
                 bGenerateMapForAllEmpires = true;
             }
+
+            if (m_scConfig.bReport) {
+
+                char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
+                if (GetGameClassName (iGameClass, pszGameClassName) != OK) {
+                    StrNCpy (pszGameClassName, "Unknown gameclass");
+                }
+
+                char pszUpdateReport [128 + MAX_FULL_GAME_CLASS_NAME_LENGTH];
+                sprintf (pszUpdateReport, "%s %i has started", pszGameClassName, iGameNumber);
+                m_pReport->WriteReport (pszUpdateReport);
+            }
         }
     }
 
@@ -2970,21 +2984,24 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         SignalGameWriter (iGameClass, iGameNumber);
     }
 
-    char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
-    if (GetGameClassName (iGameClass, pszGameClassName) != OK) {
-        StrNCpy (pszGameClassName, "Unknown gameclass");
+    if (m_scConfig.bReport) {
+
+        char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
+        if (GetGameClassName (iGameClass, pszGameClassName) != OK) {
+            StrNCpy (pszGameClassName, "Unknown gameclass");
+        }
+
+        char pszUpdateReport [128 + MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH];
+        sprintf (
+            pszUpdateReport,
+            "%s entered %s %i",
+            vEmpireName.GetCharPtr(),
+            pszGameClassName,
+            iGameNumber
+            );
+
+        m_pReport->WriteReport (pszUpdateReport);
     }
-
-    char pszUpdateReport [128 + MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH];
-    sprintf (
-        pszUpdateReport,
-        "%s entered %s %i",
-        vEmpireName.GetCharPtr(),
-        pszGameClassName,
-        iGameNumber
-        );
-
-    m_pReport->WriteReport (pszUpdateReport);
 
     // Entry was sucessful  
     return OK;
@@ -3664,21 +3681,31 @@ Cleanup:
     return iErrCode;
 }
 
-
 int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast) {
 
+    // Get the time
+    UTCTime tNow;
+    Time::GetTime (&tNow);
+
+    return PauseGameInternal (iGameClass, iGameNumber, tNow, bAdmin, bBroadcast);
+}
+
+int GameEngine::PauseGameAt (int iGameClass, int iGameNumber, const UTCTime& tNow) {
+
+    return PauseGameInternal (iGameClass, iGameNumber, tNow, false, false);
+}
+
+int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTime& tNow, 
+                                   bool bAdmin, bool bBroadcast) {
+
     Variant vTemp;
-    int iErrCode, iSecondsSince, iTempUntil, iNumUpdates, iState, iSecPerUpdate;
+    int iErrCode, iState;
 
     bool bFlag;
     const char* pszMessage;
 
     IWriteTable* pGameData = NULL;
     GAME_DATA (strGameData, iGameClass, iGameNumber);
-
-    // Get the time
-    UTCTime tTime;
-    Time::GetTime (&tTime);
 
     // Make sure game exists
     iErrCode = DoesGameExist (iGameClass, iGameNumber, &bFlag);
@@ -3697,16 +3724,22 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         Assert (false);
         return iErrCode;
     }
-    iSecPerUpdate = vTemp.GetInteger();
+    Seconds sUpdatePeriod = vTemp.GetInteger();
 
-    // Get game information
-    iErrCode = GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iTempUntil, &iNumUpdates, &iState);
+    int iGameClassOptions;
+    iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
     // Can only pause games that have started
+    iErrCode = GetGameState (iGameClass, iGameNumber, &iState);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
     if (!(iState & STARTED)) {
         return OK;
     }
@@ -3739,6 +3772,44 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         goto Cleanup;
     }
 
+    int iNumUpdates;
+    iErrCode = pGameData->ReadData (GameData::NumUpdates, &iNumUpdates);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    Seconds sFirstUpdateDelay = 0;
+    if (iNumUpdates == 0) {
+
+        int iTemp;
+        iErrCode = pGameData->ReadData (GameData::FirstUpdateDelay, &iTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+        sFirstUpdateDelay = iTemp;
+    }
+
+    UTCTime tLastUpdateTime;
+    iErrCode = pGameData->ReadData (GameData::LastUpdateTime, &tLastUpdateTime);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    bool bWeekends = (iGameClassOptions & WEEKEND_UPDATES) != 0;
+    Seconds sAfterWeekendDelay = 0;
+    if (!bWeekends) {
+
+        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        sAfterWeekendDelay = vTemp.GetInteger();
+    }
+
     //
     // Pause the game
     //
@@ -3749,8 +3820,22 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         goto Cleanup;
     }
 
-    // Write down seconds since last update
-    iErrCode = pGameData->WriteData (GameData::SecondsSinceLastUpdateWhilePaused, iSecondsSince);
+    UTCTime tNextUpdateTime;
+    GetNextUpdateTime (
+        tLastUpdateTime,
+        sUpdatePeriod,
+        iNumUpdates,
+        sFirstUpdateDelay,
+        sAfterWeekendDelay,
+        bWeekends,
+        &tNextUpdateTime
+        );
+
+    // Note - sSecondsUntil can be negative
+    Seconds sSecondsUntil = Time::GetSecondDifference (tNextUpdateTime, tNow);
+
+    // Write down seconds until next update
+    iErrCode = pGameData->WriteData (GameData::SecondsUntilNextUpdateWhilePaused, sSecondsUntil);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3774,10 +3859,9 @@ Cleanup:
     return iErrCode;
 }
 
-
 int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast) {
 
-    int iErrCode;
+    int iErrCode, iTemp;
     const char* pszMessage;
     Variant vTemp;
 
@@ -3801,45 +3885,14 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
         return iErrCode;
     }
 
-    Seconds sFirstUpdateDelay = 0, sUpdatePeriod = 0, sAfterWeekendDelay = 0;
-
-    if (!(iGameClassOptions & WEEKEND_UPDATES)) {
-
-        // Get after weekend delay
-        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
-        sAfterWeekendDelay = vTemp.GetInteger();
-
-        // Get update period
-        iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
-        sUpdatePeriod = vTemp.GetInteger();
-
-        // Get num updates
-        iErrCode = m_pGameData->ReadData (strGameData, GameData::NumUpdates, &vTemp);
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
-        int iNumUpdates = vTemp.GetInteger();
-
-        // Get first update delay
-        if (iNumUpdates == 0) {
-            
-            iErrCode = m_pGameData->ReadData (strGameData, GameData::FirstUpdateDelay, &vTemp);
-            if (iErrCode != OK) {
-                Assert (false);
-                return iErrCode;
-            }
-            sFirstUpdateDelay = vTemp.GetInteger();
-        }
+    // Get update period
+    Seconds sUpdatePeriod = 0;
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
     }
+    sUpdatePeriod = vTemp.GetInteger();
 
     iErrCode = m_pGameData->GetTableForWriting (strGameData, &pGameData);
     if (iErrCode != OK) {
@@ -3898,40 +3951,47 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
         pszMessage = "The game is no longer paused";
     }
 
-    int iSecsSince;
-    
-    // Get seconds since update that game was paused
-    iErrCode = pGameData->ReadData (GameData::SecondsSinceLastUpdateWhilePaused, &iSecsSince);
+    // Get num updates
+    int iNumUpdates;
+    iErrCode = pGameData->ReadData (GameData::NumUpdates, &iNumUpdates);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    // Read last update time
-    UTCTime tLastUpdateTime;
-    iErrCode = pGameData->ReadData (GameData::LastUpdateTime, &tLastUpdateTime);
+    // Get first update delay
+    Seconds sFirstUpdateDelay = 0;
+    if (iNumUpdates == 0) {
+
+        iErrCode = pGameData->ReadData (GameData::FirstUpdateDelay, &iTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        sFirstUpdateDelay = iTemp;
+    }
+
+    // Get seconds until next update when game was paused
+    Seconds sSecondsUntilNextUpdate;
+
+    iErrCode = pGameData->ReadData (GameData::SecondsUntilNextUpdateWhilePaused, &iTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    sSecondsUntilNextUpdate = iTemp;
 
-    // If the game was a weekend update game, figure out how much of the time since the last 
-    // update was really part of the week;  that's the time we really care about
-    if (!(iGameClassOptions & WEEKEND_UPDATES)) {
-
-        Seconds sCompensate = GetWeekendTimeCompensation (tLastUpdateTime,
-            iSecsSince, sUpdatePeriod, sAfterWeekendDelay, sFirstUpdateDelay);
-
-        iSecsSince -= sCompensate;
-        Assert (iSecsSince >= 0);
-    }
-
-    // Get time
     UTCTime tNow, tNewLastUpdateTime;
     Time::GetTime (&tNow);
 
-    // New last update time is 'now' minus time since last update when paused
-    Time::SubtractSeconds (tNow, iSecsSince, &tNewLastUpdateTime);
+    GetLastUpdateTimeForPausedGame (
+        tNow,
+        sSecondsUntilNextUpdate,
+        sUpdatePeriod,
+        iNumUpdates,
+        sFirstUpdateDelay,
+        &tNewLastUpdateTime
+        );
 
     iErrCode = pGameData->WriteData (GameData::LastUpdateTime, tNewLastUpdateTime);
     if (iErrCode != OK) {
@@ -4238,6 +4298,62 @@ Cleanup:
     return iErrCode;
 }
 
+
+int GameEngine::ResignGame (int iGameClass, int iGameNumber) {
+
+    char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
+    int iErrCode;
+
+    // Get game class name
+    iErrCode = GetGameClassName (iGameClass, pszGameClassName);
+    if (iErrCode != OK) {
+        Assert (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST);
+        return iErrCode;
+    }
+
+    // Prepare resignation message for all remaining empires
+    char pszMessage[128 + MAX_FULL_GAME_CLASS_NAME_LENGTH];
+    sprintf (pszMessage, "You resigned out of %s %i", pszGameClassName, iGameNumber);
+
+    // Get empires
+    Variant* pvEmpireKey = NULL;
+    unsigned int i, iNumEmpires;
+
+    GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
+
+    iErrCode = m_pGameData->ReadColumn (
+        pszEmpires, 
+        GameEmpires::EmpireKey, 
+        &pvEmpireKey, 
+        &iNumEmpires
+        );
+
+    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    for (i = 0; i < iNumEmpires; i ++) {
+
+        int iEmpireKey = pvEmpireKey[i].GetInteger();
+
+        // Best effort
+        iErrCode = DeleteEmpireFromGame (iGameClass, iGameNumber, iEmpireKey, EMPIRE_RESIGNED, NULL);
+        Assert (iErrCode == OK);
+    }
+
+Cleanup:
+
+    if (pvEmpireKey != NULL) {
+        m_pGameData->FreeData (pvEmpireKey);
+    }
+
+    // Kill the game
+    iErrCode = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE, NULL);
+    Assert (iErrCode == OK);
+
+    return iErrCode;
+}
 
 int GameEngine::GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int** ppiEmpireKey, 
                                           int* piNumResigned) {

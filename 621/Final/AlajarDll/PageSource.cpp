@@ -32,11 +32,7 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-#define ON_FINALIZE ((HttpResponse*) 0xfffffff)
-
-
 PageSource::AccessControlElement::AccessControlElement() {
-    
 }
 
 int PageSource::AccessControlElement::Initialize (const char* pszName, bool bWildCard) {
@@ -83,6 +79,9 @@ PageSource::PageSource (HttpServer* pHttpServer) {
 
     m_bFilterGets = false;
 
+    m_atAuthType = AUTH_NONE;
+    m_iDigestNonceLifetime = 0;
+
     Reset();
 }
 
@@ -126,10 +125,11 @@ void PageSource::Reset() {
 
     m_bBrowsingAllowed = false;
     m_bDefaultFile = false;
-    m_bBasicAuthentication = false;
     m_bOverrideGet = false;
     m_bOverridePost = false;
     m_bIsDefault = false;
+
+    m_atAuthType = AUTH_NONE;
 
     memset (m_pbOverrideError, 0, sizeof (m_pbOverrideError));
     memset (m_ppCachedFile, 0, sizeof (m_ppCachedFile));
@@ -144,8 +144,6 @@ void PageSource::Reset() {
     m_pPageSource = NULL;
 
     m_bFilterGets = false;
-
-    m_bSingleThreaded = false;
 
     Time::ZeroTime (&m_tLogTime);
     Time::ZeroTime (&m_tReportTime);
@@ -178,14 +176,6 @@ void PageSource::Clean() {
         m_pPageSource->OnFinalize();
         m_pPageSource->Release();
         m_pPageSource = NULL;
-    }
-
-    if (m_bSingleThreaded) {
-
-        HttpResponse* pHttpResponse;
-        while (m_tsfqResponseQueue.Pop (&pHttpResponse)) {
-            HttpResponseAllocator::Delete (pHttpResponse);
-        }
     }
 
     for (unsigned int i = 0; i < NUM_STATUS_CODES; i ++) {
@@ -458,8 +448,16 @@ bool PageSource::UseDefaultFile() {
     return m_bDefaultFile;
 }
 
-bool PageSource::UseBasicAuthentication() {
-    return m_bBasicAuthentication;
+HttpAuthenticationType PageSource::GetAuthenticationType() {
+    return m_atAuthType;
+}
+
+Seconds PageSource::GetDigestAuthenticationNonceLifetime() {
+    return m_iDigestNonceLifetime;
+}
+
+const char* PageSource::GetAuthenticationRealm (IHttpRequest* pHttpRequest) {
+    return m_pPageSource->GetAuthenticationRealm (pHttpRequest);
 }
 
 bool PageSource::OverrideGet() {
@@ -492,10 +490,6 @@ bool PageSource::UseCommonLogFormat() {
 
 ConfigFile* PageSource::GetCounterFile() {
     return &m_cfCounterFile;
-}
-
-bool PageSource::IsSingleThreaded() {
-    return m_bSingleThreaded;
 }
 
 bool PageSource::IsIPAddressAllowedAccess (const char* pszIPAddress) {
@@ -597,10 +591,6 @@ bool PageSource::IsStringInACEList (const ACEList& llList, const char* pszString
 
 bool PageSource::Enter() {
 
-    if (m_bSingleThreaded) {
-        return false;
-    }
-    
     Algorithm::AtomicIncrement (&m_iNumThreads);
     if (!m_bLocked) {
         return false;
@@ -615,27 +605,14 @@ bool PageSource::Enter() {
 
 void PageSource::Exit (bool bLocked) {
 
-    if (!m_bSingleThreaded) {
-
-        if (bLocked) {
-            m_mLock.Signal();
-        }
-        Algorithm::AtomicDecrement (&m_iNumThreads);
+    if (bLocked) {
+        m_mLock.Signal();
     }
+    Algorithm::AtomicDecrement (&m_iNumThreads);
 }
 
 // IPageSource
 int PageSource::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pControl) {
-    
-    if (m_bSingleThreaded) {
-
-        // Start up the STA thread
-        int iErrCode = m_tSTAThread.Start (ThreadSTALoop, this, Thread::NormalPriority);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-    }
-
     return m_pPageSource->OnInitialize (pHttpServer, pControl);
 }
 
@@ -645,32 +622,26 @@ int PageSource::OnFinalize() {
         return OK;
     }
 
-    if (m_bSingleThreaded) {
-
-        // Post finalization message and wait for thread to exit
-        int iErrCode = QueueResponse (ON_FINALIZE);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-
-        m_tSTAThread.WaitForTermination();
-
-        return OK;
-    }
-
     int iErrCode = m_pPageSource->OnFinalize();
 
-    // Release the page source
-    m_pPageSource->Release();
-    m_pPageSource = NULL;
+    SafeRelease (m_pPageSource);
 
     return iErrCode;
 }
 
-int PageSource::OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticated) {
+int PageSource::OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {
 
     bool bLocked = Enter();
-    int iErrCode = m_pPageSource->OnBasicAuthenticate (pszLogin, pszPassword, pbAuthenticated);
+    int iErrCode = m_pPageSource->OnBasicAuthenticate (pHttpRequest, pbAuthenticated);
+
+    Exit (bLocked);
+    return iErrCode;
+}
+
+int PageSource::OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {
+
+    bool bLocked = Enter();
+    int iErrCode = m_pPageSource->OnDigestAuthenticate (pHttpRequest, pbAuthenticated);
 
     Exit (bLocked);
     return iErrCode;
@@ -937,6 +908,10 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
     // DefaultFile
     if (m_pcfConfig->GetParameter ("DefaultFile", &pszRhs) == OK && pszRhs != NULL) {
         m_pszDefaultFile = String::StrDup (pszRhs);
+        if (m_pszDefaultFile == NULL) {
+            *pstrErrorMessage = "The server is out of memory";
+            return ERROR_OUT_OF_MEMORY;
+        }
     } else {
         *pstrErrorMessage = "The DefaultFile value could not be read";
         return ERROR_FAILURE;
@@ -1119,43 +1094,38 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
             return ERROR_FAILURE;
         }
         
-        // UseBasicAuthentication
-        if (m_pcfConfig->GetParameter ("UseBasicAuthentication", &pszRhs) == OK && pszRhs != NULL) {
-            m_bBasicAuthentication = atoi (pszRhs) != 0;
-        } else {
-            *pstrErrorMessage = "The UseBasicAuthentication value could not be read";
-            return ERROR_FAILURE;
-        }
-        
-        // Threading model      
-        if (m_pcfConfig->GetParameter ("Threading", &pszRhs) == OK && pszRhs != NULL) {
-            
-            if (stricmp (pszRhs, "Free") == 0) {
-                m_bSingleThreaded = false;
-            }
-            else if (stricmp (pszRhs, "Single") == 0) {
-                m_bSingleThreaded = true;
-            }
-            else {
-                *pstrErrorMessage = "The Threading value was invalid";
+        // UseAuthentication
+        if (m_pcfConfig->GetParameter ("UseAuthentication", &pszRhs) == OK && pszRhs != NULL) {
+
+            if (_stricmp (pszRhs, "basic") == 0) {
+                m_atAuthType = AUTH_BASIC;
+            } else if (_stricmp (pszRhs, "digest") == 0) {
+                m_atAuthType = AUTH_DIGEST;
+            } else if (_stricmp (pszRhs, "none") == 0) {
+                m_atAuthType = AUTH_NONE;
+            } else {
+                *pstrErrorMessage = "The UseAuthentication value is invalid";
                 return ERROR_FAILURE;
             }
+
         } else {
-            *pstrErrorMessage = "The Threading value could not be read";
+            *pstrErrorMessage = "The UseAuthentication value could not be read";
             return ERROR_FAILURE;
         }
 
-        if (m_bSingleThreaded) {
+        if (m_atAuthType == AUTH_DIGEST) {
 
-            if (!m_tsfqResponseQueue.Initialize()) {
-                *pstrErrorMessage = "The server is out of memory";
-                return ERROR_OUT_OF_MEMORY;
-            }
+            if (m_pcfConfig->GetParameter ("DigestAuthenticationNonceLifetime", &pszRhs) == OK && pszRhs != NULL) {
+                
+                m_iDigestNonceLifetime = atoi (pszRhs);
+                if (m_iDigestNonceLifetime < 1) {
+                    *pstrErrorMessage = "The DigestAuthenticationNonceLifetime value is invalid";
+                    return ERROR_FAILURE;
+                }
 
-            iErrCode = m_eSTAEvent.Initialize();
-            if (iErrCode != OK) {
-                *pstrErrorMessage = "The server is out of memory";
-                return iErrCode;
+            } else {
+                *pstrErrorMessage = "The DigestAuthenticationNonceLifetime value could not be read";
+                return ERROR_FAILURE;
             }
         }
 
@@ -1233,8 +1203,8 @@ int PageSource::RestartPageSource (void* pVoid) {
 
 int PageSource::Shutdown() {
 
-    if (stricmp (m_pszName, "Default") == 0 ||
-        stricmp (m_pszName, "Admin") == 0) {
+    if (_stricmp (m_pszName, "Default") == 0 ||
+        _stricmp (m_pszName, "Admin") == 0) {
         return ERROR_FAILURE;
     }
 
@@ -1255,10 +1225,6 @@ int PageSource::Shutdown() {
 
 void PageSource::LockWithNoThreads() {
 
-    if (m_bSingleThreaded) {
-        return;
-    }
-
     m_bLocked = true;
     m_mShutdownLock.Wait();
     m_mLock.Wait();
@@ -1273,17 +1239,13 @@ void PageSource::LockWithNoThreads() {
 
 void PageSource::LockWithSingleThread() {
 
-    if (m_bSingleThreaded) {
-        return;
-    }
-
     m_bLocked = true;
     m_mShutdownLock.Wait();
     m_mLock.Wait();
 
     // Spin until 1 thread
     while (m_iNumThreads > 1) {
-        OS::Sleep (200);
+        OS::Sleep (100);
     }
 
     m_mShutdownLock.Signal();
@@ -1291,99 +1253,8 @@ void PageSource::LockWithSingleThread() {
 
 void PageSource::ReleaseLock() {
 
-    if (m_bSingleThreaded) {
-        return;
-    }
-
     m_mLock.Signal();
     m_bLocked = false;
-}
-
-int PageSource::QueueResponse (HttpResponse* pHttpResponse) {
-
-    // Entrust request, response pair to STA thread
-    if (!m_tsfqResponseQueue.Push (pHttpResponse)) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    return m_eSTAEvent.Signal();
-}
-
-HttpResponse* PageSource::DeQueueResponse() {
-
-    HttpResponse* pHttpResponse;
-    return m_tsfqResponseQueue.Pop (&pHttpResponse) ? pHttpResponse : NULL;
-}
-
-int PageSource::ThreadSTALoop (void* pVoid) {
-
-    return ((PageSource*) pVoid)->STALoop();
-}
-
-int PageSource::STALoop() {
-
-    int iErrCode;
-
-    HttpResponse* pHttpResponse;
-    HttpRequest* pHttpRequest;
-    Socket* pSocket;
-
-    Timer tmTimer;
-    Time::StartTimer (&tmTimer);
-
-    HttpServerStatistics sThreadStats;
-    memset (&sThreadStats, 0, sizeof (HttpServerStatistics));
-
-    bool bStay = true;
-
-    // Loop forever
-    while (bStay) {
-
-        // Wait on event
-        m_eSTAEvent.Wait();
-
-        while (true) {
-            
-            // Look for work
-            pHttpResponse = DeQueueResponse();
-            if (pHttpResponse == NULL) {
-                break;
-            }
-            
-            else if (pHttpResponse == ON_FINALIZE) {
-                
-                iErrCode = m_pPageSource->OnFinalize();
-                m_pPageSource->Release();
-                m_pPageSource = NULL;
-                
-                bStay = false;
-                break;
-            }
-            
-            else {
-                
-                pHttpRequest = pHttpResponse->GetHttpRequest();
-                pSocket = pHttpResponse->GetSocket();
-                
-                // Send response
-                iErrCode = pHttpResponse->RespondPrivate();
-                
-                // End request
-                m_pHttpServer->FinishRequest (pHttpRequest, pHttpResponse, pSocket, &sThreadStats, iErrCode);
-
-                if (sThreadStats.NumRequests % COALESCE_REQUESTS == 0 || 
-                    Time::GetTimerCount (tmTimer) > COALESCE_PERIOD_MS) {
-                    
-                    m_pHttpServer->CoalesceStatistics (&sThreadStats);
-                    Time::StartTimer (&tmTimer);
-                }
-            }
-        }
-    }
-
-    m_pHttpServer->CoalesceStatistics (&sThreadStats);
-
-    return OK;
 }
 
 unsigned int PageSource::IncrementCounter (const char* pszName) {
@@ -1402,7 +1273,7 @@ unsigned int PageSource::IncrementCounter (const char* pszName) {
     }
 
     // Assign new value
-    m_cfCounterFile.SetParameter (pszName, itoa (iNewValue + 1, pszNewValue, 10));
+    m_cfCounterFile.SetParameter (pszName, _itoa (iNewValue + 1, pszNewValue, 10));
 
     // Unlock
     m_mCounterLock.SignalWriter();

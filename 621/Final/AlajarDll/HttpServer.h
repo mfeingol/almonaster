@@ -33,6 +33,7 @@
 #include "Osal/ReadWriteLock.h"
 #include "Osal/FifoQueue.h"
 #include "Osal/ObjectCache.h"
+#include "Osal/SslSocket.h"
 
 // Coalesce
 #define COALESCE_REQUESTS  25
@@ -75,17 +76,19 @@ private:
     // True if we're restarting
     bool m_bRestart;
 
-    // Host name
-    char m_pszHostName [256];
-
-    // IP address
+    // IP address, Host name
     char m_pszIPAddress [20];
+    char m_pszHostName [128];    
 
-    // Listener port
+    // Listener ports
     short m_siPort;
+    short m_siSslPort;
 
-    // Listener socket
+    // Listener sockets
     Socket* m_pSocket;
+
+    SslContext* m_pSslContext;
+    Socket* m_pSslSocket;
 
     // Name of server
     const char* m_pszServerName;
@@ -111,6 +114,9 @@ private:
     Mutex m_mStatMutex;
     HttpServerStatistics m_stats;
 
+    // Nonces
+    Uuid m_uuidUniqueIdentifier;
+
     // Paths
     char m_pszCounterPath [OS::MaxFileNameLength];
     char m_pszLogPath [OS::MaxFileNameLength];
@@ -127,9 +133,6 @@ private:
     ObjectCache<HttpRequest, HttpRequestAllocator>* m_pHttpRequestCache;
     ObjectCache<HttpResponse, HttpResponseAllocator>* m_pHttpResponseCache;
     Mutex m_mHttpObjectCacheLock;
-
-    ObjectCache<Socket, SocketAllocator>* m_pSocketCache;
-    Mutex m_mSocketCacheLock;
 
     ObjectCache<LogMessage, LogMessageAllocator>* m_pLogMessageCache;
     Mutex m_mLogMessageCacheLock;
@@ -229,7 +232,8 @@ public:
     const char* GetHostName();
     const char* GetIPAddress();
     const char* GetServerName();
-    
+    const Uuid& GetUniqueIdentifier();
+
     unsigned int GetNumThreads();
 
     unsigned int GetNumQueuedRequests();

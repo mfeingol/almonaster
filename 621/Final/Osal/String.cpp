@@ -80,7 +80,7 @@ String::String (int iInt) {
     m_pszString = new char [128];
     
     if (m_pszString != NULL) {
-        itoa (iInt, m_pszString, 10);
+        _itoa (iInt, m_pszString, 10);
         m_iLength = strlen (m_pszString);
         m_iRealLength = 127;
     } else {
@@ -106,7 +106,7 @@ String::String (unsigned int iInt) {
     m_pszString = new char [128];
 
     if (m_pszString != NULL) {
-        itoa (iInt, m_pszString, 10);
+        _itoa (iInt, m_pszString, 10);
         m_iLength = strlen (m_pszString);
         m_iRealLength = 127;
     } else {
@@ -307,7 +307,7 @@ String& String::AddString (const char* pszString, size_t stLength) {
 String& String::operator+= (int iInt) {
 
     char pszInteger [128];
-    itoa (iInt, pszInteger, 10);
+    _itoa (iInt, pszInteger, 10);
 
     return AddString (pszInteger, strlen (pszInteger));
 }
@@ -406,7 +406,7 @@ bool String::IEquals (const String& strComp) const {
         return *m_pszString == '\0';
     }
 
-    return stricmp (m_pszString, strComp.m_pszString) == 0;
+    return _stricmp (m_pszString, strComp.m_pszString) == 0;
 }
 
 char String::GetCharAt (unsigned int iIndex) const {
@@ -534,13 +534,13 @@ char* String::UItoA (unsigned int iData, char* pszString, int iRadix, unsigned i
 
 char* String::ItoA (int iData, char* pszString, int iRadix) {
 
-    return itoa (iData, pszString, iRadix);
+    return _itoa (iData, pszString, iRadix);
 }
 
 char* String::ItoA (int iData, char* pszString, int iRadix, unsigned int iDigits) {
 
     char pszBuffer [128];
-    itoa (iData, pszBuffer, iRadix);
+    _itoa (iData, pszBuffer, iRadix);
 
     return CopyWithZeroes (pszString, pszBuffer, iDigits);
 }
@@ -685,7 +685,7 @@ int String::StriCmp (const char* pszStringOne, const char* pszStringTwo) {
         return (*pszStringOne == '\0') ? 0 : 1;
     }
 
-    return stricmp (pszStringOne, pszStringTwo);
+    return _stricmp (pszStringOne, pszStringTwo);
 }
 
 int String::StrnCmp (const char* pszStringOne, const char* pszStringTwo, size_t stNumChars) {
@@ -715,12 +715,6 @@ int String::StrniCmp (const char* pszStringOne, const char* pszStringTwo, size_t
 
     if (pszStringTwo == NULL) {
         return (*pszStringOne == '\0') ? 0 : 1;
-    }
-
-    size_t stLen1 = strlen (pszStringOne), stLen2 = strlen (pszStringTwo);
-
-    if (stNumChars > stLen1 || stNumChars > stLen2) {
-        return -1;
     }
 
     return _strnicmp (pszStringOne, pszStringTwo, stNumChars);

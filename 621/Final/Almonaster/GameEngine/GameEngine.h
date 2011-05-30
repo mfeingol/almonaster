@@ -34,6 +34,7 @@
 #include "GameEngineGameObject.h"
 #include "GameEngineLocks.h"
 #include "IGameEngine.h"
+#include "../Chatroom/CChatroom.h"
 
 #include "Osal/Thread.h"
 #include "Osal/Event.h"
@@ -80,6 +81,7 @@ class GameEngine : public IDatabaseBackupNotificationSink, public IGameEngine {
 private:
 
     IDatabase* m_pGameData;
+    Chatroom* m_pChatroom;
 
     // Game objects
     class GameObjectHashValue {
@@ -129,6 +131,7 @@ private:
 
     // Configuration
     SystemConfiguration m_scConfig;
+    ChatroomConfig m_ccConfig;
 
     ReadWriteLock m_rwGameConfigLock;
     ReadWriteLock m_rwMapConfigLock;
@@ -188,8 +191,6 @@ private:
     int CheckGameForAllyOut (int iGameClass, int iGameNumber, bool* pbAlly);
     int CheckGameForDrawOut (int iGameClass, int iGameNumber, bool* pbDraw);
 
-    int RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, bool bBroadcast, bool* pbNewPause, int* piGameState);
-
     int DeleteShipFromDeadEmpire (const char* pszEmpireShips, const char* pszGameMap, 
         unsigned int iShipKey, unsigned int iPlanetKey);
 
@@ -201,6 +202,9 @@ private:
     int RuinEmpire (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage);
 
     GameObject* GetGameObject (int iGameClass, int iGameNumber);
+
+    int PauseGameAt (int iGameClass, int iGameNumber, const UTCTime& tNow);
+    int PauseGameInternal (int iGameClass, int iGameNumber, const UTCTime& tNow, bool bAdmin, bool bBroadcast);
 
     // Empires
     int DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, ReasonForRemoval rReason,
@@ -304,7 +308,7 @@ private:
     int ScanEmpiresOnScoreChanges();
 
     // Options
-    int CheckForDelayedPause (int iGameClass, int iGameNumber, bool* pbNewlyPaused);
+    int CheckForDelayedPause (int iGameClass, int iGameNumber, const UTCTime& tNow, bool* pbNewlyPaused);
 
     // Top Lists
     int UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey);
@@ -443,14 +447,14 @@ private:
         const char* strEmpireDip, const char* strGameMap, const char** pstrEmpireDip, 
         String* pstrUpdateMessage);
 
-    // Setup
+    // Updates
     void GetNextUpdateTime (const UTCTime& tLastUpdate, Seconds sUpdatePeriod, int iNumUpdates,
         Seconds sFirstUpdateDelay, Seconds sAfterWeekendDelay, bool bWeekends, UTCTime* ptNextUpdateTime);
 
     void AdvanceWeekendTime (const UTCTime& tNextUpdateTime, Seconds sAfterWeekendDelay, UTCTime* ptNextUpdateTime);
 
-    Seconds GetWeekendTimeCompensation (const UTCTime& tLastUpdateTime, 
-        Seconds sSecondsSinceLast, Seconds sUpdatePeriod, Seconds sAfterWeekendDelay, Seconds sFirstUpdateDelay);
+    void GetLastUpdateTimeForPausedGame (const UTCTime& tNow, Seconds sSecondsUntilNextUpdate,
+        Seconds sUpdatePeriod, int iNumUpdates, Seconds sFirstUpdateDelay, UTCTime* ptLastUpdateTime);
 
     // Top Lists
     int MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
@@ -564,8 +568,8 @@ public:
         IReport* pReport, 
         IPageSourceControl* pPageSourceControl,
 
-        SystemConfiguration* pscConfig
-    
+        const SystemConfiguration& scConfig,
+        const ChatroomConfig& ccConfig
         );
     
     ~GameEngine();
@@ -591,6 +595,7 @@ public:
     int DeleteDatabaseBackup (int iEmpireKey, int iDay, int iMonth, int iYear, int iVersion);
 
     IDatabase* GetDatabase();
+    Chatroom* GetChatroom();
     IScoringSystem* GetScoringSystem (ScoringSystem ssScoringSystem);
 
     const char* GetSystemVersion();
@@ -881,6 +886,7 @@ public:
     int LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey, int* piIdleUpdates);
 
     int RuinGame (int iGameClass, int iGameNumber, const char* pszWinnerName);
+    int ResignGame (int iGameClass, int iGameNumber);
 
     int GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int** ppiEmpireKey, int* piNumResigned);
     int UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey, int iAdminKey);
@@ -890,7 +896,8 @@ public:
         Variant pvRestrictionMax [NUM_ENTRY_SCORE_RESTRICTIONS]);
 
     int GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey, 
-        const GameOptions* pgoGameOptions, GameAction gaAction, bool* pbAccess);
+        const GameOptions* pgoGameOptions, GameAction gaAction, 
+        bool* pbAccess, GameAccessDeniedReason* prAccessDeniedReason);
 
     int GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber, int iEmpireKey, int* piGain, int* piLoss);
 
@@ -1202,7 +1209,7 @@ public:
     int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer);
 
     int RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
-    int RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbNewPause, int* piGameState);
+    int RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int iEmpireKey);
     int RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
 
     int IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause);

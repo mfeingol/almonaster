@@ -201,7 +201,7 @@ case 1:
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Rank</th><%
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Empire</th><%
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Icon</th><%
-    %><th align="center" bgcolor="<% Write (pszTableColor); %>">Real Name</th><%
+    %><th align="center" bgcolor="<% Write (pszTableColor); %>">Name</th><%
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Wins</th><%
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Nukes</th><%
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Nuked</th><%
@@ -212,12 +212,12 @@ case 1:
     switch (ssListType) {
 
     case ALMONASTER_SCORE:
-        %>Almonaster Score</th><%
+        %>Score</th><%
         %><th align="center" bgcolor="<% Write (pszTableColor); %>">Significance</th><%
         break;
 
     case CLASSIC_SCORE:
-        %>Classic Score<%
+        %>Score<%
         break;
 
     case BRIDIER_SCORE:
@@ -227,15 +227,17 @@ case 1:
         iErrCode = g_pGameEngine->TriggerBridierTimeBombIfNecessary();
         Assert (iErrCode == OK);
 
-        %>Bridier Rank</th><%
-        %><th align="center" bgcolor="<% Write (pszTableColor); %>">Bridier Index<%
+        %>Rank</th><%
+        %><th align="center" bgcolor="<% Write (pszTableColor); %>">Index<%
         break;
 
     default:
         Assert (false);
         break;
     }
-    %></th></tr><%
+    %></th><%
+    %><th align="center" bgcolor="<% Write (pszTableColor); %>">Games</th><%    
+    %></tr><%
 
     Variant* pvEmpData;
     int iNumActiveGames;
@@ -309,7 +311,9 @@ case 1:
             %></td><td align="center"><% Write (ppvData[i][TopList::Data2]);
             break;
         }
-        %></td></tr><%
+        %></td><%
+        %></td><td align="center"><% Write (iNumActiveGames); %></td><%
+        %></tr><%
 
         g_pGameEngine->FreeData (pvEmpData);
     }

@@ -105,9 +105,6 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
     Thread::ThreadPriority tpPriority = tSelf.GetPriority();
     tSelf.SetPriority (Thread::HigherPriority);
 
-    // Update all games
-    CheckAllGamesForUpdates (true);
-
     m_bActiveBackup = true;
 
     // When this function returns, we'll be the only thread active
@@ -148,12 +145,14 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
 
     if (iNumGames > 0) {
 
-        int iErrCode2;
-
         // Best effort
         for (i = 0; i < iNumGames; i ++) {
 
-            iErrCode2 = WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
+            // Best effort
+            bool bUpdate;
+            CheckGameForUpdates(piGameClass[i], piGameNumber[i], true, &bUpdate);
+
+            int iErrCode2 = WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
             if (iErrCode2 == OK) {
 
                 if (IsGameAdminPaused (piGameClass[i], piGameNumber[i], &bFlag) == OK && 
@@ -414,7 +413,7 @@ int GameEngine::DeleteDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMont
         } else {
 
             char pszErrorCode [32];
-            itoa (iErrCode, pszErrorCode, 10);
+            _itoa (iErrCode, pszErrorCode, 10);
 
             strcat (pszMessage, "could not be deleted; the error code was ");
             strcat (pszMessage, pszErrorCode);

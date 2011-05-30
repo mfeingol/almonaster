@@ -66,10 +66,12 @@ public:
 
     int OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
     int OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-
-    int OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticate);
-
     int OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+
+    const char* GetAuthenticationRealm (IHttpRequest* pHttpRequest);
+
+    int OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
+    int OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
 
     // IAlmonasterUIEventSink
     int OnLoginEmpire (int iEmpireKey);
@@ -141,14 +143,12 @@ IFileCache* g_pFileCache = NULL;
 
 // Game objects
 GameEngine* g_pGameEngine = NULL;
-Chatroom* g_pChatroom = NULL;
 
 char* g_pszResourceDir = NULL;
 
 int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl) {
 
-    int iMaxNumSpeakers, iMaxNumMessages, iMaxMessageLength, iErrCode;
-    bool bPostSystemMessages;
+    int iErrCode;
 
     // Save weak refs
     g_pHttpServer = pHttpServer;
@@ -173,7 +173,6 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         size_t stLen = strlen (pszPageSourceName) + 1;
 
         m_pszUri1 = new char [stLen * 2 + 3];
-
         if (m_pszUri1 == NULL) {
             return ERROR_OUT_OF_MEMORY;
         }
@@ -190,10 +189,11 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     g_pReport->WriteReport ("Reading parameters from configuration");
 
     // Read setup parameters
-    Seconds sTimeOut;
     char* pszTemp = NULL;
 
     SystemConfiguration scConfig;
+    ChatroomConfig ccConfig;
+    ccConfig.cchMaxSpeakerNameLen = MAX_EMPIRE_NAME_LENGTH;
 
     const char* pszHookLibrary;
     char pszPath [OS::MaxFileNameLength];
@@ -241,35 +241,42 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         g_pReport->WriteReport ("Error: Could not read the ChatroomMaxNumSpeakers value from the configuration file");
         return ERROR_FAILURE;
     }
-    iMaxNumSpeakers = atoi (pszTemp);
+    ccConfig.iMaxNumSpeakers = atoi (pszTemp);
 
     iErrCode = g_pConfig->GetParameter ("ChatroomNumMessages", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
         g_pReport->WriteReport ("Error: Could not read the ChatroomNumMessages value from the configuration file");
         return ERROR_FAILURE;
     }
-    iMaxNumMessages = atoi (pszTemp);
+    ccConfig.iMaxNumMessages = atoi (pszTemp);
 
     iErrCode = g_pConfig->GetParameter ("ChatroomMaxMessageLength", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
         g_pReport->WriteReport ("Error: Could not read the ChatroomMaxMessageLength value from the configuration file");
         return ERROR_FAILURE;
     }
-    iMaxMessageLength = atoi (pszTemp);
+    ccConfig.iMaxMessageLength = atoi (pszTemp);
 
     iErrCode = g_pConfig->GetParameter ("ChatroomTimeOut", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
         g_pReport->WriteReport ("Error: Could not read the ChatroomTimeOut value from the configuration file");
         return ERROR_FAILURE;
     }
-    sTimeOut = atoi (pszTemp);
+    ccConfig.sTimeOut = atoi (pszTemp);
 
     iErrCode = g_pConfig->GetParameter ("ChatroomPostSystemMessages", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
         g_pReport->WriteReport ("Error: Could not read the ChatroomPostSystemMessages value from the configuration file");
         return ERROR_FAILURE;
     }
-    bPostSystemMessages = atoi (pszTemp) != 0;
+    ccConfig.bPostSystemMessages = atoi (pszTemp) != 0;
+
+    iErrCode = g_pConfig->GetParameter ("ChatroomStoreMessagesInDatabase", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the ChatroomStoreMessagesInDatabase value from the configuration file");
+        return ERROR_FAILURE;
+    }
+    ccConfig.bStoreMessagesInDatabase = atoi (pszTemp) != 0;
 
     iErrCode = g_pConfig->GetParameter ("AutoBackup", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
@@ -369,17 +376,17 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         return ERROR_FAILURE;
     }
 
-    if (iMaxNumSpeakers < 2) {
+    if (ccConfig.iMaxNumSpeakers < 2) {
         g_pReport->WriteReport ("Error: The value for ChatroomMaxNumSpeakers in the configuration file is illegal");
         return ERROR_FAILURE;
     }
 
-    if (iMaxNumMessages < 5) {
+    if (ccConfig.iMaxNumMessages < 5) {
         g_pReport->WriteReport ("Error: The value for ChatroomNumMessages in the configuration file is illegal");
         return ERROR_FAILURE;
     }
 
-    if (iMaxMessageLength < 32) {
+    if (ccConfig.iMaxMessageLength < 32) {
         g_pReport->WriteReport ("Error: The value for ChatroomMaxMessageLength in the configuration file is illegal");
         return ERROR_FAILURE;
     }
@@ -395,7 +402,8 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         this,
         g_pReport,
         g_pPageSourceControl,
-        &scConfig
+        scConfig,
+        ccConfig
         );
 
     if (g_pGameEngine == NULL) {
@@ -413,21 +421,6 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     if (iErrCode != OK) {
         g_pReport->WriteReport ("The server is out of memory");
         return iErrCode;
-    }
-
-    // Create chatroom
-    ChatroomConfig ccConfig;
-
-    ccConfig.cchMaxSpeakerNameLen = MAX_EMPIRE_NAME_LENGTH;
-    ccConfig.sTimeOut = sTimeOut;
-    ccConfig.iMaxNumMessages = iMaxNumMessages;
-    ccConfig.iMaxNumSpeakers = iMaxNumSpeakers;
-    ccConfig.iMaxMessageLength = iMaxMessageLength;
-    ccConfig.bPostSystemMessages = bPostSystemMessages;
-
-    g_pChatroom = new Chatroom (ccConfig);
-    if (g_pChatroom == NULL || g_pChatroom->Initialize() != OK) {
-        goto OutOfMemory;
     }
 
     if (g_pGameEngine->Initialize() != OK) {
@@ -513,12 +506,6 @@ int Almonaster::OnFinalize() {
     g_pReport->WriteReport ("Finished shutting down GameEngine");
     g_pReport->WriteReport ("Shutting down objects and cleaning up data");
 
-    // Delete chatroom
-    if (g_pChatroom != NULL) {
-        delete g_pChatroom;
-        g_pChatroom = NULL;
-    }
-
     if (g_pszResourceDir != NULL) {
         OS::HeapFree (g_pszResourceDir);
         g_pszResourceDir = NULL;
@@ -597,6 +584,7 @@ int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttp
 int Almonaster::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
 
     // We're only interested in 403 - forbidden errors
+    // These indicate another site leeching bandwidth from us
     if (pHttpResponse->GetStatusCode() == HTTP_403) {
         return OnAccessDenied (pHttpRequest, pHttpResponse);
     }
@@ -604,9 +592,17 @@ int Almonaster::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpRespons
     return OK;
 }
 
-int Almonaster::OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticate) {
-    
-    *pbAuthenticate = false;
+const char* Almonaster::GetAuthenticationRealm (IHttpRequest* pHttpRequest) {
+    return NULL;
+}
+
+int Almonaster::OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {
+    *pbAuthenticated = false;
+    return OK;
+}
+
+int Almonaster::OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {  
+    *pbAuthenticated = false;
     return OK;
 }
 

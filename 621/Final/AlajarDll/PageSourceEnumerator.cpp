@@ -15,7 +15,7 @@ unsigned int PageSourceHashValue::GetHashValue (const char* pszData, unsigned in
 
 bool PageSourceEquals::Equals (const char* pszLeft, const char* pszRight, const void* pEqualsHint) {
 
-    return stricmp (pszLeft, pszRight) == 0;
+    return _stricmp (pszLeft, pszRight) == 0;
 }
 
 PageSourceEnumerator::PageSourceEnumerator() {

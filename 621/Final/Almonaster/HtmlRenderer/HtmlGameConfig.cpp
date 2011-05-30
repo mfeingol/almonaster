@@ -1000,7 +1000,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
             for (unsigned int i = 0;  i < iNumBlocks; i ++) {
                 
                 const char* pszName = pHttpForm->GetForm(i)->GetValue();
-                if (pszName != NULL && stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
+                if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
 
                     bool bExists;
                     unsigned int iEmpireKey;
@@ -1673,7 +1673,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 for (i = 0;  i < iNumBlocks; i ++) {
                 
                     const char* pszName = pHttpForm->GetForm(i)->GetValue();
-                    if (pszName != NULL && stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
+                    if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
 
                         unsigned int iEmpireKey;
                         int64 iSecretKey;
@@ -1708,7 +1708,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                             // Make sure name hasn't been used already
                             for (j = 0; j < iNumRealBlocks; j ++) {
 
-                                if (stricmp (pgoOptions->pSecurity[j].pszEmpireName, pszName) == 0) {
+                                if (_stricmp (pgoOptions->pSecurity[j].pszEmpireName, pszName) == 0) {
                                     bAlready = true;
                                     break;
                                 }

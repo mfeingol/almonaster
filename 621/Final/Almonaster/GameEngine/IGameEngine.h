@@ -700,9 +700,6 @@ public:
         Variant pvRestrictionMin [NUM_ENTRY_SCORE_RESTRICTIONS], 
         Variant pvRestrictionMax [NUM_ENTRY_SCORE_RESTRICTIONS]) = 0;
 
-    virtual int GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey, 
-        const GameOptions* pgoGameOptions, GameAction gaAction, bool* pbAccess) = 0;
-
     virtual int GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber, int iEmpireKey, int* piGain, int* piLoss) = 0;
 
     // GameEmpireData

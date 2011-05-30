@@ -54,7 +54,7 @@ if ((pHttpForm = m_pHttpRequest->GetForm ("ButtonKey")) == NULL) {
     return Redirect (LOGIN);
 }
 
-m_iButtonKey = pHttpForm->GetIntValue();
+m_iButtonKey = pHttpForm->GetUIntValue();
 
 if ((pHttpForm = m_pHttpRequest->GetForm ("TextColor")) == NULL) {
     AddMessage ("Missing TextColor form");
@@ -117,7 +117,7 @@ if (!m_bRedirection &&
         AddMessage ("Missing EmpireProxy form");
         return Redirect (LOGIN);
     }
-    iEmpireKey = pHttpForm->GetIntValue();
+    iEmpireKey = pHttpForm->GetUIntValue();
 
     // Get password
     if ((pHttpForm = m_pHttpRequest->GetForm ("Password")) == NULL) {
@@ -318,7 +318,7 @@ if (m_bRedirection) {
         // AddMessage ("Missing EmpireKey form");
         return Redirect (LOGIN);
     }
-    iEmpireKey = pHttpForm->GetIntValue();
+    iEmpireKey = pHttpForm->GetUIntValue();
 
 } else {
 
@@ -327,7 +327,7 @@ if (m_bRedirection) {
         // AddMessage ("Missing EmpireProxy form");
         return Redirect (LOGIN);
     }
-    iEmpireKey = pHttpForm->GetIntValue();
+    iEmpireKey = pHttpForm->GetUIntValue();
 }
 
 pHttpForm = m_pHttpRequest->GetForm ("BackgroundKey");
@@ -335,14 +335,14 @@ if (pHttpForm == NULL) {
     AddMessage ("Missing BackgroundKey form");
     return Redirect (LOGIN);
 }
-m_iBackgroundKey = pHttpForm->GetIntValue();
+m_iBackgroundKey = pHttpForm->GetUIntValue();
 
 pHttpForm = m_pHttpRequest->GetForm ("SeparatorKey");
 if (pHttpForm == NULL) {
     AddMessage ("Missing SeparatorKey form");
     return Redirect (LOGIN);
 }
-m_iSeparatorKey = pHttpForm->GetIntValue();
+m_iSeparatorKey = pHttpForm->GetUIntValue();
 
 %><html><head><title><% WriteSystemTitleString(); %></title></head><%
 
@@ -355,7 +355,7 @@ ICookie* pCookie = m_pHttpRequest->GetCookie ("LastEmpireUsed");
 
 if (pCookie != NULL && pCookie->GetValue() != NULL) {
 
-    iEmpireKey = pCookie->GetIntValue();
+    iEmpireKey = pCookie->GetUIntValue();
     iErrCode = g_pGameEngine->DoesEmpireExist (iEmpireKey, &bFlag, NULL);
     if (!bFlag || iErrCode != OK) {
         iEmpireKey = NO_KEY;

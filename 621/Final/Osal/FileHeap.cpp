@@ -541,7 +541,7 @@ Offset FileHeap::Reallocate (Offset oBlock, Size sSize) {
     m_rwGlobalLock.WaitReader();
 
     // Note: we refresh the old header because the old pointer might have become stale!
-    // Out allocate might have resized the file and changed every real address
+    // Our allocate might have resized the file and changed every real address
     pOldHeader = GetBlockHeader (oRealBlock);
     Assert (pOldHeader != NULL);
 

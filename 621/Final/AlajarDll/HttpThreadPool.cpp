@@ -42,6 +42,7 @@ HttpThreadPool::HttpThreadPool (HttpServer* pHttpServer, unsigned int iInitNumTh
 
     m_iMaxNumTasksQueued = 0;
     m_iNumIdleThreads = 0;
+    m_iNumTimingOutThreads = 0;
 
     m_pThreadBlock = NULL;
     m_ppThreads = NULL;
@@ -166,11 +167,7 @@ int HttpThreadPool::Stop() {
 
 int HttpThreadPool::QueueTask (Socket* pSocket) {
 
-    Assert (
-        pSocket != NULL && 
-        pSocket != SHUTDOWN_THREAD && 
-        pSocket != SHUTDOWN_THREAD_POOL
-        );
+    Assert (pSocket != NULL && pSocket != SHUTDOWN_THREAD_POOL);
 
     // Add socket to queue
     if (!m_tsfqTaskQueue.Push (pSocket)) {
@@ -206,22 +203,39 @@ int HttpThreadPool::QueueTask (Socket* pSocket) {
         m_iMaxNumTasksQueued = iNumTasks;
     }
 
-    // Check for excessive number of threads
-    if (m_iNumIdleThreads > m_iNumThreads / 2 && m_iNumThreads > m_iInitNumThreads) {
-
-        // Send someone a poison pill, best effort
-        if (m_tsfqTaskQueue.Push (SHUTDOWN_THREAD)) {
-            m_eThreadEvent.Signal();
-        }
-    }
-
     return OK;
 }
 
 int HttpThreadPool::ThreadExec (void* pVoid) {
 
     HttpPoolThread* pSelf = (HttpPoolThread*) pVoid;
-    return pSelf->pHttpServer->WWWServe (pSelf);
+    return pSelf->pHttpServer->GetThreadPool()->RunWorkerThread (pSelf);
+}
+
+int HttpThreadPool::RunWorkerThread (HttpPoolThread* pThread) {
+
+    int iErrCode = m_pHttpServer->WWWServe (pThread);
+
+    m_mThreadListLock.Wait();
+
+    // Defragment the thread array by grabbing the last valid thread
+    // and moving it to our slot
+    unsigned int iSelfThread = pThread->iThreadIndex;
+    unsigned int iDefragThread = m_iNumThreads - 1;
+
+    m_ppThreads [iSelfThread] = m_ppThreads [iDefragThread];
+    m_ppThreads [iSelfThread]->iThreadIndex = iSelfThread;
+
+    // One thread less in the pool...
+    m_iNumThreads --;
+
+    if (pThread->bTimingOut) {
+        m_iNumTimingOutThreads --;
+    }
+
+    m_mThreadListLock.Signal();
+
+    return iErrCode;
 }
 
 Socket* HttpThreadPool::WaitForTask (HttpPoolThread* pSelf) {
@@ -235,42 +249,32 @@ Socket* HttpThreadPool::WaitForTask (HttpPoolThread* pSelf) {
         if (m_tsfqTaskQueue.Pop (&pSocket)) {
 
             // Exit signal
-            if (pSocket == SHUTDOWN_THREAD || pSocket == SHUTDOWN_THREAD_POOL) {
-
-                m_mThreadListLock.Wait();
-
-                if (pSocket == SHUTDOWN_THREAD) {
-
-                    // We were asked to die gracefully.
-                    // We should have too many threads, or we shouldn't be here
-                    // However, the poison pills are sent without taking the lock,
-                    // so this can happen...
-                    if (m_iNumThreads <= m_iInitNumThreads) {
-                        m_mThreadListLock.Signal();
-                        continue;
-                    }
-
-                    // Defragment the thread array by grabbing the last valid thread
-                    // and moving it to our slot
-                    unsigned int iSelfThread = pSelf->iThreadIndex;
-                    unsigned int iDefragThread = m_iNumThreads - 1;
-
-                    m_ppThreads [iSelfThread] = m_ppThreads [iDefragThread];
-                    m_ppThreads [iSelfThread]->iThreadIndex = iSelfThread;
-                }
-
-                // One thread less in the pool...
-                m_iNumThreads --;
-                m_mThreadListLock.Signal();
-
+            if (pSocket == SHUTDOWN_THREAD_POOL) {
                 pSocket = NULL;
             }
-
             break;
         }
 
-        // Wait on event
-        m_eThreadEvent.Wait();
+        // Wait for the signal that an event arrived
+        int iErrCode = m_eThreadEvent.Wait (3 * 60 * 1000);
+        if (iErrCode == WARNING) {
+
+            // We timed out, so see if we should idle out
+            m_mThreadListLock.Wait();
+
+            bool bTimeout = m_iNumThreads - m_iNumTimingOutThreads > m_iInitNumThreads;
+            if (bTimeout) {
+                m_iNumTimingOutThreads ++;
+            }
+
+            m_mThreadListLock.Signal();
+
+            if (bTimeout) {
+                pSelf->bTimingOut = true;
+                pSocket = NULL;
+                break;
+            }
+        }
     }
 
     Algorithm::AtomicDecrement (&m_iNumIdleThreads);

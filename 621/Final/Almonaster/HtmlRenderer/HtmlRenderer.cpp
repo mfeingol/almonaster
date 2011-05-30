@@ -602,22 +602,16 @@ void HtmlRenderer::WriteFormattedMessage (const char* pszText) {
     }
 }
 
-void HtmlRenderer::WriteTime (Seconds sNumSeconds) {
-    
-    int iHrs = 0, iMin = 0;
-    
-    if (sNumSeconds < 0) {
-        OutputText ("<strong>Error: ");
-        m_pHttpResponse->WriteText (sNumSeconds);
-        OutputText ("</strong>");
-        return;
-    }
-    
-    if (sNumSeconds == 0) {
+void HtmlRenderer::WriteTime (Seconds sSeconds) {
+     
+    if (sSeconds == 0) {
         OutputText ("<strong>0</strong> sec");
         return;
     }
-    
+
+    int iHrs = 0, iMin = 0;
+    Seconds sNumSeconds = abs(sSeconds);
+
     if (sNumSeconds >= 3600) {
         iHrs = sNumSeconds / 3600;
         sNumSeconds -= iHrs * 3600;
@@ -651,6 +645,10 @@ void HtmlRenderer::WriteTime (Seconds sNumSeconds) {
         OutputText ("<strong>");
         m_pHttpResponse->WriteText (sNumSeconds);
         OutputText ("</strong> sec");
+    }
+
+    if (sSeconds < 0) {
+        OutputText (" ago");
     }
 }
 
@@ -1848,15 +1846,17 @@ void HtmlRenderer::ReportEmpireCreation (IReport* pReport, const char* pszEmpire
 
 void HtmlRenderer::WriteSystemTitleString() {
 
-    const char* pszEmpireName = m_vEmpireName.GetCharPtr();
+    if (m_pgPageId != LOGIN && m_pgPageId != NEW_EMPIRE) {
 
-    if (pszEmpireName != NULL) {
+        const char* pszEmpireName = m_vEmpireName.GetCharPtr();
+        if (pszEmpireName != NULL) {
 
-        m_pHttpResponse->WriteText (pszEmpireName);
-        if (pszEmpireName [strlen (pszEmpireName) - 1] == 's') {
-            OutputText ("' ");
-        } else {
-            OutputText ("'s ");
+            m_pHttpResponse->WriteText (pszEmpireName);
+            if (pszEmpireName [strlen (pszEmpireName) - 1] == 's') {
+                OutputText ("' ");
+            } else {
+                OutputText ("'s ");
+            }
         }
     }
 
@@ -5705,7 +5705,7 @@ int HtmlRenderer::RenderHyperText (const char* pszText, const char* pszUrl) {
 
     OutputText ("<a href=\"");
         
-    if (strnicmp (pszUrl, "http://", sizeof ("http://") - 1) != 0) {
+    if (_strnicmp (pszUrl, "http://", sizeof ("http://") - 1) != 0) {
         OutputText ("http://");
     }
 
@@ -7170,7 +7170,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             if (iValue != 1) {
                 OutputText ("s");
             }
-            OutputText (" idle");
+            OutputText (" idle)");
         }
         OutputText ("</td>");
 

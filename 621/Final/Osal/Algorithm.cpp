@@ -56,11 +56,43 @@ static AutoMutexInit autoInit;
 //
 
 //
+// Private methods
+//
+
+int HexCharToDecimal (char szDigit) {
+    
+    if (szDigit <= '9' && szDigit >= '0') {
+        return szDigit - '0';
+    }
+
+    else if (szDigit <= 'f' && szDigit >= 'a') {
+        return szDigit - 'a' + 10;
+    }
+
+    else if (szDigit <= 'F' && szDigit >= 'A') {
+        return szDigit - 'A' + 10;
+    }
+    
+    return -1;
+}
+
+char HexDataToHexChar (char szData) {
+
+    Assert (szData < 16);
+
+    char szHex = '0' + szData;
+    if (szHex > '9')
+        szHex = 'a' + szHex - '9' - 1;
+
+    return szHex;
+}
+
+//
 // Algorithm functionality
 //
 
 void Algorithm::InitializeThreadRandom (int iRandFactor) {
-    srand (time (NULL) * iRandFactor);
+    srand ((unsigned int) (time (NULL) * iRandFactor));
 }
 
 int Algorithm::GetRandomInteger (int iUpper) {
@@ -457,21 +489,29 @@ int Algorithm::DecodeBase64 (const char* pszBase64, void* pbData, size_t cbLengt
     return OK;
 }
 
-int Algorithm::HexCharToDecimal (char szDigit) {
-    
-    if (szDigit <= '9' && szDigit >= '0') {
-        return szDigit - '0';
+int Algorithm::HexEncode (const void* pbData, size_t cbDataLength, char* pszHex, size_t cchLength) {
+
+    if (cbDataLength * 2 >= cchLength) {
+        return ERROR_SMALL_BUFFER;
     }
 
-    else if (szDigit <= 'f' && szDigit >= 'a') {
-        return szDigit - 'a' + 10;
+    size_t cchHexCursor = 0;
+    const char* pszData = (const char*) pbData;
+    for (size_t i = 0; i < cbDataLength; i ++) {
+
+        char szData = pszData[i];
+
+        char szLeft = (szData >> 4) & 0xf;
+        pszHex[cchHexCursor ++] = HexDataToHexChar (szLeft);
+
+        char szRight = szData & 0xf;
+        pszHex[cchHexCursor ++] = HexDataToHexChar (szRight);
     }
 
-    else if (szDigit <= 'F' && szDigit >= 'A') {
-        return szDigit - 'A' + 10;
-    }
-    
-    return -1;
+    // Null-cap the string
+    pszHex[cchHexCursor] = '\0';
+
+    return OK;
 }
 
 int Algorithm::AtomicIncrement (int* piValue) {

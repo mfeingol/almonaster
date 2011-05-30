@@ -23,9 +23,10 @@
 #include "PageSource.h"
 #include "HttpServer.h"
 
-#include "Osal/TempFile.h"
 #include "Osal/Algorithm.h"
+#include "Osal/Crypto.h"
 #include "Osal/HashTable.h"
+#include "Osal/TempFile.h"
 
 #include <stdio.h>
 
@@ -42,7 +43,8 @@ HttpRequest::HttpRequest() {
     m_iNumRefs = 1;
 
     m_iMethod = UNSUPPORTED_HTTP_METHOD;
-    m_iVersion = UNSUPPORTED_HTTP_VERSION;
+    m_vVersion = UNSUPPORTED_HTTP_VERSION;
+    m_atAuth = AUTH_NONE;
 
     m_pszUri = NULL;
 
@@ -147,8 +149,14 @@ void HttpRequest::Recycle() {
 
     unsigned int i;
 
-    m_strLogin.Clear();
-    m_strPassword.Clear();
+    m_strAuthUserName.Clear();
+    m_strAuthNonce.Clear();
+    m_strAuthRealm.Clear();
+    m_strAuthDigestUri.Clear();
+    m_strAuthRequestResponse.Clear();
+    m_strNonceCount.Clear();
+    m_strCNonce.Clear();
+    m_strQop.Clear();
 
     if (m_pszSeparator != NULL) {
         *m_pszSeparator = '\0';
@@ -191,7 +199,8 @@ void HttpRequest::Recycle() {
     m_bCached = false;
 
     m_iMethod = UNSUPPORTED_HTTP_METHOD;
-    m_iVersion = UNSUPPORTED_HTTP_VERSION;
+    m_vVersion = UNSUPPORTED_HTTP_VERSION;
+    m_atAuth = AUTH_NONE;
 
     m_stSeparatorLength = 0;
     m_stContentLength = 0;
@@ -215,7 +224,7 @@ HttpMethod HttpRequest::GetMethod() {
 }
 
 HttpVersion HttpRequest::GetVersion() {
-    return m_iVersion;
+    return m_vVersion;
 }
 
 const char* HttpRequest::GetUri() {
@@ -262,12 +271,214 @@ PageSource* HttpRequest::GetPageSource() const {
     return m_pPageSource;
 }
 
-const char* HttpRequest::GetLogin() {
-    return m_strLogin;
+const char* HttpRequest::GetAuthenticationUserName() {
+    return m_strAuthUserName;
 }
 
-const char* HttpRequest::GetPassword() {
-    return m_strPassword;
+const char* HttpRequest::GetAuthenticationNonce() {
+    return m_strAuthNonce;
+}
+
+int HttpRequest::BasicAuthenticate (const char* pszPassword, bool* pbAuthenticated) {
+
+    Assert (pbAuthenticated != NULL);
+    *pbAuthenticated = false;
+
+    // We don't do blank passwords
+    if (String::IsBlank (pszPassword))
+        return OK;
+
+    // We accept either a basic auth header or no header
+    if (m_atAuth != AUTH_BASIC && m_atAuth != AUTH_NONE)
+        return OK;
+
+    // Check user's arguments
+    if (m_strAuthUserName.IsBlank() || 
+        m_strAuthPassword.IsBlank())
+        
+        return ERROR_FAILURE;
+
+    *pbAuthenticated = strcmp (m_strAuthPassword.GetCharPtr(), pszPassword) == 0;
+    return OK;
+}
+
+int HttpRequest::DigestAuthenticate (const char* pszPassword, bool* pbAuthenticated) {
+
+    int iErrCode;
+
+    Assert (pbAuthenticated != NULL);
+    *pbAuthenticated = false;
+
+    // We don't do blank passwords
+    if (String::IsBlank (pszPassword))
+        return OK;
+
+    // We accept either a digest auth header or no header
+    if (m_atAuth != AUTH_DIGEST && m_atAuth != AUTH_NONE)
+        return OK;
+
+    // Check user's arguments
+    if (m_strAuthUserName.IsBlank() || 
+        m_strAuthRealm.IsBlank() || 
+        m_strAuthNonce.IsBlank() ||
+        m_strAuthDigestUri.IsBlank() ||
+        m_strAuthRequestResponse.IsBlank() ||
+        m_strNonceCount.IsBlank() ||
+        m_strCNonce.IsBlank() ||
+        m_strQop.IsBlank())
+
+        return ERROR_FAILURE;
+
+    // Compute A1 hash
+    char pszA1Hash[DIGEST_HASH_TEXT_SIZE];
+    iErrCode = ComputeA1Hash (pszPassword, pszA1Hash);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    // Compute A2 hash
+    char pszA2Hash[DIGEST_HASH_TEXT_SIZE];
+    iErrCode = ComputeA2Hash (pszA2Hash);
+    if (iErrCode != OK)
+        return iErrCode;
+    
+    // Compute final hash
+    char pszFinalHash[DIGEST_HASH_TEXT_SIZE];
+    iErrCode = ComputeFinalHash (pszA1Hash, pszA2Hash, pszFinalHash);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    const char* pszRequestHash = m_strAuthRequestResponse.GetCharPtr();
+    *pbAuthenticated = strcmp (pszFinalHash, pszRequestHash) == 0;
+
+    return OK;    
+}
+
+int HttpRequest::ComputeA1Hash (const char* pszPassword, char pszA1 [DIGEST_HASH_TEXT_SIZE]) {
+
+    int iErrCode;
+    Crypto::HashMD5 hash;
+
+    iErrCode = hash.HashData (m_strAuthUserName.GetCharPtr(), m_strAuthUserName.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (m_strAuthRealm.GetCharPtr(), m_strAuthRealm.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (pszPassword, strlen (pszPassword));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    char pbHash [MD5_HASH_SIZE];
+    iErrCode = hash.GetHash (pbHash, sizeof (pbHash));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = Algorithm::HexEncode (pbHash, MD5_HASH_SIZE, pszA1, DIGEST_HASH_TEXT_SIZE);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    return OK;
+}
+
+int HttpRequest::ComputeA2Hash (char pszA2 [DIGEST_HASH_TEXT_SIZE]) {
+
+    int iErrCode;
+    Crypto::HashMD5 hash;
+
+    const char* pszMethod = HttpMethodText [m_iMethod];
+    iErrCode = hash.HashData (pszMethod, strlen (pszMethod));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (m_strAuthDigestUri.GetCharPtr(), m_strAuthDigestUri.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    char pbHash [MD5_HASH_SIZE];
+    iErrCode = hash.GetHash (pbHash, sizeof (pbHash));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = Algorithm::HexEncode (pbHash, MD5_HASH_SIZE, pszA2, DIGEST_HASH_TEXT_SIZE);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    return OK;
+}
+
+int HttpRequest::ComputeFinalHash (const char pszA1[DIGEST_HASH_TEXT_SIZE], const char pszA2[DIGEST_HASH_TEXT_SIZE], char pszFinal[DIGEST_HASH_TEXT_SIZE]) {
+
+    int iErrCode;
+    Crypto::HashMD5 hash;
+
+    iErrCode = hash.HashData (pszA1, (DIGEST_HASH_TEXT_SIZE - 1) * sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (m_strAuthNonce.GetCharPtr(), m_strAuthNonce.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (m_strNonceCount.GetCharPtr(), m_strNonceCount.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (m_strCNonce.GetCharPtr(), m_strCNonce.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (m_strQop.GetCharPtr(), m_strQop.GetLength());
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (":", sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = hash.HashData (pszA2, (DIGEST_HASH_TEXT_SIZE - 1) * sizeof (char));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    char pbHash [MD5_HASH_SIZE];
+    iErrCode = hash.GetHash (pbHash, sizeof (pbHash));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    iErrCode = Algorithm::HexEncode (pbHash, MD5_HASH_SIZE, pszFinal, DIGEST_HASH_TEXT_SIZE);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    return OK;
 }
 
 int HttpRequest::ParseRequestHeader (char* pszLine) {
@@ -300,32 +511,32 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
     pszVer ++;      // Safe because there's a \0 at the end of the buffer
 
     // Handle method
-    if (stricmp (pszMethod, "GET") == 0) {
+    if (_stricmp (pszMethod, HttpMethodText[GET]) == 0) {
         m_iMethod = GET;
     }
-    else if (stricmp (pszMethod, "POST") == 0) {
+    else if (_stricmp (pszMethod, HttpMethodText[POST]) == 0) {
         m_iMethod = POST;
     }
-    else if (stricmp (pszMethod, "PUT") == 0) {
+    else if (_stricmp (pszMethod, HttpMethodText[PUT]) == 0) {
         m_iMethod = PUT;
     }
-    else if (stricmp (pszMethod, "HEAD") == 0) {
+    else if (_stricmp (pszMethod, HttpMethodText[HEAD]) == 0) {
         m_iMethod = HEAD;
     }
-    else if (stricmp (pszMethod, "TRACE") == 0) {
+    else if (_stricmp (pszMethod, HttpMethodText[TRACE]) == 0) {
         m_iMethod = TRACE;
     }
     else return ERROR_UNSUPPORTED_HTTP_METHOD;
 
     // Handle version
-    if (stricmp (pszVer, "HTTP/1.1") == 0) {
-        m_iVersion = HTTP11;
+    if (_stricmp (pszVer, "HTTP/1.1") == 0) {
+        m_vVersion = HTTP11;
     }
-    else if (stricmp (pszVer, "HTTP/1.0") == 0) {
-        m_iVersion = HTTP10;
+    else if (_stricmp (pszVer, "HTTP/1.0") == 0) {
+        m_vVersion = HTTP10;
     }
-    else if (stricmp (pszVer, "HTTP/0.9") == 0) {
-        m_iVersion = HTTP09;
+    else if (_stricmp (pszVer, "HTTP/0.9") == 0) {
+        m_vVersion = HTTP09;
     }
     else return ERROR_UNSUPPORTED_HTTP_VERSION;
 
@@ -452,7 +663,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
 
     UTCTime tLastModified;
 
-    char* pszValue = NULL, * pszTemp = NULL, * pszDecode = NULL, * pszBuf;
+    char* pszValue = NULL, * pszBuf;
 
     size_t stLineLen = strlen (pszLine);
     if (stLineLen >= MAX_STACK_ALLOC) {
@@ -482,47 +693,107 @@ int HttpRequest::ParseHeader (char* pszLine) {
     }
 
     // Handle headers
-    switch (*pszLine) {
+    switch (pszLine[0]) {
         
     // Authorization
     case 'A':
     case 'a':
 
-        if (stricmp (pszHeader, "Authorization:") == 0) {
+        if (_stricmp (pszHeader, "Authorization:") == 0) {
 
-            const size_t stBasicSpaceLen = sizeof ("Basic");
+            if (pszValue[0] == 'B') {
 
-            if (strnicmp (pszValue, "Basic ", stBasicSpaceLen)  == 0) {
+                const size_t cchBasicSpaceLen = countof ("Basic ") - 1;
 
-                pszTemp = pszValue + stBasicSpaceLen;
-                size_t cbEncodeLen = strlen (pszTemp) + 1;
+                if (_strnicmp (pszValue, "Basic ", cchBasicSpaceLen)  == 0) {
 
-                if (cbEncodeLen <= 128) {
-                    pszDecode = (char*) StackAlloc (cbEncodeLen + 1);
-                } else {
-                    pszDecode = new char [cbEncodeLen + 1];
+                    m_atAuth = AUTH_BASIC;
+
+                    char* pszTemp = pszValue + cchBasicSpaceLen;
+                    size_t cbEncodeLen = strlen (pszTemp)+ 1;
+
+                    char* pszDecode = new char [cbEncodeLen + 1];
+                    Algorithm::AutoDelete<char> autoDeleteDecode (pszDecode, true);
+
                     if (pszDecode == NULL) {
                         iErrCode = ERROR_OUT_OF_MEMORY;
                         goto Cleanup;
                     }
+
+                    size_t cbDecoded;
+                    iErrCode = Algorithm::DecodeBase64 (pszTemp, pszDecode, cbEncodeLen, &cbDecoded);
+                    if (iErrCode != OK) {
+                        goto Cleanup;
+                    }
+                    Assert (cbDecoded <= cbEncodeLen);
+                    pszDecode [cbDecoded] = '\0';
+
+                    pszTemp = strtok (pszDecode, ":");
+                    if (pszTemp == NULL) {
+                        iErrCode = ERROR_MALFORMED_REQUEST;
+                        goto Cleanup;
+                    }
+                    m_strAuthUserName = pszTemp;
+
+                    pszTemp = strtok (NULL, "");
+                    if (pszTemp == NULL) {
+                        iErrCode = ERROR_MALFORMED_REQUEST;
+                        goto Cleanup;
+                    }
+                    m_strAuthPassword = pszTemp;
                 }
+            }
 
-                size_t cbDecoded;
-                iErrCode = Algorithm::DecodeBase64 (pszTemp, pszDecode, cbEncodeLen, &cbDecoded);
-                if (iErrCode != OK) {
-                    goto Cleanup;
-                }
-                Assert (cbDecoded <= cbEncodeLen);
-                pszDecode [cbDecoded] = '\0';
+            else if (pszValue[0] == 'D') {
 
-                pszTemp = strtok (pszDecode, ":");
-                m_strLogin = pszTemp;
+                const size_t cchDigestSpaceLen = countof ("Digest ") - 1;
 
-                pszTemp = strtok (NULL, "");
-                m_strPassword = pszTemp;
+                if (String::StrniCmp (pszValue, "Digest ", cchDigestSpaceLen) == 0) {
 
-                if (cbEncodeLen > 128) {
-                    delete [] pszDecode;
+                    m_atAuth = AUTH_DIGEST;
+
+                    char* pszAttribute = pszValue + cchDigestSpaceLen;
+                    char* pszEnd = pszValue + strlen (pszValue);
+                    while (pszAttribute < pszEnd) {
+
+                        if (String::StrniCmp (pszAttribute, "username", countof ("username") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strAuthUserName);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "realm", countof ("realm") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strAuthRealm);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "nonce", countof ("nonce") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strAuthNonce);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "uri", countof ("uri") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strAuthDigestUri);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "response", countof ("response") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strAuthRequestResponse);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "nc", countof ("nc") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strNonceCount);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "cnonce", countof ("cnonce") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strCNonce);
+                        }
+
+                        else if (String::StrniCmp (pszAttribute, "qop", countof ("qop") - 1) == 0) {
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strQop);
+                        }
+
+                        else {
+
+                            // Unrecognized attribute
+                            pszAttribute = ParseAuthenticationAttribute (pszAttribute, NULL);
+                        }
+                    }
                 }
             }
         }
@@ -533,10 +804,10 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'C':
     case 'c':
         
-        if (stricmp (pszHeader, "Connection:") == 0) {
-            m_bKeepAlive = (stricmp (pszValue, "Keep-Alive") == 0);
+        if (_stricmp (pszHeader, "Connection:") == 0) {
+            m_bKeepAlive = (_stricmp (pszValue, "Keep-Alive") == 0);
         }
-        else if (stricmp (pszHeader, "Content-Type:") == 0) {
+        else if (_stricmp (pszHeader, "Content-Type:") == 0) {
             
             // Check for multipart
             if (strstr (pszValue, "multipart/form-data") != NULL) {
@@ -599,10 +870,10 @@ int HttpRequest::ParseHeader (char* pszLine) {
                 }
             }
         }
-        else if (stricmp (pszHeader, "Content-Length:") == 0) {
+        else if (_stricmp (pszHeader, "Content-Length:") == 0) {
             m_stContentLength = atoi (pszValue);
         }
-        else if (stricmp (pszHeader, "Cookie:") == 0) {
+        else if (_stricmp (pszHeader, "Cookie:") == 0) {
             
             // Count the number of semicolons
             unsigned int i, iNumSemicolons = 1;
@@ -752,7 +1023,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'H':
     case 'h':
         
-        if (stricmp (pszHeader, "Host:") == 0 && !String::IsBlank (pszValue)) {
+        if (_stricmp (pszHeader, "Host:") == 0 && !String::IsBlank (pszValue)) {
             m_strHostName = pszValue;
             if (m_strHostName.GetCharPtr() == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -766,7 +1037,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'i':
 
         // TODO - if the method is overriden, this might be a bit ambitious
-        if (stricmp (pszHeader, "If-Modified-Since") == 0 && !String::IsBlank (pszValue)) {
+        if (_stricmp (pszHeader, "If-Modified-Since") == 0 && !String::IsBlank (pszValue)) {
             m_bCached = !File::WasFileModifiedAfter (m_pszFileName, pszValue, &tLastModified);
         }
         
@@ -776,7 +1047,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'U':
     case 'u':
         
-        if (stricmp (pszHeader, "User-Agent:") == 0 && !String::IsBlank (pszValue)) {
+        if (_stricmp (pszHeader, "User-Agent:") == 0 && !String::IsBlank (pszValue)) {
             m_strBrowserName = pszValue;
             if (m_strBrowserName.GetCharPtr() == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -788,7 +1059,7 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'R':
     case 'r':
 
-        if (stricmp (pszHeader, "Referer:") == 0 && !String::IsBlank (pszValue)) {
+        if (_stricmp (pszHeader, "Referer:") == 0 && !String::IsBlank (pszValue)) {
             m_strReferer = pszValue;
             if (m_strReferer.GetCharPtr() == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -811,6 +1082,42 @@ Cleanup:
     return iErrCode;
 }
 
+// username="foo", response="bar"
+char* HttpRequest::ParseAuthenticationAttribute (char* pszCursor, String* pstrValue) {
+
+    // Advance to equals at end of name
+    while (*pszCursor != '\0' && *pszCursor != '=')
+        pszCursor ++;
+
+    // Skip equals and spaces and new lines
+    while (*pszCursor == '=' || *pszCursor == ' ' || *pszCursor == '\r' || *pszCursor == '\n')
+        pszCursor ++;
+
+    // Skip initial quote
+    if (*pszCursor == '\"')
+        pszCursor ++;
+
+    // Find the end of the value - could be end of string, a comma or an end quote
+    char* pszTemp = pszCursor;
+    while (*pszTemp != '\0' && *pszTemp != ',' && *pszTemp != '\"')
+        pszTemp ++;
+
+    char cRestore = *pszTemp;
+    *pszTemp = '\0';
+
+    if (pstrValue != NULL) {
+        *pstrValue = pszCursor;
+    }
+
+    *pszTemp = cRestore;
+
+    // Find the next attribute
+    while (*pszTemp == ',' || *pszTemp == '\"' || *pszTemp == ' ' || *pszTemp == '\r' || *pszTemp == '\n')
+        pszTemp ++;
+
+    return pszTemp;
+}
+
 int HttpRequest::ParseHeaders() {
 
     int iErrCode;
@@ -829,10 +1136,6 @@ int HttpRequest::ParseHeaders() {
     bool bEndHeaders = false, bFirstLine = true;
 
     char* pszBegin, * pszEnd, * pszEndMarker;
-    
-    // Set the timeout to 10 seconds, just in case
-    // TODO:  this blocks reusing connections in HTTP 1.1
-    m_pSocket->SetRecvTimeOut (10000);
 
     // Recv as big a block of data as possible
     // This loop will terminate when the end of the headers is received
@@ -938,7 +1241,7 @@ int HttpRequest::ParseHeaders() {
     Assert (iErrCode == OK);
 
     // Check results
-    if (m_iVersion == UNSUPPORTED_HTTP_VERSION) {
+    if (m_vVersion == UNSUPPORTED_HTTP_VERSION) {
         return ERROR_UNSUPPORTED_HTTP_VERSION;
     }
     

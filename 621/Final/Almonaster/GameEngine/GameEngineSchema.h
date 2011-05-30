@@ -1728,7 +1728,7 @@ namespace GameData {
         MinY,
         NumRequestingPause,
         MaxY,
-        SecondsSinceLastUpdateWhilePaused,
+        SecondsUntilNextUpdateWhilePaused,
         LastUpdateCheck,
         CreationTime,
         NumPlanetsPerEmpire,
@@ -1759,6 +1759,7 @@ namespace GameData {
         NumRequestingDraw,
         MinBridierRankLoss,
         MaxBridierRankLoss,
+        RealLastUpdateTime,
     };
 
     static const VariantType Types[] = {
@@ -1804,6 +1805,7 @@ namespace GameData {
         V_INT,
         V_INT,
         V_INT,
+        V_TIME,
     };
 
     static const size_t Sizes[] = {
@@ -1849,9 +1851,10 @@ namespace GameData {
         0,
         0,
         0,
+        0,
     };
     
-    static const unsigned int NumColumns = MaxBridierRankLoss + 1;
+    static const unsigned int NumColumns = RealLastUpdateTime + 1;
 
     static const TemplateDescription Template = {
         "GameData",
@@ -2932,6 +2935,50 @@ namespace SystemBridierScoreEstablishedTopList {
         0,
         NULL,
         20,
+        NULL,
+    };
+};
+
+////////////////////////
+// SystemChatroomData //
+////////////////////////
+
+#define SYSTEM_CHATROOM_DATA "SystemChatroomData"
+
+namespace SystemChatroomData {
+    
+    enum Columns {
+        Flags,
+        Time,
+        Speaker,
+        Message,
+    };
+    
+    static const VariantType Types[] = {
+        V_INT,
+        V_TIME,
+        V_STRING,
+        V_STRING,
+    };
+
+    static const size_t Sizes[] = {
+        0,
+        0,
+        MAX_EMPIRE_NAME_LENGTH,
+        VARIABLE_LENGTH_STRING,
+    };
+
+    static const unsigned int NumColumns = Message + 1;
+
+    static const TemplateDescription Template = {
+        "SystemChatroomData",
+        NumColumns,
+        (VariantType*) Types,
+        (size_t*) Sizes,
+        false,
+        0,
+        NULL,
+        25,
         NULL,
     };
 };

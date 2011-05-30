@@ -110,6 +110,18 @@ void Time::GetTime (int iSec, int iMin, int iHour, int iDay, int iMonth, int iYe
     *ptUTCTime = mktime (&tmStruct);
 }
 
+int64 Time::GetUnixTime() {
+    return GetUnixTime (time (NULL));
+}
+
+int64 Time::GetUnixTime (const UTCTime& tTime) {
+    return (int64) tTime;
+}
+
+void Time::FromUnixTime (int64 i64Time, UTCTime* ptUTCTime) {
+    *ptUTCTime = (UTCTime) i64Time;
+}
+
 int Time::GetTimeZone (char pszTimeZone[OS::MaxTimeZoneLength], int* piBias) {
 
 #ifdef __LINUX__
@@ -302,6 +314,58 @@ int Time::GetCookieDateString (const UTCTime& tTime, char pszCookieDateString[OS
     return OK;
 }
 
+int Time::GetSmtpDateString (char pszCookieDateString[OS::MaxSmtpDateLength]) {
+
+    UTCTime tTime;
+    GetTime (&tTime);
+
+    return GetSmtpDateString (tTime, pszCookieDateString);
+}
+
+int Time::GetSmtpDateString (const UTCTime& tTime, char pszCookieDateString[OS::MaxSmtpDateLength]) {
+
+    tm* ptmTime = localtime (&tTime);
+    if (ptmTime == NULL) {
+        return ERROR_INVALID_ARGUMENT;
+    }
+
+    char pszHour[8], pszMin[8], pszSec[8], pszDayM[8];
+    
+    String::ItoA (ptmTime->tm_hour, pszHour, 10, 2);
+    String::ItoA (ptmTime->tm_min, pszMin, 10, 2);
+    String::ItoA (ptmTime->tm_sec, pszSec, 10, 2);
+    String::ItoA (ptmTime->tm_mday, pszDayM, 10, 2);
+
+    char pszOffset [32];
+    int iBias;
+    if (GetTimeZoneBias (&iBias) == OK) {
+
+        int iBiasBase60 = 100 * (iBias / 60) + (iBias % 60);
+
+        char pszBias[8];
+        String::ItoA (iBiasBase60, pszBias, 10, 4);
+        strcpy (pszOffset, pszBias);
+                        
+    } else {
+        pszOffset[0] = '\0';
+    }
+
+    sprintf (
+        pszCookieDateString,
+        "%s, %s %s %i %s:%s:%s %s",
+        pszDay [ptmTime->tm_wday],
+        pszDayM,
+        pszMonth[ptmTime->tm_mon],
+        ptmTime->tm_year + 1900,
+        pszHour,
+        pszMin,
+        pszSec,
+        pszOffset
+        );
+    
+    return OK;
+}
+
 int Time::GetDay() {
 
     UTCTime tTime;
@@ -481,7 +545,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
 
     Assert (tEnd >= tStart);
 
-    Seconds sDiff = tEnd - tStart;
+    Seconds sDiff = (Seconds) (tEnd - tStart);
     Seconds sModDiff = sDiff % (7 * 24 * 60 * 60);
 
     // If the start is weeks before the end, mod it to inside the week before the end
@@ -521,7 +585,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
         if (tEndOfWeekend > tEnd) {
 
             // We overshot, but we're done.  Just add the seconds between the two times
-            sWeekend += tEnd - tRealStart;
+            sWeekend += (Seconds) (tEnd - tRealStart);
             return sWeekend;
         }
         
@@ -539,7 +603,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
        // The end has to fall on a weekend, because otherwise it would be a difference
        // greater than a week
 
-       sWeekend += tEnd - tNextWeekendStart;
+       sWeekend += (Seconds) (tEnd - tNextWeekendStart);
        return sWeekend;
 
     } else {
@@ -569,7 +633,7 @@ Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTim
         if (tNextWeekendEnd > tEnd) {
  
             // The end falls inside the next weekend, so we're done
-            sWeekend += tEnd - tNextWeekendStart;
+            sWeekend += (Seconds) (tEnd - tNextWeekendStart);
             return sWeekend;
         }
 
@@ -612,7 +676,7 @@ char* Time::UTCTimetoA (const UTCTime& tTime, char* pszString, int iRadix) {
 #ifdef __WIN64__
     return _i64toa ((__int64) tTime, pszString, iRadix);
 #else
-    return itoa ((int) tTime, pszString, iRadix);
+    return _itoa ((int) tTime, pszString, iRadix);
 #endif
 }
 

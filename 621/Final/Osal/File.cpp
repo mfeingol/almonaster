@@ -509,7 +509,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
     int iErrCode = OK;
 
     // Get file's extension
-    char* pszExtension = strrchr(pszFileName, '.');
+    const char* pszExtension = strrchr(pszFileName, '.');
     if (pszExtension != NULL)
         pszExtension ++;
     else
@@ -523,7 +523,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
     case 'h':
     case 'H':
         
-        if (stricmp (pszExtension, "html") == 0 || stricmp (pszExtension, "htm") == 0) {
+        if (_stricmp (pszExtension, "html") == 0 || _stricmp (pszExtension, "htm") == 0) {
             pszFinalMimeType = "text/html";
             goto Cleanup;
         }
@@ -532,7 +532,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
         
     case 'g':
     case 'G':
-        if (stricmp (pszExtension, "gif") == 0) {;
+        if (_stricmp (pszExtension, "gif") == 0) {;
             pszFinalMimeType = "image/gif";
             goto Cleanup;
         }
@@ -541,7 +541,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
         
     case 'j':
     case 'J':
-        if (stricmp (pszExtension, "jpg") == 0) {
+        if (_stricmp (pszExtension, "jpg") == 0) {
             pszFinalMimeType = "image/jpeg";
             goto Cleanup;
         }
@@ -550,7 +550,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
         
     case 't':
     case 'T':
-        if (stricmp (pszExtension, "txt") == 0 || stricmp (pszExtension, "text") == 0) {
+        if (_stricmp (pszExtension, "txt") == 0 || _stricmp (pszExtension, "text") == 0) {
             pszFinalMimeType = "text/plain";
             goto Cleanup;
         }
@@ -558,7 +558,7 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
         
     case 'z':
     case 'Z':
-        if (stricmp (pszExtension, "zip") == 0) {
+        if (_stricmp (pszExtension, "zip") == 0) {
             pszFinalMimeType = "application/x-zip-compressed";
             goto Cleanup;
         }
@@ -898,30 +898,30 @@ bool File::WasFileModifiedAfter (const char* pszFileName, const char* pszGMTDate
         
     case 'J':
     case 'j':
-        if (stricmp (pszMonth, "Jan") == 0) {
+        if (_stricmp (pszMonth, "Jan") == 0) {
             iMonth = 0;
         }
-        else if (stricmp (pszMonth, "Jun") == 0) {
+        else if (_stricmp (pszMonth, "Jun") == 0) {
             iMonth = 5;
         }
-        else if (stricmp (pszMonth, "Jul") == 0) {
+        else if (_stricmp (pszMonth, "Jul") == 0) {
             iMonth = 6;
         }
         break;
         
     case 'F':
     case 'f':
-        if (stricmp (pszMonth, "Feb") == 0) {
+        if (_stricmp (pszMonth, "Feb") == 0) {
             iMonth = 1;
         }
         break;
         
     case 'M':
     case 'm':
-        if (stricmp (pszMonth, "Mar") == 0) {
+        if (_stricmp (pszMonth, "Mar") == 0) {
             iMonth = 2;
         }
-        else if (stricmp (pszMonth, "May") == 0) {
+        else if (_stricmp (pszMonth, "May") == 0) {
             iMonth = 4;
         }
         
@@ -929,38 +929,38 @@ bool File::WasFileModifiedAfter (const char* pszFileName, const char* pszGMTDate
         
     case 'A':
     case 'a':
-        if (stricmp (pszMonth, "Apr") == 0) {
+        if (_stricmp (pszMonth, "Apr") == 0) {
             iMonth = 3;
         }
-        else if (stricmp (pszMonth, "Aug") == 0) {
+        else if (_stricmp (pszMonth, "Aug") == 0) {
             iMonth = 7;
         }
         break;
         
     case 'S':
     case 's':
-        if (stricmp (pszMonth, "Sep") == 0) {
+        if (_stricmp (pszMonth, "Sep") == 0) {
             iMonth = 8;
         }
         break;
         
     case 'O':
     case 'o':
-        if (stricmp (pszMonth, "Oct") == 0) {
+        if (_stricmp (pszMonth, "Oct") == 0) {
             iMonth = 9;
         }
         break;
         
     case 'N':
     case 'n':
-        if (stricmp (pszMonth, "Nov") == 0) {
+        if (_stricmp (pszMonth, "Nov") == 0) {
             iMonth = 10;
         }
         break;
         
     case 'D':
     case 'd':
-        if (stricmp (pszMonth, "Dec") == 0) {
+        if (_stricmp (pszMonth, "Dec") == 0) {
             iMonth = 11;
         }
         break;
@@ -1110,7 +1110,7 @@ int File::ResolvePath (const char* pszPath, char pszResolvedPath [OS::MaxFileNam
 
 #ifdef __LINUX__
 
-    	size_t i, stLength = strlen (pszPath);
+    size_t i, stLength = strlen (pszPath);
 
 	// Check for path too long
 	if (stLength >= OS::MaxFileNameLength) {

@@ -56,7 +56,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     char strIndependentShips [256];
 
     String strMessage;
-    Variant vTemp, vBR, vShipName, vGameState;
+    Variant vTemp, vBR, vShipName;
     int iGameClassOptions;
 
     GameConfiguration gcConfig;
@@ -98,24 +98,12 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     unsigned int* piNukedPlanetKey, ** ppiShipNukeKey = NULL, ** ppiEmpireNukeKey, * piNumNukingShips, 
         iNumNukedPlanets = 0, i, j, * piPlanetKey = NULL, iNumPlanets;
 
-    Variant vUpdatePeriod, vLastUpdateTime;
-
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::NumSecPerUpdate, 
-        &vUpdatePeriod
-        );
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
-
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateTime, &vLastUpdateTime);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    int iUpdatePeriod = vTemp.GetInteger();
 
     ////////////////////////////////
     // Initialize data for update //
@@ -203,11 +191,12 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         return iErrCode;
     }
 
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vGameState);
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    int iGameState = vTemp.GetInteger();
 
     ///////////////////////////////
     // Generate map if necessary //
@@ -217,7 +206,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
     if (iNewUpdateCount == 1 && 
         (iGameClassOptions & GENERATE_MAP_FIRST_UPDATE) &&
-        !(vGameState.GetInteger() & GAME_MAP_GENERATED)) {
+        !(iGameState & GAME_MAP_GENERATED)) {
 
         bool bCommit;
 
@@ -233,11 +222,11 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
             return iErrCode;
         }
 
-        vGameState = vGameState.GetInteger() | GAME_MAP_GENERATED;
+        iGameState |= GAME_MAP_GENERATED;
         bMapGenerated = true;
     }
 
-    Assert (vGameState.GetInteger() & GAME_MAP_GENERATED);
+    Assert (iGameState & GAME_MAP_GENERATED);
 
     //
     // Initialize empire's table names - big stack alloc!
@@ -622,7 +611,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Close game if numupdates is sufficient //
     ////////////////////////////////////////////
     
-    if (vGameState.GetInteger() & STILL_OPEN) {
+    if (iGameState & STILL_OPEN) {
         
         iErrCode = m_pGameData->ReadData (strGameData, GameData::NumUpdatesBeforeGameCloses, &vTemp);
         if (iErrCode != OK) {
@@ -690,7 +679,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Check for ally out, draw out if game is closed //
     ////////////////////////////////////////////////////
 
-    if (!(vGameState.GetInteger() & STILL_OPEN)) {
+    if (!(iGameState & STILL_OPEN)) {
 
         iErrCode = CheckGameForEndConditions (iGameClass, iGameNumber, NULL, pbGameOver);
         if (iErrCode != OK) {
@@ -878,7 +867,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     /////////////////////////////////////////////////////////////////////////////
 
     iErrCode = UpdateEmpiresEcon (iGameClass, iGameNumber, iNumEmpires, piEmpireKey, pbAlive, piTotalMin, 
-        piTotalFuel, piTotalAg, vUpdatePeriod, tUpdateTime, strGameData, pstrEmpireDip, pstrEmpireData, 
+        piTotalFuel, piTotalAg, iUpdatePeriod, tUpdateTime, strGameData, pstrEmpireDip, pstrEmpireData, 
         pstrEmpireShips, iNewUpdateCount, strGameMap, vMaxAgRatio.GetFloat(),
         gcConfig);
 
@@ -907,13 +896,14 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Check for one player left in a closed game //
     ////////////////////////////////////////////////
 
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vGameState);
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    iGameState = vTemp.GetInteger();
     
-    if (!(vGameState.GetInteger() & STILL_OPEN)) {
+    if (!(iGameState & STILL_OPEN)) {
         
         iErrCode = m_pGameData->GetNumRows (strGameEmpires, (unsigned int*) &iTemp);
         if (iErrCode != OK) {
@@ -978,14 +968,22 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Idleness //
     //////////////
     {
-        unsigned int iNumUpdatedEmpires = 0, iSurvivorIndex = NO_KEY, iGameRuinIdlers = 0, 
-            iComplexAwake = 0, iNumIdleEmpires = 0;
-        Variant vRuinFlags;
+        unsigned int iNumUpdatedEmpires = 0, iSurvivorIndex = NO_KEY;
 
-        bool* pbNewlyIdle = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
+        // Number of empires who are idle enough to make the game ruin 
+        unsigned int iGameRuinIdlers = 0;
+        
+        // Number of empires blocking the game from ruining under complex rules
+        unsigned int iComplexAwake = 0;
+
+        // Number of idle and resigned empires in the game
+        unsigned int iNumIdleEmpires = 0, iNumResignedEmpires = 0;
+
+        bool* pbNewlyIdle = (bool*) StackAlloc (3 * iNumEmpires * sizeof (bool));
+        bool* pbResigned = pbNewlyIdle + iNumEmpires;
+        bool* pbRuinEmpireUpdated = pbResigned + iNumEmpires;
 
         int* piRuinEmpire = (int*) StackAlloc (iNumEmpires * sizeof (int));
-        bool* pbRuinEmpireUpdated = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
 
         int iNumIdleUpdatesForRuin, iNumUpdatesForIdle, iGameState;
 
@@ -1022,22 +1020,16 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         iNumIdleUpdatesForRuin = vTemp.GetInteger();
 
         // Get ruin behavior
-        iErrCode = m_pGameData->ReadData (
-            SYSTEM_GAMECLASS_DATA,
-            iGameClass,
-            SystemGameClassData::RuinFlags,
-            &vRuinFlags
-            );
-
+        iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::RuinFlags, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
+        int iRuinFlags = vTemp.GetInteger();
 
-        bool bSimpleRuins = vRuinFlags.GetInteger() == RUIN_CLASSIC_SC;
-        bool bComplexRuins = vRuinFlags.GetInteger() == RUIN_ALMONASTER;
-
-        Assert (bSimpleRuins || bComplexRuins || vRuinFlags.GetInteger() == 0);
+        bool bSimpleRuins = iRuinFlags == RUIN_CLASSIC_SC;
+        bool bComplexRuins = iRuinFlags == RUIN_ALMONASTER;
+        Assert (bSimpleRuins || bComplexRuins || iRuinFlags == 0);
 
         char pszDead [128 + MAX_EMPIRE_NAME_LENGTH];
         char pszMessage [128 + MAX_FULL_GAME_CLASS_NAME_LENGTH] = "";
@@ -1056,7 +1048,8 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
             }
             int iEmpireOptions = vTemp.GetInteger();
 
-            if (iEmpireOptions & RESIGNED) {
+            pbResigned[i] = (iEmpireOptions & RESIGNED) != 0;
+            if (pbResigned[i]) {
 
                 iErrCode = m_pGameData->WriteOr (pstrEmpireData[i], GameEmpireData::Options, UPDATED);
                 if (iErrCode != OK) {
@@ -1064,9 +1057,11 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     goto Cleanup;
                 }
 
+                // Resigned empires disallow complex ruins, except when everyone is either resigned or idle
+                iNumResignedEmpires ++;
+                iComplexAwake ++;
                 iGameRuinIdlers ++;
                 iNumUpdatedEmpires ++;
-                iNumIdleEmpires ++;
             }
 
             else if (iNewUpdateCount > 1 && !(iEmpireOptions & LOGGED_IN_THIS_UPDATE)) {
@@ -1179,7 +1174,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         // Check for end game because of ruins
         if (
             (bComplexRuins && bRuinGame) ||                     // Complex game ruin 
-            (iGameRuinIdlers == iNumEmpires) ||                 // All empires idle for ruin
+            (iGameRuinIdlers == iNumEmpires) ||                 // All empires idle for game ruin
             (bSimpleRuins && iNumRuins >= iNumEmpires - 1)      // Simple game ruin
             ) {
 
@@ -1210,6 +1205,19 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 if (iErrCode != OK) {
                     Assert (false);
                     //goto Cleanup;
+                }
+            }
+
+            // Remove all remaining resigned empires - they shouldn't ruin
+            for (i = 0; i < iNumEmpires; i ++) {
+
+                if (pbAlive[i] && pbResigned[i]) {
+
+                    iErrCode = DeleteEmpireFromGame (iGameClass, iGameNumber, piEmpireKey[i], EMPIRE_RESIGNED, NULL);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto Cleanup;
+                    }
                 }
             }
             
@@ -1295,16 +1303,16 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 continue;
             }
 
+            bool bFlag;
             if (iGameClassOptions & ALLOW_DRAW) {
 
-                bool bDraw;
-                iErrCode = IsEmpireRequestingDraw (iGameClass, iGameNumber, piEmpireKey[i], &bDraw);
+                iErrCode = IsEmpireRequestingDraw (iGameClass, iGameNumber, piEmpireKey[i], &bFlag);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
 
-                if (!bDraw) {
+                if (!bFlag) {
 
                     iErrCode = RequestDraw (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
                     if (iErrCode != OK) {
@@ -1315,25 +1323,21 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 }
             }
 
-            bool bNewPause;
-            iErrCode = RequestPauseQuietly (iGameClass, iGameNumber, piEmpireKey[i], &bNewPause, &iGameState);
+            iErrCode = IsEmpireRequestingPause (iGameClass, iGameNumber, piEmpireKey[i], &bFlag);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
 
-            if (bNewPause && (iGameState & PAUSED)) {
-                
-                for (j = 0; j < iNumEmpires; j ++) {
-                    if (pbAlive[j]) {
-                        pstrUpdateMessage[j] += "The game is now paused\n";
-                    }
-                }
+            if (!bFlag) {
 
-                // No reason to continue scanning empires
-                break;
+                iErrCode = RequestPauseDuringUpdate (iGameClass, iGameNumber, piEmpireKey[i]);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
             }
-        }
+        }   // End for each empire
 
         // Set updated empires
         iErrCode = m_pGameData->WriteData (strGameData, GameData::NumEmpiresUpdated, iNumUpdatedEmpires);
@@ -1360,6 +1364,25 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 }
             }
         }
+
+        // Notify world of resigned empires
+        if (iNumResignedEmpires > 0) {
+
+            if (iNumResignedEmpires == 1) {
+                strMessage = "There is " BEGIN_STRONG "1" END_STRONG " resigned empire in the game\n";
+            } else {
+                strMessage = "There are " BEGIN_STRONG;
+                strMessage += iNumResignedEmpires;
+                strMessage += END_STRONG " resigned empires in the game\n";
+            }
+
+            for (j = 0; j < iNumEmpires; j ++) {
+
+                if (pbAlive[j]) {
+                    pstrUpdateMessage[j] += strMessage;
+                }
+            }
+        }
     }
 
 
@@ -1367,7 +1390,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     // Check for ally out and draw out if someone died and the game has closed //
     /////////////////////////////////////////////////////////////////////////////
 
-    if (!(vGameState.GetInteger() & STILL_OPEN) && iNumObliterations + iNumRuins + iNumNewDraws > 0) {
+    if (!(iGameState & STILL_OPEN) && iNumObliterations + iNumRuins + iNumNewDraws > 0) {
 
         iErrCode = CheckGameForEndConditions (iGameClass, iGameNumber, NULL, pbGameOver);
         if (iErrCode != OK) {
@@ -1451,6 +1474,28 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     Assert (iErrCode == OK);
 #endif
 
+    /////////////////////////////
+    // Update last update time //
+    /////////////////////////////
+    
+    iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateTime, tUpdateTime);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->WriteData (strGameData, GameData::RealLastUpdateTime, tUpdateTime);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateCheck, tUpdateTime);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
     /////////////////////////////////
     // Increment number of updates //
     /////////////////////////////////
@@ -1471,47 +1516,27 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         );
 
     m_pReport->WriteReport (pszUpdateReport);
-    
-    /////////////////////////////
-    // Update last update time //
-    /////////////////////////////
-    
-    iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateTime, tUpdateTime);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
 
-    iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateCheck, tUpdateTime);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    if (iGameState & PAUSED) {
 
-    // If paused, reset SecondsSinceLastUpdateWhilePaused to zero
-    if (vGameState.GetInteger() & (PAUSED | ADMIN_PAUSED)) {
-
-        iErrCode = m_pGameData->WriteData (
-            strGameData, 
-            GameData::SecondsSinceLastUpdateWhilePaused,
-            0
-            );
-
+        // The game updated because everyone was ready for the update
+        iErrCode = m_pGameData->WriteData (strGameData, GameData::SecondsUntilNextUpdateWhilePaused, iUpdatePeriod);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
-    
+
     } else {
 
-        bool bPaused;
-        iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, &bPaused);
+        // Check if we need to pause the game in the aftermath of the update
+        bool bNewlyPaused;
+        iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, tUpdateTime, &bNewlyPaused);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        if (bPaused) {
+        if (bNewlyPaused) {
 
             for (i = 0; i < iNumEmpires; i ++) {
                 pstrUpdateMessage[i] += "The game is now paused\n";
@@ -1886,19 +1911,18 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
                                 if (GameAllowsDiplomacy (iDipLevel, TRUCE) && 
                                     !GameAllowsDiplomacy (iDipLevel, TRADE)) {
 
+                                    Assert (!bPermanentAlliances || vOldStatus.GetInteger() != ALLIANCE);
+
                                     vOffer = TRUCE;
 
-                                    if (!bPermanentAlliances) {
-
-                                        iErrCode = m_pGameData->Increment (
-                                            pstrEmpireData[i], 
-                                            GameEmpireData::NumAlliances, 
-                                            -1
-                                            );
-                                        if (iErrCode != OK) {
-                                            Assert (false);
-                                            goto Cleanup1;
-                                        }
+                                    iErrCode = m_pGameData->Increment (
+                                        pstrEmpireData[i], 
+                                        GameEmpireData::NumAlliances, 
+                                        -1
+                                        );
+                                    if (iErrCode != OK) {
+                                        Assert (false);
+                                        goto Cleanup1;
                                     }
                                     
                                     iErrCode = m_pGameData->Increment (
@@ -1937,7 +1961,8 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
                                     
                                     vOffer = TRADE;
 
-                                    if (!bPermanentAlliances) {
+                                    if (!bPermanentAlliances || 
+                                        vOldStatus.GetInteger() < ALLIANCE) {
                                     
                                         iErrCode = m_pGameData->Increment (
                                             pstrEmpireData[i], 
@@ -2003,19 +2028,18 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
                                 if (GameAllowsDiplomacy (iDipLevel, TRUCE) && 
                                     !GameAllowsDiplomacy (iDipLevel, TRADE)) {
                                     
+                                    Assert (!bPermanentAlliances || vOldStatus.GetInteger() != ALLIANCE);
+
                                     vReceive = TRUCE;
 
-                                    if (!bPermanentAlliances) {
-                                    
-                                        iErrCode = m_pGameData->Increment (
-                                            pstrEmpireData[k], 
-                                            GameEmpireData::NumAlliances, 
-                                            -1
-                                            );
-                                        if (iErrCode != OK) {
-                                            Assert (false);
-                                            goto Cleanup1;
-                                        }
+                                    iErrCode = m_pGameData->Increment (
+                                        pstrEmpireData[k], 
+                                        GameEmpireData::NumAlliances, 
+                                        -1
+                                        );
+                                    if (iErrCode != OK) {
+                                        Assert (false);
+                                        goto Cleanup1;
                                     }
                                     
                                     iErrCode = m_pGameData->Increment (
@@ -5578,13 +5602,13 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
         iNumAdjustedEmpires ++;
     }
 
-    unsigned int* piProxyPlanetKey = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
+    unsigned int* piProxyPlanetKey = (unsigned int*) StackAlloc (iNumAdjustedEmpires * sizeof (unsigned int));
     memset (piProxyPlanetKey, NO_KEY, iNumAdjustedEmpires * sizeof (unsigned int));
 
-    unsigned int** ppiShipKey = (unsigned int**) StackAlloc (iNumEmpires * sizeof (unsigned int*));
+    unsigned int** ppiShipKey = (unsigned int**) StackAlloc (iNumAdjustedEmpires * sizeof (unsigned int*));
     memset (ppiShipKey, NULL, iNumAdjustedEmpires * sizeof (unsigned int*));
 
-    unsigned int* piNumShips = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
+    unsigned int* piNumShips = (unsigned int*) StackAlloc (iNumAdjustedEmpires * sizeof (unsigned int));
     memset (piNumShips, 0, iNumAdjustedEmpires * sizeof (unsigned int));
 
     // Loop through all empires

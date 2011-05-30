@@ -1079,7 +1079,10 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
         // Check for pause
         if (bGameAlive) {
 
-            iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, &bFlag);
+            UTCTime tNow;
+            Time::GetTime (&tNow);
+
+            iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, tNow, &bFlag);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
@@ -1419,7 +1422,7 @@ Cleanup:
             iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumEmpires);
             if (iErrCode == OK && vOldResigned.GetInteger() + 1 == iNumEmpires) {
 
-                iErrCode = RuinGame (iGameClass, iGameNumber, NULL);
+                iErrCode = ResignGame (iGameClass, iGameNumber);
                 Assert (iErrCode == OK);
             }
         }
@@ -1892,7 +1895,10 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
             BroadcastGameMessage (iGameClass, iGameNumber, pszString, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
 
             // Check game for pause
-            iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, &bFlag);
+            UTCTime tNow;
+            Time::GetTime (&tNow);
+
+            iErrCode = CheckForDelayedPause (iGameClass, iGameNumber, tNow, &bFlag);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;

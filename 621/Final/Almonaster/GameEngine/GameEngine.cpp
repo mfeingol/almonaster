@@ -32,7 +32,8 @@ GameEngine::GameEngine (const char* pszDatabaseName,
                         IReport* pReport, 
                         IPageSourceControl* pPageSourceControl,
                         
-                        SystemConfiguration* pscConfig
+                        const SystemConfiguration& scConfig,
+                        const ChatroomConfig& ccConfig
                         
                         ) :
 
@@ -48,13 +49,14 @@ GameEngine::GameEngine (const char* pszDatabaseName,
     m_iNumRefs = 1;
     m_bGoodDatabase = false;
 
-    memcpy (&m_scConfig, pscConfig, sizeof (m_scConfig));
+    m_scConfig = scConfig;
+    m_ccConfig = ccConfig;
 
     m_pszDatabaseName = String::StrDup (pszDatabaseName);
+    m_pAlmonasterHook = NULL;
 
     typedef IAlmonasterHook* (*Fxn_AlmonasterHookCreateInstance)();
     Fxn_AlmonasterHookCreateInstance pCreateInstance;
-    m_pAlmonasterHook = NULL;
 
     // Best effort
     if (pszHookLibrary != NULL && 
@@ -71,6 +73,7 @@ GameEngine::GameEngine (const char* pszDatabaseName,
     }
 
     m_pGameData = NULL;
+    m_pChatroom = NULL;
 
     m_dbsStage = DATABASE_BACKUP_NONE;
     m_iMaxNumTemplates = 0;
@@ -95,6 +98,12 @@ GameEngine::~GameEngine() {
     if (m_bGoodDatabase) {
         iErrCode = CheckAllGamesForUpdates (true);
         Assert (iErrCode == OK);
+    }
+
+    // Clean up chatroom
+    if (m_pChatroom != NULL) {
+        delete m_pChatroom;
+        m_pChatroom = NULL;
     }
 
     // Finalize
@@ -308,7 +317,6 @@ int GameEngine::Initialize() {
     default:
 
         char pszString [256];
-
         sprintf (
             pszString, 
             "Error %i occurred while initializing the database: make sure the database is being "\
@@ -317,7 +325,6 @@ int GameEngine::Initialize() {
             );
 
         m_pReport->WriteReport (pszString);
-        
         return iErrCode;
     }
 
@@ -361,6 +368,22 @@ int GameEngine::Initialize() {
         return iErrCode;
     }
 
+    // Setup the system
+    m_pReport->WriteReport ("GameEngine is initializing the chatroom");
+
+    // Chatroom
+    m_pChatroom = new Chatroom(m_ccConfig, m_pGameData);
+    if (m_pChatroom == NULL) {
+        m_pReport->WriteReport ("GameEngine is out of memory");
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    iErrCode = m_pChatroom->Initialize();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("Chatroom init failed");
+        return iErrCode;
+    }
+
     // Long running queries
     iErrCode = m_tLongRunningQueries.Start (LongRunningQueryProcessor, this, Thread::LowerPriority);
     if (iErrCode != OK) {
@@ -398,6 +421,12 @@ IDatabase* GameEngine::GetDatabase() {
 
     m_pGameData->AddRef(); 
     return m_pGameData;
+}
+
+Chatroom* GameEngine::GetChatroom() {
+
+    Assert (m_pChatroom != NULL);
+    return m_pChatroom;
 }
 
 IScoringSystem* GameEngine::GetScoringSystem (ScoringSystem ssScoringSystem) {
@@ -948,7 +977,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 621";
+    return "Almonaster Build 621.3";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

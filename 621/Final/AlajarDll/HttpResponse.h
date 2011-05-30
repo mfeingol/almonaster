@@ -29,9 +29,10 @@
 #include "HttpRequest.h"
 #include "FileCache.h"
 
-#include "Osal/Variant.h"
+#include "Osal/Crypto.h"
 #include "Osal/Socket.h"
 #include "Osal/TempFile.h"
+#include "Osal/Variant.h"
 
 enum ResponseType {
     RESPONSE_NONE,
@@ -40,6 +41,8 @@ enum ResponseType {
     RESPONSE_BUFFER, 
     RESPONSE_REDIRECT
 };
+
+#define NONCE_SIZE (64)
 
 class HttpServer;
 
@@ -79,6 +82,8 @@ private:
     char** m_ppszCookieDelName;
     char** m_ppszCookieDelPath;
 
+    UTCTime m_tNow;
+
     // Response data
     size_t m_stResponseLength;
     bool m_bNoErrorCallback;
@@ -114,6 +119,10 @@ private:
     void SetNoPageSource();
     void SetNoErrorCallback();
     void SetResponseHttpVersion (HttpVersion iVersion);
+
+    int CreateDigestAuthenticationNonce (char pszNonce [NONCE_SIZE]);
+    int CreateDigestAuthenticationInnerNonce (int64 utTime, char pbInnerNonce [MD5_HASH_SIZE]);
+    int CheckDigestAuthenticationNonce (bool* pbStale);
 
     int SendChunk (const void* pData, size_t stDataLen);
     int SendChunkFromBuffer();

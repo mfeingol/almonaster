@@ -1409,12 +1409,6 @@ Redirection:                                                                    
         Check (g_pGameEngine->GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
         sprintf (pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                \
-        SystemConfiguration scConfig;                                                           \
-        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {      \
-            char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];         \
-            sprintf (pszReport, "%s entered %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);  \
-            g_pReport->WriteReport (pszReport);                                                 \
-        }                                                                                       \
         return Redirect (INFO);                                                                 \
         }                                                                                       \
     case ERROR_GAME_DOES_NOT_EXIST:                                                             \

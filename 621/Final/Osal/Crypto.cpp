@@ -195,6 +195,6 @@ int Crypto::Hash::GetHash (void* pbData, size_t stSize) {
 //
 
 Crypto::HashMD5::HashMD5() : Hash (CALG_MD5) {}
-Crypto::HashRC4::HashRC4() : Hash (CALG_RC4) {}
+Crypto::HashSHA1::HashSHA1() : Hash (CALG_SHA1) {}
 
 #endif // __WIN32__

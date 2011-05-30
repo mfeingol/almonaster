@@ -26,6 +26,7 @@
 #include <string.h>
 
 #include "Osal/Algorithm.h"
+#include "Osal/Crypto.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -111,6 +112,8 @@ void HttpResponse::Recycle() {
     ClearObject();
 
     m_sStatus = HTTP_200;
+    m_rReason = HTTP_REASON_NONE;
+    Time::ZeroTime (&m_tNow);
 
     m_stPageSourceNameLength = 0;
 
@@ -207,6 +210,8 @@ HttpResponse::~HttpResponse() {
     if (m_ppszCustomLogMessages != NULL) {
         delete [] m_ppszCustomLogMessages;
     }
+
+    Assert (m_pszCustomHeaders == NULL);
 }
 
 HttpStatus HttpResponse::GetStatusCode() {
@@ -513,7 +518,7 @@ int HttpResponse::WriteData (const void* pszData, size_t stNumBytes) {
 int HttpResponse::WriteText (int iData) {
     
     char pszData [128];
-    return WriteText (itoa (iData, pszData, 10));
+    return WriteText (_itoa (iData, pszData, 10));
 }
 
 int HttpResponse::WriteText (unsigned int iData) {
@@ -853,26 +858,29 @@ int HttpResponse::Respond() {
     m_pPageSource = m_pHttpRequest->GetPageSource();
     m_iMethod = m_pHttpRequest->GetMethod();
 
-    // Check for STA
-    if (m_pPageSource != NULL && m_pPageSource->IsSingleThreaded()) {
-        return m_pPageSource->QueueResponse (this);
-    }
-
     return RespondPrivate();
 }
 
 int HttpResponse::RespondPrivate() {
 
+    int iErrCode;
+
     Timer tTimer;
     Time::StartTimer (&tTimer);
 
+    // Get time
+    Time::GetTime (&m_tNow);
+
     if (m_pPageSource != NULL) {
 
-        m_stPageSourceNameLength = strlen (m_pPageSource->GetName());
+        const char* pszPageSourceName = m_pPageSource->GetName();
+        m_stPageSourceNameLength = strlen (pszPageSourceName);
 
         // Check for name without slash and no forms
-        const char* pszName = m_pHttpRequest->GetUri() + 1;
-        if (stricmp (pszName, m_pPageSource->GetName()) == 0) {
+        const char* pszUri = m_pHttpRequest->GetUri();
+        const char* pszName = pszUri + 1;
+
+        if (_stricmp (pszName, pszPageSourceName) == 0) {
 
             const char* pszForms;
             size_t stFormLen;
@@ -885,8 +893,12 @@ int HttpResponse::RespondPrivate() {
                 stFormLen = 0;
             }
 
-            char* pszRedirect = (char*) StackAlloc (m_stPageSourceNameLength + stFormLen + 3);
-            *pszRedirect = '/';
+            char* pszRedirect = new char [m_stPageSourceNameLength + stFormLen + 3];
+            if (pszRedirect == NULL) {
+                iErrCode = ERROR_OUT_OF_MEMORY;
+                return iErrCode;
+            }
+            pszRedirect[0] = '/';
 
             strcpy (pszRedirect + 1, pszName);
             strcat (pszRedirect, "/");
@@ -897,6 +909,8 @@ int HttpResponse::RespondPrivate() {
             }
 
             SetRedirect (pszRedirect);
+
+            delete [] pszRedirect;
         }
         
         // Check for restarting pagesource
@@ -910,13 +924,13 @@ int HttpResponse::RespondPrivate() {
         // Check for hosed pagesource
         else if (!m_pPageSource->IsWorking()) {
             
-            // Return 409: the page source is screwed up
+            // 409: the page source is screwed up
             SetNoPageSource();
             InternalSetStatusCode (HTTP_409);
         }
         
-        // Does URI contain the following illegal string? /..
-        else if (strstr (m_pHttpRequest->GetUri(), "/..") != NULL) {
+        // Does URI contain the following illegal string? ..
+        else if (strstr (pszUri, "..") != NULL) {
             InternalSetStatusCode (HTTP_404);
         }
 
@@ -936,36 +950,61 @@ int HttpResponse::RespondPrivate() {
             SetStatusCodeReason (HTTP_REASON_USER_AGENT_BLOCKED);
         }
         
-        // Use Basic Authentication?
-        else if (m_pPageSource->UseBasicAuthentication()) {
-
-            // Are we authenticated
+        // Authentication?
+        else {
+            
             bool bAuthenticated = false;
 
-            if (m_pPageSource->OnBasicAuthenticate (
-                m_pHttpRequest->GetLogin(), 
-                m_pHttpRequest->GetPassword(), 
-                &bAuthenticated
-                ) != OK) {
-                
-                if (!m_bHeadersSent) {
-                    SetStatusCodeOnError (HTTP_500);
+            Assert (!m_bHeadersSent);
+
+            HttpAuthenticationType atAuth = m_pPageSource->GetAuthenticationType();
+            switch (atAuth) {
+
+            case AUTH_BASIC:
+                iErrCode = m_pPageSource->OnBasicAuthenticate (m_pHttpRequest, &bAuthenticated);
+                break;
+
+            case AUTH_DIGEST:
+
+                // Check the nonce before asking the page source to authenticate
+                bool bStale;
+                iErrCode = CheckDigestAuthenticationNonce (&bStale);
+                if (iErrCode == OK) {
+
+                    if (bStale) {
+                        // This codepath leaves bAuthenticated as false, so we return 401 with a hint
+                        m_rReason = HTTP_REASON_STALE_NONCE;
+                    } else {
+                        iErrCode = m_pPageSource->OnDigestAuthenticate (m_pHttpRequest, &bAuthenticated);
+                    }
                 }
-                
-            } else {
+                break;
 
-                if (!bAuthenticated) {
+            case AUTH_NONE:
+                iErrCode = OK;
+                bAuthenticated = true;
+                break;
 
-                    // Disable error callbacks
-                    SetNoErrorCallback();
-                    InternalSetStatusCode (HTTP_401);
-                }   
+            default:
+                iErrCode = ERROR_FAILURE;
+                Assert (false);
+                break;
+            }
+
+            if (iErrCode != OK) {
+                SetNoErrorCallback();
+                InternalSetStatusCode (HTTP_400);
+            }
+            
+            else if (!bAuthenticated) {
+                SetNoErrorCallback();
+                InternalSetStatusCode (HTTP_401);
             }
         }
     }
 
     // Go ahead and send the response
-    int iErrCode = SendResponse();
+    iErrCode = SendResponse();
 
     m_msResponseTime = Time::GetTimerCount (tTimer);
 
@@ -1079,19 +1118,15 @@ int HttpResponse::ProcessInconsistencies() {
 
 int HttpResponse::Send() {
 
+    int iErrCode;
+
     if (m_bHeadersSent) {
         Assert (m_bNoBuffering);
         return FlushChunkFromBuffer();
     }
-
-    int iErrCode;
-
-    // Get time
-    UTCTime tNow, tTimePlus;
-    Time::GetTime (&tNow);
     
     char pszGMTDateString [OS::MaxGMTDateLength];
-    iErrCode = Time::GetGMTDateString (tNow, pszGMTDateString);
+    iErrCode = Time::GetGMTDateString (m_tNow, pszGMTDateString);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1099,8 +1134,19 @@ int HttpResponse::Send() {
 
     unsigned int i;
 
+    const char* pszAuthRealm, * pszAuthDomain;
+    if (m_pPageSource != NULL) {
+        pszAuthRealm = m_pPageSource->GetAuthenticationRealm (m_pHttpRequest);
+        pszAuthDomain = m_pPageSource->GetName();
+    } else {
+        pszAuthRealm = NULL;
+        pszAuthDomain = NULL;
+    }
+
     char pszInt [32];
-    char* pszBuffer = (char*) StackAlloc (4096 + m_stCookieSpace + m_stCustomHeaderLength);
+    char* pszBuffer = (char*) StackAlloc (
+        4096 + m_stCookieSpace + m_stCustomHeaderLength + 
+        String::StrLen (pszAuthRealm) + String::StrLen (pszAuthDomain));
 
     ///////////////////////////
     // Send response headers //
@@ -1113,134 +1159,8 @@ int HttpResponse::Send() {
     strcat (pszBuffer, HttpStatusText[m_sStatus]);
 
     // Date, server name, connection
-    strcat (pszBuffer, "\r\nServer: Alajar/1.59\r\nDate: ");
+    strcat (pszBuffer, "\r\nServer: Alajar/1.70\r\nDate: ");
     strcat (pszBuffer, pszGMTDateString);
-
-    if (m_rType != RESPONSE_REDIRECT && m_rType != RESPONSE_ERROR) {
-
-        // Last modified, Expires, Cache-Control
-        strcat (pszBuffer, "\r\nLast-Modified: ");
-
-        if (m_rType == RESPONSE_FILE) {
-
-            Assert (m_pCachedFile != NULL);
-
-            UTCTime tTime;
-            char pszTime [OS::MaxGMTDateLength];
-
-            m_pCachedFile->GetLastModifiedTime (&tTime);
-
-            iErrCode = Time::GetGMTDateString (tTime, pszTime);
-            if (iErrCode != OK) {
-                Assert (false);
-                return iErrCode;
-            }
-
-            // File's last modified time
-            strcat (pszBuffer, pszTime);
-
-            // Expires in a year
-            strcat (pszBuffer, "\r\nExpires: ");
-
-            Time::AddSeconds (tNow, 60 * 60 * 24 * 365, &tTime);
-            iErrCode = Time::GetGMTDateString (tTime, pszTime);
-            if (iErrCode != OK) {
-                Assert (false);
-                return iErrCode;
-            }
-
-            strcat (pszBuffer, pszTime);
-
-            // Cache-control is private
-            strcat (pszBuffer, "\r\nCache-Control: public");
-
-        } else {
-
-            Assert (m_rType == RESPONSE_BUFFER);
-
-            // Last modified this second
-            strcat (pszBuffer, pszGMTDateString);
-
-            // Expires this second
-            strcat (pszBuffer, "\r\nExpires: ");
-            strcat (pszBuffer, pszGMTDateString);
-
-            // Cache-control is private
-            //
-            // It might seem more appropriate to use no-cache or no-store, but
-            // they have the effect of preventing the back button in IE6 from working
-            strcat (pszBuffer, "\r\nCache-Control: private");
-        }
-    }
-    
-    strcat (pszBuffer, "\r\nContent-Type: ");
-
-    // Custom mime type has precedence
-    if (m_pszMimeType != NULL) {
-        
-        strcat (pszBuffer, m_pszMimeType);
-        
-    } else {
-        
-        // Next comes response file's type
-        if (m_rType == RESPONSE_FILE) {
-            
-            Assert (m_pCachedFile != NULL);
-            
-            // File's mime type
-            strcat (pszBuffer, m_pCachedFile->GetMimeType());
-            
-        } else {
-            
-            // Default to text/html
-            strcat (pszBuffer, "text/html");        
-        }
-    }
-
-    // Content length
-    if (m_bNoBuffering && m_rType == RESPONSE_BUFFER) {
-
-        // Chunked encoding
-        strcat (pszBuffer, "\r\nTransfer-Encoding: chunked");
-
-    } else {
-
-        // Content length
-        strcat (pszBuffer, "\r\nContent-Length: ");
-        
-        if (m_rType == RESPONSE_FILE) {
-            
-            Assert (m_pCachedFile != NULL);
-            
-            // Send length of cached file
-            strcat (pszBuffer, String::UI64toA (m_pCachedFile->GetSize(), pszInt, 10));
-        }
-        else if (m_rType == RESPONSE_BUFFER) {
-            
-            // Send length of data buffer
-            strcat (pszBuffer, String::UI64toA (m_stLength, pszInt, 10));
-        }
-        else if (m_rType == RESPONSE_ERROR) {
-
-            // Send length of error string
-            strcat (pszBuffer, String::UI64toA (HttpStatusErrorTextLength[m_sStatus], pszInt, 10));
-        }
-    }
-
-    // Accept ranges is none
-    strcat (pszBuffer, "\r\nAccept-Ranges: none");
-
-
-    // Connection
-    // TODO - blocks reusing connections for HTTP 1.1
-    m_bConnectionClosed = true || !m_pHttpRequest->GetKeepAlive() || m_iResponseHttpVersion < HTTP11;
-    if (m_bConnectionClosed) {
-        strcat (pszBuffer, "\r\nConnection: close");
-    }
-    
-    /*else {
-        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
-    }*/
 
     //////////////////////////////////
     // Send status specific headers //
@@ -1265,10 +1185,180 @@ int HttpResponse::Send() {
 
     case HTTP_401:
 
-        // Send basic authentication challenge
-        strcat (pszBuffer, "\r\nWWW-Authenticate: basic realm=\"Alajar\"");
+        Assert (m_pPageSource != NULL);
+        switch (m_pPageSource->GetAuthenticationType()) {
+
+        case AUTH_BASIC:
+
+            // Send basic authentication challenge
+            strcat (pszBuffer, "\r\nWWW-Authenticate: basic realm=\"");
+            strcat (pszBuffer, pszAuthRealm);
+            strcat (pszBuffer, "\"");
+            break;
+
+        case AUTH_DIGEST:
+
+            // Create a new nonce
+            char pszNonce [NONCE_SIZE];
+            iErrCode = CreateDigestAuthenticationNonce (pszNonce);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            // Send digest authentication challenge
+            strcat (pszBuffer, "\r\nWWW-Authenticate: Digest realm=\"");
+            strcat (pszBuffer, pszAuthRealm);
+            strcat (pszBuffer, "\", domain=\"/");
+            strcat (pszBuffer, pszAuthDomain);
+            strcat (pszBuffer, "\", nonce=\"");
+            strcat (pszBuffer, pszNonce);
+            strcat (pszBuffer, "\", stale=");
+            
+            if (m_rReason == HTTP_REASON_STALE_NONCE) {
+                strcat (pszBuffer, "true");
+            } else {
+                strcat (pszBuffer, "false");
+            }
+
+            strcat (pszBuffer, ", algorithm=MD5, qop=\"auth\"");
+            break;
+
+        default:
+            Assert (false);
+            break;
+        }
         break;
     }
+
+    // Last modified, Expires, Cache-Control
+    if (m_rType != RESPONSE_REDIRECT && 
+        m_rType != RESPONSE_ERROR &&
+        m_sStatus == HTTP_200) {
+
+        if (m_rType == RESPONSE_FILE) {
+
+            Assert (m_pCachedFile != NULL);
+
+            UTCTime tTime;
+            char pszTime [OS::MaxGMTDateLength];
+
+            m_pCachedFile->GetLastModifiedTime (&tTime);
+
+            iErrCode = Time::GetGMTDateString (tTime, pszTime);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            // File's last modified time
+            strcat (pszBuffer, "\r\nLast-Modified: ");
+            strcat (pszBuffer, pszTime);
+
+            // Expires in a year
+            strcat (pszBuffer, "\r\nExpires: ");
+
+            Time::AddSeconds (m_tNow, 60 * 60 * 24 * 365, &tTime);
+            iErrCode = Time::GetGMTDateString (tTime, pszTime);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            strcat (pszBuffer, pszTime);
+
+            // Cache-control is private
+            strcat (pszBuffer, "\r\nCache-Control: public");
+
+        } else {
+
+            Assert (m_rType == RESPONSE_BUFFER);
+
+            // Last modified this second
+            strcat (pszBuffer, "\r\nLast-Modified: ");
+            strcat (pszBuffer, pszGMTDateString);
+
+            // Expires this second
+            strcat (pszBuffer, "\r\nExpires: ");
+            strcat (pszBuffer, pszGMTDateString);
+
+            // Cache-control is private
+            //
+            // It might seem more appropriate to use no-cache or no-store, but
+            // they have the effect of preventing the back button in IE6 from working
+            strcat (pszBuffer, "\r\nCache-Control: private");
+        }
+    }
+
+    if (m_rType != RESPONSE_REDIRECT) {
+
+        strcat (pszBuffer, "\r\nContent-Type: ");
+
+        // Custom mime type has precedence
+        if (m_pszMimeType != NULL) {
+
+            strcat (pszBuffer, m_pszMimeType);
+
+        } else {
+
+            // Next comes response file's type
+            if (m_rType == RESPONSE_FILE) {
+
+                Assert (m_pCachedFile != NULL);
+
+                // File's mime type
+                strcat (pszBuffer, m_pCachedFile->GetMimeType());
+
+            } else {
+
+                // Default to text/html
+                strcat (pszBuffer, "text/html");        
+            }
+        }
+
+        // Content length
+        if (m_bNoBuffering && m_rType == RESPONSE_BUFFER) {
+
+            // Chunked encoding
+            strcat (pszBuffer, "\r\nTransfer-Encoding: chunked");
+
+        } else {
+
+            // Content length
+            strcat (pszBuffer, "\r\nContent-Length: ");
+
+            if (m_rType == RESPONSE_FILE) {
+
+                Assert (m_pCachedFile != NULL);
+
+                // Send length of cached file
+                strcat (pszBuffer, String::UI64toA (m_pCachedFile->GetSize(), pszInt, 10));
+            }
+            else if (m_rType == RESPONSE_BUFFER) {
+
+                // Send length of data buffer
+                strcat (pszBuffer, String::UI64toA (m_stLength, pszInt, 10));
+            }
+            else if (m_rType == RESPONSE_ERROR) {
+
+                // Send length of error string
+                strcat (pszBuffer, String::UI64toA (HttpStatusErrorTextLength[m_sStatus], pszInt, 10));
+            }
+        }
+
+        // Accept ranges is none
+        strcat (pszBuffer, "\r\nAccept-Ranges: none");
+    }
+
+    // Connection
+    // TODO - blocks reusing connections for HTTP 1.1
+    m_bConnectionClosed = true || !m_pHttpRequest->GetKeepAlive();
+    if (m_bConnectionClosed && m_iResponseHttpVersion >= HTTP11) {
+        strcat (pszBuffer, "\r\nConnection: close");
+    }
+    /*else {
+        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
+    }*/
 
     // Send custom headers
     if (m_pszCustomHeaders != NULL) {
@@ -1288,7 +1378,8 @@ int HttpResponse::Send() {
         // Set cookies
         for (i = 0; i < m_iNumCookiesSet; i ++) {
             
-            Time::AddSeconds (tNow, m_piCookieTTL[i], &tTimePlus);
+            UTCTime tTimePlus;
+            Time::AddSeconds (m_tNow, m_piCookieTTL[i], &tTimePlus);
             
             iErrCode = Time::GetCookieDateString (tTimePlus, pszCookieExpirationDate);
             if (iErrCode != OK) {
@@ -1300,7 +1391,7 @@ int HttpResponse::Send() {
             strcat (pszBuffer, m_ppszCookieSetName[i]);
             strcat (pszBuffer, "=");
             strcat (pszBuffer, m_ppszCookieSetValue[i]);
-            strcat (pszBuffer, "; expires=");
+            strcat (pszBuffer, "; httponly; expires=");
             strcat (pszBuffer, pszCookieExpirationDate);
             strcat (pszBuffer, "; path=");
             
@@ -1319,7 +1410,8 @@ int HttpResponse::Send() {
         // Delete cookies
         for (i = 0; i < m_iNumCookiesDel; i ++) {
             
-            Time::SubtractSeconds (tNow, 24 * 60 * 60, &tTimePlus);
+            UTCTime tTimePlus;
+            Time::SubtractSeconds (m_tNow, 24 * 60 * 60, &tTimePlus);
             
             iErrCode = Time::GetCookieDateString (tTimePlus, pszCookieExpirationDate);
             if (iErrCode != OK) {
@@ -1363,7 +1455,7 @@ int HttpResponse::Send() {
 
     m_stResponseLength += stSent;
 
-    Assert (m_bNoBuffering && m_rType == RESPONSE_BUFFER || !m_bNoBuffering);
+    Assert ((m_bNoBuffering && m_rType == RESPONSE_BUFFER) || !m_bNoBuffering);
 
     // Send data
     if (m_pHttpRequest->GetMethod() != HEAD) {
@@ -1413,6 +1505,119 @@ int HttpResponse::Send() {
             }
         }
     }
+
+    return OK;
+}
+
+int HttpResponse::CreateDigestAuthenticationNonce (char pszNonce [NONCE_SIZE]) {
+
+    int iErrCode;
+
+    const size_t cbNonceSize = sizeof (int64) + MD5_HASH_SIZE;
+    char pbNonce [cbNonceSize];
+
+    // The first 8 bytes are a timestamp (seconds since 1970)
+    int64 utNow = Time::GetUnixTime (m_tNow);
+    memcpy (pbNonce, &utNow, sizeof (int64));  // No guarantee that buffer is properly aligned...
+
+    // The rest of the bytes are the inner MD5 hash
+    iErrCode = CreateDigestAuthenticationInnerNonce (utNow, pbNonce + sizeof (int64));
+    if (iErrCode != OK)
+        return iErrCode;
+
+    // Convert the whole thing to base64
+    Assert (Algorithm::GetEncodeBase64Size (cbNonceSize) <= NONCE_SIZE);
+    return Algorithm::EncodeBase64 (pbNonce, cbNonceSize, pszNonce, NONCE_SIZE);
+}
+
+int HttpResponse::CreateDigestAuthenticationInnerNonce (int64 utTime, char pbInnerNonce [MD5_HASH_SIZE]) {
+
+    int iErrCode;
+
+    Crypto::HashMD5 hash;
+
+    // Add time to the hash
+    iErrCode = hash.HashData (&utTime, sizeof (utTime));
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    // Add user agent to the hash
+    const char* pszUserAgent = m_pHttpRequest->GetBrowserName();
+    if (pszUserAgent != NULL) {
+        iErrCode = hash.HashData (pszUserAgent, strlen (pszUserAgent));
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+    }
+
+    // We could add the IP address, but that would probably force re-authentication
+    // when corporate firewalls get in the way
+
+    // Add instance-global server-specific data
+    // If the server restarts, it will get a new unique identifier.
+    // This will cause existing nonces to be declared stale, but clients
+    // will not have to reauthenticate
+    const Uuid& uuidUnique = m_pHttpServer->GetUniqueIdentifier();
+    iErrCode = hash.HashData (&uuidUnique, sizeof (uuidUnique));
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    return hash.GetHash (pbInnerNonce, MD5_HASH_SIZE);
+}
+
+int HttpResponse::CheckDigestAuthenticationNonce (bool* pbStale) {
+
+    int iErrCode;
+
+    // If the nonce is not present, we just ignore this check
+    // We'll send the right 401 challenge as a result of authenticating and failing
+    const char* pszNonce = m_pHttpRequest->GetAuthenticationNonce();
+    if (pszNonce == NULL)
+        return OK;
+
+    char pbNonce [sizeof (int64) + MD5_HASH_SIZE];
+
+    *pbStale = true;
+
+    // Decode the nonce to bytes
+    size_t cbDecoded;
+    iErrCode = Algorithm::DecodeBase64 (pszNonce, pbNonce, sizeof (pbNonce), &cbDecoded);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    // Make sure we got the size we were expecting
+    if (cbDecoded != sizeof (pbNonce))
+        return OK;
+
+    // Get the time embedded in the nonce
+    int64 utTime;
+    memcpy (&utTime, pbNonce, sizeof (int64));
+
+    // See if the time is within range
+    Seconds iNonceLifetime = m_pPageSource->GetDigestAuthenticationNonceLifetime();
+
+    UTCTime utcTime;
+    Time::FromUnixTime (utTime, &utcTime);
+
+    if (Time::GetSecondDifference (m_tNow, utcTime) > iNonceLifetime)
+        return OK;  // Stale nonce
+    
+    // Compute the rest of the nonce and check it for accuracy
+    char pbCheckNonce [MD5_HASH_SIZE];
+    iErrCode = CreateDigestAuthenticationInnerNonce (utTime, pbCheckNonce);
+    if (iErrCode != OK)
+        return iErrCode;
+
+    // This is usually caused by a stale nonce (e.g., a process restart)
+    if (memcmp (pbNonce + sizeof (int64), pbCheckNonce, MD5_HASH_SIZE) != 0)
+        return OK;
+
+    *pbStale = false;
 
     return OK;
 }

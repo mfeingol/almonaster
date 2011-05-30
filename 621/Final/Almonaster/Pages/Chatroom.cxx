@@ -27,6 +27,7 @@ IHttpForm* pHttpForm;
 
 unsigned int i;
 InChatroom iInChatroom = CHATROOM_UNCHECKED;
+Chatroom* pChatroom = g_pGameEngine->GetChatroom();
 
 // Make sure we have broadcast rights
 int iErrCode;
@@ -47,7 +48,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (WasButtonPressed (BID_CLEARMESSAGES)) {
 
-                if (g_pChatroom->ClearMessages() == OK) {
+                if (pChatroom->ClearMessages() == OK) {
                     AddMessage ("The chatroom's messages were cleared");
                 } else {
                     AddMessage ("The chatroom's messages could not be cleared");
@@ -59,7 +60,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Check for leave
             if (WasButtonPressed (BID_LEAVETHECHATROOM)) {
-                g_pChatroom->ExitChatroom (m_vEmpireName.GetCharPtr());
+                pChatroom->ExitChatroom (m_vEmpireName.GetCharPtr());
                 AddMessage ("You left the chatroom");
                 return Redirect (ACTIVE_GAME_LIST);
             }
@@ -81,14 +82,14 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (pszMessage != NULL && *pszMessage != '\0') {
 
-                iInChatroom = g_pChatroom->EnterChatroom (m_vEmpireName.GetCharPtr()) == OK ? CHATROOM_IN : CHATROOM_OUT;
+                iInChatroom = pChatroom->EnterChatroom (m_vEmpireName.GetCharPtr()) == OK ? CHATROOM_IN : CHATROOM_OUT;
 
                 if (iInChatroom == CHATROOM_IN) {
 
                     String strFilter;
                     iErrCode = HTMLFilter (pszMessage, &strFilter, MAX_NUM_SPACELESS_CHARS, false);
                     if (iErrCode == OK) {
-                        g_pChatroom->PostMessage (m_vEmpireName.GetCharPtr(), strFilter, 0);
+                        pChatroom->PostMessage (m_vEmpireName.GetCharPtr(), strFilter, 0);
                     } else {
                         AddMessage ("Not enough memory to post your message");
                     }
@@ -107,7 +108,7 @@ SYSTEM_OPEN (false)
 
 // Enter the chatroom
 if (bBroadcast && iInChatroom == CHATROOM_UNCHECKED) {
-    iInChatroom = g_pChatroom->EnterChatroom (m_vEmpireName.GetCharPtr()) == OK ? CHATROOM_IN : CHATROOM_OUT;
+    iInChatroom = pChatroom->EnterChatroom (m_vEmpireName.GetCharPtr()) == OK ? CHATROOM_IN : CHATROOM_OUT;
 }
 
 // Chatroom
@@ -126,13 +127,13 @@ if (iInChatroom == CHATROOM_OUT) {
     Assert (!bBroadcast || iInChatroom == CHATROOM_IN);
 
     // Get speaket list
-    iErrCode = g_pChatroom->GetSpeakers (&pcsSpeaker, &iNumSpeakers);
+    iErrCode = pChatroom->GetSpeakers (&pcsSpeaker, &iNumSpeakers);
     if (iErrCode != OK) {
         %><p>An error occurred reading the speaker list from the chatroom<%
         goto Cleanup;
     }
 
-    iErrCode = g_pChatroom->GetMessages (&pcmMessage, &iNumMessages);
+    iErrCode = pChatroom->GetMessages (&pcmMessage, &iNumMessages);
     if (iErrCode != OK) {
         %><p>An error occurred reading the message list from the chatroom<%
         goto Cleanup;
@@ -230,11 +231,11 @@ if (iInChatroom == CHATROOM_OUT) {
 Cleanup:
 
     if (pcsSpeaker != NULL) {
-        g_pChatroom->FreeSpeakers (pcsSpeaker);
+        pChatroom->FreeSpeakers (pcsSpeaker);
     }
 
     if (pcmMessage != NULL) {
-        g_pChatroom->FreeMessages (pcmMessage);
+        pChatroom->FreeMessages (pcmMessage);
     }
 }
 

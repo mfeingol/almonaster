@@ -54,6 +54,10 @@ namespace Time {
     OSAL_EXPORT void GetTime (UTCTime* ptUTCTime);
     OSAL_EXPORT void GetTime (int iSec, int iMin, int iHour, int iDay, int iMonth, int iYear, UTCTime* ptUTCTime);
 
+    OSAL_EXPORT int64 GetUnixTime();
+    OSAL_EXPORT int64 GetUnixTime (const UTCTime& tTime);
+    OSAL_EXPORT void FromUnixTime (int64 i64Time, UTCTime* ptUTCTime);
+
     OSAL_EXPORT int GetTimeZone (char pszTimeZone[OS::MaxTimeZoneLength], int* piBias);
     OSAL_EXPORT int GetTimeZoneBias (int* piBias);
 
@@ -62,7 +66,7 @@ namespace Time {
     OSAL_EXPORT void GetDate (
         const UTCTime& tTime,
         int* piSec, int* piMin, int* piHour, DayOfWeek* pdayOfWeek, int* piDay, int* piMonth, int* piYear);
-
+    
     OSAL_EXPORT int GetTimeString (char pszTimeString[OS::MaxTimeLength]);
     OSAL_EXPORT int GetTimeString (const UTCTime& tTime, char pszTimeString[OS::MaxTimeLength]);
 
@@ -74,6 +78,9 @@ namespace Time {
 
     OSAL_EXPORT int GetCookieDateString (char pszCookieDateString[OS::MaxCookieDateLength]);
     OSAL_EXPORT int GetCookieDateString (const UTCTime& tTime, char pszCookieDateString[OS::MaxCookieDateLength]);
+
+    OSAL_EXPORT int GetSmtpDateString (char pszCookieDateString[OS::MaxSmtpDateLength]);
+    OSAL_EXPORT int GetSmtpDateString (const UTCTime& tTime, char pszCookieDateString[OS::MaxSmtpDateLength]);
 
     OSAL_EXPORT int GetDay();
     OSAL_EXPORT int GetDay (const UTCTime& tTime);

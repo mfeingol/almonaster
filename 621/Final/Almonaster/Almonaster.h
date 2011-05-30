@@ -37,7 +37,6 @@ extern IPageSourceControl* g_pPageSourceControl;
 extern IFileCache* g_pFileCache;
 
 extern GameEngine* g_pGameEngine;
-extern Chatroom* g_pChatroom;
 
 extern char* g_pszResourceDir;
 

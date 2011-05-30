@@ -497,9 +497,11 @@ int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
 
     // Browser
     const char* pszBrowser = m_pHttpRequest->GetBrowserName();
-    iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
-    if (iErrCode != OK) {
-        return iErrCode;
+    if (pszBrowser != NULL) {
+        iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
     }
 
     // Secret key
@@ -549,9 +551,11 @@ int HtmlRenderer::GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64H
 
     // Browser
     const char* pszBrowser  = m_pHttpRequest->GetBrowserName();
-    iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
-    if (iErrCode != OK) {
-        return iErrCode;
+    if (pszBrowser != NULL) {
+        iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
     }
 
     // Secret key
@@ -620,9 +624,11 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
 
     // Browser
     const char* pszBrowser  = m_pHttpRequest->GetBrowserName();
-    iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
-    if (iErrCode != OK) {
-        return iErrCode;
+    if (pszBrowser != NULL) {
+        iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
+        if (iErrCode != OK) {
+            return iErrCode;
+        }
     }
 
     // Secret key

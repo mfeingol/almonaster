@@ -23,10 +23,17 @@
 
 #include <stdio.h>
 
-Chatroom::Chatroom (const ChatroomConfig& ccConf) : 
-    m_hSpeakerTable (NULL, NULL) {
-
+Chatroom::Chatroom (const ChatroomConfig& ccConf, IDatabase* pDatabase) 
+    : 
+    m_hSpeakerTable (NULL, NULL),
+    m_pDatabase (NULL)
+{
     m_ccConf = ccConf;
+
+    if (m_ccConf.bStoreMessagesInDatabase && pDatabase != NULL) {
+        m_pDatabase = pDatabase;
+        m_pDatabase->AddRef();
+    }
 }
 
 Chatroom::~Chatroom() {
@@ -40,6 +47,10 @@ Chatroom::~Chatroom() {
     while (m_hSpeakerTable.GetNextIterator (&htiSpeaker)) {
         delete htiSpeaker.GetData();
     }
+
+    if (m_pDatabase != NULL) {
+        m_pDatabase->Release();
+    }
 }
 
 int Chatroom::Initialize() {
@@ -50,12 +61,91 @@ int Chatroom::Initialize() {
     if (iErrCode != OK) {
         return iErrCode;
     }
+
     iErrCode = m_rwSpeakerLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    return m_hSpeakerTable.Initialize (m_ccConf.iMaxNumSpeakers) ? OK : ERROR_OUT_OF_MEMORY;
+    if (!m_hSpeakerTable.Initialize (m_ccConf.iMaxNumSpeakers)) {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    if (m_pDatabase != NULL) {
+        iErrCode = InitializeFromDatabase();
+    }
+
+    return iErrCode;
+}
+
+int Chatroom::InitializeFromDatabase() {
+
+    const unsigned int piColumns[] = {
+        SystemChatroomData::Flags,
+        SystemChatroomData::Time,
+        SystemChatroomData::Speaker,
+        SystemChatroomData::Message,
+        };
+
+    const unsigned int iNumColumns = countof (piColumns);
+
+    int iErrCode;
+    IReadTable* pTable = NULL;
+
+    unsigned int* piKey = NULL;
+    Variant** ppvMessage = NULL;
+    unsigned int iNumMessages;
+
+    iErrCode = m_pDatabase->GetTableForReading(SYSTEM_CHATROOM_DATA, &pTable);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    iErrCode = pTable->ReadColumns(iNumColumns, piColumns, &piKey, &ppvMessage, &iNumMessages);
+    if (iErrCode != OK) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+        }
+        goto Cleanup;
+    }
+
+    SafeRelease(pTable);
+
+    // Sort the messages oldest to newest
+    UTCTime* ptTime = (UTCTime*) StackAlloc (iNumMessages * sizeof (UTCTime));
+    unsigned int* piIndex = (unsigned int*) StackAlloc (iNumMessages * sizeof (unsigned int));
+    
+    for (unsigned int i = 0; i < iNumMessages; i ++) {
+        piIndex[i] = i;
+        ptTime[i] = ppvMessage[i][SystemChatroomData::Time].GetUTCTime();
+    }
+
+    Algorithm::QSortTwoAscending<UTCTime, unsigned int> (ptTime, piIndex, iNumMessages);
+
+    // Insert the messages into the in-memory cache
+    for (unsigned int i = 0; i < iNumMessages; i ++) {
+
+        unsigned int iIndex = piIndex[i];
+
+        const char* pszSpeaker = ppvMessage[iIndex][SystemChatroomData::Speaker].GetCharPtr();
+        const char* pszMessage = ppvMessage[iIndex][SystemChatroomData::Message].GetCharPtr();
+        UTCTime tTime = ppvMessage[iIndex][SystemChatroomData::Time].GetUTCTime();
+        int iFlags = ppvMessage[iIndex][SystemChatroomData::Flags].GetInteger();
+
+        iErrCode = PostMessageWithTime(pszSpeaker, pszMessage, tTime, iFlags, piKey[iIndex]);
+        if (iErrCode != OK) {
+            goto Cleanup;
+        }
+    }                        
+
+Cleanup:
+
+    m_pDatabase->FreeData(ppvMessage);
+    m_pDatabase->FreeKeys(piKey);
+
+    SafeRelease(pTable);
+
+    return iErrCode;
 }
 
 
@@ -190,14 +280,12 @@ Cleanup:
     return iErrCode;
 }
 
-
 void Chatroom::FreeMessages (ChatroomMessage* pcmMessage) {
 
     if (pcmMessage != NULL) {
         delete [] pcmMessage;
     }
 }
-
 
 int Chatroom::PostMessage (const char* pszSpeakerName, const char* pszMessage, int iFlags) {
 
@@ -212,21 +300,29 @@ int Chatroom::PostMessage (const char* pszSpeakerName, const char* pszMessage, i
     UTCTime tTime;
     Time::GetTime (&tTime);
 
-    return PostMessageWithTime (pszSpeakerName, pszMessage, tTime, iFlags);
+    return PostMessageWithTime (pszSpeakerName, pszMessage, tTime, iFlags, NO_KEY);
 }
 
 int Chatroom::ClearMessages() {
 
+    int iErrCode = OK;
+
     m_rwMessageLock.WaitWriter();
     m_mqMessageQueue.Clear();
+
+    if (m_pDatabase != NULL) {
+        iErrCode = m_pDatabase->DeleteAllRows(SYSTEM_CHATROOM_DATA);
+    }
+
     m_rwMessageLock.SignalWriter();
 
-    return OK;
+    return iErrCode;
 }
 
 int Chatroom::PostMessageWithTime (const char* pszSpeakerName, const char* pszMessage, const UTCTime& tTime,
-                                   int iFlags) {
+                                   int iFlags, unsigned int iKey) {
 
+    int iErrCode = OK;
     bool bTruncated = false;
 
     ChatroomMessage* pMessage = new ChatroomMessage;
@@ -251,7 +347,12 @@ int Chatroom::PostMessageWithTime (const char* pszSpeakerName, const char* pszMe
         pMessage->strMessageText = pszMessage;
     }
 
-    if (pMessage->strMessageText.GetCharPtr() == NULL) {
+    Variant pvColVal[SystemChatroomData::NumColumns] = { 
+        iFlags, tTime, pszSpeakerName, pMessage->strMessageText.GetCharPtr()
+    };
+
+    if (pMessage->strMessageText.GetCharPtr() == NULL ||
+        pvColVal[SystemChatroomData::Message].GetCharPtr() == NULL) {
         delete pMessage;
         return ERROR_OUT_OF_MEMORY;
     }
@@ -263,32 +364,55 @@ int Chatroom::PostMessageWithTime (const char* pszSpeakerName, const char* pszMe
     } else {
 
         pMessage->strSpeaker = pszSpeakerName;
-        if (pMessage->strSpeaker.GetCharPtr() == NULL) {
+
+        if (pMessage->strSpeaker.GetCharPtr() == NULL ||
+            pvColVal[SystemChatroomData::Speaker].GetCharPtr() == NULL) {
             delete pMessage;
             return ERROR_OUT_OF_MEMORY;
         }
     }
 
+    m_rwMessageLock.WaitWriter();
+
+    if (m_pDatabase != NULL) {
+
+        // Insert into the table if it's a new message
+        if (iKey == NO_KEY) {
+            iErrCode = m_pDatabase->InsertRow(SYSTEM_CHATROOM_DATA, pvColVal, iKey);
+            if (iErrCode != OK) {
+                m_rwMessageLock.SignalWriter();
+                delete pMessage;
+                return iErrCode;
+            }
+        }
+    }
+
     pMessage->tTime = tTime;
     pMessage->iFlags = iFlags;
-
-    m_rwMessageLock.WaitWriter();
+    pMessage->iKey = iKey;
 
     if (!m_mqMessageQueue.Push (pMessage)) {
         m_rwMessageLock.SignalWriter();
         delete pMessage;
         return ERROR_OUT_OF_MEMORY;
     }
-
     pMessage = NULL;
 
     if (m_mqMessageQueue.GetNumElements() > m_ccConf.iMaxNumMessages) {
 
         bool bRetVal = m_mqMessageQueue.Pop (&pMessage);
         Assert (bRetVal);
+
+        if (m_pDatabase != NULL) {
+            iErrCode = m_pDatabase->DeleteRow(SYSTEM_CHATROOM_DATA, pMessage->iKey);
+        }
     }
 
     m_rwMessageLock.SignalWriter();
+
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
 
     return bTruncated ? WARNING : OK ;
 }
@@ -343,7 +467,7 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
             if (m_ccConf.bPostSystemMessages) {
 
                 sprintf (pszTimeOut, "%s timed out of the chatroom", pszName);
-                iErrCode = PostMessageWithTime (NULL, pszTimeOut, tTimeOutTime, CHATROOM_MESSAGE_SYSTEM);
+                iErrCode = PostMessageWithTime (NULL, pszTimeOut, tTimeOutTime, CHATROOM_MESSAGE_SYSTEM, NO_KEY);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -470,6 +594,6 @@ bool Chatroom::SpeakerEquals::Equals (const char* pszSpeakerLeft, const char* ps
     if (bCaseSensitive) {
         return strcmp (pszSpeakerLeft, pszSpeakerRight) == 0;
     } else {
-        return stricmp (pszSpeakerLeft, pszSpeakerRight) == 0;
+        return _stricmp (pszSpeakerLeft, pszSpeakerRight) == 0;
     }
 }

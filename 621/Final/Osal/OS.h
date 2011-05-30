@@ -194,9 +194,10 @@ namespace OS {
         MaxOSVersionLength = 512,
         MaxTimeZoneLength = 512,
         MaxTimeLength = 16,
-        MaxDateLength = 128,
-        MaxGMTDateLength = 192,
-        MaxCookieDateLength = 256,
+        MaxDateLength = 64,
+        MaxGMTDateLength = 64,
+        MaxCookieDateLength = 64,
+        MaxSmtpDateLength = 64
     };
 
     OSAL_EXPORT int GetOSVersion (char pszOSVersion[OS::MaxOSVersionLength]);

@@ -152,14 +152,40 @@ int Admin::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
     return iErrCode;
 }
 
-int Admin::OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticate) {
-
-    *pbAuthenticate = String::StrCmp (pszLogin, m_pszLogin) == 0 && 
-                      String::StrCmp (pszPassword, m_pszPassword) == 0;
-
+int Admin::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
     return OK;
 }
 
-int Admin::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
-    return OK;
+const char* Admin::GetAuthenticationRealm (IHttpRequest* pHttpRequest) {
+
+    // All resources share the same realm
+    return "admin";
+}
+
+int Admin::OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {
+
+    const char* pszUserName = pHttpRequest->GetAuthenticationUserName();
+
+    // Check username - we only allow one user anyway
+    if (String::StriCmp (pszUserName, m_pszLogin) != 0) {
+        *pbAuthenticated = false;
+        return OK;
+    }
+
+    // Delegate to default implementation
+    return pHttpRequest->BasicAuthenticate (m_pszPassword, pbAuthenticated);
+}
+
+int Admin::OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {
+
+    const char* pszUserName = pHttpRequest->GetAuthenticationUserName();
+
+    // Check username - we only allow one user anyway
+    if (String::StriCmp (pszUserName, m_pszLogin) != 0) {
+        *pbAuthenticated = false;
+        return OK;
+    }
+
+    // Delegate to default implementation
+    return pHttpRequest->DigestAuthenticate (m_pszPassword, pbAuthenticated);
 }

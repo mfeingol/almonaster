@@ -64,10 +64,12 @@ public:
 
     int OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
     int OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-
-    int OnBasicAuthenticate (const char* pszLogin, const char* pszPassword, bool* pbAuthenticated);
-
     int OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+
+    const char* GetAuthenticationRealm (IHttpRequest* pHttpRequest);
+
+    int OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
+    int OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
 };
 
 #endif

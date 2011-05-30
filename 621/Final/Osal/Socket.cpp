@@ -98,7 +98,6 @@ int Socket::Finalize() {
 #endif
 }
 
-
 int Socket::Open() {
     
     if ((m_Socket = socket (AF_INET, SOCK_STREAM, 0)) == INVALID_SOCKET) {
@@ -106,7 +105,6 @@ int Socket::Open() {
     }   
     return OK;
 }
-
 
 int Socket::Listen (short siPort) {
 
@@ -131,42 +129,52 @@ int Socket::Listen (short siPort) {
     return OK;
 }
 
-
-Socket* Socket::Accept() {
-
-    // Create a new Socket for the incoming connection
-    Socket* pSocket = new Socket();
-    int iErrCode = Accept (pSocket);
-
-    if (iErrCode == OK) {
-        return pSocket;
-    }
-    
-    delete pSocket;
-    return NULL;
-}
-
 int Socket::Accept (Socket* pSocket) {
 
     // Accept the connection
 #ifdef __LINUX__
-	socklen_t iAddrLen = (socklen_t) sizeof (pSocket->m_saTheirAddr);
+	socklen_t iAddrLen = (socklen_t) sizeof (m_saTheirAddr);
 #else if defined __WIN32__
-	int iAddrLen = sizeof (pSocket->m_saTheirAddr);
+	int iAddrLen = sizeof (m_saTheirAddr);
 #endif
-    pSocket->m_Socket = accept (
-        m_Socket, 
+
+    SOCKET socket = accept (
+        m_Socket,
         (struct sockaddr*) &(pSocket->m_saTheirAddr), 
         &iAddrLen
         );
-        
-    if (pSocket->m_Socket == INVALID_SOCKET) {
+
+    if (socket == INVALID_SOCKET) {
         return ERROR_FAILURE;
     }
+
+    pSocket->m_Socket = socket;
 
     // Get their IP address
     strcpy (pSocket->m_pszTheirIP, inet_ntoa (pSocket->m_saTheirAddr.sin_addr));
 
+    return OK;
+}
+
+Socket* Socket::Accept() {
+
+    Assert (m_Socket != INVALID_SOCKET);
+
+    // Create a new Socket for the incoming connection
+    Socket* pSocket = new Socket();
+    if (pSocket == NULL) {
+        return NULL;
+    }
+
+    if (Accept (pSocket) != OK) {
+        delete pSocket;
+        return NULL;
+    }
+
+    return pSocket;
+}
+
+int Socket::Negotiate() {
     return OK;
 }
 
@@ -216,7 +224,7 @@ int Socket::Recv (void* pData, size_t stNumBytes, size_t* pstNumBytesRecvd) {
     *pstNumBytesRecvd = 0;
 
     Assert (stNumBytes == (size_t) (int) stNumBytes);
-    size_t stNumBytesRecvd = recv (m_Socket, (char*) pData, (int) stNumBytes, 0);
+    size_t stNumBytesRecvd = SocketRecv (pData, stNumBytes);
 
     if (stNumBytesRecvd == SOCKET_ERROR || stNumBytesRecvd == 0) {
         return ERROR_FAILURE;
@@ -246,7 +254,7 @@ int Socket::Peek (void* pData, size_t stNumBytes, size_t* pstNumBytesPeeked) {
     *pstNumBytesPeeked = 0;
 
     Assert (stNumBytes == (size_t) (int) stNumBytes);
-    size_t stNumBytesPeeked = recv (m_Socket, (char*) pData, (int) stNumBytes, MSG_PEEK);
+    size_t stNumBytesPeeked = SocketPeek (pData, stNumBytes);
     
     if (stNumBytesPeeked == SOCKET_ERROR || stNumBytesPeeked == 0) {
         return ERROR_FAILURE;
@@ -267,10 +275,9 @@ int Socket::Send (const void* pData, size_t stNumBytes, size_t* pstNumBytesSent)
     *pstNumBytesSent = 0;
 
     size_t stNumBytesSent, stTotalNumBytesSent;
-    const char* pszData = (const char*) pData;
 
     Assert (stNumBytes == (size_t) (int) stNumBytes);
-    stTotalNumBytesSent = stNumBytesSent = send (m_Socket, pszData, (int) stNumBytes, 0);
+    stTotalNumBytesSent = stNumBytesSent = SocketSend (pData, stNumBytes);
     if (stNumBytesSent == SOCKET_ERROR) {
         return ERROR_FAILURE;
     }
@@ -301,7 +308,7 @@ int Socket::Send (const void* pData, size_t stNumBytes, size_t* pstNumBytesSent)
 
         do {
             
-            stNumBytesSent = send (m_Socket, pszData + stCurrentIndex, (int) (stNumBytes - stTotalNumBytesSent), 0);
+            stNumBytesSent = SocketSend ((char*) pData + stCurrentIndex, stNumBytes - stTotalNumBytesSent);
             if (stNumBytesSent == SOCKET_ERROR) {
                 return ERROR_FAILURE;
             }
@@ -318,13 +325,25 @@ int Socket::Send (const void* pData, size_t stNumBytes, size_t* pstNumBytesSent)
     return OK;
 }
 
+size_t Socket::SocketSend (const void* pData, size_t cbSend) {
+    return send (m_Socket, (const char*) pData, (int) cbSend, 0);
+}
+
+size_t Socket::SocketRecv (void* pData, size_t stNumBytes) {
+    return recv (m_Socket, (char*) pData, (int) stNumBytes, 0);
+}
+
+size_t Socket::SocketPeek (void* pData, size_t stNumBytes) {
+    return recv (m_Socket, (char*) pData, (int) stNumBytes, MSG_PEEK);
+}
+
 int Socket::Send (int iData, size_t* pstNumBytesSent) {
 
     char pszData[64];
 #ifdef __LINUX__
     snprintf(pszData, sizeof(pszData), "%d", iData);
 #else if defined __WIN32__
-	itoa (iData, pszData, 10);
+	_itoa (iData, pszData, 10);
 #endif
 
     return Send (pszData, strlen (pszData), pstNumBytesSent);
@@ -333,7 +352,7 @@ int Socket::Send (int iData, size_t* pstNumBytesSent) {
 int Socket::Send (unsigned int iData, size_t* pstNumBytesSent) {
 
     char pszData[64];
-    ultoa (iData, pszData, 10);
+    _ultoa (iData, pszData, 10);
 
     return Send (pszData, strlen (pszData), pstNumBytesSent);
 }
@@ -392,7 +411,7 @@ int Socket::Close() {
     char pszBuf [512];
     while (true) {
 
-        stNumBytesRecvd = recv (m_Socket, pszBuf, sizeof (pszBuf), 0);
+        stNumBytesRecvd = SocketRecv (pszBuf, sizeof (pszBuf));
         if (stNumBytesRecvd == 0 || stNumBytesRecvd == SOCKET_ERROR) {
             break;
         }
@@ -425,13 +444,22 @@ int Socket::Close() {
     return stNumBytesRecvd == SOCKET_ERROR ? ERROR_FAILURE : OK;
 }
 
+int Socket::SetKeepAlive (bool bKeepAlive) {
+
+    BOOL bFlag = bKeepAlive ? TRUE : FALSE;
+    return setsockopt (m_Socket, SOL_SOCKET, SO_KEEPALIVE, (char*) &bFlag, sizeof (bFlag)) ?
+        OK : ERROR_FAILURE;
+}
 
 int Socket::SetRecvTimeOut (MilliSeconds iTimeOut) {
 
-    BOOL b = TRUE;
-    setsockopt (m_Socket, SOL_SOCKET, SO_KEEPALIVE, (char*) &b, sizeof (b));
-
     return setsockopt (m_Socket, SOL_SOCKET, SO_RCVTIMEO, (char*) &iTimeOut, sizeof (iTimeOut)) == 0 ? 
+        OK : ERROR_FAILURE;
+}
+
+int Socket::SetSendTimeOut (MilliSeconds iTimeOut) {
+
+    return setsockopt (m_Socket, SOL_SOCKET, SO_SNDTIMEO, (char*) &iTimeOut, sizeof (iTimeOut)) == 0 ? 
         OK : ERROR_FAILURE;
 }
 
@@ -551,6 +579,54 @@ int Socket::GetOurHostName (char* pszAddress, size_t stLength) {
 #endif
         return ERROR_FAILURE;
     }
+
+    return OK;
+}
+
+int Socket::Select (SocketSet* pSelectSet) {
+
+    unsigned int i, j;
+
+    fd_set set;
+    set.fd_count = pSelectSet->iNumSockets;
+    
+    if (pSelectSet->iNumSockets > FD_SETSIZE) {
+        return ERROR_INVALID_ARGUMENT;
+    }
+
+    for (i = 0; i < set.fd_count; i ++) {
+        set.fd_array[i] = pSelectSet->pSockets[i]->m_Socket;
+    }
+
+    int ret = select (0, &set, NULL, NULL, NULL);
+    if (ret == SOCKET_ERROR) {
+        return ERROR_FAILURE;
+    }
+
+    Socket* pSockets [FD_SETSIZE];
+    for (i = 0; i < set.fd_count; i ++) {
+
+        SOCKET socket = set.fd_array[i];
+        for (j = 0; j < pSelectSet->iNumSockets; j ++) {
+
+            Socket* pSocket = pSelectSet->pSockets[j];
+            SOCKET socketSocket = pSocket->m_Socket;
+
+            if (socketSocket == INVALID_SOCKET) {
+                return ERROR_FAILURE;
+            }
+
+            if (socket == socketSocket) {
+                pSockets[i] = pSocket;
+                break;
+            }
+        }
+
+        Assert (j < pSelectSet->iNumSockets);
+    }
+
+    pSelectSet->iNumSockets = set.fd_count;
+    memcpy (pSelectSet->pSockets, pSockets, set.fd_count * sizeof (Socket*));
 
     return OK;
 }
