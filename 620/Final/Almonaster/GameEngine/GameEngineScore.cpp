@@ -268,8 +268,8 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     Assert (vNukedKey.GetInteger() >= ROOT_KEY);
 
-    bEmpireLocked = true;
     LockEmpire (vNukedKey.GetInteger(), &nmEmpireMutex);
+    bEmpireLocked = true;
 
     if (ValidateEmpireKey (vNukedKey.GetInteger(), vHashEmpireName.GetInteger())) {
         iLoserKey = vNukedKey.GetInteger();

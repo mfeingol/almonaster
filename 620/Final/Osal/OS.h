@@ -158,6 +158,8 @@ typedef char Byte;
 
 #define StackAlloc(stNumBytes) alloca (stNumBytes)
 
+#define countof(x) (sizeof (x) / sizeof (x[0]))
+
 //
 // Errors
 //

@@ -108,9 +108,6 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     Variant vTech;
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    NamedMutex nmLock;
-    LockEmpireTechs (iGameClass, iGameNumber, iEmpireKey, &nmLock);
-
     iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
     if (iErrCode != OK || vTech.GetInteger() == 0) {
         iErrCode = ERROR_NO_TECHNOLOGY_AVAILABLE;
@@ -159,8 +156,6 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
 
 Cleanup:
 
-    UnlockEmpireTechs (nmLock);
-    
     return iErrCode;
 }
 

@@ -108,9 +108,6 @@ int GameEngine::SetEmpireAutoUpdate (int iGameClass, int iGameNumber, int iEmpir
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
-    NamedMutex nmEmpireUpdatedMutex;
-    LockEmpireUpdated (iGameClass, iGameNumber, iEmpireKey, &nmEmpireUpdatedMutex);
-
     // Return if same setting
     iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
@@ -194,8 +191,6 @@ int GameEngine::SetEmpireAutoUpdate (int iGameClass, int iGameNumber, int iEmpir
     }
 
 Cleanup:
-
-    UnlockEmpireUpdated (nmEmpireUpdatedMutex);
 
     return iErrCode;
 }
@@ -507,9 +502,6 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
 
     Variant vOptions, vState, vOldNum;
 
-    NamedMutex nmMutex;
-    LockPauseGame (iGameClass, iGameNumber, &nmMutex);
-
     iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
     if (iErrCode != OK) {
         Assert (false);
@@ -565,8 +557,6 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
 
 Cleanup:
 
-    UnlockPauseGame (nmMutex);
-
     return iErrCode;
 }
 
@@ -583,56 +573,60 @@ Cleanup:
 
 int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
 
-    int iErrCode;
+    int iErrCode, iState = 0, iOptions;
+    Variant vTemp;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
-    NamedMutex nmMutex;
-    LockPauseGame (iGameClass, iGameNumber, &nmMutex);
-
-    Variant vState, vOptions;
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    iState = vTemp.GetInteger();
 
-    *piGameState = vState.GetInteger();
-
-    if (!(vState.GetInteger() & STARTED)) {
+    if (!(iState & STARTED)) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vOptions);
+    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    iOptions = vTemp.GetInteger();
 
-    if (!(vOptions.GetInteger() & REQUEST_PAUSE)) {
+    if (!(iOptions & REQUEST_PAUSE)) {
         goto Cleanup;
     }
 
     iErrCode = m_pGameData->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_PAUSE);
-    Assert (iErrCode == OK);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
 
     iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingPause, -1);
-    Assert (iErrCode == OK);
+    if (iErrCode != OK) {
+        // TODO - need compensation
+        Assert (false);
+        goto Cleanup;
+    }
 
-    if (!(vState.GetInteger() & ADMIN_PAUSED) && vState.GetInteger() & PAUSED) {
+    if (!(iState & ADMIN_PAUSED) && (iState & PAUSED)) {
 
         iErrCode = UnpauseGame (iGameClass, iGameNumber, false, true);
         Assert (iErrCode == OK);
 
         if (iErrCode == OK) {
-            *piGameState &= ~PAUSED;
+            iState &= ~PAUSED;
         }
     }
 
 Cleanup:
 
-    UnlockPauseGame (nmMutex);
+    *piGameState = iState;
     
     return iErrCode;
 }
@@ -706,9 +700,6 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
 
     Variant vOptions, vState, vOldNum;
 
-    NamedMutex nmMutex;
-    LockDrawGame (iGameClass, iGameNumber, &nmMutex);
-
     iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
     if (iErrCode != OK) {
         Assert (false);
@@ -755,8 +746,6 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
 
 Cleanup:
 
-    UnlockDrawGame (nmMutex);
-
     return iErrCode;
 }
 
@@ -774,9 +763,6 @@ int GameEngine::RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) 
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
-
-    NamedMutex nmMutex;
-    LockDrawGame (iGameClass, iGameNumber, &nmMutex);
 
     Variant vState, vOptions;
     iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
@@ -808,8 +794,6 @@ int GameEngine::RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) 
     }
 
 Cleanup:
-
-    UnlockPauseGame (nmMutex);
     
     return iErrCode;
 }

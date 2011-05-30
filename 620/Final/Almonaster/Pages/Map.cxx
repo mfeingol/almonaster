@@ -29,7 +29,7 @@ bool bMapGenerated = (m_iGameState & GAME_MAP_GENERATED) != 0;
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 bool bForceFullMap = false;
 
-int iErrCode, iMapSubPage = 0, iClickedPlanetKey = 0, iClickedProxyPlanetKey = 0;
+int iErrCode, iMapSubPage = 0, iClickedPlanetKey = NO_KEY, iClickedProxyPlanetKey = NO_KEY;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -364,12 +364,15 @@ EndPartialMaps:
 
                 HandleMiniBuild (iUpdatePlanetKey);
 
+                iClickedPlanetKey = iUpdatePlanetKey;
                 iMapSubPage = 1;
                 bRedirectTest = false;
                 break;
             }
 
             if (WasButtonPressed (BID_UPDATE)) {
+
+                iClickedPlanetKey = iUpdatePlanetKey;
                 iMapSubPage = 1;
                 bRedirectTest = false;
                 break;

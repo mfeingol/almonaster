@@ -331,8 +331,8 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
 
     // Try to find the loser
     // This doesn't really belong here, but it's a convenient place to do it for perf
-    bLocked = true;
     m_pGameEngine->LockEmpire (iLoserKey, &nmEmpireLock);
+    bLocked = true;
 
     if (m_pGameEngine->ValidateEmpireKey (iLoserKey, iHashEmpireName)) {
         
@@ -1010,8 +1010,8 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
         }
     }
 
-    bEmpireLocked = true;
     m_pGameEngine->LockEmpire (iLoserKey, &nmEmpireLock);
+    bEmpireLocked = true;
     
     // If empire is valid, decrement its score
     if (!m_pGameEngine->ValidateEmpireKey (iLoserKey, iHashEmpireName)) {

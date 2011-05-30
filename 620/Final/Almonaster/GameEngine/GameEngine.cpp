@@ -126,6 +126,9 @@ GameEngine::~GameEngine() {
         m_tLongRunningQueries.WaitForTermination();
     }
 
+    // Stop lock manager
+    m_lockMgr.Shutdown();
+
     // Clean up game object table
     GameObject* pGameObject;
     HashTableIterator<const char*, GameObject*> htiGameObject;
@@ -232,7 +235,7 @@ int GameEngine::Initialize() {
         return iErrCode;
     }
 
-    if (!m_htGameObjectTable.Initialize (250) || !m_tsfqQueryQueue.Initialize()) {
+    if (!m_tsfqQueryQueue.Initialize()) {
         m_pReport->WriteReport ("GameEngine is out of memory");
         return ERROR_OUT_OF_MEMORY;
     }
@@ -297,6 +300,17 @@ int GameEngine::Initialize() {
         return iErrCode;
     }
 
+    int iNumActiveGames;
+    iErrCode = GetNumActiveGames (&iNumActiveGames);
+    if (iErrCode != OK) {
+        iNumActiveGames = 250;
+    }
+
+    if (!m_htGameObjectTable.Initialize (max (250, iNumActiveGames))) {
+        m_pReport->WriteReport ("GameEngine is out of memory");
+        return ERROR_OUT_OF_MEMORY;
+    }
+
     // Init scoring systems
     m_ppScoringSystem[ALMONASTER_SCORE] = AlmonasterScore::CreateInstance (this);
     m_ppScoringSystem[CLASSIC_SCORE] = ClassicScore::CreateInstance (this);
@@ -327,29 +341,53 @@ int GameEngine::Initialize() {
     }
 
     // Long running queries
-    m_tLongRunningQueries.Start (LongRunningQueryProcessor, this, Thread::LowerPriority);
-    m_pReport->WriteReport ("GameEngine started the long running query processor");
+    iErrCode = m_tLongRunningQueries.Start (LongRunningQueryProcessor, this, Thread::LowerPriority);
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine could not start the long running query thread");
+        Assert (false);
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine started the long running query thread");
+
+    // AutoBackup
+    if (m_scConfig.bAutoBackup) {
+        iErrCode = m_tAutoBackupThread.Start (AutomaticBackup, this);
+        if (iErrCode != OK) {
+            m_pReport->WriteReport ("GameEngine could not start the auto-backup thread");
+            Assert (false);
+            return iErrCode;
+        }
+        m_pReport->WriteReport ("GameEngine started the auto-backup thread");
+    }
+
+    // Lock Manager
+    LockManagerConfig lmConf;
+
+    iErrCode = GetNumEmpiresInGames (&lmConf.iNumEmpiresHint);
+    if (iErrCode != OK) {
+        lmConf.iNumEmpiresHint = 100;
+    }
+
+    // UNDONE - proper settings needed
+    lmConf.iMaxAgedOutPerScan = 25;         // Heuristic
+    lmConf.msMaxScanTime = 1000;            // One second
+    lmConf.msScanPeriod = 10; //1000 * 60 * 15;   // Fifteen minutes
+    lmConf.sAgeOutPeriod = 1; //60 * 10;         // Ten minutes
+
+    iErrCode = m_lockMgr.Initialize (lmConf);
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine could not initialize the game empire lock manager");
+        Assert (false);
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine initialized the game empire lock manager");
 
     // Hook library
     if (m_pAlmonasterHook != NULL) {
         m_pAlmonasterHook->Running();
     }
 
-    // AutoBackup
-    if (iErrCode == OK) {
-
-        m_pReport->WriteReport ("GameEngine set up the system successfully");
-        
-        if (m_scConfig.bAutoBackup) {
-            m_tAutoBackupThread.Start (AutomaticBackup, this);
-            m_pReport->WriteReport ("GameEngine started auto-backup thread");
-        }
-
-    } else {
-
-        m_pReport->WriteReport ("GameEngine could not set up the system successfully");
-        m_scConfig.bAutoBackup = false;
-    }
+    m_pReport->WriteReport ("GameEngine set up the system successfully");
 
     return iErrCode;
 }

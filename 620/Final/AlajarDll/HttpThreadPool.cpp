@@ -146,7 +146,7 @@ int HttpThreadPool::Stop() {
     // just one event to be signalled for everyone to wake up
     while (m_iNumThreads > 0) {
         m_eThreadEvent.Signal();
-        OS::Sleep();
+        OS::Sleep (20);
     }
 
     // Make sure all threads are gone

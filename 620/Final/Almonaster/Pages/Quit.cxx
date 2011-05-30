@@ -31,15 +31,19 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
     if (WasButtonPressed (BID_CANCEL)) {
 
-        // Cancelled - redirect to info
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+        // Cancelled - redirect to options
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+        m_pgeLock = NULL;
         return Redirect (OPTIONS);
     }
 
     else if (WasButtonPressed (BID_RESIGN)) {
 
         // Upgrade to write lock
-        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber) != OK || 
+        GameEmpireLock* pgeLock = m_pgeLock;
+        m_pgeLock = NULL;
+
+        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, pgeLock) != OK || 
             g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
 
             AddMessage ("That game no longer exists");
@@ -90,7 +94,10 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
     else if (WasButtonPressed (BID_QUIT)) {
 
         // Upgrade to write lock
-        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber) != OK || 
+        GameEmpireLock* pgeLock = m_pgeLock;
+        m_pgeLock = NULL;
+
+        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, pgeLock) != OK || 
             g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
 
             AddMessage ("That game no longer exists");
@@ -149,7 +156,8 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
             iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
             if (iErrCode != OK || iNumEmpires != 2) {
 
-                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                m_pgeLock = NULL;
                 return Redirect (OPTIONS);
             }
 
@@ -157,7 +165,10 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
         }
 
         // Upgrade to write lock
-        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber) != OK || 
+        GameEmpireLock* pgeLock = m_pgeLock;
+        m_pgeLock = NULL;
+
+        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, pgeLock) != OK || 
             g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
 
             AddMessage ("That game no longer exists");

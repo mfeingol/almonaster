@@ -199,6 +199,59 @@ struct BuildLocation {
     unsigned int iFleetKey;
 };
 
+enum FleetOrderType {
+    FLEET_ORDER_NORMAL      = 0,
+    FLEET_ORDER_MERGE       = 1,
+    FLEET_ORDER_MOVE_PLANET = 2,
+    FLEET_ORDER_MOVE_FLEET  = 3,
+
+    FLEET_ORDER_TYPE_FIRST  = FLEET_ORDER_NORMAL,
+    FLEET_ORDER_TYPE_LAST   = FLEET_ORDER_MOVE_FLEET,
+};
+
+struct FleetOrder {
+    int iKey;
+    char* pszText;
+    FleetOrderType fotType;
+};
+
+enum ShipOrderType {
+    SHIP_ORDER_NORMAL       = 0,
+    SHIP_ORDER_MOVE_PLANET  = 2,
+    SHIP_ORDER_MOVE_FLEET   = 3,
+
+    SHIP_ORDER_TYPE_FIRST  = SHIP_ORDER_NORMAL,
+    SHIP_ORDER_TYPE_LAST   = SHIP_ORDER_MOVE_FLEET,
+};
+
+struct ShipOrder {
+    int iKey;
+    char* pszText;
+    ShipOrderType sotType;
+};
+
+struct ShipOrderPlanetInfo {
+    const char* pszName;
+    unsigned int iPlanetKey;
+    unsigned int iOwner;
+    int iX;
+    int iY;
+};
+
+struct ShipOrderShipInfo {
+    int iShipType;
+    int iSelectedAction;
+    int iState;
+    float fBR;
+    float fMaxBR;
+    bool bBuilding;
+};
+
+struct ShipOrderGameInfo {
+    int iGameClassOptions;
+    float fMaintRatio;
+};
+
 class IAlmonasterUIEventSink : virtual public IObject {
 public:
 
@@ -296,14 +349,8 @@ public:
         const GameUpdateInformation* pUpdateInfo) = 0;
     
     virtual int RemoveEmpire (int iEmpireKey) = 0;
-    virtual int RemoveEmpireFromGameInternal (int iGameClass, int iGameNumber, int iEmpireKey, 
-        int iKillerEmpire) = 0;
 
     // Ships
-    virtual int DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey, bool bSafe) = 0;
-
-    virtual int ChangeShipTypeOrMaxBR (const char* pszShips, const char* pszEmpireData, int iShipKey, int iEmpireKey,
-        int iOldShipType, int iNewShipType, float fBRChange) = 0;
 
     // Score
     virtual int UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* pszNukerName, 
@@ -478,15 +525,9 @@ public:
 
     virtual void LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpireBridier (const NamedMutex& nmMutex) = 0;
-    
-    virtual void LockGame (int iGameClass, int iGameNumber, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockGame (const NamedMutex& nmMutex) = 0;
 
     virtual void LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpireGameMessages (const NamedMutex& nmMutex) = 0;
-
-    virtual void LockEmpireShips (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockEmpireShips (const NamedMutex& nmMutex) = 0;
 
     virtual void LockEmpires() = 0;
     virtual void UnlockEmpires() = 0;
@@ -494,44 +535,8 @@ public:
     virtual void LockAlienIcons() = 0;
     virtual void UnlockAlienIcons() = 0;
 
-    virtual void LockAutoUpdate (int iGameClass, int iGameNumber, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockAutoUpdate (const NamedMutex& nmMutex) = 0;
-
-    virtual void LockPauseGame (int iGameClass, int iGameNumber, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockPauseGame (const NamedMutex& nmMutex) = 0;
-
-    virtual void LockEmpireUpdated (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockEmpireUpdated (const NamedMutex& nmMutex) = 0;
-
-    virtual void LockEmpireTechs (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockEmpireTechs (const NamedMutex& nmMutex) = 0;
-
-    virtual void LockEmpireFleets (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
-    virtual void UnlockEmpireFleets (const NamedMutex& nmMutex) = 0;
-
     virtual void LockEmpire (int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpire (const NamedMutex& nmMutex) = 0;
-
-    virtual int WaitGameReader (int iGameClass, int iGameNumber) = 0;
-    virtual int SignalGameReader (int iGameClass, int iGameNumber) = 0;
-
-    virtual int WaitGameWriter (int iGameClass, int iGameNumber) = 0;
-    virtual int SignalGameWriter (int iGameClass, int iGameNumber) = 0;
-
-    virtual int WaitForUpdate (int iGameClass, int iGameNumber) = 0;
-    virtual int SignalAfterUpdate (int iGameClass, int iGameNumber) = 0;
-
-    virtual void LockGameConfigurationForReading() = 0;
-    virtual void UnlockGameConfigurationForReading() = 0;
-
-    virtual void LockGameConfigurationForWriting() = 0;
-    virtual void UnlockGameConfigurationForWriting() = 0;
-
-    virtual void LockMapConfigurationForReading() = 0;
-    virtual void UnlockMapConfigurationForReading() = 0;
-
-    virtual void LockMapConfigurationForWriting() = 0;
-    virtual void UnlockMapConfigurationForWriting() = 0;
 
     // Update
     virtual int ForceUpdate (int iGameClass, int iGameNumber) = 0;
@@ -667,9 +672,6 @@ public:
     virtual int IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* pbProtected) = 0;
     virtual int GetGamePassword (int iGameClass, int iGameNumber, Variant* pvPassword) = 0;
     virtual int SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword) = 0;
-
-    virtual int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber) = 0;
-    virtual int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, int* piNumUpdates, bool bSendMessages, bool bGameAlreadyLocked) = 0;
 
     virtual int DoesGameExist (int iGameClass, int iGameNumber, bool* pbExists) = 0;
     virtual int GetNumUpdates (int iGameClass, int iGameNumber, int* piNumUpdates) = 0;
@@ -961,9 +963,6 @@ public:
         int piDipOptKey[], int* piSelected, int* piNumOptions) = 0;
     virtual int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer) = 0;
 
-    virtual int AdminPauseGame (int iGameClass, int iGameNumber, bool bBroadcast) = 0;
-    virtual int AdminUnpauseGame (int iGameClass, int iGameNumber, bool bBroadcast) = 0;
-
     virtual int GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey,
         int* piWar, int* piTruce, int* piTrade, int* piAlliance) = 0;
 
@@ -1015,11 +1014,6 @@ public:
     virtual int CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
 
     // Ships
-    virtual int GetShipOrders (int iGameClass, int iGameNumber, int iEmpireKey, 
-        const GameConfiguration& gcConfig, int iShipKey, int iShipType, float fBR, float fMaintRatio, 
-        int iPlanetKey, int iLocationX, int iLocationY, int** ppiOrderKey, String** ppstrOrderText, 
-        int* piNumOrders, int* piSelected) = 0;
-
     virtual int UpdateShipName (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey, const char* pszNewName) = 0;
 
     virtual int GetNumShips (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumShips) = 0;
@@ -1029,15 +1023,12 @@ public:
     virtual int GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiFleetKeys, 
         int* piNumFleets) = 0;
 
-    virtual int GetFleetLocation (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int* piPlanetKey) = 0;
     virtual int GetFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, Variant* pvFleetName) = 0;
     virtual int GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiLocationKey, 
         int* piNumLocations) = 0;
 
     virtual int UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
         const char* pszNewName) = 0;
-
-    virtual int GetNumShipsInFleet (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int* piNumShips) = 0;
 
     // Auxiliary database functions
     virtual bool IsDatabaseBackingUp() = 0;

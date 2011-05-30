@@ -2864,7 +2864,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
             if (fNewBR < FLOAT_PROXIMITY_TOLERANCE) {
                 
                 // Destroy ship
-                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3075,7 +3075,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                 piNumVoluntaryDismantled [vType.GetInteger()] ++;
                 
                 // Delete ship
-                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -4020,7 +4020,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                         else if (vBR.GetFloat() - gcConfig.fMorpherCost <= FLOAT_PROXIMITY_TOLERANCE) {
                             
                             // Just destroy the ship
-                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
@@ -5119,7 +5119,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                             if (!ppbAlive[j][k]) {
                                 
                                 // Destroy ship
-                                iErrCode = DeleteShip (iGameClass, iGameNumber, INDEPENDENT, ppiBattleShipKey[j][k], true);
+                                iErrCode = DeleteShip (iGameClass, iGameNumber, INDEPENDENT, ppiBattleShipKey[j][k]);
                                 if (iErrCode != OK) {
                                     Assert (false);
                                     goto OnError;
@@ -5162,8 +5162,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                         iGameClass, 
                                         iGameNumber, 
                                         piEmpireKey[piBattleEmpireIndex[j]], 
-                                        ppiBattleShipKey[j][k],
-                                        true
+                                        ppiBattleShipKey[j][k]
                                         );
                                     
                                     if (iErrCode != OK) {
@@ -5206,8 +5205,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                     iGameClass, 
                                     iGameNumber, 
                                     piEmpireKey[piBattleEmpireIndex[j]], 
-                                    ppiCloakerKey[j][k],
-                                    true
+                                    ppiCloakerKey[j][k]
                                     );
                                 if (iErrCode != OK) {
                                     Assert (false);
@@ -5323,7 +5321,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                 iCounter ++;
                                 
                                 // Destroy the ship
-                                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[j], piShipKey[k], true);
+                                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[j], piShipKey[k]);
                                 if (iErrCode != OK) {
                                     Assert (false);
                                     goto OnError;
@@ -5494,26 +5492,26 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
     int iErrCode = OK, iX, iY;
     unsigned int i, j, k, l, * piMineKey = NULL, iNumMines;
 
-    String strMessage;
+    String strPrefix, strMessage;
     Variant vPlanetKey, vPlanetName, vCoordinates, vNumShips, vOwner, vShipName, vType;
     bool bSweep, bExist;
 
     const char* pszShipTable;
 
-    unsigned int* piProxyPlanetKey = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
-    memset (piProxyPlanetKey, NO_KEY, iNumEmpires * sizeof (unsigned int));
-
-    unsigned int** ppiShipKey = (unsigned int**) StackAlloc (iNumEmpires * sizeof (unsigned int*));
-    memset (ppiShipKey, NULL, iNumEmpires * sizeof (unsigned int*));
-
-    unsigned int* piNumShips = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
-    memset (piNumShips, 0, iNumEmpires * sizeof (unsigned int));
-
     unsigned int iNumAdjustedEmpires = iNumEmpires, iCurrentPlanetColumn, iTypeColumn;
 
     if (bIndependence) {
-        iNumEmpires ++;
+        iNumAdjustedEmpires ++;
     }
+
+    unsigned int* piProxyPlanetKey = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
+    memset (piProxyPlanetKey, NO_KEY, iNumAdjustedEmpires * sizeof (unsigned int));
+
+    unsigned int** ppiShipKey = (unsigned int**) StackAlloc (iNumEmpires * sizeof (unsigned int*));
+    memset (ppiShipKey, NULL, iNumAdjustedEmpires * sizeof (unsigned int*));
+
+    unsigned int* piNumShips = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
+    memset (piNumShips, 0, iNumAdjustedEmpires * sizeof (unsigned int));
 
     // Loop through all empires
     for (i = 0; i < iNumEmpires; i ++) {
@@ -5712,34 +5710,39 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
 
             GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
 
-            // Initial update messages
-            strMessage = SHIP_TYPE_STRING [MINEFIELD];
-            strMessage += " ";
-            strMessage.AppendHtml (vShipName.GetCharPtr(), 0, false);
-            strMessage += " of " BEGIN_STRONG;
-            strMessage += pvEmpireName[i].GetCharPtr();
+            // Prefix to update messages
+            strPrefix = SHIP_TYPE_STRING [MINEFIELD];
+            strPrefix += " ";
+            strPrefix.AppendHtml (vShipName.GetCharPtr(), 0, false);
+            strPrefix += " of " BEGIN_STRONG;
+            strPrefix += pvEmpireName[i].GetCharPtr();
             
             if (bSweep) {
                 
+                strPrefix += END_STRONG " was " BEGIN_STRONG "defused" END_STRONG " by a ";
+                strPrefix += SHIP_TYPE_STRING_LOWERCASE [MINESWEEPER];
+                strPrefix += " and could not detonate at ";
+
+            } else {
+                
+                strPrefix += END_STRONG " was " BEGIN_STRONG "detonated" END_STRONG " at ";
+            }
+
+            AddPlanetNameAndCoordinates (strPrefix, vPlanetName.GetCharPtr(), iX, iY);
+            strPrefix += END_FONT "\n";
+
+            // End strPrefix
+
+            if (bSweep) {
+
                 // Destroy mine
-                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piMineKey[j], true);
+                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piMineKey[j]);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
-                
-                strMessage += END_STRONG " was " BEGIN_STRONG "defused" END_STRONG " by a ";
-                strMessage += SHIP_TYPE_STRING_LOWERCASE [MINESWEEPER];
-                strMessage += " and could not detonate at ";
-
-                AddPlanetNameAndCoordinates (strMessage, vPlanetName.GetCharPtr(), iX, iY);
-                strMessage += "\n";
 
             } else {
-                
-                strMessage += END_STRONG " was " BEGIN_STRONG "detonated" END_STRONG " at ";
-                AddPlanetNameAndCoordinates (strMessage, vPlanetName.GetCharPtr(), iX, iY);
-                strMessage += "\n";
         
                 // Reduce planet population
                 iErrCode = MinefieldExplosion (
@@ -5756,9 +5759,15 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                     Assert (false);
                     goto Cleanup;
                 }
+
+                strMessage = (const char*) NULL;
                 
                 // Destroy ships from all empires
                 for (k = 0; k < iNumAdjustedEmpires; k ++) {
+
+                    if (piNumShips[k] == 0) {
+                        continue;
+                    }
 
                     if (k == iNumEmpires) {
                         
@@ -5781,8 +5790,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                                 iGameClass, 
                                 iGameNumber, 
                                 INDEPENDENT, 
-                                ppiShipKey[k][l],
-                                true
+                                ppiShipKey[k][l]
                                 );
                         }
                         
@@ -5807,8 +5815,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                                 iGameClass, 
                                 iGameNumber, 
                                 piEmpireKey[k], 
-                                ppiShipKey[k][l],
-                                true
+                                ppiShipKey[k][l]
                                 );
                             
                             if (iErrCode != OK) {
@@ -5846,14 +5853,15 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
             for (k = 0; k < iNumEmpires; k ++) {
                 
                 if (piProxyPlanetKey[k] != NO_KEY) {
-                    
-                    if (bSweep) {
-                        pstrUpdateMessage[k] += strMessage;
+
+                    if (piEmpireKey[k] == piEmpireKey[i]) {
+                        pstrUpdateMessage[k] += BEGIN_GOOD_FONT(k);
                     } else {
                         pstrUpdateMessage[k] += BEGIN_BAD_FONT(k);
-                        pstrUpdateMessage[k] += strMessage;
-                        pstrUpdateMessage[k] += END_FONT "\n";
                     }
+                    pstrUpdateMessage[k] += strPrefix;
+
+                    pstrUpdateMessage[k] += strMessage;
                 }
             }
 
@@ -6348,8 +6356,20 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
                     fStrength += (float) vTemp.GetFloat() * vTemp.GetFloat();
                 }
             }
+
+            // Write num ships
+            iErrCode = m_pGameData->WriteData (
+                pstrEmpireFleets[i], 
+                iFleetKey, 
+                GameEmpireFleets::NumShips, 
+                iNumShips
+                );
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
             
-            // Write new fleet strength
+            // Write new fleet strengths
             iErrCode = m_pGameData->WriteData (
                 pstrEmpireFleets[i], 
                 iFleetKey, 
@@ -7315,7 +7335,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         strMessage += "\n";
                         
                         // Delete the colony
-                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -7456,7 +7476,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         }
                         
                         // Melt the ship down
-                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -7598,7 +7618,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         }
                         
                         // Delete ship
-                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -7863,7 +7883,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         }
                         
                         // Delete ship
-                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -8062,7 +8082,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         if (iInvadePop == vPop.GetInteger()) {
                             
                             // Delete ship
-                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
@@ -8448,7 +8468,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                     }
                     
                     // Delete ship
-                    iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                    iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -8624,7 +8644,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         } else {
                             
                             // Delete ship
-                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
@@ -8890,7 +8910,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         } else {
                             
                             // Delete ship
-                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                            iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
@@ -9118,7 +9138,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         }
                         
                         // Delete ship
-                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -9147,7 +9167,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
             if (bDismantle && !bDied) {
                 
                 // Delete the ship
-                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -10327,7 +10347,7 @@ int GameEngine::ProcessGates (int iGameClass, int iGameNumber,
                         pstrUpdateMessage[i] += " destroyed itself gating ships\n" END_FONT;
                         
                         // Scrap heap
-                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j], true);
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[i], piShipKey[j]);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto OnError;
@@ -10430,14 +10450,21 @@ int GameEngine::GateShips (unsigned int iGaterEmpireIndex, const char* pszGaterE
         &piGateShipKey,
         &iNumShips
         );
-    
+
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        return ERROR_EMPIRE_HAS_NO_SHIPS;
+        Assert (iGaterEmpireIndex != iGatedEmpireIndex);
+        iErrCode = ERROR_EMPIRE_HAS_NO_SHIPS;
+        goto Cleanup;
     }
 
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
+    }
+
+    // Maybe we're alone?
+    if (iNumShips == 1 && iGaterEmpireIndex == iGatedEmpireIndex) {
+        return ERROR_EMPIRE_HAS_NO_SHIPS;
     }
     
     ////////////////
@@ -10629,45 +10656,46 @@ int GameEngine::GateShips (unsigned int iGaterEmpireIndex, const char* pszGaterE
         m_pGameData->FreeKeys (piGateShipKey);
         piGateShipKey = NULL;
     }
-        
-    // Gate fleets with ships also
-    iErrCode = m_pGameData->GetEqualKeys (
-        pszEmpireFleets,
-        GameEmpireFleets::CurrentPlanet,
-        iOldPlanetKey,
-        false,
-        &piGateShipKey, 
-        &iNumShips
-        );
-                    
-    if (iErrCode != OK) {
 
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        } else {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
+    if (iNumPrivateGatedShips == 0) {
+        iErrCode = ERROR_EMPIRE_HAS_NO_SHIPS;
+    } else {
 
-    for (k = 0; k < iNumShips; k ++) {
-        
-        // Set fleet location to new planet
-        iErrCode = m_pGameData->WriteData (
-            pszEmpireFleets, 
-            piGateShipKey[k], 
-            GameEmpireFleets::CurrentPlanet, 
-            iNewPlanetKey
+        // Gate fleets with ships also
+        iErrCode = m_pGameData->GetEqualKeys (
+            pszEmpireFleets,
+            GameEmpireFleets::CurrentPlanet,
+            iOldPlanetKey,
+            false,
+            &piGateShipKey, 
+            &iNumShips
             );
-        
+                        
         if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
 
-    // Add to gated empire's update message
-    if (iNumPrivateGatedShips > 0) {
+            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                iErrCode = OK;
+            } else {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+
+        for (k = 0; k < iNumShips; k ++) {
+            
+            // Set fleet location to new planet
+            iErrCode = m_pGameData->WriteData (
+                pszEmpireFleets, 
+                piGateShipKey[k], 
+                GameEmpireFleets::CurrentPlanet, 
+                iNewPlanetKey
+                );
+            
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
 
         pstrUpdateMessage[iGatedEmpireIndex] += SHIP_TYPE_STRING[iShipType];
         pstrUpdateMessage[iGatedEmpireIndex] += " ";

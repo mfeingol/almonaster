@@ -32,6 +32,7 @@
 #include "GameEngineSchema.h"
 #include "GameEngineUI.h"
 #include "GameEngineGameObject.h"
+#include "GameEngineLocks.h"
 #include "IGameEngine.h"
 
 #include "Osal/Thread.h"
@@ -138,6 +139,9 @@ private:
     Mutex m_mSuperClasses;
     Mutex m_mAlienIcons;
 
+    // GameEmpireLock management
+    GameEmpireLockManager m_lockMgr;
+
     // Long running queries
     Event m_eQueryEvent;
 
@@ -169,9 +173,6 @@ private:
     int CheckGameForDrawOut (int iGameClass, int iGameNumber, bool* pbDraw);
 
     int RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState, bool bBroadcast);
-    
-    int PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
-    int UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
 
     int DeleteShipFromDeadEmpire (const char* pszEmpireShips, const char* pszGameMap, 
         unsigned int iShipKey, unsigned int iPlanetKey);
@@ -188,9 +189,8 @@ private:
     // Empires
     int DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, ReasonForRemoval rReason,
         const GameUpdateInformation* pUpdateInfo);
-    int RemoveEmpire (int iEmpireKey);
-    int RemoveEmpireFromGameInternal (int iGameClass, int iGameNumber, int iEmpireKey, int iKillerEmpire);
 
+    int RemoveEmpire (int iEmpireKey);
     int UpdateEmpireString (int iEmpireKey, int iColumn, const char* pszString, size_t stMaxLen, bool* pbTruncated);
 
     // Planets
@@ -221,7 +221,7 @@ private:
 #endif
 
     // Ships
-    int DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey, bool bSafe);
+    int DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey);
 
     int ChangeShipTypeOrMaxBR (const char* pszShips, const char* pszEmpireData, int iEmpireKey, int iShipKey, 
         int iOldShipType, int iNewShipType, float fBRChange);
@@ -626,15 +626,9 @@ public:
 
     void LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpireBridier (const NamedMutex& nmMutex);
-    
-    void LockGame (int iGameClass, int iGameNumber, NamedMutex* pnmMutex);
-    void UnlockGame (const NamedMutex& nmMutex);
 
     void LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpireGameMessages (const NamedMutex& nmMutex);
-
-    void LockEmpireShips (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireShips (const NamedMutex& nmMutex);
 
     void LockEmpires();
     void UnlockEmpires();
@@ -645,29 +639,11 @@ public:
     void LockTournament (unsigned int iTournamentKey, NamedMutex* pnmMutex);
     void UnlockTournament (const NamedMutex& nmMutex);
 
-    void LockAutoUpdate (int iGameClass, int iGameNumber, NamedMutex* pnmMutex);
-    void UnlockAutoUpdate (const NamedMutex& nmMutex);
-
-    void LockPauseGame (int iGameClass, int iGameNumber, NamedMutex* pnmMutex);
-    void UnlockPauseGame (const NamedMutex& nmMutex);
-
-    void LockDrawGame (int iGameClass, int iGameNumber, NamedMutex* pnmMutex);
-    void UnlockDrawGame (const NamedMutex& nmMutex);
-
-    void LockEmpireUpdated (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireUpdated (const NamedMutex& nmMutex);
-
-    void LockEmpireTechs (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireTechs (const NamedMutex& nmMutex);
-
-    void LockEmpireFleets (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireFleets (const NamedMutex& nmMutex);
-
     void LockEmpire (int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpire (const NamedMutex& nmMutex);
 
-    int WaitGameReader (int iGameClass, int iGameNumber);
-    int SignalGameReader (int iGameClass, int iGameNumber);
+    int WaitGameReader (int iGameClass, int iGameNumber, int iEmpireKey, GameEmpireLock** ppgeLock);
+    int SignalGameReader (int iGameClass, int iGameNumber, int iEmpireKey, GameEmpireLock* pgeLock);
 
     int WaitGameWriter (int iGameClass, int iGameNumber);
     int SignalGameWriter (int iGameClass, int iGameNumber);
@@ -826,7 +802,7 @@ public:
     int SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword);
 
     int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber);
-    int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, int* piNumUpdates, bool bSendMessages, bool bGameAlreadyLocked);
+    int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, int* piNumUpdates, bool bSendMessages, bool bCreatingGame);
 
     int SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszIPAddress);
 
@@ -856,6 +832,9 @@ public:
     int PauseAllGames();
     int UnpauseAllGames();
 
+    int PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
+    int UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
+
     int LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey);
 
     int RuinGame (int iGameClass, int iGameNumber, const char* pszWinnerName);
@@ -871,6 +850,8 @@ public:
         const GameOptions* pgoGameOptions, GameAction gaAction, bool* pbAccess);
 
     int GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber, int iEmpireKey, int* piGain, int* piLoss);
+
+    int GetNumEmpiresInGames (unsigned int* piNumEmpires);
 
     // GameEmpireData
     int QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, int iKillerEmpire = NO_KEY);
@@ -1171,9 +1152,6 @@ public:
     int RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
     int RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
 
-    int AdminPauseGame (int iGameClass, int iGameNumber, bool bBroadcast);
-    int AdminUnpauseGame (int iGameClass, int iGameNumber, bool bBroadcast);
-
     int IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause);
     int GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, int* piNumEmpires);
 
@@ -1254,22 +1232,37 @@ public:
         unsigned int iPlanetKey, bool* pbBuilder);
 
     // Ships
-    int GetShipOrders (int iGameClass, int iGameNumber, int iEmpireKey, const GameConfiguration& gcConfig,
-        int iShipKey, int iShipType, float fBR, float fMaintRatio, int iPlanetKey, int iLocationX, 
-        int iLocationY, int** ppiOrderKey, String** ppstrOrderText, int* piNumOrders, int* piSelected);
+    int GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iShipKey, const ShipOrderShipInfo* pShipInfo, const ShipOrderGameInfo* pGameInfo, 
+        const ShipOrderPlanetInfo* pPlanetInfo, const GameConfiguration& gcConfig, 
+        const BuildLocation* pblLocations, unsigned int iNumLocations,
+        ShipOrder** ppsoOrder, unsigned int* piNumOrders, int* piSelectedOrder);
 
     int UpdateShipName (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey, const char* pszNewName);
-
-    int UpdateShipOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey, int iNewShipOrder);
+    int UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iShipKey, const ShipOrder& soOrder);
 
     int GetNumShips (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumShips);
-    int GetNumFleets (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumFleets);
+
+    int MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iShipKey, 
+        unsigned int iPlanetKey, unsigned int iFleetKey);
+
+    int GetUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, unsigned int iGameNumber,
+        unsigned int iEmpireKey, unsigned int iPlanetKey, unsigned int** ppiShipKey, unsigned int* piNumShips);
+
+    int HasUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, unsigned int iGameNumber, 
+        unsigned int iEmpireKey, unsigned int iPlanetKey, bool* pbFlag);
+
+    void FreeShipOrders (ShipOrder* psoOrders, unsigned int iNumOrders);
 
     // Fleets
     int GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiFleetKeys, 
         int* piNumFleets);
 
-    int GetFleetLocation (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int* piPlanetKey);
+    int GetNumFleets (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumFleets);
+
+    int GetFleetLocation (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iFleetKey, unsigned int* piPlanetKey);
     int GetFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, Variant* pvFleetName);
     int GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiLocationKey, 
         int* piNumLocations);
@@ -1277,16 +1270,26 @@ public:
     int CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszFleetName, 
         int iPlanetKey, unsigned int* piFleetKey);
 
-    int GetFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
-        const GameConfiguration& gcConfig, int** ppiOrderKey, 
-        String** ppstrOrderText, int* piSelected, int* piNumOrders);
+    int GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iFleetKey, 
+        const GameConfiguration& gcConfig, FleetOrder** ppfoOrders, unsigned int* piNumOrders, 
+        unsigned int* piSelected);
+
+    void FreeFleetOrders (FleetOrder* pfoOrders, unsigned int iNumOrders);
 
     int UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
         const char* pszNewName);
 
-    int UpdateFleetOrders (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iOrderKey);
+    int UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iFleetKey, const FleetOrder& foOrder);
 
-    int GetNumShipsInFleet (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int* piNumShips);
+    int GetNumShipsInFleet (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
+        unsigned int* piNumShips, unsigned int* piNumBuildShips);
+
+    int MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iSrcKey, 
+        unsigned int iDestKey, unsigned int iPlanetKey);
+
+    int CreateRandomFleet (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
+        unsigned int iPlanetKey, unsigned int* piFleetKey);
 
     // Tournaments
     int GetOwnedTournaments (int iEmpireKey, unsigned int** ppiTournamentKey, Variant** ppvName, unsigned int* piNumTournaments);

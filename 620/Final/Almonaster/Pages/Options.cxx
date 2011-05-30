@@ -117,7 +117,8 @@ if (m_bOwnPost && !m_bRedirection) {
                             if (RedirectOnSubmitGame (&pageRedirect)) {
                                 return Redirect (pageRedirect);
                             } else {
-                                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+                                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                                m_pgeLock = NULL;
                                 return Redirect (m_pgPageId);
                             }
                         } else {
@@ -746,7 +747,8 @@ if (m_bOwnPost && !m_bRedirection) {
                             } else {
 
                                 // Release the read lock
-                                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+                                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                                m_pgeLock = NULL;
 
                                 // Take a write lock
                                 if (g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
@@ -776,7 +778,7 @@ if (m_bOwnPost && !m_bRedirection) {
                                     }
 
                                     // Get the reader lock again
-                                    if (g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber) != OK) {
+                                    if (g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
 
                                         // The game ended after all
                                         AddMessage ("That game no longer exists");
@@ -864,7 +866,8 @@ if (m_bOwnPost && !m_bRedirection) {
             if (m_iGameState & STARTED) {
 
                 if (WasButtonPressed (BID_RESIGN)) {
-                    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+                    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                    m_pgeLock = NULL;
                     m_iReserved = BID_RESIGN;
                     return Redirect (QUIT);
                 }
@@ -881,7 +884,8 @@ if (m_bOwnPost && !m_bRedirection) {
                          (iGameClassOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES)) &&
                          iNumEmpires == 2)) {
 
-                        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+                        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                        m_pgeLock = NULL;
                         m_iReserved = BID_SURRENDER;
                         return Redirect (QUIT);
                     }

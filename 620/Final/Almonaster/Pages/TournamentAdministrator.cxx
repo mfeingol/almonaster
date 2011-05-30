@@ -1091,7 +1091,13 @@ if (m_bOwnPost && !m_bRedirection) {
         // Pause game
         if (WasButtonPressed (BID_PAUSEGAME)) {
 
-            if ((iErrCode = g_pGameEngine->AdminPauseGame (iGameClass, iGameNumber, true)) == OK) {
+            iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+            if (iErrCode == OK) {
+                iErrCode = g_pGameEngine->PauseGame (iGameClass, iGameNumber, true, true);
+                g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+            }
+
+            if (iErrCode == OK) {
                 AddMessage ("The game is now paused");
                 iTAdminPage = 13;
             } else {
@@ -1106,7 +1112,13 @@ if (m_bOwnPost && !m_bRedirection) {
         // Unpause game
         if (WasButtonPressed (BID_UNPAUSEGAME)) {
 
-            if ((iErrCode = g_pGameEngine->AdminUnpauseGame (iGameClass, iGameNumber, true)) == OK) {
+            iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+            if (iErrCode == OK) {
+                iErrCode = g_pGameEngine->UnpauseGame (iGameClass, iGameNumber, true, true);
+                g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+            }
+
+            if (iErrCode == OK) {
                 AddMessage ("The game is no longer paused");
                 iTAdminPage = 13;
             } else {
@@ -1128,7 +1140,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszMessage = pHttpForm->GetValue();
 
-            if (g_pGameEngine->WaitGameReader (iGameClass, iGameNumber) != OK) {
+            if (g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL) != OK) {
                 iTAdminPage = 2;
                 AddMessage ("That game no longer exists");
             } else {
@@ -1145,7 +1157,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("The game no longer exists");
                 }
 
-                if (g_pGameEngine->SignalGameReader (iGameClass, iGameNumber) == OK) {
+                if (g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL) == OK) {
                     iTAdminPage = 13;
                 } else {
                     iTAdminPage = 12;
@@ -1852,7 +1864,7 @@ case 14:
         goto AllGames;
     }
 
-    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     if (iErrCode != OK) {
         goto AllGames;
     }
@@ -1862,9 +1874,9 @@ case 14:
     %><input type="hidden" name="GameClass" value="<% Write (iGameClass); %>"><%
     %><input type="hidden" name="GameNumber" value="<% Write (iGameNumber); %>"><%
 
-    RenderMap (iGameClass, iGameNumber, m_iEmpireKey, true, NULL, false);
+    RenderMap (iGameClass, iGameNumber, NO_KEY, true, NULL, false);
 
-    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     %><p><% WriteButton (BID_CANCEL);
 
@@ -1874,7 +1886,7 @@ case 15:
 
     {
 
-    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto AllGames;
@@ -1898,7 +1910,7 @@ case 15:
 
     RenderEmpireInformation (iGameClass, iGameNumber, true);
 
-    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     WriteButton (BID_CANCEL);
 
@@ -1935,7 +1947,7 @@ case 16:
         goto AllGames;
     }
 
-    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto AllGames;
@@ -1994,7 +2006,7 @@ case 16:
 Cleanup:
 
     // Best effort
-    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     if (pvPlanetData != NULL) {
         pDatabase->FreeData (pvPlanetData);

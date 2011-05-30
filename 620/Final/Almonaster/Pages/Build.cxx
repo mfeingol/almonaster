@@ -328,7 +328,7 @@ if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
 if (iBR < 1) {
     %><p>You do not have the minimum tech level required to build ships<%
     %><input type="hidden" name="NumTechs" value="0"><%
-    goto Close;
+    goto BuildFleet;
 }
 
 // Check ship limits
@@ -351,7 +351,7 @@ if (vMaxNumShips.GetInteger() != INFINITE_SHIPS) {
     if (iNumShips >= vMaxNumShips.GetInteger()) {
         %><p>You have reached the limit of ships that can be built in this game<%
         %><input type="hidden" name="NumTechs" value="0"><%
-        goto Close;
+        goto BuildFleet;
     }
 }
 
@@ -368,7 +368,7 @@ GameCheck (g_pGameEngine->GetBuildLocations (
 if (iNumLocations == 0) {
     %><p>You have no planets capable of building ships<%
     %><input type="hidden" name="NumTechs" value="0"><%
-    goto Close;
+    goto BuildFleet;
 }
 
 %><input type="hidden" name="NumLocations" value="<% Write (iNumLocations); %>"><%
@@ -675,6 +675,8 @@ if (piFleetKey != NULL) {
     g_pGameEngine->FreeKeys (piFleetKey);
     piFleetKey = NULL;
 }
+
+BuildFleet:
 
 // Get fleet locations
 int* piPlanetKey, iNumPlanets;

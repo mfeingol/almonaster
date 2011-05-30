@@ -34,6 +34,9 @@ public:
         Bucket = 0;
     }
 
+    void Freeze() {
+        ListIterator<HashTableNode<CKey, CData>*>::Reset();
+    }
 };
 
 template <class CKey, class CData, class HashValue, class Equals> class HashTable {
@@ -160,7 +163,6 @@ public:
     bool FindFirst (CKey key, HashTableIterator<CKey, CData>* phtIterator) {
 
         unsigned int iBucket = HashValue::GetHashValue (key, m_iNumBuckets, m_pHashHint);
-
         ListIterator<HashTableNode<CKey, CData>*> liIterator;
 
         while (m_pBuckets[iBucket].GetNextIterator (&liIterator)) {
@@ -184,7 +186,6 @@ public:
     bool FindNext (HashTableIterator<CKey, CData>* phtIterator) {
 
         unsigned int iBucket = phtIterator->Bucket;
-
         Assert (iBucket < m_iNumBuckets);
 
         CKey key = phtIterator->GetKey();
@@ -208,32 +209,33 @@ public:
         }
 
         unsigned int iBucket = phtIterator->Bucket;
+        if (iBucket >= m_iNumBuckets) {
+            Assert (false);
+            return false;
+        }
 
         if (m_pBuckets[iBucket].GetNextIterator (phtIterator)) {
-
             return true;
-        
-        } else {
+        }
+
+        // Next bucket
+        iBucket ++;
+
+        while (iBucket < m_iNumBuckets) {
+
+            // Reset the iterator
+            phtIterator->Reset();
+
+            if (m_pBuckets[iBucket].GetNextIterator (phtIterator)) {
+                phtIterator->Bucket = iBucket;
+                return true;
+            }
 
             // Next bucket
             iBucket ++;
-
-            while (iBucket < m_iNumBuckets) {
-
-                // Reset the iterator
-                phtIterator->Reset();
-
-                if (m_pBuckets[iBucket].GetNextIterator (phtIterator)) {
-                    phtIterator->Bucket = iBucket;
-                    return true;
-                }
-
-                // Next bucket
-                iBucket ++;
-            }
-
-            return false;
         }
+
+        return false;
     }
 
     bool Delete (HashTableIterator<CKey, CData>* phtIterator, CKey* pKey, CData* pData) {
@@ -243,7 +245,10 @@ public:
         }
 
         unsigned int iBucket = phtIterator->Bucket;
-        Assert (iBucket < m_iNumBuckets);
+        if (iBucket >= m_iNumBuckets) {
+            Assert (false);
+            return false;
+        }
 
         HashTableNode<CKey, CData>* phtNode;
 
@@ -324,7 +329,7 @@ public:
         }
 
         return true;
-    }
+    }    
 };
 
 #endif

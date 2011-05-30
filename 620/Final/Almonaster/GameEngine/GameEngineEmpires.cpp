@@ -1143,7 +1143,6 @@ int GameEngine::ObliterateEmpire (int iEmpireKey, int iKillerEmpire) {
             }
 
             // Ruin empire out of each game
-            NamedMutex nmGameMutex;
             bool bFlag;
             unsigned int i;
             int iGameClass, iGameNumber;
@@ -1162,9 +1161,6 @@ int GameEngine::ObliterateEmpire (int iEmpireKey, int iKillerEmpire) {
                     continue;   // Game must be dead
                 }
 
-                // Lock the game
-                LockGame (iGameClass, iGameNumber, &nmGameMutex);
-
                 // Is empire in the game
                 iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bFlag);
                 if (iErrCode != OK) {
@@ -1180,7 +1176,7 @@ int GameEngine::ObliterateEmpire (int iEmpireKey, int iKillerEmpire) {
                         
                         // The empire couldn't be removed nicely,
                         // so let's delete the empire the hard way
-                        iErrCode = RemoveEmpireFromGameInternal (iGameClass, iGameNumber, iEmpireKey, iKillerEmpire);
+                        iErrCode = RemoveEmpireFromGame (iGameClass, iGameNumber, iEmpireKey, iKillerEmpire);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto EndGame;
@@ -1188,8 +1184,6 @@ int GameEngine::ObliterateEmpire (int iEmpireKey, int iKillerEmpire) {
                     }
                 }
     EndGame:
-                UnlockGame (nmGameMutex);
-
                 // Always try to unlock game
                 SignalGameWriter (iGameClass, iGameNumber);
             }

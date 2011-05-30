@@ -146,7 +146,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     case ERROR_EMPIRE_IS_NOT_IN_GAME:
 
-                        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+                        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                        m_pgeLock = NULL;
                         AddMessage ("Your empire is not in that game");
                         break;
 

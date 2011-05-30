@@ -270,7 +270,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
 
         for (i = 0; i < iNumLocations; i ++) {
 
-            int iNumShips;
+            unsigned int iNumShips;
             String strFleetName;
 
             OutputText ("<option value=\"");
@@ -315,7 +315,8 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
                     m_iGameNumber,
                     m_iEmpireKey,
                     pblBuildLocation[i].iFleetKey,
-                    &iNumShips
+                    &iNumShips,
+                    NULL
                     );
 
                 if (iErrCode == OK) {
@@ -506,23 +507,29 @@ Cleanup:
 
 int HtmlRenderer::CreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFleetKey) {
 
-    char pszFleetName [64];
-    int iErrCode = ERROR_NAME_IS_IN_USE;
+    const char* pszFleetName = "";
+    Variant vName;
 
-    while (iErrCode == ERROR_NAME_IS_IN_USE) {
+    int iErrCode = g_pGameEngine->CreateRandomFleet (
+        m_iGameClass,
+        m_iGameNumber,
+        m_iEmpireKey,
+        iPlanetKey,
+        piFleetKey
+        );
 
-        // Generate a random fleet name
-        int iRand = Algorithm::GetRandomInteger (0x7fffffff);
-        snprintf (pszFleetName, sizeof (pszFleetName), "Fleet%i", iRand);
+    if (iErrCode == OK) {
 
-        iErrCode = g_pGameEngine->CreateNewFleet (
+        if (g_pGameEngine->GetFleetName (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
-            pszFleetName,
-            iPlanetKey,
-            piFleetKey
-            );
+            *piFleetKey,
+            &vName
+            ) == OK) {
+
+            pszFleetName = vName.GetCharPtr();
+        }
     }
 
     AddCreateNewFleetMessage (iErrCode, pszFleetName);

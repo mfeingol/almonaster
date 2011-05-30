@@ -62,9 +62,6 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    NamedMutex nmShipMutex, nmFleetMutex;
-    bool bLockedShips = false, bLockedFleets = false;
-
     *piNumShipsBuilt = 0;
     *pbBuildReduced = false;
 
@@ -205,12 +202,6 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
             *pbBuildReduced = true;
         }
     }
-
-    // Lock everything
-    LockEmpireShips (iGameClass, iGameNumber, iEmpireKey, &nmShipMutex);
-    LockEmpireFleets (iGameClass, iGameNumber, iEmpireKey, &nmFleetMutex);
-
-    bLockedShips = bLockedFleets = true;
 
     // Make sure fleet exists and is at same planet
     if (iFleetKey != NO_KEY) {
@@ -411,6 +402,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
             goto Cleanup;
         }
 
+        // Increment number of ships
+        iErrCode = m_pGameData->Increment (strEmpireFleets, iFleetKey, GameEmpireFleets::NumShips, iNumShips);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
         // Set the fleet to stand by
         iErrCode = m_pGameData->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
         if (iErrCode != OK) {
@@ -587,14 +585,6 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
 Cleanup:
 
-    if (bLockedShips) {
-        UnlockEmpireShips (nmShipMutex);
-    }
-
-    if (bLockedFleets) {
-        UnlockEmpireFleets (nmFleetMutex);
-    }
-
     return iErrCode;
 }
 
@@ -650,7 +640,7 @@ int GameEngine::CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey
         for (i = 0; i < iNumShips; i ++) {
 
             // Best effort
-            iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, piShipKey[i], false);
+            iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, piShipKey[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -759,6 +749,9 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
     BuildLocation* pblBuildLocation = NULL;
 
     GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+
+    *ppblBuildLocation = NULL;
+    *piNumLocations = 0;
 
     // Multi-planet scenario
     if (iPlanetKey == NO_KEY) {

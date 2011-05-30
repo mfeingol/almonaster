@@ -36,7 +36,8 @@ if (m_bOwnPost && !m_bRedirection) {
     // Get target empire
     pHttpForm = m_pHttpRequest->GetForm ("TargetEmpireKey");
     if (pHttpForm == NULL) {
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+        m_pgeLock = NULL;
         AddMessage ("Missing TargetEmpireKey form");
         return Redirect (INFO);
     }
@@ -44,7 +45,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
     // Handle submissions
     if ((pHttpForm = m_pHttpRequest->GetForm ("ProfilePage")) == NULL) {
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+        m_pgeLock = NULL;
         return Redirect (LOGIN);
     }
 
@@ -185,7 +187,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Release game read lock
-            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+            m_pgeLock = NULL;
 
             goOptions.iNumEmpires = 1;
             goOptions.piEmpireKey = &m_iEmpireKey;
@@ -385,7 +388,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Release game read lock
-            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+            m_pgeLock = NULL;
 
             goOptions.iNumEmpires = 1;
             goOptions.piEmpireKey = &m_iEmpireKey;
@@ -409,7 +413,8 @@ if (m_bOwnPost && !m_bRedirection) {
             sscanf (pszStart, "ViewTourneyInfo%d", &m_iReserved) == 1) {
 
             // Release game read lock
-            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+            m_pgeLock = NULL;
             return Redirect (TOURNAMENTS);
         }
 

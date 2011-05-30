@@ -1189,7 +1189,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     break;
                 }
 
-                iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+                iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
                 if (iErrCode != OK) {
                     iGameAdminPage = 1;
                     AddMessage ("The game no longer exists");
@@ -1205,7 +1205,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
-                iErrCode = g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+                iErrCode = g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
                 if (iErrCode != OK) {
                     AddMessage ("The game no longer exists");
                     iGameAdminPage = 1;
@@ -1350,7 +1350,13 @@ if (m_bOwnPost && !m_bRedirection) {
             // Pause game
             if (WasButtonPressed (BID_PAUSEGAME)) {
 
-                if ((iErrCode = g_pGameEngine->AdminPauseGame (iGameClass, iGameNumber, true)) == OK) {
+                iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                if (iErrCode == OK) {
+                    iErrCode = g_pGameEngine->PauseGame (iGameClass, iGameNumber, true, true);
+                    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                }
+
+                if (iErrCode == OK) {
                     AddMessage ("The game is now paused");
                     iGameAdminPage = 3;
                 } else {
@@ -1365,7 +1371,13 @@ if (m_bOwnPost && !m_bRedirection) {
             // Unpause game
             if (WasButtonPressed (BID_UNPAUSEGAME)) {
 
-                if ((iErrCode = g_pGameEngine->AdminUnpauseGame (iGameClass, iGameNumber, true)) == OK) {
+                iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                if (iErrCode == OK) {
+                    iErrCode = g_pGameEngine->UnpauseGame (iGameClass, iGameNumber, true, true);
+                    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                }
+
+                if (iErrCode == OK) {
                     AddMessage ("The game is no longer paused");
                     iGameAdminPage = 3;
                 } else {
@@ -1387,7 +1399,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 pszMessage = pHttpForm->GetValue();
 
-                if (g_pGameEngine->WaitGameReader (iGameClass, iGameNumber) != OK) {
+                if (g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL) != OK) {
                     iGameAdminPage = 1;
                     AddMessage ("That game no longer exists");
                 } else {
@@ -1404,7 +1416,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("The game no longer exists");
                     }
 
-                    if (g_pGameEngine->SignalGameReader (iGameClass, iGameNumber) == OK) {
+                    if (g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL) == OK) {
                         iGameAdminPage = 3;
                     } else {
                         iGameAdminPage = 1;
@@ -2472,7 +2484,7 @@ case 4:
         goto AllGames;
     }
 
-    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     if (iErrCode != OK) {
         goto AllGames;
     }
@@ -2483,7 +2495,7 @@ case 4:
 
     RenderMap (iGameClass, iGameNumber, m_iEmpireKey, true, NULL, false);
 
-    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     %><p><% WriteButton (BID_CANCEL);
 
@@ -2516,7 +2528,7 @@ case 6:
         goto AllGames;
     }
 
-    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto AllGames;
@@ -2574,7 +2586,7 @@ case 6:
 Cleanup:
 
     // Best effort
-    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     if (pvPlanetData != NULL) {
         pDatabase->FreeData (pvPlanetData);
@@ -2597,7 +2609,7 @@ case 7:
 
     {
 
-    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber);
+    iErrCode = g_pGameEngine->WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto AllGames;
@@ -2620,7 +2632,7 @@ case 7:
 
     RenderEmpireInformation (iGameClass, iGameNumber, true);
 
-    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     WriteButton (BID_CANCEL);
 

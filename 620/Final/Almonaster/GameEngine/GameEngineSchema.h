@@ -2636,7 +2636,7 @@ namespace GameEmpireFleets {
     
     enum Columns {
         Name,
-        RESERVED0,
+        NumShips,
         CurrentStrength,
         MaxStrength,
         CurrentPlanet,

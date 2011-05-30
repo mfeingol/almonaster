@@ -193,10 +193,10 @@ public:
 		}
 
         // Beta 5
-        iErrCode = m_pDatabase->WriteData (pszGameData, GameData::MinBridierRankLoss, (float) 0);
+        iErrCode = m_pDatabase->WriteData (pszGameData, GameData::MinBridierRankLoss, 0);
         Assert (iErrCode == OK);
 
-        iErrCode = m_pDatabase->WriteData (pszGameData, GameData::MaxBridierRankLoss, (float) 0);
+        iErrCode = m_pDatabase->WriteData (pszGameData, GameData::MaxBridierRankLoss, 0);
         Assert (iErrCode == OK);
 	}
 
@@ -210,6 +210,7 @@ public:
 		GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 		GAME_EMPIRE_DIPLOMACY (pszDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 		GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
+        GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
 		// Beta 2
 		// Fix removal of draw diplomacy option
@@ -374,7 +375,39 @@ public:
 		}
 
 		iErrCode = m_pDatabase->WriteData (strGameEmpireData, GameEmpireData::GameRatios, RATIOS_DISPLAY_ON_RELEVANT_SCREENS);
-		Assert (iErrCode == OK);
+        Assert (iErrCode == OK);
+
+        // Beta 5
+        iKey = NO_KEY;
+		while (true) {
+
+			iErrCode = m_pDatabase->GetNextKey (pszFleets, iKey, &iKey);
+			if (iErrCode == ERROR_DATA_NOT_FOUND) {
+				iErrCode = OK;
+				break;
+			}
+
+			Assert (iErrCode == OK);
+
+            unsigned int iNumShips;
+            iErrCode = m_pDatabase->GetEqualKeys (
+                pszShips,
+                GameEmpireShips::FleetKey,
+                iKey,
+                false,
+                NULL,
+                &iNumShips
+                );
+
+            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                iErrCode = OK;
+            }
+
+            Assert (iErrCode == OK);
+
+            iErrCode = m_pDatabase->WriteData (pszFleets, iKey, GameEmpireFleets::NumShips, iNumShips);
+            Assert (iErrCode == OK);
+        }
 	}
 
 	void UpgradeEmpireTo620 (int iEmpireKey) {

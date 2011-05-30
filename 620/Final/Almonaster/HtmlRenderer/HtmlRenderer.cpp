@@ -108,6 +108,13 @@ HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResp
     m_i64SessionId = NO_SESSION_ID;
 
     m_iNumOldUpdates = 0;
+
+    m_pgeLock = NULL;
+}
+
+HtmlRenderer::~HtmlRenderer() {
+
+    Assert (m_pgeLock == NULL);
 }
 
 int HtmlRenderer::Initialize() {
@@ -1767,7 +1774,9 @@ False:
     
 True:
     
-    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+    m_pgeLock = NULL;
+
     return true;
 }
 
@@ -1871,7 +1880,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     
     bool bUpdate;
     if (g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, &bUpdate) != OK ||
-        g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber) != OK
+        g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK
         ) {
         
         // Remove update message after update
@@ -1887,7 +1896,10 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     // Re-verify empire's presence in game
     iErrCode = g_pGameEngine->IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
     if (iErrCode != OK || !bFlag) {
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+        m_pgeLock = NULL;
+
         AddMessage ("You are no longer in that game");
         *ppageRedirect = ACTIVE_GAME_LIST;
         return ERROR_FAILURE;
@@ -1896,7 +1908,10 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     // Verify not resigned
     iErrCode = g_pGameEngine->HasEmpireResignedFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
     if (iErrCode != OK || bFlag) {
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
+        
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+        m_pgeLock = NULL;
+
         AddMessage ("Your empire has resigned from that game");
         *ppageRedirect = ACTIVE_GAME_LIST;
         return ERROR_FAILURE;
@@ -1938,8 +1953,10 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         ) {
         
         Assert (false);
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
-        
+
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+        m_pgeLock = NULL;
+
         AddMessage ("The game no longer exists");
         *ppageRedirect = ACTIVE_GAME_LIST;
         return ERROR_FAILURE;
@@ -2155,8 +2172,9 @@ int HtmlRenderer::PostGamePageInformation() {
 void HtmlRenderer::CloseGamePage() {
     
     // Unlock the game by decrementing the thread count
-    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);
-    
+    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+    m_pgeLock = NULL;
+
     OutputText ("<p>");
     WriteSeparatorString (m_iSeparatorKey);
     OutputText ("<p><strong><font size=\"3\">");
@@ -2617,6 +2635,12 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
     if (HTMLFilter (pvPlanetData[GameMap::Name].GetCharPtr(), &strFilter, 0, false) != OK) {
         return ERROR_OUT_OF_MEMORY;
     }
+
+    OutputText ("<input type=\"hidden\" name=\"KeyPlanet");
+    m_pHttpResponse->WriteText (iPlanetCounter);
+    OutputText ("\" value=\"");
+    m_pHttpResponse->WriteText (iPlanetKey);
+    OutputText ("\">");
     
     if (iOwner != SYSTEM && iOwner == iEmpireKey && !bAdmin) {
         
@@ -2626,10 +2650,6 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
         m_pHttpResponse->WriteText (iPlanetCounter);
         OutputText ("\"value=\"");
         m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
-        OutputText ("\"><input type=\"hidden\" name=\"KeyPlanet");
-        m_pHttpResponse->WriteText (iPlanetCounter);
-        OutputText ("\" value=\"");
-        m_pHttpResponse->WriteText (iPlanetKey);
         OutputText ("\"><input type=\"hidden\" name=\"OldPlanetName");
         m_pHttpResponse->WriteText (iPlanetCounter);
         OutputText ("\" value=\"");
@@ -2999,7 +3019,6 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
         }
         
         int iNumOwners = piOwnerData[0];
-        
         if (iNumOwners > 0) {
             
             m_pHttpResponse->WriteText (
@@ -3828,6 +3847,9 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
     }
     
     if (WasButtonPressed (BID_EXIT)) {
+        if (m_pgeLock != NULL) {
+            m_pgeLock->SetActive (false);
+        }
         *ppageRedirect = LOGIN;
         return true;
     }

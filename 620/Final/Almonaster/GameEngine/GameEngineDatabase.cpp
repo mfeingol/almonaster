@@ -101,7 +101,6 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
     char pszText [128];
 
     int* piGameClass = NULL, * piGameNumber = NULL, iNumGames = 0, i, iErrCode2 = OK;
-    bool* pbAdminPaused = NULL;
 
     // Set ourselves as high priority
     Thread tSelf;
@@ -151,33 +150,18 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
 
         int iErrCode2;
 
-        pbAdminPaused = (bool*) StackAlloc (iNumGames * sizeof (bool));
-        memset (pbAdminPaused, 0, iNumGames * sizeof (bool));
-
         // Best effort
         for (i = 0; i < iNumGames; i ++) {
 
-            bool bWasPaused, bIsPaused;
+            iErrCode2 = WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
+            if (iErrCode2 == OK) {
 
-            iErrCode2 = IsGameAdminPaused (piGameClass[i], piGameNumber[i], &bWasPaused);
-            if (iErrCode2 != OK) {
-                Assert (false);
-                goto EndPause;
+                iErrCode2 = PauseGame (piGameClass[i], piGameNumber[i], true, false);
+                Assert (iErrCode2 == OK);
             }
 
-            iErrCode2 = AdminPauseGame (piGameClass[i], piGameNumber[i], false);
-            if (iErrCode2 != OK) {
-                Assert (false);
-                goto EndPause;
-            }
-
-            iErrCode2 = IsGameAdminPaused (piGameClass[i], piGameNumber[i], &bIsPaused);
-            if (iErrCode2 != OK) {
-                Assert (false);
-                goto EndPause;
-            }
-
-            pbAdminPaused[i] = !bWasPaused && bIsPaused;
+            iErrCode2 = SignalGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
+            Assert (iErrCode2 == OK);
         }
     }
 
@@ -208,14 +192,14 @@ EndPause:
 
     if (iNumGames > 0) {
 
-        Assert (pbAdminPaused != NULL);
-
         for (i = 0; i < iNumGames; i ++) {
 
-            // Best effort
-            if (pbAdminPaused[i]) {
-                iErrCode2 = AdminUnpauseGame (piGameClass[i], piGameNumber[i], false);
+            if (WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL) == OK) {
+
+                iErrCode2 = UnpauseGame (piGameClass[i], piGameNumber[i], true, false);
                 Assert (iErrCode2 == OK);
+
+                SignalGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
             }
         }
 
@@ -636,7 +620,6 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             }
 Unlock:
             UnlockEmpire (nmLockEmpire);
-
         }
     }
 

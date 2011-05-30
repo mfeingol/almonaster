@@ -33,22 +33,23 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUp
 
     *pbUpdate = false;
 
-    bool bGameOver = false, bExist, bGameWriter = false;
+    bool bGameOver = false, bExist, bGameWriter = false, bGameReader = false;
     int iSecondsSince, iSecondsUntil, iNumUpdates, iState;
 
     Variant vState, vNumPrevUpdates;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
+    // Lock game for reading
+    iErrCode = WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+    bGameReader = true;
+
     // Get time
     UTCTime tNow;
     Time::GetTime (&tNow);
-
-    // Lock game
-    NamedMutex nmGameMutex, nmPauseMutex;
-    
-    LockGame (iGameClass, iGameNumber, &nmGameMutex);
-    LockPauseGame (iGameClass, iGameNumber, &nmPauseMutex);
 
     // Make sure game still exists
     iErrCode = DoesGameExist (iGameClass, iGameNumber, &bExist);
@@ -106,6 +107,14 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUp
 
             const UTCTime* ptUpdateTime = vecUpdateTimes.GetData();
 
+            // Release the game lock
+            iErrCode = SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+            bGameReader = false;
+
             // Yes, we're going to update
             *pbUpdate = true;
             
@@ -125,11 +134,23 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUp
                     goto Cleanup;
                 }
             }
+
+            SignalAfterUpdate (iGameClass, iGameNumber);
+            bGameWriter = false;
+
+            // Lock game for reading again
+            if (!bGameOver) {
+                iErrCode = WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                if (iErrCode != OK) {
+                    return iErrCode;
+                }
+                bGameReader = true;
+            }
         }
 
         // Refresh game state if necessary
-        if (*pbUpdate && !bGameOver) {
-            
+        if (!bGameOver && (*pbUpdate)) {
+
             iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
             if (iErrCode != OK) {
                 Assert (false);
@@ -226,12 +247,19 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUp
             }
             
             if (!bGameWriter) {
-                
+
+                // Release the game lock
+                iErrCode = SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto Cleanup;
+                }
+                bGameReader = false;
+
                 if (WaitForUpdate (iGameClass, iGameNumber) != OK) {
                     bGameOver = true;
                     break;
                 }
-                
                 bGameWriter = true;
             }
             
@@ -248,7 +276,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool* pbUp
     
 Cleanup:
 
-    if (iErrCode == OK && !bGameOver) {
+    if (!bGameOver && iErrCode == OK) {
         
         // Update last checked
         iErrCode = m_pGameData->WriteData (strGameData, GameData::LastUpdateCheck, tNow);
@@ -263,9 +291,9 @@ Cleanup:
         SignalAfterUpdate (iGameClass, iGameNumber);
     }
 
-    // Release game locks
-    UnlockPauseGame (nmPauseMutex);
-    UnlockGame (nmGameMutex);
+    if (bGameReader) {
+        SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
+    }
 
     return iErrCode;
 }
@@ -478,10 +506,7 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
     Variant vOptions;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    
-    NamedMutex nmMutex;
-    LockEmpireUpdated (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
-    
+
     iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
         Assert (false);
@@ -516,8 +541,6 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
 
 Cleanup:
 
-    UnlockEmpireUpdated (nmMutex);
-
     return iErrCode;
 }
 
@@ -537,10 +560,7 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
 
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
-    
-    NamedMutex nmMutex;
-    LockEmpireUpdated (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
-    
+
     iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
         Assert (false);
@@ -571,8 +591,6 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
     }
     
 Cleanup:
-
-    UnlockEmpireUpdated (nmMutex);
 
     return iErrCode;
 }

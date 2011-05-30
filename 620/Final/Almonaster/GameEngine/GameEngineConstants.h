@@ -759,6 +759,7 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 // Fleet actions
 #define DISBAND (-20)
 #define DISBAND_AND_DISMANTLE (-21)
+#define PICK_UP_UNAFFILIATED_SHIPS (-22)
 
 // Special actions
 #define EXPLORE_NORTH (-30)
@@ -964,5 +965,6 @@ extern const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES];
 #define ERROR_INVALID_FLEET_ORDER (-1118)
 #define ERROR_FLEET_NOT_ON_PLANET (-1119)
 #define ERROR_SHIP_CANNOT_JOIN_FLEET (-1120)
+#define ERROR_SHIP_ALREADY_BUILT (-1121)
 
 #endif

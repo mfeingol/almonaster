@@ -47,6 +47,11 @@ int Mutex::Initialize() {
 
     int iErrCode;
 
+    if (m_fInit) {
+        Assert (false);
+        return ERROR_FAILURE;
+    }
+
 #ifdef __LINUX__
     iErrCode = pthread_mutex_init(&m_critsec, NULL) == 0 ? OK : ERROR_FAILURE;
 #else if defined __WIN32__

@@ -310,6 +310,8 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
             iNumNewPlanets
             );
 
+        SafeRelease (pMapGen);
+
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2167,7 +2169,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
 
         GET_GAME_EMPIRE_MAP (strTheirEmpireMap, iGameClass, iGameNumber, pvKey[i].GetInteger());
 
-        if (pvKey[i].GetInteger() == iEmpireKey) {
+        if (pvKey[i].GetInteger() == iEmpireKey && iPlanetProxyKey != NO_KEY) {
             iKey = iPlanetProxyKey;
         } else {
 
@@ -2178,6 +2180,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                 false, 
                 &iKey
                 );
+
             if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != OK) {
                 goto Cleanup;
             }

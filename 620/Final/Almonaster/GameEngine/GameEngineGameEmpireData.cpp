@@ -107,7 +107,7 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         
         iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumRows);
         Assert (iErrCode == OK);
-        
+
         Assert (!(vGameState.GetInteger() & PAUSED) || (vGameState.GetInteger() & ADMIN_PAUSED));
         
         if (vNumPaused.GetInteger() == (int) iNumRows && !(vGameState.GetInteger() & ADMIN_PAUSED)) {
@@ -894,25 +894,6 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
                                       unsigned int iKillerEmpire) {
 
     int iErrCode;
-
-    // Lock the game
-    NamedMutex nmGameMutex;
-    LockGame (iGameClass, iGameNumber, &nmGameMutex);
-
-    iErrCode = RemoveEmpireFromGameInternal (iGameClass, iGameNumber, iEmpireKey, iKillerEmpire);
-    Assert (iErrCode == OK);
-
-    // Unlock and leave
-    UnlockGame (nmGameMutex);
-
-    return iErrCode;
-}
-
-
-int GameEngine::RemoveEmpireFromGameInternal (int iGameClass, int iGameNumber, int iEmpireKey, 
-                                              int iKillerEmpire) {
-
-    int iErrCode;
     bool bFlag;
 
     Variant vEmpireName;
@@ -986,7 +967,7 @@ int GameEngine::RemoveEmpireFromGameInternal (int iGameClass, int iGameNumber, i
         }
     }
     
-    // Actually remove empire from game     
+    // Actually remove empire from game
     iErrCode = m_pGameData->WriteOr (strGameData, GameData::State, GAME_DELETING_EMPIRE);
     if (iErrCode != OK) {
         Assert (false);
@@ -1055,7 +1036,7 @@ int GameEngine::RemoveEmpireFromGameInternal (int iGameClass, int iGameNumber, i
             int iErrCode2;
             for (i = 0; i < iNumEmpires; i ++) {
 
-                if (pvEmpireKey[i].GetInteger() != iEmpireKey) {
+                if ((unsigned int) pvEmpireKey[i].GetInteger() != iEmpireKey) {
 
                     sprintf (
                         pszMessage, 
@@ -1153,10 +1134,6 @@ int GameEngine::QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpire
     bool bExists;
     int iErrCode;
 
-    // Get a lock on the game
-    NamedMutex nmGameMutex;
-    LockGame (iGameClass, iGameNumber, &nmGameMutex);
-
     iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bExists);
     if (iErrCode == OK) {
 
@@ -1166,9 +1143,6 @@ int GameEngine::QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpire
             iErrCode = QuitEmpireFromGameInternal (iGameClass, iGameNumber, iEmpireKey, iKillerEmpire);
         }
     }
-
-    // Release the lock
-    UnlockGame (nmGameMutex);
 
     return iErrCode;
 }
@@ -1308,7 +1282,6 @@ Cleanup:
 int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey) {
 
     int iErrCode;
-
     bool bFlag;
 
     // Has the game started yet?
@@ -1329,9 +1302,6 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
 
     unsigned int iShipKey = NO_KEY;
-
-    NamedMutex nmMutex;
-    LockGame (iGameClass, iGameNumber, &nmMutex);
 
     int iGameState;
     char pszMessage [256];
@@ -1378,9 +1348,6 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     bResigned = true;
 
     // Dismantle all ships
-    NamedMutex nmLock;
-    LockEmpireShips (iGameClass, iGameNumber, iEmpireKey, &nmLock);
-
     while (true) {
 
         iErrCode = m_pGameData->GetNextKey (strEmpireShips, iShipKey, &iShipKey);
@@ -1391,11 +1358,9 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
             break;
         }
 
-        iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, iShipKey, true);
+        iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, iShipKey);
         Assert (iErrCode == OK);
     }
-
-    UnlockEmpireShips (nmLock);
 
     // Broadcast to other players
     iErrCode = GetEmpireName (iEmpireKey, &vEmpireName);
@@ -1429,8 +1394,6 @@ Cleanup:
         }
     }
 
-    UnlockGame (nmMutex);
-
     return iErrCode;
 }
 
@@ -1441,9 +1404,6 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
     Variant vOptions;
 
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-    NamedMutex nmMutex;
-    LockGame (iGameClass, iGameNumber, &nmMutex);
 
     // Is empire resigned?
     iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::Options, &vOptions);
@@ -1538,8 +1498,6 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
 
 Cleanup:
 
-    UnlockGame (nmMutex);
-
     return iErrCode;
 }
 
@@ -1547,16 +1505,11 @@ Cleanup:
 int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, SurrenderType sType) {
 
     int iErrCode;
-
+    unsigned int iEmpires, iNumAllies = 0, iNumEmpires;
     bool bFlag;
 
     Variant vTemp, vEmpireName, vHomeWorld, vNumUpdates;
-
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
-
-    unsigned int iEmpires, iNumAllies = 0, iNumEmpires;
-
-    NamedMutex nmMutex;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
@@ -1576,8 +1529,6 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
     if (vTemp.GetInteger() & STILL_OPEN) {
         return ERROR_GAME_HAS_NOT_CLOSED;
     }
-
-    LockGame (iGameClass, iGameNumber, &nmMutex);
 
     // Is empire in the game?
     iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bFlag);
@@ -1911,8 +1862,6 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
     }
 
 Cleanup:
-
-    UnlockGame (nmMutex);
 
     return iErrCode;
 }

@@ -1,4 +1,4 @@
-// GameEngineGameObject.h: interface for the GameEngineGameObject class.
+// GameEngineGameObject.h: interface for the GameObject class.
 //
 //////////////////////////////////////////////////////////////////////
 

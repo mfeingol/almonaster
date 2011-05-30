@@ -393,6 +393,9 @@ protected:
     int m_iNumOldUpdates;
     int m_iNumNewUpdates;
 
+    // Lock control
+    GameEmpireLock* m_pgeLock;
+
     // Methods
 
     void WriteGameListHeader (const char** ppszHeaders, size_t stNumHeaders, const char* pszTableColor);
@@ -439,6 +442,8 @@ public:
     static AlmonasterStatistics m_sStats;
 
     HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+    ~HtmlRenderer();
+
     static int Initialize();
 
     int Render();
@@ -658,9 +663,10 @@ public:
     bool UpdateIntroLower (const char* pszText);
     bool UpdateServerNews (const char* pszText);
 
-    int WriteShip (const GameConfiguration& gcConfig, const Variant* pvData, int i, int iShipKey, 
-        int iBR, float fMaintRatio, int iShipLoc, int& iLastLocation, int& iLastX, int& iLastY, 
-        Variant& vPlanetName, bool bFleet = false);
+    int WriteShip (unsigned int iShipKey, const Variant* pvData, unsigned int iIndex, bool bFleet,
+        const GameConfiguration& gcConfig, const ShipOrderPlanetInfo& planetInfo, 
+        const ShipOrderShipInfo& shipInfo, const ShipOrderGameInfo& gameInfo,
+        const BuildLocation* pblLocations, unsigned int iNumLocations);
 
     int GetGoodBadResourceLimits (int iGameClass, int iGameNumber, int* piGoodAg, int* piBadAg, int* piGoodMin,
         int* piBadMin, int* piGoodFuel, int* piBadFuel);
@@ -1157,7 +1163,8 @@ const ThreadFunction g_pfxnRenderPage[] = {
         AppendMessage (" on line ");                                                \
         AppendMessage (__LINE__);                                                   \
         AppendMessage ("; please contact the administrator");                       \
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber);              \
+        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock); \
+        m_pgeLock = NULL;                                                           \
         return Redirect (ACTIVE_GAME_LIST);                                         \
     }
 

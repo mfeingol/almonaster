@@ -47,6 +47,8 @@ void ReadWriteLock::WaitReader() {
 
     if (m_iNumWriters > 0) {
 
+        Assert (m_dwLastThreadLocked != ::GetCurrentThreadId());
+
         Algorithm::AtomicDecrement (&m_iNumReaders);
         Lock();
         Algorithm::AtomicIncrement (&m_iNumReaders);

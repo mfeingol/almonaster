@@ -126,7 +126,7 @@ if (iSpectatorGamesPage > 0) {
 
     bool bFlag;
 
-    if (g_pGameEngine->WaitGameReader (iGameClassKey, iGameNumber) != OK) {
+    if (g_pGameEngine->WaitGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL) != OK) {
 
         AddMessage ("That game no longer exists");
         iSpectatorGamesPage = 0;
@@ -137,7 +137,7 @@ if (iSpectatorGamesPage > 0) {
         iErrCode = g_pGameEngine->DoesGameExist (iGameClassKey, iGameNumber, &bFlag);
         if (iErrCode != OK || !bFlag) {
 
-            g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber);
+            g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
 
             AddMessage ("That game no longer exists");
             iSpectatorGamesPage = 0;
@@ -448,7 +448,7 @@ case 1:
         %><input type="hidden" name="GameNumber" value="<% Write (iGameNumber); %>"><%
     }
 
-    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
 
     break;
 
@@ -542,7 +542,7 @@ case 2:
         &bTrue
         );
 
-    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
 
     %></table><%
 
@@ -577,7 +577,7 @@ case 3:
 
     RenderEmpireInformation (iGameClassKey, iGameNumber, false);
 
-    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber);
+    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
 
     break;
 

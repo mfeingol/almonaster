@@ -302,6 +302,9 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 				RelativePath=".\GameEngine\GameEngineGameObject.h">
 			</File>
 			<File
+				RelativePath="GameEngine\GameEngineLocks.h">
+			</File>
+			<File
 				RelativePath=".\GameEngine\GameEngineSchema.h">
 			</File>
 			<File
