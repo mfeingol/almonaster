@@ -1047,7 +1047,8 @@ int HttpServer::ConfigurePageSources() {
             return iErrCode;
         }
         
-        if (pPageSource->Configure (pszConfigFilePath, &strErrorMessage) == OK) {
+        iErrCode = pPageSource->Configure (pszConfigFilePath, &strErrorMessage);
+        if (iErrCode == OK) {
 
             // We have a good page source here
             pszPageSourceName = pPageSource->GetName();
@@ -1057,16 +1058,29 @@ int HttpServer::ConfigurePageSources() {
             if (stricmp (pPageSource->GetName(), "Default") == 0) {
                 m_pDefaultPageSource = pPageSource;
             } else {
-                m_pPageSourceTable->Insert (pszPageSourceName, pPageSource);
+                
+                if (!m_pPageSourceTable->Insert (pszPageSourceName, pPageSource)) {
+
+                    pPageSource->Release();
+
+                    iErrCode = ERROR_OUT_OF_MEMORY;
+                    bError = true;
+                    break;
+                }
             }
 
         } else {
 
             // Fatal error:  a pagesource failed to start up
-            ReportEvent ((String) "An error occurred initializing the pagesource from " + ppszFileName[i] + ". " +
-                strErrorMessage);
+            String strError = (String) "Error ";
+            strError += iErrCode;
+            strError += " occurred initializing the pagesource from ";
+            strError += ppszFileName[i];
+            strError += ". Error text: ";
+            strError += strErrorMessage;
 
-            pPageSource->Release();
+            ReportEvent (strError);
+
             bError = true;
             break;
         }

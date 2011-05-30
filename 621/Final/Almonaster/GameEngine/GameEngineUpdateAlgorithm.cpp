@@ -750,18 +750,25 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         goto Cleanup;
     }
 
-    /////////////////////////////////////////////////////////////////////////////////////
-    // Make ships fight.  Check for Minefields and first contact with opponent's ships //
-    /////////////////////////////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////////////////////////////////
+    // Make ships fight.  Also check for Minefields and first contact with opponent's ships //
+    //////////////////////////////////////////////////////////////////////////////////////////
 
-    iErrCode = MakeShipsFight (iGameClass, iGameNumber, strGameMap, iNumEmpires, piEmpireKey, pbAlive, 
-        pvEmpireName, pstrEmpireShips, pstrEmpireDip, pstrEmpireMap, pstrUpdateMessage, pstrEmpireData, 
-        pfFuelRatio, iNumPlanets, piPlanetKey, piTotalMin, piTotalFuel, bIndependence, strIndependentShips,
-        pvGoodColor, pvBadColor, gcConfig);
+    // Randomize planet list
+    Algorithm::Randomize <unsigned int> (piPlanetKey, iNumPlanets);
 
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
+    // Loop through all planets
+    for (i = 0; i < iNumPlanets; i ++) {
+
+        iErrCode = MakeShipsFight (iGameClass, iGameNumber, strGameMap, iNumEmpires, piEmpireKey, pbAlive, 
+            pvEmpireName, pstrEmpireShips, pstrEmpireDip, pstrEmpireMap, pstrUpdateMessage, pstrEmpireData, 
+            pfFuelRatio, piPlanetKey[i], piTotalMin, piTotalFuel, bIndependence, strIndependentShips,
+            pvGoodColor, pvBadColor, gcConfig);
+
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
     }
 
     ///////////////////////////////////////////
@@ -972,7 +979,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     //////////////
     {
         unsigned int iNumUpdatedEmpires = 0, iSurvivorIndex = NO_KEY, iGameRuinIdlers = 0, 
-            iAwake = 0, iNumIdleEmpires = 0;
+            iComplexAwake = 0, iNumIdleEmpires = 0;
         Variant vRuinFlags;
 
         bool* pbNewlyIdle = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
@@ -980,7 +987,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         int* piRuinEmpire = (int*) StackAlloc (iNumEmpires * sizeof (int));
         bool* pbRuinEmpireUpdated = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
 
-        int iNumUpdatesIdle, iNumIdleUpdatesForRuin, iNumUpdatesForIdle, iGameState;
+        int iNumIdleUpdatesForRuin, iNumUpdatesForIdle, iGameState;
 
         memset (pbRuinEmpireUpdated, false, iNumEmpires * sizeof (bool));
         memset (pbNewlyIdle, false, iNumEmpires * sizeof (bool));
@@ -1032,8 +1039,6 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
         Assert (bSimpleRuins || bComplexRuins || vRuinFlags.GetInteger() == 0);
 
-        bool bRuinGame = false;
-
         char pszDead [128 + MAX_EMPIRE_NAME_LENGTH];
         char pszMessage [128 + MAX_FULL_GAME_CLASS_NAME_LENGTH] = "";
         
@@ -1071,14 +1076,14 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     Assert (false);
                     goto Cleanup;
                 }
-                iNumUpdatesIdle = vTemp.GetInteger() + 1;
 
-                if (iNumUpdatesIdle >= NUM_UPDATES_FOR_GAME_RUIN || (iEmpireOptions & RESIGNED)) {
+                int iNumUpdatesIdle = vTemp.GetInteger() + 1;
+                if (iNumUpdatesIdle >= NUM_UPDATES_FOR_GAME_RUIN) {
                     iGameRuinIdlers ++;
                 }
 
                 // Check for idle empire
-                if (iNumUpdatesIdle >= iNumUpdatesForIdle || (iEmpireOptions & RESIGNED)) {
+                if (iNumUpdatesIdle >= iNumUpdatesForIdle) {
 
                     iErrCode = m_pGameData->WriteOr (pstrEmpireData[i], GameEmpireData::Options, UPDATED);
                     if (iErrCode != OK) {
@@ -1104,11 +1109,9 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                             goto Cleanup;
                         }
                     }
-
-                    iAwake ++;
                 }
 
-                // Check for simple ruin
+                // Check for empire that would ruin
                 if (iNumUpdatesIdle >= iNumIdleUpdatesForRuin) {
 
                     if (bSimpleRuins) {
@@ -1124,6 +1127,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 } else {
 
                     iSurvivorIndex = i;
+                    iComplexAwake ++;
                 }
 
             } else {
@@ -1143,7 +1147,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 }
 
                 iSurvivorIndex = i;
-                iAwake ++;
+                iComplexAwake ++;
 
                 if (iEmpireOptions & UPDATED) {
 
@@ -1158,7 +1162,8 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 
         // Complex ruins:
         // Only ruin game with one empire alive if at one point in the game there were more than two
-        if (bComplexRuins && iAwake < 2) {
+        bool bRuinGame = false;
+        if (bComplexRuins && iComplexAwake < 2) {
 
             iErrCode = m_pGameData->ReadData (strGameData, GameData::MaxNumEmpires, &vTemp);
             if (iErrCode != OK) {
@@ -1277,6 +1282,9 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                     pstrUpdateMessage[j] += pszDead;
                 }
             }
+
+            iNumIdleEmpires -= iNumRuins;
+            Assert (iNumIdleEmpires >= 0);
 
         }   // End if ruins occurred
 
@@ -1441,7 +1449,6 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
 #ifdef _DEBUG
     iErrCode = VerifyUpdatedEmpireCount (iGameClass, iGameNumber);
     Assert (iErrCode == OK);
-    iErrCode = OK;
 #endif
 
     /////////////////////////////////
@@ -1453,6 +1460,17 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         Assert (false);
         goto Cleanup;
     }
+
+    char pszUpdateReport [128 + MAX_FULL_GAME_CLASS_NAME_LENGTH];
+    sprintf (
+        pszUpdateReport,
+        "%s %i ran update %i",
+        pszGameClassName,
+        iGameNumber,
+        iNewUpdateCount
+        );
+
+    m_pReport->WriteReport (pszUpdateReport);
     
     /////////////////////////////
     // Update last update time //
@@ -1741,45 +1759,13 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
                 GameEmpireDiplomacy::CurrentStatus, 
                 &vOldStatus
                 );
+
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup1;
             }
 
-            if (vReceive.GetInteger() == vOffer.GetInteger()) {
-                
-                if (vReceive.GetInteger() == SURRENDER || 
-                    vReceive.GetInteger() == ACCEPT_SURRENDER) {
-
-                    // Stay with prev status
-                    iFinal = vOldStatus.GetInteger();
-                
-                } else {
-
-                    // The empires agree
-                    iFinal = vOffer.GetInteger();
-                }
-
-            } else {
-
-                // The final diplomatic level is the least of the offered dips and the current status
-                if (vOffer.GetInteger() < vReceive.GetInteger()) {
-
-                    if (vOffer.GetInteger() < vOldStatus.GetInteger()) {
-                        iFinal = vOffer.GetInteger();
-                    } else {
-                        iFinal = vOldStatus.GetInteger();
-                    }
-                    
-                } else {
-                    
-                    if (vReceive.GetInteger() < vOldStatus.GetInteger()) {
-                        iFinal = vReceive.GetInteger();
-                    } else {
-                        iFinal = vOldStatus.GetInteger();
-                    }
-                }
-            }
+            iFinal = GetNextDiplomaticStatus (vOffer.GetInteger(), vReceive.GetInteger(), vOldStatus.GetInteger());
 
             // Write final status
             if (iFinal != vOldStatus.GetInteger()) {
@@ -4231,29 +4217,28 @@ Cleanup:
 int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* strGameMap, int iNumEmpires, 
                                 unsigned int* piEmpireKey, bool* pbAlive, Variant* pvEmpireName, const char** pstrEmpireShips, 
                                 const char** pstrEmpireDip, const char** pstrEmpireMap, String* pstrUpdateMessage, 
-                                const char** pstrEmpireData, float* pfFuelRatio, int iNumPlanets, 
-                                unsigned int* piPlanetKey, int* piTotalMin, int* piTotalFuel,
+                                const char** pstrEmpireData, float* pfFuelRatio, unsigned int iPlanetKey, 
+                                int* piTotalMin, int* piTotalFuel,
                                 bool bIndependence, const char* strIndependentShips,
                                 Variant* pvGoodColor, Variant* pvBadColor, 
                                 const GameConfiguration& gcConfig) {
 
-    int i, j, k, l, iErrCode = OK, iCurrentShip, iCounter;
+    int i, j, k, l, iErrCode = OK;
     
-    unsigned int iPlanetProxyKey, iKey, * piShipKey = NULL, iNumShips, iNumIndependentShips = 0,
-        * piIndependentShipKey = NULL;
+    unsigned int iPlanetProxyKey, * piShipKey = NULL, iNumShips, iCounter, * piIndependentShipKey = NULL;
 
-    Variant vNumShips, vNumCloaked, vDipStatus, pvColData[GameEmpireDiplomacy::NumColumns], vPlanetName, 
+    Variant vNumShips, vNumCloaked, pvColData[GameEmpireDiplomacy::NumColumns], vPlanetName, 
         vTemp, vPop, vMin, vFuel, vCoord, vOwner, vMineName;
     String strList;
     
-    char pszPlanetName [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH];
+    char pszPlanetName [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH + 1];
 
     float fDmgRatio, fDest, fDV, fDamageRatio, fFactor;
-    bool bMines, bDetonated;
 
     unsigned int iNumAdjustedEmpires = iNumEmpires + 1;
 
-    bool* pbBattleEmpire = (bool*) StackAlloc (iNumAdjustedEmpires * sizeof (bool));
+    bool* pbBattleEmpire = (bool*) StackAlloc (2 * iNumAdjustedEmpires * sizeof (bool));
+    bool* pbHasShipsEmpire = pbBattleEmpire + iNumAdjustedEmpires;
 
     int* piIntBlock = (int*) StackAlloc (5 * iNumAdjustedEmpires * sizeof (int));
 
@@ -4263,10 +4248,11 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
     int* piWatcherIndex = piNumCloaked + iNumAdjustedEmpires;
     int* piBattleShipsDestroyed = piWatcherIndex + iNumAdjustedEmpires;
 
-    void** ppvPtrBlock = (void**) StackAlloc (8 * iNumAdjustedEmpires * sizeof (void*));
+    void** ppvPtrBlock = (void**) StackAlloc (9 * iNumAdjustedEmpires * sizeof (void*));
 
     int** ppiBattleShipKey = (int**) ppvPtrBlock;
-    float** ppfBattleShipBR = (float**) ppiBattleShipKey + iNumAdjustedEmpires;
+    int** ppiBattleShipType = (int**) ppiBattleShipKey + iNumAdjustedEmpires;
+    float** ppfBattleShipBR = (float**) ppiBattleShipType + iNumAdjustedEmpires;
     float** ppfRealBR = (float**) ppfBattleShipBR + iNumAdjustedEmpires;
     int** ppiCloakerKey = (int**)  ppfRealBR + iNumAdjustedEmpires;
     bool** ppbAlive = (bool**) ppiCloakerKey + iNumAdjustedEmpires;
@@ -4276,6 +4262,8 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
     // Assign 2D dipref arrays
     int* piBlob = (int*) StackAlloc (iNumAdjustedEmpires * iNumAdjustedEmpires * sizeof (int));
+    memset (piBlob, 0, iNumAdjustedEmpires * iNumAdjustedEmpires * sizeof (int));
+
     for (i = 0; i <= iNumEmpires; i ++) {
         ppiDipRef[i] = piBlob + i * (iNumAdjustedEmpires);
     }
@@ -4284,30 +4272,87 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
     float* pfEnemyBP = pfBP + iNumAdjustedEmpires;
     float* pfTotDmg = pfEnemyBP + iNumAdjustedEmpires;
 
-    unsigned int iMineIndex, iTempMineIndex, iMineOwner;
+    IReadTable* pShipsTable = NULL;
+    IWriteTable* pShipsTableW = NULL;
 
-    // Randomize planet list
-    Algorithm::Randomize <unsigned int> (piPlanetKey, iNumPlanets);
+    // First, find out if a battle can take place at this planet
+    iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::NumUncloakedShips, &vNumShips);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
-    // Loop through all planets
-    int iNumBattleEmpires, iNumWatchers;
-    bool bFight, bTestedIndependence;
+    if (vNumShips.GetInteger() == 0) {
+        return OK;
+    }
 
-    for (i = 0; i < iNumPlanets; i ++) {
-    
-        // Initialize variables
-        iNumBattleEmpires = 0;  // Zero empires fighting
-        iNumWatchers = 0;       // Zero empires watching
-        bFight = false;         // No fight
-        
-        iMineOwner = NO_KEY;
-        iMineIndex = NO_KEY;
+    int iNumBattleEmpires = 0;  // Zero empires fighting
+    int iNumWatchers = 0;       // Zero empires watching
+    int iNumHasShipsEmpires = 0;
+    unsigned int iNumIndependentShips = 0;
+    unsigned int iMineIndex = NO_KEY, iTempMineIndex;
+    unsigned int iMineOwner = NO_KEY;
+    bool bMines = false, bDetonated = false;
 
-        // No owners yet
-        bTestedIndependence = true;
-        
-        // First, find out if a battle will take place at this planet
-        iErrCode = m_pGameData->ReadData (strGameMap, piPlanetKey[i], GameMap::NumUncloakedShips, &vNumShips);
+    // Check the owner
+    bool bIndependentOwner = bIndependence;
+    if (bIndependence) {
+
+        iErrCode = m_pGameData->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        bIndependentOwner = vOwner.GetInteger() == INDEPENDENT;
+    }
+
+    // Get the planet name
+    iErrCode = GetPlanetNameWithCoordinates (strGameMap, iPlanetKey, pszPlanetName);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    // There are ships here:  loop through all empires
+    for (j = 0; j < iNumEmpires; j ++) {
+
+        pbBattleEmpire[j] = false;
+        pbHasShipsEmpire[j] = false;
+
+        if (!pbAlive[j]) {
+            continue;
+        }
+
+        iErrCode = m_pGameData->GetFirstKey (
+            pstrEmpireMap[j], 
+            GameEmpireMap::PlanetKey, 
+            iPlanetKey, 
+            false, 
+            &iPlanetProxyKey
+            );
+
+        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+            iErrCode = OK;
+            continue;
+        }
+
+        else if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+
+        // Add to watchers list
+        piWatcherIndex[iNumWatchers] = j;
+        iNumWatchers ++;
+
+        // Does empire have visible ships at the planet?
+        iErrCode = m_pGameData->ReadData (
+            pstrEmpireMap[j], 
+            iPlanetProxyKey, 
+            GameEmpireMap::NumUncloakedShips, 
+            &vNumShips
+            );
+
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -4317,219 +4362,165 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
             continue;
         }
 
-        pszPlanetName[0] = '\0';
+        pbHasShipsEmpire[j] = true;
+        iNumHasShipsEmpires ++;
 
-        bTestedIndependence = false;
-        bMines = false;
-        bDetonated = false;
+        // Scan through empires already found at this planet
+        for (k = 0; k < j; k ++) {
 
-        // There are ships here:  loop through all empires
-        for (j = 0; j < iNumEmpires; j ++) {
-
-            if (!pbAlive[j]) {
+            // Only care if they have ships
+            if (!pbHasShipsEmpire[k]) {
                 continue;
             }
-            
-            iErrCode = m_pGameData->GetFirstKey (
-                pstrEmpireMap[j], 
-                GameEmpireMap::PlanetKey, 
-                piPlanetKey[i], 
-                false, 
-                &iPlanetProxyKey
+
+            int iStatus;
+            bool bMet;
+
+            // Check diplomatic status
+            iErrCode = GetDiplomaticStatus (
+                iGameClass,
+                iGameNumber,
+                piEmpireKey[j],
+                piEmpireKey[k],
+                NULL, NULL, &iStatus, &bMet
                 );
-            
-            if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                iErrCode = OK;
-            }
-            
-            else if (iErrCode != OK) {
-                
-                Assert (false);
-                return iErrCode;
-            }
-            
-            else {
-                
-                // Add to watchers list
-                piWatcherIndex[iNumWatchers] = j;
-                iNumWatchers ++;
-                
-                // Does empire have visible ships at the planet?
-                iErrCode = m_pGameData->ReadData (
-                    pstrEmpireMap[j], 
-                    iPlanetProxyKey, 
-                    GameEmpireMap::NumUncloakedShips, 
-                    &vNumShips
-                    );
 
-                if (iErrCode != OK) {
-                    Assert (false);
-                    return iErrCode;
-                }
-                
-                if (vNumShips.GetInteger() > 0) {
-                    
-                    // Add empire to list of possible battling empires
-                    piBattleEmpireIndex [iNumBattleEmpires] = j;
-                    pbBattleEmpire [j] = true;
-                    
-                    piNumBattleShips[iNumBattleEmpires] = 0;
-                    piNumCloaked[iNumBattleEmpires] = 0;
-                    piBattleShipsDestroyed[iNumBattleEmpires] = 0;
-
-                    ppiBattleShipKey[iNumBattleEmpires] = NULL;
-                    ppfBattleShipBR[iNumBattleEmpires] = NULL;
-                    ppbAlive[iNumBattleEmpires] = NULL;
-                    ppbSweep[iNumBattleEmpires] = NULL;
-                    ppiCloakerKey[iNumBattleEmpires] = NULL;
-                    
-                    // Scan through empires already found at this planet
-                    for (k = 0; k < iNumBattleEmpires; k ++) {
-                        
-                        // Check diplomatic setting
-                        iErrCode = m_pGameData->GetFirstKey (
-                            pstrEmpireDip[j], 
-                            GameEmpireDiplomacy::EmpireKey, 
-                            piEmpireKey[piBattleEmpireIndex[k]], 
-                            false, 
-                            &iKey
-                            );
-                        
-                        if (iErrCode == OK) {
-                            
-                            iErrCode = m_pGameData->ReadData (pstrEmpireDip[j], iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                return iErrCode;
-                            }
-
-                            if (vDipStatus.GetInteger() == WAR) {
-                                bFight = true;
-                            }
-                        }
-                        
-                        else if (iErrCode != ERROR_DATA_NOT_FOUND) {
-                        
-                            Assert (false);
-                            return iErrCode;
-                        }
-                        
-                        else {
-
-                            
-                            //////////////////////////////////
-                            // First contact (ship to ship) //
-                            //////////////////////////////////
-                            
-                            vDipStatus = WAR;
-                            bFight = true;
-
-                            // Add second empire to first's dip screen
-                            pvColData[GameEmpireDiplomacy::EmpireKey] = piEmpireKey[piBattleEmpireIndex[k]];
-                            pvColData[GameEmpireDiplomacy::DipOffer] = WAR;
-                            pvColData[GameEmpireDiplomacy::CurrentStatus] = WAR;
-                            pvColData[GameEmpireDiplomacy::VirtualStatus] = WAR;
-                            pvColData[GameEmpireDiplomacy::State] = 0;
-                            pvColData[GameEmpireDiplomacy::SubjectiveEcon] = 0;
-                            pvColData[GameEmpireDiplomacy::SubjectiveMil] = 0;
-                            pvColData[GameEmpireDiplomacy::LastMessageTargetFlag] = 0;
-                            
-                            iErrCode = m_pGameData->InsertRow (pstrEmpireDip[j], pvColData);
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                return iErrCode;
-                            }
-                            
-                            // Add first empire to second's dip screen
-                            pvColData[GameEmpireDiplomacy::EmpireKey] = piEmpireKey[j]; // EmpireKey
-                            
-                            iErrCode = m_pGameData->InsertRow (
-                                pstrEmpireDip[piBattleEmpireIndex[k]], 
-                                pvColData
-                                );
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                return iErrCode;
-                            }
-                            
-                            // Add to first empire's update message
-                            if (pszPlanetName[0] == '\0') {
-
-                                iErrCode = GetPlanetNameWithCoordinates (strGameMap, piPlanetKey[i], pszPlanetName);
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    strcpy (pszPlanetName, "Error");
-                                }
-                            }
-
-                            pstrUpdateMessage[j] += "You have had " BEGIN_STRONG " first contact " END_STRONG " with " BEGIN_STRONG;
-                            pstrUpdateMessage[j] += pvEmpireName[piBattleEmpireIndex[k]].GetCharPtr();
-                            pstrUpdateMessage[j] += END_STRONG " (ship to ship) at ";
-                            pstrUpdateMessage[j].AppendHtml (pszPlanetName, 0, false);
-                            pstrUpdateMessage[j] += "\n";
-                            
-                            // Add to second empire's update message
-                            pstrUpdateMessage[piBattleEmpireIndex[k]] += "You have had " BEGIN_STRONG " first contact " END_STRONG " with " BEGIN_STRONG;
-                            pstrUpdateMessage[piBattleEmpireIndex[k]] += pvEmpireName[j].GetCharPtr();
-                            pstrUpdateMessage[piBattleEmpireIndex[k]] += END_STRONG " (ship to ship) at ";
-                            pstrUpdateMessage[piBattleEmpireIndex[k]].AppendHtml (pszPlanetName, 0, false);
-                            pstrUpdateMessage[piBattleEmpireIndex[k]] += "\n";
-
-                            // End first contact
-                        }
-                        
-                        // Save the diplomatic status between the empires
-                        ppiDipRef[iNumBattleEmpires][k] = vDipStatus.GetInteger();
-                        ppiDipRef[k][iNumBattleEmpires] = vDipStatus.GetInteger();
-                    }
-                    
-                    // Increment the number of empires with ships on the planet
-                    iNumBattleEmpires ++;
-                
-                } else {
-                    
-                    // Sir Not-involved-in-this-battle
-                    pbBattleEmpire[j] = false;
-
-                } // End if empire has uncloaked ships on planet
-            } // End if empire has explored planet
-        }   // End empire loop
-
-        // Independent ships?
-        if (bIndependence && iNumBattleEmpires > 0) {
-
-            bFight = true;
-            
-            iErrCode = m_pGameData->ReadData (strGameMap, piPlanetKey[i], GameMap::Owner, &vOwner);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
             }
 
-            if (vOwner.GetInteger() == INDEPENDENT) {
+            // Save the diplomatic status between the empires
+            ppiDipRef[k][j] = ppiDipRef[j][k] = iStatus;
 
-                bTestedIndependence = true;
+            // If it's war, they will fight
+            if (iStatus == WAR) {
 
-                iErrCode = m_pGameData->GetEqualKeys (
-                    strIndependentShips,
-                    GameIndependentShips::CurrentPlanet,
-                    piPlanetKey[i],
-                    false,
-                    &piIndependentShipKey,
-                    &iNumIndependentShips
-                    );
+                // Add empires to list of battling empires
 
-                if (iErrCode == OK) {
+                if (!pbBattleEmpire[j]) {
 
-                    // Add to owners list
-                    piBattleEmpireIndex [iNumBattleEmpires] = INDEPENDENT;
+                    // j
+                    pbBattleEmpire[j] = true;
+                    piBattleEmpireIndex [iNumBattleEmpires] = j;
 
-                    for (j = 0; j < iNumBattleEmpires; j ++) {
-                        ppiDipRef[iNumBattleEmpires][j] = WAR;
-                        ppiDipRef[j][iNumBattleEmpires] = WAR;
-                    }
+                    piNumBattleShips[iNumBattleEmpires] = 0;
+                    piNumCloaked[iNumBattleEmpires] = 0;
+                    piBattleShipsDestroyed[iNumBattleEmpires] = 0;
 
                     ppiBattleShipKey[iNumBattleEmpires] = NULL;
+                    ppiBattleShipType[iNumBattleEmpires] = NULL;
+                    ppfBattleShipBR[iNumBattleEmpires] = NULL;
+                    ppbAlive[iNumBattleEmpires] = NULL;
+                    ppbSweep[iNumBattleEmpires] = NULL;
+                    ppiCloakerKey[iNumBattleEmpires] = NULL;
+
+                    iNumBattleEmpires ++;
+                }
+
+                if (!pbBattleEmpire[k]) {
+
+                    // k
+                    pbBattleEmpire[k] = true;
+                    piBattleEmpireIndex [iNumBattleEmpires] = k;
+
+                    piNumBattleShips[iNumBattleEmpires] = 0;
+                    piNumCloaked[iNumBattleEmpires] = 0;
+                    piBattleShipsDestroyed[iNumBattleEmpires] = 0;
+
+                    ppiBattleShipKey[iNumBattleEmpires] = NULL;
+                    ppiBattleShipType[iNumBattleEmpires] = NULL;
+                    ppfBattleShipBR[iNumBattleEmpires] = NULL;
+                    ppbAlive[iNumBattleEmpires] = NULL;
+                    ppbSweep[iNumBattleEmpires] = NULL;
+                    ppiCloakerKey[iNumBattleEmpires] = NULL;
+
+                    iNumBattleEmpires ++;
+                }
+
+                if (!bMet) {
+
+                    //////////////////////////////////
+                    // First contact (ship to ship) //
+                    //////////////////////////////////
+                    // TODO - merge this code with the other first contact code
+
+                    // Add second empire to first's dip screen
+                    pvColData[GameEmpireDiplomacy::EmpireKey] = piEmpireKey[k];
+                    pvColData[GameEmpireDiplomacy::DipOffer] = WAR;
+                    pvColData[GameEmpireDiplomacy::CurrentStatus] = WAR;
+                    pvColData[GameEmpireDiplomacy::VirtualStatus] = WAR;
+                    pvColData[GameEmpireDiplomacy::State] = 0;
+                    pvColData[GameEmpireDiplomacy::SubjectiveEcon] = 0;
+                    pvColData[GameEmpireDiplomacy::SubjectiveMil] = 0;
+                    pvColData[GameEmpireDiplomacy::LastMessageTargetFlag] = 0;
+
+                    iErrCode = m_pGameData->InsertRow (pstrEmpireDip[j], pvColData);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        return iErrCode;
+                    }
+
+                    // Add first empire to second's dip screen
+                    pvColData[GameEmpireDiplomacy::EmpireKey] = piEmpireKey[j]; // EmpireKey
+
+                    iErrCode = m_pGameData->InsertRow (pstrEmpireDip[k], pvColData);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        return iErrCode;
+                    }
+
+                    // Add to first empire's update message
+                    pstrUpdateMessage[j] += "You have had " BEGIN_STRONG " first contact " END_STRONG " with " BEGIN_STRONG;
+                    pstrUpdateMessage[j] += pvEmpireName[k].GetCharPtr();
+                    pstrUpdateMessage[j] += END_STRONG " (ship to ship) at ";
+                    pstrUpdateMessage[j].AppendHtml (pszPlanetName, 0, false);
+                    pstrUpdateMessage[j] += "\n";
+
+                    // Add to second empire's update message
+                    pstrUpdateMessage[k] += "You have had " BEGIN_STRONG " first contact " END_STRONG " with " BEGIN_STRONG;
+                    pstrUpdateMessage[k] += pvEmpireName[j].GetCharPtr();
+                    pstrUpdateMessage[k] += END_STRONG " (ship to ship) at ";
+                    pstrUpdateMessage[k].AppendHtml (pszPlanetName, 0, false);
+                    pstrUpdateMessage[k] += "\n";
+
+                    // End first contact
+                }
+            }
+        }   // End previous empires scanned loop
+    }   // End empire loop
+
+    // Independent ships fight everyone
+    if (bIndependentOwner) {
+
+        iErrCode = m_pGameData->GetEqualKeys (
+            strIndependentShips,
+            GameIndependentShips::CurrentPlanet,
+            iPlanetKey,
+            false,
+            &piIndependentShipKey,
+            &iNumIndependentShips
+            );
+
+        if (iErrCode != OK) {
+            if (iErrCode != ERROR_DATA_NOT_FOUND) {
+                Assert (false);
+                return iErrCode;
+            }
+            Assert (iNumIndependentShips == 0 && piIndependentShipKey == NULL);
+
+        } else {
+
+            // Add everyone else who had a ship and isn't on the list already
+            for (j = 0; j < iNumEmpires; j ++) {
+
+                if (pbAlive[j] && pbHasShipsEmpire[j] && !pbBattleEmpire[j]) {
+
+                    pbBattleEmpire[j] = true;
+                    piBattleEmpireIndex [iNumBattleEmpires] = j;
+
+                    ppiBattleShipKey[iNumBattleEmpires] = NULL;
+                    ppiBattleShipType[iNumBattleEmpires] = NULL;
                     ppfBattleShipBR[iNumBattleEmpires] = NULL;
                     ppbAlive[iNumBattleEmpires] = NULL;
                     ppbSweep[iNumBattleEmpires] = NULL;
@@ -4539,155 +4530,172 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                     piNumCloaked[iNumBattleEmpires] = 0;
                     piBattleShipsDestroyed[iNumBattleEmpires] = 0;
 
-/*                  piNumBattleShips[iNumBattleEmpires] = iNumShips;
-                    piNumCloaked[iNumBattleEmpires] = 0;
-                    piBattleShipsDestroyed[iNumBattleEmpires] = 0;
-
-                    ppiBattleShipKey[iNumBattleEmpires] = new int [iNumShips];
-                    memcpy (ppiBattleShipKey[iNumBattleEmpires], piShipKey, sizeof (int) * iNumShips);
-
-                    ppiCloakerKey[iNumBattleEmpires] = NULL;
-
-                    ppfBattleShipBR[iNumBattleEmpires] = new float [iNumShips];
-                    ppbAlive[iNumBattleEmpires] = new bool [iNumShips];
-
-                    for (j = 0; j < iNumShips; j ++) {
-
-                        ppbAlive[iNumBattleEmpires][j] = true;
-
-
-
-                        ppfBattleShipBR[iNumBattleEmpires][j];
-                    }
-
-                    FreeKeys (piShipKey);
-*/
                     iNumBattleEmpires ++;
                 }
+            }
 
-                else if (iErrCode != ERROR_DATA_NOT_FOUND) {
+            // Add the Independent empire too
+            piBattleEmpireIndex [iNumBattleEmpires] = INDEPENDENT;
 
-                    Assert (false);
-                    return iErrCode;
-                }
+            ppiBattleShipKey[iNumBattleEmpires] = NULL;
+            ppiBattleShipType[iNumBattleEmpires] = NULL;
+            ppfBattleShipBR[iNumBattleEmpires] = NULL;
+            ppbAlive[iNumBattleEmpires] = NULL;
+            ppbSweep[iNumBattleEmpires] = NULL;
+            ppiCloakerKey[iNumBattleEmpires] = NULL;
 
-                else iErrCode = OK;
+            piNumBattleShips[iNumBattleEmpires] = 0;
+            piNumCloaked[iNumBattleEmpires] = 0;
+            piBattleShipsDestroyed[iNumBattleEmpires] = 0;
+
+            iNumBattleEmpires ++;
+        }
+    }
+
+    //////////////////////
+    // Fight the battle //
+    //////////////////////
+
+    if (iNumBattleEmpires > 0) {
+
+#ifdef _DEBUG
+
+        // Make sure there are no index duplicates
+        for (j = 0; j < iNumBattleEmpires; j ++) {
+            Assert (
+                piBattleEmpireIndex[j] == INDEPENDENT ||
+                (piBattleEmpireIndex[j] >= 0 && 
+                piBattleEmpireIndex[j] < iNumEmpires)
+                );
+
+            for (k = j + 1; k < iNumBattleEmpires; k ++) {
+                Assert (piBattleEmpireIndex[j] != piBattleEmpireIndex[k]);
             }
         }
+#endif
+        for (j = 0; j < iNumBattleEmpires; j ++) {
 
-        //////////////////////
-        // Fight the battle //
-        //////////////////////
+            unsigned int cStateColumn, cTypeColumn, cCurrentBRColumn;
 
-        if (bFight) {
+            if (piBattleEmpireIndex[j] == INDEPENDENT) {
 
-            for (j = 0; j < iNumBattleEmpires; j ++) {
+                cStateColumn = GameIndependentShips::State;
+                cTypeColumn = GameIndependentShips::Type;
+                cCurrentBRColumn = GameIndependentShips::CurrentBR;
 
-                if (piBattleEmpireIndex[j] == INDEPENDENT) {
+                ppszEmpireShips[j] = strIndependentShips;
+                piShipKey = piIndependentShipKey;
+                piIndependentShipKey = NULL;
+                iNumShips = iNumIndependentShips;
 
-                    ppszEmpireShips[j] = strIndependentShips;
-                    piShipKey = piIndependentShipKey;
-                    piIndependentShipKey = NULL;
-                    iNumShips = iNumIndependentShips;
+            } else {
+
+                cStateColumn = GameEmpireShips::State;
+                cTypeColumn = GameEmpireShips::Type;
+                cCurrentBRColumn = GameEmpireShips::CurrentBR;
+
+                ppszEmpireShips[j] = pstrEmpireShips[piBattleEmpireIndex[j]];
+
+                // Make a list of all empire's ships at planet
+                iErrCode = m_pGameData->GetEqualKeys (
+                    ppszEmpireShips[j], 
+                    GameEmpireShips::CurrentPlanet, 
+                    iPlanetKey, 
+                    false, 
+                    &piShipKey, 
+                    &iNumShips
+                    );
+
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
+            }
+
+            Assert (piShipKey != NULL && iNumShips > 0);
+
+            // Randomize ship array
+            Algorithm::Randomize (piShipKey, iNumShips);
+
+            // Set up tables
+            pfBP[j] = (float) 0.0;
+            pfEnemyBP[j] = (float) 0.0;
+            pfTotDmg[j] = (float) 0.0;
+
+            ppiBattleShipKey[j] = new int [iNumShips * 3];
+            ppiBattleShipType[j] = ppiBattleShipKey[j] + iNumShips;
+            ppiCloakerKey[j] = ppiBattleShipType[j] + iNumShips;
+
+            ppfBattleShipBR[j] = new float [iNumShips * 2];
+            ppfRealBR[j] = ppfBattleShipBR[j] + iNumShips;
+
+            ppbAlive[j] = new bool [iNumShips * 2];
+            ppbSweep[j] = ppbAlive[j] + iNumShips;
+
+            iErrCode = m_pGameData->GetTableForReading (ppszEmpireShips[j], &pShipsTable);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto OnError;
+            }
+
+            // Collect keys while filtering cloaked ships
+            for (l = 0; l < (int) iNumShips; l ++) {
+
+                int iState;
+
+                iErrCode = pShipsTable->ReadData (piShipKey[l], cStateColumn, &iState);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
+
+                if (!(iState & CLOAKED)) {
+
+                    // Add ship to tables
+                    ppiBattleShipKey[j][piNumBattleShips[j]] = piShipKey[l];
+                    ppbAlive[j][piNumBattleShips[j]] = true;
+                    ppbSweep[j][piNumBattleShips[j]] = false;
+
+                    int iType;
+                    iErrCode = pShipsTable->ReadData (piShipKey[l], cTypeColumn, &iType);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto OnError;
+                    }
+                    ppiBattleShipType[j][piNumBattleShips[j]] = iType;
+
+                    // Add ship's BR ^ 2 to BP
+                    float fBR;
+                    iErrCode = pShipsTable->ReadData (piShipKey[l], cCurrentBRColumn, &fBR);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto OnError;
+                    }
+                    ppfRealBR[j][piNumBattleShips[j]] = fBR;
+
+                    fFactor = fBR * fBR;
+                    ppfBattleShipBR[j][piNumBattleShips[j]] = fFactor;
+                    pfBP[j] += fFactor;
+                    piNumBattleShips[j] ++;
 
                 } else {
 
-                    ppszEmpireShips[j] = pstrEmpireShips[piBattleEmpireIndex[j]];
-                    
-                    // Make a list of all ships at planet
-                    iErrCode = m_pGameData->GetEqualKeys (
-                        ppszEmpireShips[j], 
-                        GameEmpireShips::CurrentPlanet, 
-                        piPlanetKey[i], 
-                        false, 
-                        &piShipKey, 
-                        &iNumShips
-                        );
+                    Assert (piBattleEmpireIndex[j] != INDEPENDENT);
 
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        goto OnError;
-                    }
+                    // Add cloaked ships to a list (useful if a mine goes off)
+                    ppiCloakerKey[j][piNumCloaked[j]] = piShipKey[l];
+                    piNumCloaked[j] ++;
                 }
 
-                Assert (piShipKey != NULL && iNumShips > 0);
+            }   // End for all ships
 
-                // Randomize ship array
-                Algorithm::Randomize (piShipKey, iNumShips);
+            //////////////////////
+            // Apply fuel ratio //
+            //////////////////////
 
-                // Set up tables
-                pfBP[j] = (float) 0.0;
-                pfEnemyBP[j] = (float) 0.0;
-                pfTotDmg[j] = (float) 0.0;
+            if (piBattleEmpireIndex[j] != INDEPENDENT && 
+                pfFuelRatio[piBattleEmpireIndex[j]] < (float) 1.0) {
 
-                ppiBattleShipKey[j] = new int [iNumShips * 2];
-                ppiCloakerKey[j] = ppiBattleShipKey[j] + iNumShips;
-
-                ppfBattleShipBR[j] = new float [iNumShips * 2];
-                ppfRealBR[j] = ppfBattleShipBR[j] + iNumShips;
-
-                ppbAlive[j] = new bool [iNumShips * 2];
-                ppbSweep[j] = ppbAlive[j] + iNumShips;
-
-                // Collect keys while filtering cloaked ships
-                for (l = 0; l < (int) iNumShips; l ++) {
-
-                    iErrCode = m_pGameData->ReadData (
-                        ppszEmpireShips[j], 
-                        piShipKey[l], 
-                        GameEmpireShips::State, 
-                        &vTemp
-                        );
-
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        goto OnError;
-                    }
-
-                    if (!(vTemp.GetInteger() & CLOAKED)) {
-
-                        // Add ship to tables
-                        ppiBattleShipKey[j][piNumBattleShips[j]] = piShipKey[l];
-                        ppbAlive[j][piNumBattleShips[j]] = true;
-                        ppbSweep[j][piNumBattleShips[j]] = false;
-                                            
-                        // Add ship's BR ^ 2 to BP
-                        iErrCode = m_pGameData->ReadData (
-                            ppszEmpireShips[j], 
-                            piShipKey[l], 
-                            GameEmpireShips::CurrentBR, 
-                            &vTemp
-                            );
-                        if (iErrCode != OK) {
-                            Assert (false);
-                            goto OnError;
-                        }
-
-                        ppfRealBR[j][piNumBattleShips[j]] = vTemp.GetFloat();
-
-                        fFactor = vTemp.GetFloat() * vTemp.GetFloat();
-                        ppfBattleShipBR[j][piNumBattleShips[j]] = fFactor;
-                        pfBP[j] += fFactor;
-                        piNumBattleShips[j] ++;
-                    
-                    } else {
-
-                        Assert (piBattleEmpireIndex[j] != INDEPENDENT);
-
-                        // Add cloaked ships to a list (useful if a mine goes off)
-                        ppiCloakerKey[j][piNumCloaked[j]] = piShipKey[l];
-                        piNumCloaked[j] ++;
-                    }
-
-                }   // End cloaker filter loop
-
-                //////////////////////
-                // Apply fuel ratio //
-                //////////////////////
-
-                if (piBattleEmpireIndex[j] != INDEPENDENT && 
-                    pfFuelRatio[piBattleEmpireIndex[j]] < (float) 1.0) {
-                    
                     // Apply to BP
                     pfBP[j] *= pfFuelRatio[piBattleEmpireIndex[j]];
 
@@ -4697,78 +4705,79 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                     }
                 }
 
+                SafeRelease (pShipsTable);
+
                 m_pGameData->FreeKeys (piShipKey);
                 piShipKey = NULL;
 
-            } // End empire BP collection loop  
+        } // End empire BP collection loop  
 
 
-            // Calculate enemy_bp_tot for each empire
-            for (j = 0; j < iNumBattleEmpires; j ++) {
-                for (k = j + 1; k < iNumBattleEmpires; k ++) {
-                    if (ppiDipRef[j][k] == WAR) {
+        // Calculate enemy_bp_tot for each empire
+        for (j = 0; j < iNumBattleEmpires; j ++) {
+            for (k = j + 1; k < iNumBattleEmpires; k ++) {
+
+                if (piBattleEmpireIndex[j] == INDEPENDENT || 
+                    piBattleEmpireIndex[k] == INDEPENDENT || 
+                    ppiDipRef[piBattleEmpireIndex[j]][piBattleEmpireIndex[k]] == WAR) {
+
                         pfEnemyBP[j] += pfBP[k];
                         pfEnemyBP[k] += pfBP[j];
                     }
-                }
             }
+        }
 
-            // Calculate tot_dmg for each empire
-            // This can only be done after all the enemy_bp_tot's are known, 
-            // so that's why we have redundant loops
-            for (j = 0; j < iNumBattleEmpires; j ++) {
-                for (k = j + 1; k < iNumBattleEmpires; k ++) {
-                    if (ppiDipRef[j][k] == WAR) {
+        // Calculate tot_dmg for each empire
+        // This can only be done after all the enemy_bp_tot's are known, 
+        // so that's why we have redundant loops
+        for (j = 0; j < iNumBattleEmpires; j ++) {
+            for (k = j + 1; k < iNumBattleEmpires; k ++) {
+
+                if (piBattleEmpireIndex[j] == INDEPENDENT || 
+                    piBattleEmpireIndex[k] == INDEPENDENT || 
+                    ppiDipRef[piBattleEmpireIndex[j]][piBattleEmpireIndex[k]] == WAR) {
+
                         fDmgRatio = pfBP[j] / pfEnemyBP[k];
                         pfTotDmg[j] += fDmgRatio * pfBP[k];
 
                         fDmgRatio = pfBP[k] / pfEnemyBP[j];
                         pfTotDmg[k] += fDmgRatio * pfBP[j];
                     }
-                }
+            }
+        }
+
+        ////////////////////
+        // Resolve combat //
+        ////////////////////
+
+        for (j = 0; j < iNumBattleEmpires; j ++) {
+
+            unsigned int cActionColumn, cTypeColumn, cCurrentBRColumn, cMaxBRColumn;
+
+            fDest = pfTotDmg[j] * (float) gcConfig.iPercentDamageUsedToDestroy / 100;
+            fDV = pfTotDmg[j] - fDest;
+
+            iTempMineIndex = NO_KEY;
+
+            if (piBattleEmpireIndex[j] == INDEPENDENT) {
+
+                cActionColumn = GameIndependentShips::Action;
+                cTypeColumn = GameIndependentShips::Type;
+                cCurrentBRColumn = GameIndependentShips::CurrentBR;
+                cMaxBRColumn = GameIndependentShips::MaxBR;
+
+            } else {
+
+                cActionColumn = GameEmpireShips::Action;
+                cTypeColumn = GameEmpireShips::Type;
+                cCurrentBRColumn = GameEmpireShips::CurrentBR;
+                cMaxBRColumn = GameEmpireShips::MaxBR;
             }
 
-            ////////////////////
-            // Resolve combat //
-            ////////////////////
+            // Apply DEST
+            for (int iCurrentShip = 0; iCurrentShip < piNumBattleShips[j]; iCurrentShip ++) {
 
-            for (j = 0; j < iNumBattleEmpires; j ++) {
-
-                unsigned int iActionColumn, iTypeColumn;
-
-                fDest = pfTotDmg[j] * (float) gcConfig.iPercentDamageUsedToDestroy / 100;
-                fDV = pfTotDmg[j] - fDest;
-
-                iTempMineIndex = NO_KEY;
-
-                if (piBattleEmpireIndex[j] == INDEPENDENT) {
-
-                    iActionColumn = GameIndependentShips::Action;
-                    iTypeColumn = GameIndependentShips::Type;
-
-                } else {
-
-                    iActionColumn = GameEmpireShips::Action;
-                    iTypeColumn = GameEmpireShips::Type;
-                }
-
-                // Apply DEST
-                for (iCurrentShip = 0; iCurrentShip < piNumBattleShips[j]; iCurrentShip ++) {
-
-                    // Get ship type
-                    iErrCode = m_pGameData->ReadData (
-                        ppszEmpireShips[j],
-                        ppiBattleShipKey[j][iCurrentShip], 
-                        iTypeColumn, 
-                        &vTemp
-                        );
-
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        goto OnError;
-                    }
-
-                    switch (vTemp.GetInteger()) {
+                switch (ppiBattleShipType[j][iCurrentShip]) {
 
                     case MINEFIELD:
 
@@ -4780,17 +4789,17 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                         iErrCode = m_pGameData->ReadData (
                             ppszEmpireShips[j],
                             ppiBattleShipKey[j][iCurrentShip], 
-                            iActionColumn, 
+                            cActionColumn, 
                             &vTemp
                             );
-                        
+
                         if (iErrCode != OK) {
                             Assert (false);
                             goto OnError;
                         }
-                        
+
                         if (vTemp.GetInteger() == DETONATE) {
-                            
+
                             if (!bMines) {
                                 bMines = true;
                                 bDetonated = true;
@@ -4801,10 +4810,10 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                             // Kill ship
                             ppbAlive[j][iCurrentShip] = false;
                             piBattleShipsDestroyed[j] ++;
-                            
+
                             // Reduce empire's battle points
                             pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
-                        
+
                         } else {
 
                             if (iTempMineIndex == NO_KEY) {
@@ -4813,509 +4822,428 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                         }
 
                         break;
-                            
+
                     case CARRIER:
-                        
+
                         // A capable carrier?
                         if (fDest >= ppfBattleShipBR[j][iCurrentShip] &&
                             ppfRealBR[j][iCurrentShip] >= gcConfig.fCarrierCost) {
-                            
-                            float fAbsorbed = GetCarrierDESTAbsorption (ppfRealBR[j][iCurrentShip]);
-                            
-                            if (fDest < fAbsorbed) {
-                                fDest = 0;
-                            } else {
-                                fDest -= fAbsorbed;
-                            }
-                            
-                            float fNewBR = ppfRealBR[j][iCurrentShip] - gcConfig.fCarrierCost;
-                            
-                            // Reduce ship BR
-                            if (fNewBR <= FLOAT_PROXIMITY_TOLERANCE) {
-                                
-                                // Kill ship
-                                ppbAlive[j][iCurrentShip] = false;
-                                piBattleShipsDestroyed[j] ++;
-                                
-                                // Reduce empire's battle points
-                                pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
 
-                            } else {
+                                float fAbsorbed = GetCarrierDESTAbsorption (ppfRealBR[j][iCurrentShip]);
 
-                                const char* pszEmpireData;
-                                int iEmpireKey;
-
-                                if (piBattleEmpireIndex[j] == INDEPENDENT) {
-                                    pszEmpireData = NULL;
-                                    iEmpireKey = INDEPENDENT;
+                                if (fDest < fAbsorbed) {
+                                    fDest = 0;
                                 } else {
-                                    pszEmpireData = pstrEmpireData[piBattleEmpireIndex[j]];
-                                    iEmpireKey = piEmpireKey[piBattleEmpireIndex[j]];
+                                    fDest -= fAbsorbed;
                                 }
-                                
-                                // Reduce ship's BR
-                                iErrCode = ChangeShipTypeOrMaxBR (
-                                    ppszEmpireShips[j],
-                                     pszEmpireData,
-                                    iEmpireKey,
-                                    ppiBattleShipKey[j][iCurrentShip],
-                                    CARRIER,
-                                    CARRIER,
-                                    - gcConfig.fCarrierCost
-                                    );
-                                
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    goto OnError;
+
+                                float fNewBR = ppfRealBR[j][iCurrentShip] - gcConfig.fCarrierCost;
+
+                                // Reduce ship BR
+                                if (fNewBR <= FLOAT_PROXIMITY_TOLERANCE) {
+
+                                    // Kill ship
+                                    ppbAlive[j][iCurrentShip] = false;
+                                    piBattleShipsDestroyed[j] ++;
+
+                                    // Reduce empire's battle points
+                                    pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
+
+                                } else {
+
+                                    const char* pszEmpireData;
+                                    int iEmpireKey;
+
+                                    if (piBattleEmpireIndex[j] == INDEPENDENT) {
+                                        pszEmpireData = NULL;
+                                        iEmpireKey = INDEPENDENT;
+                                    } else {
+                                        pszEmpireData = pstrEmpireData[piBattleEmpireIndex[j]];
+                                        iEmpireKey = piEmpireKey[piBattleEmpireIndex[j]];
+                                    }
+
+                                    // Reduce ship's BR
+                                    iErrCode = ChangeShipTypeOrMaxBR (
+                                        ppszEmpireShips[j],
+                                        pszEmpireData,
+                                        iEmpireKey,
+                                        ppiBattleShipKey[j][iCurrentShip],
+                                        CARRIER,
+                                        CARRIER,
+                                        - gcConfig.fCarrierCost
+                                        );
+
+                                    if (iErrCode != OK) {
+                                        Assert (false);
+                                        goto OnError;
+                                    }
+
+                                    // Adjust BR, battle points
+                                    ppfRealBR[j][iCurrentShip] -= gcConfig.fCarrierCost;
+                                    ppfBattleShipBR[j][iCurrentShip] = 
+                                        ppfRealBR[j][iCurrentShip] * ppfRealBR[j][iCurrentShip];
+
+                                    // Reduce empire's battle points
+                                    pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
+                                    pfBP[j] += fNewBR * fNewBR;
                                 }
-                                
-                                // Adjust BR, battle points
-                                ppfRealBR[j][iCurrentShip] -= gcConfig.fCarrierCost;
-                                ppfBattleShipBR[j][iCurrentShip] = 
-                                    ppfRealBR[j][iCurrentShip] * ppfRealBR[j][iCurrentShip];
-                                
-                                // Reduce empire's battle points
-                                pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
-                                pfBP[j] += fNewBR * fNewBR;
                             }
-                        }
-                        break;
+                            break;
 
                     case MINESWEEPER:
-                        
+
                         ppbSweep[j][iCurrentShip] = true;
                         // Fall through
-                        
+
                     default:
-                        
+
                         if (fDest >= ppfBattleShipBR[j][iCurrentShip]) {
 
                             // Kill ship
                             ppbAlive[j][iCurrentShip] = false;
                             piBattleShipsDestroyed[j] ++;
-                            
+
                             // Reduce empire's battle points
                             pfBP[j] -= ppfBattleShipBR[j][iCurrentShip];
-                            
+
                             // Reduce DEST
                             fDest -= ppfBattleShipBR[j][iCurrentShip];
                         }
                         break;
-                    
-                    }   // End type switch
 
-                }   // End ships loop
+                }   // End type switch
 
-                Assert (fDest >= 0.0);
+            }   // End ships loop
 
-                // Apply damage ratio
-                fDamageRatio = (fDV + fDest) / pfBP[j];
-                
-                if (fDamageRatio >= (float) 1.0 - FLOAT_PROXIMITY_TOLERANCE) {
+            Assert (fDest >= 0.0);
 
-                    for (k = 0; k < piNumBattleShips[j]; k ++) {
-                        ppbAlive[j][k] = false;
+            // Apply damage ratio
+            fDamageRatio = (fDV + fDest) / pfBP[j];
+
+            if (fDamageRatio >= (float) 1.0 - FLOAT_PROXIMITY_TOLERANCE) {
+
+                for (k = 0; k < piNumBattleShips[j]; k ++) {
+                    ppbAlive[j][k] = false;
+                }
+
+                if (iTempMineIndex != NO_KEY && !bMines) {
+
+                    Assert (iMineOwner == NO_KEY);
+                    Assert (iMineIndex == NO_KEY);
+
+                    bMines = true;
+                    iMineOwner = j;
+                    iMineIndex = iTempMineIndex;
+                }
+
+                piBattleShipsDestroyed[j] = piNumBattleShips[j];
+
+            } else {
+
+                fFactor = (float) 1.0 - fDamageRatio;
+
+                iErrCode = m_pGameData->GetTableForWriting (ppszEmpireShips[j], &pShipsTableW);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
+
+                // Reduce BR of remaining ships
+                for (k = 0; k < piNumBattleShips[j]; k ++) {
+
+                    if (!ppbAlive[j][k]) {
+                        continue;
                     }
 
-                    if (iTempMineIndex != NO_KEY && !bMines) {
-                        
-                        Assert (iMineOwner == NO_KEY);
-                        Assert (iMineIndex == NO_KEY);
+                    unsigned int iShipKey = ppiBattleShipKey[j][k];
 
-                        bMines = true;
-                        iMineOwner = j;
-                        iMineIndex = iTempMineIndex;
+                    float fMaxBR, fNextBR = ppfRealBR[j][k] * fFactor;
+                    iErrCode = pShipsTableW->ReadData (iShipKey, cMaxBRColumn, &fMaxBR);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto OnError;
                     }
-                    
-                    piBattleShipsDestroyed[j] = piNumBattleShips[j];
 
-                } else {
-                    
-                    fFactor = (float) 1.0 - fDamageRatio;
-                    
-                    // Reduce BR of remaining ships
-                    for (k = 0; k < piNumBattleShips[j]; k ++) {
-                        
-                        if (ppbAlive[j][k]) {
-
-                            iErrCode = m_pGameData->ReadData (
-                                ppszEmpireShips[j], 
-                                ppiBattleShipKey[j][k], 
-                                GameEmpireShips::CurrentBR, 
-                                &vTemp
-                                );
-
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                goto OnError;
-                            }
-                            
-                            vTemp *= fFactor;
-
-                            iErrCode = m_pGameData->ReadData (
-                                ppszEmpireShips[j], 
-                                ppiBattleShipKey[j][k], 
-                                GameEmpireShips::MaxBR, 
-                                &vDipStatus
-                                );
-
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                goto OnError;
-                            }
-
-                            if (vDipStatus.GetFloat() < vTemp.GetFloat()) {
-                                vTemp = vDipStatus.GetFloat();
-                            }
-                            
-                            // Write new BR of ship
-                            iErrCode = m_pGameData->WriteData (
-                                ppszEmpireShips[j], 
-                                ppiBattleShipKey[j][k], 
-                                GameEmpireShips::CurrentBR, 
-                                vTemp
-                                );
-
-                            if (iErrCode != OK) {
-                                Assert (false);
-                                goto OnError;
-                            }
-                            
-                            Assert (vTemp.GetFloat() >= 0.0);
-                        }
+                    if (fNextBR > fMaxBR) {
+                        fNextBR = fMaxBR;
                     }
-                }  // End if ships survived
-            } // End empires loop
+                    Assert (fNextBR >= 0.0);
 
-            // Check for surviving sweepers if a mine went off
-            for (j = 0; bMines && j < iNumBattleEmpires; j ++) {
-
-                for (k = 0; bMines && k < piNumBattleShips[j]; k ++) {
-                
-                    if (ppbAlive[j][k] && ppbSweep[j][k]) {
-                        bMines = false;
+                    // Write new BR of ship
+                    iErrCode = pShipsTableW->WriteData (iShipKey, cCurrentBRColumn, fNextBR);
+                    if (iErrCode != OK) {
+                        Assert (false);
+                        goto OnError;
                     }
+
+                }   // End for each ship
+
+                SafeRelease (pShipsTableW);
+
+            }  // End if any ships survived
+
+        } // End empires loop
+
+        // Check for surviving sweepers if a mine went off
+        for (j = 0; bMines && j < iNumBattleEmpires; j ++) {
+            for (k = 0; bMines && k < piNumBattleShips[j]; k ++) {
+
+                if (ppbAlive[j][k] && ppbSweep[j][k]) {
+                    bMines = false;
                 }
             }
+        }
 
-            if (bMines) {
+        if (bMines) {
 
-                ///////////////////
-                // Mine goes off //
-                ///////////////////
+            ///////////////////
+            // Mine goes off //
+            ///////////////////
 
-                iErrCode = MinefieldExplosion (
-                    strGameMap,
-                    pstrEmpireData, 
-                    piPlanetKey[i],
-                    iNumEmpires,
-                    piEmpireKey,
-                    piTotalMin,
-                    piTotalFuel
+            iErrCode = MinefieldExplosion (
+                strGameMap,
+                pstrEmpireData, 
+                iPlanetKey,
+                iNumEmpires,
+                piEmpireKey,
+                piTotalMin,
+                piTotalFuel
+                );
+
+            if (iErrCode != OK) {
+                Assert (false);
+                goto OnError;
+            }
+
+            // Kill all ships on planet
+            for (j = 0; j < iNumBattleEmpires; j ++) {
+                for (k = 0; k < piNumBattleShips[j]; k ++) {
+                    ppbAlive[j][k] = false;
+                }
+
+                piBattleShipsDestroyed[j] = piNumBattleShips[j];
+            }
+
+            // Get mine name
+            if (piBattleEmpireIndex[iMineOwner] != INDEPENDENT) {
+
+                iErrCode = m_pGameData->ReadData (
+                    pstrEmpireShips[piBattleEmpireIndex[iMineOwner]],
+                    ppiBattleShipKey[iMineOwner][iMineIndex],
+                    GameEmpireShips::Name,
+                    &vMineName
                     );
 
                 if (iErrCode != OK) {
                     Assert (false);
                     goto OnError;
                 }
-                
-                // Kill all ships on planet
-                for (j = 0; j < iNumBattleEmpires; j ++) {
-                    for (k = 0; k < piNumBattleShips[j]; k ++) {
-                        ppbAlive[j][k] = false;
-                    }
-                    
-                    piBattleShipsDestroyed[j] = piNumBattleShips[j];
-                }
-
-                // Get mine name
-                if (piBattleEmpireIndex[iMineOwner] != INDEPENDENT) {
-
-                    iErrCode = m_pGameData->ReadData (
-                        pstrEmpireShips[piBattleEmpireIndex[iMineOwner]],
-                        ppiBattleShipKey[iMineOwner][iMineIndex],
-                        GameEmpireShips::Name,
-                        &vMineName
-                        );
-
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        goto OnError;
-                    }
-                }
-
-            }   // End if mines
-
-            //////////////////////////////
-            // Conflict update messages //
-            //////////////////////////////          
-            
-            // Was a ship destroyed?
-            for (j = 0; j < iNumBattleEmpires; j ++) {
-                if (piBattleShipsDestroyed[j] > 0) {
-                    break;
-                }
             }
 
-            // Make ship lists
-            if (j < iNumBattleEmpires) {
+        }   // End if mines
 
-                if (pszPlanetName[0] == '\0') {
+        //////////////////////////////
+        // Conflict update messages //
+        //////////////////////////////          
 
-                    iErrCode = GetPlanetNameWithCoordinates (strGameMap, piPlanetKey[i], pszPlanetName);
-                    if (iErrCode != OK) {
-                        Assert (false);
-                        strcpy (pszPlanetName, "Error");
+        // Was a ship destroyed?
+        for (j = 0; j < iNumBattleEmpires; j ++) {
+            if (piBattleShipsDestroyed[j] > 0) {
+                break;
+            }
+        }
+
+        // Process destroyed ships
+        if (j < iNumBattleEmpires) {
+
+            String strBattleEmpires;
+
+            // Build battle empire list
+            for (k = 0; k < iNumBattleEmpires; k ++) {
+
+                int iShipsToDeclare = piNumBattleShips[k];
+
+                if (piBattleEmpireIndex[k] == INDEPENDENT) {
+
+                    strBattleEmpires += " * " BEGIN_STRONG;
+                    strBattleEmpires += iShipsToDeclare;
+                    strBattleEmpires += " " INDEPENDENT_NAME END_STRONG " ship";
+                    if (iShipsToDeclare != 1) {
+                        strBattleEmpires += "s";
+                    }
+
+                } else {
+
+                    strBattleEmpires += " * " BEGIN_STRONG;
+                    strBattleEmpires += pvEmpireName[piBattleEmpireIndex[k]].GetCharPtr();
+                    strBattleEmpires += END_STRONG ": " BEGIN_STRONG;
+                    strBattleEmpires += iShipsToDeclare;
+                    strBattleEmpires += END_STRONG " ship";
+                    if (iShipsToDeclare != 1) {
+                        strBattleEmpires += "s";
                     }
                 }
 
-                // Add battle notification to update messages
-                for (j = 0; j < iNumWatchers; j ++) {
+                strBattleEmpires += " (";
 
-                    pstrUpdateMessage[piWatcherIndex[j]] += BEGIN_STRONG "There was a fleet battle at ";
-                    pstrUpdateMessage[piWatcherIndex[j]].AppendHtml (pszPlanetName, 0, false);
-                    pstrUpdateMessage[piWatcherIndex[j]] += END_STRONG ":\n";
+                // Count ships by type
+                unsigned int piShipsByType [NUM_SHIP_TYPES];
+                memset (piShipsByType, 0, sizeof (piShipsByType));
 
-                    if (bMines) {
+                int iType;
+                for (l = 0; l < iShipsToDeclare; l ++) {
 
-                        pstrUpdateMessage[piWatcherIndex[j]] += BEGIN_BAD_FONT(piWatcherIndex[j]);
+                    iType = ppiBattleShipType[k][l];
+                    Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP);
+                    piShipsByType [iType] ++;
+                }
 
-                        if (piBattleEmpireIndex[iMineOwner] == INDEPENDENT) {
+                int iCounted = 0;
+                ENUMERATE_SHIP_TYPES (iType) {
 
-                            pstrUpdateMessage[piWatcherIndex[j]] += "An " BEGIN_STRONG "Independent" END_STRONG " ";
-                            pstrUpdateMessage[piWatcherIndex[j]] += SHIP_TYPE_STRING [MINEFIELD];
+                    int iNumShips = piShipsByType [iType];
+                    if (iNumShips > 0) {
 
-                        } else {
-
-                            pstrUpdateMessage[piWatcherIndex[j]] += SHIP_TYPE_STRING [MINEFIELD];
-                            pstrUpdateMessage[piWatcherIndex[j]] += " ";
-                            pstrUpdateMessage[piWatcherIndex[j]].AppendHtml (vMineName.GetCharPtr(), 0, false);
-                            pstrUpdateMessage[piWatcherIndex[j]] += " of " BEGIN_STRONG;
-                            pstrUpdateMessage[piWatcherIndex[j]] += pvEmpireName[piBattleEmpireIndex[iMineOwner]].GetCharPtr();
-                            pstrUpdateMessage[piWatcherIndex[j]] += END_STRONG;
-                        }
-                        
-                        if (bDetonated) {
-                            pstrUpdateMessage[piWatcherIndex[j]] += " was " BEGIN_STRONG "detonated" END_STRONG " at ";
-                        } else {
-                            pstrUpdateMessage[piWatcherIndex[j]] += " " BEGIN_STRONG "exploded" END_STRONG " at ";
+                        if (iCounted > 0) {
+                            strBattleEmpires += ", ";
                         }
 
-                        pstrUpdateMessage[piWatcherIndex[j]].AppendHtml (pszPlanetName, 0, false);
-                        pstrUpdateMessage[piWatcherIndex[j]] += END_FONT "\n";
+                        //strBattleEmpires += BEGIN_STRONG;
+                        strBattleEmpires += iNumShips;
+                        //strBattleEmpires += END_STRONG;
+                        strBattleEmpires += " ";
+                        if (iNumShips == 1) {
+                            strBattleEmpires += SHIP_TYPE_STRING_LOWERCASE [iType];
+                        } else {
+                            strBattleEmpires += SHIP_TYPE_STRING_LOWERCASE_PLURAL [iType];
+                        }
+
+                        iCounted += iNumShips;
                     }
                 }
 
-                // Destroy each empire's ships
-                for (j = 0; j < iNumBattleEmpires; j ++) {
+                strBattleEmpires += ")\n";
+            }
 
-                    strList.Clear();
+            // Add battle notification to update messages
+            for (j = 0; j < iNumWatchers; j ++) {
 
-                    if (piBattleEmpireIndex[j] == INDEPENDENT) {
+                pstrUpdateMessage[piWatcherIndex[j]] += BEGIN_STRONG "There was a fleet battle at ";
+                pstrUpdateMessage[piWatcherIndex[j]].AppendHtml (pszPlanetName, 0, false);
+                pstrUpdateMessage[piWatcherIndex[j]] += " between:" END_STRONG "\n";
 
-                        iCounter = piBattleShipsDestroyed[j];
-                        
-                        for (k = 0; k < piNumBattleShips[j]; k ++) {
-                            
-                            if (!ppbAlive[j][k]) {
-                                
-                                // Destroy ship
-                                iErrCode = DeleteShip (iGameClass, iGameNumber, INDEPENDENT, ppiBattleShipKey[j][k]);
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    goto OnError;
-                                }
-                            }
-                        }
+                // Add empires participating in battle
+                pstrUpdateMessage[piWatcherIndex[j]] += strBattleEmpires;
+
+                // Add minefield detonation if necessary
+                if (bMines) {
+
+                    pstrUpdateMessage[piWatcherIndex[j]] += BEGIN_BAD_FONT(piWatcherIndex[j]);
+
+                    if (piBattleEmpireIndex[iMineOwner] == INDEPENDENT) {
+
+                        pstrUpdateMessage[piWatcherIndex[j]] += "An " BEGIN_STRONG "Independent" END_STRONG " ";
+                        pstrUpdateMessage[piWatcherIndex[j]] += SHIP_TYPE_STRING [MINEFIELD];
 
                     } else {
 
-                        iCounter = 0;
-                        
-                        if (piBattleShipsDestroyed[j] > 0) {
-                            
-                            // Make a list of the empire's destroyed ships
-                            for (k = 0; k < piNumBattleShips[j]; k ++) {
+                        pstrUpdateMessage[piWatcherIndex[j]] += SHIP_TYPE_STRING [MINEFIELD];
+                        pstrUpdateMessage[piWatcherIndex[j]] += " ";
+                        pstrUpdateMessage[piWatcherIndex[j]].AppendHtml (vMineName.GetCharPtr(), 0, false);
+                        pstrUpdateMessage[piWatcherIndex[j]] += " of " BEGIN_STRONG;
+                        pstrUpdateMessage[piWatcherIndex[j]] += pvEmpireName[piBattleEmpireIndex[iMineOwner]].GetCharPtr();
+                        pstrUpdateMessage[piWatcherIndex[j]] += END_STRONG;
+                    }
 
-                                if (!ppbAlive[j][k]) {
-                                    
-                                    // Get ship name
-                                    iErrCode = m_pGameData->ReadData (
-                                        ppszEmpireShips[j], 
-                                        ppiBattleShipKey[j][k], 
-                                        GameEmpireShips::Name, 
-                                        &vTemp
-                                        );
-                                    if (iErrCode != OK) {
-                                        Assert (false);
-                                        goto OnError;
-                                    }
-                                    
-                                    // Add ship name to list
-                                    if (iCounter > 0) {
-                                        strList += ", ";
-                                    }
-                                    strList.AppendHtml (vTemp.GetCharPtr(), 0, false);
-                                    iCounter ++;
-                                    
-                                    // Destroy ship
-                                    iErrCode = DeleteShip (
-                                        iGameClass, 
-                                        iGameNumber, 
-                                        piEmpireKey[piBattleEmpireIndex[j]], 
-                                        ppiBattleShipKey[j][k]
-                                        );
-                                    
-                                    if (iErrCode != OK) {
-                                        Assert (false);
-                                        goto OnError;
-                                    }
-                                }
-                            }
-                        }
-                        
-                        // Add cloaked mine victims
-                        if (bMines) {
-                            
-                            for (k = 0; k < piNumCloaked[j]; k ++) {
-                                
-                                // Get cloaked ship name
-                                iErrCode = m_pGameData->ReadData (
-                                    ppszEmpireShips[j], 
-                                    ppiCloakerKey[j][k], 
-                                    GameEmpireShips::Name, 
-                                    &vTemp
-                                    );
+                    if (bDetonated) {
+                        pstrUpdateMessage[piWatcherIndex[j]] += " was " BEGIN_STRONG "detonated" END_STRONG " at ";
+                    } else {
+                        pstrUpdateMessage[piWatcherIndex[j]] += " " BEGIN_STRONG "exploded" END_STRONG " at ";
+                    }
 
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    goto OnError;
-                                }
-                                
-                                // Add ship name to list
-                                if (iCounter == 0) {
-                                    strList.AppendHtml (vTemp.GetCharPtr(), 0, false);
-                                } else {
-                                    strList += ", ";
-                                    strList.AppendHtml (vTemp.GetCharPtr(), 0, false);
-                                }
-                                iCounter ++;
-                                
-                                // Destroy the ship
-                                iErrCode = DeleteShip (
-                                    iGameClass, 
-                                    iGameNumber, 
-                                    piEmpireKey[piBattleEmpireIndex[j]], 
-                                    ppiCloakerKey[j][k]
-                                    );
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    goto OnError;
-                                }
+                    pstrUpdateMessage[piWatcherIndex[j]].AppendHtml (pszPlanetName, 0, false);
+                    pstrUpdateMessage[piWatcherIndex[j]] += END_FONT "\n";
+                }
+            }
+
+            // Destroy each battling empire's ships
+            for (j = 0; j < iNumBattleEmpires; j ++) {
+
+                strList.Clear();
+
+                if (piBattleEmpireIndex[j] == INDEPENDENT) {
+
+                    for (k = 0; k < piNumBattleShips[j]; k ++) {
+
+                        if (!ppbAlive[j][k]) {
+
+                            // Destroy ship
+                            iErrCode = DeleteShip (iGameClass, iGameNumber, INDEPENDENT, ppiBattleShipKey[j][k]);
+                            if (iErrCode != OK) {
+                                Assert (false);
+                                goto OnError;
                             }
                         }
                     }
-                    
-                    // Add to update messages
-                    if (iCounter > 0) {
+                    iCounter = piBattleShipsDestroyed[j];
 
-                        String strBattleMessage;
+                } else {
 
-                        int iBattleShips = max (piNumBattleShips[j], iCounter);
+                    iCounter = 0;
 
-                        if (piBattleEmpireIndex[j] == INDEPENDENT) {
+                    if (piBattleShipsDestroyed[j] > 0) {
 
-                            strBattleMessage = BEGIN_STRONG;
-                            strBattleMessage += iCounter;
-                            strBattleMessage += END_STRONG " (of " BEGIN_STRONG;
-                            strBattleMessage += iBattleShips;
+                        // Make a list of the empire's destroyed ships
+                        for (k = 0; k < piNumBattleShips[j]; k ++) {
 
-                            strBattleMessage += END_STRONG ") " BEGIN_STRONG "Independent" END_STRONG " ship";
-
-                            if (iBattleShips == 1) {
-                                strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
-                            } else {
-                                strBattleMessage += "s were " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                            if (ppbAlive[j][k]) {
+                                continue;
                             }
 
-                            strBattleMessage.AppendHtml (pszPlanetName, 0, false);
-                            strBattleMessage += "\n";
-
-                        } else {
-
-                            strBattleMessage = BEGIN_STRONG;
-                            strBattleMessage += iCounter;
-                            strBattleMessage += END_STRONG " (of " BEGIN_STRONG;
-                            strBattleMessage += iBattleShips;
-
-                            if (iBattleShips == 1) {
-                                strBattleMessage += END_STRONG ") ship";
-                            } else {
-                                strBattleMessage += END_STRONG ") ships";
-                            }
-
-                            strBattleMessage += " of " BEGIN_STRONG;
-                            strBattleMessage += pvEmpireName[piBattleEmpireIndex[j]].GetCharPtr();
-                            strBattleMessage += END_STRONG;
-
-                            if (iBattleShips == 1) {
-                                strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
-                            } else {
-                                strBattleMessage += " were " BEGIN_STRONG "destroyed" END_STRONG " at ";
-                            }
-
-                            strBattleMessage.AppendHtml (pszPlanetName, 0, false);
-
-                            strBattleMessage += ": ";
-                            strBattleMessage += strList;
-
-                            strBattleMessage += "\n";
-                        }
-
-                        for (k = 0; k < iNumWatchers; k ++) {
-                            pstrUpdateMessage[piWatcherIndex[k]] += strBattleMessage;
-                        }
-                    }
-                }   // End battle empire loop
-
-                // If a minefield exploded, add the innocent passer-by's cloakers to the list of the dead
-                if (bMines) {
-
-                    for (j = 0; j < iNumEmpires; j ++) {
-                        
-                        if (pbBattleEmpire[j] || piNumCloaked[j] == 0) {
-                            continue;
-                        }
-
-                        // Get the cloaker keys
-                        iErrCode = m_pGameData->GetEqualKeys (
-                            pstrEmpireShips[j], 
-                            GameEmpireShips::CurrentPlanet, 
-                            piPlanetKey[i], 
-                            false, 
-                            &piShipKey, 
-                            &iNumShips
-                            );
-
-                        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                            iErrCode = OK;
-                            continue;
-                        }
-
-                        else if (iErrCode != OK) {
-
-                            Assert (false);
-                            goto OnError;
-                        }
-
-                        iCounter = 0;
-
-                        for (k = 0; k < (int) iNumShips; k ++) {
-                            
+                            // Get ship name
                             iErrCode = m_pGameData->ReadData (
-                                pstrEmpireShips[j], 
-                                piShipKey[k], 
-                                GameEmpireShips::State, 
+                                ppszEmpireShips[j], 
+                                ppiBattleShipKey[j][k], 
+                                GameEmpireShips::Name, 
+                                &vTemp
+                                );
+                            if (iErrCode != OK) {
+                                Assert (false);
+                                goto OnError;
+                            }
+
+                            // Add ship name to list
+                            if (iCounter > 0) {
+                                strList += ", ";
+                            }
+                            strList.AppendHtml (vTemp.GetCharPtr(), 0, false);
+                            iCounter ++;
+
+                            // Destroy ship
+                            iErrCode = DeleteShip (
+                                iGameClass, 
+                                iGameNumber, 
+                                piEmpireKey[piBattleEmpireIndex[j]], 
+                                ppiBattleShipKey[j][k]
+                                );
+
+                                if (iErrCode != OK) {
+                                    Assert (false);
+                                    goto OnError;
+                                }
+                        }
+                    }
+
+                    // Add battling empires' cloaked mine victims
+                    if (bMines) {
+
+                        for (k = 0; k < piNumCloaked[j]; k ++) {
+
+                            // Get cloaked ship name
+                            iErrCode = m_pGameData->ReadData (
+                                ppszEmpireShips[j], 
+                                ppiCloakerKey[j][k], 
+                                GameEmpireShips::Name, 
                                 &vTemp
                                 );
 
@@ -5323,83 +5251,202 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                                 Assert (false);
                                 goto OnError;
                             }
-                            
-                            if (vTemp.GetInteger() & CLOAKED) {
 
-                                // Kill ship
-                                iErrCode = m_pGameData->ReadData (
-                                    pstrEmpireShips[j], 
-                                    piShipKey[k], 
-                                    GameEmpireShips::Name,
-                                    &vTemp
-                                    );
+                            // Add ship name to list
+                            if (iCounter > 0) {
+                                strList += ", ";
+                            }
+                            strList.AppendHtml (vTemp.GetCharPtr(), 0, false);
+                            iCounter ++;
+
+                            // Destroy the ship
+                            iErrCode = DeleteShip (
+                                iGameClass, 
+                                iGameNumber, 
+                                piEmpireKey[piBattleEmpireIndex[j]], 
+                                ppiCloakerKey[j][k]
+                                );
                                 if (iErrCode != OK) {
                                     Assert (false);
                                     goto OnError;
                                 }
-                                
-                                if (iCounter == 0) {
-                                    strList = vTemp.GetCharPtr();
-                                } else {
-                                    strList += ", ";
-                                    strList += vTemp.GetCharPtr();
-                                }
-                                iCounter ++;
-                                
-                                // Destroy the ship
-                                iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[j], piShipKey[k]);
-                                if (iErrCode != OK) {
-                                    Assert (false);
-                                    goto OnError;
-                                }
-                            }
                         }
 
-                        FreeKeys (piShipKey);
-                        piShipKey = NULL;
+                    }   // End if mines
 
-                        for (k = 0; k < iNumWatchers; k ++) {
-                            
-                            pstrUpdateMessage[piWatcherIndex[k]] += strList;
-                            pstrUpdateMessage[piWatcherIndex[k]] += " of " BEGIN_STRONG; 
-                            pstrUpdateMessage[piWatcherIndex[k]] += pvEmpireName[j].GetCharPtr();
-                            pstrUpdateMessage[piWatcherIndex[k]] += END_STRONG;
+                }   // End test not independent
 
-                            if (iCounter == 1) {
-                                pstrUpdateMessage[piWatcherIndex[k]] += " was "\
-                                    BEGIN_STRONG "destroyed" END_STRONG " at ";
-                            } else {
-                                pstrUpdateMessage[piWatcherIndex[k]] += " were "\
-                                    BEGIN_STRONG "destroyed" END_STRONG " at ";
-                            }
+                // Add to update messages
+                if (iCounter > 0) {
 
-                            pstrUpdateMessage[piWatcherIndex[k]].AppendHtml (pszPlanetName, 0, false);
-                            pstrUpdateMessage[piWatcherIndex[k]] += "\n";
+                    String strBattleMessage;
+
+                    if (piBattleEmpireIndex[j] == INDEPENDENT) {
+
+                        strBattleMessage = BEGIN_STRONG;
+                        strBattleMessage += iCounter;
+                        strBattleMessage += " Independent" END_STRONG " ship";
+
+                        if (iCounter == 1) {
+                            strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                        } else {
+                            strBattleMessage += "s were " BEGIN_STRONG "destroyed" END_STRONG " at ";
                         }
 
-                    }   // End all empires loop
-                }   // End if mines
-            }   // End if some ship was destroyed
-        
-            // Clean up
-            for (j = 0; j < iNumBattleEmpires; j ++) {
+                        strBattleMessage.AppendHtml (pszPlanetName, 0, false);
+                        strBattleMessage += "\n";
 
-                delete [] ppiBattleShipKey[j];
-                delete [] ppfBattleShipBR[j];
-                delete [] ppbAlive[j];
+                    } else {
 
-                ppiBattleShipKey[j] = NULL;
-                ppfBattleShipBR[j] = NULL;
-                ppbAlive[j] = NULL;
-            }
+                        strBattleMessage = BEGIN_STRONG;
+                        strBattleMessage += iCounter;
+                        strBattleMessage += END_STRONG " ship";
+                        if (iCounter != 1) {
+                            strBattleMessage += END_STRONG "s";
+                        }
 
-        }  // End of battle
+                        strBattleMessage += " of " BEGIN_STRONG;
+                        strBattleMessage += pvEmpireName[piBattleEmpireIndex[j]].GetCharPtr();
+                        strBattleMessage += END_STRONG;
 
-    } // End planet loop
+                        if (iCounter == 1) {
+                            strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                        } else {
+                            strBattleMessage += " were " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                        }
+
+                        strBattleMessage.AppendHtml (pszPlanetName, 0, false);
+
+                        strBattleMessage += ": ";
+                        strBattleMessage += strList;
+
+                        strBattleMessage += "\n";
+                    }
+
+                    for (k = 0; k < iNumWatchers; k ++) {
+                        pstrUpdateMessage[piWatcherIndex[k]] += strBattleMessage;
+                    }
+                }
+            }   // End battle empire loop
+
+            // If a minefield exploded, add all innocent passers-by to the list of the dead
+            if (bMines) {
+
+                for (j = 0; j < iNumEmpires; j ++) {
+
+                    if (!pbAlive[j] || pbBattleEmpire[j]) {
+                        continue;
+                    }
+
+                    // Get the ship keys
+                    iErrCode = m_pGameData->GetEqualKeys (
+                        pstrEmpireShips[j], 
+                        GameEmpireShips::CurrentPlanet, 
+                        iPlanetKey, 
+                        false, 
+                        &piShipKey, 
+                        &iNumShips
+                        );
+
+                    if (iErrCode != OK) {
+                        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                            iErrCode = OK;
+                            continue;
+                        } else {
+                            Assert (false);
+                            goto OnError;
+                        }
+                    }
+
+                    iCounter = 0;
+                    strList.Clear();
+
+                    for (k = 0; k < (int) iNumShips; k ++) {
+
+                        iErrCode = m_pGameData->ReadData (
+                            pstrEmpireShips[j], 
+                            piShipKey[k], 
+                            GameEmpireShips::Name, 
+                            &vTemp
+                            );
+
+                        if (iErrCode != OK) {
+                            Assert (false);
+                            goto OnError;
+                        }
+
+                        // Add ship name to list
+                        if (iCounter > 0) {
+                            strList += ", ";
+                        }
+                        strList.AppendHtml (vTemp.GetCharPtr(), 0, false);
+                        iCounter ++;
+
+                        // Destroy the ship
+                        iErrCode = DeleteShip (iGameClass, iGameNumber, piEmpireKey[j], piShipKey[k]);
+                        if (iErrCode != OK) {
+                            Assert (false);
+                            goto OnError;
+                        }
+                    }
+
+                    m_pGameData->FreeKeys (piShipKey);
+                    piShipKey = NULL;
+
+                    String strBattleMessage;
+
+                    strBattleMessage = BEGIN_STRONG;
+                    strBattleMessage += iCounter;
+                    strBattleMessage += END_STRONG " ship";
+                    if (iCounter != 1) {
+                        strBattleMessage += END_STRONG "s";
+                    }
+
+                    strBattleMessage += " of " BEGIN_STRONG;
+                    strBattleMessage += pvEmpireName[j].GetCharPtr();
+                    strBattleMessage += END_STRONG;
+
+                    if (iCounter == 1) {
+                        strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                    } else {
+                        strBattleMessage += " were " BEGIN_STRONG "destroyed" END_STRONG " at ";
+                    }
+
+                    strBattleMessage.AppendHtml (pszPlanetName, 0, false);
+
+                    strBattleMessage += ": ";
+                    strBattleMessage += strList;
+
+                    strBattleMessage += "\n";
+
+                    for (k = 0; k < iNumWatchers; k ++) {
+                        pstrUpdateMessage[piWatcherIndex[k]] += strBattleMessage;
+                    }
+
+                }   // End all empires loop
+            }   // End if mines
+        }   // End if some ship was destroyed
+
+        // Clean up
+        for (j = 0; j < iNumBattleEmpires; j ++) {
+
+            delete [] ppiBattleShipKey[j];
+            delete [] ppfBattleShipBR[j];
+            delete [] ppbAlive[j];
+
+            ppiBattleShipKey[j] = NULL;
+            ppfBattleShipBR[j] = NULL;
+            ppbAlive[j] = NULL;
+        }
+
+    }  // End of battle
 
     return iErrCode;
 
 OnError:
+
+    SafeRelease (pShipsTable);
+    SafeRelease (pShipsTableW);
 
     if (piShipKey != NULL) {
         m_pGameData->FreeKeys (piShipKey);
@@ -5524,7 +5571,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
 
     const char* pszShipTable;
 
-    unsigned int iNumAdjustedEmpires = iNumEmpires, iCurrentPlanetColumn, iTypeColumn;
+    unsigned int iNumAdjustedEmpires = iNumEmpires, iCurrentPlanetColumn, cTypeColumn;
 
     if (bIndependence) {
         iNumAdjustedEmpires ++;
@@ -5618,7 +5665,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
 
                     pszShipTable = strIndependentShips;
                     iCurrentPlanetColumn = GameIndependentShips::CurrentPlanet;
-                    iTypeColumn = GameIndependentShips::Type;
+                    cTypeColumn = GameIndependentShips::Type;
     
                 } else {
 
@@ -5647,7 +5694,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
 
                     pszShipTable = pstrEmpireShips[k];
                     iCurrentPlanetColumn = GameEmpireShips::CurrentPlanet;
-                    iTypeColumn = GameEmpireShips::Type;
+                    cTypeColumn = GameEmpireShips::Type;
                 }
                 
                 // Does empire have ships on planet?
@@ -5675,7 +5722,7 @@ int GameEngine::MakeMinefieldsDetonate (int iGameClass, int iGameNumber, const c
                     iErrCode = m_pGameData->ReadData (
                         pszShipTable,
                         ppiShipKey[k][l],
-                        iTypeColumn,
+                        cTypeColumn,
                         &vType
                         );
                     
@@ -6489,12 +6536,11 @@ int GameEngine::UpdateEmpiresEcon (int iGameClass, int iGameNumber, int iNumEmpi
                                    int iNewUpdateCount, const char* strGameMap,
                                    float fMaxAgRatio, const GameConfiguration& gcConfig) {
 
-    int iNumTraders, iNumAllies = 0, i, j, iNumBusinesses, iErrCode = OK, iEcon, iNumShips, iMil,
-        iBonusMin, iBonusFuel, iBonusAg;
+    int iNumTraders, iNumAllies = 0, i, j, iErrCode = OK, iEcon, iNumShips, iMil, iBonusMin, iBonusFuel, iBonusAg;
     
     unsigned int* piProxyKey;
     
-    float fIncrease, fMil;
+    float fMil;
     
     Variant vTemp, * pvShipMil, vPop, vMaxPop, vTotalPop, vTotalAg, vMin, vFuel;
 
@@ -6513,6 +6559,11 @@ int GameEngine::UpdateEmpiresEcon (int iGameClass, int iGameNumber, int iNumEmpi
             NULL, 
             (unsigned int*) &iNumTraders
             );
+
+        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
+            Assert (false);
+            return iErrCode;
+        }
         
         // Count number of empires at alliance
         iErrCode = m_pGameData->GetEqualKeys (
@@ -6524,6 +6575,11 @@ int GameEngine::UpdateEmpiresEcon (int iGameClass, int iGameNumber, int iNumEmpi
             (unsigned int*) &iNumAllies
             );
 
+        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
+            Assert (false);
+            return iErrCode;
+        }
+
 #ifdef _DEBUG
 
         iErrCode = GetMaxNumDiplomacyPartners (iGameClass, iGameNumber, ALLIANCE, &j);
@@ -6533,23 +6589,15 @@ int GameEngine::UpdateEmpiresEcon (int iGameClass, int iGameNumber, int iNumEmpi
         Assert (iErrCode == OK && (j == UNRESTRICTED_DIPLOMACY || iNumTraders <= j));
 #endif
 
-        // Add trade and alliance advantages to econ
-        fIncrease = (float) gcConfig.iPercentFirstTradeIncrease / 100;
-        iNumBusinesses = iNumTraders + iNumAllies;
-        
-        iBonusFuel = 0;
-        iBonusMin = 0;
-        iBonusAg = 0;
-        
-        for (j = 0; j < iNumBusinesses; j ++) {
-            
-            iBonusFuel += (int) ((float) (piTotalFuel[i] + iBonusFuel) * fIncrease);
-            iBonusMin += (int) ((float) (piTotalMin[i] + iBonusMin) * fIncrease);
-            iBonusAg += (int) ((float) (piTotalAg[i] + iBonusAg) * fIncrease);
+        unsigned int iNumTradeRelationships = iNumTraders + iNumAllies;
 
-            fIncrease *= (float) gcConfig.iPercentNextTradeIncrease / 100;
-        }
-        
+        // Add trade and alliance advantages to econ
+        CalculateTradeBonuses (
+            iNumTradeRelationships, piTotalAg[i], piTotalMin[i], piTotalFuel[i],
+            gcConfig.iPercentFirstTradeIncrease, gcConfig.iPercentNextTradeIncrease,
+            &iBonusAg, &iBonusMin, &iBonusFuel
+            );
+
         // Write new resource totals to database
         iErrCode = m_pGameData->WriteData (pstrEmpireData[i], GameEmpireData::TotalFuel, piTotalFuel[i]);
         if (iErrCode != OK) {
@@ -10255,7 +10303,8 @@ int GameEngine::ProcessGates (int iGameClass, int iGameNumber,
                             piEmpireKey[k],
                             NULL,
                             NULL,
-                            &iStatus
+                            &iStatus,
+                            NULL
                             );
 
                         if (iErrCode != OK) {
@@ -11708,25 +11757,25 @@ int GameEngine::ChangeShipTypeOrMaxBR (const char* pszShips, const char* pszEmpi
     float fNewMaxBR, fOldMaxBR;
     Variant vTemp;
 
-    unsigned int iCurrentBRColumn, iMaxBRColumn, iTypeColumn;
+    unsigned int iCurrentBRColumn, iMaxBRColumn, cTypeColumn;
 
     if (iEmpireKey == INDEPENDENT) {
 
         iCurrentBRColumn = GameIndependentShips::CurrentBR;
         iMaxBRColumn = GameIndependentShips::MaxBR;
-        iTypeColumn = GameIndependentShips::Type;
+        cTypeColumn = GameIndependentShips::Type;
 
     } else {
 
         iCurrentBRColumn = GameEmpireShips::CurrentBR;
         iMaxBRColumn = GameEmpireShips::MaxBR;
-        iTypeColumn = GameEmpireShips::Type;
+        cTypeColumn = GameEmpireShips::Type;
     }
 
     if (iOldShipType != iNewShipType) {
 
         // Set new type
-        iErrCode = m_pGameData->WriteData (pszShips, iShipKey, iTypeColumn, iNewShipType);
+        iErrCode = m_pGameData->WriteData (pszShips, iShipKey, cTypeColumn, iNewShipType);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;

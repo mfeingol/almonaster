@@ -63,6 +63,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 &iNumUpdatesTranspired,
                 true,
                 false,
+                true,
                 NULL,
                 NULL
                 );

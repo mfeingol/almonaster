@@ -64,7 +64,7 @@ int GameEngine::GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpire
 // Return diplomatic status between two empires
 
 int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
-                                     int* piWeOffer, int* piTheyOffer, int* piCurrent) {
+                                     int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet) {
 
     int iErrCode = OK;
     IReadTable* pTable = NULL;
@@ -82,6 +82,10 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         *piCurrent = WAR;
     }
 
+    if (pbMet != NULL) {
+        *pbMet = true;
+    }
+
     if (piWeOffer != NULL || piCurrent != NULL) {
 
         GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
@@ -96,7 +100,11 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         iErrCode = pTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
+
                 iErrCode = OK;
+                if (pbMet != NULL) {
+                    *pbMet = false;
+                }
             }
             goto Cleanup;
         }
@@ -151,7 +159,12 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         iErrCode = pTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iEmpireKey, &iKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                
+                Assert (piWeOffer == NULL && piCurrent == NULL);
                 iErrCode = OK;
+                if (pbMet != NULL) {
+                    *pbMet = false;
+                }
             }
             goto Cleanup;
         }
@@ -1128,7 +1141,6 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
     return iErrCode;
 }
 
-
 // Input:
 // iGameClass -> Gameclass
 // iGameNumber -> Gamenumber
@@ -1138,7 +1150,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
 // **ppiNumDuplicatesInList -> Number of keys in each set of duplicates
 // *piNumDuplicates -> Number of duplicates lists found
 //
-// Return the number of empires requesting pause in a given game
+// Searches for empires in a game with the same data column
 
 int GameEngine::SearchForDuplicates (int iGameClass, int iGameNumber, unsigned int iSystemEmpireDataColumn,
                                      unsigned int iGameEmpireDataColumn, int** ppiDuplicateKeys, 
@@ -1753,6 +1765,105 @@ Cleanup:
     return iErrCode;
 }
 
+int GameEngine::GetNumEmpiresAtDiplomaticStatusNextUpdate (int iGameClass, int iGameNumber, int iEmpireKey, 
+                                                           int* piWar, int* piTruce, int* piTrade, 
+                                                           int* piAlliance) {
+
+    const unsigned int piColumns[] = {
+        GameEmpireDiplomacy::EmpireKey, 
+        GameEmpireDiplomacy::DipOffer,
+        GameEmpireDiplomacy::CurrentStatus
+    };
+
+    int iErrCode;
+
+    GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
+
+    int iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0;
+    unsigned int iNumEmpires, i;
+
+    Variant** ppvData = NULL;
+
+    iErrCode = m_pGameData->ReadColumns (
+        strGameEmpireDiplomacy, 
+        countof (piColumns),
+        piColumns, 
+        &ppvData, 
+        &iNumEmpires
+        );
+
+    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+        iErrCode = OK;
+        goto Cleanup;   // Set return values to zero
+    }
+
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    for (i = 0; i < iNumEmpires; i ++) {
+
+        unsigned int iFoeKey = ppvData[i][0].GetInteger();
+        int iWeOffer = ppvData[i][1].GetInteger();
+        int iStatus = ppvData[i][2].GetInteger();
+
+        int iTheyOffer;
+        iErrCode = GetDiplomaticStatus (iGameClass, iGameNumber, iEmpireKey, iFoeKey, NULL, &iTheyOffer, NULL, NULL);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
+
+        switch (GetNextDiplomaticStatus (iWeOffer, iTheyOffer, iStatus)) {
+
+        case WAR:
+            iWar ++;
+            break;
+
+        case TRUCE:
+            iTruce ++;
+            break;
+
+        case TRADE:
+            iTrade ++;
+            break;
+
+        case ALLIANCE:
+            iAlliance ++;
+            break;
+
+        default:
+            Assert (false);
+            break;
+        }
+    }
+
+Cleanup:
+
+    if (piWar != NULL) {
+        *piWar = iWar;
+    }
+
+    if (piTruce != NULL) {
+        *piTruce = iTruce;
+    }
+
+    if (piTrade != NULL) {
+        *piTrade = iTrade;
+    }
+
+    if (piAlliance != NULL) {
+        *piAlliance = iAlliance;
+    }
+
+    if (ppvData != NULL) {
+        m_pGameData->FreeData (ppvData);
+    }
+
+    return iErrCode;
+}
+
 int GameEngine::GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int* piWar, 
                                                  int* piTruce, int* piTrade, int* piAlliance) {
 
@@ -1815,10 +1926,21 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber
         }
     }
 
-    *piWar = iWar;
-    *piTruce = iTruce;
-    *piTrade = iTrade;
-    *piAlliance = iAlliance;
+    if (piWar != NULL) {
+        *piWar = iWar;
+    }
+
+    if (piTruce != NULL) {
+        *piTruce = iTruce;
+    }
+
+    if (piTrade != NULL) {
+        *piTrade = iTrade;
+    }
+
+    if (piAlliance != NULL) {
+        *piAlliance = iAlliance;
+    }
 
 Cleanup:
 

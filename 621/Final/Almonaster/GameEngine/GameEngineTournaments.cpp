@@ -517,12 +517,27 @@ int GameEngine::GetTournamentName (unsigned int iTournamentKey, Variant* pvTourn
 int GameEngine::GetTournamentOwner (unsigned int iTournamentKey, unsigned int* piOwnerKey) {
 
     int iErrCode;
-    Variant vValue;
+    
+    IReadTable* pTable = NULL;
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vValue);
-    if (iErrCode == OK) {
-        *piOwnerKey = vValue.GetInteger();
+    iErrCode = m_pGameData->GetTableForReading (SYSTEM_TOURNAMENTS, &pTable);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
     }
+
+    bool bExists;
+    iErrCode = pTable->DoesRowExist (iTournamentKey, &bExists);
+    if (iErrCode != OK || !bExists) {
+        iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
+        goto Cleanup;
+    }
+
+    iErrCode = pTable->ReadData (iTournamentKey, SystemTournaments::Owner, (int*) piOwnerKey);
+
+Cleanup:
+
+    SafeRelease (pTable);
 
     return iErrCode;
 }

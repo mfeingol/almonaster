@@ -509,7 +509,8 @@ int HttpRequest::ParseHeader (char* pszLine) {
                     pszDecode = (char*) StackAlloc (stEncodeLen);
                 }
 
-                iErrCode = Algorithm::DecodeBase64 (pszTemp, pszDecode, stEncodeLen);
+                size_t cbDecoded;
+                iErrCode = Algorithm::DecodeBase64 (pszTemp, pszDecode, stEncodeLen, &cbDecoded);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }

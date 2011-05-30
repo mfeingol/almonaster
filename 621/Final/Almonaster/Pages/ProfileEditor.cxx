@@ -476,6 +476,25 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("Your collapsed fleets option was updated");
             }
 
+            // Handle BlockUploadedIcons
+            if ((pHttpForm = m_pHttpRequest->GetForm ("BlockUploadedIcons")) == NULL) {
+                goto Redirection;
+            }
+            iNewValue = pHttpForm->GetIntValue();
+            bValue = (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS) != 0;
+
+            if ((iNewValue != 0) != bValue) {
+
+                EmpireCheck (g_pGameEngine->SetEmpireOption2 (m_iEmpireKey, BLOCK_UPLOADED_ICONS, !bValue));
+
+                if (!bValue) {
+                    m_iSystemOptions2 |= BLOCK_UPLOADED_ICONS;
+                } else {
+                    m_iSystemOptions2 &= ~BLOCK_UPLOADED_ICONS;
+                }
+                AddMessage ("Your block uploaded icons option was updated");
+            }
+
             // Handle Confirm
             if ((pHttpForm = m_pHttpRequest->GetForm ("Confirm")) == NULL) {
                 goto Redirection;
@@ -1397,9 +1416,7 @@ Quote:
             // Handle blank empire stats request
             if (WasButtonPressed (BID_BLANKEMPIRESTATISTICS)) {
 
-                if (m_iEmpireKey == ROOT_KEY) {
-                    AddMessage (ROOT_NAME "'s statistics cannot be blanked");
-                } else if (m_iEmpireKey == GUEST_KEY) {
+                if (m_iEmpireKey == GUEST_KEY) {
                     AddMessage (GUEST_NAME "'s statistics cannot be blanked");
                 } else {
                     bRedirectTest = false;
@@ -2431,7 +2448,7 @@ case 0:
     %><option<%
     if (iValue == 0) {
         %> selected<%
-    } %> value="<% Write (0); %>"><%
+    } %> value="0"><%
     %>At top of screen only</option><%
 
     %><option<%
@@ -2480,7 +2497,7 @@ case 0:
     %><option<%
     if (iValue == 0) {
         %> selected<%
-    } %> value="<% Write (0); %>"><%
+    } %> value="0"><%
     %>On neither system screens nor game screens by default</option><%
 
     %></select></td></tr><%
@@ -2525,11 +2542,28 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On</option><option<%
+    } %> value="1">On</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off</option></select></td></tr><%
+    } %> value="0">Off</option></select></td></tr><%
+
+
+    %><tr><td>Block uploaded icons from other empires:</td><td><select name="BlockUploadedIcons"><%
+
+    bFlag = (pvEmpireData[SystemEmpireData::Options2].GetInteger() & BLOCK_UPLOADED_ICONS) != 0;
+
+    %><option<%
+    if (!bFlag) {
+        %> selected<%
+    } %> value="0">Display uploaded icons</option><%
+
+    %><option<%
+    if (bFlag) {
+        %> selected<%
+    } %> value="1">Display default icon instead of uploaded icons</option><%
+   
+    %></select></td></tr><%
 
 
     if (m_iPrivilege >= PRIVILEGE_FOR_ADVANCED_SEARCH) {
@@ -2571,11 +2605,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Visual update countdown <em>(requires JavaScript)</em>:</td><%
@@ -2585,11 +2619,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Refresh unstarted game screens every 2 min <em>(requires JavaScript)</em>:</td><%
@@ -2600,11 +2634,11 @@ case 0:
     %><option<%
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On in all unstarted games</option><option<%
+    } %> value="1">On in all unstarted games</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off</option></select></td></tr><%
+    } %> value="0">Off</option></select></td></tr><%
     
     
     %><tr><td>Displace End Turn button to corner:</td><td><select name="DisplaceEndTurn"><%
@@ -2614,11 +2648,11 @@ case 0:
     %><option<%
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Map coloring by diplomatic status:</td><td><select name="MapColoring"><option<%
@@ -2627,11 +2661,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Ship coloring by diplomatic status on map screen:</td><td><select name="ShipMapColoring"><option<%
@@ -2640,11 +2674,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Ship highlighting on map screen:</td><td><select name="ShipHighlighting"><option<%
@@ -2653,11 +2687,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Sensitive maps <em>(requires Internet Explorer)</em>:</td><%
@@ -2667,11 +2701,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Partial maps:</td><td><select name="PartialMaps"><option<%
@@ -2680,11 +2714,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Display local maps in up-close map views:</td><td><select name="LocalMaps"><option<%
@@ -2693,11 +2727,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">On by default</option><option<%
+    } %> value="1">On by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Off by default</option></select></td></tr><%
+    } %> value="0">Off by default</option></select></td></tr><%
 
 
     %><tr><td>Display ship menus in planet views:</td><td><select name="UpCloseShips"><%
@@ -2783,8 +2817,8 @@ case 0:
     } %> value="<% Write (RATIOS_DISPLAY_ALWAYS); %>">On all game screens by default</option><%
 
     %></select></td></tr><%
-    
-    
+
+
     %><tr><td>Game screen password hashing:<br><%
     %>(<em>IP address hashing can conflict with firewalls</em>)</td><%
     %><td><select name="Hashing"><option<%
@@ -2807,7 +2841,7 @@ case 0:
 
     if (!bIP && !bID) {
         %> selected<%
-    } %> value="<% Write (0); %>">Use neither (insecure)</option></select></td></tr><%
+    } %> value="0">Use neither (insecure)</option></select></td></tr><%
 
 
     %><tr><td align="center" colspan="2">&nbsp;</td></tr><%
@@ -2915,11 +2949,11 @@ case 0:
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Accept by default</option><option<%
+    } %> value="0">Accept by default</option><option<%
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">Reject by default</option></select></td></tr><%
+    } %> value="1">Reject by default</option></select></td></tr><%
     
     
     %><tr><td>Disband empty fleets on update:</td><td><select name="DeleteEmptyFleets"><option<%
@@ -2928,11 +2962,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">Always disband empty fleets</option><option<%
+    } %> value="1">Always disband empty fleets</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Never disband empty fleets</option></select></td></tr><%
+    } %> value="0">Never disband empty fleets</option></select></td></tr><%
 
 
     %><tr><td>Collapse or expand fleets by default:</td><td><select name="CollapseFleets"><option<%
@@ -2941,11 +2975,11 @@ case 0:
 
     if (bFlag) {
         %> selected<%
-    } %> value="<% Write (1); %>">Fleets are collapsed by default</option><option<%
+    } %> value="1">Fleets are collapsed by default</option><option<%
 
     if (!bFlag) {
         %> selected<%
-    } %> value="<% Write (0); %>">Fleets are expanded by default</option></select></td></tr><%
+    } %> value="0">Fleets are expanded by default</option></select></td></tr><%
 
 
     %><tr><td>Messages sent when nuke events occur:</td><td><select name="SendScore"><option<%
@@ -2980,7 +3014,7 @@ case 0:
     if (HTMLFilter (pvEmpireData[SystemEmpireData::Quote].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Quote:<br>(<em>Visible to everyone from your profile</em>)</td><%
-        %><td><textarea name="Quote" cols="50" rows="6"><%
+        %><td><textarea name="Quote" cols="50" rows="6" wrap="virtual"><%
         Write (strFilter.GetCharPtr(), strFilter.GetLength());
         %></textarea></td></tr><%
     }
@@ -2988,7 +3022,7 @@ case 0:
     if (HTMLFilter (pvEmpireData[SystemEmpireData::VictorySneer].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Victory Sneer:<br>(<em>Sent to your opponents when you nuke them</em>)</td><%
-        %><td><textarea name="VictorySneer" cols="50" rows="4"><%
+        %><td><textarea name="VictorySneer" cols="50" rows="4" wrap="virtual"><%
         Write (strFilter.GetCharPtr(), strFilter.GetLength());
         %></textarea></td></tr><%
     }
@@ -3027,7 +3061,7 @@ case 0:
 
     %></table><p><%
 
-    if (m_iEmpireKey != ROOT_KEY && m_iEmpireKey != GUEST_KEY) {
+    if (m_iEmpireKey != GUEST_KEY) {
         WriteButton (BID_BLANKEMPIRESTATISTICS);
     }
 

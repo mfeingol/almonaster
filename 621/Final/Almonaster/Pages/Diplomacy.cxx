@@ -206,7 +206,8 @@ if (m_bOwnPost && !m_bRedirection) {
                                 piDelayEmpireKey[i],
                                 NULL,
                                 NULL,
-                                &iCurrent
+                                &iCurrent,
+                                NULL
                                 );
 
                             if (iErrCode != OK) {
@@ -962,6 +963,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         iKnownEmpireKey,
         NULL,
         &iTheyOffer,
+        NULL,
         NULL
         );
 
@@ -1542,7 +1544,7 @@ if (iActiveEmpires > 1) {
 
         %><p><table width="90%"><tr><td><strong>Send a message to:</strong></td><%
 
-        %><td align="center" rowspan="3"><textarea name="Message" rows="7" cols="60" wrap="physical"><% 
+        %><td align="center" rowspan="3"><textarea name="Message" rows="7" cols="60" wrap="virtual"><% 
         if (pszRedrawMessage != NULL) {
             Write (pszRedrawMessage);
         } %></textarea></td><%

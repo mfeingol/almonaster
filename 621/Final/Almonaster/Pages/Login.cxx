@@ -200,8 +200,6 @@ else if (!m_bRedirection) {
                 m_vPassword = pszPassword;
 
                 if (LoginEmpire() == OK && InitializeEmpire (false) == OK) {
-                    AddMessage ("Welcome back, ");
-                    AppendMessage (vEmpireName.GetCharPtr());
                     return Redirect (ACTIVE_GAME_LIST);
                 }
 
@@ -347,7 +345,7 @@ WriteIntro();
 
 WriteAlmonasterBanner();
 
-%><p><% WriteIntroUpper();
+%><p><% WriteIntroUpper (false);
 
 if (!m_strMessage.IsBlank()) {
     %><p><strong><%
@@ -408,7 +406,7 @@ if (!(iOptions & LOGINS_ENABLED)) {
     WriteButton (BID_LOGIN);
 }
 
-%><p><% WriteIntroLower();
+%><p><% WriteIntroLower (false);
 
 WriteContactLine();
 

@@ -909,8 +909,7 @@ public:
     // Diplomacy
     virtual int GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpireKey, 
         int* piNumEmpires) = 0;
-    virtual int GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
-        int* piWeOffer, int* piTheyOffer, int* piCurrent) = 0;
+
     virtual int GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
         int piDipOptKey[], int* piSelected, int* piNumOptions) = 0;
     virtual int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer) = 0;

@@ -90,11 +90,6 @@ int PageSource::Init() {
 
     int iErrCode;
 
-    m_pcfConfig = Config::CreateInstance();
-    if (m_pcfConfig == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
     iErrCode = m_mLogMutex.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
@@ -115,6 +110,11 @@ int PageSource::Init() {
     iErrCode = m_mCounterLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
+    }
+
+    m_pcfConfig = Config::CreateInstance();
+    if (m_pcfConfig == NULL) {
+        return ERROR_OUT_OF_MEMORY;
     }
 
     return OK;
@@ -1589,9 +1589,9 @@ int PageSource::WriteReport (const char* pszMessage) {
 
     plmMessage->lmtMessageType = REPORT_MESSAGE;
     plmMessage->pPageSource = this;
-    memcpy (plmMessage->pszText, pszMessage, stLength + 1);
-
     AddRef();
+
+    memcpy (plmMessage->pszText, pszMessage, stLength + 1);
 
     int iErrCode = m_pHttpServer->PostMessage (plmMessage);
     if (iErrCode != OK) {

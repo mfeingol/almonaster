@@ -661,7 +661,13 @@ recurse:
     OSAL_EXPORT char* memstr (const char* pszBuffer, const char* pszMatchString, size_t cbBytes);
 
     OSAL_EXPORT int UnescapeString (const char* pszInput, char* pszAnsi, size_t cchLength);
-    OSAL_EXPORT int DecodeBase64 (const char* pszBase64, char* ppszAnsi, size_t cchLength);
+
+    OSAL_EXPORT size_t GetEncodeBase64Size (size_t cbDataLength);
+    OSAL_EXPORT int EncodeBase64 (const void* pbData, size_t cbDataLength, char* pszBase64, size_t cchLength);
+
+    OSAL_EXPORT size_t GetDecodeBase64Size (const char* pszBase64, size_t cchLength);
+    OSAL_EXPORT int DecodeBase64 (const char* pszBase64, void* pbData, size_t cbLength, size_t* pcbDecoded);
+
     OSAL_EXPORT int HexCharToDecimal (char szDigit);
 
     OSAL_EXPORT int AtomicIncrement (int* piValue);

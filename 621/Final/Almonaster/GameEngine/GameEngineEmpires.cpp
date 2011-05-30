@@ -1762,11 +1762,7 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     bool bBridierLocked = false;
 
     char pszTable [256];
-    Variant vOldClassicScore, vOldAlmonasterScore, vOldBridierIndex;
-
-    if (iEmpireKey == ROOT_KEY) {
-        return ERROR_CANNOT_MODIFY_ROOT;
-    }
+    Variant vPriv, vOldClassicScore, vOldAlmonasterScore, vOldBridierIndex;
 
     if (iEmpireKey == GUEST_KEY) {
         return ERROR_CANNOT_MODIFY_GUEST;
@@ -1890,11 +1886,20 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
         Assert (false);
         goto Cleanup;
     }
-
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
+    
+    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
+    }
+
+    if (vPriv.GetInteger() != ADMINISTRATOR) {
+
+        iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
     }
 
     // Blank nuke history fields
@@ -2611,19 +2616,24 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
         GET_GAME_EMPIRE_DATA (pszGameData, iGameClass, iGameNumber, iEmpireKey);
 
-        Variant vNumUpdatesIdle;
-        iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-
         Variant vOptions;
         iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::Options, &vOptions);
         if (iErrCode != OK) {
             goto Cleanup;
         }
 
+        // Ignore games in which the empire has resigned
+        if (vOptions.GetInteger() & RESIGNED) {
+            continue;
+        }
+
         if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE)) {
+
+            Variant vNumUpdatesIdle;
+            iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
+            if (iErrCode != OK) {
+                goto Cleanup;
+            }
 
             Variant vNumUpdatesForIdle;
             iErrCode = GetGameClassProperty (iGameClass, SystemGameClassData::NumUpdatesForIdle, &vNumUpdatesForIdle);

@@ -118,7 +118,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
         "<p><table width=\"90%\">"\
         "<tr>"\
         "<td>Description:</td><td>"\
-        "<textarea rows=\"4\" cols=\"40\" wrap=\"physical\" name=\"TournamentDescription\">"
+        "<textarea rows=\"4\" cols=\"40\" wrap=\"virtual\" name=\"TournamentDescription\">"
         );
 
     m_pHttpResponse->WriteText (strDesc.GetCharPtr(), strDesc.GetLength());
@@ -443,7 +443,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
     OutputText (
         "<tr>"\
         "<td>News:</td><td>"\
-        "<textarea rows=\"6\" cols=\"60\" wrap=\"physical\" name=\"TournamentNews\">"
+        "<textarea rows=\"6\" cols=\"60\" wrap=\"virtual\" name=\"TournamentNews\">"
         );
 
     m_pHttpResponse->WriteText (strNews.GetCharPtr(), strNews.GetLength());
@@ -535,7 +535,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
         "<p><table width=\"65%\">"\
         "<tr>"\
         "<td>Description:</td><td>"\
-        "<textarea rows=\"4\" cols=\"40\" wrap=\"physical\" name=\"TeamDescription\">"
+        "<textarea rows=\"4\" cols=\"40\" wrap=\"virtual\" name=\"TeamDescription\">"
         );
 
     m_pHttpResponse->WriteText (strDesc.GetCharPtr(), strDesc.GetLength());
@@ -730,7 +730,7 @@ void HtmlRenderer::WriteCreateTournamentTeam (unsigned int iTournamentKey) {
     OutputText (
         "<tr>"\
         "<td>Description:</td><td>"\
-        "<textarea rows=\"4\" cols=\"40\" wrap=\"physical\" name=\"TeamDescription\">"
+        "<textarea rows=\"4\" cols=\"40\" wrap=\"virtual\" name=\"TeamDescription\">"
         );
 
     m_pHttpResponse->WriteText (strDesc.GetCharPtr(), strDesc.GetLength());
@@ -836,12 +836,7 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
     pvSubmitArray [SystemTournamentTeams::WebPage] = pHttpForm->GetValue();
 
     // Icon
-    if (g_pGameEngine->GetSystemProperty (
-        SystemData::DefaultAlien,
-        pvSubmitArray + SystemTournamentTeams::Icon) != OK
-        ) {
-        pvSubmitArray [SystemTournamentTeams::Icon] = 0;
-    }
+    pvSubmitArray [SystemTournamentTeams::Icon] = GetDefaultSystemIcon();
 
     return OK;
 }
@@ -1116,6 +1111,18 @@ int HtmlRenderer::StartTournamentGame (unsigned int iTournamentKey, int iTeamOpt
 
     case ERROR_EMPIRE_IS_UNAVAILABLE_FOR_TOURNAMENTS:
         AddMessage ("One of the selected empires is unavailable to join tournament games");
+        break;
+
+    case ERROR_ACCESS_DENIED:
+        AddMessage ("An empire does not have permission to enter the game");
+        break;
+
+    case ERROR_DUPLICATE_IP_ADDRESS:
+        AddMessage ("An empire has a duplicate IP address and may not enter the game");
+        break;
+
+    case ERROR_DUPLICATE_SESSION_ID:
+        AddMessage ("An empire has a duplicate Session Id and may not enter the game");
         break;
 
     default:

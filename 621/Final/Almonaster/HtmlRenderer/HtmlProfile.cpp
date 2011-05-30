@@ -390,13 +390,15 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         m_iEmpireKey != iTargetEmpireKey && 
         iTargetEmpireKey != ROOT_KEY &&
         iTargetEmpireKey != GUEST_KEY) {
+
+        float fScore = pvEmpireData[SystemEmpireData::AlmonasterScore].GetFloat();
         
         OutputText ("<input type=\"hidden\" name=\"OldAScore\" value=\"");
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::AlmonasterScore].GetFloat());
+        m_pHttpResponse->WriteText (fScore);
         OutputText ("\">");
         
         OutputText ("<input type=\"text\" size=\"12\" maxlength=\"12\" name=\"NewAScore\" value=\"");
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::AlmonasterScore].GetFloat());
+        m_pHttpResponse->WriteText (fScore);
         OutputText ("\">");
         
     } else {
@@ -415,10 +417,29 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         OutputText ("N/A");
     }
     
-    // Significance
     OutputText ("</td><td>&nbsp;</td><td><strong>Significance:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::AlmonasterScoreSignificance].GetInteger());
-    
+    if (bEmpireAdmin &&
+        m_iPrivilege >= ADMINISTRATOR &&
+        m_iEmpireKey != iTargetEmpireKey && 
+        iTargetEmpireKey != ROOT_KEY &&
+        iTargetEmpireKey != GUEST_KEY) {
+
+        int iSignificance = pvEmpireData[SystemEmpireData::AlmonasterScoreSignificance].GetInteger();
+
+        OutputText ("<input type=\"hidden\" name=\"OldASignificance\" value=\"");
+        m_pHttpResponse->WriteText (iSignificance);
+        OutputText ("\">");
+        
+        OutputText ("<input type=\"text\" size=\"12\" maxlength=\"12\" name=\"NewASignificance\" value=\"");
+        m_pHttpResponse->WriteText (iSignificance);
+        OutputText ("\">");
+
+    } else {
+
+        // Significance
+        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::AlmonasterScoreSignificance].GetInteger());
+    }
+
     // Location
     OutputText ("</td></tr><tr><td><strong>Location:</strong></td><td>");
     iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::Location].GetCharPtr(), &strHtml, 0, false);
@@ -428,21 +449,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     
     // Classic Score
     OutputText ("</td><td>&nbsp;</td><td><strong>Classic Score:</strong></td><td>");
-    
-    if (bEmpireAdmin &&
-        m_iPrivilege >= ADMINISTRATOR &&
-        iTargetEmpireKey != m_iEmpireKey && 
-        iTargetEmpireKey != ROOT_KEY && 
-        iTargetEmpireKey != GUEST_KEY) {
-
-        OutputText ("<input type=\"text\" size=\"12\" maxlength=\"12\" name=\"NewCScore\" value=\"");
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore].GetFloat());
-        OutputText ("\">");
-        
-    } else {
-        
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore]);
-    }
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore]);
 
     // Email address
     OutputText ("</td></tr><tr><td><strong>Email Address:</strong></td><td>");
@@ -621,7 +628,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     }
     
     if (!bEmpireAdmin && bSendMessage && bCanBroadcast && m_iEmpireKey != iTargetEmpireKey && m_iPrivilege > GUEST) {
-        OutputText ("<p><textarea name=\"Message\" rows=\"7\" cols=\"60\" wrap=\"hard\"></textarea><p>");
+        OutputText ("<p><textarea name=\"Message\" rows=\"7\" cols=\"60\" wrap=\"virtual\"></textarea><p>");
         WriteButton (BID_SENDMESSAGE);
     }
     

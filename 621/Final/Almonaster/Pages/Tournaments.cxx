@@ -72,6 +72,17 @@ if (m_bOwnPost && !m_bRedirection) {
             iErrCode = g_pGameEngine->InviteSelfIntoTournament (iTournamentKey, m_iEmpireKey);
             if (iErrCode == OK) {
                 AddMessage ("A request to join the tournament was sent to the tournament owner");
+
+                // Figure out where to redirect next
+                unsigned int iTourneyOwner;
+                iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iTourneyOwner);
+                if (iErrCode == OK) {
+                    
+                    if (iTourneyOwner == m_iEmpireKey) {
+                        return Redirect (PERSONAL_TOURNAMENTS);
+                    }
+                }
+
             } else if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
                 AddMessage ("You are already in the tournament");
             } else if (iErrCode == ERROR_TOURNAMENT_DOES_NOT_EXIST) {
@@ -82,6 +93,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AppendMessage (" occurred");
             }
 
+            iTournamentPage = 1;
             bRedirectTest = false;
         }
 
@@ -96,6 +108,17 @@ if (m_bOwnPost && !m_bRedirection) {
             iErrCode = g_pGameEngine->DeleteEmpireFromTournament (iTournamentKey, m_iEmpireKey);
             if (iErrCode == OK) {
                 AddMessage ("Your empire was deleted from the tournament");
+
+                // Figure out where to redirect next
+                unsigned int iTourneyOwner;
+                iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iTourneyOwner);
+                if (iErrCode == OK) {
+                    
+                    if (iTourneyOwner == m_iEmpireKey) {
+                        return Redirect (PERSONAL_TOURNAMENTS);
+                    }
+                }
+
             } else if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT) {
                 AddMessage ("Your empire was no longer in the tournament");
             } else if (iErrCode == ERROR_EMPIRE_IS_IN_GAMES) {
@@ -105,6 +128,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AppendMessage (iErrCode);
             }
 
+            iTournamentPage = 1;
             bRedirectTest = false;
         }
 

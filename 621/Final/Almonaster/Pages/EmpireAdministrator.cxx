@@ -330,6 +330,7 @@ SearchResults:
                 }
             }
 
+            // Score
             if ((pHttpForm = m_pHttpRequest->GetForm ("NewAScore")) == NULL) {
                 goto Redirection;
             }
@@ -364,6 +365,43 @@ SearchResults:
                 }
             }
 
+            // Significance
+            if ((pHttpForm = m_pHttpRequest->GetForm ("NewASignificance")) == NULL) {
+                goto Redirection;
+            }
+            iValue = pHttpForm->GetIntValue();
+
+            if ((pHttpForm = m_pHttpRequest->GetForm ("OldASignificance")) == NULL) {
+                goto Redirection;
+            }
+            iOldValue = pHttpForm->GetIntValue();
+
+            if (iValue != iOldValue) {
+
+                if (iValue < 0) {
+                    AddMessage ("The submitted Almonaster significance was invalid");
+                }
+
+                else if (iTargetEmpireKey == m_iEmpireKey) {
+                    AddMessage ("You cannot change your own Almonaster significance");
+                }
+
+                else if (iTargetEmpireKey == ROOT_KEY) {
+                    AddMessage ("You cannot change " ROOT_NAME "'s Almonaster significance");
+                }
+
+                else if (iTargetEmpireKey == GUEST_KEY) {
+                    AddMessage ("You cannot change " GUEST_NAME "'s Almonaster significance");
+                }
+
+                else {
+
+                    EmpireCheck (g_pGameEngine->SetEmpireProperty (iTargetEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, iValue));
+                    AddMessage ("The empire's Almonaster significance was successfully updated");
+                }
+            }
+
+            // Broadcast
             if ((pHttpForm = m_pHttpRequest->GetForm ("Broadcast")) == NULL) {
                 goto Redirection;
             }
@@ -533,7 +571,7 @@ case 0:
     RenderSearchForms (true);
 
     %><p>Broadcast a message to all empires:<p><%
-    %><textarea name="Message" rows="7" cols="60" wrap="physical"></textarea><p><%
+    %><textarea name="Message" rows="7" cols="60" wrap="virtual"></textarea><p><%
 
     WriteButton (BID_SENDMESSAGE);
 

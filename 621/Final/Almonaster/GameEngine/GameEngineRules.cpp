@@ -100,7 +100,7 @@ int GameEngine::GetNextPopulation (int iPop, float fAgRatio) {
 
     Assert (iPop >= 0 && fAgRatio >= (float) 0.0);
 
-    return (int) (fAgRatio * (float) iPop) + 1;
+    return (int) (fAgRatio * (double) iPop) + 1;
 }
 
 // Return en empire's econ, given its fuel, min and ag
@@ -141,7 +141,7 @@ float GameEngine::GetTechDevelopment (int iFuel, int iMin, int iMaint, int iBuil
         return fMaxTechDev;
     }
     
-    return fMaxTechDev * (float) (iResTotal - iResUsed) / iResTotal;
+    return (float) (fMaxTechDev * (double) (iResTotal - iResUsed) / iResTotal);
 }
 
 
@@ -369,7 +369,7 @@ int GameEngine::GetTroopshipSuccessPopDecrement (float fTroopshipSuccessFactor, 
 
     Assert (iPop >= 0);
 
-    return (int) ceil ((float) iPop * (- fTroopshipSuccessFactor));
+    return (int) ceil ((double) iPop * (- fTroopshipSuccessFactor));
 }
 
 // Return the number of updates that a planet remains uninhabitable after
@@ -386,12 +386,12 @@ void GameEngine::GetBuilderNewPlanetResources (float fBR, float fBRDampening, fl
 
     Assert (fBRDampening <= fBR);
 
-    float fMultiple = (fBR - fBRDampening + (float) 1.0) / fBR;
-    float fBase = (float) fMultiplier * fMultiple * fMultiple;
+    double fMultiple = (fBR - fBRDampening + (double) 1.0) / fBR;
+    double fBase = (double) fMultiplier * fMultiple * fMultiple;
 
-    *piNewAvgAg = (int) ((float) iAvgAg * fBase);
-    *piNewAvgMin = (int) ((float) iAvgMin * fBase);
-    *piNewAvgFuel = (int) ((float) iAvgFuel * fBase);
+    *piNewAvgAg = (int) ((double) iAvgAg * fBase);
+    *piNewAvgMin = (int) ((double) iAvgMin * fBase);
+    *piNewAvgFuel = (int) ((double) iAvgFuel * fBase);
 }
 
 float GameEngine::GetGateBRForRange (float fRangeFactor, int iSrcX, int iSrcY, int iDestX, int iDestY) {
@@ -422,7 +422,7 @@ float GameEngine::GetLateComerTechIncrease (int iPercentTechIncreaseForLatecomer
 
     Assert (fMaxTechDev >= 0.0);
 
-    return (float) iNumUpdates * fMaxTechDev * ((float) iPercentTechIncreaseForLatecomers / 100);
+    return (float) ((double) iNumUpdates * fMaxTechDev * ((double) iPercentTechIncreaseForLatecomers / 100));
 }
 
 int GameEngine::GetMaxPop (int iMin, int iFuel) {
@@ -508,7 +508,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
             return iErrCode;
         }
 
-        *piMaxNumPartners = (int) ((float) (vMax.GetInteger() - 2) / 2);
+        *piMaxNumPartners = (int) ((double) (vMax.GetInteger() - 2) / 2);
         return OK;
     }
 
@@ -517,9 +517,32 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
     return iErrCode;
 }
 
+void GameEngine::CalculateTradeBonuses (int iNumTrades, int iTotalAg, int iTotalMin, int iTotalFuel,
+                                        int iPercentFirstTradeIncrease, int iPercentNextTradeIncrease,
+                                        int* piBonusAg, int* piBonusMin, int* piBonusFuel) {
+
+    int iBonusAg = 0, iBonusMin = 0, iBonusFuel = 0;
+
+    double fIncrease = (double) iPercentFirstTradeIncrease / 100;
+    double fNext = (double) iPercentNextTradeIncrease / 100;
+
+    for (int i = 0; i < iNumTrades; i ++) {
+
+        iBonusAg += (int) ((double) iTotalAg * fIncrease);
+        iBonusMin += (int) ((double) iTotalMin * fIncrease);
+        iBonusFuel += (int) ((double) iTotalFuel * fIncrease);
+
+        fIncrease *= fNext;
+    }
+
+    *piBonusAg = iBonusAg;
+    *piBonusMin = iBonusMin;
+    *piBonusFuel = iBonusFuel;
+}
+
 unsigned int GameEngine::GetNumFairDiplomaticPartners (unsigned int iMaxNumEmpires) {
 
-    return (int) ((float) (iMaxNumEmpires - 2) / 2);
+    return (int) ((double) (iMaxNumEmpires - 2) / 2);
 }
 
 bool GameEngine::GameAllowsDiplomacy (int iDiplomacyLevel, int iDip) {
@@ -535,4 +558,14 @@ bool GameEngine::IsLegalDiplomacyLevel (int iDiplomacyLevel) {
 bool GameEngine::IsLegalPrivilege (int iPrivilege) {
 
     return (iPrivilege >= NOVICE && iPrivilege <= ADMINISTRATOR) || iPrivilege == GUEST;
+}
+
+int GameEngine::GetNextDiplomaticStatus (int iOffer1, int iOffer2, int iCurrentStatus) {
+
+    int iStatus = min (iOffer1, iOffer2);
+    if (iStatus > ALLIANCE) {
+        iStatus = iCurrentStatus;
+    }
+
+    return iStatus;
 }

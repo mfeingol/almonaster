@@ -194,6 +194,22 @@ int GameEngine::Initialize() {
 
     int iOptions = 0, i, iErrCode;
 
+    // Lock Manager
+    LockManagerConfig lmConf;
+    lmConf.iNumEmpiresHint = 1000;          // Guess
+    lmConf.iMaxAgedOutPerScan = 25;         // Heuristic
+    lmConf.msMaxScanTime = 1000;            // One second
+    lmConf.msScanPeriod = 1000 * 60 * 15;   // Fifteen minutes
+    lmConf.sAgeOutPeriod = 60 * 10;         // Ten minutes
+
+    iErrCode = m_lockMgr.Initialize (lmConf);
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine could not initialize the game empire lock manager");
+        Assert (false);
+        return iErrCode;
+    }
+    m_pReport->WriteReport ("GameEngine initialized the game empire lock manager");
+
     iErrCode = m_mGameClasses.Initialize();
     if (iErrCode != OK) {
         m_pReport->WriteReport ("GameEngine is out of memory");
@@ -364,27 +380,6 @@ int GameEngine::Initialize() {
         }
         m_pReport->WriteReport ("GameEngine started the auto-backup thread");
     }
-
-    // Lock Manager
-    LockManagerConfig lmConf;
-
-    iErrCode = GetNumEmpiresInGames (&lmConf.iNumEmpiresHint);
-    if (iErrCode != OK) {
-        lmConf.iNumEmpiresHint = 100;
-    }
-
-    lmConf.iMaxAgedOutPerScan = 25;         // Heuristic
-    lmConf.msMaxScanTime = 1000;            // One second
-    lmConf.msScanPeriod = 1000 * 60 * 15;   // Fifteen minutes
-    lmConf.sAgeOutPeriod = 60 * 10;         // Ten minutes
-
-    iErrCode = m_lockMgr.Initialize (lmConf);
-    if (iErrCode != OK) {
-        m_pReport->WriteReport ("GameEngine could not initialize the game empire lock manager");
-        Assert (false);
-        return iErrCode;
-    }
-    m_pReport->WriteReport ("GameEngine initialized the game empire lock manager");
 
     // Hook library
     if (m_pAlmonasterHook != NULL) {
@@ -953,7 +948,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 620.3 beta 2";
+    return "Almonaster Build 621";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

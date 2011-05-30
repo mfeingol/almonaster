@@ -622,38 +622,34 @@ int GameEngine::GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppv
     *pppvNukedData = *pppvNukerData = NULL;
 
     // Get Nuked data
-    if (m_pGameData->DoesTableExist (strNuked)) {
+    iErrCode = m_pGameData->ReadColumns (
+        strNuked, 
+        iNumColumns,
+        piNukeColumns,
+        pppvNukedData,
+        (unsigned int*) piNumNuked
+        );
 
-        iErrCode = m_pGameData->ReadColumns (
-            strNuked, 
-            iNumColumns,
-            piNukeColumns,
-            pppvNukedData,
-            (unsigned int*) piNumNuked
-            );
-
-        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            return iErrCode;
-        }
+    if (iErrCode != OK && iErrCode != ERROR_UNKNOWN_TABLE_NAME && iErrCode != ERROR_DATA_NOT_FOUND) {
+        return iErrCode;
     }
 
     // Get Nuker data
-    if (m_pGameData->DoesTableExist (strNuker)) {
+    iErrCode = m_pGameData->ReadColumns (
+        strNuker, 
+        iNumColumns,
+        piNukeColumns,
+        pppvNukerData,
+        (unsigned int*) piNumNukers
+        );
 
-        iErrCode = m_pGameData->ReadColumns (
-            strNuker, 
-            iNumColumns,
-            piNukeColumns,
-            pppvNukerData,
-            (unsigned int*) piNumNukers
-            );
-        
-        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            if (*pppvNukedData != NULL) {
-                m_pGameData->FreeData (*pppvNukedData);
-            }
-            return iErrCode;
+    if (iErrCode != OK && iErrCode != ERROR_UNKNOWN_TABLE_NAME && iErrCode != ERROR_DATA_NOT_FOUND) {
+
+        if (*pppvNukedData != NULL) {
+            m_pGameData->FreeData (*pppvNukedData);
+            *pppvNukedData = NULL;
         }
+        return iErrCode;
     }
 
     return OK;

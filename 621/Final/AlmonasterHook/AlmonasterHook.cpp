@@ -3017,12 +3017,12 @@ Cleanup:
 
 		m_pDatabase = m_pGameEngine->GetDatabase();
 
-		//System();
+		System();
         //ForEachTheme();
         //ForEachGameClass();
 		//ForEachEmpire();
 		//ForEachTournament();
-		ForEachGame();
+		//ForEachGame();
 		//ForEachEmpireInEachGame();
 
 		return OK;

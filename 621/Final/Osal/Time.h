@@ -103,6 +103,7 @@ namespace Time {
     
     OSAL_EXPORT Seconds GetRemainingWeekendSeconds();
     OSAL_EXPORT Seconds GetRemainingWeekendSeconds (const UTCTime& tTime);
+    OSAL_EXPORT Seconds GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTime& tEnd);
 
     OSAL_EXPORT void StartTimer (Timer* ptmTimer);
     OSAL_EXPORT MilliSeconds GetTimerCount (const Timer& tmTimer);

@@ -611,48 +611,30 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Update text files
-            if ((pHttpForm = m_pHttpRequest->GetForm ("IntroU")) == NULL) {
-                goto Redirection;
-            }
-            pszNewValue = pHttpForm->GetValue();
-
-            iErrCode = UpdateIntroUpper (pszNewValue);
+            iErrCode = TryUpdateIntroUpper();
             if (iErrCode == OK ) {
                 AddMessage ("The text above the login form was updated");
             } else if (iErrCode != WARNING) {
                 AddMessage ("The text above the login form could not be updated");
             }
 
-            if ((pHttpForm = m_pHttpRequest->GetForm ("IntroL")) == NULL) {
-                goto Redirection;
-            }
-            pszNewValue = pHttpForm->GetValue();
-
-            iErrCode = UpdateIntroLower (pszNewValue);
+            iErrCode = TryUpdateIntroLower();
             if (iErrCode == OK) {
                 AddMessage ("The text below the login form was updated");
             } else if (iErrCode != WARNING) {
                 AddMessage ("The text below the login form could not be updated");
             }
 
-            if ((pHttpForm = m_pHttpRequest->GetForm ("ServerN")) == NULL) {
-                goto Redirection;
-            }
-            pszNewValue = pHttpForm->GetValue();
-
-            iErrCode = UpdateServerNews (pszNewValue);
+            iErrCode = TryUpdateServerNews();
             if (iErrCode == OK) {
                 AddMessage ("The server news text was updated");
-            } else if (iErrCode != WARNING) {
-                AddMessage ("The server news text could not be updated");
+            }
+            else if (iErrCode != WARNING) {
+                AddMessage ("The server news text could not be updated: ");
+                AppendMessage (iErrCode);
             }
 
-            if ((pHttpForm = m_pHttpRequest->GetForm ("Contributors")) == NULL) {
-                goto Redirection;
-            }
-            pszNewValue = pHttpForm->GetValue();
-
-            iErrCode = UpdateContributors (pszNewValue);
+            iErrCode = TryUpdateContributors();
             if (iErrCode == OK) {
                 AddMessage ("The contributors text was updated");
             } else if (iErrCode != WARNING) {
@@ -1680,21 +1662,21 @@ case 0:
 
     %></table></td></tr><%
 
-    %><tr><td>Edit text above login form:</td><td><textarea name="IntroU" rows="10" cols="60"><%
-    WriteIntroUpper();
-    %></textarea></td></tr><%
+    %><tr><td>Edit text above login form:</td><td><%
+    WriteIntroUpper (true);
+    %></td></tr><%
 
-    %><tr><td>Edit text below login form:</td><td><textarea name="IntroL" rows="10" cols="60"><%
-    WriteIntroLower();
-    %></textarea></td></tr><%
+    %><tr><td>Edit text below login form:</td><td><%
+    WriteIntroLower (true);
+    %></td></tr><%
 
-    %><tr><td>Edit server news:</td><td><textarea name="ServerN" rows="20" cols="60"><%
-    WriteServerNewsFile();
-    %></textarea></td></tr><%
+    %><tr><td>Edit server news:</td><td><%
+    WriteServerNewsFile (true);
+    %></td></tr><%
 
-    %><tr><td>Edit contributor list:</td><td><textarea name="Contributors" rows="10" cols="60"><%
-    WriteContributorsFile();
-    %></textarea></td></tr><%
+    %><tr><td>Edit contributor list:</td><td><%
+    WriteContributorsFile (true);
+    %></td></tr><%
 
     %></table><p><%
 

@@ -3,7 +3,7 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="Almonaster"
-	SccProjectName="&quot;$/620&quot;, TWCAAAAA"
+	SccProjectName="&quot;$/621&quot;, TWCAAAAA"
 	SccAuxPath=""
 	SccLocalPath=".."
 	SccProvider="MSSCCI:Microsoft Visual SourceSafe">
@@ -32,9 +32,9 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				EnableFiberSafeOptimizations="TRUE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
 				IgnoreStandardIncludePath="FALSE"
 				GeneratePreprocessedFile="0"
@@ -78,7 +78,7 @@
 				Version=""
 				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
 				MapExports="FALSE"
@@ -144,9 +144,9 @@ copy release\Almonaster.pdb ..\release\pagesources
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="FALSE"
 				EnableFiberSafeOptimizations="FALSE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="FALSE"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -183,7 +183,7 @@ copy release\Almonaster.pdb ..\release\pagesources
 				OutputFile=".\Debug/Almonaster.dll"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/Almonaster.pdb"
 				SubSystem="2"
@@ -1236,16 +1236,6 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath=".\Almonaster.h">
 			</File>
-			<Filter
-				Name="Chatroom"
-				Filter="">
-				<File
-					RelativePath=".\Chatroom\CChatroom.cpp">
-				</File>
-				<File
-					RelativePath=".\Chatroom\CChatroom.h">
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Scoring"
@@ -1291,6 +1281,9 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 				RelativePath=".\HtmlRenderer\HtmlGameLists.cpp">
 			</File>
 			<File
+				RelativePath=".\HtmlRenderer\HtmlGraphics.cpp">
+			</File>
+			<File
 				RelativePath=".\HtmlRenderer\HtmlMaps.cpp">
 			</File>
 			<File
@@ -1324,41 +1317,13 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 				RelativePath=".\HtmlRenderer\HtmlShips.cpp">
 			</File>
 			<File
+				RelativePath=".\HtmlRenderer\HtmlTextFiles.cpp">
+			</File>
+			<File
 				RelativePath="HtmlRenderer\HtmlTOS.cpp">
 			</File>
 			<File
 				RelativePath=".\HtmlRenderer\HtmlTournaments.cpp">
-			</File>
-		</Filter>
-		<Filter
-			Name="Text"
-			Filter="">
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\Contributions.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\resource\text\contributors.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\Credits.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Faq\Faq.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\Intro-Lower.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\Intro-Upper.html">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\Intro.html">
-			</File>
-			<File
-				RelativePath=".\LockOrder.txt">
-			</File>
-			<File
-				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\News.html">
 			</File>
 		</Filter>
 		<Filter
@@ -1369,6 +1334,16 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			</File>
 			<File
 				RelativePath=".\MapGen\DefaultMapGenerator.h">
+			</File>
+		</Filter>
+		<Filter
+			Name="Chatroom"
+			Filter="">
+			<File
+				RelativePath=".\Chatroom\CChatroom.cpp">
+			</File>
+			<File
+				RelativePath=".\Chatroom\CChatroom.h">
 			</File>
 		</Filter>
 	</Files>

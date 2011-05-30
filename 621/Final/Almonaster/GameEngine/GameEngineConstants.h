@@ -289,6 +289,7 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 #define DISBAND_EMPTY_FLEETS_ON_UPDATE      (0x00000008)
 #define FLEETS_COLLAPSED_BY_DEFAULT         (0x00000010)
 #define EMPIRE_ACCEPTED_TOS                 (0x00000020)
+#define BLOCK_UPLOADED_ICONS                (0x00000040)
 
 // SystemEmpireData::Gender
 enum EmpireGender {
@@ -331,6 +332,8 @@ enum MiniMaps {
 #define TECH_BUILDER                        (0x00002000)
 #define TECH_MORPHER                        (0x00004000)
 #define TECH_JUMPGATE                       (0x00008000)
+
+#define TECH_NUKE                           (0x80000000)
 
 #define ALL_CLASSIC_TECHS (TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_STARGATE | TECH_CLOAKER | \
                            TECH_SATELLITE | TECH_TERRAFORMER | TECH_TROOPSHIP | TECH_DOOMSDAY | TECH_MINEFIELD | \
@@ -1003,5 +1006,6 @@ extern const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES];
 #define ERROR_ASSOCIATION_ALREADY_EXISTS (-1122)
 #define ERROR_DUPLICATE_EMPIRE (-1123)
 #define ERROR_ASSOCIATION_NOT_FOUND (-1124)
+#define ERROR_GAME_PAUSED (-1125)
 
 #endif

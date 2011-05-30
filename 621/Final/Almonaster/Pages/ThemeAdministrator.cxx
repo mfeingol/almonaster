@@ -634,7 +634,7 @@ if (iNumThemes > 0) {
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" rowspan="2" align="center"><%
         %>Description:</th><%
 
-        %><td rowspan="2" colspan="2" align="left"><textarea rows="3" cols="50" wrap="physical" name="Desc<%
+        %><td rowspan="2" colspan="2" align="left"><textarea rows="3" cols="50" wrap="virtual" name="Desc<%
         Write (i); %>"><% Write (pvThemeData[SystemThemes::Description].GetCharPtr()); 
         %></textarea></td><%
         %></tr><%
@@ -826,7 +826,7 @@ if (iNumThemes > 0) {
 %></tr><%
 %><tr><%
 %><td>Description:</td><%
-%><td><textarea rows="3" cols="40" wrap="physical" name="NewDesc"></textarea></td><%
+%><td><textarea rows="3" cols="40" wrap="virtual" name="NewDesc"></textarea></td><%
 %></tr><%
 %></table><%
 %><p><%

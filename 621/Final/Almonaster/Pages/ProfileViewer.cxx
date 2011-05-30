@@ -253,14 +253,16 @@ SearchResults:
 
                         m_iEmpireKey = iSwitch;
 
-                        if (LoginEmpire() == OK && InitializeEmpire (false) == OK) {
-                            
-                            return Redirect (ACTIVE_GAME_LIST);
-                        
-                        } else {
-                            AddMessage ("Login failed");
-                            Redirect (LOGIN);
+                        iErrCode = LoginEmpire();
+                        if (iErrCode == OK) {
+                            iErrCode = InitializeEmpire (false);
+                            if (iErrCode == OK) {
+                                return Redirect (ACTIVE_GAME_LIST);
+                            }
                         }
+
+                        AddMessage ("Login failed: error ");
+                        AppendMessage (iErrCode);
 
                     } else {
 

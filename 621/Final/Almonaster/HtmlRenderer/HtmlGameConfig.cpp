@@ -470,7 +470,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     OutputText (
         
         "<tr><td>Message sent to empires entering the game:</td><td>"\
-        "<textarea rows=\"3\" cols=\"50\" wrap=\"physical\" name=\"EnterGameMessage\">"
+        "<textarea rows=\"3\" cols=\"50\" wrap=\"virtual\" name=\"EnterGameMessage\">"
         );
     
     if (pszMessage != NULL) {
@@ -993,6 +993,9 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         if (pHttpForm != NULL) {
 
             iNumBlocks = pHttpForm->GetNumForms();
+            if (iNumBlocks > MAX_SPECIFIC_EMPIRE_BLOCKS) {
+                iNumBlocks = MAX_SPECIFIC_EMPIRE_BLOCKS;
+            }
 
             for (unsigned int i = 0;  i < iNumBlocks; i ++) {
                 
@@ -1663,6 +1666,10 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     #ifdef _DEBUG
                 memset (pgoOptions->pSecurity, 0xde, iNumBlocks * sizeof (GameSecurityEntry));
     #endif
+                if (iNumBlocks > MAX_SPECIFIC_EMPIRE_BLOCKS) {
+                    iNumBlocks = MAX_SPECIFIC_EMPIRE_BLOCKS;
+                }
+
                 for (i = 0;  i < iNumBlocks; i ++) {
                 
                     const char* pszName = pHttpForm->GetForm(i)->GetValue();

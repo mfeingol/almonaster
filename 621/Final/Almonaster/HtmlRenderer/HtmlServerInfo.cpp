@@ -940,13 +940,10 @@ void HtmlRenderer::WriteServerRules() {
         m_pHttpResponse->WriteText (vValue.GetInteger());
         OutputText ("</strong> bytes</li>");
     }
-    
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::DefaultAlien, &vValue);
-    if (iErrCode == OK) {
-        OutputText ("<li>The default icon for new empires is: ");
-        WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
-        OutputText ("</li>");
-    }
+
+    OutputText ("<li>The default icon for new empires is: ");
+    WriteEmpireIcon (GetDefaultSystemIcon(), NO_KEY, NULL, false);
+    OutputText ("</li>");
 
     iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);
     if (iErrCode == OK) {

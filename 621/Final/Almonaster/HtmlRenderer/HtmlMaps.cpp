@@ -555,7 +555,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 }
                 iAlienKey = vTemp.GetInteger();
                 
-                GetAlienButtonString (
+                GetAlienPlanetButtonString (
                     iAlienKey, 
                     iOwner, 
                     iOwner == iEmpireKey, 
@@ -581,7 +581,8 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                             iOwner,
                             &iWeOffer,
                             &iTheyOffer,
-                            &iCurrent
+                            &iCurrent,
+                            NULL
                             );
                         
                         if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -898,6 +899,1077 @@ Cleanup:
     }
 
     pDatabase->Release();
+    
+    return iErrCode;
+}
+
+
+void HtmlRenderer::GetAlienPlanetButtonString (int iAlienKey, int iEmpireKey, bool bBorder, int iPlanetKey, 
+                                         int iProxyKey, const char* pszAlt, const char* pszExtraTag,
+                                         String* pstrAlienButtonString) {
+    
+    *pstrAlienButtonString = "<input type=\"image\" border=\"";
+    *pstrAlienButtonString += (bBorder ? 1:0);
+    *pstrAlienButtonString += "\" src=\"" BASE_RESOURCE_DIR;
+    
+    if (iAlienKey == UPLOADED_ICON) {
+
+        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS) {
+
+            *pstrAlienButtonString += BASE_ALIEN_DIR ALIEN_NAME;
+            *pstrAlienButtonString += GetDefaultSystemIcon();
+
+        } else {
+
+            *pstrAlienButtonString += BASE_UPLOADED_ALIEN_DIR "/" ALIEN_NAME;
+            *pstrAlienButtonString += iEmpireKey;
+        }
+
+    } else {
+        *pstrAlienButtonString += BASE_ALIEN_DIR ALIEN_NAME;
+        *pstrAlienButtonString += iAlienKey;
+    }
+    
+    *pstrAlienButtonString += DEFAULT_IMAGE_EXTENSION "\" name=\"Planet";
+    *pstrAlienButtonString += iPlanetKey;
+    *pstrAlienButtonString += ".";
+    *pstrAlienButtonString += iProxyKey;
+    
+    *pstrAlienButtonString += "\"";
+    
+    if (!String::IsBlank (pszAlt)) {
+        
+        *pstrAlienButtonString += " alt=\"";
+        *pstrAlienButtonString += pszAlt;
+        *pstrAlienButtonString += "\"";
+    }
+
+    if (pszExtraTag != NULL) {
+        *pstrAlienButtonString += " ";
+        *pstrAlienButtonString += pszExtraTag;
+    }
+    
+    *pstrAlienButtonString += ">";
+}
+
+void HtmlRenderer::WriteAlienButtonString (int iAlienKey, bool bBorder, const char* pszNamePrefix,
+                                           const char* pszAuthorName) {
+    
+    OutputText ("<input type=\"image\" border=\"");
+    m_pHttpResponse->WriteText (bBorder ? 1:0);
+    OutputText ("\" src=\"" BASE_RESOURCE_DIR);
+    OutputText (BASE_ALIEN_DIR ALIEN_NAME);
+    m_pHttpResponse->WriteText (iAlienKey);
+    OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
+    m_pHttpResponse->WriteText (pszNamePrefix);
+    m_pHttpResponse->WriteText (iAlienKey);
+    OutputText ("\" alt=\"Alien ");
+    m_pHttpResponse->WriteText (iAlienKey);
+    OutputText (" by ");
+    m_pHttpResponse->WriteText (pszAuthorName);
+    OutputText ("\">");
+}
+
+void HtmlRenderer::GetLivePlanetButtonString (int iLivePlanetKey, int iPlanetKey, int iProxyKey, 
+                                              const char* pszAlt, const char* pszExtraTag,
+                                              String* pstrLivePlanet) {
+    
+    switch (iLivePlanetKey) {
+        
+    case NULL_THEME:
+        
+        *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"" \
+            BASE_RESOURCE_DIR LIVE_PLANET_NAME "\" name=\"Planet";
+        break;
+        
+    case ALTERNATIVE_PATH:
+        
+        *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"";
+        *pstrLivePlanet += m_vLocalPath.GetCharPtr();
+        *pstrLivePlanet += "/" LIVE_PLANET_NAME "\" name=\"Planet";
+        break;
+        
+    default:
+        
+        *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR;
+        *pstrLivePlanet += iLivePlanetKey;
+        *pstrLivePlanet += "/" LIVE_PLANET_NAME "\" name=\"Planet";
+        break;
+    }
+    
+    *pstrLivePlanet += iPlanetKey;
+    *pstrLivePlanet += ".";
+    *pstrLivePlanet += iProxyKey;
+    *pstrLivePlanet += "\"";
+    
+    if (!String::IsBlank (pszAlt)) {
+        
+        *pstrLivePlanet += " alt=\"";
+        *pstrLivePlanet += pszAlt;
+        *pstrLivePlanet += "\"";
+    }
+
+    if (pszExtraTag != NULL) {
+        *pstrLivePlanet += " ";
+        *pstrLivePlanet += pszExtraTag;
+    }
+    
+    *pstrLivePlanet += ">";
+}
+
+void HtmlRenderer::GetDeadPlanetButtonString (int iDeadPlanetKey, int iPlanetKey, int iProxyKey, 
+                                              const char* pszAlt, const char* pszExtraTag,
+                                              String* pstrDeadPlanet) {
+    
+    switch (iDeadPlanetKey) {   
+        
+    case NULL_THEME:
+        
+        *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"" \
+            BASE_RESOURCE_DIR DEAD_PLANET_NAME "\" name=\"Planet";
+        break;
+        
+    case ALTERNATIVE_PATH:
+        
+        *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"";
+        *pstrDeadPlanet += m_vLocalPath.GetCharPtr();
+        *pstrDeadPlanet += "/" DEAD_PLANET_NAME "\" name=\"Planet";
+        break;
+        
+    default:
+        
+        *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR;
+        *pstrDeadPlanet += iDeadPlanetKey;
+        *pstrDeadPlanet += "/" DEAD_PLANET_NAME "\" name=\"Planet";
+        break;
+    }
+    
+    *pstrDeadPlanet += iPlanetKey;
+    *pstrDeadPlanet += ".";
+    *pstrDeadPlanet += iProxyKey;
+    *pstrDeadPlanet += "\"";
+    
+    if (!String::IsBlank (pszAlt)) {
+        
+        *pstrDeadPlanet += " alt=\"";
+        *pstrDeadPlanet += pszAlt;
+        *pstrDeadPlanet += "\"";
+    }
+
+    if (pszExtraTag != NULL) {
+        *pstrDeadPlanet += " ";
+        *pstrDeadPlanet += pszExtraTag;
+    }
+    
+    *pstrDeadPlanet += ">";
+}
+
+void HtmlRenderer::GetIndependentPlanetButtonString (int iPlanetKey, int iProxyKey, const char* pszAlt, 
+                                                     const char* pszExtraTag, String* pstrPlanetString) {
+    
+    *pstrPlanetString = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR INDEPENDENT_PLANET_NAME "\" name=\"Planet";
+    *pstrPlanetString += iPlanetKey;
+    *pstrPlanetString += ".";
+    *pstrPlanetString += iProxyKey;
+    *pstrPlanetString += "\"";
+    
+    if (!String::IsBlank (pszAlt)) {
+        
+        *pstrPlanetString += " alt=\"";
+        *pstrPlanetString += pszAlt;
+        *pstrPlanetString += "\"";
+    }
+
+    if (pszExtraTag != NULL) {
+        *pstrPlanetString += " ";
+        *pstrPlanetString += pszExtraTag;
+    }
+    
+    *pstrPlanetString += ">";
+}
+
+void HtmlRenderer::WriteLivePlanetString (int iLivePlanetKey) {
+    
+    switch (iLivePlanetKey) {
+        
+    case NULL_THEME:
+        
+        OutputText ("<img src=\"" BASE_RESOURCE_DIR LIVE_PLANET_NAME "\">");
+        break;
+        
+    case ALTERNATIVE_PATH:
+        
+        OutputText ("<img src=\"");
+        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
+        OutputText ("/" LIVE_PLANET_NAME "\">");
+        break;
+        
+    default:
+        
+        OutputText ("<img src=\"" BASE_RESOURCE_DIR);
+        m_pHttpResponse->WriteText (iLivePlanetKey);
+        OutputText ("/" LIVE_PLANET_NAME "\">");
+        break;
+    }
+}
+
+void HtmlRenderer::WriteDeadPlanetString (int iDeadPlanetKey) {
+    
+    switch (iDeadPlanetKey) {
+        
+    case NULL_THEME:
+        
+        OutputText ("<img src=\"" BASE_RESOURCE_DIR DEAD_PLANET_NAME "\">");
+        break;
+        
+    case ALTERNATIVE_PATH:
+        
+        OutputText ("<img src=\"");
+        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
+        OutputText ("/" DEAD_PLANET_NAME "\">");
+        break;
+        
+    default:
+        
+        OutputText ("<img src=\"" BASE_RESOURCE_DIR);
+        m_pHttpResponse->WriteText (iDeadPlanetKey);
+        OutputText ("/" DEAD_PLANET_NAME "\">");
+        break;
+    }
+}
+
+void HtmlRenderer::WriteIndependentPlanetString() {
+    
+    OutputText ("<img src=\"" BASE_RESOURCE_DIR INDEPENDENT_PLANET_NAME "\">");
+}
+
+int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, 
+                                            int iLivePlanetKey, int iDeadPlanetKey, 
+                                            int iPlanetCounter, bool bVisibleBuilds, int iGoodAg, int iBadAg, 
+                                            int iGoodMin, int iBadMin, int iGoodFuel, int iBadFuel, 
+                                            float fEmpireAgRatio, bool bIndependence, 
+                                            bool bAdmin, bool bSpectator, const Variant* pvPlanetData,
+                                            bool* pbOurPlanet) {
+    
+    int iErrCode = OK, i;
+    unsigned int j;
+
+    bool bMapColoring = !bAdmin && !bSpectator; 
+    const char* pszTableColor = m_vTableColor.GetCharPtr();
+    
+    String strFilter;
+    
+    if (!(m_iGameState & GAME_MAP_GENERATED)) {
+        
+        // Lay down the default "planet lost in outer space" table
+        OutputText ("<tr><th>&nbsp;</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Name</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Location</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Owner</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Min</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Fuel</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Ag</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Pop</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Max Pop</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\">Next Pop</th><th bgcolor=\"");
+        m_pHttpResponse->WriteText (pszTableColor);
+        OutputText ("\" align=\"left\">Jumps</th></tr><tr><td align=\"center\">");
+        
+        WriteProfileAlienString (
+            m_iAlienKey,
+            iEmpireKey,
+            m_vEmpireName.GetCharPtr(),
+            0, 
+            "ProfileLink",
+            "View your profile",
+            false,
+            false
+            );
+        
+        OutputText ("</td><td align=\"center\"><strong>");
+        m_pHttpResponse->WriteText (m_vEmpireName.GetCharPtr());    // Name
+        OutputText ("</strong></td><td align=\"center\">None yet</td><td align=\"center\"><strong>");
+        m_pHttpResponse->WriteText (m_vEmpireName.GetCharPtr());
+        OutputText ("</strong></td><td align=\"center\"><font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">0</font></td><td align=\"center\"><font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">0</font></td><td align=\"center\"><font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">0</font></td><td align=\"center\"><font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">0</font></td><td align=\"center\"><font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">0</font></td><td align=\"center\"><font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">0</font></td><td align=\"left\">None yet</td></tr>");
+        
+        return OK;
+    }
+    
+    OutputText ("<tr><th>&nbsp;</th><th align=\"left\" bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Name</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Location</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Owner</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Min</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Fuel</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Ag</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Pop</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Max Pop</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Next Pop</th><th bgcolor=\"");
+    m_pHttpResponse->WriteText (pszTableColor);
+    OutputText ("\">Jumps</th></tr><tr><td align=\"center\">");
+    
+    int iData, iWeOffer, iTheyOffer, iCurrent, iAlienKey;
+    unsigned int iAnnihilated = pvPlanetData[GameMap::Annihilated].GetInteger();
+    unsigned int iOwner = pvPlanetData[GameMap::Owner].GetInteger();
+
+    String strPlanet;
+    Variant vEmpireName;
+    
+    if (iOwner == SYSTEM) {
+        
+        iCurrent = TRUCE;
+        
+        if (iAnnihilated == 0) {
+            WriteLivePlanetString (iLivePlanetKey);
+        } else {
+            WriteDeadPlanetString (iDeadPlanetKey);
+        }
+
+    } else {
+
+        if (iOwner == INDEPENDENT) {
+            
+            iCurrent = bMapColoring ? WAR : TRUCE;
+            WriteIndependentPlanetString();
+            
+        } else {
+            
+            if (iOwner == iEmpireKey) {
+                
+                iCurrent = bMapColoring ? ALLIANCE : TRUCE;
+                
+                WriteProfileAlienString (
+                    m_iAlienKey,
+                    iEmpireKey,
+                    m_vEmpireName.GetCharPtr(),
+                    0, 
+                    "ProfileLink",
+                    "View your profile",
+                    false,
+                    false
+                    );
+                
+            } else {
+                
+                if (!bMapColoring) {
+                    iCurrent = TRUCE;
+                } else {
+                    
+                    iErrCode = g_pGameEngine->GetDiplomaticStatus (
+                        m_iGameClass, 
+                        m_iGameNumber, 
+                        iEmpireKey, 
+                        iOwner, 
+                        &iWeOffer, 
+                        &iTheyOffer, 
+                        &iCurrent,
+                        NULL
+                        );
+                    
+                    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                        iCurrent = WAR;
+                    }
+                    
+                    else if (iErrCode != OK) {
+                        Assert (false);
+                        return iErrCode;
+                    }
+                }
+                
+                Variant vTemp;
+                iErrCode = g_pGameEngine->GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    return iErrCode;
+                }
+                iAlienKey = vTemp.GetInteger();
+                
+                iErrCode = g_pGameEngine->GetEmpireName (iOwner, &vEmpireName);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    return iErrCode;
+                }
+                
+                char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
+                sprintf (pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
+                
+                WriteProfileAlienString (
+                    iAlienKey,
+                    iOwner,
+                    vEmpireName.GetCharPtr(),
+                    0, 
+                    "ProfileLink",
+                    pszProfile,
+                    false,
+                    true
+                    );
+                
+                NotifyProfileLink();
+            }
+        }
+    }
+    
+    OutputText ("</td>");
+    
+    if (HTMLFilter (pvPlanetData[GameMap::Name].GetCharPtr(), &strFilter, 0, false) != OK) {
+        return ERROR_OUT_OF_MEMORY;
+    }
+    
+    if (iOwner != SYSTEM && iOwner == iEmpireKey && !bAdmin) {
+        
+        OutputText ("<td><input type=\"text\" size=\"15\" maxlength=\"");
+        m_pHttpResponse->WriteText (MAX_PLANET_NAME_LENGTH);
+        OutputText ("\" name=\"NewPlanetName");
+        m_pHttpResponse->WriteText (iPlanetCounter);
+        OutputText ("\"value=\"");
+        m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
+        OutputText ("\"><input type=\"hidden\" name=\"OldPlanetName");
+        m_pHttpResponse->WriteText (iPlanetCounter);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
+        OutputText ("\"><input type=\"hidden\" name=\"OldMaxPop");
+        m_pHttpResponse->WriteText (iPlanetCounter);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
+        OutputText ("\"></td>");
+
+        OutputText ("<input type=\"hidden\" name=\"KeyPlanet");
+        m_pHttpResponse->WriteText (iPlanetCounter);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (iPlanetKey);
+        OutputText ("\">");
+        
+        *pbOurPlanet = true;
+        
+    } else {
+        
+        OutputText ("<td align=\"left\"><strong>");
+        WriteStringByDiplomacy (strFilter.GetCharPtr(), iCurrent);
+        OutputText ("</strong>");
+        
+        if (iAnnihilated != NOT_ANNIHILATED) {
+            
+            OutputText ("<br>(Quarantined <strong>");
+            
+            if (iAnnihilated == ANNIHILATED_FOREVER) {
+                OutputText ("forever</strong>)");
+            } else {
+                
+                m_pHttpResponse->WriteText (iAnnihilated);
+                OutputText ("</strong> update");
+                
+                if (iAnnihilated == 1) {
+                    OutputText (")");
+                } else {
+                    OutputText ("s)");
+                }
+            }
+        }
+        
+        else if (pvPlanetData[GameMap::HomeWorld].GetInteger() >= ROOT_KEY) {
+            OutputText ("<br>(Surrendered)");
+        }
+        
+        OutputText ("</td>");
+        
+        *pbOurPlanet = false;
+    }
+    
+    // Coordinates
+    OutputText ("<td align=\"center\">");
+    WriteStringByDiplomacy (pvPlanetData[GameMap::Coordinates].GetCharPtr(), iCurrent);
+    OutputText ("</td><td align=\"center\">");
+    
+    // Owner name
+    if (iOwner != SYSTEM) {
+        
+        Variant vEmpireName;
+        const char* pszEmpireName;
+        
+        if (iOwner == iEmpireKey) {
+            pszEmpireName = m_vEmpireName.GetCharPtr();
+        } else {
+            
+            if (iOwner == INDEPENDENT) {
+                pszEmpireName = INDEPENDENT_NAME;
+            } else {
+                
+                iErrCode = g_pGameEngine->GetEmpireName (iOwner, &vEmpireName);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    return iErrCode;
+                }
+                
+                pszEmpireName = vEmpireName.GetCharPtr();
+            }
+        }
+        
+        WriteStringByDiplomacy (pszEmpireName, iCurrent);
+        
+        OutputText ("</td>");
+        
+    } else {
+        OutputText ("-</td>");
+    }
+    
+    // Minerals
+    OutputText ("<td align=\"center\">");
+    
+    iData = pvPlanetData[GameMap::Minerals].GetInteger();
+    if (iData < iBadMin) {
+        OutputText ("<font color=\"");
+        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (iData);
+        OutputText ("</font>");
+    } else {
+        if (iData > iGoodMin) {
+            OutputText ("<font color=\"");
+            m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (iData);
+            OutputText ("</font>");
+        } else {
+            m_pHttpResponse->WriteText (iData);
+        }
+    }
+    OutputText ("</td><td align=\"center\">");
+    
+    iData = pvPlanetData[GameMap::Fuel].GetInteger();
+    if (iData < iBadFuel) {
+        OutputText ("<font color=\"");
+        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (iData);
+        OutputText ("</font>");
+    } else {
+        if (iData > iGoodFuel) {
+            OutputText ("<font color=\"");
+            m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (iData);
+            OutputText ("</font>");
+        } else {
+            m_pHttpResponse->WriteText (iData);
+        }
+    }
+    OutputText ("</td><td align=\"center\">");
+    
+    int iAg = pvPlanetData[GameMap::Ag].GetInteger();
+    if (iAg < iBadAg) {
+        OutputText ("<font color=\"");
+        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (iAg);
+        OutputText ("</font>");
+    } else {
+        if (iAg > iGoodAg) {
+            OutputText ("<font color=\"");
+            m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (iAg);
+            OutputText ("</font>");
+        } else {
+            m_pHttpResponse->WriteText (iAg); 
+        }
+    }
+    OutputText ("</td><td align=\"center\">");
+    
+    iData = pvPlanetData[GameMap::Pop].GetInteger();
+    if (iData == iAg) {
+        OutputText ("<font color=\"");
+        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (iData);
+        OutputText ("</font>");
+    } else {
+        if (iData > iAg || iData == 0) {
+            OutputText ("<font color=\"");
+            m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (iData);
+            OutputText ("</font>");
+        } else {
+            m_pHttpResponse->WriteText (iData); 
+        }
+    }
+    
+    OutputText ("</td><td align=\"center\">");
+    
+    if (iOwner != SYSTEM && iOwner == iEmpireKey && !bAdmin) {
+        
+        OutputText ("<input type=\"text\" size=\"4\" maxlength=\"4\" name=\"NewMaxPop");
+        m_pHttpResponse->WriteText (iPlanetCounter);
+        OutputText ("\"value=\"");
+        m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
+        OutputText ("\">");
+        
+    } else {
+        
+        if (iOwner != SYSTEM && bAdmin) {
+            m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
+        } else {
+            OutputText ("-");
+        }
+    }
+    OutputText ("</td><td align=\"center\">");
+    
+    if (iOwner == SYSTEM) {
+        OutputText ("0");
+    }
+    
+    else if (iOwner == iEmpireKey || bAdmin) {
+        
+        int iCost = pvPlanetData[GameMap::PopLostToColonies].GetInteger();
+        int iPop = pvPlanetData[GameMap::Pop].GetInteger();
+        
+        Assert (iCost >= 0 && iCost <= iPop);
+        
+        int iNextPop = g_pGameEngine->GetNextPopulation (
+            iPop - iCost,
+            fEmpireAgRatio
+            );
+        
+        if (iNextPop > pvPlanetData[GameMap::MaxPop].GetInteger()) {
+            iNextPop = pvPlanetData[GameMap::MaxPop].GetInteger();
+        }
+        
+        iData = iNextPop;
+        if (iData == iAg) {
+            OutputText ("<font color=\"");
+            m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+            OutputText ("\">");
+            m_pHttpResponse->WriteText (iData);
+            OutputText ("</font>");
+        } else {
+            if (iData > iAg || iData == 0) {
+                OutputText ("<font color=\"");
+                m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+                OutputText ("\">");
+                m_pHttpResponse->WriteText (iData);
+                OutputText ("</font>");
+            } else {
+                m_pHttpResponse->WriteText (iData); 
+            }
+        }
+    }
+    
+    else {
+        
+        OutputText ("-");
+    }
+    
+    OutputText ("</td><td align=\"center\">");
+    
+    int iX, iY;
+    g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
+    
+    int iLink = pvPlanetData[GameMap::Link].GetInteger();
+    bool bLinkNorth = (iLink & LINK_NORTH) != 0;
+    bool bLinkEast  = (iLink & LINK_EAST) != 0;
+    bool bLinkSouth = (iLink & LINK_SOUTH) != 0;
+    bool bLinkWest  = (iLink & LINK_WEST) != 0;
+    
+    int iNumJumps = (bLinkNorth ? 1:0) + (bLinkEast ? 1:0) + (bLinkSouth ? 1:0) + (bLinkWest ? 1:0);
+    
+    if (iNumJumps > 0) {
+        
+        int piJumpX [NUM_CARDINAL_POINTS];
+        int piJumpY [NUM_CARDINAL_POINTS];
+        int piCardinalPoint [NUM_CARDINAL_POINTS];
+        
+        int iNeighbourKey, iCounter = 0;
+        
+        if (bLinkNorth) {
+            piJumpX[iCounter] = iX;
+            piJumpY[iCounter] = iY + 1;
+            piCardinalPoint [iCounter] = NORTH;
+            iCounter ++;
+        }
+        
+        if (bLinkEast) {
+            piJumpX[iCounter] = iX + 1;
+            piJumpY[iCounter] = iY;
+            piCardinalPoint [iCounter] = EAST;
+            iCounter ++;
+        }
+        
+        if (bLinkSouth) {
+            piJumpX[iCounter] = iX;
+            piJumpY[iCounter] = iY - 1;
+            piCardinalPoint [iCounter] = SOUTH;
+            iCounter ++;
+        }
+        
+        if (bLinkWest) {
+            piJumpX[iCounter] = iX - 1;
+            piJumpY[iCounter] = iY;
+            piCardinalPoint [iCounter] = WEST;
+            iCounter ++;
+        }
+        
+        Assert (iCounter == iNumJumps);
+
+        Variant vTemp;
+        String strPlanetName;
+
+        for (i = 0; i < iNumJumps; i ++) {
+            
+            // Get neighbouring planet's key
+            iErrCode = g_pGameEngine->GetNeighbourPlanetKey (
+                m_iGameClass, 
+                m_iGameNumber, 
+                iPlanetKey, 
+                piCardinalPoint[i], 
+                &iNeighbourKey
+                );
+            
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+            
+            Assert (iNeighbourKey != NO_KEY);
+            
+            if (!bAdmin && !bSpectator) {
+                
+                iErrCode = g_pGameEngine->GetPlanetNameWithSecurity (
+                    m_iGameClass, 
+                    m_iGameNumber, 
+                    iEmpireKey, 
+                    iNeighbourKey, 
+                    &vTemp
+                    );
+
+            } else {
+                
+                iErrCode = g_pGameEngine->GetPlanetName (
+                    m_iGameClass, 
+                    m_iGameNumber, 
+                    iNeighbourKey, 
+                    &vTemp
+                    );
+            }
+
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+
+            if (vTemp.GetCharPtr() != NULL && 
+                String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
+                return ERROR_OUT_OF_MEMORY;
+            }
+
+            OutputText ("<strong>");
+            m_pHttpResponse->WriteText (CARDINAL_STRING[piCardinalPoint[i]]);
+            OutputText ("</strong>: ");
+
+            if (!strPlanetName.IsBlank()) {
+                m_pHttpResponse->WriteText (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
+            }
+            OutputText (" (");
+            m_pHttpResponse->WriteText (piJumpX[i]);
+            OutputText (",");
+            m_pHttpResponse->WriteText (piJumpY[i]);
+            OutputText (")<br>");
+        }
+        
+    } else {
+        OutputText ("<strong>None</strong>");
+    }
+    
+    OutputText ("</td></tr>");
+    
+    int iTotalNumShips = 
+        pvPlanetData[GameMap::NumUncloakedShips].GetInteger() + 
+        pvPlanetData[GameMap::NumCloakedShips].GetInteger() + 
+        pvPlanetData[GameMap::NumUncloakedBuildShips].GetInteger() + 
+        pvPlanetData[GameMap::NumCloakedBuildShips].GetInteger();
+    
+    if (iTotalNumShips > 0) {
+        
+        unsigned int* piOwnerData = NULL;
+        iErrCode = g_pGameEngine->GetPlanetShipOwnerData (
+            m_iGameClass, 
+            m_iGameNumber, 
+            iEmpireKey, 
+            iPlanetKey, 
+            iProxyPlanetKey, 
+            iTotalNumShips, 
+            bVisibleBuilds, 
+            bIndependence, 
+            &piOwnerData
+            );
+        
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+
+        int iNumOwners = piOwnerData[0];
+        if (iNumOwners > 0) {
+            
+            m_pHttpResponse->WriteText (
+                "<tr><td></td><td></td>"\
+                "<td colspan=\"10\">"\
+                "<table>"\
+                "<tr>"\
+                "<td></td>"\
+                "<th></th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (pszTableColor);
+            OutputText ("\">Empire</th>");
+
+            bool pbTech [NUM_SHIP_TYPES];
+            memset (pbTech, 0, sizeof (pbTech));
+
+            int** ppiNumTechsTable = (int**) StackAlloc (iNumOwners * sizeof (int*));
+            int* piTemp = (int*) StackAlloc (iNumOwners * NUM_SHIP_TYPES * sizeof (int));
+            for (i = 0; i < iNumOwners; i ++) {
+
+                ppiNumTechsTable[i] = piTemp + i * NUM_SHIP_TYPES;
+                memset (ppiNumTechsTable[i], 0, NUM_SHIP_TYPES * sizeof (int));
+            }
+            unsigned int* piOwnerKey = (unsigned int*) StackAlloc (2 * iNumOwners * sizeof (unsigned int));
+            unsigned int* piOwnerShips = piOwnerKey + iNumOwners;
+
+            unsigned int iBase = 1;
+            for (i = 0; i < iNumOwners; i ++) {
+
+                piOwnerKey[i] = piOwnerData [iBase];
+                piOwnerShips[i] = piOwnerData [iBase + 1];
+
+                unsigned int iNumOwnerTechs = piOwnerData [iBase + 2];
+                
+                for (j = 0; j < iNumOwnerTechs; j ++) {
+
+                    unsigned int iBaseIndex = iBase + 3 + j * 2;
+                    unsigned int iType = piOwnerData [iBaseIndex];
+
+                    ppiNumTechsTable [i][iType] = piOwnerData [iBaseIndex + 1];
+                    pbTech [iType] = true;
+                }
+                
+                iBase += 3 + 2 * iNumOwnerTechs;
+            }
+            
+            ENUMERATE_SHIP_TYPES (i) {
+                if (pbTech[i]) {
+                    OutputText ("<th bgcolor=\"");
+                    m_pHttpResponse->WriteText (pszTableColor);
+                    OutputText ("\">");
+                    m_pHttpResponse->WriteText (SHIP_TYPE_STRING[i]);
+                    OutputText ("</th>");
+                }
+            }
+            OutputText ("</tr>");
+            
+            int iDip, iWeOffer, iTheyOffer;
+            
+            Variant vEmpireName;
+            const char* pszEmpireName;
+            
+            for (i = 0; i < iNumOwners; i ++) {
+                
+                OutputText ("<tr><td align=\"right\">");
+                
+                if (piOwnerKey[i] != INDEPENDENT) {
+                    
+                    if (piOwnerKey[i] == iEmpireKey) {
+                        
+                        WriteProfileAlienString (
+                            m_iAlienKey,
+                            iEmpireKey,
+                            m_vEmpireName.GetCharPtr(),
+                            0, 
+                            "ProfileLink",
+                            "View your profile",
+                            false,
+                            false
+                            );
+
+                    } else {
+                        
+                        Variant vTemp;
+                        iErrCode = g_pGameEngine->GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienKey, &vTemp);
+                        if (iErrCode != OK) {
+                            Assert (false);
+                            delete [] piOwnerData;
+                            return iErrCode;
+                        }
+                        iAlienKey = vTemp.GetInteger();
+                        
+                        iErrCode = g_pGameEngine->GetEmpireName (piOwnerKey[i], &vEmpireName);
+                        if (iErrCode != OK) {
+                            Assert (false);
+                            delete [] piOwnerData;
+                            return iErrCode;
+                        }
+                        
+                        char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
+                        sprintf (pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
+                        
+                        WriteProfileAlienString (
+                            iAlienKey,
+                            piOwnerKey[i],
+                            vEmpireName.GetCharPtr(),
+                            0, 
+                            "ProfileLink",
+                            pszProfile,
+                            false,
+                            true
+                            );
+                        
+                        NotifyProfileLink();
+                    }
+                    
+                } else {
+                    
+                    WriteIndependentPlanetString();
+                }
+                
+                OutputText ("</td>");
+                
+                if (piOwnerKey[i] == iEmpireKey) {
+                    
+                    iDip = ALLIANCE;
+                    pszEmpireName = m_vEmpireName.GetCharPtr();
+                    
+                } else {
+                    
+                    if (piOwnerKey[i] == INDEPENDENT) {
+                        iDip = WAR;
+                        pszEmpireName = INDEPENDENT_NAME;
+                    } else {
+                        
+                        iErrCode = g_pGameEngine->GetEmpireName (piOwnerKey[i], &vEmpireName);
+                        if (iErrCode != OK) {
+                            Assert (false);
+                            delete [] piOwnerData;
+                            return iErrCode;
+                        }
+                        
+                        pszEmpireName = vEmpireName.GetCharPtr();
+                        
+                        if (!bMapColoring) {
+                            iDip = TRUCE;
+                        } else {
+                            
+                            iErrCode = g_pGameEngine->GetDiplomaticStatus (
+                                m_iGameClass, 
+                                m_iGameNumber, 
+                                iEmpireKey, 
+                                piOwnerKey[i], 
+                                &iWeOffer, 
+                                &iTheyOffer, 
+                                &iDip,
+                                NULL
+                                );
+
+                            if (iErrCode != OK) {
+                                Assert (false);
+                                delete [] piOwnerData;
+                                return iErrCode;
+                            }
+                        }
+                    }
+                }
+                
+                if (iDip == WAR) {
+                    
+                    OutputText ("<td align=\"center\"><font color=\"");
+                    m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+                    OutputText ("\"><strong>");
+                    m_pHttpResponse->WriteText (piOwnerShips[i]);
+                    OutputText ("</strong></font></td><td align=\"center\"><strong>");
+                    m_pHttpResponse->WriteText (pszEmpireName);
+                    OutputText ("</strong></td>");
+                    
+                    ENUMERATE_SHIP_TYPES (j) {
+                        if (pbTech[j]) {
+                            OutputText ("<td align=\"center\"><font color=\"");
+                            m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
+                            OutputText ("\">");
+                            m_pHttpResponse->WriteText (ppiNumTechsTable[i][j]);
+                            OutputText ("</font></td>");
+                        }
+                    }
+                    
+                } else {
+                    
+                    if (iDip == ALLIANCE) {
+                        OutputText ("<td align=\"center\"><font color=\"");
+                        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+                        OutputText ("\"><strong>");
+                        m_pHttpResponse->WriteText (piOwnerShips[i]);
+                        OutputText ("</strong></font></td><td align=\"center\"><strong>");
+                        m_pHttpResponse->WriteText (pszEmpireName);
+                        OutputText ("</strong></td>");
+                        
+                        ENUMERATE_SHIP_TYPES (j) {
+                            if (pbTech[j]) {
+                                OutputText ("<td align=\"center\"><font color=\"");
+                                m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
+                                OutputText ("\">");
+                                m_pHttpResponse->WriteText (ppiNumTechsTable[i][j]);
+                                OutputText ("</font></td>");
+                            }
+                        }
+                        
+                    } else {
+                        
+                        OutputText ("<td align=\"center\"><strong>");
+                        m_pHttpResponse->WriteText (piOwnerShips[i]);
+                        OutputText ("</strong></font></td><td align=\"center\"><strong>");
+                        m_pHttpResponse->WriteText (pszEmpireName);
+                        OutputText ("</strong></td>");
+
+                        ENUMERATE_SHIP_TYPES (j) {
+                            if (pbTech[j]) {
+                                OutputText ("<td align=\"center\">");
+                                m_pHttpResponse->WriteText (ppiNumTechsTable[i][j]);
+                                OutputText ("</td>");
+                            }
+                        }
+                    }
+                }
+                OutputText ("</tr>");
+            }
+            OutputText ("</table></td></tr>");
+        }
+        
+        delete [] piOwnerData;
+    }
     
     return iErrCode;
 }

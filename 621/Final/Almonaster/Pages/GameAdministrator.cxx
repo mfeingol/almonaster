@@ -1126,6 +1126,19 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
             }
 
+            // Handle reset update times on all games
+            if (WasButtonPressed (BID_RESET)) {
+
+                iErrCode = g_pGameEngine->ResetAllGamesUpdateTime();
+
+                if (iErrCode == OK) {
+                    AddMessage ("All game update times were reset");
+                } else {
+                    char pszMessage [256];
+                    sprintf (pszMessage, "Error %i occurred resetting update times on all games", iErrCode);
+                    AddMessage (pszMessage);
+                }
+            }
 
             }
             break;
@@ -1232,6 +1245,28 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("The game was forcibly updated");
                 } else {
                     AddMessage ("The game no longer exists");
+                }
+
+                if (g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bExist) == OK && bExist) {
+                    iGameAdminPage = 3;
+                } else {
+                    iGameAdminPage = 1;
+                }
+
+                bRedirectTest = false;
+                break;
+            }
+
+            if (WasButtonPressed (BID_RESET)) {
+
+                iErrCode = g_pGameEngine->ResetGameUpdateTime (iGameClass, iGameNumber);
+                if (iErrCode == OK) {
+                    AddMessage ("The game's update time was reset");
+                } else if (iErrCode == ERROR_GAME_PAUSED) {
+                    AddMessage ("The game was paused and its update time could not be reset");
+                } else {
+                    AddMessage ("An error occurred: ");
+                    AppendMessage (iErrCode);
                 }
 
                 if (g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bExist) == OK && bExist) {
@@ -1654,6 +1689,10 @@ case 0:
         %></td></tr><tr><td>Unpause all games:</td><td><%
 
         WriteButton (BID_UNPAUSEALLGAMES);
+
+        %></td></tr><tr><td>Reset update times on all games:</td><td><%
+
+        WriteButton (BID_RESET);
 
         %></td></tr><%
     }
@@ -2674,7 +2713,7 @@ case 8:
     %>Are you sure you want to kill <strong><% Write (pszGameClassName); %> <% Write (iGameNumber); 
     %></strong>?<p>If so, please send a message to its participants:<%
     %></td></tr></table><%
-    %><p><textarea name="DoomMessage" rows="5" cols="45" wrap="physical"></textarea><p><%
+    %><p><textarea name="DoomMessage" rows="5" cols="45" wrap="virtual"></textarea><p><%
 
     WriteButton (BID_CANCEL);
     WriteButton (BID_KILLGAME);

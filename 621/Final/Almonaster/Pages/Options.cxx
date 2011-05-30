@@ -1580,7 +1580,7 @@ case 0:
 
 
     %><tr><td align="top">Keep game notes here:<%
-    %></td><td><textarea name="Notepad" rows="8" cols="50" wrap="physical"><%
+    %></td><td><textarea name="Notepad" rows="8" cols="50" wrap="virtual"><%
 
 
     Variant vNotepad;

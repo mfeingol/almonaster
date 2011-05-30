@@ -739,6 +739,12 @@ int String::StriStr (const char* pszString, const char* pszCharSet, const char**
 
     int iErrCode = OK;
 
+    *ppszStrStr = NULL;
+
+    if (pszString == NULL || pszCharSet == NULL) {
+        return OK;
+    }
+
     char* pszLwrString = NULL;
     char* pszLwrCharSet = NULL;
     char* pszStrStr = NULL;
@@ -748,8 +754,6 @@ int String::StriStr (const char* pszString, const char* pszCharSet, const char**
 
     bool fFreeString = false;
     bool fFreeCharSet = false;
-
-    *ppszStrStr = NULL;
 
     if (stStringLen < 512) {
         pszLwrString = (char*) StackAlloc (stStringLen);
@@ -791,8 +795,8 @@ Cleanup:
         OS::HeapFree (pszLwrString);
     }
 
-    if (fFreeString) {
-        OS::HeapFree (pszLwrString);
+    if (fFreeCharSet) {
+        OS::HeapFree (pszLwrCharSet);
     }
 
     return iErrCode;

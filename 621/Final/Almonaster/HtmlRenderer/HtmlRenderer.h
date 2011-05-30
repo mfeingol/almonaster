@@ -148,6 +148,7 @@ enum PageId {
 
 #define INVALID_PASSWORD_STRING             "!!!!!!!!!!"
 
+#define MAX_SPECIFIC_EMPIRE_BLOCKS          25
 #define UNSTARTED_GAMEPAGE_REFRESH_SEC      (120)
 
 enum ButtonId {
@@ -375,6 +376,7 @@ protected:
     int m_iSystemOptions;
     int m_iSystemOptions2;
     int m_iGameOptions;
+    int m_iDefaultSystemIcon;
 
     Variant m_vTableColor;
     Variant m_vTextColor;
@@ -414,11 +416,11 @@ protected:
 
     void WriteGameListHeader (const char** ppszHeaders, size_t stNumHeaders, const char* pszTableColor);
 
-    void AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpires, int iMinEmpires, int iMaxEmpires);
+    void AddEmpiresInGame (int iGameState, int iNumActiveEmpires, const char* pszEmpires, int iMinEmpires, int iMaxEmpires);
 
     int AddGameClassDescription (int iWhichList, const Variant* pvGameClassInfo, 
-        int iGameClass, int iGameNumber, const char* pszEmpiresInGame, int iNumEmpiresInGame, bool bAdmin,
-        bool bSpectators);
+        int iGameClass, int iGameNumber, int iGameState, const char* pszEmpiresInGame, 
+        int iNumEmpiresInGame, bool bAdmin, bool bSpectators);
 
     int WriteInPlayGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
         bool bAdmin, bool bSpectator);
@@ -443,6 +445,8 @@ protected:
     void WriteGameButtons();
     void WriteGameNextUpdateString();
 
+    int WriteTextFile (bool bTextArea, const char* pszFile, const char* pszFileForm, const char* pszFileHashForm);
+    int TryUpdateFile (const char* pszFile, const char* pszFileForm, const char* pszFileHashForm);
     int UpdateCachedFile (const char* pszFileName, const char* pszText);
 
     void RenderSearchField (const SearchField& sfField, bool fAdvanced);
@@ -451,9 +455,7 @@ protected:
     void RenderHiddenSearchVariant (const char* pszColName, const Variant& vData);
 
     static bool ms_bLocksInitialized;
-    static ReadWriteLock ms_mNewsFileLock;
-    static ReadWriteLock ms_mIntroUpperFileLock;
-    static ReadWriteLock ms_mIntroLowerFileLock;
+    static ReadWriteLock ms_mTextFileLock;
 
 public:
 
@@ -461,6 +463,8 @@ public:
     static AlmonasterStatistics m_sStats;
 
     static UTCTime m_stEmpiresInGamesCheck;
+    static UTCTime m_stServerNewsLastUpdate;
+
     static Mutex m_slockEmpiresInGames;
     static unsigned int m_siNumGamingEmpires;
 
@@ -644,7 +648,9 @@ public:
 
     void WriteGameMessages();
 
-    void GetAlienButtonString (int iAlienKey, int iEmpireKey, bool bBorder, int iPlanetKey, int iProxyKey,
+    int GetDefaultSystemIcon();
+
+    void GetAlienPlanetButtonString (int iAlienKey, int iEmpireKey, bool bBorder, int iPlanetKey, int iProxyKey,
         const char* pszAlt, const char* pszExtraTag, String* pstrAlienButtonString);
 
     void WriteAlienButtonString (int iAlienKey, bool bBorder, const char* pszNamePrefix, 
@@ -679,19 +685,20 @@ public:
     void WriteCredits();
 
     void WriteIntro();
-    void WriteIntroUpper();
-    void WriteIntroLower();
-    void WriteServerNewsFile();
-    void WriteContributorsFile();
+
+    void WriteIntroUpper (bool bTextArea);
+    void WriteIntroLower (bool bTextArea);
+    void WriteServerNewsFile (bool bTextArea);
+    void WriteContributorsFile (bool bTextArea);
 
     void WriteTOS();
     void WriteTOSFile();
     void WriteConfirmTOSDecline();
 
-    int UpdateIntroUpper (const char* pszText);
-    int UpdateIntroLower (const char* pszText);
-    int UpdateServerNews (const char* pszText);
-    int UpdateContributors (const char* pszText);
+    int TryUpdateIntroUpper();
+    int TryUpdateIntroLower();
+    int TryUpdateServerNews();
+    int TryUpdateContributors();
 
     int WriteShip (unsigned int iShipKey, const Variant* pvData, unsigned int iIndex, bool bFleet,
         const GameConfiguration& gcConfig, const ShipOrderPlanetInfo& planetInfo, 
@@ -1160,7 +1167,6 @@ const ThreadFunction g_pfxnRenderPage[] = {
 #define VERT_LINE_NAME          "vert.gif"
 
 #define ALIEN_NAME              "alien"
-#define ICON_FORMAT             "GIF89a"
 
 #define ICON_WIDTH 40
 #define ICON_HEIGHT 40
@@ -1405,7 +1411,7 @@ Redirection:                                                                    
         AddMessage (pszMessage);                                                                \
         SystemConfiguration scConfig;                                                           \
         if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {      \
-            char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_GAME_CLASS_NAME_LENGTH + 128];         \
+            char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];         \
             sprintf (pszReport, "%s entered %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);  \
             g_pReport->WriteReport (pszReport);                                                 \
         }                                                                                       \

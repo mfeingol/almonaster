@@ -32,9 +32,9 @@
 				FavorSizeOrSpeed="2"
 				OmitFramePointers="TRUE"
 				EnableFiberSafeOptimizations="TRUE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="TRUE"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
 				IgnoreStandardIncludePath="FALSE"
 				GeneratePreprocessedFile="0"
@@ -77,7 +77,7 @@
 				Version=""
 				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
 				GenerateDebugInformation="TRUE"
 				GenerateMapFile="FALSE"
 				MapExports="FALSE"
@@ -138,9 +138,9 @@ copy release\Alajar.pdb ..\release
 				FavorSizeOrSpeed="0"
 				OmitFramePointers="FALSE"
 				EnableFiberSafeOptimizations="FALSE"
-				OptimizeForProcessor="2"
+				OptimizeForProcessor="3"
 				OptimizeForWindowsApplication="FALSE"
-				AdditionalIncludeDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalIncludeDirectories="D:\mfeingol\Dev\621\Include"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
 				ExceptionHandling="TRUE"
@@ -177,7 +177,7 @@ copy release\Alajar.pdb ..\release
 				OutputFile=".\Debug/Alajar.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="TRUE"
-				AdditionalLibraryDirectories="D:\mfeingol\Dev\620\Include"
+				AdditionalLibraryDirectories="D:\mfeingol\Dev\621\Include"
 				GenerateDebugInformation="TRUE"
 				ProgramDatabaseFile=".\Debug/Alajar.pdb"
 				SubSystem="1"
@@ -229,12 +229,6 @@ copy release\Alajar.pdb ..\release
 		</File>
 		<File
 			RelativePath=".\Main.cpp">
-		</File>
-		<File
-			RelativePath=".\Config\Server.conf">
-		</File>
-		<File
-			RelativePath=".\Config\SSI.conf">
 		</File>
 	</Files>
 	<Globals>

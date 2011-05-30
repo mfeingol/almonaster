@@ -346,10 +346,9 @@ private:
     int MakeShipsFight (int iGameClass, int iGameNumber, const char* strGameMap, int iNumEmpires, 
         unsigned int* piEmpireKey, bool* pbAlive, Variant* pvEmpireName, const char** pstrEmpireShips, 
         const char** pstrEmpireDip, const char** pstrEmpireMap, String* pstrUpdateMessage, 
-        const char** pstrEmpireData, float* pfFuelRatio, 
-        int iNumPlanets, unsigned int* piPlanetKey, int* piTotalMin, int* piTotalFuel,
-        bool bIndependence, const char* strIndependentShips, Variant* pvGoodColor, Variant* pvBadColor,
-        const GameConfiguration& gcConfig);
+        const char** pstrEmpireData, float* pfFuelRatio, unsigned int iPlanetKey, 
+        int* piTotalMin, int* piTotalFuel, bool bIndependence, const char* strIndependentShips, 
+        Variant* pvGoodColor, Variant* pvBadColor, const GameConfiguration& gcConfig);
 
     int MinefieldExplosion (const char* strGameMap, const char** pstrEmpireData, 
         unsigned int iPlanetKey, unsigned int iNumEmpires, unsigned int* piEmpireKey, 
@@ -449,6 +448,9 @@ private:
         Seconds sFirstUpdateDelay, Seconds sAfterWeekendDelay, bool bWeekends, UTCTime* ptNextUpdateTime);
 
     void AdvanceWeekendTime (const UTCTime& tNextUpdateTime, Seconds sAfterWeekendDelay, UTCTime* ptNextUpdateTime);
+
+    Seconds GetWeekendTimeCompensation (const UTCTime& tLastUpdateTime, 
+        Seconds sSecondsSinceLast, Seconds sUpdatePeriod, Seconds sAfterWeekendDelay, Seconds sFirstUpdateDelay);
 
     // Top Lists
     int MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
@@ -643,11 +645,17 @@ public:
 
     int GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel, int* piMaxNumPartners);
 
+    void CalculateTradeBonuses (int iNumTrades, int iTotalAg, int iTotalMin, int iTotalFuel,
+        int iPercentFirstTradeIncrease, int iPercentNextTradeIncrease, 
+        int* piBonusAg, int* piBonusMin, int* iBonusFuel);
+
     unsigned int GetNumFairDiplomaticPartners (unsigned int iMaxNumEmpires);
 
     bool GameAllowsDiplomacy (int iDiplomacyLevel, int iDip);
     bool IsLegalDiplomacyLevel (int iDiplomacyLevel);
     bool IsLegalPrivilege (int iPrivilege);
+
+    int GetNextDiplomaticStatus (int iOffer1, int iOffer2, int iCurrentStatus);
 
     // Locks: don't use these unless you know what you're doing!
     int LockGameClass (int iGameClass, NamedMutex* pnmMutex);
@@ -809,6 +817,9 @@ public:
     int GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecondsSince, int* piSecondsUntil, 
         int* piNumUpdates, int* piGameState, Vector<UTCTime>* pvecUpdateTimes = NULL);
 
+    int ResetAllGamesUpdateTime();
+    int ResetGameUpdateTime (int iGameClass, int iGameNumber);
+
     int GetGameState (int iGameClass, int iGameNumber, int* piGameState);
     int GetGameCreationTime (int iGameClass, int iGameNumber, UTCTime* ptCreationTime);
 
@@ -834,7 +845,7 @@ public:
 
     int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber);
     int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword, int* piNumUpdates, 
-        bool bSendMessages, bool bCreatingGame, NamedMutex* pempireMutex, bool* pbUnlocked);
+        bool bSendMessages, bool bCreatingGame, bool bCheckSecurity, NamedMutex* pempireMutex, bool* pbUnlocked);
 
     int SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszIPAddress);
 
@@ -1185,7 +1196,7 @@ public:
     int GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpireKey, 
         int* piNumEmpires);
     int GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
-        int* piWeOffer, int* piTheyOffer, int* piCurrent);
+        int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet);
     int GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
         int piDipOptKey[], int* piSelected, int* piNumOptions);
     int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer);
@@ -1203,6 +1214,9 @@ public:
     int GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, unsigned int* piNumEmpires);
 
     int GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey,
+        int* piWar, int* piTruce, int* piTrade, int* piAlliance);
+
+    int GetNumEmpiresAtDiplomaticStatusNextUpdate (int iGameClass, int iGameNumber, int iEmpireKey, 
         int* piWar, int* piTruce, int* piTrade, int* piAlliance);
 
     int GetEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey,

@@ -150,12 +150,6 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     int iMaxNumSpeakers, iMaxNumMessages, iMaxMessageLength, iErrCode;
     bool bPostSystemMessages;
 
-    iErrCode = HtmlRenderer::Initialize();
-    if (iErrCode != OK) {
-        g_pReport->WriteReport ("The server is out of memory");
-        return iErrCode;
-    }
-
     // Save weak refs
     g_pHttpServer = pHttpServer;
     g_pPageSourceControl = pPageSourceControl;
@@ -408,24 +402,31 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         goto OutOfMemory;
     }
 
+    // Copy resource dir
+    g_pszResourceDir = String::StrDup (pszResourceDir);
+    if (g_pszResourceDir == NULL) {
+        goto OutOfMemory;
+    }
+
+    // Initialize HtmlRenderer
+    iErrCode = HtmlRenderer::Initialize();
+    if (iErrCode != OK) {
+        g_pReport->WriteReport ("The server is out of memory");
+        return iErrCode;
+    }
+
     // Create chatroom
     ChatroomConfig ccConfig;
 
     ccConfig.cchMaxSpeakerNameLen = MAX_EMPIRE_NAME_LENGTH;
     ccConfig.sTimeOut = sTimeOut;
-    ccConfig.iMaxNumMessages = iMaxNumSpeakers;
-    ccConfig.iMaxNumSpeakers = iMaxNumMessages;
+    ccConfig.iMaxNumMessages = iMaxNumMessages;
+    ccConfig.iMaxNumSpeakers = iMaxNumSpeakers;
     ccConfig.iMaxMessageLength = iMaxMessageLength;
     ccConfig.bPostSystemMessages = bPostSystemMessages;
 
     g_pChatroom = new Chatroom (ccConfig);
     if (g_pChatroom == NULL || g_pChatroom->Initialize() != OK) {
-        goto OutOfMemory;
-    }
-
-    // Copy resource dir
-    g_pszResourceDir = String::StrDup (pszResourceDir);
-    if (g_pszResourceDir == NULL) {
         goto OutOfMemory;
     }
 

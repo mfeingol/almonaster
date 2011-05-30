@@ -72,7 +72,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
                     SystemConfiguration scConfig;
                     if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
                         
-                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_GAME_CLASS_NAME_LENGTH + 128];
+                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
                         sprintf (pszReport, "%s resigned from %s %i", 
                             m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
                         g_pReport->WriteReport (pszReport);
@@ -136,7 +136,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
                     SystemConfiguration scConfig;
                     if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
                         
-                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_GAME_CLASS_NAME_LENGTH + 128];
+                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
                         sprintf (pszReport, "%s quit from %s %i", 
                             m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
                         g_pReport->WriteReport (pszReport);

@@ -266,7 +266,7 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
 
     case ICON_EMPIREPLANET:
 
-        GetAlienButtonString (
+        GetAlienPlanetButtonString (
             mmEntry.iAlienKey, 
             mmEntry.iOwnerKey, 
             mmEntry.iOwnerKey == iEmpireKey, 

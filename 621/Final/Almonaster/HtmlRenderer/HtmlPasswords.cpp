@@ -31,6 +31,7 @@ int HtmlRenderer::LoginEmpire() {
     //
 
     int iErrCode = OK;
+    Variant vValue;
     
     if (m_vEmpireName.GetType() != V_STRING || 
         m_vEmpireName.GetCharPtr() == NULL ||
@@ -65,6 +66,14 @@ int HtmlRenderer::LoginEmpire() {
         m_i64SecretKey = vValue.GetInteger64();
     }
     
+    // Get last login time
+    iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::LastLoginTime, &vValue);
+    if (iErrCode != OK) {
+        AddMessage ("Login failed: the empire's last login time could not be read");
+        return iErrCode;
+    }
+    UTCTime lastLoginTime = vValue.GetUTCTime();
+
     // We're authenticated, so register a login
     iErrCode = g_pGameEngine->LoginEmpire (m_iEmpireKey, m_pHttpRequest->GetBrowserName(), m_pHttpRequest->GetClientIP());
     if (iErrCode != OK) {
@@ -107,7 +116,6 @@ int HtmlRenderer::LoginEmpire() {
         
         // Get theme key
         int iThemeKey;
-        Variant vValue;
 
         iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
         if (iErrCode != OK) {
@@ -153,6 +161,13 @@ int HtmlRenderer::LoginEmpire() {
     }
 
     if (iErrCode == OK) {
+
+        AddMessage ("Welcome back, ");
+        AppendMessage (m_vEmpireName.GetCharPtr());
+
+        if (Time::OlderThan (lastLoginTime, m_stServerNewsLastUpdate)) {
+            AddMessage ("The Server News page was updated since your last login");
+        }
 
         // Add to report
         ReportLoginSuccess (g_pReport, m_vEmpireName.GetCharPtr(), m_bAutoLogon);

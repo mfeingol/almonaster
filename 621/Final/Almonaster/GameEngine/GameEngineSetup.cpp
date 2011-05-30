@@ -190,7 +190,7 @@ void GameEngine::VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, 
         Assert (false);
         goto Cleanup;
     }
-    
+
     // SystemGameClassData
     pszBadTable = SYSTEM_GAMECLASS_DATA;
     if (!m_pGameData->DoesTableExist (SYSTEM_GAMECLASS_DATA) ||

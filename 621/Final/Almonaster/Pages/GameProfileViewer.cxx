@@ -88,6 +88,46 @@ if (m_bOwnPost && !m_bRedirection) {
             break;
         }
 
+        // Login
+        if (WasButtonPressed (BID_LOGIN)) {
+
+            pHttpForm = m_pHttpRequest->GetForm ("Switch");
+            if (pHttpForm != NULL) {
+
+                unsigned int iSwitch = pHttpForm->GetIntValue();
+
+                bool bAuth;
+                if (g_pGameEngine->CheckAssociation (m_iEmpireKey, iSwitch, &bAuth) == OK && bAuth) {
+
+                    m_iReserved = 0;
+                    m_i64SecretKey = 0;
+                    m_vPassword = 0;
+                    m_vEmpireName = 0;
+
+                    m_iEmpireKey = iSwitch;
+
+                    iErrCode = LoginEmpire();
+                    if (iErrCode == OK) {
+                        iErrCode = InitializeEmpire (false);
+                        if (iErrCode == OK) {
+
+                            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
+                            m_pgeLock = NULL;
+
+                            return Redirect (ACTIVE_GAME_LIST);
+                        }
+                    }
+
+                    AddMessage ("Login failed: error ");
+                    AppendMessage (iErrCode);
+
+                } else {
+
+                    AddMessage ("Access denied");
+                }
+            }
+        }
+
         // Send messages
         if (WasButtonPressed (BID_SENDMESSAGE)) {
 

@@ -480,13 +480,31 @@ Cleanup:
 
 int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpireKey, RatioInformation* pRatInfo) {
 
-    float fTechLevel;
-    int iBuild, iMaint, iAg, iFuel, iMin, iFuelUse, iNextMaint, iNextFuelUse, iNextMin, iNextFuel, 
-        iBonusAg, iBonusFuel, iBonusMin, iTotalPop, iNextTotalPop, iErrCode;
+    int iBuild, iMaint, iAg, iFuel, iMin, iFuelUse, iNextMaint, iNextFuelUse, 
+        iNextMinAdjustment, iNextFuelAdjustment, iBonusAg, iBonusFuel, iBonusMin, iTotalPop, 
+        iNextTotalPop, iErrCode, iNumTrades, iNumAlliances, iPercentFirstTradeIncrease, 
+        iPercentNextTradeIncrease, iGameClassOptions;
 
-    Variant vMaxTechDev, vMaxAgRatio;
+    float fTechLevel, fMaxAgRatio, fMaxTechDev;
+
+    Variant vTemp;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+    iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    if (iGameClassOptions & VISIBLE_DIPLOMACY) {
+        iErrCode = GetNumEmpiresAtDiplomaticStatusNextUpdate (iGameClass, iGameNumber, iEmpireKey, NULL, NULL, &iNumTrades, &iNumAlliances);
+    } else {
+        iErrCode = GetNumEmpiresAtDiplomaticStatus (iGameClass, iGameNumber, iEmpireKey, NULL, NULL, &iNumTrades, &iNumAlliances);
+    }
+
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
 
     IReadTable* pTable = NULL;
     iErrCode = m_pGameData->GetTableForReading (strGameEmpireData, &pTable);
@@ -559,12 +577,12 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (GameEmpireData::NextMin, &iNextMin);
+    iErrCode = pTable->ReadData (GameEmpireData::NextMin, &iNextMinAdjustment);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (GameEmpireData::NextFuel, &iNextFuel);
+    iErrCode = pTable->ReadData (GameEmpireData::NextFuel, &iNextFuelAdjustment);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -576,28 +594,33 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
 
     SafeRelease (pTable);
 
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxTechDev, 
-        &vMaxTechDev
-        );
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
+    fMaxTechDev = vTemp.GetFloat();
 
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxAgRatio, 
-        &vMaxAgRatio
-        );
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
+    fMaxAgRatio = vTemp.GetFloat();
+
+    iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PercentFirstTradeIncrease, &vTemp);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+    iPercentFirstTradeIncrease = vTemp.GetInteger();
+
+    iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PercentNextTradeIncrease, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    iPercentNextTradeIncrease = vTemp.GetInteger();
 
     // Current
-    pRatInfo->fAgRatio = GetAgRatio (iAg + iBonusAg, iTotalPop, vMaxAgRatio.GetFloat());
+    pRatInfo->fAgRatio = GetAgRatio (iAg + iBonusAg, iTotalPop, fMaxAgRatio);
 
     pRatInfo->fMaintRatio = GetMaintenanceRatio (iMin + iBonusMin, iMaint, iBuild);
     
@@ -611,35 +634,51 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
         iMaint, 
         iBuild, 
         iFuelUse, 
-        vMaxTechDev.GetFloat()
+        fMaxTechDev
         );
 
     pRatInfo->iBR = GetBattleRank (fTechLevel);
 
 
-    // Next
-    pRatInfo->fNextAgRatio = GetAgRatio (iAg + iBonusAg, iNextTotalPop, vMaxAgRatio.GetFloat());
+    //
+    // Next ratios
+    //
+
+    // First, calculate next bonus ratios
+
+    int iNextAg = iAg;
+    int iNextMin = iMin + iNextMinAdjustment;
+    int iNextFuel = iFuel + iNextFuelAdjustment;
+
+    int iNextBonusAg, iNextBonusMin, iNextBonusFuel;
+
+    CalculateTradeBonuses (
+        iNumTrades + iNumAlliances, iNextAg, iNextMin, iNextFuel, iPercentFirstTradeIncrease, 
+        iPercentNextTradeIncrease, &iNextBonusAg, &iNextBonusMin, &iNextBonusFuel
+        );
+
+    pRatInfo->fNextAgRatio = GetAgRatio (iNextAg + iNextBonusAg, iNextTotalPop, fMaxAgRatio);
 
     pRatInfo->fNextMaintRatio = GetMaintenanceRatio (
-        iMin + iBonusMin + iNextMin, 
+        iNextMin + iNextBonusMin, 
         iMaint + iNextMaint,
         0
         );
 
     pRatInfo->fNextFuelRatio = GetFuelRatio (
-        iFuel + iBonusFuel + iNextFuel, 
+        iNextFuel + iNextBonusFuel, 
         iFuelUse + iNextFuelUse
         );
 
     pRatInfo->fNextTechLevel = fTechLevel + pRatInfo->fTechDev;
 
     pRatInfo->fNextTechDev = GetTechDevelopment (
-        iFuel + iBonusFuel + iNextFuel, 
-        iMin + iBonusMin + iNextMin, 
+        iNextFuel + iNextBonusFuel,
+        iNextMin + iNextBonusMin, 
         iMaint + iNextMaint, 
-        0, 
+        0,
         iFuelUse + iNextFuelUse, 
-        vMaxTechDev.GetFloat()
+        fMaxTechDev
         );
 
     pRatInfo->iNextBR = GetBattleRank (pRatInfo->fNextTechLevel);
@@ -919,6 +958,11 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                     pszPlanetName, iLocationX, iLocationY, strFleetName.GetCharPtr());
 
                 psoOrders[iNumOrders].iKey = pblLocations[i].iFleetKey;
+
+            } else {
+
+                // Immobile ships don't build into fleets
+                continue;
             }
 
             psoOrders[iNumOrders].sotType = SHIP_ORDER_NORMAL;
@@ -1030,6 +1074,11 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
 
                 strcat (pszOrder, " in fleet ");
                 strcat (pszOrder, strFleetName.GetCharPtr());
+            
+            } else {
+
+                // Immobile ships don't build into fleets
+                continue;
             }
 
             psoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
@@ -2930,6 +2979,8 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 iErrCode = ERROR_CANNOT_COLONIZE;
                 goto Cleanup;
             }
+
+            bDismantle = true;
             
             break;
 
@@ -3185,6 +3236,8 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 iErrCode = ERROR_WRONG_SHIP_TYPE;
                 goto Cleanup;
             }
+
+            bDismantle = true;
             break;
             
         case OPEN_LINK_NORTH:
@@ -3463,7 +3516,9 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     bOldDismantle = 
         iOldOrder == DISMANTLE ||
         iOldOrder == TERRAFORM_AND_DISMANTLE ||
-        iOldOrder == INVADE_AND_DISMANTLE;
+        iOldOrder == INVADE_AND_DISMANTLE ||
+        iOldOrder == COLONIZE ||
+        iOldOrder == DETONATE;
 
     if (bDismantle && !bOldDismantle) {
         
@@ -3964,7 +4019,7 @@ Cleanup:
 int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
                           unsigned int iShipKey, unsigned int iPlanetKey, unsigned int iFleetKey) {
     
-    int iErrCode, iBuiltThisUpdate;
+    int iErrCode, iBuiltThisUpdate, iType;
     bool bFlag;
     IReadTable* pShips = NULL;
 
@@ -3985,11 +4040,27 @@ int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int
         goto Cleanup;
     }
 
+    // Get type
+    iErrCode = pShips->ReadData (iShipKey, GameEmpireShips::Type, &iType);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // Check for immobile ships being moved into fleets
+    if (iFleetKey != NO_KEY) {
+
+        if (!IsMobileShip (iType)) {
+            iErrCode = ERROR_SHIP_CANNOT_JOIN_FLEET;
+            goto Cleanup;
+        }
+    }
+
     if (iPlanetKey != NO_KEY) {
 
         Variant vName;
         float fBR;
-        int iType, iBuilt;
+        int iBuilt;
 
         // We're moving planets, so we must be a build ship
         // The checks in BuildNewShips will cover any other problems we might have
@@ -4007,13 +4078,6 @@ int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int
 
         // Get BR
         iErrCode = pShips->ReadData (iShipKey, GameEmpireShips::MaxBR, &fBR);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-
-        // Get type
-        iErrCode = pShips->ReadData (iShipKey, GameEmpireShips::Type, &iType);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
