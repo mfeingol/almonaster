@@ -30,12 +30,15 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     int iErrCode;
     Variant vTemp;
 
-    unsigned int i, iNumLocations, iMaxNumShipsBuiltAtOnce;
+    unsigned int i, iNumLocations, iMaxNumShipsBuiltAtOnce, iMin, iLimit;
     BuildLocation* pblBuildLocation = NULL;
     Algorithm::AutoDelete<BuildLocation> autopblBuildLocation (pblBuildLocation, true);
 
     int iTechDevs, iTechUndevs, iBR, iNumTechs, iOneTech = 0;
     bool bBuilder;
+
+    const char* pszTableColor;
+    size_t stTableColorLen;
 
     // Make sure planet is a builder
     iErrCode = g_pGameEngine->IsPlanetBuilder (m_iGameClass, m_iGameNumber, m_iEmpireKey, iPlanetKey, &bBuilder);
@@ -110,7 +113,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     }
 
     // Row
-    unsigned int iLimit = sizeof (g_pszColumns) / sizeof (g_pszColumns[0]);
+    iLimit = sizeof (g_pszColumns) / sizeof (g_pszColumns[0]);
     if (iNumLocations == 1) {
         iLimit --;
     }
@@ -136,8 +139,8 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
         "<tr>"
         );
 
-    const char* pszTableColor = m_vTableColor.GetCharPtr();
-    size_t stTableColorLen = strlen (pszTableColor);
+    pszTableColor = m_vTableColor.GetCharPtr();
+    stTableColorLen = strlen (pszTableColor);
 
     for (i = 0; i < iLimit; i ++) {
         OutputText ("<th bgcolor=\"#");
@@ -191,7 +194,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     m_pHttpResponse->WriteText (iPlanetKey);
     OutputText ("\">");
 
-    unsigned int iMin = min (iMaxNumShipsBuiltAtOnce + 1, 16);
+    iMin = min (iMaxNumShipsBuiltAtOnce + 1, 16);
     for (i = 0; i < iMin; i ++) {
         OutputText ("<option>");
         m_pHttpResponse->WriteText (i);
@@ -292,11 +295,12 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
             default:
 
                 Variant vFleetName;
-                iErrCode = g_pGameEngine->GetFleetName (
+                iErrCode = g_pGameEngine->GetFleetProperty (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
                     pblBuildLocation[i].iFleetKey,
+                    GameEmpireFleets::Name,
                     &vFleetName
                     );
 
@@ -457,11 +461,12 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
 
     } else {
 
-        iErrCode = g_pGameEngine->GetFleetName (
+        iErrCode = g_pGameEngine->GetFleetProperty (
             m_iGameClass, 
             m_iGameNumber,
             m_iEmpireKey,
-            iFleet, 
+            iFleet,
+            GameEmpireFleets::Name,
             &vFleetName
             );
 
@@ -520,11 +525,12 @@ int HtmlRenderer::CreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFl
 
     if (iErrCode == OK) {
 
-        if (g_pGameEngine->GetFleetName (
+        if (g_pGameEngine->GetFleetProperty (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
             *piFleetKey,
+            GameEmpireFleets::Name,
             &vName
             ) == OK) {
 

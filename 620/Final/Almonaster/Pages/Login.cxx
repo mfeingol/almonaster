@@ -57,32 +57,34 @@ if (m_pHttpRequest->GetMethod() == GET) {
 
         if (iAutoLogonKey != NO_KEY && i64SubmittedPasswordHash != -1) {
 
-            iErrCode = g_pGameEngine->DoesEmpireExist (iAutoLogonKey, &bFlag, NULL);
-            if (iErrCode == OK && bFlag) {
+            Variant vValue;
 
-                iErrCode = g_pGameEngine->GetEmpirePassword (iAutoLogonKey, &m_vPassword);
-                if (iErrCode == OK) {
+            if (g_pGameEngine->DoesEmpireExist (iAutoLogonKey, &bFlag, NULL) == OK && 
+                bFlag &&
+                g_pGameEngine->GetEmpirePassword (iAutoLogonKey, &m_vPassword) == OK &&
+                g_pGameEngine->GetEmpireProperty (iAutoLogonKey, SystemEmpireData::SecretKey, &vValue) == OK) {
 
-                    // Authenticate
-                    iErrCode = GetPasswordHashForAutologon (&i64RealPasswordHash);
-                    if (iErrCode == OK) {
+                // Authenticate
+                m_i64SecretKey = vValue.GetInteger64();
 
-                        if (i64RealPasswordHash == i64SubmittedPasswordHash) {
+                if (GetPasswordHashForAutologon (&i64RealPasswordHash) == OK) {
 
-                            m_iEmpireKey = iAutoLogonKey;
+                    if (i64RealPasswordHash == i64SubmittedPasswordHash) {
 
-                            if (LoginEmpire() == OK && InitializeEmpire (true) == OK) {
-                                return Redirect (ACTIVE_GAME_LIST);
-                            }
+                        m_iEmpireKey = iAutoLogonKey;
 
-                            AddMessage ("Login failed");
-                            m_iEmpireKey = NO_KEY;
+                        if (LoginEmpire() == OK && InitializeEmpire (true) == OK) {
+                            return Redirect (ACTIVE_GAME_LIST);
                         }
 
-                        m_vPassword = "";
+                        AddMessage ("Login failed");
                     }
                 }
             }
+
+            m_iEmpireKey = NO_KEY;
+            m_vPassword = (const char*) NULL;
+            m_i64SecretKey = 0;
 
             // Autologon failed
             AddMessage ("Autologon failed and was disabled");

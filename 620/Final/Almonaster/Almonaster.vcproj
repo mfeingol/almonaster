@@ -35,14 +35,19 @@
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS"
+				IgnoreStandardIncludePath="FALSE"
+				GeneratePreprocessedFile="0"
+				KeepComments="FALSE"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
+				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="2"
 				StructMemberAlignment="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="FALSE"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/Almonaster.pch"
@@ -50,25 +55,36 @@
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="4"
-				WarnAsError="FALSE"
+				WarnAsError="TRUE"
 				SuppressStartupBanner="TRUE"
+				Detect64BitPortabilityProblems="FALSE"
 				DebugInformationFormat="3"
+				CallingConvention="0"
 				CompileAs="2"
-				DisableSpecificWarnings="4189"/>
+				DisableSpecificWarnings="4189"
+				ShowIncludes="FALSE"
+				UndefineAllPreprocessorDefinitions="FALSE"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
 				Name="VCLinkerTool"
+				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
 				AdditionalDependencies="odbc32.lib odbccp32.lib Alajar.lib Database.lib Osal.lib"
 				ShowProgress="0"
 				OutputFile=".\Release/Almonaster.dll"
 				Version=""
-				LinkIncremental="1"
+				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
+				GenerateMapFile="FALSE"
+				MapExports="FALSE"
 				SubSystem="2"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"
+				SetChecksum="TRUE"
 				ImportLibrary=".\Release/Almonaster.lib"
 				TargetMachine="1"/>
 			<Tool
@@ -447,7 +463,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\ActiveGameList.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -463,7 +480,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Build.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -479,7 +497,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Chatroom.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -495,7 +514,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Diplomacy.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -511,7 +531,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\EmpireAdministrator.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -527,7 +548,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameAdministrator.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -543,7 +565,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameContributions.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -559,7 +582,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameCredits.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -575,7 +599,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameFAQ.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -591,7 +616,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameNews.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -607,7 +633,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameProfileViewer.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -623,7 +650,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\GameServerRules.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -639,7 +667,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Info.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -655,7 +684,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\LatestGames.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -671,7 +701,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\LatestNukes.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -687,7 +718,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Login.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -703,7 +735,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Map.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -719,7 +752,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\NewEmpire.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -735,7 +769,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\OpenGameList.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -751,7 +786,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Options.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -767,7 +803,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\PersonalGameClasses.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -783,7 +820,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\PersonalTournaments.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -799,7 +837,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Planets.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -815,7 +854,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\ProfileEditor.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -831,7 +871,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\ProfileViewer.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -847,7 +888,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Quit.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -863,7 +905,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\ServerAdministrator.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -879,7 +922,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Ships.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -895,7 +939,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SpectatorGames.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -911,7 +956,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SystemContributions.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -927,7 +973,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SystemCredits.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -943,7 +990,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SystemFAQ.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -959,7 +1007,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SystemGameList.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -975,7 +1024,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SystemNews.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -991,7 +1041,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\SystemServerRules.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -1007,7 +1058,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Tech.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -1023,7 +1075,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\ThemeAdministrator.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -1039,7 +1092,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\TopLists.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -1055,7 +1109,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\TournamentAdministrator.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
@@ -1071,7 +1126,8 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			<File
 				RelativePath="Pages\Tournaments.cxx">
 				<FileConfiguration
-					Name="Release|Win32">
+					Name="Release|Win32"
+					ExcludedFromBuild="TRUE">
 					<Tool
 						Name="VCCLCompilerTool"
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>

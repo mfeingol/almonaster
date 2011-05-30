@@ -24,25 +24,28 @@
 #define AFX_READWRITELOCK_H__857FDA13_4D1F_11D3_A18F_0050047FE2E2__INCLUDED_
 
 #include "Mutex.h"
+#include "Event.h"
+#include "Thread.h"
 
 class OSAL_EXPORT ReadWriteLock {
 private:
 
     int m_iNumReaders;
     int m_iNumWriters;
+    int m_iFlags;
 
 #ifdef __LINUX__
-    pthread_t m_dwLastThreadLocked;
+    pthread_t m_tidThread;
+    pthread_t GetCurrentThreadId() { return pthread_self(); }
 #else if defined __WIN32__
-	DWORD m_dwLastThreadLocked;
+	DWORD m_tidThread;
+    DWORD GetCurrentThreadId() { return ::GetCurrentThreadId(); }
 #endif
 
     Mutex m_mLock;
+    Event m_eEvent;
 
-    void Lock();
-    void Unlock();
-
-    void AssertWriterThread();
+    bool Held (Thread* pThread);
 
 public:
 
@@ -61,6 +64,9 @@ public:
 
     void UpgradeReaderWriter();
     void DowngradeReaderWriter();
+
+    bool HeldExclusive (Thread* pThread);
+    bool HeldSpeculative (Thread* pThread);
 };
 
 class AutoReadLock {

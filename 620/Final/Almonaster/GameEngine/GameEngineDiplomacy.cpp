@@ -66,7 +66,8 @@ int GameEngine::GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpire
 int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
                                      int* piWeOffer, int* piTheyOffer, int* piCurrent) {
 
-    IReadTable* pOurTable = NULL, * pTheirTable = NULL;
+    int iErrCode = OK;
+    IReadTable* pTable = NULL;
     unsigned int iKey;
 
     if (piWeOffer != NULL) {
@@ -81,43 +82,46 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         *piCurrent = WAR;
     }
 
-    GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
+    if (piWeOffer != NULL && piCurrent != NULL) {
 
-    int iErrCode = m_pGameData->GetTableForReading (strEmpireDiplomacy, &pOurTable);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+        GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
-    // Get proxy key
-    iErrCode = pOurTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
-    if (iErrCode != OK) {
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        }
-        goto Cleanup;
-    }
-
-    if (piWeOffer != NULL) {
-
-        iErrCode = pOurTable->ReadData (iKey, GameEmpireDiplomacy::DipOffer, piWeOffer);
+        iErrCode = m_pGameData->GetTableForReading (strEmpireDiplomacy, &pTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
-    }
 
-    if (piCurrent != NULL) {
-
-        // Current status
-        iErrCode = pOurTable->ReadData (iKey, GameEmpireDiplomacy::CurrentStatus, piCurrent);
+        // Get proxy key
+        iErrCode = pTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
         if (iErrCode != OK) {
-            Assert (false);
+            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+                iErrCode = OK;
+            }
             goto Cleanup;
         }
-    }
 
-    SafeRelease (pOurTable);
+        if (piWeOffer != NULL) {
+
+            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::DipOffer, piWeOffer);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+
+        if (piCurrent != NULL) {
+
+            // Current status
+            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::CurrentStatus, piCurrent);
+            if (iErrCode != OK) {
+                Assert (false);
+                goto Cleanup;
+            }
+        }
+
+        SafeRelease (pTable);
+    }
 
     // They offer
     if (piTheyOffer != NULL) {
@@ -136,15 +140,15 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
             goto Cleanup;
         }
 
-        GET_GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iFoeKey);
+        GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iFoeKey);
         
-        iErrCode = m_pGameData->GetTableForReading (strEmpireDiplomacy, &pTheirTable);
+        iErrCode = m_pGameData->GetTableForReading (strEmpireDiplomacy, &pTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         
-        iErrCode = pTheirTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iEmpireKey, &iKey);
+        iErrCode = pTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iEmpireKey, &iKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 iErrCode = OK;
@@ -153,13 +157,13 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         }
 
         if (!(vOptions.GetInteger() & VISIBLE_DIPLOMACY)) {
-            iErrCode = pTheirTable->ReadData (iKey, GameEmpireDiplomacy::VirtualStatus, piTheyOffer);   
+            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::VirtualStatus, piTheyOffer);   
         } else {
-            iErrCode = pTheirTable->ReadData (iKey, GameEmpireDiplomacy::DipOffer, piTheyOffer);    
+            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::DipOffer, piTheyOffer);    
         }
 
-        SafeRelease (pTheirTable);
-        
+        SafeRelease (pTable);
+
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -168,8 +172,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
 
 Cleanup:
 
-    SafeRelease (pTheirTable);
-    SafeRelease (pOurTable);
+    SafeRelease (pTable);
 
     return iErrCode;
 }

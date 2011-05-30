@@ -25,22 +25,29 @@
 #include "Osal/HashTable.h"
 #include "Osal/ReadWriteLock.h"
 
-struct ChatroomMessage {
+struct ChatroomConfig {
+    size_t cchMaxSpeakerNameLen;
+    Seconds sTimeOut;
+    unsigned int iMaxNumMessages;
+    unsigned int iMaxNumSpeakers;
+    unsigned int iMaxMessageLength;
+    bool bPostSystemMessages;
+};
 
+struct ChatroomMessage {
     String strMessageText;
     String strSpeaker;
     UTCTime tTime;
     int iFlags;
 };
 
-// iFlags
-#define CHATROOM_MESSAGE_SYSTEM     (0x00000001)
-
 struct ChatroomSpeaker {
-
     String strName;
     UTCTime tTime;
 };
+
+// iFlags
+#define CHATROOM_MESSAGE_SYSTEM     (0x00000001)
 
 class Chatroom {
 private:
@@ -64,19 +71,12 @@ private:
     ReadWriteLock m_rwSpeakerLock;
 
     // Rules
-    Seconds m_sTimeOut;
-
-    unsigned int m_iMaxNumSpeakers;
-    unsigned int m_iMaxNumMessages;
-    unsigned int m_iMaxMessageLength;
-
+    ChatroomConfig m_ccConf;
     int PostMessageWithTime (const char* pszSpeakerName, const char* pszMessage, const UTCTime& tTime, int iFlags);
 
 public:
 
-    Chatroom (unsigned int iMaxNumMessages, unsigned int iMaxNumSpeakers, unsigned int iMaxMessageLength, 
-        Seconds iTimeOut);
-
+    Chatroom (const ChatroomConfig& ccConf);
     ~Chatroom();
 
     int Initialize();

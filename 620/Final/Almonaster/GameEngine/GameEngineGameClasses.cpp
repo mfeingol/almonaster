@@ -230,15 +230,20 @@ int GameEngine::GetNextGameNumber (int iGameClass, int* piGameNumber) {
 int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
 
     // Lock gameclass
+    int iErrCode;
     NamedMutex nmMutex;
-    LockGameClass (iGameClass, &nmMutex);
+    iErrCode = LockGameClass (iGameClass, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Check for gameclass
     bool bExists;
-    int iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
-        UnlockGameClass (nmMutex);
-        return ERROR_GAMECLASS_DOES_NOT_EXIST;
+        iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
+        goto Cleanup;
     }
 
     // Check for active games
@@ -378,16 +383,22 @@ bool GameEngine::DoesGameClassHaveActiveGames (int iGameClass) {
 
 int GameEngine::HaltGameClass (int iGameClass) {
 
+    int iErrCode;
+
     // Lock gameclass
     NamedMutex nmMutex;
-    LockGameClass (iGameClass, &nmMutex);
+    iErrCode = LockGameClass (iGameClass, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Check for gameclass
     bool bExists;
-    int iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
-        UnlockGameClass (nmMutex);
-        return ERROR_GAMECLASS_DOES_NOT_EXIST;
+        iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
+        goto Cleanup;
     }
 
     // Mark the gameclass as halted
@@ -398,6 +409,8 @@ int GameEngine::HaltGameClass (int iGameClass) {
         GAMECLASS_HALTED
         );
     Assert (iErrCode == OK);
+
+Cleanup:
 
     // Unlock
     UnlockGameClass (nmMutex);
@@ -413,15 +426,20 @@ int GameEngine::HaltGameClass (int iGameClass) {
 
 int GameEngine::UnhaltGameClass (int iGameClass) {
 
+    int iErrCode;
     Variant vHalted;
 
     // Lock gameclass
     NamedMutex nmMutex;
-    LockGameClass (iGameClass, &nmMutex);
+    iErrCode = LockGameClass (iGameClass, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Check for gameclass
     bool bExists;
-    int iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
@@ -438,7 +456,6 @@ int GameEngine::UnhaltGameClass (int iGameClass) {
         Assert (false);
         goto Cleanup;
     }
-
 
     if (!(vHalted.GetInteger() & GAMECLASS_HALTED)) {
         iErrCode = ERROR_GAMECLASS_NOT_HALTED;
@@ -616,7 +633,11 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     iTournamentKey = pvGameClassData[SystemGameClassData::TournamentKey].GetInteger();
     if (iTournamentKey != NO_KEY) {
 
-        LockTournament (iTournamentKey, &nmTournamentLock);
+        iErrCode = LockTournament (iTournamentKey, &nmTournamentLock);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
         bTournamentLocked = true;
 
         iErrCode = m_pGameData->DoesRowExist (SYSTEM_TOURNAMENTS, iTournamentKey, &bFlag);
@@ -735,7 +756,11 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
     Variant vOptions;
 
     NamedMutex nmMutex;
-    LockGameClass (iGameClass, &nmMutex);
+    iErrCode = LockGameClass (iGameClass, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Test if gameclass exists
     bool bExist;

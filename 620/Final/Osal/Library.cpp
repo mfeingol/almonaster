@@ -47,7 +47,7 @@ Library::~Library() {
 int Library::Open (const char* pszLibrary) {
 
 #ifdef __LINUX__
-    m_hLibrary = dlopen(pszLibrary, RTLD_NOW);
+    m_hLibrary = dlopen(pszLibrary, RTLD_NOW | RTLD_GLOBAL);
 	return m_hLibrary == NULL ? ERROR_FAILURE : OK;
 #else if defined __WIN32__
     m_hLibrary = ::LoadLibrary (pszLibrary);

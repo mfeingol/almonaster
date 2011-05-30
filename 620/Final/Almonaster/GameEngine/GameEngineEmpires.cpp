@@ -86,6 +86,8 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     NamedMutex nmParentMutex;
     unsigned int iKey, i;
 
+    int64 i64SecretKey;
+
     bool bParentLocked = false;
 
     int iOptions = 0, iAlmonasterScoreSignificance = 0, iErrCode;
@@ -152,8 +154,12 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
 
         bool bExist;
 
+        iErrCode = LockEmpire (iParentKey, &nmParentMutex);
+        if (iErrCode != OK) {
+            Assert (false);
+            goto Cleanup;
+        }
         bParentLocked = true;
-        LockEmpire (iParentKey, &nmParentMutex);
 
         iErrCode = m_pGameData->DoesRowExist (SYSTEM_EMPIRE_DATA, iParentKey, &bExist);
         if (iErrCode != OK || !bExist) {
@@ -410,7 +416,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     pvColVal[SystemEmpireData::GameRatios] = RATIOS_DISPLAY_ON_RELEVANT_SCREENS;
 
     // Generate a secret key for the empire
-    int64 i64SecretKey = 0;
+    i64SecretKey = 0;
     iErrCode = Crypto::GetRandomData ((Byte*) &i64SecretKey, sizeof (i64SecretKey));
     if (iErrCode != OK) {
         Assert (false);
@@ -769,7 +775,11 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int iMaxNumS
 
     // Lock message table
     NamedMutex nmMutex;
-    LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
     
     // Get num messages and current max number of messages
     if (!m_pGameData->DoesTableExist (strSystemEmpireMessages)) {
@@ -1027,7 +1037,11 @@ int GameEngine::DeleteEmpire (int iEmpireKey) {
     int iErrCode = OK;
 
     NamedMutex nmMutex;
-    LockEmpire (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Read active games total
     unsigned int iNumGames = 0;
@@ -1120,7 +1134,11 @@ int GameEngine::ObliterateEmpire (int iEmpireKey, int iKillerEmpire) {
     Variant* pvGame;
     
     NamedMutex nmMutex;
-    LockEmpire (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     SYSTEM_EMPIRE_ACTIVE_GAMES (pszGames, iEmpireKey);
 
@@ -1508,7 +1526,11 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
     Time::GetTime (&tTime);
 
     NamedMutex nmMutex;
-    LockEmpire (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
@@ -1609,12 +1631,17 @@ int GameEngine::GetNumEmpiresOnServer (int* piNumEmpires) {
 
 int GameEngine::UndeleteEmpire (int iEmpireKey) {
 
+    int iErrCode;
     Variant vTemp;
 
     NamedMutex nmEmpireMutex;
-    LockEmpire (iEmpireKey, &nmEmpireMutex);
+    iErrCode = LockEmpire (iEmpireKey, &nmEmpireMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
+    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == OK && vTemp.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
 
         iErrCode = m_pGameData->WriteAnd (
@@ -1641,6 +1668,7 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
 int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
 
     int iErrCode;
+    bool bBridierLocked = false;
 
     char pszTable [256];
     Variant vOldClassicScore, vOldAlmonasterScore, vOldBridierIndex;
@@ -1654,7 +1682,11 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     }
 
     NamedMutex nmEmpireMutex, nmBridierMutex;
-    LockEmpire (iEmpireKey, &nmEmpireMutex);
+    iErrCode = LockEmpire (iEmpireKey, &nmEmpireMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Get old scores
     iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, &vOldClassicScore);
@@ -1675,6 +1707,11 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
 
     // Lock
     LockEmpireBridier (iEmpireKey, &nmBridierMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    bBridierLocked = true;
 
     iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, &vOldBridierIndex);
     if (iErrCode != OK) {
@@ -1694,6 +1731,7 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     
     // Unlock
     UnlockEmpireBridier (nmBridierMutex);
+    bBridierLocked = false;
 
     if (iErrCode != OK) {
         Assert (false);
@@ -1834,6 +1872,11 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     }
 
 Cleanup:
+
+    if (bBridierLocked) {
+        UnlockEmpireBridier (nmBridierMutex);
+        bBridierLocked = false;
+    }
 
     UnlockEmpire (nmEmpireMutex);
 

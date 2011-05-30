@@ -189,10 +189,17 @@ bool NamedMutexEquals::Equals(const char *pszLeft, const char *pszRight, const v
 
 Mutex *Mutex::FindNamedMutex(const char* pszLockName)
 {
-    static Mutex *NamedMutexLock = new Mutex();
+    static Mutex *NamedMutexLock = NULL;
     static HashTable<const char *, Mutex *, NamedMutexHashValue, NamedMutexEquals> *phtNamedMutexHashTable = NULL;
 
     Mutex *mutex;
+
+    if (!NamedMutexLock)
+    {
+        NamedMutexLock = new Mutex();
+        NamedMutexLock->Initialize();
+    }
+
     NamedMutexLock->Wait();
 
     if (phtNamedMutexHashTable == NULL)
@@ -205,6 +212,7 @@ Mutex *Mutex::FindNamedMutex(const char* pszLockName)
     {
         // not found
         mutex = new Mutex();
+        mutex->Initialize();
         phtNamedMutexHashTable->Insert(String::StrDup(pszLockName), mutex);
     }
 

@@ -2641,7 +2641,8 @@ namespace GameEmpireFleets {
         MaxStrength,
         CurrentPlanet,
         Action,
-        BuildShips
+        BuildShips,
+        Flags,
     };
     
     static const VariantType Types[] = {
@@ -2649,6 +2650,7 @@ namespace GameEmpireFleets {
         V_INT,
         V_FLOAT,
         V_FLOAT,
+        V_INT,
         V_INT,
         V_INT,
         V_INT,
@@ -2663,7 +2665,8 @@ namespace GameEmpireFleets {
         0,
         0,
         0,
-        0
+        0,
+        0,
     };
 
     static unsigned int IndexColumns[] = {
@@ -2674,7 +2677,7 @@ namespace GameEmpireFleets {
         0,
     };
 
-    static const unsigned int NumColumns = BuildShips + 1;
+    static const unsigned int NumColumns = Flags + 1;
 
     static const TemplateDescription Template = {
         "GameEmpireFleets",

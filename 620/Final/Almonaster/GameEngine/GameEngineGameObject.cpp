@@ -23,10 +23,6 @@ GameObject::~GameObject() {
     }
 }
 
-int GameObject::Initialize() {
-    return m_rwGameLock.Initialize();
-}
-
 int GameObject::SetName (const char* pszName) {
 
     m_pszName = String::StrDup (pszName);
@@ -37,24 +33,4 @@ int GameObject::SetName (const char* pszName) {
 const char* GameObject::GetName() {
 
     return m_pszName;
-}
-
-void GameObject::WaitReader() {
-
-    m_rwGameLock.WaitReader();
-}
-
-void GameObject::SignalReader() {
-
-    m_rwGameLock.SignalReader();
-}
-
-void GameObject::WaitWriter() {
-    
-    m_rwGameLock.WaitWriter();
-}
-
-void GameObject::SignalWriter() {
-    
-    m_rwGameLock.SignalWriter();
 }

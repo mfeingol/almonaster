@@ -29,32 +29,50 @@
 //////////////////////////////////////////////////////////////////////
 
 Event::Event() {
-
 #ifdef __LINUX__
-    pthread_cond_init(&m_hEvent, NULL);
-    pthread_mutex_init(&m_Lock, NULL);
-
+    m_bInit = false;
 #else if defined __WIN32__
-    m_hEvent = ::CreateEvent (NULL, FALSE, FALSE, NULL);    // Auto-reset event, initially non-signalled
+    m_hEvent = NULL;
 #endif
 }
 
 Event::~Event() {
 
 #ifdef __LINUX__
-    pthread_cond_destroy(&m_hEvent);
+    if (m_bInit)
+        pthread_cond_destroy(&m_hEvent);
 #else if defined __WIN32__
-
     if (m_hEvent != NULL) {
         ::CloseHandle (m_hEvent);
     }
 #endif
 }
 
+int Event::Initialize() {
+
+    int iErrCode = OK;
+
+#ifdef __LINUX__
+    pthread_cond_init(&m_hEvent, NULL);
+    pthread_mutex_init(&m_Lock, NULL);
+    m_bInit = true;
+
+#else if defined __WIN32__
+    // Auto-reset event, initially non-signalled
+    m_hEvent = ::CreateEvent (NULL, FALSE, FALSE, NULL);
+    if (m_hEvent == NULL) {
+        iErrCode = ERROR_OUT_OF_MEMORY;
+    }
+#endif
+
+    return iErrCode;
+}
+
+
 int Event::Signal() {
 
 #ifdef __LINUX__
-
+    Assert(m_bInit);
     pthread_mutex_lock(&m_Lock);
     // is signal good enough? or should it be broadcast?
     pthread_cond_signal(&m_hEvent);
@@ -62,10 +80,7 @@ int Event::Signal() {
     return OK;
 
 #else if defined __WIN32__
-
-    if (m_hEvent == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
+    Assert (m_hEvent != NULL);
     return ::SetEvent (m_hEvent) ? OK : ERROR_FAILURE;
 #endif
 }
@@ -73,6 +88,7 @@ int Event::Signal() {
 int Event::Wait() {
 
 #ifdef __LINUX__
+    Assert (m_bInit);
 
     pthread_mutex_lock(&m_Lock);
     pthread_cond_wait(&m_hEvent, &m_Lock);
@@ -80,15 +96,17 @@ int Event::Wait() {
     return OK;
 
 #else if defined __WIN32__
-
+    Assert (m_hEvent != NULL);
     return Wait (WAIT_INFINITE);
-    
 #endif
 }
 
 int Event::Wait (MilliSeconds iWait) {
 
+
 #ifdef __LINUX__
+
+    Assert (m_bInit);
 
     int retval;
     struct timespec ts;
@@ -106,9 +124,7 @@ int Event::Wait (MilliSeconds iWait) {
 
 #else if defined __WIN32__
 
-    if (m_hEvent == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
+    Assert (m_hEvent != NULL);
 
     DWORD dwRetVal = ::WaitForSingleObject (m_hEvent, (DWORD) iWait);
     if (dwRetVal == WAIT_TIMEOUT) {

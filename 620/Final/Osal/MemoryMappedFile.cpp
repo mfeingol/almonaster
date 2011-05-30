@@ -128,8 +128,11 @@ int MemoryMappedFile::OpenMappedFile (size_t stSize) {
             return ERROR_FAILURE;
     }
 
-    m_pBaseAddress = mmap(0, stSize, m_bReadOnly ? PROT_READ : PROT_READ | PROT_WRITE, 
-                          MAP_SHARED, m_hFile, 0);
+    m_pBaseAddress = mmap(
+        0, stSize, 
+        (m_iFlags & MEMMAP_READONLY) ? PROT_READ : PROT_READ | PROT_WRITE, MAP_SHARED, 
+        m_hFile, 0
+        );
 
     // Hmm, not very 64-bit friendly...
     if ((int) m_pBaseAddress == -1)
@@ -260,7 +263,7 @@ int MemoryMappedFile::OpenExisting (const char* pszFileName, unsigned int iFlags
     if (iErrCode != OK)
         return iErrCode;
 
-	return OpenMappedFile (m_stSize, iFlags);
+	return OpenMappedFile (m_stSize);
 
 #else if defined __WIN32__
 

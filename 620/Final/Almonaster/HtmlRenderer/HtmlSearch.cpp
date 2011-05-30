@@ -17,6 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "HtmlRenderer.h"
+#include "Database.h"
 
 const SearchField g_AdvancedSearchFields[] = {
 
@@ -76,7 +77,7 @@ void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
     if (!fAdvanced) {
         
         OutputText (
-            "<input type=\"hidden\" name=\"MaxNumHits\" value=\"1\">"\
+            "<input type=\"hidden\" name=\"MaxNumHits\" value=\"20\">"\
             "<input type=\"hidden\" name=\"Skip\" value=\"0\">"
             );
 
@@ -171,7 +172,10 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
         m_pHttpResponse->WriteText (SEARCH_SUBSTRING);
         OutputText ("\">Substring search</option><option value=\"");
         m_pHttpResponse->WriteText (SEARCH_BEGINS_WITH);
-        OutputText ("\">Begins with search</option></select>");
+        OutputText ("\">Begins with search</option><option value=\"");
+        m_pHttpResponse->WriteText (SEARCH_ENDS_WITH);
+        OutputText ("\">Ends with search</option>"\
+            "</select>");
         
         break;
         
@@ -327,7 +331,7 @@ int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol,
 
         pszFormName [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInputCheckBox;
         pszColName1 [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInput1;
-        pszColName2 [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInput1;
+        pszColName2 [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInput2;
 
         // Select on type
         switch (g_AdvancedSearchFields[i].sftType) {
@@ -353,7 +357,7 @@ int HtmlRenderer::HandleSearchSubmission (unsigned int* piSearchCol,
         case SEARCHFIELD_STRING:
 
             pvSearchColData1 [iNumSearchColumns] = pHttpForm1->GetValue();
-            piFlags [iNumSearchColumns] = pHttpForm2->GetIntValue();
+            pvSearchColData2 [iNumSearchColumns] = piFlags [iNumSearchColumns] = pHttpForm2->GetIntValue();
             break;
 
         case SEARCHFIELD_PRIVILEGE:

@@ -683,6 +683,13 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         if (iPause != 0) {
 
+                            if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock) != OK || 
+                                g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
+
+                                AddMessage ("That game no longer exists");
+                                return Redirect (ACTIVE_GAME_LIST);
+                            }
+
                             GameCheck (g_pGameEngine->RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                             if (m_iGameState & ADMIN_PAUSED) {
@@ -698,6 +705,13 @@ if (m_bOwnPost && !m_bRedirection) {
                             }
 
                             m_iGameOptions |= REQUEST_PAUSE;
+
+                            if (g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber) != OK || 
+                                g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
+
+                                AddMessage ("That game no longer exists");
+                                return Redirect (ACTIVE_GAME_LIST);
+                            }
 
                         } else {
 
@@ -1378,22 +1392,21 @@ case 0:
     }
     %>value="<% Write (NO_DEFAULT_BUILDER_PLANET); %>">No default builder planet</option><%
 
-    unsigned int* piBuilderKey = NULL, iNumBuilderKey;
-
+    unsigned int* piBuilderKey = NULL, iNumBuilderKeys;
     GameCheck (g_pGameEngine->GetBuilderPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         &piBuilderKey,
-        &iNumBuilderKey
+        &iNumBuilderKeys
         ));
 
-    if (iValue > 0) {
+    if (iNumBuilderKeys > 0) {
 
         String strFilter;
         char pszPlanetName [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH];
 
-        for (i = 0; (unsigned int) i < iNumBuilderKey; i ++) {
+        for (i = 0; (unsigned int) i < iNumBuilderKeys; i ++) {
 
             iErrCode = g_pGameEngine->GetPlanetNameWithCoordinates (
                 m_iGameClass,

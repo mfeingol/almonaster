@@ -2930,8 +2930,10 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
         }
         
         Assert (iCounter == iNumJumps);
-        
-        Variant vPlanetName;
+
+        Variant vTemp;
+        String strPlanetName;
+
         for (i = 0; i < iNumJumps; i ++) {
             
             // Get neighbouring planet's key
@@ -2957,7 +2959,7 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                     m_iGameNumber, 
                     iEmpireKey, 
                     iNeighbourKey, 
-                    &vPlanetName
+                    &vTemp
                     );
 
             } else {
@@ -2966,8 +2968,12 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
                     m_iGameClass, 
                     m_iGameNumber, 
                     iNeighbourKey, 
-                    &vPlanetName
+                    &vTemp
                     );
+            }
+
+            if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
+                return ERROR_OUT_OF_MEMORY;
             }
             
             if (iErrCode != OK) {
@@ -2978,7 +2984,7 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
             OutputText ("<strong>");
             m_pHttpResponse->WriteText (CARDINAL_STRING[piCardinalPoint[i]]);
             OutputText ("</strong>: ");
-            m_pHttpResponse->WriteText (vPlanetName.GetCharPtr());
+            m_pHttpResponse->WriteText (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
             OutputText (" (");
             m_pHttpResponse->WriteText (piJumpX[i]);
             OutputText (",");

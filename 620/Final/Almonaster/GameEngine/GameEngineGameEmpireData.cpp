@@ -72,7 +72,11 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 #endif
 */
     NamedMutex nmMutex;
-    LockEmpire (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Get empire's game options
     iErrCode = m_pGameData->ReadData (strEmpireData, GameEmpireData::Options, &vOptions);

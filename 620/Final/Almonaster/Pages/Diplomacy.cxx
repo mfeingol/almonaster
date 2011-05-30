@@ -483,14 +483,14 @@ Variant vIPAddress;
 
 Time::GetTime (&tCurrentTime);
 
-Variant* pvKnownEmpireKey = NULL;
+Variant** ppvEmpireData = NULL;
 unsigned int* piProxyEmpireKey = NULL;
 
 bool bSubjective = false;
 
 int piDipKey [NUM_DIP_LEVELS], iSelected = 0, iNumOptions = 0, iSelectedIndex, iWeOffer, 
     iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey, iActiveEmpires,
-    iRuins, iSec, iMin, iHour, iDay, iMonth, iYear;
+    iRuins, iSec, iMin, iHour, iDay, iMonth, iYear, * piStatus = NULL, * piIndex = NULL, iIndex;
 
 UTCTime tCreated;
 char pszCreated [OS::MaxDateLength];
@@ -826,7 +826,8 @@ if (bGameStarted) {
     %></tr></table><%
 }
 
-%><p><table width="90%"><%
+// Self
+%><p><table width="95%"><%
 %><tr><th></th><%
 %><th bgcolor="<% Write (pszTableColor); %>">Alien</th><%
 %><th bgcolor="<% Write (pszTableColor); %>">Econ</th><%
@@ -903,13 +904,21 @@ if (iGameOptions & UPDATED) {
     %><strong><font color="#<% Write (pszGood); %>">Yes</font></strong><%
 } else {
     %><strong><font color="#<% Write (pszBad); %>">No</font></strong><%
-} %></td></tr></table><%
+} %></td></tr><%
 
-iErrCode = pDatabase->ReadColumn (
-    strGameEmpireDiplomacy, 
-    GameEmpireDiplomacy::EmpireKey, 
+// Other empires
+const unsigned int piColumns[] = {
+    GameEmpireDiplomacy::EmpireKey,
+    GameEmpireDiplomacy::DipOffer,
+    GameEmpireDiplomacy::CurrentStatus,
+};
+
+iErrCode = pDatabase->ReadColumns (
+    strGameEmpireDiplomacy,
+    countof (piColumns),
+    piColumns,
     &piProxyEmpireKey,
-    &pvKnownEmpireKey,
+    &ppvEmpireData,
     (unsigned int*) &iNumKnownEmpires
     );
 
@@ -920,19 +929,33 @@ if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
 
 %><input type="hidden" name="NumKnownEmpires" value="<% Write (iNumKnownEmpires); %>"><%
 
+// Sort by diplomatic status
+piStatus = (int*) StackAlloc (iNumKnownEmpires * 2 * sizeof (int));
+piIndex = piStatus + iNumKnownEmpires;
+
 for (i = 0; i < iNumKnownEmpires; i ++) {
+    piStatus[i] = ppvEmpireData[i][2].GetInteger();
+    piIndex[i] = i;
+}
+Algorithm::QSortTwoDescending<int, int> (piStatus, piIndex, iNumKnownEmpires);
+
+for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
+
+    i = piIndex [iIndex];
 
     // Get diplomacy data
-    iKnownEmpireKey = pvKnownEmpireKey[i].GetInteger();
+    iKnownEmpireKey = ppvEmpireData[i][0].GetInteger();
+    iWeOffer = ppvEmpireData[i][1].GetInteger();
+    iCurrentStatus = ppvEmpireData[i][2].GetInteger();
 
     iErrCode = g_pGameEngine->GetDiplomaticStatus (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         iKnownEmpireKey,
-        &iWeOffer,
+        NULL,
         &iTheyOffer,
-        &iCurrentStatus
+        NULL
         );
 
     if (iErrCode != OK) {
@@ -961,11 +984,7 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
     GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
 
     // Get empire data
-    iErrCode = pDatabase->GetTableForReading (
-        pszEmpireData, 
-        &pGameEmpireTable
-        );
-
+    iErrCode = pDatabase->GetTableForReading (pszEmpireData, &pGameEmpireTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -999,11 +1018,11 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
             GameEmpireDiplomacy::SubjectiveEcon,
             &vTemp
             );
+
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
-
         iEcon = vTemp.GetInteger();
 
         iErrCode = pDatabase->ReadData (
@@ -1016,7 +1035,6 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
             Assert (false);
             goto Cleanup;
         }
-
         iMil = vTemp.GetInteger();
 
     } else {
@@ -1039,10 +1057,7 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
     }
 
     // Do this every time to improve concurrency with logins, etc.
-    iErrCode = pDatabase->GetTableForReading (
-        SYSTEM_EMPIRE_DATA, 
-        &pSystemEmpireDataTable
-        );
+    iErrCode = pDatabase->GetTableForReading (SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1123,9 +1138,15 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
     }
     sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
-    %><p><table width="90%"><%
-    %><tr><td>&nbsp;</td></tr><%
-    %><tr><th><%
+    %><tr><td colspan="11">&nbsp;</td></tr><%
+
+    if (iIndex == 0 || piStatus[iIndex] != piStatus[iIndex - 1]) {
+        %><tr><td colspan="11"><% WriteSeparatorString (m_iSeparatorKey); %></td></tr><%
+        %><tr><td colspan="11">&nbsp;</td></tr><%
+    }
+
+    %><tr><%
+    %><th><%
     if (iGameOptions & RESIGNED) {
         %><em>Resigned</em><%
     }
@@ -1343,7 +1364,7 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
         %><strong><font color="#<% Write (pszGood); %>">Yes</font></strong><%
     } else {
         %><strong><font color="#<% Write (pszBad); %>">No</font></strong><%
-    } %></td></tr></table><%
+    } %></td></tr><%
 }   // End known empire loop
 
 iErrCode = g_pGameEngine->DoesGameClassAllowPrivateMessages (m_iGameClass, &bPrivateMessages);
@@ -1578,10 +1599,12 @@ if (iActiveEmpires > 1) {
             Variant vSendEmpireName;
             for (i = 0; i < iNumKnownEmpires; i ++) {
 
+                iKnownEmpireKey = ppvEmpireData[i][0].GetInteger();
+
                 iErrCode = g_pGameEngine->GetEmpireIgnoreMessages (
                     m_iGameClass,
                     m_iGameNumber, 
-                    pvKnownEmpireKey[i].GetInteger(),
+                    iKnownEmpireKey,
                     m_iEmpireKey,
                     &bIgnore
                     );
@@ -1592,7 +1615,7 @@ if (iActiveEmpires > 1) {
 
                 if (!bIgnore) {
 
-                    iErrCode = g_pGameEngine->GetEmpireName (pvKnownEmpireKey[i].GetInteger(), &vSendEmpireName);
+                    iErrCode = g_pGameEngine->GetEmpireName (iKnownEmpireKey, &vSendEmpireName);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -1602,7 +1625,7 @@ if (iActiveEmpires > 1) {
                     if (pbSelected[NUM_MESSAGE_TARGETS + i] || (iNumKnownEmpires == 1 && !bBroadcast && bNoDipTargets)) {
                         %> selected<%
                     }
-                    %> value="<% Write (pvKnownEmpireKey[i].GetInteger()); %>"><% 
+                    %> value="<% Write (iKnownEmpireKey); %>"><% 
                     Write (vSendEmpireName.GetCharPtr()); %></option><%
                 }
             }
@@ -1621,8 +1644,8 @@ if (piProxyEmpireKey != NULL) {
     g_pGameEngine->FreeKeys (piProxyEmpireKey);
 }
 
-if (pvKnownEmpireKey != NULL) {
-    g_pGameEngine->FreeData (pvKnownEmpireKey);
+if (ppvEmpireData != NULL) {
+    g_pGameEngine->FreeData (ppvEmpireData);
 }
 
 if (pGameEmpireTable != NULL) {

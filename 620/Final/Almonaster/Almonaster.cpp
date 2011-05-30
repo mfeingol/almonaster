@@ -145,6 +145,7 @@ char* g_pszResourceDir = NULL;
 int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl) {
 
     int iMaxNumSpeakers, iMaxNumMessages, iMaxMessageLength, iErrCode;
+    bool bPostSystemMessages;
 
     iErrCode = HtmlRenderer::Initialize();
     if (iErrCode != OK) {
@@ -192,7 +193,7 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     g_pReport->WriteReport ("Reading parameters from configuration");
 
     // Read setup parameters
-    Seconds iTimeOut;
+    Seconds sTimeOut;
     char* pszTemp = NULL;
 
     SystemConfiguration scConfig;
@@ -264,7 +265,14 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         g_pReport->WriteReport ("Error: Could not read the ChatroomTimeOut value from the configuration file");
         return ERROR_FAILURE;
     }
-    iTimeOut = atoi (pszTemp);
+    sTimeOut = atoi (pszTemp);
+
+    iErrCode = g_pConfig->GetParameter ("ChatroomPostSystemMessages", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the ChatroomPostSystemMessages value from the configuration file");
+        return ERROR_FAILURE;
+    }
+    bPostSystemMessages = atoi (pszTemp) != 0;
 
     iErrCode = g_pConfig->GetParameter ("AutoBackup", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
@@ -391,7 +399,16 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     }
 
     // Create chatroom
-    g_pChatroom = new Chatroom (iMaxNumMessages, iMaxNumSpeakers, iTimeOut, iMaxMessageLength);
+    ChatroomConfig ccConfig;
+
+    ccConfig.cchMaxSpeakerNameLen = MAX_EMPIRE_NAME_LENGTH;
+    ccConfig.sTimeOut = sTimeOut;
+    ccConfig.iMaxNumMessages = iMaxNumSpeakers;
+    ccConfig.iMaxNumSpeakers = iMaxNumMessages;
+    ccConfig.iMaxMessageLength = iMaxMessageLength;
+    ccConfig.bPostSystemMessages = bPostSystemMessages;
+
+    g_pChatroom = new Chatroom (ccConfig);
     if (g_pChatroom == NULL || g_pChatroom->Initialize() != OK) {
         goto OutOfMemory;
     }

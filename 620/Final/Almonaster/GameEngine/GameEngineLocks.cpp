@@ -18,12 +18,12 @@
 
 #include "GameEngine.h"
 
-void GameEngine::LockGameClass (int iGameClass, NamedMutex* pnmMutex) {
+int GameEngine::LockGameClass (int iGameClass, NamedMutex* pnmMutex) {
     
     char pszLock [256];
     sprintf (pszLock, "GameClass%i", iGameClass);
 
-    Mutex::Wait (pszLock, pnmMutex);
+    return Mutex::Wait (pszLock, pnmMutex);
 }
 
 void GameEngine::UnlockGameClass (const NamedMutex& nmMutex) {
@@ -46,37 +46,36 @@ void GameEngine::UnlockSuperClasses() {
     m_mSuperClasses.Signal();
 }
 
-void GameEngine::LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex) {
+int GameEngine::LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex) {
 
     char pszLock [256];
     sprintf (pszLock, "Game%i", iEmpireKey);
 
-    Mutex::Wait (pszLock, pnmMutex);
+    return Mutex::Wait (pszLock, pnmMutex);
 }
 
 void GameEngine::UnlockEmpireSystemMessages (const NamedMutex& nmMutex) {
     Mutex::Signal (nmMutex);
 }
 
-void GameEngine::LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) {
+int GameEngine::LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) {
 
     char pszLock [256];
     sprintf (pszLock, "Bridier%i", iEmpireKey);
 
-    Mutex::Wait (pszLock, pnmMutex);
+    return Mutex::Wait (pszLock, pnmMutex);
 }
 
 void GameEngine::UnlockEmpireBridier (const NamedMutex& nmMutex) {
     Mutex::Signal (nmMutex);
 }
 
-void GameEngine::LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, 
-                                               NamedMutex* pnmMutex) {
+int GameEngine::LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) {
 
     char pszLock [256];
     sprintf (pszLock, "GameMessages%i.%i.%i", iGameClass, iGameNumber, iEmpireKey);
 
-    Mutex::Wait (pszLock, pnmMutex);
+    return Mutex::Wait (pszLock, pnmMutex);
 }
 
 void GameEngine::UnlockEmpireGameMessages (const NamedMutex& nmMutex) {
@@ -99,24 +98,24 @@ void GameEngine::UnlockAlienIcons() {
     m_mAlienIcons.Signal();
 }
 
-void GameEngine::LockTournament (unsigned int iTournamentKey, NamedMutex* pnmMutex) {
+int GameEngine::LockTournament (unsigned int iTournamentKey, NamedMutex* pnmMutex) {
 
     char pszLock [256];
     sprintf (pszLock, "Tournament%i", iTournamentKey);
 
-    Mutex::Wait (pszLock, pnmMutex);
+    return Mutex::Wait (pszLock, pnmMutex);
 }
 
 void GameEngine::UnlockTournament (const NamedMutex& nmMutex) {
     Mutex::Signal (nmMutex);
 }
 
-void GameEngine::LockEmpire (int iEmpireKey, NamedMutex* pnmMutex) {
+int GameEngine::LockEmpire (int iEmpireKey, NamedMutex* pnmMutex) {
 
     char pszLock [256];
     sprintf (pszLock, "EmpireLock%i", iEmpireKey);
 
-    Mutex::Wait (pszLock, pnmMutex);
+    return Mutex::Wait (pszLock, pnmMutex);
 }
 
 void GameEngine::UnlockEmpire (const NamedMutex& nmMutex) {
@@ -126,32 +125,34 @@ void GameEngine::UnlockEmpire (const NamedMutex& nmMutex) {
 
 int GameEngine::WaitGameReader (int iGameClass, int iGameNumber, int iEmpireKey, GameEmpireLock** ppgeLock) {
 
-    // Lock the game
-    GameObject* pGameObject = GetGameObject (iGameClass, iGameNumber);
-    if (pGameObject == NULL) {
-        return ERROR_GAME_DOES_NOT_EXIST;
-    }
-    pGameObject->WaitReader();
-    
+    // Lock the empire
+    GameEmpireLock* pgeLock = NULL;
     if (iEmpireKey != NO_KEY) {
 
-        Assert (ppgeLock != NULL);
-
-        // Lock the empire
         GameEmpireId geId;
         geId.iEmpireKey = iEmpireKey;
 
-        GameEmpireLock* pgeLock = m_lockMgr.GetGameEmpireLock (geId);
+        pgeLock = m_lockMgr.GetGameEmpireLock (geId);
         if (pgeLock == NULL) {
-            pGameObject->SignalReader();
             return ERROR_OUT_OF_MEMORY;
         }
         pgeLock->Wait();
 
-        Assert (*ppgeLock == NULL);
+        Assert (ppgeLock != NULL && *ppgeLock == NULL);
         *ppgeLock = pgeLock;
     }
 
+    // Lock the game
+    GameObject* pGameObject = GetGameObject (iGameClass, iGameNumber);
+    if (pGameObject == NULL) {
+
+        if (pgeLock != NULL) {
+            pgeLock->Signal();
+            *ppgeLock = NULL;
+        }
+        return ERROR_GAME_DOES_NOT_EXIST;
+    }
+    pGameObject->WaitReader();
     pGameObject->Release();
 
     return OK;
@@ -169,10 +170,10 @@ int GameEngine::SignalGameReader (int iGameClass, int iGameNumber, int iEmpireKe
     pGameObject->SignalReader();
     pGameObject->Release();
 
+    // Unlock the empire
     if (iEmpireKey != NO_KEY) {
 
         Assert (pgeLock != NULL);
-
         pgeLock->Signal();
         m_lockMgr.ReleaseGameEmpireLock (pgeLock);
     }
@@ -341,18 +342,35 @@ GameEmpireLockManager::GameEmpireLockManager() : m_htLocks (NULL, NULL) {
 }
 
 GameEmpireLockManager::~GameEmpireLockManager() {
+
+    LMHashTableIterator itor;
+    GameEmpireLock* pgeLock;
+
+    while (m_htLocks.GetNextIterator (&itor)) {
+        pgeLock = itor.GetData();
+        delete pgeLock;
+    }
+
+    m_htLocks.Clear();
 }
 
 int GameEmpireLockManager::Initialize (const LockManagerConfig& lmConf) {
     
+    int iErrCode;
+
     m_lmConf = lmConf;
 
-    int iErrCode = m_rwHTLock.Initialize();
+    iErrCode = m_rwHTLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     iErrCode = m_mOCLock.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    iErrCode = m_eShutdown.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }

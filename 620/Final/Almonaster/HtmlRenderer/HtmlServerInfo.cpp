@@ -367,7 +367,7 @@ void HtmlRenderer::WriteServerRules() {
         
         if (iNumActiveGames == 0) {
             OutputText ("<li>There are no active games on the server</li>");
-        } else {            
+        } else {
             OutputText ("<li>There ");
             if (iNumActiveGames == 1) { 
                 OutputText ("is <strong>1</strong> active game");
@@ -381,6 +381,15 @@ void HtmlRenderer::WriteServerRules() {
             OutputText ("</strong> open, <strong>");
             m_pHttpResponse->WriteText (iNumClosedGames); 
             OutputText ("</strong> closed)</li>");
+
+            unsigned int iNumGamingEmpires;
+            iErrCode = g_pGameEngine->GetNumEmpiresInGames (&iNumGamingEmpires);
+            if (iErrCode == OK && iNumGamingEmpires > 0) {
+
+                OutputText ("<li>There are <strong>");
+                m_pHttpResponse->WriteText (iNumGamingEmpires);
+                OutputText ("</strong> active empires on the server</li>");
+            }
         }
     }
     

@@ -42,12 +42,13 @@ static Mutex AtomicOpsLock;
 
 class AutoMutexInit
 {
+public:
     AutoMutexInit()
     {
         AtomicOpsLock.Initialize();
     }
 };
-AutoMutexInit autoInit;
+static AutoMutexInit autoInit;
 #endif
 
 //

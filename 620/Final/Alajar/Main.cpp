@@ -75,6 +75,12 @@ int main() {
         printf ("Could not set the break handler for the process");
         goto Cleanup;
     }
+    
+    iErrCode = evShutdown.Initialize();
+    if (iErrCode != OK) {
+        printf ("Could not initialize an event object");
+        goto Cleanup;
+    }
 
     // Create new web server object
     iErrCode = AlajarCreateInstance (CLSID_HttpServer, IID_IHttpServer, (void**) &g_pAlajar);

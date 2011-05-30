@@ -219,8 +219,12 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
 
     // Lock message table
     NamedMutex nmMutex;
-    LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
-    
+    iErrCode = LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
     // Get current and max number of messages
     iErrCode = m_pGameData->GetNumRows (strGameEmpireMessages, (unsigned int*) &iNumMessages);
     if (iErrCode != OK) {
@@ -493,34 +497,47 @@ int GameEngine::RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpir
 int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState,
                                       bool bBroadcast) {
 
-    int iErrCode;
-    unsigned int iNumRows;
+    int iErrCode, iGameState = 0, iOptions;
+    unsigned int iNumEmpires;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
-    Variant vOptions, vState, vOldNum;
+    Variant vTemp, vOldNum;
 
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
+#ifdef _DEBUG
+    // Only call this function holding an exclusive lock
+    GameObject* pGameObj = GetGameObject (iGameClass, iGameNumber);
+    Assert (pGameObj != NULL && pGameObj->HeldExclusive (NULL));
+    SafeRelease (pGameObj);
+#endif
+
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+    iGameState = vTemp.GetInteger();
+
+    if (!(iGameState & STARTED)) {
+        goto Cleanup;
+    }
+
+    iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    *piGameState = vState.GetInteger();
-
-    if (!(vState.GetInteger() & STARTED)) {
-        goto Cleanup;
-    }
-
-    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vOptions);
+    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    iOptions = vTemp.GetInteger();
 
-    if (vOptions.GetInteger() & REQUEST_PAUSE) {
+    if (iOptions & REQUEST_PAUSE) {
         goto Cleanup;
     }
 
@@ -535,16 +552,10 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
         Assert (false);
         goto Cleanup;
     }
-
-    iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumRows);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
     
-    if ((unsigned int) vOldNum.GetInteger() + 1 == iNumRows) {
+    if ((unsigned int) vOldNum.GetInteger() + 1 == iNumEmpires) {
 
-        if (!(vState.GetInteger() & ADMIN_PAUSED)) {
+        if (!(iGameState & ADMIN_PAUSED)) {
 
             iErrCode = PauseGame (iGameClass, iGameNumber, false, bBroadcast);
             Assert (iErrCode == OK);
@@ -556,6 +567,8 @@ int GameEngine::RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpi
     }
 
 Cleanup:
+
+    *piGameState = iGameState;
 
     return iErrCode;
 }
@@ -578,6 +591,13 @@ int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey,
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
+
+#ifdef _DEBUG
+    // Only call this function holding an exclusive lock
+    GameObject* pGameObj = GetGameObject (iGameClass, iGameNumber);
+    Assert (pGameObj != NULL && pGameObj->HeldExclusive (NULL));
+    SafeRelease (pGameObj);
+#endif
 
     iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
@@ -609,7 +629,6 @@ int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey,
 
     iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingPause, -1);
     if (iErrCode != OK) {
-        // TODO - need compensation
         Assert (false);
         goto Cleanup;
     }
@@ -692,33 +711,34 @@ int GameEngine::GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, i
 int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState) {
 
     int iErrCode;
-    unsigned int iNumRows;
+    unsigned int iNumEmpires;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
-    Variant vOptions, vState, vOldNum;
+    Variant vTemp, vOldNum;
+    int iOptions, iState = 0;
 
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    iState = vTemp.GetInteger();
 
-    *piGameState = vState.GetInteger();
-
-    if (!(vState.GetInteger() & STARTED)) {
+    if (!(iState & STARTED)) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vOptions);
+    iErrCode = m_pGameData->ReadData (strGameEmpireData, GameEmpireData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
+    iOptions = vTemp.GetInteger();
 
-    if (vOptions.GetInteger() & REQUEST_DRAW) {
+    if (iOptions & REQUEST_DRAW) {
         goto Cleanup;
     }
 
@@ -734,17 +754,19 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumRows);
+    iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
-    if ((unsigned int) vOldNum.GetInteger() + 1 >= iNumRows) {
+    if ((unsigned int) vOldNum.GetInteger() + 1 >= iNumEmpires) {
         *piGameState |= GAME_ENDED;
     }
 
 Cleanup:
+
+    *piGameState = iState;
 
     return iErrCode;
 }
@@ -786,11 +808,15 @@ int GameEngine::RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) 
     }
 
     iErrCode = m_pGameData->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_DRAW);
-    Assert (iErrCode == OK);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
 
-    if (iErrCode == OK) {
-        iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingDraw, -1);
-        Assert (iErrCode == OK);
+    iErrCode = m_pGameData->Increment (strGameData, GameData::NumRequestingDraw, -1);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
     }
 
 Cleanup:

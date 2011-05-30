@@ -29,6 +29,7 @@ class OSAL_EXPORT Event {
 protected:
 
 #ifdef __LINUX__
+    bool m_bInit;
     pthread_mutex_t m_Lock;
 	pthread_cond_t m_hEvent;
 #else if defined __WIN32__
@@ -36,8 +37,11 @@ protected:
 #endif
 
 public:
+
     Event();
     ~Event();
+    
+    int Initialize();
 
     int Signal();
     int Wait();

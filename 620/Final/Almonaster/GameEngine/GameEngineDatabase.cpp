@@ -96,7 +96,7 @@ int GameEngine::BackupDatabaseMsg (LongRunningQueryMessage* pMessage) {
 int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
 
     int iErrCode = OK;
-    bool bInternal = iEmpireKey == SYSTEM;
+    bool bInternal = iEmpireKey == SYSTEM, bFlag, * pbUnpause = NULL;
 
     char pszText [128];
 
@@ -116,6 +116,7 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
 
     // When this function returns, we'll be the only thread active
     m_pPageSourceControl->LockWithNoThreads();
+    bool bPageSrcLocked = true;
 
     // Start timer
     Timer tTimer;
@@ -125,26 +126,29 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
     iErrCode = SetSystemProperty (SystemData::AccessDisabledReason, "The server is being backed up");
     if (iErrCode != OK) {
         Assert (false);
-        goto EndPause;
+        goto End;
     }
 
     iErrCode = SetSystemProperty (SystemData::NewEmpiresDisabledReason, "The server is being backed up");
     if (iErrCode != OK) {
         Assert (false);
-        goto EndPause;
+        goto End;
     }
 
     iErrCode = SetSystemOption (ACCESS_ENABLED | NEW_EMPIRES_ENABLED, false);
     if (iErrCode != OK) {
         Assert (false);
-        goto EndPause;
+        goto End;
     }
 
     iErrCode = GetActiveGames (&piGameClass, &piGameNumber, &iNumGames);
     if (iErrCode != OK) {
         Assert (false);
-        goto EndPause;
+        goto End;
     }
+
+    pbUnpause = (bool*) StackAlloc (iNumGames * sizeof (bool));
+    memset (pbUnpause, 0, iNumGames * sizeof (bool));
 
     if (iNumGames > 0) {
 
@@ -156,23 +160,21 @@ int GameEngine::BackupDatabasePrivate (int iEmpireKey) {
             iErrCode2 = WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
             if (iErrCode2 == OK) {
 
-                iErrCode2 = PauseGame (piGameClass[i], piGameNumber[i], true, false);
-                Assert (iErrCode2 == OK);
-            }
+                if (IsGameAdminPaused (piGameClass[i], piGameNumber[i], &bFlag) == OK && 
+                    !bFlag &&
+                    PauseGame (piGameClass[i], piGameNumber[i], true, false) == OK) {
 
-            iErrCode2 = SignalGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
-            Assert (iErrCode2 == OK);
+                    pbUnpause[i] = true;
+                }
+
+                SignalGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL);
+            }
         }
     }
 
-EndPause:
-
     // Let the unwashed masses receive responses
     m_pPageSourceControl->ReleaseLock();
-
-    if (iErrCode != OK) {
-        goto End;
-    }
+    bPageSrcLocked = false;
 
     // Tell the database to back itself up:  when this terminates it will have finished
     iErrCode = m_pGameData->Backup (this, m_scConfig.bCheckDatabase);
@@ -194,7 +196,7 @@ EndPause:
 
         for (i = 0; i < iNumGames; i ++) {
 
-            if (WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL) == OK) {
+            if (pbUnpause[i] && WaitGameReader (piGameClass[i], piGameNumber[i], NO_KEY, NULL) == OK) {
 
                 iErrCode2 = UnpauseGame (piGameClass[i], piGameNumber[i], true, false);
                 Assert (iErrCode2 == OK);
@@ -238,6 +240,10 @@ End:
     // Inform report file
     sprintf (pszText, "The database was backed up in %i second%c", sec, sec == 1 ? '\0' : 's');
     m_pReport->WriteReport (pszText);
+
+    if (bPageSrcLocked) {
+        m_pPageSourceControl->ReleaseLock();
+    }
 
     // We're set
     return iErrCode;
@@ -503,7 +509,11 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
                 break;
             }
 
-            LockEmpire (iEmpireKey, &nmLockEmpire);
+            iErrCode = LockEmpire (iEmpireKey, &nmLockEmpire);
+            if (iErrCode != OK) {
+                Assert (false);
+                continue;
+            }
             
             // Never purge administrators
             iErrCode = m_pGameData->ReadData (

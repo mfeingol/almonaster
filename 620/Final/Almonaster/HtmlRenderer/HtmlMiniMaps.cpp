@@ -127,6 +127,8 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         ppMiniMap[iIndexX][iIndexY].iOwnerKey = vValue.GetInteger();
         ppMiniMap[iIndexX][iIndexY].iPlanetKey = iPlanetKey;
         ppMiniMap[iIndexX][iIndexY].iPlanetProxyKey = piProxyKey[i];
+        ppMiniMap[iIndexX][iIndexY].iX = iX;
+        ppMiniMap[iIndexX][iIndexY].iY = iY;
 
         switch (vValue.GetInteger()) {
             
@@ -245,18 +247,21 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
 
     String strPlanetString;
 
+    char pszCoord [MAX_COORDINATE_LENGTH + 1];
+    g_pGameEngine->GetCoordinates (mmEntry.iX, mmEntry.iY, pszCoord);
+
     switch (mmEntry.iiIcon) {
 
     case ICON_LIVEPLANET:
 
         GetLivePlanetButtonString (iLivePlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, 
-            NULL, "width=\"75%\"", &strPlanetString);
+            pszCoord, "width=\"75%\"", &strPlanetString);
         break;
 
     case ICON_DEADPLANET:
 
         GetLivePlanetButtonString (iDeadPlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, 
-            NULL, "width=\"75%\"", &strPlanetString);
+            pszCoord, "width=\"75%\"", &strPlanetString);
         break;
 
     case ICON_EMPIREPLANET:
@@ -267,7 +272,7 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
             mmEntry.iOwnerKey == iEmpireKey, 
             mmEntry.iPlanetKey, 
             mmEntry.iPlanetProxyKey, 
-            NULL,
+            pszCoord,
             "width=\"75%\"",
             &strPlanetString
             );
@@ -277,7 +282,7 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
     case ICON_INDEPENDENT:
 
         GetIndependentPlanetButtonString (mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, 
-            NULL, "width=\"75%\"", &strPlanetString);
+            pszCoord, "width=\"75%\"", &strPlanetString);
         break;
     }
 

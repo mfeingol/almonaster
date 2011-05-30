@@ -107,7 +107,11 @@ int GameEngine::DeliverSystemMessage (int iEmpireKey, const Variant* pvData) {
 
     // Lock
     NamedMutex nmMutex;
-    LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     if (!m_pGameData->DoesTableExist (strMessages)) {
 
@@ -377,7 +381,11 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
     }
 
     NamedMutex nmMutex;
-    LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     iErrCode = m_pGameData->GetEqualKeys (
         strMessages,
@@ -542,12 +550,17 @@ Cleanup:
 
 int GameEngine::DeleteSystemMessage (int iEmpireKey, int iKey) {
 
+    int iErrCode;
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
     NamedMutex nmMutex;
-    LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireSystemMessages (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
-    int iErrCode = m_pGameData->DeleteRow (pszMessages, (unsigned int) iKey);
+    iErrCode = m_pGameData->DeleteRow (pszMessages, (unsigned int) iKey);
 
     UnlockEmpireSystemMessages (nmMutex);
 
@@ -742,7 +755,11 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
 
     // Lock
     NamedMutex nmMutex;
-    LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     iErrCode = m_pGameData->InsertRow (strGameEmpireMessages, pvData);
     if (iErrCode != OK) {
@@ -911,7 +928,11 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     UTCTime* ptTime;
 
     NamedMutex nmMutex;
-    LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     iErrCode = m_pGameData->GetEqualKeys (
         strMessages,
@@ -1068,12 +1089,17 @@ Cleanup:
 
 int GameEngine::DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, int iKey) {
 
+    int iErrCode;
     GAME_EMPIRE_MESSAGES (pszMessages, iGameClass, iGameNumber, iEmpireKey);
 
     NamedMutex nmMutex;
-    LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    iErrCode = LockEmpireGameMessages (iGameClass, iGameNumber, iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
-    int iErrCode = m_pGameData->DeleteRow (pszMessages, iKey);
+    iErrCode = m_pGameData->DeleteRow (pszMessages, iKey);
 
     UnlockEmpireGameMessages (nmMutex);
 

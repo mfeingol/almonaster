@@ -122,14 +122,19 @@ copy debug\DBConv.pdb ..\alajar
 				OptimizeForProcessor="2"
 				OptimizeForWindowsApplication="TRUE"
 				PreprocessorDefinitions="WIN32,NDEBUG,_CONSOLE"
+				IgnoreStandardIncludePath="FALSE"
+				GeneratePreprocessedFile="0"
+				KeepComments="FALSE"
 				StringPooling="TRUE"
 				MinimalRebuild="TRUE"
+				ExceptionHandling="FALSE"
 				BasicRuntimeChecks="0"
 				SmallerTypeCheck="FALSE"
 				RuntimeLibrary="2"
 				StructMemberAlignment="0"
 				BufferSecurityCheck="TRUE"
 				EnableFunctionLevelLinking="TRUE"
+				TreatWChar_tAsBuiltInType="TRUE"
 				ForceConformanceInForLoopScope="FALSE"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Release/DBConv.pch"
@@ -137,11 +142,14 @@ copy debug\DBConv.pdb ..\alajar
 				ObjectFile=".\Release/"
 				ProgramDataBaseFileName=".\Release/"
 				WarningLevel="4"
-				WarnAsError="FALSE"
+				WarnAsError="TRUE"
 				SuppressStartupBanner="TRUE"
 				DebugInformationFormat="3"
+				CallingConvention="0"
 				CompileAs="2"
-				DisableSpecificWarnings="4189"/>
+				DisableSpecificWarnings="4189"
+				ShowIncludes="FALSE"
+				UndefineAllPreprocessorDefinitions="FALSE"/>
 			<Tool
 				Name="VCCustomBuildTool"/>
 			<Tool
@@ -152,10 +160,15 @@ copy debug\DBConv.pdb ..\alajar
 				ShowProgress="0"
 				OutputFile=".\Release/DBConv.exe"
 				Version=""
-				LinkIncremental="1"
+				LinkIncremental="0"
 				SuppressStartupBanner="TRUE"
 				GenerateDebugInformation="TRUE"
+				GenerateMapFile="FALSE"
+				MapExports="FALSE"
 				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				OptimizeForWindows98="1"
 				TargetMachine="1"/>
 			<Tool
 				Name="VCMIDLTool"

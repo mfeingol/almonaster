@@ -480,7 +480,7 @@ int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
     }
 
     // Browser
-    const char* pszBrowser  = m_pHttpRequest->GetBrowserName();
+    const char* pszBrowser = m_pHttpRequest->GetBrowserName();
     iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
     if (iErrCode != OK) {
         return iErrCode;

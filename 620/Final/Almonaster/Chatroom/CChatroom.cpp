@@ -23,17 +23,10 @@
 
 #include <stdio.h>
 
-Chatroom::Chatroom (unsigned int iMaxNumMessages, 
-                    unsigned int iMaxNumSpeakers, 
-                    unsigned int iMaxMessageLength, 
-                    Seconds iTimeOut
-                    ) : m_hSpeakerTable (NULL, NULL) {
+Chatroom::Chatroom (const ChatroomConfig& ccConf) : 
+    m_hSpeakerTable (NULL, NULL) {
 
-    m_iMaxNumMessages = iMaxNumMessages;
-    m_iMaxNumSpeakers = iMaxNumSpeakers;
-    m_iMaxMessageLength = iMaxMessageLength;
-
-    m_sTimeOut = iTimeOut;
+    m_ccConf = ccConf;
 }
 
 Chatroom::~Chatroom() {
@@ -62,7 +55,7 @@ int Chatroom::Initialize() {
         return iErrCode;
     }
 
-    return m_hSpeakerTable.Initialize (m_iMaxNumSpeakers) ? OK : ERROR_OUT_OF_MEMORY;
+    return m_hSpeakerTable.Initialize (m_ccConf.iMaxNumSpeakers) ? OK : ERROR_OUT_OF_MEMORY;
 }
 
 
@@ -241,12 +234,12 @@ int Chatroom::PostMessageWithTime (const char* pszSpeakerName, const char* pszMe
         return ERROR_OUT_OF_MEMORY;
     }
 
-    if (String::StrLen (pszMessage) > m_iMaxMessageLength) {
+    if (String::StrLen (pszMessage) > m_ccConf.iMaxMessageLength) {
 
         // Truncate message
-        char* pszSubMessage = (char*) StackAlloc (m_iMaxMessageLength * sizeof (char) + sizeof (char));
-        memcpy (pszSubMessage, pszMessage, m_iMaxMessageLength);
-        pszSubMessage [m_iMaxMessageLength] = '\0';
+        char* pszSubMessage = (char*) StackAlloc (m_ccConf.iMaxMessageLength * sizeof (char) + sizeof (char));
+        memcpy (pszSubMessage, pszMessage, m_ccConf.iMaxMessageLength);
+        pszSubMessage [m_ccConf.iMaxMessageLength] = '\0';
 
         pMessage->strMessageText = pszSubMessage;
 
@@ -289,7 +282,7 @@ int Chatroom::PostMessageWithTime (const char* pszSpeakerName, const char* pszMe
 
     pMessage = NULL;
 
-    if (m_mqMessageQueue.GetNumElements() > m_iMaxNumMessages) {
+    if (m_mqMessageQueue.GetNumElements() > m_ccConf.iMaxNumMessages) {
 
         bool bRetVal = m_mqMessageQueue.Pop (&pMessage);
         Assert (bRetVal);
@@ -321,7 +314,7 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
 
     UTCTime tCurrentTime, tTimeOut, tTimeOutTime;
     Time::GetTime (&tCurrentTime);
-    Time::SubtractSeconds (tCurrentTime, m_sTimeOut, &tTimeOut);
+    Time::SubtractSeconds (tCurrentTime, m_ccConf.sTimeOut, &tTimeOut);
 
     m_rwSpeakerLock.WaitWriter();
 
@@ -331,7 +324,10 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
         bInAlready = true;
     }
 
-    char pszTimeOut [64 + MAX_EMPIRE_NAME_LENGTH];
+    char* pszTimeOut = NULL;
+    if (m_ccConf.bPostSystemMessages) {
+        pszTimeOut = (char*) StackAlloc (64 + m_ccConf.cchMaxSpeakerNameLen);
+    }
 
     // Check for speaker timeouts
     while (m_hSpeakerTable.GetNextIterator (&htiSpeaker)) {
@@ -342,19 +338,15 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
             pszName = htiSpeaker.GetData()->strName.GetCharPtr();
             liDelList.PushLast (pszName);
 
-            Time::AddSeconds (htiSpeaker.GetData()->tTime, m_sTimeOut, &tTimeOutTime);
+            Time::AddSeconds (htiSpeaker.GetData()->tTime, m_ccConf.sTimeOut, &tTimeOutTime);
 
-            sprintf (pszTimeOut, "%s timed out of the chatroom", pszName);
+            if (m_ccConf.bPostSystemMessages) {
 
-            iErrCode = PostMessageWithTime (
-                NULL, 
-                pszTimeOut,
-                tTimeOutTime,
-                0
-                );
-
-            if (iErrCode != OK) {
-                goto Cleanup;
+                sprintf (pszTimeOut, "%s timed out of the chatroom", pszName);
+                iErrCode = PostMessageWithTime (NULL, pszTimeOut, tTimeOutTime, 0);
+                if (iErrCode != OK) {
+                    goto Cleanup;
+                }
             }
         }
     }
@@ -362,7 +354,7 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
     if (!bInAlready) {
         
         // Make sure we aren't at the max number of speakers
-        if (m_hSpeakerTable.GetNumElements() >= m_iMaxNumSpeakers) {
+        if (m_hSpeakerTable.GetNumElements() >= m_ccConf.iMaxNumSpeakers) {
             iErrCode = ERROR_TOO_MANY_SPEAKERS;
             goto Cleanup;
         }
@@ -385,14 +377,17 @@ int Chatroom::EnterChatroom (const char* pszSpeakerName) {
             iErrCode = ERROR_OUT_OF_MEMORY;
             goto Cleanup;
         }
-        
-        size_t stLen = strlen (pszSpeakerName);
-        size_t stLen2 = sizeof (" joined the chatroom");
 
-        pszPost = (char*) StackAlloc (stLen + stLen2);
-        
-        memcpy (pszPost, pszSpeakerName, stLen);
-        memcpy (pszPost + stLen, " joined the chatroom", stLen2);
+        if (m_ccConf.bPostSystemMessages) {
+
+            size_t stLen = strlen (pszSpeakerName);
+            size_t stLen2 = sizeof (" joined the chatroom");
+
+            pszPost = (char*) StackAlloc (stLen + stLen2);
+            
+            memcpy (pszPost, pszSpeakerName, stLen);
+            memcpy (pszPost + stLen, " joined the chatroom", stLen2);
+        }
     }
 
 Cleanup:
@@ -424,39 +419,41 @@ int Chatroom::ExitChatroom (const char* pszSpeakerName) {
     int iErrCode = ERROR_NOT_IN_CHATROOM;
 
     m_rwSpeakerLock.WaitWriter();
-
     bool bRetVal = m_hSpeakerTable.DeleteFirst (pszSpeakerName, NULL, &pSpeaker);
-
     m_rwSpeakerLock.SignalWriter();
 
     if (bRetVal) {
 
         delete pSpeaker;
+        iErrCode = OK;
 
-        size_t stLen = strlen (pszSpeakerName);
-        size_t stLen2 = sizeof (" left the chatroom");
+        if (m_ccConf.bPostSystemMessages) {
 
-        char* pszPost = (char*) StackAlloc (stLen + stLen2);
-        
-        memcpy (pszPost, pszSpeakerName, stLen);
-        memcpy (pszPost + stLen, " left the chatroom", stLen2);
+            size_t stLen = strlen (pszSpeakerName);
+            size_t stLen2 = sizeof (" left the chatroom");
 
-        iErrCode = PostMessage (NULL, pszPost, CHATROOM_MESSAGE_SYSTEM);
+            char* pszPost = (char*) StackAlloc (stLen + stLen2);
+            
+            memcpy (pszPost, pszSpeakerName, stLen);
+            memcpy (pszPost + stLen, " left the chatroom", stLen2);
+
+            iErrCode = PostMessage (NULL, pszPost, CHATROOM_MESSAGE_SYSTEM);
+        }
     }
 
     return iErrCode;
 }
 
 unsigned int Chatroom::GetMaxNumMessages() {
-    return m_iMaxNumMessages;
+    return m_ccConf.iMaxNumMessages;
 }
 
 unsigned int Chatroom::GetMaxNumSpeakers() {
-    return m_iMaxNumSpeakers;
+    return m_ccConf.iMaxNumSpeakers;
 }
 
 Seconds Chatroom::GetTimeOut() {
-    return m_sTimeOut;
+    return m_ccConf.sTimeOut;
 }
 
 unsigned int Chatroom::SpeakerHashValue::GetHashValue (const char* pszSpeaker, unsigned int iNumBuckets, 

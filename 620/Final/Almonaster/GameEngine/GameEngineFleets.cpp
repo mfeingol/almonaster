@@ -56,65 +56,104 @@ int GameEngine::GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpire
 // iFleetKey -> Integer key of fleet
 //
 // Output:
-// *piPlanetKey -> Integer key of planet
+// *pvFleetName -> Fleet property
 //
-// Return the location of a given fleet
+// Return a property of a given fleet
 
-int GameEngine::GetFleetLocation (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
-                                  unsigned int iFleetKey, unsigned int* piPlanetKey) {
+int GameEngine::GetFleetProperty (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
+                                  unsigned int iProperty, Variant* pvFleetName) {
 
     int iErrCode;
+    bool bFlag;
+
     IReadTable* pFleets = NULL;
 
     GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
-    
+
     iErrCode = m_pGameData->GetTableForReading (strGameEmpireFleets, &pFleets);
-    if (iErrCode == OK) {
-
-        bool bFlag;
-        iErrCode = pFleets->DoesRowExist (iFleetKey, &bFlag);
-        if (iErrCode != OK) {
-            iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
-        } else {
-            iErrCode = pFleets->ReadData (iFleetKey, GameEmpireFleets::CurrentPlanet, (int*) piPlanetKey);
-        }
-
-        pFleets->Release();
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
     }
+
+    iErrCode = pFleets->DoesRowExist (iFleetKey, &bFlag);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    if (!bFlag) {
+        iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
+        goto Cleanup;
+    }
+
+    iErrCode = pFleets->ReadData (iFleetKey, iProperty, pvFleetName);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+Cleanup:
+
+    SafeRelease (pFleets);
 
     return iErrCode;
 }
 
 
-// Input:
-// iGameClass -> Gameclass
-// iGameNumber -> Gamenumber
-// iEmpireKey -> Integer key of empire
-// iFleetKey -> Integer key of fleet
-//
-// Output:
-// *pstrFleetName -> Name of fleet
-//
-// Return the name of a given fleet
-
-int GameEngine::GetFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
-                              Variant* pvFleetName) {
+int GameEngine::GetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iFlag, 
+                              bool* pbFlag) {
 
     int iErrCode;
-    bool bFlag;
+    Variant vTemp;
 
     GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = m_pGameData->DoesRowExist (strGameEmpireFleets, iFleetKey, &bFlag);
+    iErrCode = m_pGameData->ReadData (strGameEmpireFleets, iFleetKey, GameEmpireFleets::Flags, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    if (!bFlag) {
-        return ERROR_FLEET_DOES_NOT_EXIST;
+    *pbFlag = (vTemp.GetInteger() & iFlag) != 0;
+
+    return iErrCode;
+}
+
+int GameEngine::SetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iFlag, 
+                              bool bFlag) {
+
+    int iErrCode;
+    bool bExists;
+
+    IWriteTable* pFleets = NULL;
+
+    GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
+
+    iErrCode = m_pGameData->GetTableForWriting (strGameEmpireFleets, &pFleets);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
     }
 
-    return m_pGameData->ReadData (strGameEmpireFleets, iFleetKey, GameEmpireFleets::Name, pvFleetName);
+    iErrCode = pFleets->DoesRowExist (iFleetKey, &bExists);
+    if (iErrCode != OK) {
+        goto Cleanup;
+    }
+
+    if (!bExists) {
+        iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
+        goto Cleanup;
+    }
+
+    if (bFlag) {
+        iErrCode = pFleets->WriteOr (iFleetKey, GameEmpireFleets::Flags, iFlag);
+    } else {
+        iErrCode = pFleets->WriteAnd (iFleetKey, GameEmpireFleets::Flags, ~iFlag);
+    }
+
+Cleanup:
+
+    SafeRelease (pFleets);
+
+    return iErrCode;
 }
 
 
@@ -274,6 +313,7 @@ Cleanup:
 int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszFleetName, 
                                 int iPlanetKey, unsigned int* piFleetKey) {
 
+    int iErrCode, iEmpireOptions2, iFleetOptions = 0;
     bool bAccept = true;
     Variant vOwner;
 
@@ -289,7 +329,7 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
 
     // Make sure the name isn't in use
     unsigned int iKey;
-    int iErrCode = m_pGameData->GetFirstKey (strEmpireFleets, GameEmpireFleets::Name, pszFleetName, false, &iKey);
+    iErrCode = m_pGameData->GetFirstKey (strEmpireFleets, GameEmpireFleets::Name, pszFleetName, false, &iKey);
 
     if (iErrCode != ERROR_DATA_NOT_FOUND) {
 
@@ -352,7 +392,19 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
     }
 
     if (!bAccept) {
-        return ERROR_ORPHANED_FLEET;
+        iErrCode = ERROR_ORPHANED_FLEET;
+        goto Cleanup;
+    }
+
+    // Get empire options
+    iErrCode = GetEmpireOptions2 (iEmpireKey, &iEmpireOptions2);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    if (iEmpireOptions2 & FLEETS_COLLAPSED_BY_DEFAULT) {
+        iFleetOptions |= FLEET_COLLAPSED_DISPLAY;
     }
 
     // Insert new row
@@ -364,7 +416,8 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
             (float) 0.0,
             iPlanetKey,
             STAND_BY,
-            0
+            0,
+            iFleetOptions,
         };
 
         if (pvColVal[GameEmpireFleets::Name].GetCharPtr() == NULL) {
@@ -574,6 +627,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
                     iNewY
                     );
 
+                Assert (iNumOrders < iMaxNumOrders);
                 pfoOrders[iNumOrders].iKey = MOVE_NORTH - i;
                 pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
                 if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -629,6 +683,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
                     
                     sprintf (pszOrder, "Nuke %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
 
+                    Assert (iNumOrders < iMaxNumOrders);
                     pfoOrders[iNumOrders].iKey = NUKE;
                     pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
                     if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -655,6 +710,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_COLONY) {
+            Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_COLONIZE;
             pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and colonize");
             if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -665,6 +721,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_TERRAFORMER) {
+            Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_TERRAFORM;
             pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and terraform");
             if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -675,6 +732,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_TROOPSHIP) {
+            Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_INVADE;
             pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and invade");
             if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -685,6 +743,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         if (iMask & TECH_DOOMSDAY) {
+            Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].iKey = FLEET_STANDBY_AND_ANNIHILATE;
             pfoOrders[iNumOrders].pszText = String::StrDup ("Standby and annihilate");
             if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -708,7 +767,6 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     if (bFlag) {
 
         Assert (iNumOrders < iMaxNumOrders);
-
         pfoOrders[iNumOrders].iKey = PICK_UP_UNAFFILIATED_SHIPS;
         pfoOrders[iNumOrders].pszText = String::StrDup ("Pick up unaffiliated ships");
         if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -749,11 +807,14 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
 
         if (iNumFleets > 1) {
 
-            // '2' refers to Disband and Disband & dismantle
-            if (iNumOrders + 2 + iNumFleets > iMaxNumOrders) {
+            // '2' refers to Disband and Disband & Dismantle
+            // + 10 is for good luck and buffering for the next section
+            const unsigned int iNewMaxNumOrders = iNumOrders + 2 + iNumFleets + 10;
+
+            if (iNewMaxNumOrders > iMaxNumOrders) {
 
                 // + 10 is for good luck and buffering for the next section
-                iMaxNumOrders = iNumOrders + 2 + iNumFleets + 10;
+                iMaxNumOrders = iNewMaxNumOrders;
 
                 // Damn, we have to realloc; luckily, we'll hardly ever hit this case
                 FleetOrder* pfoOrdersTemp = new FleetOrder [iMaxNumOrders];
@@ -790,6 +851,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
 
                 sprintf (pszOrder, "Merge into fleet %s", strFleetName.GetCharPtr());
 
+                Assert (iNumOrders < iMaxNumOrders);
                 pfoOrders[iNumOrders].iKey = piFleetKey[i];
                 pfoOrders[iNumOrders].fotType = FLEET_ORDER_MERGE;
                 pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
@@ -827,15 +889,20 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         // Count the locations we'll be adding
         iNumRealLocations = 0;
         for (i = 0; i < iNumLocations; i ++) {
-            if (pblBuildLoc[i].iPlanetKey != iPlanetKey &&
-                pblBuildLoc[i].iFleetKey == FLEET_NEWFLEETKEY) {
-                iNumRealLocations ++;
+
+            // Ignore our planet and 'new fleet' locations
+            if (pblBuildLoc[i].iPlanetKey == iPlanetKey || pblBuildLoc[i].iFleetKey == FLEET_NEWFLEETKEY) {
+                continue;
             }
+            iNumRealLocations ++;
         }
 
-        if (iNumOrders + 2 + iNumRealLocations > iMaxNumOrders) {
+        // '2' refers to Disband and Disband & Dismantle
+        const unsigned int iNewMaxNumOrders = iNumOrders + 2 + iNumRealLocations;
 
-            iMaxNumOrders = iNumOrders + 2 + iNumRealLocations;
+        if (iNewMaxNumOrders > iMaxNumOrders) {
+
+            iMaxNumOrders = iNewMaxNumOrders;
 
             // We have to realloc
             FleetOrder* pfoOrdersTemp = new FleetOrder [iMaxNumOrders];
@@ -858,8 +925,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         for (i = 0; i < iNumLocations; i ++) {
 
             // Ignore our planet and 'new fleet' locations
-            if (pblBuildLoc[i].iPlanetKey == iPlanetKey ||
-                pblBuildLoc[i].iFleetKey == FLEET_NEWFLEETKEY) {
+            if (pblBuildLoc[i].iPlanetKey == iPlanetKey || pblBuildLoc[i].iFleetKey == FLEET_NEWFLEETKEY) {
                 continue;
             }
 
@@ -897,7 +963,10 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
                 pfoOrders[iNumOrders].iKey = pblBuildLoc[i].iFleetKey;
                 pfoOrders[iNumOrders].fotType = FLEET_ORDER_MOVE_FLEET;
 
-                iErrCode = GetFleetName (iGameClass, iGameNumber, iEmpireKey, pblBuildLoc[i].iFleetKey, &vTemp);
+                iErrCode = GetFleetProperty (
+                    iGameClass, iGameNumber, iEmpireKey, pblBuildLoc[i].iFleetKey, 
+                    GameEmpireFleets::Name, &vTemp
+                    );
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -912,6 +981,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
                 strcat (pszOrder, strFleetName.GetCharPtr());
             }
 
+            Assert (iNumOrders < iMaxNumOrders);
             pfoOrders[iNumOrders].pszText = String::StrDup (pszOrder);
             if (pfoOrders[iNumOrders].pszText == NULL) {
                 iErrCode = ERROR_OUT_OF_MEMORY;
@@ -922,6 +992,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     }
 
     // Add disband
+    Assert (iNumOrders < iMaxNumOrders);
     pfoOrders[iNumOrders].iKey = DISBAND;
     pfoOrders[iNumOrders].pszText = String::StrDup ("Disband fleet");
     if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -933,6 +1004,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     // Add disband and dismantle if there are ships in the fleet
     if (iNumShips > 0) {
 
+        Assert (iNumOrders < iMaxNumOrders);
         pfoOrders[iNumOrders].iKey = DISBAND_AND_DISMANTLE;
         pfoOrders[iNumOrders].pszText = String::StrDup ("Disband fleet and dismantle ships");
         if (pfoOrders[iNumOrders].pszText == NULL) {
@@ -987,7 +1059,7 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
 
     *piMask = 0;
 
-    int iErrCode;
+    int iErrCode, iTestMask;
     Variant vPlanetKey;
     unsigned int iNumShips, i, iStopKey, * piShipKey = NULL;
 
@@ -1037,7 +1109,7 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
     }
 
     // Run tests
-    int iTestMask = 0;
+    iTestMask = 0;
 
     for (i = 0; i < iNumShips; i ++) {
 

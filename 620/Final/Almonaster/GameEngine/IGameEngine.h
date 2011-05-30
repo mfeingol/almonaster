@@ -511,7 +511,7 @@ public:
     virtual bool IsLegalPrivilege (int iPrivilege) = 0;
 
     // Locks
-    virtual void LockGameClass (int iGameClass, NamedMutex* pnmMutex) = 0;
+    virtual int LockGameClass (int iGameClass, NamedMutex* pnmMutex) = 0;
     virtual void UnlockGameClass (const NamedMutex& nmMutex) = 0;
 
     virtual void LockGameClasses() = 0;
@@ -520,13 +520,13 @@ public:
     virtual void LockSuperClasses() = 0;
     virtual void UnlockSuperClasses() = 0;
 
-    virtual void LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex) = 0;
+    virtual int LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpireSystemMessages (const NamedMutex& nmMutex) = 0;
 
-    virtual void LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) = 0;
+    virtual int LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpireBridier (const NamedMutex& nmMutex) = 0;
 
-    virtual void LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
+    virtual int LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpireGameMessages (const NamedMutex& nmMutex) = 0;
 
     virtual void LockEmpires() = 0;
@@ -535,7 +535,7 @@ public:
     virtual void LockAlienIcons() = 0;
     virtual void UnlockAlienIcons() = 0;
 
-    virtual void LockEmpire (int iEmpireKey, NamedMutex* pnmMutex) = 0;
+    virtual int LockEmpire (int iEmpireKey, NamedMutex* pnmMutex) = 0;
     virtual void UnlockEmpire (const NamedMutex& nmMutex) = 0;
 
     // Update
@@ -713,7 +713,6 @@ public:
 
     // GameEmpireData
     virtual int QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, int iKillerEmpire = NO_KEY) = 0;
-    virtual int ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
     virtual int SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, SurrenderType sType) = 0;
 
     virtual int HasEmpireResignedFromGame (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbResigned) = 0;
@@ -1023,7 +1022,6 @@ public:
     virtual int GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiFleetKeys, 
         int* piNumFleets) = 0;
 
-    virtual int GetFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, Variant* pvFleetName) = 0;
     virtual int GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiLocationKey, 
         int* piNumLocations) = 0;
 

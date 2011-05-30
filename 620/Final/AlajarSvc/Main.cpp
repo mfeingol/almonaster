@@ -55,10 +55,19 @@ int THREAD_CALL StopWatch (void* pVoid) {
     return 0;
 }
 
-VOID Start() {
+void Start() {
+
+    int iErrCode;
+
+    iErrCode = g_evShutdown.Initialize();
+    if (iErrCode != OK) {
+        OS::Alert ("Could not initialize an event object");
+        ServiceStartAborted();
+        return;
+    }
 
     // Create new web server object
-    int iErrCode = AlajarCreateInstance (CLSID_HttpServer, IID_IHttpServer, (void**) &g_pAlajar);
+    iErrCode = AlajarCreateInstance (CLSID_HttpServer, IID_IHttpServer, (void**) &g_pAlajar);
     if (iErrCode != OK) {
         OS::Alert ("Could not create an instance of IHttpServer");
         ServiceStartAborted();

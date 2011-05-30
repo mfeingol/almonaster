@@ -75,6 +75,25 @@ const char* const SHIP_TYPE_STRING_LOWERCASE[] = {
     "jumpgate",
 };
 
+const char* const SHIP_TYPE_STRING_LOWERCASE_PLURAL[] = {
+    "attacks",
+    "sciences",
+    "colonies",
+    "stargates",
+    "cloakers",
+    "satellites",
+    "terraformers",
+    "troopships",
+    "doomsdays",
+    "minefields",
+    "minesweepers",
+    "engineers",
+    "carriers",
+    "builders",
+    "morphers",
+    "jumpgates",
+};
+
 const char* const SHIP_TYPE_DESCRIPTION[] = {
     "Workhorse for defense and attack",                         // Attack
     "Explores unmapped planets",                                // Science

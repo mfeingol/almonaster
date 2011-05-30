@@ -39,14 +39,14 @@ int GameEngine::GetNumAliens (int* piNumAliens) {
 
 int GameEngine::GetAlienKeys (Variant*** pppvData, int* piNumAliens) {
 
-    unsigned int piColumns[] = {
+    const unsigned int piColumns[] = {
         SystemAlienIcons::AlienKey, 
         SystemAlienIcons::AuthorName
     };
 
     return m_pGameData->ReadColumns (
         SYSTEM_ALIEN_ICONS, 
-        sizeof (piColumns) / sizeof (unsigned int),
+        countof (piColumns),
         piColumns, 
         pppvData, 
         (unsigned int*) piNumAliens

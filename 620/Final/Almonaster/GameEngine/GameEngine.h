@@ -612,7 +612,7 @@ public:
     bool IsLegalPrivilege (int iPrivilege);
 
     // Locks: don't use these unless you know what you're doing!
-    void LockGameClass (int iGameClass, NamedMutex* pnmMutex);
+    int LockGameClass (int iGameClass, NamedMutex* pnmMutex);
     void UnlockGameClass (const NamedMutex& nmMutex);
 
     void LockGameClasses();
@@ -621,13 +621,13 @@ public:
     void LockSuperClasses();
     void UnlockSuperClasses();
 
-    void LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex);
+    int LockEmpireSystemMessages (int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpireSystemMessages (const NamedMutex& nmMutex);
 
-    void LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex);
+    int LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpireBridier (const NamedMutex& nmMutex);
 
-    void LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
+    int LockEmpireGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpireGameMessages (const NamedMutex& nmMutex);
 
     void LockEmpires();
@@ -636,10 +636,10 @@ public:
     void LockAlienIcons();
     void UnlockAlienIcons();
 
-    void LockTournament (unsigned int iTournamentKey, NamedMutex* pnmMutex);
+    int LockTournament (unsigned int iTournamentKey, NamedMutex* pnmMutex);
     void UnlockTournament (const NamedMutex& nmMutex);
 
-    void LockEmpire (int iEmpireKey, NamedMutex* pnmMutex);
+    int LockEmpire (int iEmpireKey, NamedMutex* pnmMutex);
     void UnlockEmpire (const NamedMutex& nmMutex);
 
     int WaitGameReader (int iGameClass, int iGameNumber, int iEmpireKey, GameEmpireLock** ppgeLock);
@@ -1261,9 +1261,12 @@ public:
 
     int GetNumFleets (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumFleets);
 
-    int GetFleetLocation (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
-        unsigned int iFleetKey, unsigned int* piPlanetKey);
-    int GetFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, Variant* pvFleetName);
+    int GetFleetProperty (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, unsigned int iProperty,
+        Variant* pvProperty);
+
+    int GetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iFlag, bool* pbFlag);
+    int SetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iFlag, bool bFlag);
+
     int GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiLocationKey, 
         int* piNumLocations);
 

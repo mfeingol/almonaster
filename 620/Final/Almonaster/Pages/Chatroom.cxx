@@ -154,39 +154,46 @@ if (iInChatroom == CHATROOM_OUT) {
     Write (m_vTableColor.GetCharPtr()); %>"><strong>Message</strong></th><%
     %></tr><%
 
-    for (i = 0; i < iNumMessages; i ++) {
+    if (iNumMessages == 0) {
 
-        String& strMessageText = pcmMessage[i].strMessageText;
-        String& strSpeaker = pcmMessage[i].strSpeaker;
+        %><tr><td colspan="2">&nbsp;</td></tr><%
 
-        UTCTime tTime = pcmMessage[i].tTime;
-        int iFlags = pcmMessage[i].iFlags;
+    } else {
 
-        %><tr><td align="left" width="25%" bgcolor="#331111"><font color="#ffff00"><% 
-        iErrCode = Time::GetDateString (tTime, pszDate);
-        if (iErrCode != OK) {
-            %>Time Error<%
-        } else {
-            Write (pszDate);
+        for (i = 0; i < iNumMessages; i ++) {
+
+            String& strMessageText = pcmMessage[i].strMessageText;
+            String& strSpeaker = pcmMessage[i].strSpeaker;
+
+            UTCTime tTime = pcmMessage[i].tTime;
+            int iFlags = pcmMessage[i].iFlags;
+
+            %><tr><td align="left" width="25%" bgcolor="#331111"><font color="#ffff00"><% 
+            iErrCode = Time::GetDateString (tTime, pszDate);
+            if (iErrCode != OK) {
+                %>Time Error<%
+            } else {
+                Write (pszDate);
+            }
+            %></font></td><td align="left" width="55%" bgcolor="#331111"><strong><% 
+
+            if (iFlags & CHATROOM_MESSAGE_SYSTEM) {
+
+                %><font color="#ffffff">&lt;<%
+                Write (SYSTEM_MESSAGE_SENDER);
+                %>&gt;</font></strong><font color="#ffffff"><%
+
+            } else {
+
+                %><font color="#ffff00">&lt;<%
+                Write (strSpeaker.GetCharPtr(), strSpeaker.GetLength());
+                %>&gt;</font></strong><font color="#ffffaa"><%
+            }
+
+            Write (strMessageText.GetCharPtr(), strMessageText.GetLength());
+
+            %></font></td></tr><% 
         }
-        %></font></td><td align="left" width="55%" bgcolor="#331111"><strong><% 
-
-        if (iFlags & CHATROOM_MESSAGE_SYSTEM) {
-
-            %><font color="#ffffff">&lt;<%
-            Write (SYSTEM_MESSAGE_SENDER);
-            %>&gt;</font></strong><font color="#ffffff"><%
-
-        } else {
-
-            %><font color="#ffff00">&lt;<%
-            Write (strSpeaker.GetCharPtr(), strSpeaker.GetLength());
-            %>&gt;</font></strong><font color="#ffffaa"><%
-        }
-
-        Write (strMessageText.GetCharPtr(), strMessageText.GetLength());
-
-        %></font></td></tr><% 
     }
 
     %></table></td><td bgcolor="#331111" valign="top" width="20%"><%

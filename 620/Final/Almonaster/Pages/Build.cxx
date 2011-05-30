@@ -192,11 +192,12 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 } else {
 
-                    iErrCode = g_pGameEngine->GetFleetName (
-                        m_iGameClass, 
+                    iErrCode = g_pGameEngine->GetFleetProperty (
+                        m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
-                        iFleetKey, 
+                        iFleetKey,
+                        GameEmpireFleets::Name,
                         &vFleetName
                         );
 
@@ -433,7 +434,9 @@ for (i = 0; i < iNumLocations; i ++) {
     
     default:
 
-        if (g_pGameEngine->GetFleetName (m_iGameClass, m_iGameNumber, m_iEmpireKey, iFleetKey, &vTemp) != OK ||
+        if (g_pGameEngine->GetFleetProperty (
+            m_iGameClass, m_iGameNumber, m_iEmpireKey, iFleetKey, 
+            GameEmpireFleets::Name, &vTemp) != OK ||
             String::AtoHtml (vTemp.GetCharPtr(), &strFleetName, 0, false) == NULL) {
             continue;
         }

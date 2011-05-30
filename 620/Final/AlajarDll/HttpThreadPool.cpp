@@ -82,6 +82,11 @@ int HttpThreadPool::Start() {
         return ERROR_OUT_OF_MEMORY;
     }
 
+    iErrCode = m_eThreadEvent.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
     iErrCode = m_mThreadListLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;

@@ -268,7 +268,11 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     Assert (vNukedKey.GetInteger() >= ROOT_KEY);
 
-    LockEmpire (vNukedKey.GetInteger(), &nmEmpireMutex);
+    iErrCode = LockEmpire (vNukedKey.GetInteger(), &nmEmpireMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
     bEmpireLocked = true;
 
     if (ValidateEmpireKey (vNukedKey.GetInteger(), vHashEmpireName.GetInteger())) {
@@ -1057,8 +1061,12 @@ int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {
     Variant vRank, vIndex;
 
     NamedMutex nmBridierLock;
-    LockEmpireBridier (iEmpireKey, &nmBridierLock);
-    
+    iErrCode = LockEmpireBridier (iEmpireKey, &nmBridierLock);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
     iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierRank, &vRank);
     if (iErrCode != OK) {
         UnlockEmpireBridier (nmBridierLock);
@@ -1145,7 +1153,10 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
             Seconds sDiff;
             
             // Take a lock
-            LockEmpireBridier (iKey, &nmBridierLock);
+            iErrCode = LockEmpireBridier (iKey, &nmBridierLock);
+            if (iErrCode != OK) {
+                continue;
+            }
             
             // Refresh
             iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);

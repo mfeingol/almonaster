@@ -32,18 +32,24 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
     char pszHashedIPAddress [20];
     const char* pszIPAddress = NULL;
     
+    Variant* pvEmpireData = NULL;
+    int iErrCode, iNumActiveGames, iNumPersonalGameClasses, iNumUnreadMessages, iOptions, iOptions2;
+    unsigned int iNumActiveTournaments, iNumPersonalTournaments;
+    
+    bool bEmpireLocked = false;
+
     OutputText ("<input type=\"hidden\" name=\"TargetEmpireKey\" value=\"");
     m_pHttpResponse->WriteText (iTargetEmpireKey);
     OutputText ("\">");
-    
-    Variant* pvEmpireData = NULL;
-    int iNumActiveGames, iNumPersonalGameClasses, iNumUnreadMessages, iOptions, iOptions2;
-    unsigned int iNumActiveTournaments, iNumPersonalTournaments;
-    
+
     NamedMutex nmLock;
-    g_pGameEngine->LockEmpire (iTargetEmpireKey, &nmLock);
+    iErrCode = g_pGameEngine->LockEmpire (iTargetEmpireKey, &nmLock);
+    if (iErrCode != OK) {
+        goto OnError;
+    }
+    bEmpireLocked = true;
     
-    int iErrCode = g_pGameEngine->GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
+    iErrCode = g_pGameEngine->GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -574,8 +580,11 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
     
 OnError:
     
-    g_pGameEngine->UnlockEmpire (nmLock);
-    
+    if (bEmpireLocked) {
+        g_pGameEngine->UnlockEmpire (nmLock);
+        bEmpireLocked = false;
+    }
+
     if (pvEmpireData != NULL) {
         g_pGameEngine->FreeData (pvEmpireData);
     }

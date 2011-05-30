@@ -697,7 +697,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
     bool bBuilding, bMobile;
     unsigned int iMaxNumOrders, i, iProxyPlanetKey, iPlanetKey, iPlanetOwner;
     int iNewX, iNewY, iShipType, iLocationX, iLocationY, iGameClassOptions, iSelectedAction, iState;
-    float fBR, fMaxBR, fMaintRatio;
+    float fBR, fMaxBR, fMaintRatio, fNextBR;
 
     *ppsoOrder = NULL;
     *piNumOrders = 0;
@@ -831,7 +831,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
     }
 
     // Get ship's next BR
-    float fNextBR = GetShipNextBR (fBR, fMaintRatio);    
+    fNextBR = GetShipNextBR (fBR, fMaintRatio);    
     if (fNextBR > fMaxBR) {
         fNextBR = fMaxBR;
     }
@@ -977,7 +977,10 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 psoOrders[iNumOrders].iKey = pblLocations[i].iFleetKey;
                 psoOrders[iNumOrders].sotType = SHIP_ORDER_MOVE_FLEET;
 
-                iErrCode = GetFleetName (iGameClass, iGameNumber, iEmpireKey, pblLocations[i].iFleetKey, &vTemp);
+                iErrCode = GetFleetProperty (
+                    iGameClass, iGameNumber, iEmpireKey, pblLocations[i].iFleetKey, 
+                    GameEmpireFleets::Name, &vTemp
+                    );
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -2122,10 +2125,14 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
         // We need the location of the destination fleet
         unsigned int iDestPlanet;
-        iErrCode = GetFleetLocation (iGameClass, iGameNumber, iEmpireKey, soOrder.iKey, &iDestPlanet);
+        iErrCode = GetFleetProperty (
+            iGameClass, iGameNumber, iEmpireKey, soOrder.iKey, 
+            GameEmpireFleets::CurrentPlanet, &vTemp
+            );
         if (iErrCode != OK) {
             goto Cleanup;
         }
+        iDestPlanet = vTemp.GetInteger();
 
         iErrCode = MoveShip (
             iGameClass,
@@ -3599,7 +3606,7 @@ int GameEngine::GetNumShips (int iGameClass, int iGameNumber, int iEmpireKey, in
 
 int GameEngine::GetNumFleets (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumFleets) {
 
-    GAME_EMPIRE_SHIPS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+    GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
     return m_pGameData->GetNumRows (pszFleets, (unsigned int*) piNumFleets);
 }

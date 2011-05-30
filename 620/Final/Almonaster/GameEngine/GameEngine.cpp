@@ -234,6 +234,16 @@ int GameEngine::Initialize() {
         m_pReport->WriteReport ("GameEngine is out of memory");
         return iErrCode;
     }
+    iErrCode = m_eQueryEvent.Initialize();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine is out of memory");
+        return iErrCode;
+    }
+    iErrCode = m_eAutoBackupEvent.Initialize();
+    if (iErrCode != OK) {
+        m_pReport->WriteReport ("GameEngine is out of memory");
+        return iErrCode;
+    }
 
     if (!m_tsfqQueryQueue.Initialize()) {
         m_pReport->WriteReport ("GameEngine is out of memory");
@@ -368,11 +378,10 @@ int GameEngine::Initialize() {
         lmConf.iNumEmpiresHint = 100;
     }
 
-    // UNDONE - proper settings needed
     lmConf.iMaxAgedOutPerScan = 25;         // Heuristic
     lmConf.msMaxScanTime = 1000;            // One second
-    lmConf.msScanPeriod = 10; //1000 * 60 * 15;   // Fifteen minutes
-    lmConf.sAgeOutPeriod = 1; //60 * 10;         // Ten minutes
+    lmConf.msScanPeriod = 1000 * 60 * 15;   // Fifteen minutes
+    lmConf.sAgeOutPeriod = 60 * 10;         // Ten minutes
 
     iErrCode = m_lockMgr.Initialize (lmConf);
     if (iErrCode != OK) {
@@ -936,7 +945,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 620 Beta 5";
+    return "Almonaster Build 620 RC1";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

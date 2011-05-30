@@ -73,6 +73,8 @@ struct MiniMapEntry {
     unsigned int iAlienKey;
     unsigned int iPlanetKey;
     unsigned int iPlanetProxyKey;
+    int iX;
+    int iY;
 };
 
 // Page id's
@@ -289,6 +291,8 @@ enum ButtonId {
     BID_LOOKUP,
     BID_VIEWMINIMAP,
     BID_MINIBUILD,
+    BID_PLUS,
+    BID_MINUS,
     BID_LAST,
 };
 

@@ -163,7 +163,11 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
     UTCTime tNow;
 
     NamedMutex nmMutex;
-    m_pGameEngine->LockEmpireBridier (iEmpireKey, &nmMutex);
+    iErrCode = m_pGameEngine->LockEmpireBridier (iEmpireKey, &nmMutex);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     Time::GetTime (&tNow);
     

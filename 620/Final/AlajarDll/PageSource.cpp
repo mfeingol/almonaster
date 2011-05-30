@@ -147,10 +147,6 @@ void PageSource::Reset() {
 
     m_bSingleThreaded = false;
 
-    m_ptsfqResponseQueue = NULL;
-    m_pSTAThread = NULL;
-    m_pSTAEvent = NULL;
-
     Time::ZeroTime (&m_tLogTime);
     Time::ZeroTime (&m_tReportTime);
 }
@@ -184,17 +180,9 @@ void PageSource::Clean() {
 
     if (m_bSingleThreaded) {
 
-        // Thread has already exited
-        if (m_pSTAEvent != NULL) {
-            delete m_pSTAEvent;
-        }
-
-        if (m_pSTAThread != NULL) {
-            delete m_pSTAThread;
-        }
-
-        if (m_ptsfqResponseQueue != NULL) {
-            delete m_ptsfqResponseQueue;
+        HttpResponse* pHttpResponse;
+        while (m_tsfqResponseQueue.Pop (&pHttpResponse)) {
+            HttpResponseAllocator::Delete (pHttpResponse);
         }
     }
 
@@ -627,7 +615,7 @@ int PageSource::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pCon
     if (m_bSingleThreaded) {
 
         // Start up the STA thread
-        int iErrCode = m_pSTAThread->Start (ThreadSTALoop, this, Thread::NormalPriority);
+        int iErrCode = m_tSTAThread.Start (ThreadSTALoop, this, Thread::NormalPriority);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -650,7 +638,7 @@ int PageSource::OnFinalize() {
             return iErrCode;
         }
 
-        m_pSTAThread->WaitForTermination();
+        m_tSTAThread.WaitForTermination();
 
         return OK;
     }
@@ -1144,18 +1132,15 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
 
         if (m_bSingleThreaded) {
 
-            m_ptsfqResponseQueue = new ThreadSafeFifoQueue<HttpResponse*>();
-            m_pSTAThread = new Thread();
-            m_pSTAEvent = new Event();
-
-            if (m_ptsfqResponseQueue == NULL || m_pSTAThread == NULL || m_pSTAEvent == NULL) {
+            if (!m_tsfqResponseQueue.Initialize()) {
                 *pstrErrorMessage = "The server is out of memory";
                 return ERROR_OUT_OF_MEMORY;
             }
 
-            if (!m_ptsfqResponseQueue->Initialize()) {
+            iErrCode = m_eSTAEvent.Initialize();
+            if (iErrCode != OK) {
                 *pstrErrorMessage = "The server is out of memory";
-                return ERROR_OUT_OF_MEMORY;
+                return iErrCode;
             }
         }
 
@@ -1302,16 +1287,17 @@ void PageSource::ReleaseLock() {
 int PageSource::QueueResponse (HttpResponse* pHttpResponse) {
 
     // Entrust request, response pair to STA thread
-    m_ptsfqResponseQueue->Push (pHttpResponse);
-    m_pSTAEvent->Signal();
+    if (!m_tsfqResponseQueue.Push (pHttpResponse)) {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
-    return OK;
+    return m_eSTAEvent.Signal();
 }
 
 HttpResponse* PageSource::DeQueueResponse() {
 
     HttpResponse* pHttpResponse;
-    return m_ptsfqResponseQueue->Pop (&pHttpResponse) ? pHttpResponse : NULL;
+    return m_tsfqResponseQueue.Pop (&pHttpResponse) ? pHttpResponse : NULL;
 }
 
 int PageSource::ThreadSTALoop (void* pVoid) {
@@ -1339,7 +1325,7 @@ int PageSource::STALoop() {
     while (bStay) {
 
         // Wait on event
-        m_pSTAEvent->Wait();
+        m_eSTAEvent.Wait();
 
         while (true) {
             

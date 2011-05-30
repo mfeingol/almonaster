@@ -737,6 +737,7 @@ int String::StriStr (const char* pszString, const char* pszCharSet, const char**
 
     char* pszLwrString = NULL;
     char* pszLwrCharSet = NULL;
+    char* pszStrStr = NULL;
 
     size_t stStringLen = strlen (pszString) + 1;
     size_t stCharSetLen = strlen (pszCharSet) + 1;
@@ -775,7 +776,7 @@ int String::StriStr (const char* pszString, const char* pszCharSet, const char**
     String::StrLwr (pszLwrString);
     String::StrLwr (pszLwrCharSet);
 
-    char* pszStrStr = strstr (pszLwrString, pszLwrCharSet);
+    pszStrStr = strstr (pszLwrString, pszLwrCharSet);
     if (pszStrStr != NULL) {
         *ppszStrStr = pszString + (pszStrStr - pszLwrString);
     }

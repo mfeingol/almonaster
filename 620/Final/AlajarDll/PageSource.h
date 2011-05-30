@@ -152,9 +152,10 @@ private:
 
     // Single threaded
     bool m_bSingleThreaded;
-    ThreadSafeFifoQueue<HttpResponse*>* m_ptsfqResponseQueue;
-    Thread* m_pSTAThread;
-    Event* m_pSTAEvent;
+
+    ThreadSafeFifoQueue<HttpResponse*> m_tsfqResponseQueue;
+    Thread m_tSTAThread;
+    Event m_eSTAEvent;
 
     // Utilities
     void Clean();

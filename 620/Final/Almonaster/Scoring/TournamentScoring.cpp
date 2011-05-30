@@ -8,7 +8,7 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-static const s_piEmpireColumn [TOURNAMENT_NUM_EVENTS] = {
+static const unsigned int s_piEmpireColumn [TOURNAMENT_NUM_EVENTS] = {
     SystemTournamentEmpires::Nukes,
     SystemTournamentEmpires::Nuked,
     SystemTournamentEmpires::Wins,
@@ -16,7 +16,7 @@ static const s_piEmpireColumn [TOURNAMENT_NUM_EVENTS] = {
     SystemTournamentEmpires::Ruins,
 };
 
-static const s_piTeamColumn [TOURNAMENT_NUM_EVENTS] = {
+static const unsigned int s_piTeamColumn [TOURNAMENT_NUM_EVENTS] = {
     SystemTournamentTeams::Nukes,
     SystemTournamentTeams::Nuked,
     SystemTournamentTeams::Wins,

@@ -394,7 +394,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                     AddMessage ("Your independent gift option was updated");
                 } else {
-                    AddMessage ("Your independent gift option was updated; the error was ");
+                    AddMessage ("Your independent gift option was not updated; the error was ");
                     AppendMessage (iErrCode);
                 }
             }
@@ -418,9 +418,28 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                     AddMessage ("Your empty fleet disband option was updated");
                 } else {
-                    AddMessage ("Your empty fleet disband option was updated; the error was ");
+                    AddMessage ("Your empty fleet disband option was not updated; the error was ");
                     AppendMessage (iErrCode);
                 }
+            }
+
+            // Handle CollapseFleets
+            if ((pHttpForm = m_pHttpRequest->GetForm ("CollapseFleets")) == NULL) {
+                goto Redirection;
+            }
+            iNewValue = pHttpForm->GetIntValue();
+            bValue = (m_iSystemOptions2 & FLEETS_COLLAPSED_BY_DEFAULT) != 0;
+
+            if ((iNewValue != 0) != bValue) {
+
+                EmpireCheck (g_pGameEngine->SetEmpireOption2 (m_iEmpireKey, FLEETS_COLLAPSED_BY_DEFAULT, !bValue));
+
+                if (!bValue) {
+                    m_iSystemOptions2 |= FLEETS_COLLAPSED_BY_DEFAULT;
+                } else {
+                    m_iSystemOptions2 &= ~FLEETS_COLLAPSED_BY_DEFAULT;
+                }
+                AddMessage ("Your collapsed fleets option was updated");
             }
 
             // Handle Confirm
@@ -447,12 +466,12 @@ if (m_bOwnPost && !m_bRedirection) {
             if ((pHttpForm = m_pHttpRequest->GetForm ("AutoLogonSel")) == NULL) {
                 goto Redirection;
             }
-            unsigned int uiVerify = pHttpForm->GetIntValue();
+            unsigned int uiVerify = pHttpForm->GetUIntValue();
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("AutoLogon")) == NULL) {
                 goto Redirection;
             }
-            unsigned int uiNewValue = pHttpForm->GetIntValue();
+            unsigned int uiNewValue = pHttpForm->GetUIntValue();
 
             if (uiVerify != uiNewValue) {
 
@@ -475,7 +494,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     char pszText [128];
                     iErrCode = m_pHttpResponse->CreateCookie (
                         AUTOLOGON_EMPIREKEY_COOKIE,
-                        itoa (iNewValue, pszText, 10),
+                        String::UItoA (uiNewValue, pszText, 10),
                         ONE_YEAR_IN_SECONDS,
                         NULL
                         );
@@ -2657,6 +2676,19 @@ case 0:
     if (!bFlag) {
         %> selected<%
     } %> value="<% Write (0); %>">Never disband empty fleets</option></select></td></tr><%
+
+
+    %><tr><td>Collapse or expand fleets by default:</td><td><select name="CollapseFleets"><option<%
+
+    bFlag = (pvEmpireData[SystemEmpireData::Options2].GetInteger() & FLEETS_COLLAPSED_BY_DEFAULT) != 0;
+
+    if (bFlag) {
+        %> selected<%
+    } %> value="<% Write (1); %>">Fleets are collapsed by default</option><option<%
+
+    if (!bFlag) {
+        %> selected<%
+    } %> value="<% Write (0); %>">Fleets are expanded by default</option></select></td></tr><%
 
 
     %><tr><td>Send message with score information on nuke:</td><td><select name="SendScore"><option<%

@@ -59,6 +59,7 @@ enum ShipType {
 extern const char* const SHIP_TYPE_STRING[];
 extern const char* const SHIP_TYPE_STRING_PLURAL[];
 extern const char* const SHIP_TYPE_STRING_LOWERCASE[];
+extern const char* const SHIP_TYPE_STRING_LOWERCASE_PLURAL[];
 extern const char* const SHIP_TYPE_DESCRIPTION[];
 
 extern const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN[];
@@ -134,6 +135,9 @@ enum GameRatioSetting {
 
 // New fleet key
 #define FLEET_NEWFLEETKEY (0xffffabab)
+
+// GameEmpireFleets::Flags
+#define FLEET_COLLAPSED_DISPLAY         (0x00000001)
 
 // Cardinal points
 #define NUM_CARDINAL_POINTS 4
@@ -281,6 +285,7 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 #define UNAVAILABLE_FOR_TOURNAMENTS         (0x00000002)
 #define REFRESH_UNSTARTED_GAME_PAGES        (0x00000004)
 #define DISBAND_EMPTY_FLEETS_ON_UPDATE      (0x00000008)
+#define FLEETS_COLLAPSED_BY_DEFAULT         (0x00000010)
 
 // GameEmpireData::MiniMaps
 enum MiniMaps {

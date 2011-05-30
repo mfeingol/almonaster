@@ -303,7 +303,11 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
 
     Assert (!bOwnerDeleted || iEmpireKey != DELETED_EMPIRE_KEY);
     
-    LockTournament (iTournamentKey, &nmTournamentLock);
+    iErrCode = LockTournament (iTournamentKey, &nmTournamentLock);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     // Check existence
     iErrCode = m_pGameData->DoesRowExist (SYSTEM_TOURNAMENTS, iTournamentKey, &bFlag);
@@ -722,7 +726,11 @@ int GameEngine::HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey,
     bool bMessagesLocked = true, bDeleteMessage = false, bSendMessage = false;
 
     NamedMutex nmLock;
-    LockEmpireSystemMessages (iEmpireKey, &nmLock);
+    iErrCode = LockEmpireSystemMessages (iEmpireKey, &nmLock);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     bExists = m_pGameData->DoesTableExist (pszMessages);
     if (!bExists) {
@@ -885,7 +893,11 @@ int GameEngine::AddEmpireToTournament (unsigned int iTournamentKey, int iInviteK
     IWriteTable* pWriteTable = NULL;
     NamedMutex nmTournamentLock;
 
-    LockTournament (iTournamentKey, &nmTournamentLock);
+    iErrCode = LockTournament (iTournamentKey, &nmTournamentLock);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
     bool bTournamentLock = true;
     
     // Join the tournament!
@@ -983,7 +995,11 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
     char pszMessage [MAX_TOURNAMENT_TEAM_NAME_LENGTH + 96];
 
     NamedMutex nmLock;
-    LockTournament (iTournamentKey, &nmLock);
+    iErrCode = LockTournament (iTournamentKey, &nmLock);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
 
     iErrCode = GetTournamentName (iTournamentKey, &vTourneyName);
     if (iErrCode != OK) {

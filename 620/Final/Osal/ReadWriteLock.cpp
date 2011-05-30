@@ -27,7 +27,8 @@
 
 #define NO_THREAD 0x87654321
 
-#define YIELD_MS 100
+#define HELD_EXCLUSIVE      (0x00000001)
+#define HELD_SPECULATIVE    (0x00000002)
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -38,127 +39,169 @@ ReadWriteLock::ReadWriteLock() {
     m_iNumReaders = 0;
     m_iNumWriters = 0;
 
-    m_dwLastThreadLocked = NO_THREAD;
+    m_iFlags = 0;
+    m_tidThread = NO_THREAD;
+}
+
+int ReadWriteLock::Initialize() {
+
+    int iErrCode;
+
+    iErrCode = m_mLock.Initialize();
+    if (iErrCode == OK) {
+        iErrCode = m_eEvent.Initialize();
+    }
+    return iErrCode;
 }
 
 void ReadWriteLock::WaitReader() {
 
+    Assert (m_iNumReaders >= 0);
     Algorithm::AtomicIncrement (&m_iNumReaders);
 
     if (m_iNumWriters > 0) {
 
-        Assert (m_dwLastThreadLocked != ::GetCurrentThreadId());
+        Assert (m_tidThread != GetCurrentThreadId());
 
-        Algorithm::AtomicDecrement (&m_iNumReaders);
-        Lock();
+        if (Algorithm::AtomicDecrement (&m_iNumReaders) == 0) {
+            m_eEvent.Signal();
+        }
+
+        m_mLock.Wait();
         Algorithm::AtomicIncrement (&m_iNumReaders);
+        m_mLock.Signal();
     }
-}
 
-int ReadWriteLock::Initialize() {
-    return m_mLock.Initialize();
+    Assert (m_tidThread != GetCurrentThreadId());
+    Assert (!(m_iFlags & HELD_EXCLUSIVE));
 }
 
 void ReadWriteLock::SignalReader() {
 
-#ifdef __LINUX__
-	if (m_dwLastThreadLocked == pthread_self()) {
-#else if defined __WIN32__
-	if (m_dwLastThreadLocked == ::GetCurrentThreadId()) {
-#endif
-        Unlock();
-    }
+    Assert (m_iNumReaders > 0);
+    Assert (m_tidThread != GetCurrentThreadId());
 
     int iNumReaders = Algorithm::AtomicDecrement (&m_iNumReaders);
+    if (iNumReaders == 0 && m_iNumWriters > 0) {
+        m_eEvent.Signal();
+    }
     Assert (iNumReaders >= 0);
 }
 
 void ReadWriteLock::WaitWriter() {
 
-    Lock();
-
-    while (m_iNumReaders > 0) {
-        OS::Sleep (YIELD_MS);
-    }
+    m_mLock.Wait();
 
     Assert (m_iNumWriters == 0);
     m_iNumWriters ++;
     Assert (m_iNumWriters == 1);
+    Assert (m_iNumReaders >= 0);
 
     while (m_iNumReaders > 0) {
-        OS::Sleep (YIELD_MS);
+        m_eEvent.Wait();
     }
+    Assert (m_iNumWriters == 1);
+
+    m_tidThread = GetCurrentThreadId();
+    m_iFlags |= HELD_EXCLUSIVE;
 }
 
 void ReadWriteLock::SignalWriter() {
 
-    AssertWriterThread();
+    Assert (m_tidThread == GetCurrentThreadId());
+    Assert (m_iFlags & HELD_EXCLUSIVE);
     Assert (m_iNumWriters == 1);
 
+    m_tidThread = NO_THREAD;
+    m_iFlags &= ~HELD_EXCLUSIVE;
+
     m_iNumWriters --;
-    Unlock();
+    Assert (m_iNumWriters == 0);
+
+    m_mLock.Signal();
 }
 
 void ReadWriteLock::WaitReaderWriter() {
 
-    Lock();
+    m_mLock.Wait();
+
+    m_tidThread = GetCurrentThreadId();
+    m_iFlags |= HELD_SPECULATIVE;
 }
 
 void ReadWriteLock::SignalReaderWriter() {
 
-    AssertWriterThread();
+    Assert (m_tidThread == GetCurrentThreadId());
+    Assert (m_iFlags & HELD_SPECULATIVE);
+    Assert (!(m_iFlags & HELD_EXCLUSIVE));
     Assert (m_iNumWriters == 0);
 
-    Unlock();
+    m_tidThread = NO_THREAD;
+    m_iFlags &= ~HELD_SPECULATIVE;
+
+    m_mLock.Signal();
 }
 
 void ReadWriteLock::UpgradeReaderWriter() {
 
-    AssertWriterThread();
+    Assert (m_tidThread == GetCurrentThreadId());
+    Assert (m_iFlags & HELD_SPECULATIVE);
     Assert (m_iNumWriters == 0);
 
     m_iNumWriters ++;
 
     while (m_iNumReaders > 0) {
-        OS::Sleep (YIELD_MS);
+        m_eEvent.Wait();
     }
+
+    Assert (m_tidThread == GetCurrentThreadId());
+    Assert (m_iNumReaders == 0);
+
+    m_iFlags |= HELD_EXCLUSIVE;
 }
 
 void ReadWriteLock::DowngradeReaderWriter() {
 
-    AssertWriterThread();
+    Assert (m_tidThread == GetCurrentThreadId());
+    Assert (m_iFlags & HELD_SPECULATIVE);
+    Assert (m_iFlags & HELD_EXCLUSIVE);
+
     Assert (m_iNumWriters == 1);
-
     m_iNumWriters --;
+    Assert (m_iNumWriters == 0);
+
+    m_iFlags &= ~HELD_EXCLUSIVE;
 }
 
-//
-// Utility
-//
+bool ReadWriteLock::HeldExclusive (Thread* pThread) {
 
-inline void ReadWriteLock::Lock() {
+    if (!(m_iFlags & HELD_EXCLUSIVE)) {
+        return false;
+    }
 
-    m_mLock.Wait();
-#ifdef __LINUX__
-	m_dwLastThreadLocked = pthread_self();
-#else if defined __WIN32__
-	m_dwLastThreadLocked = ::GetCurrentThreadId();
-#endif
+    return Held (pThread);
 }
 
-inline void ReadWriteLock::Unlock() {
+bool ReadWriteLock::HeldSpeculative (Thread* pThread) {
 
-    m_dwLastThreadLocked = NO_THREAD;
-    m_mLock.Signal();
+    if (!(m_iFlags & HELD_SPECULATIVE)) {
+        return false;
+    }
+
+    return Held (pThread);
 }
 
-inline void ReadWriteLock::AssertWriterThread() {
+bool ReadWriteLock::Held (Thread* pThread) {
 
-#ifdef __LINUX__
-	Assert (m_dwLastThreadLocked == pthread_self());
-#else if defined __WIN32__
-	Assert (m_dwLastThreadLocked == ::GetCurrentThreadId());
-#endif
+    unsigned int iThreadId;
+    
+    if (pThread == NULL) {
+        iThreadId = GetCurrentThreadId();
+    } else {
+        iThreadId = pThread->GetThreadId();
+    }
+
+    return m_tidThread == iThreadId;
 }
 
 //

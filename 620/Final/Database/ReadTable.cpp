@@ -1406,7 +1406,6 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
     iErrCode = ERROR_DATA_NOT_FOUND;
 
     // Loop through all keys and match all conditions
-    bool bHit;
     unsigned int iTerminatorRowKey = m_tcContext.GetTerminatorRowKey();
 
     if (iStartKey == NO_KEY) {
@@ -1415,214 +1414,248 @@ int ReadTable::GetSearchKeys (unsigned int iNumColumns, const unsigned int* piCo
 
     for (i = iStartKey; i < iTerminatorRowKey; i ++) {
 
-        if (m_tcContext.IsValidRow (i)) {
+        if (!m_tcContext.IsValidRow (i)) {
+            continue;
+        }
 
-            // Match search parameters
-            bHit = true;
+        const char* pszStr;
+        size_t cchTestLen, cchDataLen;
+        bool bHit = true;
 
-            for (j = 0; j < iNumColumns && bHit; j ++) {
+        for (j = 0; j < iNumColumns && bHit; j ++) {
 
-                switch (pvData[j].GetType()) {
+            switch (pvData[j].GetType()) {
+                
+            case V_INT:
+
+                int iData;
+                
+                switch (piFlags[j]) {
                     
-                case V_INT:
-
-                    int iData;
-                    
-                    switch (piFlags[j]) {
-                        
-                    case 0:                 
-
-                        if (piColumn[j] == NO_KEY) {
-                            iData = i;
-                        } else {
-                            iData = *((int*) m_tcContext.GetData (i, piColumn[j]));
-                        }
-
-                        if (iData < pvData[j].GetInteger() || iData > pvData2[j].GetInteger()) {
-                            bHit = false;
-                        }
-
-                        break;
-
-                    case SEARCH_AND:
-                    case SEARCH_NOTAND:
-
-                        iData = *((int*) m_tcContext.GetData (i, piColumn[j]));
-
-                        if (piFlags[j] == SEARCH_AND) {
-                            bHit = (iData & pvData[j].GetInteger()) != 0;
-                        } else {
-                            bHit = (iData & pvData[j].GetInteger()) == 0;
-                        }
-
-                        break;
-
-                    default:
-
-                        bHit = false;
-                        break;
-                    }
-                    break;
-
-                case V_FLOAT:
-
-                    {
-
-                    float fData = *((float*) m_tcContext.GetData (i, piColumn[j]));
-
-                    if (fData < pvData[j].GetFloat() || fData > pvData2[j].GetFloat()) {
-                        bHit = false;
-                    }
-                    
-                    }
-                    break;
-
-                case V_TIME:
-
-                    {
-
-                    UTCTime tData = *((UTCTime*) m_tcContext.GetData (i, piColumn[j]));
-
-                    if (tData < pvData[j].GetUTCTime() || tData > pvData2[j].GetUTCTime()) {
-                        bHit = false;
-                    }
-                    
-                    }
-                    break;
-                    
-                case V_STRING:
-
-                    switch (piFlags[j]) {
-
-                    case SEARCH_SUBSTRING | SEARCH_CASE_SENSITIVE:
-
-                        if (String::StrStr (
-                            m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()
-                            ) == NULL) {
-                            bHit = false;
-                        }
-                        break;
-
-                    case SEARCH_SUBSTRING:
-
-                        const char* pszStr;
-                        iErrCode = String::StriStr (
-                            m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), &pszStr
-                            );
-
-                        if (iErrCode != OK) {
-                            delete [] (*ppiKey);
-                            *ppiKey = NULL;
-                            *piNumHits = 0;
-                            return iErrCode;
-                        }
-
-                        if (pszStr == NULL) {
-                            bHit = false;
-                        }
-                        break;
-
-                    case SEARCH_EXACT | SEARCH_CASE_SENSITIVE:
-
-                        if (String::StrCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()) != 0) {
-                            bHit = false;
-                        }
-                        break;
-
-                    case SEARCH_EXACT:
-                        
-                        if (String::StriCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()) != 0) {
-                            bHit = false;
-                        }
-                        break;
-
-                    case SEARCH_BEGINS_WITH | SEARCH_CASE_SENSITIVE:
-
-                        if (String::StrnCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), 
-                            String::StrLen (pvData[j].GetCharPtr())) != 0) {
-                            bHit = false;
-                        }
-
-                    case SEARCH_BEGINS_WITH:
-
-                        if (String::StrniCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), 
-                            String::StrLen (pvData[j].GetCharPtr())) != 0) {
-                            bHit = false;
-                        }
-                        break;
-
-                    default:
-
-                        bHit = false;
-                        break;
-                    }
-                    break;
-
-                case V_INT64:
-                    {
-
-                    int64 i64Data;
+                case 0:                 
 
                     if (piColumn[j] == NO_KEY) {
-                        i64Data = i;
+                        iData = i;
                     } else {
-                        i64Data = *((int64*) m_tcContext.GetData (i, piColumn[j]));
+                        iData = *((int*) m_tcContext.GetData (i, piColumn[j]));
                     }
 
-                    if (i64Data < pvData[j].GetInteger64() || i64Data > pvData2[j].GetInteger64()) {
+                    if (iData < pvData[j].GetInteger() || iData > pvData2[j].GetInteger()) {
                         bHit = false;
                     }
+
+                    break;
+
+                case SEARCH_AND:
+                case SEARCH_NOTAND:
+
+                    iData = *((int*) m_tcContext.GetData (i, piColumn[j]));
+
+                    if (piFlags[j] == SEARCH_AND) {
+                        bHit = (iData & pvData[j].GetInteger()) != 0;
+                    } else {
+                        bHit = (iData & pvData[j].GetInteger()) == 0;
+                    }
+
+                    break;
+
+                default:
+
+                    bHit = false;
+                    break;
+                }
+                break;
+
+            case V_FLOAT:
+
+                {
+
+                float fData = *((float*) m_tcContext.GetData (i, piColumn[j]));
+
+                if (fData < pvData[j].GetFloat() || fData > pvData2[j].GetFloat()) {
+                    bHit = false;
+                }
+                
+                }
+                break;
+
+            case V_TIME:
+
+                {
+
+                UTCTime tData = *((UTCTime*) m_tcContext.GetData (i, piColumn[j]));
+
+                if (tData < pvData[j].GetUTCTime() || tData > pvData2[j].GetUTCTime()) {
+                    bHit = false;
+                }
+                
+                }
+                break;
+                
+            case V_STRING:
+
+                switch (piFlags[j]) {
+
+                case SEARCH_SUBSTRING | SEARCH_CASE_SENSITIVE:
+
+                    if (String::StrStr (
+                        m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()
+                        ) == NULL) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_SUBSTRING:
+
+                    iErrCode = String::StriStr (
+                        m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), &pszStr
+                        );
+
+                    if (iErrCode != OK) {
+                        delete [] (*ppiKey);
+                        *ppiKey = NULL;
+                        *piNumHits = 0;
+                        return iErrCode;
+                    }
+
+                    if (pszStr == NULL) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_EXACT | SEARCH_CASE_SENSITIVE:
+
+                    if (String::StrCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()) != 0) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_EXACT:
                     
+                    if (String::StriCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr()) != 0) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_BEGINS_WITH | SEARCH_CASE_SENSITIVE:
+
+                    if (String::StrnCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), 
+                        String::StrLen (pvData[j].GetCharPtr())) != 0) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_BEGINS_WITH:
+
+                    if (String::StrniCmp (m_tcContext.GetStringData (i, piColumn[j]), pvData[j].GetCharPtr(), 
+                        String::StrLen (pvData[j].GetCharPtr())) != 0) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_ENDS_WITH | SEARCH_CASE_SENSITIVE:
+
+                    pszStr = m_tcContext.GetStringData (i, piColumn[j]);
+                    cchTestLen = String::StrLen (pszStr);
+                    cchDataLen = String::StrLen (pvData[j].GetCharPtr());
+
+                    if (cchDataLen > cchTestLen ||
+                        String::StrnCmp (
+                        pszStr + cchTestLen - cchDataLen,
+                        pvData[j].GetCharPtr(),
+                        cchDataLen
+                        ) != 0) {
+                        bHit = false;
+                    }
+                    break;
+
+                case SEARCH_ENDS_WITH:
+
+                    pszStr = m_tcContext.GetStringData (i, piColumn[j]);
+                    cchTestLen = String::StrLen (pszStr);
+                    cchDataLen = String::StrLen (pvData[j].GetCharPtr());
+
+                    if (cchDataLen > cchTestLen ||
+                        String::StrniCmp (
+                        pszStr + cchTestLen - cchDataLen,
+                        pvData[j].GetCharPtr(),
+                        cchDataLen
+                        ) != 0) {
+                        bHit = false;
                     }
                     break;
 
                 default:
 
-                    Assert (false);
                     bHit = false;
                     break;
                 }
-            }
+                break;
 
-            if (bHit) {
+            case V_INT64:
+                {
 
-                if (iNumHitsSkipped < iSkipHits) {
-                    iNumHitsSkipped ++;
+                int64 i64Data;
+
+                if (piColumn[j] == NO_KEY) {
+                    i64Data = i;
                 } else {
+                    i64Data = *((int64*) m_tcContext.GetData (i, piColumn[j]));
+                }
 
-                    if (iMaxNumHits != 0 && *piNumHits == iMaxNumHits) {
-                        
-                        // Abort!
-                        if (piStopKey != NULL) {
-                            *piStopKey = i;
-                        }
-                        iErrCode = ERROR_TOO_MANY_HITS;
-                        break;
-                    }
+                if (i64Data < pvData[j].GetInteger64() || i64Data > pvData2[j].GetInteger64()) {
+                    bHit = false;
+                }
+                
+                }
+                break;
+
+            default:
+
+                Assert (false);
+                bHit = false;
+                break;
+            }
+        }
+
+        if (bHit) {
+
+            if (iNumHitsSkipped < iSkipHits) {
+                iNumHitsSkipped ++;
+            } else {
+
+                if (iMaxNumHits != 0 && *piNumHits == iMaxNumHits) {
                     
-                    // Add to hits list
-                    if (*piNumHits == stKeySpace) {
-                        
-                        stKeySpace *= 2;
-                        piTemp = new unsigned int [stKeySpace];
-                        if (piTemp == NULL) {
-
-                            delete [] (*ppiKey);
-                            *ppiKey = NULL;
-                            *piNumHits = 0;
-
-                            return ERROR_OUT_OF_MEMORY;
-                        }
-
-                        memcpy (piTemp, *ppiKey, *piNumHits * sizeof (unsigned int));
+                    // Abort!
+                    if (piStopKey != NULL) {
+                        *piStopKey = i;
+                    }
+                    iErrCode = ERROR_TOO_MANY_HITS;
+                    break;
+                }
+                
+                // Add to hits list
+                if (*piNumHits == stKeySpace) {
+                    
+                    stKeySpace *= 2;
+                    piTemp = new unsigned int [stKeySpace];
+                    if (piTemp == NULL) {
 
                         delete [] (*ppiKey);
-                        *ppiKey = piTemp;
+                        *ppiKey = NULL;
+                        *piNumHits = 0;
+
+                        return ERROR_OUT_OF_MEMORY;
                     }
-                    
-                    (*ppiKey)[*piNumHits] = i;
-                    (*piNumHits) ++;
+
+                    memcpy (piTemp, *ppiKey, *piNumHits * sizeof (unsigned int));
+
+                    delete [] (*ppiKey);
+                    *ppiKey = piTemp;
                 }
+                
+                (*ppiKey)[*piNumHits] = i;
+                (*piNumHits) ++;
             }
         }
     }

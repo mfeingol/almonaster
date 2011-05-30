@@ -205,6 +205,10 @@ int HttpServer::Init() {
         return ERROR_OUT_OF_MEMORY;
     }
 
+    iErrCode = m_evLogEvent.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
     iErrCode = m_mShutdown.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
@@ -332,7 +336,7 @@ int HttpServer::StartServer() {
         
     // Print intro screen
     ReportEvent (m_pszServerName);
-    ReportEvent ("Copyright (c) 1998-2001 Max Attar Feingold");
+    ReportEvent ("Copyright (c) 1998-2002 Max Attar Feingold");
     ReportEvent ("");
     ReportEvent ("Alajar comes with ABSOLUTELY NO WARRANTY.");
     ReportEvent ("This is free software, and you are welcome");

@@ -161,6 +161,8 @@ const char* ButtonText[] = {
     "Lookup",
     "View Mini-Map",
     "Build",
+    "+",
+    "-",
     NULL
 };
 
@@ -307,6 +309,8 @@ const char* ButtonName[] = {
     "Lookup",
     "ViewMiniMap",
     "MiniBuild",
+    "Plus",
+    "Minus",
     NULL
 };
 
@@ -453,6 +457,8 @@ const char* ButtonImageName[] = {
     "Lookup.x",
     "ViewMiniMap.x",
     "MiniBuild.x",
+    "Plus.x",
+    "Minux.x",
     NULL
 };
 
@@ -599,6 +605,8 @@ const char* ButtonFileName[] = {
     "Lookup.gif",
     "ViewMiniMap.gif",
     "Build.gif",
+    "Plus.gif",
+    "Minus.gif",
     NULL
 };
 

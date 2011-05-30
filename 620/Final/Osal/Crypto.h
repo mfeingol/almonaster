@@ -25,6 +25,10 @@
 
 #include "OS.h"
 
+#ifdef __LINUX__
+#include <openssl/evp.h>
+#endif
+
 namespace Crypto {
 
     //
@@ -37,7 +41,26 @@ namespace Crypto {
     //
 
 #if defined __LINUX__
-#error Needs implementation
+    class OSAL_EXPORT Hash {
+    private:
+        EVP_MD_CTX m_mdctx;
+        EVP_MD *m_md;
+
+    public:
+        Hash (EVP_MD *md);
+        ~Hash();
+
+        int HashData (const void* pbData, size_t cbData);
+
+        int GetHashSize (size_t* pstSize);
+        int GetHash (void* pbData, size_t stSize);
+    };
+
+    class OSAL_EXPORT HashMD5 : public Hash {
+    public:
+        HashMD5();
+    };
+
 #else if defined __WIN32__
 
     class OSAL_EXPORT Hash {
