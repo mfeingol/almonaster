@@ -188,7 +188,7 @@ private:
     int CheckGameForAllyOut (int iGameClass, int iGameNumber, bool* pbAlly);
     int CheckGameForDrawOut (int iGameClass, int iGameNumber, bool* pbDraw);
 
-    int RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState, bool bBroadcast);
+    int RequestPauseInternal (int iGameClass, int iGameNumber, int iEmpireKey, bool bBroadcast, bool* pbNewPause, int* piGameState);
 
     int DeleteShipFromDeadEmpire (const char* pszEmpireShips, const char* pszGameMap, 
         unsigned int iShipKey, unsigned int iPlanetKey);
@@ -301,6 +301,9 @@ private:
     static int THREAD_CALL TriggerBridierTimeBombIfNecessaryMsg (LongRunningQueryMessage* pMessage);
 
     int ScanEmpiresOnScoreChanges();
+
+    // Options
+    int CheckForDelayedPause (int iGameClass, int iGameNumber, bool* pbNewlyPaused);
 
     // Top Lists
     int UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey);
@@ -806,6 +809,8 @@ public:
     int GetNumOpenGames (int* piNumGames);
     int GetNumClosedGames (int* piNumGames);
 
+    int AreAllEmpiresIdle (int iGameClass, int iGameNumber, bool* pbIdle);
+
     int GetActiveGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
     int GetOpenGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
     int GetClosedGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
@@ -852,7 +857,7 @@ public:
     int PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
     int UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
 
-    int LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey);
+    int LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey, int* piIdleUpdates);
 
     int RuinGame (int iGameClass, int iGameNumber, const char* pszWinnerName);
 
@@ -1173,7 +1178,7 @@ public:
     int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer);
 
     int RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
-    int RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
+    int RequestPauseQuietly (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbNewPause, int* piGameState);
     int RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
 
     int IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause);

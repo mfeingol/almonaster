@@ -1223,16 +1223,6 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 						ObjectFile="$(IntDir)/$(InputName)1.obj"/>
 				</FileConfiguration>
 			</File>
-			<Filter
-				Name="MapGen"
-				Filter="">
-				<File
-					RelativePath=".\MapGen\DefaultMapGenerator.cpp">
-				</File>
-				<File
-					RelativePath=".\MapGen\DefaultMapGenerator.h">
-				</File>
-			</Filter>
 		</Filter>
 		<Filter
 			Name="Almonaster"
@@ -1366,6 +1356,16 @@ copy Debug\Almonaster.pdb ..\Alajar\PageSources
 			</File>
 			<File
 				RelativePath="..\Alajar\Www_root\Almonaster\Resource\Text\News.html">
+			</File>
+		</Filter>
+		<Filter
+			Name="MapGen"
+			Filter="">
+			<File
+				RelativePath=".\MapGen\DefaultMapGenerator.cpp">
+			</File>
+			<File
+				RelativePath=".\MapGen\DefaultMapGenerator.h">
 			</File>
 		</Filter>
 	</Files>
