@@ -1,0 +1,54 @@
+OBJS                  = $(SRCS:.cpp=.o)
+DEFINES               = -D__LINUX__
+INCLUDE_PATH          = -I$(TOP) -I$(TOP)/AlajarDll -I$(TOP)/Database
+LIBDIR                = .
+LIBRARIES             = -L$(TOP)/Osal -L$(TOP)/Database -L$(TOP)/AlajarDll -lOsal -lAlajarDll -lDatabase \
+                                -lpthread -ldl  -lcrypto
+CXX                   = g++
+CXXFLAGS              = -g $(DEFINES) $(INCLUDE_PATH)
+LDXXSHARED            = $(CXX) -shared -Wl,-rpath,$(LIBDIR)
+RM                    = rm -f
+
+all: $(LIB_OUTPUT) $(OUTPUT) $(SUBDIRS) 
+
+$(LIB_OUTPUT): $(OBJS)
+	$(RM) $@
+	$(LDXXSHARED) -o $@ $(OBJS) 
+
+$(OUTPUT): $(OBJS)
+	$(RM) $@
+	LD_RUN_PATH=$(LIBDIR) $(CXX) -o $@ $(OBJS) $(LIBRARIES)
+
+# Used to find all .cpp files to add to top of Makefile
+listsrcs:
+	@echo "SRCS = \\"
+	@find . -name "*.cpp" | awk '{print "\t" $$1 " \\" }'
+	@echo "Remove the last backslash and copy into the Makefile"
+
+# recursively convert all files from dos CRLF to unix LF
+# some compilers can't correctly handle CRLF line breaks
+convert:
+	@echo Converting all source files to use Unix newlines
+	@find . \( -name "*.cpp" -o -name "*.h" \) -exec sh -c "mv {} {}.old; cat {}.old | tr -d '\015\032' > {}" \;
+
+clean::  $(SUBDIRS:%=%/__clean__)
+	$(RM) $(OBJS) $(OUTPUT)
+
+$(SUBDIRS:%=%/__clean__):
+	@cd `dirname $@` && $(MAKE) clean
+
+depend::  $(SUBDIRS:%=%/__depend__)
+	makedepend -Y -- $(CXXFLAGS) -- $(SRCS)
+
+$(SUBDIRS:%=%/__depend__):
+	@cd `dirname $@` && $(MAKE) depend
+
+$(SUBDIRS):
+	@cd $@ && $(MAKE)
+
+.SUFFIXES: .cpp
+
+.cpp.o:
+	$(CXX) -c $(CXXFLAGS) -o $@ $<
+
+.PHONY: all clean listsrcs $(SUBDIRS)
