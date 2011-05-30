@@ -1140,8 +1140,9 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
         if (iErrCode != OK) {
             continue;
         }
-        
-        if (Time::GetSecondDifference (tNow, vLastAct.GetUTCTime()) > 3 * 30 * DAY_LENGTH_IN_SECONDS) {
+
+        Seconds sActivityDiff = Time::GetSecondDifference (tNow, vLastAct.GetUTCTime());
+        if (sActivityDiff > 3 * 30 * DAY_LENGTH_IN_SECONDS) {
             
             Seconds sDiff;
             

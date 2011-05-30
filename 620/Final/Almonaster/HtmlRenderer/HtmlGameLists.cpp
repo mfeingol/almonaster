@@ -1094,9 +1094,6 @@ void HtmlRenderer::AddBridierGame (int iGameClass, int iGameNumber, const Varian
                 OutputText ("<br>Gain: <strong>");
                 m_pHttpResponse->WriteText (iGain);
                 OutputText ("</strong><br>Loss: <strong>");
-                if (iLoss > 0) {
-                    OutputText ("-");
-                }
                 m_pHttpResponse->WriteText (iLoss);
                 OutputText ("</strong>");
             }

@@ -39,7 +39,17 @@ public:
 		Variant vTemp;
 
         int iErrCode;
-/*      unsigned int iKey;
+        unsigned int iKey;
+
+        /*// Falcon only
+        UTCTime tShutdownTime;
+        Time::GetTime (0, 0, 23, 29, 11, 2001, &tShutdownTime);
+
+        char pszShutdownTime [OS::MaxDateLength];
+        Time::GetDateString (tShutdownTime, pszShutdownTime);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tShutdownTime);
+		Assert (iErrCode == OK);*/
 
         // Beta 1
 		// Create new templates
@@ -109,7 +119,6 @@ public:
         // Create Alien Glow Theme
         // Beta 4
         Variant pvColVal [SystemThemes::NumColumns];
-        unsigned int iKey;
 
         pvColVal[SystemThemes::Name] = "Alien Glow Theme";
         pvColVal[SystemThemes::AuthorName] = "Denis Moreaux";
@@ -180,8 +189,6 @@ public:
 			}
 		}
 
-        */
-
         iErrCode = m_pDatabase->WriteData (SYSTEM_DATA, SystemData::BuilderBRDampener, (float) 4.0);
         Assert (iErrCode == OK);
     }
@@ -189,7 +196,7 @@ public:
     void UpgradeEmpire (int iEmpireKey) {
 
         Variant vTemp;
-/*
+
         // Beta 1
 		char pszTable [256];
 
@@ -458,13 +465,11 @@ public:
 			    Assert (iErrCode == OK);
 			}
 		}
-        */
     }
 
 
 	void UpgradeGameClass (int iGameClass) {
 
-/*
 		int iErrCode;
 		Variant vOwner, vTournament, vTemp;
 
@@ -660,13 +665,10 @@ public:
             iErrCode = m_pDatabase->WriteData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Name, "Blank");
             Assert (iErrCode == OK);
         }
-
-        */
     }
 
 	void UpgradeTournament (unsigned int iTournament) {
 
-/*
 		// Beta 3
 		int iErrCode;
 		Variant vOwner;
@@ -713,11 +715,10 @@ public:
 			);
 
 		Assert (iErrCode == OK);
-*/
 	}
 
     void UpgradeTheme (unsigned int iThemeKey) {
-/*
+
         // Beta 4
         int iErrCode;
         Variant vFileName;
@@ -746,12 +747,10 @@ public:
 		Assert (iErrCode == OK);
 
         OS::HeapFree (pszName);
-*/
     }
 
 	void UpgradeGame (int iGameClass, int iGameNumber) {
 
-/*
 		Variant vTemp;
 		int iErrCode;
 
@@ -1076,8 +1075,6 @@ public:
 				Assert (iErrCode == OK);
 			}
 		}
-
-        */
 	}
 
 	void UpgradeEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey) {
@@ -1089,7 +1086,6 @@ public:
 		GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
         GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
-/*
         int iErrCode;
 		unsigned int iKey;
 
@@ -1317,7 +1313,6 @@ public:
                 Assert (iErrCode == OK);
             }
         }
-        */
 	}
 
 	//

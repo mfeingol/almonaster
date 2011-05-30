@@ -1436,7 +1436,7 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
         iTries ++;
         OS::Sleep (250);
     }
-    
+
     Assert (false);
     return ERROR_FAILURE;
 }

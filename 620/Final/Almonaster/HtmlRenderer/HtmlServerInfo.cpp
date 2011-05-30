@@ -751,9 +751,9 @@ void HtmlRenderer::WriteServerRules() {
         "</tr>"\
         "<tr>"\
             "<td><b>Carrier</b></td>"\
-            "<td>((BR + 4 ) ^ 2) + 100</td>"\
-            "<td>BR * 2 + 16</td>"\
-            "<td>BR * 4 + 32</td>"\
+            "<td>((BR + 4 ) ^ 2) + 75</td>"\
+            "<td>BR * 2 + 12</td>"\
+            "<td>BR * 4 + 24</td>"\
         "</tr>"\
         "<tr>"\
             "<td><b>Builder</b></td>"\
@@ -763,15 +763,15 @@ void HtmlRenderer::WriteServerRules() {
         "</tr>"\
         "<tr>"\
             "<td><b>Morpher</b></td>"\
-            "<td>((BR + 4 ) ^ 2) + 50</td>"\
-            "<td>BR * 2 + 8</td>"\
-            "<td>BR * 4 + 16</td>"\
+            "<td>((BR + 4 ) ^ 2) + 35</td>"\
+            "<td>BR * 2 + 6</td>"\
+            "<td>BR * 4 + 12</td>"\
         "</tr>"\
         "<tr>"\
             "<td><b>Jumpgate</b></td>"\
-            "<td>((BR + 4 ) ^ 2) + 200</td>"\
-            "<td>BR * 2 + 32</td>"\
-            "<td>BR * 4 + 64</td>"\
+            "<td>((BR + 4 ) ^ 2) + 150</td>"\
+            "<td>BR * 2 + 24</td>"\
+            "<td>BR * 4 + 48</td>"\
         "</tr>"\
         "<tr>"\
             "<td colspan=\"4\" align=\"center\">(*) If this value falls below 2, it becomes 2</td>"\
