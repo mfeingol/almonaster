@@ -24,7 +24,9 @@ INITIALIZE_EMPIRE
 
 IHttpForm* pHttpForm;
 
-int i, iErrCode, iPersonalGameClassesPage = 0, iGameClassKey = NO_KEY;
+int i, iErrCode, iPersonalGameClassesPage = 0;
+unsigned int iGameClassKey = NO_KEY;
+
 char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
 // Handle a submission
@@ -273,7 +275,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         case 3:
 
-            unsigned int iOwnerKey, iGameClassKey;
+            unsigned int iOwnerKey;
 
             pHttpForm = m_pHttpRequest->GetForm ("GameClassKey");
             if (pHttpForm != NULL && WasButtonPressed (BID_DELETEGAMECLASS)) {

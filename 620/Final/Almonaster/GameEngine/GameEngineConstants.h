@@ -332,6 +332,8 @@ enum MiniMaps {
 #define TECH_MORPHER                        (0x00004000)
 #define TECH_JUMPGATE                       (0x00008000)
 
+#define TECH_NUKE                           (0x80000000)
+
 #define ALL_CLASSIC_TECHS (TECH_ATTACK | TECH_SCIENCE | TECH_COLONY | TECH_STARGATE | TECH_CLOAKER | \
                            TECH_SATELLITE | TECH_TERRAFORMER | TECH_TROOPSHIP | TECH_DOOMSDAY | TECH_MINEFIELD | \
                            TECH_MINESWEEPER | TECH_ENGINEER)

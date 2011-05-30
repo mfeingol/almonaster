@@ -1,6 +1,6 @@
 //
 // Almonaster.dll:  a component of Almonaster
-// Copyright (C) 1998 Max Attar Feingold (maf6@cornell.edu)
+// Copyright (c) 1998-2004 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -436,25 +436,44 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     // Empires in game
     if (iGameOptions & GAME_NAMES_LISTED) {
 
-        Variant vTemp;
-        
+        Variant vName, vOptions;
+
         // Empire names may fail; halted empire quits
         int iLoopGuard = iNumActiveEmpires - 1;
-        for (i = 0; i < iLoopGuard; i ++) {
+        for (i = 0; i <= iLoopGuard; i ++) {
             
-            iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i].GetInteger(), &vTemp);
-            if (iErrCode == OK) {
-                strList += vTemp.GetCharPtr();
-                strList += ", ";
+            unsigned int iEmpireKey = pvEmpireKey[i].GetInteger();
+
+            if (g_pGameEngine->GetEmpireName (iEmpireKey, &vName) == OK &&
+                g_pGameEngine->GetEmpireGameProperty (iGameClass, iGameNumber, iEmpireKey, GameEmpireData::Options, &vOptions) == OK) {
+
+                bool bUpdated = (vOptions.GetInteger() & UPDATED) != 0;
+                if (bUpdated) {
+                    strList += "<font color=\"#";
+                    strList += m_vGoodColor.GetCharPtr();
+                    strList += "\">";
+                } else {
+                    strList += "<font color=\"#";
+                    strList += m_vBadColor.GetCharPtr();
+                    strList += "\">";
+                }
+
+                strList += vName.GetCharPtr();
+                if (i < iLoopGuard) {
+                    strList += ", ";
+                }
+
+                if (bUpdated) {
+                    strList += "</font>";
+                } else {
+                    strList += "</font>";
+                }
             }
-        }
-        iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i].GetInteger(), &vTemp);
-        if (iErrCode == OK) {
-            strList += vTemp.GetCharPtr();
         }
     }
 
     AddEmpiresInGame (
+        iState,
         iNumActiveEmpires, 
         strList.GetCharPtr(), 
         pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
@@ -758,7 +777,8 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
         OPEN_GAME_LIST, 
         pvGameClassInfo, 
         iGameClass, 
-        iGameNumber, 
+        iGameNumber,
+        iState,
         strList.GetCharPtr(), 
         iNumEmpiresInGame,
         bAdmin,
@@ -856,7 +876,8 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
     
     OutputText ("</td>");
 
-    iErrCode = AddGameClassDescription (SYSTEM_GAME_LIST, pvGameClassInfo, NO_KEY, NO_KEY, NULL, 0, false, false);
+    iErrCode = AddGameClassDescription (
+        SYSTEM_GAME_LIST, pvGameClassInfo, NO_KEY, 0, 0, NULL, 0, false, false);
 
 Cleanup:
 
@@ -864,7 +885,7 @@ Cleanup:
 }
 
 
-void HtmlRenderer::AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpires, 
+void HtmlRenderer::AddEmpiresInGame (int iGameState, int iNumActiveEmpires, const char* pszEmpires, 
                                      int iMinEmpires, int iMaxEmpires) {
 
     // Num empires
@@ -872,12 +893,7 @@ void HtmlRenderer::AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpir
     
     if (iNumActiveEmpires > 0) {
 
-        if (iNumActiveEmpires == iMaxEmpires) {
-            OutputText ("Full game<p>");
-        }
-        
-        OutputText ("<strong>");
-        
+        OutputText ("<strong>");       
         m_pHttpResponse->WriteText (iNumActiveEmpires);
         OutputText ("</strong> empire");
         if (iNumActiveEmpires != 1) {
@@ -893,7 +909,7 @@ void HtmlRenderer::AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpir
         OutputText ("<p>");
     }
 
-    if (iNumActiveEmpires != iMaxEmpires) {
+    if ((iGameState & STILL_OPEN) && iNumActiveEmpires != iMaxEmpires) {
 
         // Empires required
         if (iMinEmpires == iMaxEmpires) {
@@ -923,7 +939,8 @@ void HtmlRenderer::AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpir
 }
 
 int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGameClassInfo, 
-                                           int iGameClass, int iGameNumber, const char* pszEmpiresInGame, 
+                                           int iGameClass, int iGameNumber, int iGameState, 
+                                           const char* pszEmpiresInGame, 
                                            int iNumEmpiresInGame, bool bAdmin, bool bSpectators) {
     
     int iErrCode, iGameOptions = 0;
@@ -958,11 +975,12 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     
     // Empires
     AddEmpiresInGame (
-            iNumEmpiresInGame, 
-            pszEmpiresInGame, 
-            pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
-            pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
-            );
+        iGameState,
+        iNumEmpiresInGame, 
+        pszEmpiresInGame, 
+        pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
+        pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
+        );
 
     OutputText ("<td align=\"center\"><font size=\"2\"><strong>");
     

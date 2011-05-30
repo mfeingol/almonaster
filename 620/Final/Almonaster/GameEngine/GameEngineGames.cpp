@@ -2089,17 +2089,18 @@ int GameEngine::EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, cons
         // Check for 'pause on start' option
         if (!(iSystemOptions & PAUSE_GAMES_BY_DEFAULT)) {
 
-            // Unpause the game - a new empire came in and he's not paused by default
-            iErrCode = IsGamePaused (iGameClass, iGameNumber, &bUnPaused);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto OnError;
-            }
+            // If not admin-paused, unpause the game - a new empire came in and he's not paused by default
+            if ((iGameState & PAUSED) && !(iGameState & ADMIN_PAUSED)) {
 
-            iErrCode = UnpauseGame (iGameClass, iGameNumber, false, false);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto OnError;
+                bUnPaused = true;
+
+                iErrCode = UnpauseGame (iGameClass, iGameNumber, false, false);
+                if (iErrCode != OK) {
+                    Assert (false);
+                    goto OnError;
+                }
+
+                iGameState &= ~PAUSED;
             }
         }
         
@@ -3728,7 +3729,7 @@ int GameEngine::PauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bB
         goto Cleanup;
     }
 
-    // Write down remaining seconds
+    // Write down seconds since last update
     iErrCode = pGameData->WriteData (GameData::SecondsSinceLastUpdateWhilePaused, iSecondsSince);
     if (iErrCode != OK) {
         Assert (false);
@@ -3765,19 +3766,52 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
-    // Get gameclass update period
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::NumSecPerUpdate, 
-        &vTemp
-        );
-
+    // Get gameclass update options
+    int iGameClassOptions;
+    iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
     if (iErrCode != OK) {
-        Assert (false);
         return iErrCode;
     }
-    Seconds sUpdatePeriod = vTemp.GetInteger();
+
+    Seconds sFirstUpdateDelay = 0, sUpdatePeriod = 0, sAfterWeekendDelay = 0;
+
+    if (!(iGameClassOptions & WEEKEND_UPDATES)) {
+
+        // Get num updates
+        iErrCode = m_pGameData->ReadData (strGameData, GameData::NumUpdates, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        int iNumUpdates = vTemp.GetInteger();
+
+        // Get after weekend delay
+        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        sAfterWeekendDelay = vTemp.GetInteger();
+
+        // Get update period
+        iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+        if (iErrCode != OK) {
+            Assert (false);
+            return iErrCode;
+        }
+        sUpdatePeriod = vTemp.GetInteger();
+
+        // Get first update delay
+        if (iNumUpdates == 0) {
+            
+            iErrCode = m_pGameData->ReadData (strGameData, GameData::FirstUpdateDelay, &vTemp);
+            if (iErrCode != OK) {
+                Assert (false);
+                return iErrCode;
+            }
+            sFirstUpdateDelay = vTemp.GetInteger();
+        }
+    }
 
     unsigned int iNumEmpires;
     iErrCode = m_pGameData->GetNumRows (strEmpires, &iNumEmpires);
@@ -3851,11 +3885,23 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
         goto Cleanup;
     }
 
-    // If the time is greater than an update period, it means that 
-    // the game was paused on a weekend. In this case, we assume
-    // that the game has a full update remaining
-    if (iSecsSince > sUpdatePeriod) {
-        //iSecsSince = 1;  // 1 second
+    // Read last update time
+    UTCTime tLastUpdateTime;
+    iErrCode = pGameData->ReadData (GameData::LastUpdateTime, &tLastUpdateTime);
+    if (iErrCode != OK) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    // If the game was a weekend update game, figure out how much of the time since the last 
+    // update was really part of the week;  that's the time we really care about
+    if (!(iGameClassOptions & WEEKEND_UPDATES)) {
+
+        Seconds sCompensate = GetWeekendTimeCompensation (tLastUpdateTime,
+            iSecsSince, sUpdatePeriod, sAfterWeekendDelay, sFirstUpdateDelay);
+
+        iSecsSince -= sCompensate;
+        Assert (iSecsSince >= 0);
     }
 
     // Get time

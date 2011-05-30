@@ -172,7 +172,7 @@
 				RegisterOutput="FALSE"
 				IgnoreImportLibrary="FALSE"
 				AdditionalOptions="/MACHINE:I386"
-				AdditionalDependencies="odbc32.lib odbccp32.lib osal.lib"
+				AdditionalDependencies="odbc32.lib odbccp32.lib osal.lib database.lib"
 				ShowProgress="0"
 				OutputFile=".\Release/AlmonasterHook.dll"
 				Version=""

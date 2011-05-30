@@ -517,6 +517,29 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
     return iErrCode;
 }
 
+void GameEngine::CalculateTradeBonuses (int iNumTrades, int iTotalAg, int iTotalMin, int iTotalFuel,
+                                        int iPercentFirstTradeIncrease, int iPercentNextTradeIncrease,
+                                        int* piBonusAg, int* piBonusMin, int* piBonusFuel) {
+
+    int iBonusAg = 0, iBonusMin = 0, iBonusFuel = 0;
+
+    float fIncrease = (float) iPercentFirstTradeIncrease / 100;
+    float fNext = (float) iPercentNextTradeIncrease / 100;
+
+    for (int i = 0; i < iNumTrades; i ++) {
+
+        iBonusAg += (int) ((float) iTotalAg * fIncrease);
+        iBonusMin += (int) ((float) iTotalMin * fIncrease);
+        iBonusFuel += (int) ((float) iTotalFuel * fIncrease);
+
+        fIncrease *= fNext;
+    }
+
+    *piBonusAg = iBonusAg;
+    *piBonusMin = iBonusMin;
+    *piBonusFuel = iBonusFuel;
+}
+
 unsigned int GameEngine::GetNumFairDiplomaticPartners (unsigned int iMaxNumEmpires) {
 
     return (int) ((float) (iMaxNumEmpires - 2) / 2);

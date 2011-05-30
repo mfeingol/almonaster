@@ -447,6 +447,7 @@ Seconds Time::GetRemainingWeekendSeconds (const UTCTime& tTime) {
 
     tm* ptmTime = localtime (&tTime);
     if (ptmTime == NULL) {
+        Assert (false);
         return 0;
     }
 
@@ -475,6 +476,109 @@ Seconds Time::GetRemainingWeekendSeconds (const UTCTime& tTime) {
     sSeconds += ((60 - ptmTime->tm_sec));
 
     return sSeconds;
+}
+
+Seconds Time::GetWeekendSecondsBetweenTimes (const UTCTime& tStart, const UTCTime& tEnd) {
+
+    Assert (tEnd >= tStart);
+
+    Seconds sDiff = tEnd - tStart;
+    Seconds sModDiff = sDiff % (7 * 24 * 60 * 60);
+
+    // If the start is weeks before the end, mod it to inside the week before the end
+    time_t tRealStart;
+    tRealStart = sDiff == sModDiff ? tStart : tEnd - sModDiff;
+
+    tm* ptmStart = localtime (&tRealStart);
+    if (ptmStart == NULL) {
+        Assert (false);
+        return 0;
+    }
+
+    Seconds sWeekend = ((sDiff - sModDiff) * 2) / 7;
+
+    if (ptmStart->tm_wday == 0 || ptmStart->tm_wday == 6) {
+
+        // Start time is on a weekend - find the end of that weekend
+
+        // Add a day if saturday
+        Seconds sThisWeekend;
+        if (ptmStart->tm_wday == 6) {
+            sThisWeekend = 24 * 60 * 60;   
+        } else {
+            sThisWeekend = 0;
+        }
+
+        // Add hours remaining until 23h
+        sThisWeekend += ((23 - ptmStart->tm_hour) * 3600);
+
+        // Add minutes remaining until 59 min
+        sThisWeekend += ((59 - ptmStart->tm_min) * 60);
+
+        // Add secs remaining until 60 sec
+        sThisWeekend += ((60 - ptmStart->tm_sec));
+
+        time_t tEndOfWeekend = tRealStart + sThisWeekend;
+        if (tEndOfWeekend > tEnd) {
+
+            // We overshot, but we're done.  Just add the seconds between the two times
+            sWeekend += tEnd - tRealStart;
+            return sWeekend;
+        }
+        
+        // Add the rest of the weekend
+        sWeekend += sThisWeekend;
+    
+       time_t tNextWeekendStart = tEndOfWeekend + 5 * 24 * 60 * 60;
+
+       if (tNextWeekendStart > tEnd) {
+
+           // We're done, since the end is before the next weekend
+           return sWeekend;
+       }
+
+       // The end has to fall on a weekend, because otherwise it would be a difference
+       // greater than a week
+
+       sWeekend += tEnd - tNextWeekendStart;
+       return sWeekend;
+
+    } else {
+
+        // Start is not on a weekend.  Find the next weekend after start
+        Seconds sUntilWeekend = (5 - ptmStart->tm_wday) * 24 * 60 * 60;
+
+        // Add hours remaining until 23h
+        sUntilWeekend += ((23 - ptmStart->tm_hour) * 3600);
+
+        // Add minutes remaining until 59 min
+        sUntilWeekend += ((59 - ptmStart->tm_min) * 60);
+
+        // Add secs remaining until 60 sec
+        sUntilWeekend += ((60 - ptmStart->tm_sec));
+
+        time_t tNextWeekendStart = tRealStart + sUntilWeekend;
+
+        if (tNextWeekendStart > tEnd) {
+
+            // The end is before the next weekend, so we're done
+            return sWeekend;
+        }
+
+        time_t tNextWeekendEnd = tNextWeekendStart + 2 * 24 * 60 * 60;
+        
+        if (tNextWeekendEnd > tEnd) {
+ 
+            // The end falls inside the next weekend, so we're done
+            sWeekend += tEnd - tNextWeekendStart;
+            return sWeekend;
+        }
+
+        // The end cannot fall on the next weekend, since that would be more than week's difference
+        // Add the weekend we're processing and we're done
+        sWeekend += 2 * 24 * 60 * 60;
+        return sWeekend;
+    }
 }
 
 void Time::StartTimer (Timer* ptmTimer) {

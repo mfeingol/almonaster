@@ -412,11 +412,11 @@ protected:
 
     void WriteGameListHeader (const char** ppszHeaders, size_t stNumHeaders, const char* pszTableColor);
 
-    void AddEmpiresInGame (int iNumActiveEmpires, const char* pszEmpires, int iMinEmpires, int iMaxEmpires);
+    void AddEmpiresInGame (int iGameState, int iNumActiveEmpires, const char* pszEmpires, int iMinEmpires, int iMaxEmpires);
 
     int AddGameClassDescription (int iWhichList, const Variant* pvGameClassInfo, 
-        int iGameClass, int iGameNumber, const char* pszEmpiresInGame, int iNumEmpiresInGame, bool bAdmin,
-        bool bSpectators);
+        int iGameClass, int iGameNumber, int iGameState, const char* pszEmpiresInGame, int iNumEmpiresInGame, 
+        bool bAdmin, bool bSpectators);
 
     int WriteInPlayGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
         bool bAdmin, bool bSpectator);

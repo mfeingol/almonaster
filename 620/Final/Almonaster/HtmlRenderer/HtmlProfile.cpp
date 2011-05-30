@@ -381,21 +381,7 @@ void HtmlRenderer::WriteProfile (unsigned int iTargetEmpireKey, bool bEmpireAdmi
     
     // Classic Score
     OutputText ("</td><td>&nbsp;</td><td><strong>Classic Score:</strong></td><td>");
-    
-    if (bEmpireAdmin &&
-        m_iPrivilege >= ADMINISTRATOR &&
-        iTargetEmpireKey != m_iEmpireKey && 
-        iTargetEmpireKey != ROOT_KEY && 
-        iTargetEmpireKey != GUEST_KEY) {
-
-        OutputText ("<input type=\"text\" size=\"12\" maxlength=\"12\" name=\"NewCScore\" value=\"");
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore].GetFloat());
-        OutputText ("\">");
-        
-    } else {
-        
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore]);
-    }
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore]);
 
     // Email address
     OutputText ("</td></tr><tr><td><strong>Email Address:</strong></td><td>");

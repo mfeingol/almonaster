@@ -449,6 +449,9 @@ private:
 
     void AdvanceWeekendTime (const UTCTime& tNextUpdateTime, Seconds sAfterWeekendDelay, UTCTime* ptNextUpdateTime);
 
+    Seconds GetWeekendTimeCompensation (const UTCTime& tLastUpdateTime, 
+        Seconds sSecondsSinceLast, Seconds sUpdatePeriod, Seconds sAfterWeekendDelay, Seconds sFirstUpdateDelay);
+
     // Top Lists
     int MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
         const Variant* pvOurData);
@@ -636,6 +639,10 @@ public:
 #endif
 
     int GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel, int* piMaxNumPartners);
+
+    void CalculateTradeBonuses (int iNumTrades, int iTotalAg, int iTotalMin, int iTotalFuel,
+        int iPercentFirstTradeIncrease, int iPercentNextTradeIncrease, 
+        int* piBonusAg, int* piBonusMin, int* iBonusFuel);
 
     unsigned int GetNumFairDiplomaticPartners (unsigned int iMaxNumEmpires);
 

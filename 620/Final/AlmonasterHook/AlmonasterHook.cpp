@@ -36,6 +36,7 @@ public:
 
     void UpgradeSystem() {
 		
+        /*
 		Variant vTemp;
 
         int iErrCode;
@@ -180,6 +181,56 @@ public:
 		}
 
         iErrCode = m_pDatabase->WriteData (SYSTEM_DATA, SystemData::BuilderBRDampener, (float) 4.0);
+        Assert (iErrCode == OK);
+        */
+
+        int iErrCode;
+
+        SYSTEM_EMPIRE_NUKER_LIST (strNuker, 1941);
+        SYSTEM_EMPIRE_NUKED_LIST (strNuked, 1941);
+
+        IDatabase* pBackup = NULL;
+        iErrCode = DatabaseCreateInstance (CLSID_Database, IID_IDatabase, (void**) &pBackup);
+        Assert (iErrCode == OK);
+
+        iErrCode = pBackup->Initialize (
+            "D:\\Falcon\\Alajar\\PageSources\\Almonaster_Database\\Backups\\2003_12_04",
+            DATABASE_CHECK);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->ImportTable (pBackup, strNuker);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->ImportTable (pBackup, strNuked);
+        Assert (iErrCode == OK);
+
+        pBackup->Release();
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::Wins, 17);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::Nukes, 24);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::Nuked, 3);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::AlmonasterScoreSignificance, 27);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::ClassicScore, (float) 27.5);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::BridierRank, 500);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::BridierIndex, 500);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::MaxEcon, 35);
+        Assert (iErrCode == OK);
+
+        iErrCode = m_pDatabase->WriteData (SYSTEM_EMPIRE_DATA, 1941, SystemEmpireData::MaxMil, 22);
         Assert (iErrCode == OK);
     }
 
@@ -3017,7 +3068,7 @@ Cleanup:
 
 		m_pDatabase = m_pGameEngine->GetDatabase();
 
-		//System();
+		System();
         //ForEachTheme();
         //ForEachGameClass();
 		//ForEachEmpire();

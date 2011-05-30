@@ -2493,7 +2493,7 @@ void GameEngine::CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey
         &iNumPlanets
         );
     
-    if (iErrCode != OK) {
+    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
         Assert (false);
         goto Cleanup;
     }

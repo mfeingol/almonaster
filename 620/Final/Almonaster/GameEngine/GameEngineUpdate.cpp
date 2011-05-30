@@ -256,6 +256,42 @@ Cleanup:
 }
 
 
+Seconds GameEngine::GetWeekendTimeCompensation (const UTCTime& tLastUpdateTime, 
+                                                Seconds sSecondsSinceLast, Seconds sUpdatePeriod,
+                                                Seconds sAfterWeekendDelay, Seconds sFirstUpdateDelay) {
+
+    UTCTime tPauseTime;
+    Time::AddSeconds (tLastUpdateTime, sSecondsSinceLast, &tPauseTime);
+    Seconds sWeekendTime = Time::GetWeekendSecondsBetweenTimes (tLastUpdateTime, tPauseTime);
+
+	if (sWeekendTime > 0 && !Time::IsWeekendTime (tPauseTime)) {
+
+        // If the pause occurred during the after weekend period, and the update
+        // also fell within that period, then compensate by adding the consumed after period 
+        // to the weekend time
+
+        UTCTime tPauseMinus;
+        Time::SubtractSeconds (tPauseTime, sAfterWeekendDelay, &tPauseMinus);
+		if (Time::IsWeekendTime (tPauseMinus)) {
+
+			Seconds sAfterWeekendUsed = sAfterWeekendDelay - Time::GetRemainingWeekendSeconds (tPauseMinus);
+			Assert (sAfterWeekendUsed > 0);
+
+			// Maybe the update occurred in that period too - don't overcompensate
+			if (sSecondsSinceLast < sAfterWeekendUsed) {
+				sAfterWeekendUsed = sSecondsSinceLast;
+			}
+
+			sWeekendTime += sAfterWeekendUsed;
+		}
+    }
+
+	Assert (sSecondsSinceLast - sWeekendTime >= 0);
+	Assert (sSecondsSinceLast - sWeekendTime < sUpdatePeriod + sFirstUpdateDelay);
+
+    return sWeekendTime;
+}
+
 // Input:
 // iGameClass -> Gameclass
 // iGameNumber -> Gamenumber
@@ -273,95 +309,98 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
 
     int iErrCode = OK, iGameState;
 
-    Variant vSecPerUpdate, vLastUpdateTime, vTemp, vNumUpdates, vOptions, vAfterWeekendDelay = 0, vState,
-        vFirstUpdateDelay = 0;
+    Variant vTemp;
+
+    Seconds sUpdatePeriod;
+    Seconds sFirstUpdateDelay = 0, sAfterWeekendDelay = 0;
+    UTCTime tLastUpdateTime;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Get update period
-    iErrCode = m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::NumSecPerUpdate, 
-        &vSecPerUpdate
-        );
-
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    sUpdatePeriod = vTemp.GetInteger();
 
     // Get game state
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vState);
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
-
-    iGameState = vState.GetInteger();
+    iGameState = vTemp.GetInteger();
 
     // Easy short-circuit: game hasn't started
     if (!(iGameState & STARTED)) {
 
         // Get first update delay
-        iErrCode = m_pGameData->ReadData (strGameData, GameData::FirstUpdateDelay, &vFirstUpdateDelay);
+        iErrCode = m_pGameData->ReadData (strGameData, GameData::FirstUpdateDelay, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
         }
+        sFirstUpdateDelay = vTemp.GetInteger();
 
         *piGameState = iGameState;
         *piNumUpdates = 0;
         *piSecondsSince = 0;
-        *piSecondsUntil = vSecPerUpdate.GetInteger() + vFirstUpdateDelay.GetInteger();
+        *piSecondsUntil = sUpdatePeriod + sFirstUpdateDelay;
 
         return OK;
     }
     
     // Get num updates
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::NumUpdates, &vNumUpdates);
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::NumUpdates, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    int iNumUpdates = vTemp.GetInteger();
     
     // Get first update delay
-    if (vNumUpdates.GetInteger() == 0) {
+    if (iNumUpdates == 0) {
         
-        iErrCode = m_pGameData->ReadData (strGameData, GameData::FirstUpdateDelay, &vFirstUpdateDelay);
+        iErrCode = m_pGameData->ReadData (strGameData, GameData::FirstUpdateDelay, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
         }
+        sFirstUpdateDelay = vTemp.GetInteger();
     }
 
-    // Get options
-    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
+    // Get last update time
+    iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateTime, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
+    tLastUpdateTime = vTemp.GetUTCTime();
 
-    if (!(vOptions.GetInteger() & WEEKEND_UPDATES)) {
+    // Get options
+    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+    bool bWeekends = (vTemp.GetInteger() & WEEKEND_UPDATES) != 0;
+
+    if (!bWeekends) {
 
         // Get after weekend delay
-        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AfterWeekendDelay, &vAfterWeekendDelay);
+        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
         }
+        sAfterWeekendDelay = vTemp.GetInteger();
     }
 
     // Get time
-    UTCTime tNow, tLastUpdateTime, tNextUpdateTime;
+    UTCTime tNow, tNextUpdateTime;
     Time::GetTime (&tNow);
-
-    bool bWeekends = (vOptions.GetInteger() & WEEKEND_UPDATES) != 0;
-    int iNumUpdates = vNumUpdates.GetInteger();
-    
-    Seconds sUpdatePeriod = vSecPerUpdate.GetInteger();
-    Seconds sAfterWeekendDelay = vAfterWeekendDelay.GetInteger();
-    Seconds sFirstUpdateDelay = vFirstUpdateDelay.GetInteger();
 
     if ((iGameState & ADMIN_PAUSED) || (iGameState & PAUSED)) {
 
@@ -370,16 +409,21 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
             Assert (false);
             return iErrCode;
         }
-        Assert (vTemp.GetInteger() >= 0);
-
-        // If the time is greater than an update period, it means that 
-        // the game was paused on a weekend. In this case, we assume
-        // that the game has a full update remaining
         Seconds sSecondsSinceLast = vTemp.GetInteger();
-        if (sSecondsSinceLast > sUpdatePeriod + (iNumUpdates == 0 ? sFirstUpdateDelay : 0)) {
-            Assert (!bWeekends);
-            sSecondsSinceLast = 1;  // 1 second
+        Assert (sSecondsSinceLast >= 0);
+
+        // If the game was a weekend update game, figure out how much of the time since the last 
+        // update was really part of the week;  that's the time we really care about
+        if (!bWeekends) {
+
+            Seconds sCompensate = GetWeekendTimeCompensation (
+                tLastUpdateTime, sSecondsSinceLast, sUpdatePeriod, sAfterWeekendDelay, sFirstUpdateDelay);
+
+            sSecondsSinceLast -= sCompensate;
+            Assert (sSecondsSinceLast >= 0);
         }
+
+        Assert (sSecondsSinceLast < sUpdatePeriod + sFirstUpdateDelay);
 
         // Calculate the simulated last update time
         Time::SubtractSeconds (tNow, sSecondsSinceLast, &tLastUpdateTime);
@@ -398,23 +442,14 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         Assert (Time::OlderThan (tNow, tNextUpdateTime));
 
         *piGameState = iGameState;
-        *piSecondsSince = vTemp.GetInteger();
+        *piSecondsSince = sSecondsSinceLast;
         *piSecondsUntil = Time::GetSecondDifference (tNextUpdateTime, tNow);
         *piNumUpdates = iNumUpdates;
 
         return OK;
     }
 
-    // Get last update time
-    iErrCode = m_pGameData->ReadData (strGameData, GameData::LastUpdateTime, &vLastUpdateTime);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-    
-    // Set last update time, loop until done
-    tLastUpdateTime = vLastUpdateTime.GetUTCTime();
-
+    // Loop until done
     while (true) {
 
         GetNextUpdateTime (

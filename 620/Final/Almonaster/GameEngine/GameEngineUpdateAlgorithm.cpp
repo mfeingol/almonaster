@@ -1104,8 +1104,6 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                             goto Cleanup;
                         }
                     }
-
-                    iAwake ++;
                 }
 
                 // Check for simple ruin
@@ -1124,6 +1122,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
                 } else {
 
                     iSurvivorIndex = i;
+                    iAwake ++;
                 }
 
             } else {
@@ -5249,7 +5248,7 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
 
                             strBattleMessage += END_STRONG ") " BEGIN_STRONG "Independent" END_STRONG " ship";
 
-                            if (iBattleShips == 1) {
+                            if (iCounter == 1) {
                                 strBattleMessage += " was " BEGIN_STRONG "destroyed" END_STRONG " at ";
                             } else {
                                 strBattleMessage += "s were " BEGIN_STRONG "destroyed" END_STRONG " at ";
@@ -6506,12 +6505,12 @@ int GameEngine::UpdateEmpiresEcon (int iGameClass, int iGameNumber, int iNumEmpi
                                    int iNewUpdateCount, const char* strGameMap,
                                    float fMaxAgRatio, const GameConfiguration& gcConfig) {
 
-    int iNumTraders, iNumAllies = 0, i, j, iNumBusinesses, iErrCode = OK, iEcon, iNumShips, iMil,
+    int iNumTraders, iNumAllies = 0, i, j, iErrCode = OK, iEcon, iNumShips, iMil,
         iBonusMin, iBonusFuel, iBonusAg;
     
     unsigned int* piProxyKey;
     
-    float fIncrease, fMil;
+    float fMil;
     
     Variant vTemp, * pvShipMil, vPop, vMaxPop, vTotalPop, vTotalAg, vMin, vFuel;
 
@@ -6551,21 +6550,11 @@ int GameEngine::UpdateEmpiresEcon (int iGameClass, int iGameNumber, int iNumEmpi
 #endif
 
         // Add trade and alliance advantages to econ
-        fIncrease = (float) gcConfig.iPercentFirstTradeIncrease / 100;
-        iNumBusinesses = iNumTraders + iNumAllies;
-        
-        iBonusFuel = 0;
-        iBonusMin = 0;
-        iBonusAg = 0;
-        
-        for (j = 0; j < iNumBusinesses; j ++) {
-            
-            iBonusFuel += (int) ((float) (piTotalFuel[i] + iBonusFuel) * fIncrease);
-            iBonusMin += (int) ((float) (piTotalMin[i] + iBonusMin) * fIncrease);
-            iBonusAg += (int) ((float) (piTotalAg[i] + iBonusAg) * fIncrease);
-
-            fIncrease *= (float) gcConfig.iPercentNextTradeIncrease / 100;
-        }
+        CalculateTradeBonuses (
+            iNumTraders + iNumAllies, piTotalAg[i], piTotalMin[i], piTotalFuel[i],
+            gcConfig.iPercentFirstTradeIncrease, gcConfig.iPercentNextTradeIncrease,
+            &iBonusAg, &iBonusMin, &iBonusFuel
+            );
         
         // Write new resource totals to database
         iErrCode = m_pGameData->WriteData (pstrEmpireData[i], GameEmpireData::TotalFuel, piTotalFuel[i]);
