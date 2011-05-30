@@ -102,7 +102,9 @@
 				CommandLine="copy release\Database.dll ..\release
 copy release\Database.pdb ..\release
 copy release\Database.lib ..\sdk
-"/>
+copy Database.h ..\sdk
+copy release\Database.lib ..\Include
+copy Database.h ..\Include"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool

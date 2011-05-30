@@ -56,6 +56,59 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcproj
 	EndProjectSection
 EndProject
 Global
+	GlobalSection(SourceCodeControl) = preSolution
+		SccNumberOfProjects = 12
+		SccProjectName0 = \u0022$/620\u0022,\u0020TWCAAAAA
+		SccLocalPath0 = ..
+		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection0 = Almonaster\\
+		SolutionUniqueID = {FF88DBDC-C759-45C5-8F7E-C183C35AF1F5}
+		SccProjectUniqueName1 = ..\\Alajar\\Alajar.vcproj
+		SccLocalPath1 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection1 = Alajar\\
+		SccProjectUniqueName2 = ..\\AlajarDll\\AlajarDll.vcproj
+		SccLocalPath2 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection2 = AlajarDll\\
+		SccProjectUniqueName3 = Almonaster.vcproj
+		SccLocalPath3 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection3 = Almonaster\\
+		SccProjectUniqueName4 = ..\\Admin\\Admin.vcproj
+		SccLocalPath4 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection4 = Admin\\
+		SccProjectUniqueName5 = ..\\AlajarSvc\\AlajarSvc.vcproj
+		SccLocalPath5 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection5 = AlajarSvc\\
+		SccProjectUniqueName6 = ..\\AlmonasterHook\\AlmonasterHook.vcproj
+		SccLocalPath6 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection6 = AlmonasterHook\\
+		SccProjectUniqueName7 = ..\\Asfpp\\Asfpp.vcproj
+		SccLocalPath7 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection7 = Asfpp\\
+		SccProjectUniqueName8 = ..\\DBConv\\DBConv.vcproj
+		SccLocalPath8 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection8 = DBConv\\
+		SccProjectUniqueName9 = ..\\Database\\Database.vcproj
+		SccLocalPath9 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection9 = Database\\
+		SccProjectUniqueName10 = ..\\OldDatabase\\OldDatabase.vcproj
+		SccLocalPath10 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection10 = OldDatabase\\
+		SccProjectUniqueName11 = ..\\Osal\\Osal.vcproj
+		SccLocalPath11 = ..
+		CanCheckoutShared = false
+		SccProjectFilePathRelativizedFromConnection11 = Osal\\
+	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
@@ -110,3 +163,4 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityAddIns) = postSolution
 	EndGlobalSection
+EndGlobal

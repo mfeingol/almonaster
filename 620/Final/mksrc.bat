@@ -3,7 +3,7 @@
 
 @set DEFOPT=-ST8!n .zip:.jpg:.mp3
 
-zip %DEFOPT% -r -D -X -S alajar-src.zip makefile %devdir%\Admin %devdir%\Alajar %devdir%\AlajarDll %devdir%\AlajarSvc %devdir%\Almonaster %devdir%\AlmonasterHook %devdir%\Asfpp %devdir%\Database %devdir%\OldDatabase %devdir%\DBConv %devdir%\Osal %devdir%\Include -x *.pdb -x *.idb -x *.obj -x *.pch -x *.lib -x *.ilk -x *.exp -x *.dll -x *.exe -x *.plg -x *.opt -x *.ncb -x *.report -x *.stat -x *.dat -x *.log -x *.html -x *.zip -x *.gif -x *.jpg -x *.conf -x *.counters -x *.bmp -x deleteme* -x *.ico -x %devdir%\Alajar\www_root\Almonaster\Resource\* -x *buildlog.htm -x *.enc -x deleteme*.txt -x *.scc -x *.vspscc -x *.vssscc -x *.suo
+zip %DEFOPT% -r -D -X -S alajar-src.zip makefile %devdir%\Admin %devdir%\Alajar %devdir%\AlajarDll %devdir%\AlajarSvc %devdir%\Almonaster %devdir%\AlmonasterHook %devdir%\Asfpp %devdir%\Database %devdir%\DBConv %devdir%\Osal %devdir%\Include -x *.pdb -x *.idb -x *.obj -x *.pch -x *.lib -x *.ilk -x *.exp -x *.dll -x *.exe -x *.plg -x *.opt -x *.ncb -x *.report -x *.stat -x *.dat -x *.log -x *.html -x *.zip -x *.gif -x *.jpg -x *.conf -x *.counters -x *.bmp -x deleteme* -x *.ico -x %devdir%\Alajar\www_root\Almonaster\Resource\* -x *buildlog.htm -x *.enc -x deleteme*.txt -x *.scc -x *.vspscc -x *.vssscc -x *.suo
 
 gpg --openpgp --local-user 3F49A1DD --print-md md5 alajar-src.zip > alajar-src.md5
 gpg --openpgp --output alajar-src.md5.asc --local-user 3F49A1DD --clearsign alajar-src.md5

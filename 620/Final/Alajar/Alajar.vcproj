@@ -3,10 +3,10 @@
 	ProjectType="Visual C++"
 	Version="7.10"
 	Name="Alajar"
-	SccProjectName="SAK"
-	SccAuxPath="SAK"
-	SccLocalPath="SAK"
-	SccProvider="SAK">
+	SccProjectName="&quot;$/620&quot;, TWCAAAAA"
+	SccAuxPath=""
+	SccLocalPath=".."
+	SccProvider="MSSCCI:Microsoft Visual SourceSafe">
 	<Platforms>
 		<Platform
 			Name="Win32"/>

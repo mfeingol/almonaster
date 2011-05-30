@@ -6202,7 +6202,7 @@ Cleanup:
 int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, 
                                    const char* strGameMap, const char** pstrEmpireShips, 
                                    const char** pstrEmpireFleets, const char** pstrEmpireMap,
-                                     String* pstrUpdateMessage) {
+                                   String* pstrUpdateMessage) {
 
     int iDirection, iErrCode = OK;
     unsigned int i, iFleetKey, * piShipKey = NULL, k, iNumShips;

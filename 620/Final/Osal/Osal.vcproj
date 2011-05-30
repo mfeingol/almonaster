@@ -209,7 +209,8 @@ copy debug\Osal.lib ..\Include
 copy release\Osal.pdb ..\release
 copy release\Osal.lib ..\sdk
 copy *.h ..\sdk\Osal
-"/>
+copy release\Osal.lib ..\Include
+copy *.h ..\Include\Osal"/>
 			<Tool
 				Name="VCPreBuildEventTool"/>
 			<Tool
