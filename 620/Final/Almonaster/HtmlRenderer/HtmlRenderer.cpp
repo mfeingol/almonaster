@@ -1609,9 +1609,9 @@ bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
 
     Assert (m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
     
-    if (WasButtonPressed (PageButtonId[m_pgPageId])) {
+    /*if (WasButtonPressed (PageButtonId[m_pgPageId])) {
         return false;
-    }
+    }*/
     
     if (WasButtonPressed (BID_INFO)) {
         *ppageRedirect = INFO;
@@ -2635,12 +2635,6 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
     if (HTMLFilter (pvPlanetData[GameMap::Name].GetCharPtr(), &strFilter, 0, false) != OK) {
         return ERROR_OUT_OF_MEMORY;
     }
-
-    OutputText ("<input type=\"hidden\" name=\"KeyPlanet");
-    m_pHttpResponse->WriteText (iPlanetCounter);
-    OutputText ("\" value=\"");
-    m_pHttpResponse->WriteText (iPlanetKey);
-    OutputText ("\">");
     
     if (iOwner != SYSTEM && iOwner == iEmpireKey && !bAdmin) {
         
@@ -2659,6 +2653,12 @@ int HtmlRenderer::WriteUpClosePlanetString (int iEmpireKey, int iPlanetKey, int 
         OutputText ("\" value=\"");
         m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
         OutputText ("\"></td>");
+
+        OutputText ("<input type=\"hidden\" name=\"KeyPlanet");
+        m_pHttpResponse->WriteText (iPlanetCounter);
+        OutputText ("\" value=\"");
+        m_pHttpResponse->WriteText (iPlanetKey);
+        OutputText ("\">");
         
         *pbOurPlanet = true;
         

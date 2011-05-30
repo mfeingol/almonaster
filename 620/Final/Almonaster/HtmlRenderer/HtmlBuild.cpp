@@ -125,7 +125,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
 
         "<table width=\"50%\">"\
         "<tr>"
-        "<td align=\"center\" colspan=\""
+        "<th align=\"center\" colspan=\""
         );
 
     m_pHttpResponse->WriteText (iLimit + 1);
@@ -133,7 +133,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     OutputText (
 
         "\">Build:"\
-        "</td>"\
+        "</th>"\
         "</tr>"\
 
         "<tr>"

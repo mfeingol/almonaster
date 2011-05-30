@@ -289,9 +289,13 @@ EndPartialMaps:
             }
             iUpdatePlanetKey = pHttpForm->GetUIntValue();
 
+            iClickedPlanetKey = iUpdatePlanetKey;
+            iMapSubPage = 1;
+
             // Get original name
             if ((pHttpForm = m_pHttpRequest->GetForm ("OldPlanetName0")) != NULL) {
 
+                // Get old name
                 pszOldPlanetName = pHttpForm->GetValue();
 
                 // Get new name
@@ -364,16 +368,16 @@ EndPartialMaps:
 
                 HandleMiniBuild (iUpdatePlanetKey);
 
-                iClickedPlanetKey = iUpdatePlanetKey;
-                iMapSubPage = 1;
+                //iClickedPlanetKey = iUpdatePlanetKey;
+                //iMapSubPage = 1;
                 bRedirectTest = false;
                 break;
             }
 
             if (WasButtonPressed (BID_UPDATE)) {
 
-                iClickedPlanetKey = iUpdatePlanetKey;
-                iMapSubPage = 1;
+                //iClickedPlanetKey = iUpdatePlanetKey;
+                //iMapSubPage = 1;
                 bRedirectTest = false;
                 break;
             }
@@ -383,7 +387,7 @@ EndPartialMaps:
                 (pszStart = pHttpForm->GetName()) != NULL &&
                 sscanf (pszStart, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2) {
 
-                iMapSubPage = 1;
+                //iMapSubPage = 1;
                 bRedirectTest = false;
                 break;
             }
@@ -522,7 +526,8 @@ case 0:
 case 1:
     {
 
-    bool bTrue;
+    bool bTrue, bOurPlanet = false;
+    unsigned int iNumShipsRendered = 0, iNumFleetsRendered = 0;
 
     unsigned int iLivePlanetKey, iDeadPlanetKey;
     iErrCode = g_pGameEngine->GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
@@ -621,13 +626,15 @@ case 1:
         }
 
         %><input type="hidden" name="MapSubPage" value="1"><%
+
         %><p><table width="90%"><%
 
         iErrCode = WriteUpClosePlanetString (
             m_iEmpireKey, iClickedPlanetKey, 
             iClickedProxyPlanetKey, iLivePlanetKey, iDeadPlanetKey, 0, 
             (vOptions.GetInteger() & VISIBLE_BUILDS) != 0, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel,
-            iBadFuel, fAgRatio, (vOptions.GetInteger() & INDEPENDENCE) != 0, false, false, pvPlanetData, &bTrue
+            iBadFuel, fAgRatio, (vOptions.GetInteger() & INDEPENDENCE) != 0, false, false, pvPlanetData, 
+            &bOurPlanet
             );
 
         pDatabase->FreeData (pvPlanetData);
@@ -636,6 +643,10 @@ case 1:
         if (iErrCode != OK) {
             %>Error rendering up-close planet view. The error was <% Write (iErrCode);
             break;
+        }
+
+        if (!bOurPlanet) {
+            %><input type="hidden" name="KeyPlanet0" value="<% Write (iClickedPlanetKey); %>"><%
         }
 
         // Render ships
@@ -657,7 +668,9 @@ case 1:
                 iBR,
                 fMaintRatio,
                 &simShipsInMap,
-                true
+                true,
+                &iNumShipsRendered,
+                &iNumFleetsRendered
                 );
 
             %><input type="hidden" name="NumShips" value="<% Write (simShipsInMap.iCurrentShip); %>"><%
@@ -697,8 +710,10 @@ case 1:
 
     %></table><p><%
 
-    WriteButton (BID_CANCEL);
-    WriteButton (BID_UPDATE);
+    if (bOurPlanet || iNumShipsRendered > 0 || iNumFleetsRendered > 0) {
+        WriteButton (BID_CANCEL);
+        WriteButton (BID_UPDATE);
+    }
 
     }
     break;

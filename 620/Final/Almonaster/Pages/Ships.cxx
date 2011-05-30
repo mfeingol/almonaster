@@ -92,7 +92,9 @@ if (!bMapGenerated) {
         iBR,
         fMaintRatio,
         NULL,
-        false
+        false,
+        NULL,
+        NULL
         );
 
     pDatabase->Release();

@@ -20,7 +20,7 @@
 
 void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
                                 int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, 
-                                bool bInMapOrPlanets) {
+                                bool bInMapOrPlanets, unsigned int* piNumShips, unsigned int* piNumFleets) {
     
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
@@ -159,6 +159,14 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
     }
+
+    if (piNumShips != NULL) {
+        *piNumShips = iNumShips;
+    }
+
+    if (piNumFleets != NULL) {
+        *piNumFleets = iNumFleets;
+    }
     
     if (iNumShips == 0) {
         
@@ -230,9 +238,9 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             OutputText ("<p><table width=\"89%\">");
 
-            if (bShipString) {
+            if (bShipString && iNumFleets > 0) {
                 bShipString = false;
-                OutputText ("<tr><td align=\"center\" colspan=\"7\">Ships:</td></tr>");
+                OutputText ("<tr><th align=\"center\" colspan=\"7\">Ships:</th></tr>");
             }
 
             OutputText ("<tr><th bgcolor=\"");
@@ -471,9 +479,9 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             // Render
             OutputText ("<tr><td>&nbsp;</td></tr>");
 
-            if (bFleetString) {
+            if (bFleetString && iNumFleetShips < iNumShips) {
                 bFleetString = false;
-                OutputText ("<tr><td align=\"center\" colspan=\"7\">Fleets:</td></tr>");
+                OutputText ("<tr><th align=\"center\" colspan=\"7\">Fleets:</th></tr>");
             }
 
             OutputText ("<tr><th></th><th align=\"left\" bgcolor=\"");

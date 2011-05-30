@@ -3285,8 +3285,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                 }
                 
                 Assert (vDestPlanetKey != NO_KEY);
-                
-                vDestPlanetName = "";
+                vDestPlanetName = (const char*) NULL;
                 
                 // Get coordinates
                 iErrCode = m_pGameData->ReadData (
@@ -3340,7 +3339,6 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                             Assert (false);
                             goto Cleanup;
                         }
-
                         Assert (iDestProxyKey != NO_KEY);
                         
                         iErrCode = m_pGameData->ReadData (pstrEmpireData[i], GameEmpireData::MinX, &vMinX);
@@ -3367,10 +3365,12 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                             goto Cleanup;
                         }
                         
-                        Assert (vMinX > 0 && vMinY > 0 && vMaxX > 0 && vMaxY > 0);
+                        Assert (
+                            vMinX.GetInteger() > 0 && vMinY.GetInteger() > 0 && 
+                            vMaxX.GetInteger() > 0 && vMaxY.GetInteger() > 0);
                         Assert (iNewX > 0 && iNewY > 0);
                         
-                        if (iNewX > vMaxX) {
+                        if (iNewX > vMaxX.GetInteger()) {
                             iErrCode = m_pGameData->WriteData (pstrEmpireData[i], 
                                 GameEmpireData::MaxX, iNewX);
                             if (iErrCode != OK) {
@@ -3378,7 +3378,7 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                                 goto Cleanup;
                             }
                         }
-                        if (iNewX < vMinX) {
+                        if (iNewX < vMinX.GetInteger()) {
                             iErrCode = m_pGameData->WriteData (pstrEmpireData[i], 
                                 GameEmpireData::MinX, iNewX);
                             if (iErrCode != OK) {
@@ -3386,14 +3386,14 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                                 goto Cleanup;
                             }
                         }
-                        if (iNewY > vMaxY) {
+                        if (iNewY > vMaxY.GetInteger()) {
                             iErrCode = m_pGameData->WriteData (pstrEmpireData[i], GameEmpireData::MaxY, iNewY);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
                             }
                         }
-                        if (iNewY < vMinY) {
+                        if (iNewY < vMinY.GetInteger()) {
                             iErrCode = m_pGameData->WriteData (pstrEmpireData[i], GameEmpireData::MinY, iNewY);
                             if (iErrCode != OK) {
                                 Assert (false);
@@ -3408,8 +3408,12 @@ int GameEngine::MoveShips (int iGameClass, int iGameNumber, int iNumEmpires, uns
                         ENUMERATE_CARDINAL_POINTS(k) {
                             
                             // Get neighbour key
-                            iErrCode = m_pGameData->ReadData (strGameMap, vDestPlanetKey, 
-                                GameMap::NorthPlanetKey + k, &vNeighbourPlanetKey);
+                            iErrCode = m_pGameData->ReadData (
+                                strGameMap,
+                                vDestPlanetKey.GetInteger(), 
+                                GameMap::NorthPlanetKey + k, 
+                                &vNeighbourPlanetKey
+                                );
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
@@ -4171,7 +4175,7 @@ Cleanup:
                 if (piNumBuilds[j] == 1) {
                     
                     pstrUpdateMessage[i] += "You built " BEGIN_STRONG "1" END_STRONG " ";
-                    pstrUpdateMessage[i] += SHIP_TYPE_STRING [j];
+                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_LOWERCASE [j];
                     pstrUpdateMessage[i] += "\n";
 
                 } else {
@@ -4179,7 +4183,7 @@ Cleanup:
                     pstrUpdateMessage[i] += "You built " BEGIN_STRONG;
                     pstrUpdateMessage[i] += piNumBuilds[j];
                     pstrUpdateMessage[i] += END_STRONG " ";
-                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_PLURAL [j];
+                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_LOWERCASE_PLURAL [j];
                     pstrUpdateMessage[i] += "\n";
                 }
             }
@@ -4191,13 +4195,13 @@ Cleanup:
             if (piNumVoluntaryDismantled[j] > 0) {
                 if (piNumVoluntaryDismantled[j] == 1) {
                     pstrUpdateMessage[i] += "You dismantled " BEGIN_STRONG "1" END_STRONG " ";
-                    pstrUpdateMessage[i] += SHIP_TYPE_STRING [j];
+                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_LOWERCASE [j];
                     pstrUpdateMessage[i] += "\n";
                 } else {
                     pstrUpdateMessage[i] += "You dismantled " BEGIN_STRONG;
                     pstrUpdateMessage[i] += piNumVoluntaryDismantled[j];
                     pstrUpdateMessage[i] += END_STRONG " ";
-                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_PLURAL [j];
+                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_LOWERCASE_PLURAL [j];
                     pstrUpdateMessage[i] += "\n";
                 }
             }
@@ -4209,13 +4213,13 @@ Cleanup:
             if (piNumForceDismantled[j] > 0) {
                 if (piNumForceDismantled[j] == 1) {
                     pstrUpdateMessage[i] += BEGIN_STRONG "1" END_STRONG " ";
-                    pstrUpdateMessage[i] += SHIP_TYPE_STRING [j];
+                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_LOWERCASE [j];
                     pstrUpdateMessage[i] += " was dismantled because it was beyond repair\n";
                 } else {
                     pstrUpdateMessage[i] += BEGIN_STRONG;
                     pstrUpdateMessage[i] += piNumForceDismantled[j];
                     pstrUpdateMessage[i] += END_STRONG " ";
-                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_PLURAL [j];
+                    pstrUpdateMessage[i] += SHIP_TYPE_STRING_LOWERCASE_PLURAL [j];
                     pstrUpdateMessage[i] += " were dismantled because they were beyond repair\n";
                 }
             }
@@ -6154,6 +6158,8 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
         iFleetKey = NO_KEY;
         while (true) {
 
+            unsigned int iNumDefectedShips = 0;
+
             iErrCode = m_pGameData->GetNextKey (pstrEmpireFleets[i], iFleetKey, &iFleetKey);
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 iErrCode = OK;
@@ -6324,6 +6330,8 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
                         goto Cleanup;
                     }
 
+                    iNumDefectedShips ++;
+
                 } else {
 
                     // Keep in fleet
@@ -6362,7 +6370,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
                 pstrEmpireFleets[i], 
                 iFleetKey, 
                 GameEmpireFleets::NumShips, 
-                iNumShips
+                iNumShips - iNumDefectedShips
                 );
             if (iErrCode != OK) {
                 Assert (false);

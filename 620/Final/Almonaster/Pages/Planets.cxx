@@ -295,7 +295,9 @@ if (bMapGenerated) {
                     iBR,
                     fMaintRatio,
                     &simShipsInMap,
-                    true
+                    true,
+                    NULL,
+                    NULL
                     );
             }
 

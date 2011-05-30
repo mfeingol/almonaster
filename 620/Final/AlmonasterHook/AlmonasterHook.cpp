@@ -810,6 +810,7 @@ public:
 		int iErrCode;
 		Variant vEmail;
 
+        // Beta 1
 		// Create new templates
 		iErrCode = m_pDatabase->CreateTemplate (SystemLatestGames::Template);
 		Assert (iErrCode == OK || iErrCode == ERROR_TEMPLATE_ALREADY_EXISTS);
@@ -895,7 +896,28 @@ public:
 
         iErrCode = m_pGameEngine->CreateTheme (pvColVal, &iKey);
         Assert (iErrCode == OK);
-	}
+
+        // Create Iceberg Theme
+        // RC1
+
+        // Iceberg Theme
+        pvColVal[SystemThemes::Name] = "Iceberg Theme";
+        pvColVal[SystemThemes::AuthorName] = "Aleksandr Sidorenko";
+        pvColVal[SystemThemes::Version] = "1.0";
+        pvColVal[SystemThemes::AuthorEmail] = "aleksandr@videotron.ca";
+        pvColVal[SystemThemes::Description] = "Look inspired by Alexia's Iceberg server";
+        pvColVal[SystemThemes::FileName] = "iceberg.zip";
+        pvColVal[SystemThemes::Options] = ALL_THEME_OPTIONS & ~(THEME_BUTTONS | THEME_HORZ | THEME_VERT);
+        pvColVal[SystemThemes::TableColor] = "101020";              // Dark blue, almost black
+        pvColVal[SystemThemes::TextColor] = "90A0CC";               // Light blue
+        pvColVal[SystemThemes::GoodColor] = "00DD00";               // Sharp green
+        pvColVal[SystemThemes::BadColor] = "E80700";                // Sharp red
+        pvColVal[SystemThemes::PrivateMessageColor] = "9090FF";     // Brigher light blue
+        pvColVal[SystemThemes::BroadcastMessageColor] = "90A0CC";   // Light blue
+
+        iErrCode = m_pGameEngine->CreateTheme (pvColVal, &iKey);
+        Assert (iErrCode == OK);
+    }
 
 	void UpgradeTournamentTo620 (unsigned int iTournament) {
 

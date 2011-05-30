@@ -708,7 +708,8 @@ public:
     int LoginEmpire();
 
     void RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
-        int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString);
+        int iBR, float fMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString,
+        unsigned int* piShips, unsigned int* piFleets);
 
     int HandleShipMenuSubmissions();
 
