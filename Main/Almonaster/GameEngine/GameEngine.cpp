@@ -24,27 +24,30 @@
 #include "../Scoring/TournamentScoring.h"
 
 
-GameEngine::GameEngine (const char* pszDatabaseName, 
-                        const char* pszHookLibrary,
-                        
-                        IAlmonasterUIEventSink* pUIEventSink, 
-                        
-                        IReport* pReport, 
-                        IPageSourceControl* pPageSourceControl,
-                        
-                        const SystemConfiguration& scConfig,
-                        const ChatroomConfig& ccConfig
-                        
-                        ) :
+GameEngine::GameEngine(const char* pszDatabaseFile,
+                       const Uuid& uuidDatabaseClsid,
+                       const char* pszDatabaseConnectionString,
 
-                        m_htGameObjectTable (NULL, NULL),
+                       const char* pszHookLibrary,
                         
-                        m_pUIEventSink (pUIEventSink),  
+                       IAlmonasterUIEventSink* pUIEventSink, 
+                        
+                       IReport* pReport, 
+                       IPageSourceControl* pPageSourceControl,
+                        
+                       const SystemConfiguration& scConfig,
+                       const ChatroomConfig& ccConfig
+                        
+                       ) :
 
-                        m_pReport (pReport),    // Weak ref
-                        m_pPageSourceControl (pPageSourceControl)   // Weak ref
+                       m_htGameObjectTable (NULL, NULL),
+                        
+                       m_pUIEventSink (pUIEventSink),  
 
-                        {   
+                       m_pReport (pReport),    // Weak ref
+                       m_pPageSourceControl (pPageSourceControl)   // Weak ref
+
+                       {   
     
     m_iNumRefs = 1;
     m_bGoodDatabase = false;
@@ -52,7 +55,10 @@ GameEngine::GameEngine (const char* pszDatabaseName,
     m_scConfig = scConfig;
     m_ccConfig = ccConfig;
 
-    m_pszDatabaseName = String::StrDup (pszDatabaseName);
+    m_pszDatabaseFile = String::StrDup(pszDatabaseFile);
+    m_uuidDatabaseClsid = uuidDatabaseClsid;
+    m_pszDatabaseConnectionString = String::StrDup(pszDatabaseConnectionString);
+
     m_pAlmonasterHook = NULL;
 
     typedef IAlmonasterHook* (*Fxn_AlmonasterHookCreateInstance)();
@@ -124,8 +130,12 @@ GameEngine::~GameEngine() {
         m_pReport->WriteReport ("GameEngine shut down auto-backup thread");
     }
 
-    if (m_pszDatabaseName != NULL) {
-        OS::HeapFree (m_pszDatabaseName);
+    if (m_pszDatabaseFile != NULL) {
+        OS::HeapFree (m_pszDatabaseFile);
+    }
+
+    if (m_pszDatabaseConnectionString != NULL) {
+        OS::HeapFree (m_pszDatabaseConnectionString);
     }
 
     // Stop long running query processor
@@ -199,8 +209,8 @@ GameEngine::~GameEngine() {
     m_pReport->WriteReport ("GameEngine terminated");
 }
 
-int GameEngine::Initialize() {
-
+int GameEngine::Initialize()
+{
     int iOptions = 0, i, iErrCode;
 
     // Lock Manager
@@ -277,7 +287,14 @@ int GameEngine::Initialize() {
     // Create the database
     m_pReport->WriteReport ("GameEngine is creating the database");
 
-    iErrCode = DatabaseCreateInstance (CLSID_Database, IID_IDatabase, (void**) &m_pGameData);
+    iErrCode = m_libDatabase.Open(m_pszDatabaseFile);
+    if (iErrCode == OK)
+    {
+        typedef int (*Fxn_CreateInstance) (const Uuid&, const Uuid&, void**);
+        Fxn_CreateInstance pCreateInstance = (Fxn_CreateInstance)m_libDatabase.GetExport("CreateInstance");
+        iErrCode = pCreateInstance(m_uuidDatabaseClsid, IID_IDatabase, (void**)&m_pGameData);
+    }
+
     if (iErrCode == OK) {
         m_pReport->WriteReport ("GameEngine created the database");
     } else {
@@ -303,7 +320,7 @@ int GameEngine::Initialize() {
         iOptions |= DATABASE_WRITETHROUGH;
     }
 
-    iErrCode = m_pGameData->Initialize (m_pszDatabaseName, iOptions);
+    iErrCode = m_pGameData->Initialize(m_pszDatabaseConnectionString, iOptions);
     switch (iErrCode) {
 
     case OK:
@@ -983,7 +1000,7 @@ int GameEngine::GetSystemConfiguration (SystemConfiguration* pscConfig) {
 // Return the system's version string
 
 const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 622";
+    return "Almonaster Build 623 Beta 1";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId) {

@@ -136,8 +136,11 @@ private:
     ReadWriteLock m_rwGameConfigLock;
     ReadWriteLock m_rwMapConfigLock;
 
-    // Database name
-    char* m_pszDatabaseName;
+    // Database
+    Library m_libDatabase;
+    char* m_pszDatabaseFile;
+    Uuid m_uuidDatabaseClsid;
+    char* m_pszDatabaseConnectionString;
 
     // Synchronization
     ReadWriteLock m_mConfigLock;
@@ -564,7 +567,10 @@ public:
     // Constructor/destructor
     GameEngine (
         
-        const char* pszDatabaseName, 
+        const char* pszDatabaseFile,
+        const Uuid& uuidDatabaseClsid,
+        const char* pszDatabaseConnectionString,
+
         const char* pszHookLibrary,
 
         IAlmonasterUIEventSink* pUIEventSink, 

@@ -198,24 +198,52 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     const char* pszHookLibrary;
     char pszPath [OS::MaxFileNameLength];
 
-    // Database Name
-    iErrCode = g_pConfig->GetParameter ("DatabaseName", &pszTemp);
+    // DatabaseFile
+    iErrCode = g_pConfig->GetParameter ("DatabaseFile", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseName value from the configuration file");
+        g_pReport->WriteReport ("Error: Could not read the DatabaseFile value from the configuration file");
+        return ERROR_FAILURE;
+    }
+    char pszDatabaseFile[OS::MaxFileNameLength];
+    if (File::ResolvePath(pszTemp, pszDatabaseFile) == ERROR_FAILURE) {
+        g_pReport->WriteReport ("Error: The DatabaseFile value from the configuration file was invalid");
         return ERROR_FAILURE;
     }
 
-    char pszDatabaseName [OS::MaxFileNameLength];
-    if (File::ResolvePath (pszTemp, pszDatabaseName) == ERROR_FAILURE) {
-        g_pReport->WriteReport ("Error: The DatabaseName value from the configuration file was invalid");
+    // DatabaseClsid
+    iErrCode = g_pConfig->GetParameter("DatabaseClsid", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the DatabaseClsid value from the configuration file");
         return ERROR_FAILURE;
     }
-    size_t i, stLength = strlen (pszDatabaseName);
-    for (i = 0; i < stLength; i ++) {
-        if (pszDatabaseName[i] == '\\') {
-            pszDatabaseName[i] = '/';
-        }
+    Uuid uuidDatabaseClsid;
+    iErrCode = OS::UuidFromString(pszTemp, &uuidDatabaseClsid);
+    if (iErrCode != OK) {
+        g_pReport->WriteReport ("Error: The DatabaseClsid value from the configuration file was invalid");
+        return ERROR_FAILURE;
     }
+
+    // DatabaseConnectionString
+    char* pszDatabaseConnectionString;
+    iErrCode = g_pConfig->GetParameter("DatabaseConnectionString", &pszDatabaseConnectionString);
+    if (iErrCode != OK || pszDatabaseConnectionString == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the DatabaseConnectionString value from the configuration file");
+        return ERROR_FAILURE;
+    }
+
+    iErrCode = g_pConfig->GetParameter ("DatabaseCheck", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the DatabaseCheck value from the configuration file");
+        return ERROR_FAILURE;
+    }
+    scConfig.bCheckDatabase = atoi (pszTemp) != 0;
+
+    iErrCode = g_pConfig->GetParameter ("DatabaseWriteThrough", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL) {
+        g_pReport->WriteReport ("Error: Could not read the DatabaseWriteThrough value from the configuration file");
+        return ERROR_FAILURE;
+    }
+    scConfig.bDatabaseWriteThrough = atoi (pszTemp) != 0;
 
     // Resource directory
     iErrCode = g_pConfig->GetParameter ("ResourceDirectory", &pszTemp);
@@ -223,17 +251,10 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         g_pReport->WriteReport ("Error: Could not read the ResourceDirectory value from the configuration file");
         return ERROR_FAILURE;
     }
-
     char pszResourceDir [OS::MaxFileNameLength];
     if (File::ResolvePath (pszTemp, pszResourceDir) == ERROR_FAILURE) {
         g_pReport->WriteReport ("Error: The ResourceDirectory value from the configuration file was invalid");
         return ERROR_FAILURE;
-    }
-    stLength = strlen (pszResourceDir);
-    for (i = 0; i < stLength; i ++) {
-        if (pszResourceDir[i] == '\\') {
-            pszResourceDir[i] = '/';
-        }
     }
 
     iErrCode = g_pConfig->GetParameter ("ChatroomMaxNumSpeakers", &pszTemp);
@@ -336,20 +357,6 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     }
     scConfig.bRebuildTopListsOnStartup = atoi (pszTemp) != 0;
 
-    iErrCode = g_pConfig->GetParameter ("DatabaseCheck", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseCheck value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bCheckDatabase = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("DatabaseWriteThrough", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseWriteThrough value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bDatabaseWriteThrough = atoi (pszTemp) != 0;
-
     iErrCode = g_pConfig->GetParameter ("BufferedPageRendering", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
         g_pReport->WriteReport ("Error: Could not read the BufferedPageRendering value from the configuration file");
@@ -396,8 +403,10 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     // Create new game engine object
     g_pReport->WriteReport ("Initializing GameEngine");
 
-    g_pGameEngine = new GameEngine (
-        pszDatabaseName, 
+    g_pGameEngine = new GameEngine(
+        pszDatabaseFile,
+        uuidDatabaseClsid,
+        pszDatabaseConnectionString,
         pszHookLibrary,
         this,
         g_pReport,

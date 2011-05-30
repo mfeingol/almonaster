@@ -81,7 +81,7 @@ public:
 
     static TableEnumerator* CreateInstance (TableHashTable* pTables);
 
-    // IDatabaseBackup
+    // ITableEnumerator
     IMPLEMENT_INTERFACE (ITableEnumerator);
 
     unsigned int GetNumTables();
@@ -104,7 +104,7 @@ public:
     static TemplateEnumerator* CreateInstance (HashTable<const char*, Template*, TemplateNameHashValue, 
         TemplateNameEquals>* pTemplates);
 
-    // IDatabaseBackup
+    // ITemplateEnumerator
     IMPLEMENT_INTERFACE (ITemplateEnumerator);
 
     unsigned int GetNumTemplates();

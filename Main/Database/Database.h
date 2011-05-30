@@ -22,10 +22,6 @@
 // CLSID: CLSID_Database
 // IID's: IID_IDatabase
 
-extern "C" DATABASE_EXPORT int DatabaseCreateInstance (const Uuid& clsidClassId, const Uuid& iidInterface, void** ppObject);
-
-DATABASE_EXPORT extern const Uuid CLSID_Database;
-
 DATABASE_EXPORT extern const Uuid IID_ITransaction;
 DATABASE_EXPORT extern const Uuid IID_IReadTable;
 DATABASE_EXPORT extern const Uuid IID_IWriteTable;
