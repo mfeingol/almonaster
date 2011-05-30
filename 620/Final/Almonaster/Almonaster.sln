@@ -23,8 +23,8 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster.vcproj", "{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}"
 	ProjectSection(ProjectDependencies) = postProject
 		{A5498F4E-4124-4680-B43A-D105AA64C814} = {A5498F4E-4124-4680-B43A-D105AA64C814}
-		{208D5299-BDCB-4479-BD23-B544474E8772} = {208D5299-BDCB-4479-BD23-B544474E8772}
 		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+		{208D5299-BDCB-4479-BD23-B544474E8772} = {208D5299-BDCB-4479-BD23-B544474E8772}
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "..\AlmonasterHook\AlmonasterHook.vcproj", "{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}"
@@ -56,59 +56,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "..\Osal\Osal.vcproj
 	EndProjectSection
 EndProject
 Global
-	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 12
-		SccProjectName0 = \u0022$/620\u0022,\u0020TWCAAAAA
-		SccLocalPath0 = ..
-		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection0 = Almonaster\\
-		SolutionUniqueID = {FF88DBDC-C759-45C5-8F7E-C183C35AF1F5}
-		SccProjectUniqueName1 = ..\\Admin\\Admin.vcproj
-		SccLocalPath1 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection1 = Admin\\
-		SccProjectUniqueName2 = ..\\Alajar\\Alajar.vcproj
-		SccLocalPath2 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection2 = Alajar\\
-		SccProjectUniqueName3 = ..\\AlajarDll\\AlajarDll.vcproj
-		SccLocalPath3 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection3 = AlajarDll\\
-		SccProjectUniqueName4 = ..\\AlajarSvc\\AlajarSvc.vcproj
-		SccLocalPath4 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection4 = AlajarSvc\\
-		SccProjectUniqueName5 = Almonaster.vcproj
-		SccLocalPath5 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection5 = Almonaster\\
-		SccProjectUniqueName6 = ..\\AlmonasterHook\\AlmonasterHook.vcproj
-		SccLocalPath6 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection6 = AlmonasterHook\\
-		SccProjectUniqueName7 = ..\\Asfpp\\Asfpp.vcproj
-		SccLocalPath7 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection7 = Asfpp\\
-		SccProjectUniqueName8 = ..\\Database\\Database.vcproj
-		SccLocalPath8 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection8 = Database\\
-		SccProjectUniqueName9 = ..\\DBConv\\DBConv.vcproj
-		SccLocalPath9 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection9 = DBConv\\
-		SccProjectUniqueName10 = ..\\OldDatabase\\OldDatabase.vcproj
-		SccLocalPath10 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection10 = OldDatabase\\
-		SccProjectUniqueName11 = ..\\Osal\\Osal.vcproj
-		SccLocalPath11 = ..
-		CanCheckoutShared = false
-		SccProjectFilePathRelativizedFromConnection11 = Osal\\
-	EndGlobalSection
 	GlobalSection(SolutionConfiguration) = preSolution
 		Debug = Debug
 		Release = Release
@@ -163,4 +110,3 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityAddIns) = postSolution
 	EndGlobalSection
-EndGlobal
