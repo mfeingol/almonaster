@@ -219,18 +219,17 @@ private:
     // Planets
     int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, bool* pbCommit);
 
-    int CreateMapFromMapGeneratorData(int iGameClass, int iGameNumber, int* piNewEmpireKey, 
-        unsigned int iNumNewEmpires, Variant* pvGameClassData, Variant* pvGameData, 
-        Variant** ppvNewPlanetData, unsigned int iNumNewPlanets,
-        unsigned int* piExistingPlanetKey, Variant** ppvExistingPlanetData, unsigned int iNumExistingPlanets,
+    int CreateMapFromMapGeneratorData (int iGameClass, int iGameNumber, int iEmpireKey,
+        Variant* pvGameClassData, Variant* pvGameData, Variant** ppvPlanetData, unsigned int iNumNewPlanets,
         bool* pbCommit);
 
-    int CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
-        int iGameClass, int iGameNumber, int iEmpireKey, int iGameClassOptions,
-        int* piMinX, int* piMaxX, int* piMinY, int* piMaxY, int* piNewPlanetKey);
+    int CreatePlanetFromMapGeneratorData (const char* strGameMap, Variant* pvPlanetData,
+        int iEmpireKey, int iGameClassOptions, int* piAg, int* piMin, int* piFuel, int* piPop, int* piMaxPop,
+        int* piHomeWorldKey, int* piNumPlanets, int* piMinX, int* piMaxX, int* piMinY, int* piMaxY, 
+        int* piNewPlanetKey);
 
-    int InsertPlanetIntoGameEmpireData (int iGameClass, int iGameNumber, int iEmpireKey, 
-        int iPlanetKey, const Variant* pvPlanetData, int iGameClassOptions);
+    int InsertPlanetIntoGameEmpireData (int iPlanetKey, int iGameClassOptions, const char* pszGameMap,
+        const char* pszGameEmpireMap);
 
     void AdvanceCoordinates (int iX, int iY, int* piX, int* piY, int cpDirection);
 
@@ -769,9 +768,6 @@ public:
     int GetNextGameNumber (int iGameClass, int* piGameNumber);
     
     int GetGameClassOptions (int iGameClass, int* piOptions);
-    int GetSupportedMapGenerationTypes(int iGameClass, MapGeneration* pmgMapGen);
-    void GetSupportedMapGenerationTypes(int iMinEmps, int iMaxEmps, int iMinPlanets, 
-                                        MapGeneration* pmgMapGen);
 
     int GetMaxNumEmpires (int iGameClass, int* piMaxNumEmpires);
     int GetMaxNumAllies (int iGameClass, int* piMaxNumAllies);
