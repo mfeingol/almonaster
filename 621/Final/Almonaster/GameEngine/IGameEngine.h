@@ -835,7 +835,8 @@ public:
     virtual int SharePlanetsBetweenFriends (int iGameClass, int iGameNumber, 
         unsigned int iEmpireIndex1, unsigned int iEmpireIndex2,
         const char** pstrEmpireMap, const char** pstrEmpireDip, const char** pstrEmpireData, 
-        const char* pszGameMap, unsigned int iNumEmpires, unsigned int* piEmpireKey, int iDipLevel) = 0;
+        const char* pszGameMap, unsigned int iNumEmpires, unsigned int* piEmpireKey, int iDipLevel,
+        bool bShareWithFriendsClosure) = 0;
 
     // Score
     virtual int GetNumEmpiresInNukeHistory (int iEmpireKey, int* piNumNukes, int* piNumNuked) = 0;
