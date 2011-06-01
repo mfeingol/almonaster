@@ -19,10 +19,10 @@
 
 #include <stdio.h>
 
-#define DATABASE_BUILD
+#define FILE_DATABASE_BUILD
 #include "Template.h"
 #include "TableContext.h"
-#undef DATABASE_BUILD
+#undef FILE_DATABASE_BUILD
 
 #include "Osal/File.h"
 

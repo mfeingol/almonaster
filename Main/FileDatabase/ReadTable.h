@@ -5,7 +5,7 @@
 #if !defined(AFX_READONLYTABLE_H__3B5FD4A1_370A_11D3_A10B_0050047FE2E2__INCLUDED_)
 #define AFX_READONLYTABLE_H__3B5FD4A1_370A_11D3_A10B_0050047FE2E2__INCLUDED_
 
-#include "Database.h"
+#include "FileDatabase.h"
 #include "TableContext.h"
 
 class Table;

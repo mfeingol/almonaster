@@ -21,10 +21,11 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{208D5299-BDCB-4479-BD23-B544474E8772}</ProjectGuid>
     <RootNamespace>Database</RootNamespace>
-    <SccProjectName>$/almonaster/Main/Database</SccProjectName>
+    <SccProjectName>$/almonaster/Main/FileDatabase</SccProjectName>
     <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
     <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
+    <ProjectName>FileDatabase</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -176,7 +177,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y FileDatabase.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -260,7 +261,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y FileDatabase.h "%DropSdk%"
 </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -335,7 +336,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y FileDatabase.h "%DropSdk%"
 </Command>
       <Message>Copying public files...</Message>
     </PostBuildEvent>
@@ -411,7 +412,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y FileDatabase.h "%DropSdk%"
 </Command>
       <Message>Copying public files...</Message>
     </PostBuildEvent>
@@ -437,7 +438,7 @@ copy /y Database.h "%DropSdk%"
   <ItemGroup>
     <ClInclude Include="Backup.h" />
     <ClInclude Include="CDatabase.h" />
-    <ClInclude Include="Database.h" />
+    <ClInclude Include="FileDatabase.h" />
     <ClInclude Include="ReadTable.h" />
     <ClInclude Include="Table.h" />
     <ClInclude Include="TableContext.h" />

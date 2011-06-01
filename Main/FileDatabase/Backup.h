@@ -5,9 +5,9 @@
 #if !defined(AFX_BACKUP_H__B530F1C3_5133_11D3_A19B_0050047FE2E2__INCLUDED_)
 #define AFX_BACKUP_H__B530F1C3_5133_11D3_A19B_0050047FE2E2__INCLUDED_
 
-#define DATABASE_BUILD
-#include "Database.h"
-#undef DATABASE_BUILD
+#define FILE_DATABASE_BUILD
+#include "FileDatabase.h"
+#undef FILE_DATABASE_BUILD
 
 class Database;
 

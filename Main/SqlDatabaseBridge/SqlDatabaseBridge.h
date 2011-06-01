@@ -1,5 +1,5 @@
 //
-// OdbcDatabase.dll - A database library
+// SqlDatabase.dll - A database library
 // Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
@@ -19,15 +19,23 @@
 
 #pragma once
 
+#include <vcclr.h>
 #include "Database.h"
 
-class OdbcDatabase : public IDatabase
-{
-public:
-	OdbcDatabase();
-	~OdbcDatabase();
+#using <SqlDatabase.dll>
+using namespace Almonaster::Database;
 
-	static OdbcDatabase* CreateInstance();
+class SqlDatabaseBridge : public IDatabase
+{
+private:
+
+    gcroot<SqlDatabase^> m_db;
+
+public:
+	SqlDatabaseBridge();
+	~SqlDatabaseBridge();
+
+	static SqlDatabaseBridge* CreateInstance();
 
     // IDatabase
     IMPLEMENT_INTERFACE(IDatabase);

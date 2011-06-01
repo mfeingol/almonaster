@@ -2,10 +2,10 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#define DATABASE_BUILD
+#define FILE_DATABASE_BUILD
 #include "TableContext.h"
 #include "Table.h"
-#undef DATABASE_BUILD
+#undef FILE_DATABASE_BUILD
 
 ReadTable::ReadTable() {
 

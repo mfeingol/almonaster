@@ -28,9 +28,9 @@
 #include "Osal/ReadWriteLock.h"
 #include "Osal/FileHeap.h"
 
-#define DATABASE_BUILD
-#include "Database.h"
-#undef DATABASE_BUILD
+#define FILE_DATABASE_BUILD
+#include "FileDatabase.h"
+#undef FILE_DATABASE_BUILD
 
 #define TABLE_DATA_FILE         "Tables.dat"
 #define VARIABLE_DATA_FILE      "Variable.dat"

@@ -1,5 +1,5 @@
 //
-// OdbcDatabase.dll - A database library
+// SqlDatabaseBridge.dll - A database library
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
@@ -17,70 +17,72 @@
 // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 // Boston, MA  02111-1307, USA.
 
-#include "OdbcDatabase.h"
+#include "Stdafx.h"
+#include "SqlDatabaseBridge.h"
 
-OdbcDatabase::OdbcDatabase()
+SqlDatabaseBridge::SqlDatabaseBridge()
+{
+    m_db->Foo();
+}
+
+SqlDatabaseBridge::~SqlDatabaseBridge()
 {
 }
 
-OdbcDatabase::~OdbcDatabase()
+SqlDatabaseBridge* SqlDatabaseBridge::CreateInstance()
 {
+    return new SqlDatabaseBridge();
 }
 
-OdbcDatabase* OdbcDatabase::CreateInstance()
-{
-    return new OdbcDatabase();
-}
-
-int OdbcDatabase::Initialize(const char* pszMainDirectory, unsigned int iOptions)
+int SqlDatabaseBridge::Initialize(const char* pszMainDirectory, unsigned int iOptions)
 {
     return OK;
 }
 
 // Template operations
-int OdbcDatabase::CreateTemplate(const TemplateDescription& ttTemplate)
+int SqlDatabaseBridge::CreateTemplate(const TemplateDescription& ttTemplate)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::DeleteTemplate(const char* pszTemplateName)
+int SqlDatabaseBridge::DeleteTemplate(const char* pszTemplateName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetTemplate(const char* pszTemplateName, ITemplate** ppTemplate)
+int SqlDatabaseBridge::GetTemplate(const char* pszTemplateName, ITemplate** ppTemplate)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetTemplateForTable(const char* pszTableName, ITemplate** ppTemplate)
+int SqlDatabaseBridge::GetTemplateForTable(const char* pszTableName, ITemplate** ppTemplate)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-bool OdbcDatabase::DoesTemplateExist(const char* pszTemplateName)
+bool SqlDatabaseBridge::DoesTemplateExist(const char* pszTemplateName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-bool OdbcDatabase::IsTemplateEqual(const char* pszTemplateName, const TemplateDescription& ttTemplate)
+bool SqlDatabaseBridge::IsTemplateEqual(const char* pszTemplateName, const TemplateDescription& ttTemplate)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-ITemplateEnumerator* OdbcDatabase::GetTemplateEnumerator()
+ITemplateEnumerator* SqlDatabaseBridge::GetTemplateEnumerator()
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -88,28 +90,28 @@ ITemplateEnumerator* OdbcDatabase::GetTemplateEnumerator()
 }
 
 // Table operations
-int OdbcDatabase::CreateTable(const char* pszTableName, const char* pszTemplateName)
+int SqlDatabaseBridge::CreateTable(const char* pszTableName, const char* pszTemplateName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::ImportTable(IDatabase* pSrcDatabase, const char* pszTableName)
+int SqlDatabaseBridge::ImportTable(IDatabase* pSrcDatabase, const char* pszTableName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::DeleteTable(const char* pszTableName)
+int SqlDatabaseBridge::DeleteTable(const char* pszTableName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-bool OdbcDatabase::DoesTableExist(const char* pszTableName)
+bool SqlDatabaseBridge::DoesTableExist(const char* pszTableName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -117,35 +119,35 @@ bool OdbcDatabase::DoesTableExist(const char* pszTableName)
 }
 
 // Backup
-int OdbcDatabase::Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst)
+int SqlDatabaseBridge::Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-unsigned int OdbcDatabase::DeleteOldBackups(Seconds iNumSecondsOld)
+unsigned int SqlDatabaseBridge::DeleteOldBackups(Seconds iNumSecondsOld)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return 0;
 }
 
-IDatabaseBackupEnumerator* OdbcDatabase::GetBackupEnumerator()
+IDatabaseBackupEnumerator* SqlDatabaseBridge::GetBackupEnumerator()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return NULL;
 }
 
-int OdbcDatabase::RestoreBackup(IDatabaseBackup* pBackup)
+int SqlDatabaseBridge::RestoreBackup(IDatabaseBackup* pBackup)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::DeleteBackup(IDatabaseBackup* pBackup)
+int SqlDatabaseBridge::DeleteBackup(IDatabaseBackup* pBackup)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -156,49 +158,49 @@ int OdbcDatabase::DeleteBackup(IDatabaseBackup* pBackup)
 // Accounting //
 ////////////////
 
-const char* OdbcDatabase::GetDirectory()
+const char* SqlDatabaseBridge::GetDirectory()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return NULL;
 }
 
-unsigned int OdbcDatabase::GetOptions()
+unsigned int SqlDatabaseBridge::GetOptions()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return 0;
 }
 
-unsigned int OdbcDatabase::GetNumTables()
+unsigned int SqlDatabaseBridge::GetNumTables()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return 0;
 }
 
-unsigned int OdbcDatabase::GetNumTemplates()
+unsigned int SqlDatabaseBridge::GetNumTemplates()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return 0;
 }
 
-ITableEnumerator* OdbcDatabase::GetTableEnumerator()
+ITableEnumerator* SqlDatabaseBridge::GetTableEnumerator()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return NULL;
 }
 
-int OdbcDatabase::Flush()
+int SqlDatabaseBridge::Flush()
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::Check()
+int SqlDatabaseBridge::Check()
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -210,119 +212,119 @@ int OdbcDatabase::Check()
 //////////////////
 
 // Standard operations
-int OdbcDatabase::ReadData(const char* pszTableName, unsigned int iKey, unsigned int iColumn, Variant* pvData)
+int SqlDatabaseBridge::ReadData(const char* pszTableName, unsigned int iKey, unsigned int iColumn, Variant* pvData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::ReadData(const char* pszTableName, unsigned int iColumn, Variant* pvData)
+int SqlDatabaseBridge::ReadData(const char* pszTableName, unsigned int iColumn, Variant* pvData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
     
-int OdbcDatabase::WriteData(const char* pszTableName, unsigned int iKey, unsigned int iColumn, const Variant& vData)
+int SqlDatabaseBridge::WriteData(const char* pszTableName, unsigned int iKey, unsigned int iColumn, const Variant& vData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteData(const char* pszTableName, unsigned int iColumn, const Variant& vData)
+int SqlDatabaseBridge::WriteData(const char* pszTableName, unsigned int iColumn, const Variant& vData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::Increment(const char* pszTableName, unsigned int iKey, unsigned int iColumn, const Variant& vIncrement)
+int SqlDatabaseBridge::Increment(const char* pszTableName, unsigned int iKey, unsigned int iColumn, const Variant& vIncrement)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::Increment(const char* pszTableName, unsigned int iKey, unsigned int iColumn, const Variant& vIncrement, Variant* pvOldValue)
+int SqlDatabaseBridge::Increment(const char* pszTableName, unsigned int iKey, unsigned int iColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::Increment(const char* pszTableName, unsigned int iColumn, const Variant& vIncrement)
+int SqlDatabaseBridge::Increment(const char* pszTableName, unsigned int iColumn, const Variant& vIncrement)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::Increment(const char* pszTableName, unsigned int iColumn, const Variant& vIncrement, Variant* pvOldValue)
+int SqlDatabaseBridge::Increment(const char* pszTableName, unsigned int iColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteAnd(const char* pszTableName, unsigned int iKey, unsigned int iColumn, unsigned int iBitField)
+int SqlDatabaseBridge::WriteAnd(const char* pszTableName, unsigned int iKey, unsigned int iColumn, unsigned int iBitField)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteAnd(const char* pszTableName, unsigned int iColumn, unsigned int iBitField)
+int SqlDatabaseBridge::WriteAnd(const char* pszTableName, unsigned int iColumn, unsigned int iBitField)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteOr(const char* pszTableName, unsigned int iKey, unsigned int iColumn, unsigned int iBitField)
+int SqlDatabaseBridge::WriteOr(const char* pszTableName, unsigned int iKey, unsigned int iColumn, unsigned int iBitField)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteOr(const char* pszTableName, unsigned int iColumn, unsigned int iBitField)
+int SqlDatabaseBridge::WriteOr(const char* pszTableName, unsigned int iColumn, unsigned int iBitField)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteXor(const char* pszTableName, unsigned int iKey, unsigned int iColumn, unsigned int iBitField)
+int SqlDatabaseBridge::WriteXor(const char* pszTableName, unsigned int iKey, unsigned int iColumn, unsigned int iBitField)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteXor(const char* pszTableName, unsigned int iColumn, unsigned int iBitField)
+int SqlDatabaseBridge::WriteXor(const char* pszTableName, unsigned int iColumn, unsigned int iBitField)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteNot(const char* pszTableName, unsigned int iKey, unsigned int iColumn)
+int SqlDatabaseBridge::WriteNot(const char* pszTableName, unsigned int iKey, unsigned int iColumn)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteNot(const char* pszTableName, unsigned int iColumn)
+int SqlDatabaseBridge::WriteNot(const char* pszTableName, unsigned int iColumn)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::WriteColumn(const char* pszTableName, unsigned int iColumn, const Variant& vData)
+int SqlDatabaseBridge::WriteColumn(const char* pszTableName, unsigned int iColumn, const Variant& vData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -330,70 +332,70 @@ int OdbcDatabase::WriteColumn(const char* pszTableName, unsigned int iColumn, co
 }
 
 // Row operations
-unsigned int OdbcDatabase::GetNumRows(const char* pszTableName, unsigned int* piNumRows)
+unsigned int SqlDatabaseBridge::GetNumRows(const char* pszTableName, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return 0;
 }
 
-int OdbcDatabase::DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists)
+int SqlDatabaseBridge::DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::InsertRow(const char* pszTableName, const Variant* pvColVal, unsigned int* piKey)
+int SqlDatabaseBridge::InsertRow(const char* pszTableName, const Variant* pvColVal, unsigned int* piKey)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::InsertRow(const char* pszTableName, const Variant* pvColVal, unsigned int iKey)
+int SqlDatabaseBridge::InsertRow(const char* pszTableName, const Variant* pvColVal, unsigned int iKey)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::InsertRows(const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows)
+int SqlDatabaseBridge::InsertRows(const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::InsertDuplicateRows(const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows)
+int SqlDatabaseBridge::InsertDuplicateRows(const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::DeleteRow(const char* pszTableName, unsigned int iKey)
+int SqlDatabaseBridge::DeleteRow(const char* pszTableName, unsigned int iKey)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::DeleteAllRows(const char* pszTableName)
+int SqlDatabaseBridge::DeleteAllRows(const char* pszTableName)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::ReadRow(const char* pszTableName, unsigned int iKey, Variant** ppvData)
+int SqlDatabaseBridge::ReadRow(const char* pszTableName, unsigned int iKey, Variant** ppvData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::ReadRow(const char* pszTableName, Variant** ppvData)
+int SqlDatabaseBridge::ReadRow(const char* pszTableName, Variant** ppvData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -401,14 +403,14 @@ int OdbcDatabase::ReadRow(const char* pszTableName, Variant** ppvData)
 }
 
 // Column operations
-int OdbcDatabase::ReadColumn(const char* pszTableName, unsigned int iColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows)
+int SqlDatabaseBridge::ReadColumn(const char* pszTableName, unsigned int iColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::ReadColumn(const char* pszTableName, unsigned int iColumn, Variant** ppvData, unsigned int* piNumRows)
+int SqlDatabaseBridge::ReadColumn(const char* pszTableName, unsigned int iColumn, Variant** ppvData, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -416,7 +418,7 @@ int OdbcDatabase::ReadColumn(const char* pszTableName, unsigned int iColumn, Var
 }
 
 
-int OdbcDatabase::ReadColumns(const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
+int SqlDatabaseBridge::ReadColumns(const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
                               unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
@@ -424,7 +426,7 @@ int OdbcDatabase::ReadColumns(const char* pszTableName, unsigned int iNumColumns
     return OK;
 }
 
-int OdbcDatabase::ReadColumns(const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
+int SqlDatabaseBridge::ReadColumns(const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
                               Variant*** pppvData, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
@@ -433,42 +435,42 @@ int OdbcDatabase::ReadColumns(const char* pszTableName, unsigned int iNumColumns
 }
 
 // Searches
-int OdbcDatabase::GetAllKeys(const char* pszTableName, unsigned int** ppiKey, unsigned int* piNumKeys)
+int SqlDatabaseBridge::GetAllKeys(const char* pszTableName, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetNextKey(const char* pszTableName, unsigned int iKey, unsigned int* piNextKey)
+int SqlDatabaseBridge::GetNextKey(const char* pszTableName, unsigned int iKey, unsigned int* piNextKey)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetFirstKey(const char* pszTableName, unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int* piKey)
+int SqlDatabaseBridge::GetFirstKey(const char* pszTableName, unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int* piKey)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetEqualKeys(const char* pszTableName, unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int** ppiKey, unsigned int* piNumKeys)
+int SqlDatabaseBridge::GetEqualKeys(const char* pszTableName, unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
+int SqlDatabaseBridge::GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::ReadColumnWhereEqual(const char* pszTableName, unsigned int iEqualColumn, const Variant& vData, 
+int SqlDatabaseBridge::ReadColumnWhereEqual(const char* pszTableName, unsigned int iEqualColumn, const Variant& vData, 
                                        bool bCaseInsensitive, unsigned int iReadColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys)
 {
     // TODOTODO - Needs implementation
@@ -480,14 +482,14 @@ int OdbcDatabase::ReadColumnWhereEqual(const char* pszTableName, unsigned int iE
 // Direct API
 //
 
-int OdbcDatabase::GetTableForReading(const char* pszTableName, IReadTable** ppTable)
+int SqlDatabaseBridge::GetTableForReading(const char* pszTableName, IReadTable** ppTable)
 {
     // TODOTODO - Needs implementation
     Assert(false);
     return OK;
 }
 
-int OdbcDatabase::GetTableForWriting(const char* pszTableName, IWriteTable** ppTable)
+int SqlDatabaseBridge::GetTableForWriting(const char* pszTableName, IWriteTable** ppTable)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -497,7 +499,7 @@ int OdbcDatabase::GetTableForWriting(const char* pszTableName, IWriteTable** ppT
 //
 // Transactions
 //
-int OdbcDatabase::CreateTransaction(ITransaction** ppTransaction)
+int SqlDatabaseBridge::CreateTransaction(ITransaction** ppTransaction)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -505,62 +507,62 @@ int OdbcDatabase::CreateTransaction(ITransaction** ppTransaction)
 }
 
 //
-void OdbcDatabase::FreeData(void** ppData)
+void SqlDatabaseBridge::FreeData(void** ppData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
    
-void OdbcDatabase::FreeData(Variant* pvData)
+void SqlDatabaseBridge::FreeData(Variant* pvData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeData(Variant** ppvData)
+void SqlDatabaseBridge::FreeData(Variant** ppvData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeData(int* piData)
+void SqlDatabaseBridge::FreeData(int* piData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeData(unsigned int* puiData)
+void SqlDatabaseBridge::FreeData(unsigned int* puiData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeData(float* ppfData)
+void SqlDatabaseBridge::FreeData(float* ppfData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeData(char** ppszData)
+void SqlDatabaseBridge::FreeData(char** ppszData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeData(int64* pi64Data)
+void SqlDatabaseBridge::FreeData(int64* pi64Data)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
-void OdbcDatabase::FreeKeys(unsigned int* piKeys)
+void SqlDatabaseBridge::FreeKeys(unsigned int* piKeys)
 {
     // TODOTODO - Needs implementation
     Assert(false);
 }
 
 // Stats
-int OdbcDatabase::GetStatistics(DatabaseStatistics* pdsStats)
+int SqlDatabaseBridge::GetStatistics(DatabaseStatistics* pdsStats)
 {
     // TODOTODO - Needs implementation
     Assert(false);

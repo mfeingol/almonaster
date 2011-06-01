@@ -23,10 +23,10 @@
 #if !defined(AFX_TRANSACTION_H__0BE30DA1_5531_11D1_A735_0060B0579E6B__INCLUDED_)
 #define AFX_TRANSACTION_H__0BE30DA1_5531_11D1_A735_0060B0579E6B__INCLUDED_
 
-#define DATABASE_BUILD
-#include "Database.h"
+#define FILE_DATABASE_BUILD
+#include "FileDatabase.h"
 #include "CDatabase.h"
-#undef DATABASE_BUILD
+#undef FILE_DATABASE_BUILD
 
 class Transaction : virtual public Database {//, virtual public ITransaction {
 

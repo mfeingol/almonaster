@@ -2,9 +2,9 @@
 //
 //////////////////////////////////////////////////////////////////////
 
-#define DATABASE_BUILD
+#define FILE_DATABASE_BUILD
 #include "TableContext.h"
-#undef DATABASE_BUILD
+#undef FILE_DATABASE_BUILD
 
 #define INITIAL_INSERTION_LENGTH_ASSUMPTION_SIZE (64)
 
