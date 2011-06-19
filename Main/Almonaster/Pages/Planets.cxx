@@ -204,13 +204,16 @@ if (bMapGenerated) {
         ShipsInMapScreen simShipsInMap = { NO_KEY, 0, 0 };
 
         IDatabase* pDatabase = g_pGameEngine->GetDatabase();
+        Assert(pDatabase != NULL);
+        IDatabaseConnection* pConn = pDatabase->CreateConnection();
+
         Variant* pvPlanetData = NULL;
 
         int iBR = 0;
         float fMaintRatio = 0.0, fNextMaintRatio = 0.0;
 
         // Visible builds?
-        iErrCode = pDatabase->ReadData (SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
+        iErrCode = pConn->ReadData (SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -263,7 +266,7 @@ if (bMapGenerated) {
 
         for (i = 0; i < iNumPlanets; i ++) {
 
-            iErrCode = pDatabase->ReadRow (strGameMap, pvPlanetKey[i].GetInteger(), &pvPlanetData);
+            iErrCode = pConn->ReadRow (strGameMap, pvPlanetKey[i].GetInteger(), &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -309,7 +312,7 @@ if (bMapGenerated) {
 
             %></table><%
 
-            pDatabase->FreeData (pvPlanetData);
+            pConn->FreeData (pvPlanetData);
             pvPlanetData = NULL;
 
             if (bOurPlanet) {
@@ -324,7 +327,7 @@ if (bMapGenerated) {
 Cleanup:
 
         if (pvPlanetData != NULL) {
-            pDatabase->FreeData (pvPlanetData);
+            pConn->FreeData (pvPlanetData);
         }
 
         if (pvPlanetKey != NULL) {
@@ -335,7 +338,8 @@ Cleanup:
             g_pGameEngine->FreeKeys ((unsigned int*) piProxyKey);
         }
 
-        SafeRelease (pDatabase);
+        SafeRelease(pConn);
+        SafeRelease(pDatabase);
 
         if (iErrCode != OK) {
             %>Error rendering up-close planet view. The error was <% Write (iErrCode);

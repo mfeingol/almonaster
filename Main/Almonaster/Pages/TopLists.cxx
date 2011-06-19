@@ -248,7 +248,7 @@ case 1:
     for (i = 0; i < iNumEmpires; i ++) {
 
         if (g_pGameEngine->GetEmpireData (
-            ppvData[i][TopList::EmpireKey].GetInteger(), 
+            ppvData[i][TopList::iEmpireKey].GetInteger(), 
             &pvEmpData,
             &iNumActiveGames
             ) != OK) {
@@ -256,15 +256,15 @@ case 1:
         }
 
         %><tr><td align="center"><strong><% Write (i + 1); %></strong></td><%
-        %><td align="center"><% Write (pvEmpData[SystemEmpireData::Name].GetCharPtr()); %></td><%
+        %><td align="center"><% Write (pvEmpData[SystemEmpireData::iName].GetCharPtr()); %></td><%
         %><td align="center"><%
 
-        sprintf (pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::Name].GetCharPtr());
+        sprintf (pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::iName].GetCharPtr());
 
         WriteProfileAlienString (
-            pvEmpData[SystemEmpireData::AlienKey].GetInteger(),
-            ppvData[i][TopList::EmpireKey].GetInteger(),
-            pvEmpData[SystemEmpireData::Name].GetCharPtr(),
+            pvEmpData[SystemEmpireData::iAlienKey].GetInteger(),
+            ppvData[i][TopList::iEmpireKey].GetInteger(),
+            pvEmpData[SystemEmpireData::iName].GetCharPtr(),
             0,
             "ProfileLink",
             pszProfile,
@@ -274,10 +274,10 @@ case 1:
 
         %></td><td align="center"><%
 
-        iErrCode = HTMLFilter (pvEmpData[SystemEmpireData::RealName].GetCharPtr(), &strName, 0, false);
+        iErrCode = HTMLFilter (pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
         if (iErrCode == OK && !strName.IsBlank()) {
 
-            iErrCode = HTMLFilter (pvEmpData[SystemEmpireData::Email].GetCharPtr(), &strEmail, 0, false);
+            iErrCode = HTMLFilter (pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
             if (iErrCode == OK) {
 
                 if (!strEmail.IsBlank()) {
@@ -292,23 +292,23 @@ case 1:
             }
         }
 
-        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::Wins].GetInteger());
-        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::Nukes].GetInteger());
-        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::Nuked].GetInteger());
-        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::Draws].GetInteger());
-        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::Ruins].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iWins].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNukes].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNuked].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iDraws].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iRuins].GetInteger());
 
-        %></td><td align="center"><% Write (ppvData[i][TopList::Data]);
+        %></td><td align="center"><% Write (ppvData[i][TopList::iData]);
 
         switch (ssListType) {
 
         case ALMONASTER_SCORE:
-            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::AlmonasterScoreSignificance].GetInteger());
+            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iAlmonasterScoreSignificance].GetInteger());
             break;
 
         case BRIDIER_SCORE:
         case BRIDIER_SCORE_ESTABLISHED:
-            %></td><td align="center"><% Write (ppvData[i][TopList::Data2]);
+            %></td><td align="center"><% Write (ppvData[i][TopList::iData2]);
             break;
         }
         %></td><%

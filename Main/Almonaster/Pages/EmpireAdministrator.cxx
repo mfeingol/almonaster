@@ -190,7 +190,7 @@ SearchResults:
 
                 if (iTargetEmpireKey != m_iEmpireKey) {
 
-                    if (iTargetEmpireKey == ROOT_KEY) {
+                    if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                         AddMessage ("You cannot update root's password");
                         return Redirect (m_pgPageId);
                     }
@@ -211,7 +211,7 @@ SearchResults:
                         return Redirect (m_pgPageId);
                     }
 
-                    if (iPrivilege >= ADMINISTRATOR && m_iEmpireKey != ROOT_KEY) {
+                    if (iPrivilege >= ADMINISTRATOR && m_iEmpireKey != g_pGameEngine->GetRootKey()) {
                         AddMessage ("You cannot change an administrator's password");
                         return Redirect (m_pgPageId);
                     }
@@ -274,11 +274,11 @@ SearchResults:
                     AddMessage ("You cannot change your own privilege settings");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s privilege settings");
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s privilege settings");
                 }
 
@@ -308,11 +308,11 @@ SearchResults:
                     AddMessage ("You cannot change your own privilege level");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s privilege level");
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s privilege level");
                 }
 
@@ -347,11 +347,11 @@ SearchResults:
                     AddMessage ("You cannot change your own Almonaster score");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s Almonaster score");
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s Almonaster score");
                 }
 
@@ -386,11 +386,11 @@ SearchResults:
                     AddMessage ("You cannot change your own Almonaster significance");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s Almonaster significance");
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s Almonaster significance");
                 }
 
@@ -418,11 +418,11 @@ SearchResults:
                     AddMessage ("You cannot change your own broadcast setting");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s broadcast setting");
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s broadcast setting");
                 }
 
@@ -474,11 +474,11 @@ SearchResults:
                     AddMessage ("You cannot obliterate yourself");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot obliterate " ROOT_NAME);
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot obliterate " GUEST_NAME);
                 }
 
@@ -515,11 +515,11 @@ SearchResults:
                     AddMessage ("You cannot obliterate yourself");
                 }
 
-                else if (iTargetEmpireKey == ROOT_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage ("You cannot obliterate " ROOT_NAME);
                 }
 
-                else if (iTargetEmpireKey == GUEST_KEY) {
+                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage ("You cannot obliterate " GUEST_NAME);
                 }
 
@@ -646,11 +646,11 @@ case 3:
         int iTargetPrivilege;
         iErrCode = g_pGameEngine->GetEmpirePrivilege (iTargetEmpireKey, &iTargetPrivilege);
 
-        if (iErrCode == OK && iTargetPrivilege < ADMINISTRATOR || m_iEmpireKey == ROOT_KEY) {
+        if (iErrCode == OK && iTargetPrivilege < ADMINISTRATOR || m_iEmpireKey == g_pGameEngine->GetRootKey()) {
 
             WriteButton (BID_CHANGEEMPIRESPASSWORD);
 
-            if (iTargetEmpireKey != GUEST_KEY && iTargetEmpireKey != ROOT_KEY) {
+            if (iTargetEmpireKey != g_pGameEngine->GetGuestKey() && iTargetEmpireKey != g_pGameEngine->GetRootKey()) {
                 WriteButton (BID_OBLITERATEEMPIRE);
             }
         }

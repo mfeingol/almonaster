@@ -1,7 +1,7 @@
 <% #include "Osal/Algorithm.h"
 #include "../Almonaster.h"
 #include "../GameEngine/GameEngine.h"
-#include "Database.h"
+#include "SqlDatabase.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)

@@ -52,6 +52,9 @@ GameEngine::GameEngine(const char* pszDatabaseFile,
     m_iNumRefs = 1;
     m_bGoodDatabase = false;
 
+    m_iRootKey = NO_KEY;
+    m_iGuestKey = NO_KEY;
+
     m_scConfig = scConfig;
     m_ccConfig = ccConfig;
 
@@ -78,7 +81,7 @@ GameEngine::GameEngine(const char* pszDatabaseFile,
         m_pReport->WriteReport (pszString);
     }
 
-    m_pGameData = NULL;
+    m_pConn = NULL;
     m_pChatroom = NULL;
 
     m_dbsStage = DATABASE_BACKUP_NONE;
@@ -170,11 +173,13 @@ GameEngine::~GameEngine() {
         
         UTCTime tTime;
         Time::GetTime (&tTime);
-        iErrCode = m_pGameData->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tTime);
+        iErrCode = m_pConn->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tTime);
         Assert (iErrCode == OK);
 
         m_pReport->WriteReport ("GameEngine wrote last shutdown time to database");
     }
+
+    SafeRelease(m_pConn)
 
     if (m_pGameData != NULL) {
 
@@ -292,6 +297,11 @@ int GameEngine::Initialize()
     {
         typedef int (*Fxn_CreateInstance) (const Uuid&, const Uuid&, void**);
         Fxn_CreateInstance pCreateInstance = (Fxn_CreateInstance)m_libDatabase.GetExport("CreateInstance");
+        if (pCreateInstance == NULL)
+        {
+            m_pReport->WriteReport("Unable to obtain CreateInstance export from database library");
+            return ERROR_FAILURE;
+        }
         iErrCode = pCreateInstance(m_uuidDatabaseClsid, IID_IDatabase, (void**)&m_pGameData);
     }
 
@@ -345,13 +355,14 @@ int GameEngine::Initialize()
         return iErrCode;
     }
 
-    int iNumActiveGames;
-    iErrCode = GetNumActiveGames (&iNumActiveGames);
-    if (iErrCode != OK) {
-        iNumActiveGames = 250;
+    m_pConn = m_pGameData->CreateConnection();
+    if (m_pConn == NULL)
+    {
+        m_pReport->WriteReport("Unable to create database connection");
+        return ERROR_FAILURE;
     }
 
-    if (!m_htGameObjectTable.Initialize (max (250, iNumActiveGames))) {
+    if (!m_htGameObjectTable.Initialize(250)) {
         m_pReport->WriteReport ("GameEngine is out of memory");
         return ERROR_OUT_OF_MEMORY;
     }
@@ -381,6 +392,20 @@ int GameEngine::Initialize()
 
     iErrCode = Setup();
     if (iErrCode != OK) {
+        Assert (false);
+        return iErrCode;
+    }
+
+    iErrCode = m_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, ROOT_NAME, &m_iRootKey);
+    if (iErrCode != OK)
+    {
+        Assert (false);
+        return iErrCode;
+    }
+
+    iErrCode = m_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, GUEST_NAME, &m_iGuestKey);
+    if (iErrCode != OK)
+    {
         Assert (false);
         return iErrCode;
     }
@@ -445,6 +470,18 @@ Chatroom* GameEngine::GetChatroom() {
     return m_pChatroom;
 }
 
+unsigned int GameEngine::GetRootKey()
+{
+    Assert(m_iRootKey != NO_KEY);
+    return m_iRootKey;
+}
+
+unsigned int GameEngine::GetGuestKey()
+{
+    Assert(m_iGuestKey != NO_KEY);
+    return m_iGuestKey;
+}
+
 IScoringSystem* GameEngine::GetScoringSystem (ScoringSystem ssScoringSystem) {
 
     Assert (ssScoringSystem >= FIRST_SCORING_SYSTEM && ssScoringSystem < NUM_SCORING_SYSTEMS);
@@ -469,7 +506,7 @@ int GameEngine::GetGameConfiguration (GameConfiguration* pgcConfig) {
 
     LockGameConfigurationForReading();
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_DATA, &pSystem);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -649,7 +686,7 @@ int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig) {
 
     LockMapConfigurationForReading();
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_DATA, &pSystem);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -744,7 +781,7 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
 
     LockGameConfigurationForWriting();
 
-    iErrCode = m_pGameData->GetTableForWriting (SYSTEM_DATA, &pSystem);
+    iErrCode = m_pConn->GetTableForWriting (SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -938,7 +975,7 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
 
     LockMapConfigurationForWriting();
 
-    iErrCode = m_pGameData->GetTableForWriting (SYSTEM_DATA, &pSystem);
+    iErrCode = m_pConn->GetTableForWriting (SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1007,7 +1044,7 @@ int GameEngine::GetNewSessionId (int64* pi64SessionId) {
 
     Variant vSessionId;
 
-    int iErrCode = m_pGameData->Increment (SYSTEM_DATA, SystemData::SessionId, (int64) 1, &vSessionId);
+    int iErrCode = m_pConn->Increment (SYSTEM_DATA, SystemData::SessionId, (int64) 1, &vSessionId);
     if (iErrCode == OK) {
         *pi64SessionId = vSessionId.GetInteger64();
         return OK;
@@ -1017,43 +1054,43 @@ int GameEngine::GetNewSessionId (int64* pi64SessionId) {
 }
 
 void GameEngine::FreeData (void** ppData) {
-    m_pGameData->FreeData (ppData);
+    m_pConn->FreeData (ppData);
 }
 
 void GameEngine::FreeData (Variant* pvData) {
-    m_pGameData->FreeData (pvData);
+    m_pConn->FreeData (pvData);
 }
 
 void GameEngine::FreeData (Variant** ppvData) {
-    m_pGameData->FreeData (ppvData);
+    m_pConn->FreeData (ppvData);
 }
 
 void GameEngine::FreeData (int* piData) {
-    m_pGameData->FreeData (piData);
+    m_pConn->FreeData (piData);
 }
 
 void GameEngine::FreeData (unsigned int* piData) {
-    m_pGameData->FreeData (piData);
+    m_pConn->FreeData (piData);
 }
 
 void GameEngine::FreeData (float* ppfData) {
-    m_pGameData->FreeData (ppfData);
+    m_pConn->FreeData (ppfData);
 }
 
 void GameEngine::FreeData (char** ppszData) {
-    m_pGameData->FreeData (ppszData);
+    m_pConn->FreeData (ppszData);
 }
 
 void GameEngine::FreeData (int64* pi64Data) {
-    m_pGameData->FreeData (pi64Data);
+    m_pConn->FreeData (pi64Data);
 }
 
 void GameEngine::FreeKeys (unsigned int* piKeys) {
-    m_pGameData->FreeKeys (piKeys);
+    m_pConn->FreeKeys (piKeys);
 }
 
 void GameEngine::FreeKeys (int* piKeys) {
-    m_pGameData->FreeKeys ((unsigned int*) piKeys);
+    m_pConn->FreeKeys ((unsigned int*) piKeys);
 }
 
 unsigned int GameEngine::GameObjectHashValue::GetHashValue (const char* pszData, unsigned int iNumBuckets, 

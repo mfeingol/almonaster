@@ -31,6 +31,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     size_t stTemp;
     
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
+    IDatabaseConnection* pConn = pDatabase->CreateConnection();
     
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
     GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
@@ -163,7 +164,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             goto Cleanup;
         }
         
-        iErrCode = pDatabase->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
+        iErrCode = pConn->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -392,7 +393,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     memcpy (pszHorz + stTemp + strHorz.GetLength(), "</td>", sizeof ("</td>"));
     memcpy (pszVert + stTemp + strVert.GetLength(), "</td>", sizeof ("</td>"));
     
-    iErrCode = pDatabase->ReadData (
+    iErrCode = pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -415,43 +416,43 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iPlanetKey = pvPlanetKey[i].GetInteger();
             iProxyKey = piProxyKey[i];
             
-            iErrCode = pDatabase->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
+            iErrCode = pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             
-            g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
+            g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
             
             // Partial map filtering
             if (pPartialMapInfo != NULL && (iX > iMaxX || iX < iMinX || iY > iMaxY || iY < iMinY)) {
-                pDatabase->FreeData (pvPlanetData);
+                pConn->FreeData (pvPlanetData);
                 pvPlanetData = NULL;
                 continue;
             }
             
-            iErrCode = pDatabase->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
+            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumUncloakedShips = vTemp.GetInteger();
             
-            iErrCode = pDatabase->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
+            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumCloakedShips = vTemp.GetInteger();
             
-            iErrCode = pDatabase->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
+            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumUncloakedBuildShips = vTemp.GetInteger();
             
-            iErrCode = pDatabase->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
+            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -465,27 +466,27 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iPlanetKey = piPlanetKey[i];
             iProxyKey = 0;
             
-            iErrCode = pDatabase->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
+            iErrCode = pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             
-            g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
+            g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
             
             iNumOwnShips = iNumUncloakedShips = iNumCloakedShips = iNumUncloakedBuildShips = 
                 iNumCloakedBuildShips = 0;
         }
         
         // Main map loop
-        iNumOtherShips = pvPlanetData[GameMap::NumUncloakedShips].GetInteger() - iNumUncloakedShips;
+        iNumOtherShips = pvPlanetData[GameMap::iNumUncloakedShips].GetInteger() - iNumUncloakedShips;
         if (bVisible || bAdmin) {
-            iNumOtherShips += pvPlanetData[GameMap::NumUncloakedBuildShips].GetInteger() - iNumUncloakedBuildShips;
+            iNumOtherShips += pvPlanetData[GameMap::iNumUncloakedBuildShips].GetInteger() - iNumUncloakedBuildShips;
         }
         
         Assert (iNumOtherShips >= 0 && iNumOwnShips >= 0);
         
-        iLink = pvPlanetData[GameMap::Link].GetInteger();
+        iLink = pvPlanetData[GameMap::iLink].GetInteger();
 
         bLinkNorth = (iLink & LINK_NORTH) != 0;
         bLinkEast  = (iLink & LINK_EAST) != 0;
@@ -494,7 +495,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         
         iNumJumps = (bLinkNorth ? 1:0) + (bLinkEast ? 1:0) + (bLinkSouth ? 1:0) + (bLinkWest ? 1:0);
         
-        iOwner = pvPlanetData[GameMap::Owner].GetInteger();
+        iOwner = pvPlanetData[GameMap::iOwner].GetInteger();
         
         // Get grid coordinates     
         iGridLocX = (iX - iMinX) * 3 + 1;
@@ -523,7 +524,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         }
         
         // Get planet string        
-        if (pvPlanetData[GameMap::Annihilated].GetInteger() != NOT_ANNIHILATED) {
+        if (pvPlanetData[GameMap::iAnnihilated].GetInteger() != NOT_ANNIHILATED) {
             
             GetDeadPlanetButtonString (iDeadPlanetKey, iPlanetKey, iProxyKey, strAltTag, NULL, &strPlanetString);
             pszColor = NULL;
@@ -613,7 +614,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             }
         }
         
-        if (HTMLFilter (pvPlanetData[GameMap::Name].GetCharPtr(), &strFilter, 0, false) != OK) {
+        if (HTMLFilter (pvPlanetData[GameMap::iName].GetCharPtr(), &strFilter, 0, false) != OK) {
             strFilter.Clear();
         }
         
@@ -631,7 +632,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         
         // Planet name
         ppstrGrid[iGridLocX][iGridLocY] += ">"; 
-        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::Minerals].GetInteger();
+        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::iMinerals].GetInteger();
         ppstrGrid[iGridLocX][iGridLocY] += "</font></td><td rowspan=\"3\">";
         
         ppstrGrid[iGridLocX][iGridLocY] += strPlanetString;
@@ -647,7 +648,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         }
         
         ppstrGrid[iGridLocX][iGridLocY] += ">";
-        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::Fuel].GetInteger();
+        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::iFuel].GetInteger();
         ppstrGrid[iGridLocX][iGridLocY] += "</font></td></tr><tr><td align=\"center\"><font size=\"1\"";
         
         if (pszColor != NULL) {
@@ -657,7 +658,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         }
         
         ppstrGrid[iGridLocX][iGridLocY] += ">";
-        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::Ag].GetInteger();
+        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::iAg].GetInteger();
         ppstrGrid[iGridLocX][iGridLocY] += "</font></td><td align=\"center\"><font size=\"1\"";
         
         if (pszColor != NULL) {
@@ -667,7 +668,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         }
         
         ppstrGrid[iGridLocX][iGridLocY] += ">";
-        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::Pop].GetInteger();
+        ppstrGrid[iGridLocX][iGridLocY] += pvPlanetData[GameMap::iPop].GetInteger();
         ppstrGrid[iGridLocX][iGridLocY] += "</font></td></tr><tr><td align=\"center\"><font size=\"1\"";
         
         if (bShipColoring) {
@@ -836,7 +837,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             }
         }
         
-        pDatabase->FreeData (pvPlanetData);
+        pConn->FreeData (pvPlanetData);
         pvPlanetData = NULL;
     }
     
@@ -872,33 +873,34 @@ Cleanup:
     if (!bAdmin && !bSpectators) {
         
         if (pvPlanetKey != pvEasyWayOut) {
-            pDatabase->FreeData (pvPlanetKey);
+            pConn->FreeData (pvPlanetKey);
         }
 
         if (piProxyKey != piEasyProxyKeys) {
-            pDatabase->FreeKeys (piProxyKey);
+            pConn->FreeKeys (piProxyKey);
         }
         
     } else {
             
         if (piPlanetKey != NULL) {
-            pDatabase->FreeKeys (piPlanetKey);
+            pConn->FreeKeys (piPlanetKey);
         }
     }
     
     if (pvEmpireKey != NULL) {
-        pDatabase->FreeData (pvEmpireKey);
+        pConn->FreeData (pvEmpireKey);
     }
     
     if (pvPlanetData != NULL) {
-        pDatabase->FreeData (pvPlanetData);
+        pConn->FreeData (pvPlanetData);
     }
     
     if (pstrGrid != NULL) {
         delete [] pstrGrid;
     }
 
-    pDatabase->Release();
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
     
     return iErrCode;
 }
@@ -1239,8 +1241,8 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     OutputText ("\">Jumps</th></tr><tr><td align=\"center\">");
     
     int iData, iWeOffer, iTheyOffer, iCurrent, iAlienKey;
-    unsigned int iAnnihilated = pvPlanetData[GameMap::Annihilated].GetInteger();
-    unsigned int iOwner = pvPlanetData[GameMap::Owner].GetInteger();
+    unsigned int iAnnihilated = pvPlanetData[GameMap::iAnnihilated].GetInteger();
+    unsigned int iOwner = pvPlanetData[GameMap::iOwner].GetInteger();
 
     String strPlanet;
     Variant vEmpireName;
@@ -1341,7 +1343,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     
     OutputText ("</td>");
     
-    if (HTMLFilter (pvPlanetData[GameMap::Name].GetCharPtr(), &strFilter, 0, false) != OK) {
+    if (HTMLFilter (pvPlanetData[GameMap::iName].GetCharPtr(), &strFilter, 0, false) != OK) {
         return ERROR_OUT_OF_MEMORY;
     }
     
@@ -1360,7 +1362,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         OutputText ("\"><input type=\"hidden\" name=\"OldMaxPop");
         m_pHttpResponse->WriteText (iPlanetCounter);
         OutputText ("\" value=\"");
-        m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
+        m_pHttpResponse->WriteText (pvPlanetData[GameMap::iMaxPop].GetInteger());
         OutputText ("\"></td>");
 
         OutputText ("<input type=\"hidden\" name=\"KeyPlanet");
@@ -1396,7 +1398,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             }
         }
         
-        else if (pvPlanetData[GameMap::HomeWorld].GetInteger() >= ROOT_KEY) {
+        else if (pvPlanetData[GameMap::iHomeWorld].GetInteger() != HOMEWORLD &&
+                 pvPlanetData[GameMap::iHomeWorld].GetInteger() != NOT_HOMEWORLD)
+        {
             OutputText ("<br>(Surrendered)");
         }
         
@@ -1407,7 +1411,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     
     // Coordinates
     OutputText ("<td align=\"center\">");
-    WriteStringByDiplomacy (pvPlanetData[GameMap::Coordinates].GetCharPtr(), iCurrent);
+    WriteStringByDiplomacy (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), iCurrent);
     OutputText ("</td><td align=\"center\">");
     
     // Owner name
@@ -1445,7 +1449,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     // Minerals
     OutputText ("<td align=\"center\">");
     
-    iData = pvPlanetData[GameMap::Minerals].GetInteger();
+    iData = pvPlanetData[GameMap::iMinerals].GetInteger();
     if (iData < iBadMin) {
         OutputText ("<font color=\"");
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
@@ -1465,7 +1469,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     }
     OutputText ("</td><td align=\"center\">");
     
-    iData = pvPlanetData[GameMap::Fuel].GetInteger();
+    iData = pvPlanetData[GameMap::iFuel].GetInteger();
     if (iData < iBadFuel) {
         OutputText ("<font color=\"");
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
@@ -1485,7 +1489,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     }
     OutputText ("</td><td align=\"center\">");
     
-    int iAg = pvPlanetData[GameMap::Ag].GetInteger();
+    int iAg = pvPlanetData[GameMap::iAg].GetInteger();
     if (iAg < iBadAg) {
         OutputText ("<font color=\"");
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
@@ -1505,7 +1509,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     }
     OutputText ("</td><td align=\"center\">");
     
-    iData = pvPlanetData[GameMap::Pop].GetInteger();
+    iData = pvPlanetData[GameMap::iPop].GetInteger();
     if (iData == iAg) {
         OutputText ("<font color=\"");
         m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
@@ -1531,13 +1535,13 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         OutputText ("<input type=\"text\" size=\"4\" maxlength=\"4\" name=\"NewMaxPop");
         m_pHttpResponse->WriteText (iPlanetCounter);
         OutputText ("\"value=\"");
-        m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
+        m_pHttpResponse->WriteText (pvPlanetData[GameMap::iMaxPop].GetInteger());
         OutputText ("\">");
         
     } else {
         
         if (iOwner != SYSTEM && bAdmin) {
-            m_pHttpResponse->WriteText (pvPlanetData[GameMap::MaxPop].GetInteger());
+            m_pHttpResponse->WriteText (pvPlanetData[GameMap::iMaxPop].GetInteger());
         } else {
             OutputText ("-");
         }
@@ -1550,8 +1554,8 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     
     else if (iOwner == iEmpireKey || bAdmin) {
         
-        int iCost = pvPlanetData[GameMap::PopLostToColonies].GetInteger();
-        int iPop = pvPlanetData[GameMap::Pop].GetInteger();
+        int iCost = pvPlanetData[GameMap::iPopLostToColonies].GetInteger();
+        int iPop = pvPlanetData[GameMap::iPop].GetInteger();
         
         Assert (iCost >= 0 && iCost <= iPop);
         
@@ -1560,8 +1564,8 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             fEmpireAgRatio
             );
         
-        if (iNextPop > pvPlanetData[GameMap::MaxPop].GetInteger()) {
-            iNextPop = pvPlanetData[GameMap::MaxPop].GetInteger();
+        if (iNextPop > pvPlanetData[GameMap::iMaxPop].GetInteger()) {
+            iNextPop = pvPlanetData[GameMap::iMaxPop].GetInteger();
         }
         
         iData = iNextPop;
@@ -1592,9 +1596,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     OutputText ("</td><td align=\"center\">");
     
     int iX, iY;
-    g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::Coordinates].GetCharPtr(), &iX, &iY);
+    g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
     
-    int iLink = pvPlanetData[GameMap::Link].GetInteger();
+    int iLink = pvPlanetData[GameMap::iLink].GetInteger();
     bool bLinkNorth = (iLink & LINK_NORTH) != 0;
     bool bLinkEast  = (iLink & LINK_EAST) != 0;
     bool bLinkSouth = (iLink & LINK_SOUTH) != 0;
@@ -1712,10 +1716,10 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     OutputText ("</td></tr>");
     
     int iTotalNumShips = 
-        pvPlanetData[GameMap::NumUncloakedShips].GetInteger() + 
-        pvPlanetData[GameMap::NumCloakedShips].GetInteger() + 
-        pvPlanetData[GameMap::NumUncloakedBuildShips].GetInteger() + 
-        pvPlanetData[GameMap::NumCloakedBuildShips].GetInteger();
+        pvPlanetData[GameMap::iNumUncloakedShips].GetInteger() + 
+        pvPlanetData[GameMap::iNumCloakedShips].GetInteger() + 
+        pvPlanetData[GameMap::iNumUncloakedBuildShips].GetInteger() + 
+        pvPlanetData[GameMap::iNumCloakedBuildShips].GetInteger();
     
     if (iTotalNumShips > 0) {
         

@@ -326,8 +326,8 @@ int GameEngine::GetColonizePopulation (int iShipBehavior, float fColonyMultiplie
 
 
 // Return the population cost of a colony, given the colony ship's BR
-int GameEngine::GetColonyPopulationBuildCost (int iShipBehavior, float fColonyMultipliedBuildFactor, 
-                                              int iColonySimpleBuildFactor, float fBR) {
+unsigned int GameEngine::GetColonyPopulationBuildCost(int iShipBehavior, float fColonyMultipliedBuildFactor, 
+                                                      int iColonySimpleBuildFactor, float fBR) {
 
     Assert (fBR > 0.0);
     Assert (fColonyMultipliedBuildFactor >= 0.0);
@@ -448,7 +448,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     case TRUCE:
         
-        iErrCode = m_pGameData->ReadData (
+        iErrCode = m_pConn->ReadData (
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxNumTruces, 
@@ -462,7 +462,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     case TRADE:
         
-        iErrCode = m_pGameData->ReadData (
+        iErrCode = m_pConn->ReadData (
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxNumTrades, 
@@ -476,7 +476,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     case ALLIANCE:
         
-        iErrCode = m_pGameData->ReadData (
+        iErrCode = m_pConn->ReadData (
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxNumAlliances, 
@@ -498,7 +498,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
         GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
-        iErrCode = m_pGameData->ReadData (
+        iErrCode = m_pConn->ReadData (
             pszGameData, 
             GameData::MaxNumEmpires, 
             &vMax

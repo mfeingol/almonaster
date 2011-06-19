@@ -132,9 +132,9 @@ void MapFairnessEvaluator::ProcessClaims() {
             ListIterator<PlanetClaim> iter;
 
             const Variant* pvPlanetData = m_ppvPlanetData[i];
-            int iAg = pvPlanetData[GameMap::Ag].GetInteger();
-            int iMin = pvPlanetData[GameMap::Minerals].GetInteger();
-            int iFuel = pvPlanetData[GameMap::Fuel].GetInteger();
+            int iAg = pvPlanetData[GameMap::iAg].GetInteger();
+            int iMin = pvPlanetData[GameMap::iMinerals].GetInteger();
+            int iFuel = pvPlanetData[GameMap::iFuel].GetInteger();
 
             int iTotalResources = (int) ((double)iAg * 1.25 + iMin + iFuel);
 
@@ -181,8 +181,8 @@ unsigned int MapFairnessEvaluator::GetHomeWorldIndex(unsigned int iEmpireKey) {
 
         const Variant* pvPlanetData = m_ppvPlanetData[i];
 
-        if (pvPlanetData[GameMap::HomeWorld].GetInteger() == HOMEWORLD &&
-            (unsigned int)pvPlanetData[GameMap::Owner].GetInteger() == iEmpireKey)
+        if (pvPlanetData[GameMap::iHomeWorld].GetInteger() == HOMEWORLD &&
+            (unsigned int)pvPlanetData[GameMap::iOwner].GetInteger() == iEmpireKey)
             return i;
     }
 

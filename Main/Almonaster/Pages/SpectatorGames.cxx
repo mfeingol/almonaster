@@ -461,6 +461,7 @@ case 2:
     {
 
     IDatabase* pDatabase = NULL;
+    IDatabaseConnection* pConn = NULL;
     Variant* pvPlanetData = NULL;
 
     int iGameClassOptions, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
@@ -505,9 +506,12 @@ case 2:
     }
 
     pDatabase = g_pGameEngine->GetDatabase();
-    Assert (pDatabase);
+    Assert(pDatabase != NULL);
 
-    iErrCode = pDatabase->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+    pConn = pDatabase->CreateConnection();
+    Assert(pConn != NULL);
+
+    iErrCode = pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -549,10 +553,11 @@ case 2:
 Cleanup:
 
     if (pvPlanetData != NULL) {
-        pDatabase->FreeData (pvPlanetData);
+        pConn->FreeData (pvPlanetData);
     }
 
-    SafeRelease (pDatabase);
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
 
     if (iErrCode != OK) {
         %><h3>Error <% Write (iErrCode); %> rendering page</h3><%

@@ -24,7 +24,7 @@
 #include "Osal/FifoQueue.h"
 #include "Osal/HashTable.h"
 #include "Osal/ReadWriteLock.h"
-#include "Database.h"
+#include "SqlDatabase.h"
 
 struct ChatroomConfig {
     size_t cchMaxSpeakerNameLen;
@@ -33,7 +33,6 @@ struct ChatroomConfig {
     unsigned int iMaxNumSpeakers;
     unsigned int iMaxMessageLength;
     bool bPostSystemMessages;
-    bool bStoreMessagesInDatabase;
 };
 
 struct ChatroomMessage {
@@ -50,7 +49,7 @@ struct ChatroomSpeaker {
 };
 
 // iFlags
-#define CHATROOM_MESSAGE_SYSTEM     (0x00000001)
+#define CHATROOM_MESSAGE_SYSTEM (0x00000001)
 
 class Chatroom {
 private:
@@ -66,43 +65,43 @@ private:
     };
     
     // Structures
-    FifoQueue<ChatroomMessage*> m_mqMessageQueue;
     HashTable<const char*, ChatroomSpeaker*, SpeakerHashValue, SpeakerEquals> m_hSpeakerTable;
 
     IDatabase* m_pDatabase;
+    IDatabaseConnection* m_pConn;
+
     int InitializeFromDatabase();
 
     // Locks
-    ReadWriteLock m_rwMessageLock;
     ReadWriteLock m_rwSpeakerLock;
 
     // Rules
     ChatroomConfig m_ccConf;
-    int PostMessageWithTime (const char* pszSpeakerName,
-                             const char* pszMessage,
-                             const UTCTime& tTime, 
-                             int iFlags,
-                             unsigned int iKey);
+    int PostMessageWithTime(const char* pszSpeakerName,
+                            const char* pszMessage,
+                            const UTCTime& tTime, 
+                            int iFlags,
+                            unsigned int iKey);
 
 public:
 
-    Chatroom (const ChatroomConfig& ccConf, IDatabase* pDatabase);
+    Chatroom(const ChatroomConfig& ccConf, IDatabase* pDatabase);
     ~Chatroom();
 
     int Initialize();
 
-    int GetSpeakers (ChatroomSpeaker** ppcsSpeakers, unsigned int* piNumSpeakers);
-    void FreeSpeakers (ChatroomSpeaker* pcsSpeakers);
+    int GetSpeakers(ChatroomSpeaker** ppcsSpeakers, unsigned int* piNumSpeakers);
+    void FreeSpeakers(ChatroomSpeaker* pcsSpeakers);
 
-    int GetMessages (ChatroomMessage** ppcmMessages, unsigned int* piNumMessages);
-    void FreeMessages (ChatroomMessage* pcmMessages);
+    int GetMessages(ChatroomMessage** ppcmMessages, unsigned int* piNumMessages);
+    void FreeMessages(ChatroomMessage* pcmMessages);
 
-    int PostMessage (const char* pszSpeakerName, const char* pszMessage, int iFlags);
+    int PostMessage(const char* pszSpeakerName, const char* pszMessage, int iFlags);
 
     int ClearMessages();
 
-    int EnterChatroom (const char* pszSpeakerName);
-    int ExitChatroom (const char* pszSpeakerName);
+    int EnterChatroom(const char* pszSpeakerName);
+    int ExitChatroom(const char* pszSpeakerName);
 
     unsigned int GetMaxNumMessages();
     unsigned int GetMaxNumSpeakers();

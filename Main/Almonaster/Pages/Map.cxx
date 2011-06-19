@@ -567,6 +567,7 @@ case 1:
     } else {
 
         IDatabase* pDatabase;
+        IDatabaseConnection* pConn;
 
         int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
         Variant* pvPlanetData = NULL;
@@ -622,18 +623,21 @@ case 1:
         }
 
         pDatabase = g_pGameEngine->GetDatabase();
+        pConn = pDatabase->CreateConnection();
 
-        iErrCode = pDatabase->ReadData (SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
+        iErrCode = pConn->ReadData (SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
         if (iErrCode != OK) {
             AddMessage ("Database error "); AppendMessage (iErrCode);
-            pDatabase->Release();
+            SafeRelease(pConn);
+            SafeRelease(pDatabase);
             goto RenderWholeMap;
         }
 
-        iErrCode = pDatabase->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+        iErrCode = pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
         if (iErrCode != OK) {
             AddMessage ("Database error "); AppendMessage (iErrCode);
-            pDatabase->Release();
+            SafeRelease(pConn);
+            SafeRelease(pDatabase);
             goto RenderWholeMap;
         }
 
@@ -649,8 +653,9 @@ case 1:
             &bOurPlanet
             );
 
-        pDatabase->FreeData (pvPlanetData);
-        SafeRelease (pDatabase);
+        pConn->FreeData (pvPlanetData);
+        SafeRelease(pConn);
+        SafeRelease(pDatabase);
 
         if (iErrCode != OK) {
             %>Error rendering up-close planet view. The error was <% Write (iErrCode);

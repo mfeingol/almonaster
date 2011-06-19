@@ -19,7 +19,7 @@
 #ifndef _GameEngineConstants_H_
 #define _GameEngineConstants_H_
 
-#include "Database.h"
+#include "SqlDatabase.h"
 
 #define EMPIRE_NAME_HASH_BUCKETS (0x7fffffff)
 
@@ -64,8 +64,11 @@ extern const char* const SHIP_TYPE_STRING_LOWERCASE[];
 extern const char* const SHIP_TYPE_STRING_LOWERCASE_PLURAL[];
 extern const char* const SHIP_TYPE_DESCRIPTION[];
 
-extern const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN[];
-extern const unsigned int SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[];
+extern const char* const SYSTEM_DATA_SHIP_NAME_COLUMN[];
+extern const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[];
+extern const char* const SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[];
+extern const unsigned int SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[];
+
 extern const int MORPH_ORDER[];
 
 // Diplomacy levels
@@ -640,9 +643,10 @@ enum ScoringSystem {
 
 extern const char* const TOPLIST_NAME [NUM_SCORING_SYSTEMS];
 extern const char* const TOPLIST_TABLE_NAME [NUM_SCORING_SYSTEMS];
+extern const TemplateDescription* TOPLIST_TEMPLATE[NUM_SCORING_SYSTEMS];
 extern const unsigned int TOPLIST_NUM_COLUMNS [NUM_SCORING_SYSTEMS];
 extern const unsigned int TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [NUM_SCORING_SYSTEMS];
-extern const unsigned int* TOPLIST_SYSTEM_EMPIRE_DATA_COLUMNS [NUM_SCORING_SYSTEMS];
+extern const char* const* TOPLIST_SYSTEM_EMPIRE_DATA_COLUMNS [NUM_SCORING_SYSTEMS];
 
 #define PRIVILEGE_FOR_ADVANCED_SEARCH       APPRENTICE
 #define PRIVILEGE_FOR_PERSONAL_GAMES        APPRENTICE
@@ -769,7 +773,6 @@ enum BridierColumns {
 #define PERSONAL_GAME ((unsigned int) 0xfffffffb)
 #define DELETED_EMPIRE_KEY ((unsigned int) 0xfffffffe)
 
-#define ROOT_KEY 0
 #define ROOT_NAME "root"
 #define ROOT_DEFAULT_PASSWORD "neil:young"
 
@@ -777,7 +780,6 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 
 #define NUM_RESERVED_EMPIRE_NAMES (sizeof (RESERVED_EMPIRE_NAMES) / sizeof (const char*))
 
-#define GUEST_KEY 1
 #define GUEST_NAME "guest"
 #define GUEST_DEFAULT_PASSWORD "crazy:horse"
 

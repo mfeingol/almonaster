@@ -84,7 +84,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Handle password change
-            if (m_iEmpireKey != GUEST_KEY) {
+            if (m_iEmpireKey != g_pGameEngine->GetGuestKey()) {
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("NewPassword")) == NULL) {
                     goto Redirection;
@@ -1354,12 +1354,12 @@ Quote:
             // Handle delete empire request
             if (WasButtonPressed (BID_DELETEEMPIRE)) {
 
-                if (m_iEmpireKey == ROOT_KEY) {
+                if (m_iEmpireKey == g_pGameEngine->GetRootKey()) {
                     AddMessage (ROOT_NAME " cannot commit suicide");
                     break;
                 }
 
-                else if (m_iEmpireKey == GUEST_KEY) {
+                else if (m_iEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage (GUEST_NAME " cannot commit suicide");
                     break;
                 }
@@ -1416,7 +1416,7 @@ Quote:
             // Handle blank empire stats request
             if (WasButtonPressed (BID_BLANKEMPIRESTATISTICS)) {
 
-                if (m_iEmpireKey == GUEST_KEY) {
+                if (m_iEmpireKey == g_pGameEngine->GetGuestKey()) {
                     AddMessage (GUEST_NAME "'s statistics cannot be blanked");
                 } else {
                     bRedirectTest = false;
@@ -2137,7 +2137,7 @@ case 0:
     %><input type="hidden" name="ProfileEditorPage" value="0"><p><%
 
     WriteProfileAlienString (
-        pvEmpireData[SystemEmpireData::AlienKey].GetInteger(),
+        pvEmpireData[SystemEmpireData::iAlienKey].GetInteger(),
         m_iEmpireKey,
         m_vEmpireName.GetCharPtr(),
         0,
@@ -2162,7 +2162,7 @@ case 0:
     Write ((int64)stLen); %>" maxlength="<% Write ((int64)stLen); 
     %>" value="<% Write (m_vEmpireName.GetCharPtr()); %>"></td></tr><%
 
-    if (m_iEmpireKey != GUEST_KEY) {
+    if (m_iEmpireKey != g_pGameEngine->GetGuestKey()) {
 
         %><tr><td align="left">Password:</td><%
         %><td align="left"><input type="password" name="NewPassword" size="20" maxlength="<%
@@ -2174,7 +2174,7 @@ case 0:
     }
 
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::RealName].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Real name:</td><%
         %><td><input type="text" name="RealName" size="40" maxlength="<% 
@@ -2184,7 +2184,7 @@ case 0:
 
 
     // Age
-    iValue = pvEmpireData[SystemEmpireData::Age].GetInteger();
+    iValue = pvEmpireData[SystemEmpireData::iAge].GetInteger();
 
     %><tr><td align="left">Age:</td><%
     %><td><select name="EmpAge"><%
@@ -2207,7 +2207,7 @@ case 0:
 
 
     // Gender
-    iValue = pvEmpireData[SystemEmpireData::Gender].GetInteger();
+    iValue = pvEmpireData[SystemEmpireData::iGender].GetInteger();
 
     %><tr><td align="left">Gender:</td><%
     %><td><select name="EmpGender"><%
@@ -2224,7 +2224,7 @@ case 0:
 
 
     // Location
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::Location].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iLocation].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Location:</td><%
         %><td><input type="text" name="Location" size="40" maxlength="<% 
@@ -2233,7 +2233,7 @@ case 0:
     }
 
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::Email].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iEmail].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">E-mail address:</td><%
         %><td><input type="text" name="Email" size="40" maxlength="<%
@@ -2243,7 +2243,7 @@ case 0:
     }
 
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::PrivateEmail].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iPrivateEmail].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Private e-mail address (<i>only visible to administrators</em>):</td><%
         %><td><input type="text" name="PrivEmail" size="40" maxlength="<%
@@ -2253,7 +2253,7 @@ case 0:
     }
 
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::IMId].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iIMId].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Instant Messenger:</td><%
         %><td><input type="text" name="IMId" size="40" maxlength="<% 
@@ -2262,7 +2262,7 @@ case 0:
     }
 
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::WebPage].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iWebPage].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Webpage:</td><%
         %><td><input type="text" name="WebPage" size="60" maxlength="<% 
@@ -2388,7 +2388,7 @@ case 0:
 
     %><select name="IconSelect"><%
 
-    if (pvEmpireData[SystemEmpireData::AlienKey].GetInteger() == UPLOADED_ICON) {
+    if (pvEmpireData[SystemEmpireData::iAlienKey].GetInteger() == UPLOADED_ICON) {
         %><option value="0">An icon from the system set</option><%
         %><option selected value="1">An uploaded icon</option><% 
     } else {
@@ -2403,15 +2403,15 @@ case 0:
 
     %><tr><td>Almonaster graphical theme:</td><td><select name="GraphicalTheme"><option<%
 
-    if (pvEmpireData[SystemEmpireData::AlmonasterTheme].GetInteger() == INDIVIDUAL_ELEMENTS) { 
+    if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == INDIVIDUAL_ELEMENTS) { 
         %> selected<%
     } %> value="<% Write (INDIVIDUAL_ELEMENTS); %>">Individual Graphical Elements</option><%
 
-    %><option<% if (pvEmpireData[SystemEmpireData::AlmonasterTheme].GetInteger() == ALTERNATIVE_PATH) {
+    %><option<% if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == ALTERNATIVE_PATH) {
         %> selected<%
     } %> value="<% Write (ALTERNATIVE_PATH); %>">Graphics from an alternative path</option><%
 
-    %><option<% if (pvEmpireData[SystemEmpireData::AlmonasterTheme].GetInteger() == NULL_THEME) {
+    %><option<% if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == NULL_THEME) {
         %> selected<%
     } %> value="<% Write (NULL_THEME); %>">Null Theme</option><%
 
@@ -2426,7 +2426,7 @@ case 0:
         for (i = 0; i < iNumThemes; i ++) {
             if (g_pGameEngine->GetThemeName (piThemeKey[i], &vThemeName) == OK) {
                 %><option <%
-                if (pvEmpireData[SystemEmpireData::AlmonasterTheme].GetInteger() == piThemeKey[i]) {
+                if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == piThemeKey[i]) {
                     %> selected<%
                 }
                 %> value="<% Write (piThemeKey[i]); %>"><% Write (vThemeName.GetCharPtr()); %></option><%
@@ -2443,7 +2443,7 @@ case 0:
 
     %><tr><td>Placement of command buttons:</td><td><select name="RepeatedButtons"><%
 
-    iValue = pvEmpireData[SystemEmpireData::Options].GetInteger() & (GAME_REPEATED_BUTTONS | SYSTEM_REPEATED_BUTTONS);
+    iValue = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & (GAME_REPEATED_BUTTONS | SYSTEM_REPEATED_BUTTONS);
 
     %><option<%
     if (iValue == 0) {
@@ -2474,7 +2474,7 @@ case 0:
 
     %><tr><td>Display server time:</td><td><select name="TimeDisplay"><%
 
-    iValue = pvEmpireData[SystemEmpireData::Options].GetInteger() & (GAME_DISPLAY_TIME | SYSTEM_DISPLAY_TIME);
+    iValue = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & (GAME_DISPLAY_TIME | SYSTEM_DISPLAY_TIME);
 
     %><option<%
     if (iValue == (GAME_DISPLAY_TIME | SYSTEM_DISPLAY_TIME)) {
@@ -2528,7 +2528,7 @@ case 0:
 
     for (i = 0; i <= iMaxNumSystemMessages; i += 10) {
         %><option<%
-        if (pvEmpireData[SystemEmpireData::MaxNumSystemMessages].GetInteger() == i) {
+        if (pvEmpireData[SystemEmpireData::iMaxNumSystemMessages].GetInteger() == i) {
             %> selected <%
         } %> value="<% Write (i); %>"><% Write (i); %></option><%
     }
@@ -2538,7 +2538,7 @@ case 0:
     %><tr><td>Fixed backgrounds <em>(requires Internet Explorer)</em>:</td><%
     %><td><select name="FixedBg"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & FIXED_BACKGROUNDS) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & FIXED_BACKGROUNDS) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2551,7 +2551,7 @@ case 0:
 
     %><tr><td>Block uploaded icons from other empires:</td><td><select name="BlockUploadedIcons"><%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options2].GetInteger() & BLOCK_UPLOADED_ICONS) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions2].GetInteger() & BLOCK_UPLOADED_ICONS) != 0;
 
     %><option<%
     if (!bFlag) {
@@ -2570,7 +2570,7 @@ case 0:
 
         %><tr><td>Profile Viewer search interface:</td><td><select name="AdvancedSearch"><option<%
 
-        bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SHOW_ADVANCED_SEARCH_INTERFACE) != 0;
+        bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SHOW_ADVANCED_SEARCH_INTERFACE) != 0;
 
         if (bFlag) {
             %> selected<%
@@ -2584,7 +2584,7 @@ case 0:
     
     %><tr><td>Prompt for confirmation on important decisions:</td><td><select name="Confirm"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & CONFIRM_IMPORTANT_CHOICES) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & CONFIRM_IMPORTANT_CHOICES) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2601,7 +2601,7 @@ case 0:
     %><tr><td>Refresh on update countdown <em>(requires JavaScript)</em>:</td><%
     %><td><select name="AutoRefresh"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & AUTO_REFRESH) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & AUTO_REFRESH) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2615,7 +2615,7 @@ case 0:
     %><tr><td>Visual update countdown <em>(requires JavaScript)</em>:</td><%
     %><td><select name="Countdown"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & COUNTDOWN) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & COUNTDOWN) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2629,7 +2629,7 @@ case 0:
     %><tr><td>Refresh unstarted game screens every 2 min <em>(requires JavaScript)</em>:</td><%
     %><td><select name="RefreshUnstarted"><%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options2].GetInteger() & REFRESH_UNSTARTED_GAME_PAGES) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions2].GetInteger() & REFRESH_UNSTARTED_GAME_PAGES) != 0;
 
     %><option<%
     if (bFlag) {
@@ -2643,7 +2643,7 @@ case 0:
     
     %><tr><td>Displace End Turn button to corner:</td><td><select name="DisplaceEndTurn"><%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & DISPLACE_ENDTURN_BUTTON) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & DISPLACE_ENDTURN_BUTTON) != 0;
 
     %><option<%
     if (bFlag) {
@@ -2657,7 +2657,7 @@ case 0:
 
     %><tr><td>Map coloring by diplomatic status:</td><td><select name="MapColoring"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & MAP_COLORING) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & MAP_COLORING) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2670,7 +2670,7 @@ case 0:
 
     %><tr><td>Ship coloring by diplomatic status on map screen:</td><td><select name="ShipMapColoring"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SHIP_MAP_COLORING) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SHIP_MAP_COLORING) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2683,7 +2683,7 @@ case 0:
 
     %><tr><td>Ship highlighting on map screen:</td><td><select name="ShipHighlighting"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SHIP_MAP_HIGHLIGHTING) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SHIP_MAP_HIGHLIGHTING) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2697,7 +2697,7 @@ case 0:
     %><tr><td>Sensitive maps <em>(requires Internet Explorer)</em>:</td><%
     %><td><select name="SensitiveMaps"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SENSITIVE_MAPS) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SENSITIVE_MAPS) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2710,7 +2710,7 @@ case 0:
 
     %><tr><td>Partial maps:</td><td><select name="PartialMaps"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & PARTIAL_MAPS) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & PARTIAL_MAPS) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2723,7 +2723,7 @@ case 0:
 
     %><tr><td>Display local maps in up-close map views:</td><td><select name="LocalMaps"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2736,7 +2736,7 @@ case 0:
 
     %><tr><td>Display ship menus in planet views:</td><td><select name="UpCloseShips"><%
 
-    iOptions = pvEmpireData[SystemEmpireData::Options].GetInteger() & 
+    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & 
         (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN);
 
     %><option <% if (iOptions == (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN)) { %>selected <% }
@@ -2760,7 +2760,7 @@ case 0:
 
     %><tr><td>Display build menus in planet views:</td><td><select name="UpCloseBuilds"><%
 
-    iOptions = pvEmpireData[SystemEmpireData::Options].GetInteger() & 
+    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & 
         (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN);
 
     %><option <% if (iOptions == (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN)) { %>selected <% }
@@ -2802,17 +2802,17 @@ case 0:
     %><tr><td>Display ratios line:</td><td><select name="Ratios"><%
 
     %><option<%
-    if (pvEmpireData[SystemEmpireData::GameRatios].GetInteger() == RATIOS_DISPLAY_NEVER) {
+    if (pvEmpireData[SystemEmpireData::iGameRatios].GetInteger() == RATIOS_DISPLAY_NEVER) {
         %> selected<%
     } %> value="<% Write (RATIOS_DISPLAY_NEVER); %>">Never by default</option><%
 
     %><option<%
-    if (pvEmpireData[SystemEmpireData::GameRatios].GetInteger() == RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
+    if (pvEmpireData[SystemEmpireData::iGameRatios].GetInteger() == RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
         %> selected<%
     } %> value="<% Write (RATIOS_DISPLAY_ON_RELEVANT_SCREENS); %>">On relevant game screens by default</option><%
 
     %><option<%
-    if (pvEmpireData[SystemEmpireData::GameRatios].GetInteger() == RATIOS_DISPLAY_ALWAYS) {
+    if (pvEmpireData[SystemEmpireData::iGameRatios].GetInteger() == RATIOS_DISPLAY_ALWAYS) {
         %> selected<%
     } %> value="<% Write (RATIOS_DISPLAY_ALWAYS); %>">On all game screens by default</option><%
 
@@ -2823,8 +2823,8 @@ case 0:
     %>(<em>IP address hashing can conflict with firewalls</em>)</td><%
     %><td><select name="Hashing"><option<%
 
-    bIP = (pvEmpireData[SystemEmpireData::Options].GetInteger() & IP_ADDRESS_PASSWORD_HASHING) != 0;
-    bID = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SESSION_ID_PASSWORD_HASHING) != 0;
+    bIP = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & IP_ADDRESS_PASSWORD_HASHING) != 0;
+    bID = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SESSION_ID_PASSWORD_HASHING) != 0;
 
     if (bIP && bID) {
         %> selected<%
@@ -2847,7 +2847,7 @@ case 0:
     %><tr><td align="center" colspan="2">&nbsp;</td></tr><%
     %><tr><td align="center" colspan="2"><h3>Gameplay:</h3></td></tr><%
 
-    iValue = pvEmpireData[SystemEmpireData::DefaultMessageTarget].GetInteger();
+    iValue = pvEmpireData[SystemEmpireData::iDefaultMessageTarget].GetInteger();
 
     %><tr><td>Default message target:</td><td><select name="MessageTarget"><%
 
@@ -2898,7 +2898,7 @@ case 0:
     
     %><tr><td>Default builder planet:</td><td><select name="DefaultBuilderPlanet"><%
 
-    iValue = pvEmpireData[SystemEmpireData::DefaultBuilderPlanet].GetInteger();
+    iValue = pvEmpireData[SystemEmpireData::iDefaultBuilderPlanet].GetInteger();
 
     %><option <%
     if (iValue == HOMEWORLD_DEFAULT_BUILDER_PLANET) {
@@ -2923,7 +2923,7 @@ case 0:
 
     %><tr><td>Maximum number of ships built at once:</td><td><select name="MaxNumShipsBuiltAtOnce"><%
 
-    iValue = pvEmpireData[SystemEmpireData::MaxNumShipsBuiltAtOnce].GetInteger();
+    iValue = pvEmpireData[SystemEmpireData::iMaxNumShipsBuiltAtOnce].GetInteger();
 
     for (i = 5; i < 16; i ++) {
         %><option <%
@@ -2945,7 +2945,7 @@ case 0:
 
     %><tr><td>Independent ship gifts:</td><td><select name="IndependentGifts"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & REJECT_INDEPENDENT_SHIP_GIFTS) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & REJECT_INDEPENDENT_SHIP_GIFTS) != 0;
 
     if (!bFlag) {
         %> selected<%
@@ -2958,7 +2958,7 @@ case 0:
     
     %><tr><td>Disband empty fleets on update:</td><td><select name="DeleteEmptyFleets"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options2].GetInteger() & DISBAND_EMPTY_FLEETS_ON_UPDATE) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions2].GetInteger() & DISBAND_EMPTY_FLEETS_ON_UPDATE) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2971,7 +2971,7 @@ case 0:
 
     %><tr><td>Collapse or expand fleets by default:</td><td><select name="CollapseFleets"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options2].GetInteger() & FLEETS_COLLAPSED_BY_DEFAULT) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions2].GetInteger() & FLEETS_COLLAPSED_BY_DEFAULT) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2984,7 +2984,7 @@ case 0:
 
     %><tr><td>Messages sent when nuke events occur:</td><td><select name="SendScore"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & SEND_SCORE_MESSAGE_ON_NUKE) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SEND_SCORE_MESSAGE_ON_NUKE) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -2997,7 +2997,7 @@ case 0:
 
     %><tr><td>Update messages for update when nuked:</td><td><select name="DisplayFatalUpdates"><option<%
 
-    bFlag = (pvEmpireData[SystemEmpireData::Options].GetInteger() & DISPLAY_FATAL_UPDATE_MESSAGES) != 0;
+    bFlag = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & DISPLAY_FATAL_UPDATE_MESSAGES) != 0;
 
     if (bFlag) {
         %> selected<%
@@ -3011,7 +3011,7 @@ case 0:
     %><tr><td align="center" colspan="2">&nbsp;</td></tr><%
     %><tr><td align="center" colspan="2"><h3>Text:</h3></td></tr><%
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::Quote].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Quote:<br>(<em>Visible to everyone from your profile</em>)</td><%
         %><td><textarea name="Quote" cols="50" rows="6" wrap="virtual"><%
@@ -3019,7 +3019,7 @@ case 0:
         %></textarea></td></tr><%
     }
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::VictorySneer].GetCharPtr(), &strFilter, 0, false) == OK) {
+    if (HTMLFilter (pvEmpireData[SystemEmpireData::iVictorySneer].GetCharPtr(), &strFilter, 0, false) == OK) {
 
         %><tr><td align="left">Victory Sneer:<br>(<em>Sent to your opponents when you nuke them</em>)</td><%
         %><td><textarea name="VictorySneer" cols="50" rows="4" wrap="virtual"><%
@@ -3035,7 +3035,7 @@ case 0:
 
         %><tr><%
 
-        if (HTMLFilter (pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[i]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        if (HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false) == OK) {
 
             %><td><% Write (SHIP_TYPE_STRING[i]); %>:</td><%
             %><td><%
@@ -3047,7 +3047,7 @@ case 0:
 
         j = i + NUM_SHIP_TYPES / 2;
 
-        if (HTMLFilter (pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[j]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        if (HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[j]].GetCharPtr(), &strFilter, 0, false) == OK) {
 
             %><td><% Write (SHIP_TYPE_STRING[j]); %>:</td><%
             %><td><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
@@ -3061,13 +3061,13 @@ case 0:
 
     %></table><p><%
 
-    if (m_iEmpireKey != GUEST_KEY) {
+    if (m_iEmpireKey != g_pGameEngine->GetGuestKey()) {
         WriteButton (BID_BLANKEMPIRESTATISTICS);
     }
 
-    if (!(pvEmpireData[SystemEmpireData::Options].GetInteger() & EMPIRE_MARKED_FOR_DELETION)) {
+    if (!(pvEmpireData[SystemEmpireData::iOptions].GetInteger() & EMPIRE_MARKED_FOR_DELETION)) {
 
-        if (m_iEmpireKey != ROOT_KEY && m_iEmpireKey != GUEST_KEY) {
+        if (m_iEmpireKey != g_pGameEngine->GetRootKey() && m_iEmpireKey != g_pGameEngine->GetGuestKey()) {
             WriteButton (BID_DELETEEMPIRE);
         }
 
@@ -3130,7 +3130,7 @@ case 2:
 
         for (i = 0; i < (int) iNumMessages; i ++) {
             piIndex[i] = i;
-            ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetInteger64();
+            ptTime[i] = ppvMessage[i][SystemEmpireMessages::iTimeStamp].GetInteger64();
         }
 
         Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
@@ -3156,16 +3156,16 @@ case 2:
 
             for (i = 0; i < (int) iNumMessages; i ++) {
 
-                int iFlags = ppvMessage[piIndex[i]][SystemEmpireMessages::Flags].GetInteger();
+                int iFlags = ppvMessage[piIndex[i]][SystemEmpireMessages::iFlags].GetInteger();
 
-                const char* pszSender = ppvMessage[piIndex[i]][SystemEmpireMessages::Source].GetCharPtr();
+                const char* pszSender = ppvMessage[piIndex[i]][SystemEmpireMessages::iSource].GetCharPtr();
 
                 %><input type="hidden" name="MsgKey<% Write (i); %>" value ="<% Write (piMessageKey[piIndex[i]]); %>"><%
                 %><input type="hidden" name="MsgSrc<% Write (i); %>" value ="<% Write (pszSender); %>"><%
 
                 %><tr><td>Time: <% 
 
-                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::TimeStamp].GetInteger64(), pszDate);
+                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
                 if (iErrCode != OK) {
                     %>Unknown date<%
                 } else {
@@ -3210,7 +3210,7 @@ case 2:
                 %>" face="<% Write (DEFAULT_MESSAGE_FONT); %>" color="#<% Write (pszFontColor); %>"<%
                 %>><% 
 
-                WriteFormattedMessage (ppvMessage[piIndex[i]][SystemEmpireMessages::Text].GetCharPtr());
+                WriteFormattedMessage (ppvMessage[piIndex[i]][SystemEmpireMessages::iText].GetCharPtr());
                 %></font></td></tr><tr><td>&nbsp;</td></tr><%
             }
 
@@ -3412,11 +3412,11 @@ case 4:
 
             %><li><a href="<%
 
-            WriteThemeDownloadSrc (piThemeKey[i], pvThemeData[SystemThemes::FileName].GetCharPtr());
+            WriteThemeDownloadSrc (piThemeKey[i], pvThemeData[SystemThemes::iFileName].GetCharPtr());
 
-            %>"><% Write (pvThemeData[SystemThemes::Name].GetCharPtr()); %></a> (<%
+            %>"><% Write (pvThemeData[SystemThemes::iName].GetCharPtr()); %></a> (<%
 
-            iOptions = pvThemeData[SystemThemes::Options].GetInteger();
+            iOptions = pvThemeData[SystemThemes::iOptions].GetInteger();
 
             bElement = false;
             if (iOptions & THEME_BACKGROUND) { bElement = true;

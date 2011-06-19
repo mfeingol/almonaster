@@ -11,12 +11,12 @@ class ClassicScore : public IScoringSystem {
 protected:
 
     IGameEngine* m_pGameEngine;
-    IDatabase* m_pDatabase;
+    IDatabaseConnection* m_pConn;
 
     ClassicScore (IGameEngine* pGameEngine);
     ~ClassicScore();
 
-    unsigned int m_iColumn;
+    const char* m_pszColumn;
 
 public:
 

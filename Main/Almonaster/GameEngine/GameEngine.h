@@ -19,8 +19,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_GAMEENGINE_H__58727607_5549_11D1_9D09_0060083E8062__INCLUDED_)
-#define AFX_GAMEENGINE_H__58727607_5549_11D1_9D09_0060083E8062__INCLUDED_
+#pragma once
 
 #include "Alajar.h"
 
@@ -81,6 +80,11 @@ class GameEngine : public IDatabaseBackupNotificationSink, public IGameEngine {
 private:
 
     IDatabase* m_pGameData;
+    IDatabaseConnection* m_pConn;
+
+    unsigned int m_iRootKey;
+    unsigned int m_iGuestKey;
+
     Chatroom* m_pChatroom;
 
     // Game objects
@@ -172,6 +176,7 @@ private:
     int CreateDefaultSystemTemplates();
     int CreateDefaultSystemTables();
     int SetupDefaultSystemTables();
+    int SetupDefaultThemes(unsigned int* piDefaultThemeKey);
     int SetupDefaultSystemGameClasses();
 
     int VerifySystem();
@@ -214,7 +219,7 @@ private:
         const GameUpdateInformation* pUpdateInfo);
 
     int RemoveEmpire (int iEmpireKey);
-    int UpdateEmpireString (int iEmpireKey, int iColumn, const char* pszString, size_t stMaxLen, bool* pbTruncated);
+    int UpdateEmpireString (int iEmpireKey, const char* pszColumn, const char* pszString, size_t stMaxLen, bool* pbTruncated);
 
     int QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey);
     static int THREAD_CALL DeleteEmpireMsg (LongRunningQueryMessage* pMessage);
@@ -511,7 +516,7 @@ private:
 
     // Diplomacy
     int AddDiplomaticOption (int iGameClass, int iGameNumber, int iTargetEmpireKey,
-        const char* pszEmpireData, const char* pszEmpireDiplomacy, unsigned int iEmpireDataColumn, 
+        const char* pszEmpireData, const char* pszEmpireDiplomacy, const char* pszEmpireDataColumn, 
         int iDiplomacyLevel, int iCurrentDiplomacyLevel, int piDipOptKey[], int* piNumOptions);
 
     int BuildDuplicateList (int* piDuplicateKeys, unsigned int iNumDuplicates, String* pstrDuplicateList);
@@ -537,22 +542,20 @@ private:
     int GetNumUnreadSystemMessagesPrivate (IReadTable* pMessages, unsigned int* piNumber);
     int GetNumUnreadGameMessagesPrivate (IReadTable* pMessages, unsigned int* piNumber);
 
-    int GetMessageProperty (const char* strMessages, unsigned int iMessageKey, unsigned int iColumn, 
-        Variant* pvProperty);
+    int GetMessageProperty (const char* strMessages, unsigned int iMessageKey, const char* pszColumn, Variant* pvProperty);
 
-    int DeleteOverflowMessages (IWriteTable* pMessages, unsigned int iTimeStampColumn, 
-        unsigned int iUnreadColumn, unsigned int iNumMessages, unsigned int iNumUnreadMessages, 
-        unsigned int iMaxNumMessages, bool bCheckUnread);
+    int DeleteOverflowMessages (IWriteTable* pMessages, const char* pszTimeStampColumn, const char* pszUnreadColumn, 
+        unsigned int iNumMessages, unsigned int iNumUnreadMessages, unsigned int iMaxNumMessages, bool bCheckUnread);
 
     // Empires
     int WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpireKey, int iTotalAg, int iBonusAg, 
         float fMaxAgRatio);
 
-    int UpdateGameEmpireString (int iGameClass, int iGameNumber, int iEmpireKey, int iColumn, 
+    int UpdateGameEmpireString (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszColumn, 
         const char* pszString, size_t stMaxLen, bool* pbTruncated);
 
     // Tournaments
-    int SetTournamentString (unsigned int iTournamentKey, unsigned int iColumn, const char* pszString);
+    int SetTournamentString (unsigned int iTournamentKey, const char* pszColumn, const char* pszString);
 
     int HandleEmpireTournamentAddition (int iEmpireKey, int iMessageKey, int iMessageType, bool bAccept);
     int AddEmpireToTournament (unsigned int iTournamentKey, int iInviteKey);
@@ -612,6 +615,9 @@ public:
 
     const char* GetSystemVersion();
 
+    unsigned int GetRootKey();
+    unsigned int GetGuestKey();
+
     int GetNewSessionId (int64* pi64SessionId);
 
     int GetGameConfiguration (GameConfiguration* pgcConfig);
@@ -637,8 +643,7 @@ public:
     int GetFuelCost (int iType, float fBR);
     int GetColonizePopulation (int iShipBehavior, float fColonyMultipliedDepositFactor, 
         float fColonyExponentialDepositFactor, float fBR);
-    int GetColonyPopulationBuildCost (int iShipBehavior, float fColonyMultipliedBuildFactor, 
-        int iColonySimpleBuildFactor, float fBR);
+    unsigned int GetColonyPopulationBuildCost (int iShipBehavior, float fColonyMultipliedBuildFactor, int iColonySimpleBuildFactor, float fBR);
     
     int GetTerraformerAg (float fTerraformerPlowFactor, float fBR);
     int GetTroopshipPop (float fTroopshipInvasionFactor, float fBR);
@@ -831,7 +836,7 @@ public:
     int SetMaxNumEmpiresForPersonalGameClass (int iMaxNumEmpires);
     int SetMaxNumPlanetsForPersonalGameClass (int iMaxNumPlanets);
 
-    int GetGameClassProperty (int iGameClass, unsigned int iProperty, Variant* pvProperty);
+    int GetGameClassProperty (int iGameClass, const char* pszColumn, Variant* pvProperty);
 
     // Games
     int GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecondsSince, int* piSecondsUntil, 
@@ -862,8 +867,8 @@ public:
     int IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* pbProtected);
     int SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword);
 
-    int GetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, Variant* pvProp);
-    int SetGameProperty(int iGameClass, int iGameNumber, unsigned int iProp, const Variant& vProp);
+    int GetGameProperty(int iGameClass, int iGameNumber, const char* pszColumn, Variant* pvProp);
+    int SetGameProperty(int iGameClass, int iGameNumber, const char* pszColumn, const Variant& vProp);
 
     int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber);
     int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword,
@@ -891,7 +896,7 @@ public:
     int IsSpectatorGame (int iGameClass, int iGameNumber, bool* pbSpectatorGame);
 
     int AddToLatestGames (const Variant* pvColumns, unsigned int iTournamentKey);
-    int AddToLatestGames (const char* pszTable, const Variant* pvColumns);
+    int AddToLatestGames (const char* pszTable, const TemplateDescription& ttTemplate, const Variant* pvColumns);
 
     void GetGameClassGameNumber (const char* pszGameData, int* piGameClass, int* piGameNumber);
     void GetGameClassGameNumber (int iGameClass, int iGameNumber, char* pszGameData);
@@ -938,8 +943,8 @@ public:
     int GetEmpireName (int iEmpireKey, char pszName [MAX_EMPIRE_NAME_LENGTH + 1]);
     int SetEmpireName (int iEmpireKey, const char* pszName);
     
-    int SetEmpirePassword (int iEmpireKey, const char* pszPassword);
-    int ChangeEmpirePassword (int iEmpireKey, const char* pszPassword);
+    int SetEmpirePassword(unsigned int iEmpireKey, const char* pszPassword);
+    int ChangeEmpirePassword(unsigned int iEmpireKey, const char* pszPassword);
 
     int SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int iMaxNumSavedMessages);
 
@@ -983,22 +988,22 @@ public:
     int GetDefaultEmpireShipNames (int iEmpireKey, const char*** pppszShipName);
 
     int UndeleteEmpire (int iEmpireKey);
-    int BlankEmpireStatistics (int iEmpireKey);
+    int BlankEmpireStatistics(unsigned int iEmpireKey);
 
     int GetEmpirePersonalGameClasses (int iEmpireKey, int** ppiGameClassKey, Variant** ppvName, int* piNumKeys);
 
     int GetEmpireData (int iEmpireKey, Variant** ppvEmpData, int* piNumActiveGames);
     int GetEmpireActiveGames (int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
 
-    int GetEmpirePrivilege (int iEmpireKey, int* piPrivilege);
-    int SetEmpirePrivilege (int iEmpireKey, int iPrivilege);
+    int GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege);
+    int SetEmpirePrivilege(unsigned int iEmpireKey, int iPrivilege);
 
-    int GetEmpireAlmonasterScore (int iEmpireKey, float* pfAlmonasterScore);
-    int SetEmpireAlmonasterScore (int iEmpireKey, float fAlmonasterScore);
+    int GetEmpireAlmonasterScore(unsigned int iEmpireKey, float* pfAlmonasterScore);
+    int SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonasterScore);
 
-    int GetEmpirePassword (int iEmpireKey, Variant* pvPassword);
+    int GetEmpirePassword(unsigned int iEmpireKey, Variant* pvPassword);
 
-    int GetEmpireDataColumn (int iEmpireKey, unsigned int iColumn, Variant* pvData);
+    int GetEmpireDataColumn (int iEmpireKey, const char* pszColumn, Variant* pvData);
 
     int GetNumLogins (int iEmpireKey, int* piNumLogins);
 
@@ -1025,8 +1030,8 @@ public:
     int GetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool* pbOption);
     int SetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool bSet);
 
-    int GetEmpireProperty (int iEmpireKey, unsigned int iProperty, Variant* pvProperty);
-    int SetEmpireProperty (int iEmpireKey, unsigned int iProperty, const Variant& vProperty);
+    int GetEmpireProperty (int iEmpireKey, const char* pszColumn, Variant* pvProperty);
+    int SetEmpireProperty (int iEmpireKey, const char* pszColumn, const Variant& vProperty);
 
     int IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle);
 
@@ -1053,11 +1058,8 @@ public:
     int GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTarget);
     int SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarget);
 
-    int GetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iColumn,
-        Variant* pvProperty);
-
-    int SetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iColumn,
-        const Variant& vProperty);
+    int GetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszColumn, Variant* pvProperty);
+    int SetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszColumn, const Variant& vProperty);
 
     // System Messages
     int SendSystemMessage (int iEmpireKey, const char* pszMessage, int iSource, int iFlags);
@@ -1074,8 +1076,7 @@ public:
     
     int DeleteSystemMessage (int iEmpireKey, unsigned int iKey);
 
-    int GetSystemMessageProperty (int iEmpireKey, unsigned int iMessageKey, unsigned int iColumn, 
-        Variant* pvProperty);
+    int GetSystemMessageProperty (int iEmpireKey, unsigned int iMessageKey, const char* pszColumn, Variant* pvProperty);
 
     // Game Messages
     int GetNumGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumber);
@@ -1091,25 +1092,18 @@ public:
         unsigned int* piNumMessages);
     
     int DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey);
-    int BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey, 
-        int iFlags);
+    int BroadcastGameMessage (int iGameClass, int iGameNumber, const char* pszMessage, int iSourceKey, int iFlags);
 
-    int GetGameMessageProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey, 
-        unsigned int iColumn, Variant* pvProperty);
+    int GetGameMessageProperty (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iMessageKey, const char* pszColumn, Variant* pvProperty);
 
     // Planets
     int GetPlanetCoordinates (int iGameClass, int iGameNumber, int iPlanetKey, int* piPlanetX, int* piPlanetY);
-
-    int GetPlanetProperty (int iGameClass, int iGameNumber, unsigned int iPlanetKey, unsigned int iProperty, 
-        Variant* pvProperty);
-
+    int GetPlanetProperty (int iGameClass, int iGameNumber, unsigned int iPlanetKey, const char* pszProperty, Variant* pvProperty);
     int GetPlanetKeyFromCoordinates (int iGameClass, int iGameNumber, int iX, int iY, int* piPlanetKey);
     int GetEmpirePlanetIcons (int iEmpireKey, unsigned int* piLivePlanetKey, unsigned int* piLiveDeadPlanetKey);
 
-    int GetNeighbourPlanetKey (int iGameClass, int iGameNumber, int iPlanetKey, int iDirection, 
-        int* piPlanetKey);
-    int HasEmpireExploredPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-        bool* pbExplored);
+    int GetNeighbourPlanetKey (int iGameClass, int iGameNumber, int iPlanetKey, int iDirection, int* piPlanetKey);
+    int HasEmpireExploredPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, bool* pbExplored);
 
     static void GetCoordinates (const char* pszCoord, int* piX, int* piY);
     static void GetCoordinates (int iX, int iY, char* pszCoord);
@@ -1150,14 +1144,14 @@ public:
     int GetSystemOptions (int* piOptions);
     int SetSystemOption (int iOption, bool bFlag);
 
-    int GetSystemProperty (int iColumn, Variant* pvProperty);
-    int SetSystemProperty (int iColumn, const Variant& vProperty);
+    int GetSystemProperty(const char* pszColumn, Variant* pvProperty);
+    int SetSystemProperty(const char* pszColumn, const Variant& vProperty);
 
     int GetDefaultShipName (int iTech, Variant* pvShipName);
     int SetDefaultShipName (int iShipKey, const char* pszShipName);
 
     // Aliens
-    int GetNumAliens (int* piNumAliens);
+    int GetNumAliens (unsigned int* piNumAliens);
     int GetAlienKeys (Variant*** pppvData, int* piNumAliens);
     int CreateAlienIcon (int iAlienKey, const char* pszAuthorName);
     int DeleteAlienIcon (int iAlienKey);
@@ -1204,11 +1198,11 @@ public:
     int UpdateGameEmpireNotepad (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszNotepad, 
         bool* pbTruncated);
 
-    int SearchForDuplicates (int iGameClass, int iGameNumber, unsigned int iSystemEmpireDataColumn,
-        unsigned int iGameEmpireDataColumn, int** ppiDuplicateKeys, unsigned int** ppiNumDuplicatesInList, 
+    int SearchForDuplicates (int iGameClass, int iGameNumber, const char* pszSystemEmpireDataColumn,
+        const char* pszGameEmpireDataColumn, int** ppiDuplicateKeys, unsigned int** ppiNumDuplicatesInList, 
         unsigned int* piNumDuplicates);
 
-    int DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int iEmpireKey, int iSystemEmpireDataColumn,
+    int DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszSystemEmpireDataColumn,
         int** ppiDuplicateKeys, unsigned int* piNumDuplicates);
 
     int GetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int* piMessageTarget);
@@ -1296,7 +1290,7 @@ public:
     int GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
         unsigned int** ppiBuilderKey, unsigned int* piNumBuilders);
 
-    int BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, int iTechKey, int iNumShips, 
+    int BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, int iTechKey, unsigned int iNumShips, 
         const char* pszShipName, float fBR, int iPlanetKey, int iFleetKey, int* piNumShipsBuilt, 
         bool* pbBuildReduced);
 
@@ -1338,10 +1332,7 @@ public:
         int* piNumFleets);
 
     int GetNumFleets (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumFleets);
-
-    int GetFleetProperty (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, unsigned int iProperty,
-        Variant* pvProperty);
-
+    int GetFleetProperty (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, const char* pszProperty, Variant* pvProperty);
     int GetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iFlag, bool* pbFlag);
     int SetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, int iFlag, bool bFlag);
 
@@ -1520,6 +1511,3 @@ public:
         unsigned int iNumNewPlanets
         ) = 0;
 };
-
-
-#endif // !defined(AFX_GAMEENGINE_H__58727607_5549_11D1_9D09_0060083E8062__INCLUDED_)

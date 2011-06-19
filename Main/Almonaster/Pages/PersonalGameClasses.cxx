@@ -68,7 +68,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != ROOT_KEY || m_iEmpireKey == ROOT_KEY))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
                         ) {
 
                         iErrCode = g_pGameEngine->DeleteGameClass (iGameClassKey, &bFlag);
@@ -103,7 +103,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != ROOT_KEY || m_iEmpireKey == ROOT_KEY))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
                         ) {
 
                         iErrCode = g_pGameEngine->UndeleteGameClass (iGameClassKey);
@@ -147,7 +147,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != ROOT_KEY || m_iEmpireKey == ROOT_KEY))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
                         ) {
 
                         iErrCode = g_pGameEngine->HaltGameClass (iGameClassKey);
@@ -179,7 +179,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != ROOT_KEY || m_iEmpireKey == ROOT_KEY))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
                         ) {
 
                         iErrCode = g_pGameEngine->UnhaltGameClass (iGameClassKey);
@@ -286,7 +286,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != ROOT_KEY || m_iEmpireKey == ROOT_KEY))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
                         ) {
 
                         iErrCode = g_pGameEngine->DeleteGameClass (iGameClassKey, &bFlag);

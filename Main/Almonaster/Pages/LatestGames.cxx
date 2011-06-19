@@ -51,7 +51,7 @@ else {
 
     // Sort by timestamp of end
     for (i = 0; i < iNumGames; i ++) {
-        ptTime[i] = ppvGameData[i][SystemLatestGames::Ended].GetInteger64();
+        ptTime[i] = ppvGameData[i][SystemLatestGames::iEnded].GetInteger64();
         ppvData[i] = ppvGameData[i];
     }
 
@@ -102,15 +102,15 @@ else {
 
         // Name
         %><td align="center"><%
-        Write (ppvData[i][SystemLatestGames::Name].GetCharPtr()); %> <%
-        Write (ppvData[i][SystemLatestGames::Number].GetInteger());
+        Write (ppvData[i][SystemLatestGames::iName].GetCharPtr()); %> <%
+        Write (ppvData[i][SystemLatestGames::iNumber].GetInteger());
         %></td><%
 
         // Created
         %><td align="center"><%
 
         Time::GetDate (
-            ppvData[i][SystemLatestGames::Created].GetInteger64(),
+            ppvData[i][SystemLatestGames::iCreated].GetInteger64(),
             &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
@@ -125,7 +125,7 @@ else {
         %><td align="center"><%
 
         Time::GetDate (
-            ppvData[i][SystemLatestGames::Ended].GetInteger64(),
+            ppvData[i][SystemLatestGames::iEnded].GetInteger64(),
             &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
@@ -138,13 +138,13 @@ else {
 
         // Updates
         %><td align="center"><%
-        Write (ppvData[i][SystemLatestGames::Updates].GetInteger());
+        Write (ppvData[i][SystemLatestGames::iUpdates].GetInteger());
         %></td><%
 
         // Result
         %><td align="center"><%
 
-        switch (ppvData[i][SystemLatestGames::Result].GetInteger()) {
+        switch (ppvData[i][SystemLatestGames::iResult].GetInteger()) {
 
         case GAME_RESULT_RUIN:
             %>Ruin<%
@@ -167,7 +167,7 @@ else {
         // Survivors
         %><td align="center" width="20%"><%
 
-        pszList = ppvData[i][SystemLatestGames::Winners].GetCharPtr();
+        pszList = ppvData[i][SystemLatestGames::iWinners].GetCharPtr();
 
         if (!String::IsBlank (pszList)) {
             Write (pszList);
@@ -177,7 +177,7 @@ else {
         // Losers
         %><td align="center" width="20%"><%
 
-        pszList = ppvData[i][SystemLatestGames::Losers].GetCharPtr();
+        pszList = ppvData[i][SystemLatestGames::iLosers].GetCharPtr();
 
         if (!String::IsBlank (pszList)) {
             Write (pszList);

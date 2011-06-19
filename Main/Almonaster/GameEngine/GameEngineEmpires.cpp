@@ -30,7 +30,7 @@
 int GameEngine::GetEmpireOption (int iEmpireKey, unsigned int iFlag, bool* pbOption) {
 
     Variant vOptions;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vOptions);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vOptions);
 
     if (iErrCode == OK) {
         *pbOption = (vOptions.GetInteger() & iFlag) != 0;
@@ -42,16 +42,16 @@ int GameEngine::GetEmpireOption (int iEmpireKey, unsigned int iFlag, bool* pbOpt
 int GameEngine::SetEmpireOption (int iEmpireKey, unsigned int iFlag, bool bOption) {
 
     if (bOption) {
-        return m_pGameData->WriteOr (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, iFlag);
+        return m_pConn->WriteOr (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, iFlag);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, ~iFlag);
+        return m_pConn->WriteAnd (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, ~iFlag);
     }
 }
 
 int GameEngine::GetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool* pbOption) {
 
     Variant vOptions;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, &vOptions);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, &vOptions);
 
     if (iErrCode == OK) {
         *pbOption = (vOptions.GetInteger() & iFlag) != 0;
@@ -63,9 +63,9 @@ int GameEngine::GetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool* pbOp
 int GameEngine::SetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool bOption) {
 
     if (bOption) {
-        return m_pGameData->WriteOr (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, iFlag);
+        return m_pConn->WriteOr (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, iFlag);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, ~iFlag);
+        return m_pConn->WriteAnd (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, ~iFlag);
     }
 }
 
@@ -101,7 +101,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     // Make sure empire creation is enabled
     if (!bBypassDisabled) {
 
-        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::Options, &vTemp);
+        iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -121,7 +121,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     }
 
     // Make sure that an empire of the same name doesn't exist
-    iErrCode = m_pGameData->GetFirstKey (SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, pszEmpireName, true, &iKey);
+    iErrCode = m_pConn->GetFirstKey (SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, pszEmpireName, &iKey);
     if (iErrCode != ERROR_DATA_NOT_FOUND) {
 
         // Set the key back to NO_KEY, or we'll hit the delete-empire clause in the cleanup
@@ -155,9 +155,9 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
         SYSTEM_EMPIRE_ACTIVE_GAMES (pszTable, iParentKey);
 
         unsigned int iNumRows = 0;
-        if (m_pGameData->DoesTableExist (pszTable)) {
+        if (m_pConn->DoesTableExist (pszTable)) {
 
-            iErrCode = m_pGameData->GetNumRows (pszTable, &iNumRows);
+            iErrCode = m_pConn->GetNumRows (pszTable, &iNumRows);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -169,7 +169,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
             goto Cleanup;
         }
 
-        iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pTable);
+        iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -263,118 +263,118 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
         goto Cleanup;
     }
 
-    pvColVal[SystemEmpireData::Name] = pszEmpireName;
-    pvColVal[SystemEmpireData::Password] = pszPassword;
-    pvColVal[SystemEmpireData::Privilege] = iPrivilege;
-    pvColVal[SystemEmpireData::RealName] = (const char*) NULL;
-    pvColVal[SystemEmpireData::Email] = (const char*) NULL;
-    pvColVal[SystemEmpireData::WebPage] = (const char*) NULL;
-    pvColVal[SystemEmpireData::Quote] = (const char*) NULL;
-    pvColVal[SystemEmpireData::Wins] = 0;
-    pvColVal[SystemEmpireData::Nukes] = 0;
-    pvColVal[SystemEmpireData::Nuked] = 0;
-    pvColVal[SystemEmpireData::LastLoginTime] = tTime;
-    pvColVal[SystemEmpireData::Draws] = 0;
-    pvColVal[SystemEmpireData::MaxEcon] = 0;
-    pvColVal[SystemEmpireData::MaxMil] = 0;
-    pvColVal[SystemEmpireData::IPAddress] = (const char*) NULL;
-    pvColVal[SystemEmpireData::Ruins] = 0;
-    pvColVal[SystemEmpireData::ClassicScore] = (float) 0.0;
-    pvColVal[SystemEmpireData::AlmonasterScore] = fScore;
-    pvColVal[SystemEmpireData::AlmonasterTheme] = INDIVIDUAL_ELEMENTS;
-    pvColVal[SystemEmpireData::AlternativeGraphicsPath] = (const char*) NULL;
-    pvColVal[SystemEmpireData::SecretKey] = i64SecretKey;
-    pvColVal[SystemEmpireData::Options2] = 0;
-    pvColVal[SystemEmpireData::Gender] = EMPIRE_GENDER_UNKNOWN;
-    pvColVal[SystemEmpireData::Age] = EMPIRE_AGE_UNKNOWN;
-    pvColVal[SystemEmpireData::Associations] = (const char*) NULL;
-    pvColVal[SystemEmpireData::CustomTableColor] = "000000";
-    pvColVal[SystemEmpireData::Options] = iOptions;
-    pvColVal[SystemEmpireData::MaxNumShipsBuiltAtOnce] = 10;
-    pvColVal[SystemEmpireData::CreationTime] = tTime;
-    pvColVal[SystemEmpireData::NumLogins] = 0;
-    pvColVal[SystemEmpireData::Browser] = (const char*) NULL;
-    pvColVal[SystemEmpireData::CustomTextColor] = "000000";
-    pvColVal[SystemEmpireData::CustomGoodColor] = "000000";
-    pvColVal[SystemEmpireData::CustomBadColor] = "000000";
-    pvColVal[SystemEmpireData::CustomPrivateMessageColor] = "000000";
-    pvColVal[SystemEmpireData::CustomBroadcastMessageColor] = "000000";
-    pvColVal[SystemEmpireData::SessionId] = NO_SESSION_ID;
-    pvColVal[SystemEmpireData::DefaultBuilderPlanet] = HOMEWORLD_DEFAULT_BUILDER_PLANET;
-    pvColVal[SystemEmpireData::DefaultMessageTarget] = MESSAGE_TARGET_BROADCAST;
-    pvColVal[SystemEmpireData::AlmonasterScoreSignificance] = iAlmonasterScoreSignificance;
-    pvColVal[SystemEmpireData::VictorySneer] = (const char*) NULL;
-    pvColVal[SystemEmpireData::BridierRank] = BRIDIER_INITIAL_RANK;
-    pvColVal[SystemEmpireData::BridierIndex] = BRIDIER_INITIAL_INDEX;
-    pvColVal[SystemEmpireData::LastBridierActivity] = tTime;
-    pvColVal[SystemEmpireData::PrivateEmail] = (const char*) NULL;
-    pvColVal[SystemEmpireData::Location] = (const char*) NULL;
-    pvColVal[SystemEmpireData::IMId] = (const char*) NULL;
-    pvColVal[SystemEmpireData::GameRatios] = RATIOS_DISPLAY_ON_RELEVANT_SCREENS;
+    pvColVal[SystemEmpireData::iName] = pszEmpireName;
+    pvColVal[SystemEmpireData::iPassword] = pszPassword;
+    pvColVal[SystemEmpireData::iPrivilege] = iPrivilege;
+    pvColVal[SystemEmpireData::iRealName] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iEmail] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iWebPage] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iQuote] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iWins] = 0;
+    pvColVal[SystemEmpireData::iNukes] = 0;
+    pvColVal[SystemEmpireData::iNuked] = 0;
+    pvColVal[SystemEmpireData::iLastLoginTime] = tTime;
+    pvColVal[SystemEmpireData::iDraws] = 0;
+    pvColVal[SystemEmpireData::iMaxEcon] = 0;
+    pvColVal[SystemEmpireData::iMaxMil] = 0;
+    pvColVal[SystemEmpireData::iIPAddress] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iRuins] = 0;
+    pvColVal[SystemEmpireData::iClassicScore] = (float) 0.0;
+    pvColVal[SystemEmpireData::iAlmonasterScore] = fScore;
+    pvColVal[SystemEmpireData::iAlmonasterTheme] = INDIVIDUAL_ELEMENTS;
+    pvColVal[SystemEmpireData::iAlternativeGraphicsPath] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iSecretKey] = i64SecretKey;
+    pvColVal[SystemEmpireData::iOptions2] = 0;
+    pvColVal[SystemEmpireData::iGender] = EMPIRE_GENDER_UNKNOWN;
+    pvColVal[SystemEmpireData::iAge] = EMPIRE_AGE_UNKNOWN;
+    pvColVal[SystemEmpireData::iAssociations] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iCustomTableColor] = "000000";
+    pvColVal[SystemEmpireData::iOptions] = iOptions;
+    pvColVal[SystemEmpireData::iMaxNumShipsBuiltAtOnce] = 10;
+    pvColVal[SystemEmpireData::iCreationTime] = tTime;
+    pvColVal[SystemEmpireData::iNumLogins] = 0;
+    pvColVal[SystemEmpireData::iBrowser] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iCustomTextColor] = "000000";
+    pvColVal[SystemEmpireData::iCustomGoodColor] = "000000";
+    pvColVal[SystemEmpireData::iCustomBadColor] = "000000";
+    pvColVal[SystemEmpireData::iCustomPrivateMessageColor] = "000000";
+    pvColVal[SystemEmpireData::iCustomBroadcastMessageColor] = "000000";
+    pvColVal[SystemEmpireData::iSessionId] = NO_SESSION_ID;
+    pvColVal[SystemEmpireData::iDefaultBuilderPlanet] = HOMEWORLD_DEFAULT_BUILDER_PLANET;
+    pvColVal[SystemEmpireData::iDefaultMessageTarget] = MESSAGE_TARGET_BROADCAST;
+    pvColVal[SystemEmpireData::iAlmonasterScoreSignificance] = iAlmonasterScoreSignificance;
+    pvColVal[SystemEmpireData::iVictorySneer] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iBridierRank] = BRIDIER_INITIAL_RANK;
+    pvColVal[SystemEmpireData::iBridierIndex] = BRIDIER_INITIAL_INDEX;
+    pvColVal[SystemEmpireData::iLastBridierActivity] = tTime;
+    pvColVal[SystemEmpireData::iPrivateEmail] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iLocation] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iIMId] = (const char*) NULL;
+    pvColVal[SystemEmpireData::iGameRatios] = RATIOS_DISPLAY_ON_RELEVANT_SCREENS;
 
-    if (pvColVal[SystemEmpireData::Name].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::Password].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::CustomTableColor].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::CustomTextColor].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::CustomGoodColor].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::CustomBadColor].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::CustomPrivateMessageColor].GetCharPtr() == NULL ||
-        pvColVal[SystemEmpireData::CustomBroadcastMessageColor].GetCharPtr() == NULL        
+    if (pvColVal[SystemEmpireData::iName].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iPassword].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iCustomTableColor].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iCustomTextColor].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iCustomGoodColor].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iCustomBadColor].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iCustomPrivateMessageColor].GetCharPtr() == NULL ||
+        pvColVal[SystemEmpireData::iCustomBroadcastMessageColor].GetCharPtr() == NULL        
         ) {
         iErrCode = ERROR_OUT_OF_MEMORY;
         goto Cleanup;
     }
 
     // Read defaults from SystemData table
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_DATA, &pTable);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_DATA, &pTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultAlien, pvColVal + SystemEmpireData::AlienKey);
+    iErrCode = pTable->ReadData(SystemData::DefaultAlien, pvColVal + SystemEmpireData::iAlienKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIIndependentPlanet, pvColVal + SystemEmpireData::UIIndependentPlanet);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIIndependentPlanet, pvColVal + SystemEmpireData::iUIIndependentPlanet);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultMaxNumSystemMessages, pvColVal + SystemEmpireData::MaxNumSystemMessages);
+    iErrCode = pTable->ReadData(SystemData::DefaultMaxNumSystemMessages, pvColVal + SystemEmpireData::iMaxNumSystemMessages);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIButtons, pvColVal + SystemEmpireData::UIButtons);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIButtons, pvColVal + SystemEmpireData::iUIButtons);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIBackground, pvColVal + SystemEmpireData::UIBackground);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIBackground, pvColVal + SystemEmpireData::iUIBackground);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUILivePlanet, pvColVal + SystemEmpireData::UILivePlanet);
+    iErrCode = pTable->ReadData(SystemData::DefaultUILivePlanet, pvColVal + SystemEmpireData::iUILivePlanet);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIDeadPlanet, pvColVal + SystemEmpireData::UIDeadPlanet);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIDeadPlanet, pvColVal + SystemEmpireData::iUIDeadPlanet);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUISeparator, pvColVal + SystemEmpireData::UISeparator);
+    iErrCode = pTable->ReadData(SystemData::DefaultUISeparator, pvColVal + SystemEmpireData::iUISeparator);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -382,26 +382,26 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
 
     ENUMERATE_SHIP_TYPES (i) {
 
-        iErrCode = pTable->ReadData (SYSTEM_DATA_SHIP_NAME_COLUMN[i], pvColVal + SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[i]);
+        iErrCode = pTable->ReadData(SYSTEM_DATA_SHIP_NAME_COLUMN[i], pvColVal + SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[i]);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIHorz, pvColVal + SystemEmpireData::UIHorz);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIHorz, pvColVal + SystemEmpireData::iUIHorz);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIVert, pvColVal + SystemEmpireData::UIVert);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIVert, pvColVal + SystemEmpireData::iUIVert);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIColor, pvColVal + SystemEmpireData::UIColor);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIColor, pvColVal + SystemEmpireData::iUIColor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -410,7 +410,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     SafeRelease (pTable);
 
     // Insert row into SystemEmpireData - this will fail if the name is duped
-    iErrCode = m_pGameData->InsertRow (SYSTEM_EMPIRE_DATA, pvColVal, &iKey);
+    iErrCode = m_pConn->InsertRow (SYSTEM_EMPIRE_DATA, SystemEmpireData::Template, pvColVal, &iKey);
     if (iErrCode != OK) {
         if (iErrCode == ERROR_DUPLICATE_DATA) {
             iErrCode = ERROR_EMPIRE_ALREADY_EXISTS;
@@ -423,16 +423,16 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     char pszTable [256];
 
     GET_SYSTEM_EMPIRE_MESSAGES (pszTable, iKey);
-    Assert (!m_pGameData->DoesTableExist (pszTable));
+    Assert (!m_pConn->DoesTableExist (pszTable));
 
     GET_SYSTEM_EMPIRE_NUKED_LIST (pszTable, iKey);
-    Assert (!m_pGameData->DoesTableExist (pszTable));
+    Assert (!m_pConn->DoesTableExist (pszTable));
 
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES (pszTable, iKey);
-    Assert (!m_pGameData->DoesTableExist (pszTable));
+    Assert (!m_pConn->DoesTableExist (pszTable));
 
     GET_SYSTEM_EMPIRE_TOURNAMENTS (pszTable, iKey);
-    Assert (!m_pGameData->DoesTableExist (pszTable));
+    Assert (!m_pConn->DoesTableExist (pszTable));
 
 #endif
 
@@ -470,7 +470,7 @@ Cleanup:
 
     // Best effort delete the new empire's row on failure
     if (iErrCode != OK && iKey != NO_KEY) {
-        int iErrCode2 = m_pGameData->DeleteRow (SYSTEM_EMPIRE_DATA, iKey);
+        int iErrCode2 = m_pConn->DeleteRow (SYSTEM_EMPIRE_DATA, iKey);
         Assert (iErrCode2 == OK);
     }
 
@@ -489,11 +489,11 @@ Cleanup:
 int GameEngine::GetEmpireName (int iEmpireKey, Variant* pvName) {
 
     bool bExists;
-    if (m_pGameData->DoesRowExist (SYSTEM_EMPIRE_DATA, iEmpireKey, &bExists) != OK || !bExists) {
+    if (m_pConn->DoesRowExist (SYSTEM_EMPIRE_DATA, iEmpireKey, &bExists) != OK || !bExists) {
         return ERROR_EMPIRE_DOES_NOT_EXIST;
     }
 
-    return m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Name, pvName);
+    return m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Name, pvName);
 }
 
 int GameEngine::GetEmpireName (int iEmpireKey, char pszName [MAX_EMPIRE_NAME_LENGTH + 1]) {
@@ -503,7 +503,7 @@ int GameEngine::GetEmpireName (int iEmpireKey, char pszName [MAX_EMPIRE_NAME_LEN
 
     const char* pszDataName;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pTable);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -533,7 +533,7 @@ Cleanup:
 
 int GameEngine::SetEmpireName (int iEmpireKey, const char* pszName) {
 
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Name, pszName);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Name, pszName);
 }
 
 
@@ -543,13 +543,13 @@ int GameEngine::SetEmpireName (int iEmpireKey, const char* pszName) {
 //
 // Update an empire's password via admin interface
 
-int GameEngine::SetEmpirePassword (int iEmpireKey, const char* pszPassword) {
-
-    if (iEmpireKey == ROOT_KEY) {
+int GameEngine::SetEmpirePassword(unsigned int iEmpireKey, const char* pszPassword)
+{
+    if (iEmpireKey == GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, pszPassword);
+    return m_pConn->WriteData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, pszPassword);
 }
 
 
@@ -559,13 +559,13 @@ int GameEngine::SetEmpirePassword (int iEmpireKey, const char* pszPassword) {
 //
 // Update an empire's password from ProfileEditor
 
-int GameEngine::ChangeEmpirePassword (int iEmpireKey, const char* pszPassword) {
+int GameEngine::ChangeEmpirePassword(unsigned int iEmpireKey, const char* pszPassword) {
 
-    if (iEmpireKey == GUEST_KEY) {
+    if (iEmpireKey == GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, pszPassword);
+    return m_pConn->WriteData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, pszPassword);
 }
 
 
@@ -576,7 +576,7 @@ int GameEngine::ChangeEmpirePassword (int iEmpireKey, const char* pszPassword) {
 // Update an empire's background key
 
 int GameEngine::SetEmpireBackgroundKey (int iEmpireKey, int iBackgroundKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIBackground, iBackgroundKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIBackground, iBackgroundKey);
 }
 
 
@@ -587,7 +587,7 @@ int GameEngine::SetEmpireBackgroundKey (int iEmpireKey, int iBackgroundKey) {
 // Update an empire's live planet key
 
 int GameEngine::SetEmpireLivePlanetKey (int iEmpireKey, int iLivePlanetKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UILivePlanet, iLivePlanetKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UILivePlanet, iLivePlanetKey);
 }
 
 
@@ -598,7 +598,7 @@ int GameEngine::SetEmpireLivePlanetKey (int iEmpireKey, int iLivePlanetKey) {
 // Update an empire's dead planet key
 
 int GameEngine::SetEmpireDeadPlanetKey (int iEmpireKey, int iDeadPlanetKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIDeadPlanet, iDeadPlanetKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIDeadPlanet, iDeadPlanetKey);
 }
 
 // Input:
@@ -608,7 +608,7 @@ int GameEngine::SetEmpireDeadPlanetKey (int iEmpireKey, int iDeadPlanetKey) {
 // Update an empire's background key
 
 int GameEngine::SetEmpireButtonKey (int iEmpireKey, int iButtonKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIButtons, iButtonKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIButtons, iButtonKey);
 }
 
 
@@ -619,7 +619,7 @@ int GameEngine::SetEmpireButtonKey (int iEmpireKey, int iButtonKey) {
 // Update an empire's separator key
 
 int GameEngine::SetEmpireSeparatorKey (int iEmpireKey, int iSeparatorKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UISeparator, iSeparatorKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UISeparator, iSeparatorKey);
 }
 
 
@@ -630,7 +630,7 @@ int GameEngine::SetEmpireSeparatorKey (int iEmpireKey, int iSeparatorKey) {
 // Update an empire's horizontal key
 
 int GameEngine::SetEmpireHorzKey (int iEmpireKey, int iHorzKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIHorz, iHorzKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIHorz, iHorzKey);
 }
 
 
@@ -641,7 +641,7 @@ int GameEngine::SetEmpireHorzKey (int iEmpireKey, int iHorzKey) {
 // Update an empire's vertical key
 
 int GameEngine::SetEmpireVertKey (int iEmpireKey, int iVertKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIVert, iVertKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIVert, iVertKey);
 }
 
 
@@ -652,7 +652,7 @@ int GameEngine::SetEmpireVertKey (int iEmpireKey, int iVertKey) {
 // Update an empire's color key
 
 int GameEngine::SetEmpireColorKey (int iEmpireKey, int iColorKey) {
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIColor, iColorKey);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIColor, iColorKey);
 }
 
 
@@ -667,7 +667,7 @@ int GameEngine::SetEmpireColorKey (int iEmpireKey, int iColorKey) {
 int GameEngine::GetEmpireLivePlanetKey (int iEmpireKey, int* piLivePlanetKey) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UILivePlanet, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UILivePlanet, &vTemp);
     
     if (iErrCode == OK) {
         *piLivePlanetKey = vTemp.GetInteger();
@@ -688,7 +688,7 @@ int GameEngine::GetEmpireLivePlanetKey (int iEmpireKey, int* piLivePlanetKey) {
 int GameEngine::GetEmpireDeadPlanetKey (int iEmpireKey, int* piDeadPlanetKey) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIDeadPlanet, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::UIDeadPlanet, &vTemp);
     
     if (iErrCode == OK) {
         *piDeadPlanetKey = vTemp.GetInteger();
@@ -716,7 +716,7 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int
     
     SYSTEM_EMPIRE_MESSAGES (strSystemEmpireMessages, iEmpireKey);
 
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::MaxNumSystemMessages,
@@ -730,7 +730,7 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int
     iMaxNum = vTemp.GetInteger();
 
     // Set the max number of messages
-    iErrCode = m_pGameData->WriteData (
+    iErrCode = m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::MaxNumSystemMessages, 
@@ -747,7 +747,7 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int
     }
 
     // Lock message table
-    iErrCode = m_pGameData->GetTableForWriting (strSystemEmpireMessages, &pMessages);
+    iErrCode = m_pConn->GetTableForWriting (strSystemEmpireMessages, &pMessages);
     if (iErrCode != OK) {
 
         if (iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
@@ -768,13 +768,7 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int
         unsigned int iNumReadMessages;
         
         // Get the oldest messages' keys        
-        iErrCode = pMessages->ReadColumn (
-            SystemEmpireMessages::TimeStamp,
-            &piKey,
-            &ptTimeStamp,
-            &iNumReadMessages
-            );
-
+        iErrCode = pMessages->ReadColumn(SystemEmpireMessages::TimeStamp, &piKey, &ptTimeStamp, &iNumReadMessages);
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = OK;
             goto Cleanup;
@@ -826,11 +820,11 @@ Cleanup:
     SafeRelease (pMessages);
 
     if (piKey != NULL) {
-        m_pGameData->FreeKeys (piKey);
+        m_pConn->FreeKeys(piKey);
     }
 
     if (ptTimeStamp != NULL) {
-        m_pGameData->FreeData (ptTimeStamp);
+        m_pConn->FreeData(ptTimeStamp);
     }
 
     return iErrCode;
@@ -846,31 +840,30 @@ Cleanup:
 //
 // Update the empire's quote if a new quote was input
 
-int GameEngine::UpdateEmpireQuote (int iEmpireKey, const char* pszQuote, bool* pbTruncated) {
-
-    return UpdateEmpireString (iEmpireKey, SystemEmpireData::Quote, pszQuote, MAX_QUOTE_LENGTH, pbTruncated);
+int GameEngine::UpdateEmpireQuote (int iEmpireKey, const char* pszQuote, bool* pbTruncated)
+{
+    return UpdateEmpireString(iEmpireKey, SystemEmpireData::Quote, pszQuote, MAX_QUOTE_LENGTH, pbTruncated);
 }
 
-int GameEngine::UpdateEmpireVictorySneer (int iEmpireKey, const char* pszSneer, bool* pbTruncated) {
-
-    return UpdateEmpireString (iEmpireKey, SystemEmpireData::VictorySneer, pszSneer, MAX_VICTORY_SNEER_LENGTH, pbTruncated);
+int GameEngine::UpdateEmpireVictorySneer(int iEmpireKey, const char* pszSneer, bool* pbTruncated)
+{
+    return UpdateEmpireString(iEmpireKey, SystemEmpireData::VictorySneer, pszSneer, MAX_VICTORY_SNEER_LENGTH, pbTruncated);
 }
 
-int GameEngine::UpdateEmpireString (int iEmpireKey, int iColumn, const char* pszString, size_t stMaxLen, 
-                                    bool* pbTruncated) {
-
+int GameEngine::UpdateEmpireString(int iEmpireKey, const char* pszColumn, const char* pszString, size_t stMaxLen, bool* pbTruncated)
+{
     IWriteTable* pWriteTable = NULL;
 
     *pbTruncated = false;
 
     const char* pszOldString;
 
-    int iErrCode = m_pGameData->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pWriteTable);
+    int iErrCode = m_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pWriteTable);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pWriteTable->ReadData (iEmpireKey, iColumn, &pszOldString);
+    iErrCode = pWriteTable->ReadData(iEmpireKey, pszColumn, &pszOldString);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -895,7 +888,7 @@ int GameEngine::UpdateEmpireString (int iEmpireKey, int iColumn, const char* psz
             pszString = pszNew;
         }
 
-        iErrCode = pWriteTable->WriteData (iEmpireKey, iColumn, pszString);
+        iErrCode = pWriteTable->WriteData(iEmpireKey, pszColumn, pszString);
 
         if (pszNew != NULL) {
             delete [] pszNew;
@@ -919,7 +912,7 @@ int GameEngine::SendVictorySneer (int iWinnerKey, const char* pszWinnerName, int
     int iErrCode;
     Variant vSneer;
 
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_EMPIRE_DATA,
         iWinnerKey,
         SystemEmpireData::VictorySneer,
@@ -990,7 +983,7 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
     // Verify correct empire
     if (pi64SecretKey != NULL) {
 
-        iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::SecretKey, &vTemp);
+        iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::SecretKey, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1005,9 +998,9 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
     // Read active games total
     SYSTEM_EMPIRE_ACTIVE_GAMES (pszGames, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszGames)) {
+    if (m_pConn->DoesTableExist (pszGames)) {
 
-        iErrCode = m_pGameData->GetNumRows (pszGames, &iNumGames);
+        iErrCode = m_pConn->GetNumRows (pszGames, &iNumGames);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1028,7 +1021,7 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
 
         if (bDeletePersonal) {
 
-            static const unsigned int s_piPersonalInfoStringCols[] = {
+            static const char* s_pszPersonalInfoStringCols[] = {
                 SystemEmpireData::RealName,
                 SystemEmpireData::Email,
                 SystemEmpireData::WebPage,
@@ -1039,25 +1032,23 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
                 SystemEmpireData::IMId,
             };
 
-            for (size_t i = 0; i < countof (s_piPersonalInfoStringCols); i ++) {
+            for (size_t i = 0; i < countof (s_pszPersonalInfoStringCols); i ++) {
 
-                iErrCode = m_pGameData->WriteData (
-                    SYSTEM_EMPIRE_DATA, iEmpireKey, s_piPersonalInfoStringCols[i], (const char*) NULL);
+                iErrCode = m_pConn->WriteData (
+                    SYSTEM_EMPIRE_DATA, iEmpireKey, s_pszPersonalInfoStringCols[i], (const char*) NULL);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
             }
 
-            iErrCode = m_pGameData->WriteData (
-                SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Gender, EMPIRE_GENDER_UNKNOWN);
+            iErrCode = m_pConn->WriteData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Gender, EMPIRE_GENDER_UNKNOWN);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
 
-            iErrCode = m_pGameData->WriteData (
-                SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Age, EMPIRE_AGE_UNKNOWN);
+            iErrCode = m_pConn->WriteData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Age, EMPIRE_AGE_UNKNOWN);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1094,7 +1085,7 @@ Cleanup:
 int GameEngine::GetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int* piMaxNumSavedMessages) {
     
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
     
     if (iErrCode == OK) {
         *piMaxNumSavedMessages = vTemp.GetInteger();
@@ -1113,11 +1104,11 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
 
     int iErrCode;
 
-    if (iEmpireKey == ROOT_KEY) {
+    if (iEmpireKey == GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    if (iEmpireKey == GUEST_KEY) {
+    if (iEmpireKey == GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
@@ -1160,12 +1151,12 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
     // Nuke him out of any game he might be in
     SYSTEM_EMPIRE_ACTIVE_GAMES (pszGames, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszGames)) {
+    if (m_pConn->DoesTableExist (pszGames)) {
 
         unsigned int iNumGames; 
         Variant* pvGame;
 
-        iErrCode = m_pGameData->ReadColumn (
+        iErrCode = m_pConn->ReadColumn (
             pszGames, 
             SystemEmpireActiveGames::GameClassGameNumber,
             &pvGame,
@@ -1210,7 +1201,7 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
                 SignalGameWriter (iGameClass, iGameNumber);
             }
 
-            m_pGameData->FreeData (pvGame);
+            m_pConn->FreeData(pvGame);
         }
     }
 
@@ -1242,8 +1233,8 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
     // Delete empire's SystemEmpireActiveGames(I) table
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
-        iErrCode2 = m_pGameData->DeleteTable (pszTable);
+    if (m_pConn->DoesTableExist (pszTable)) {
+        iErrCode2 = m_pConn->DeleteTable (pszTable);
         Assert (iErrCode2 == OK);
     }
 
@@ -1264,7 +1255,7 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
             
             if (iErrCode2 == OK && !bDelete) {
 
-                iErrCode = m_pGameData->WriteData (
+                iErrCode = m_pConn->WriteData (
                     SYSTEM_GAMECLASS_DATA,
                     piGameClassKey[i],
                     SystemGameClassData::Owner,
@@ -1274,33 +1265,32 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
             }
         }
         
-        m_pGameData->FreeKeys ((unsigned int*) piGameClassKey);
+        m_pConn->FreeKeys((unsigned int*) piGameClassKey);
     }
 
     // Best effort delete nuked table
     GET_SYSTEM_EMPIRE_NUKED_LIST (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
-        iErrCode2 = m_pGameData->DeleteTable (pszTable);
+    if (m_pConn->DoesTableExist (pszTable)) {
+        iErrCode2 = m_pConn->DeleteTable (pszTable);
         Assert (iErrCode2 == OK);
     }
 
     // Best effort delete nuker table
     GET_SYSTEM_EMPIRE_NUKER_LIST (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
-        iErrCode2 = m_pGameData->DeleteTable (pszTable);
+    if (m_pConn->DoesTableExist (pszTable)) {
+        iErrCode2 = m_pConn->DeleteTable (pszTable);
         Assert (iErrCode2 == OK);
     }
 
     // Delete tournaments owned by empire or mark them for deletion
     unsigned int* piTournamentDelKey = NULL, iNumDelTournaments;
 
-    iErrCode = m_pGameData->GetEqualKeys (
+    iErrCode = m_pConn->GetEqualKeys (
         SYSTEM_TOURNAMENTS,
         SystemTournaments::Owner,
         iEmpireKey,
-        false,
         &piTournamentDelKey,
         &iNumDelTournaments
         );
@@ -1313,42 +1303,42 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
             Assert (iErrCode == OK || iErrCode == ERROR_TOURNAMENT_HAS_GAMES);
         }
 
-        m_pGameData->FreeKeys (piTournamentDelKey);
+        m_pConn->FreeKeys(piTournamentDelKey);
     }
 
     // Delete empire from tournaments it was in
     GET_SYSTEM_EMPIRE_TOURNAMENTS (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
+    if (m_pConn->DoesTableExist (pszTable)) {
 
         unsigned int iKey = NO_KEY;
         Variant vKey;
 
         while (true) {
 
-            iErrCode = m_pGameData->GetNextKey (pszTable, iKey, &iKey);
+            iErrCode = m_pConn->GetNextKey (pszTable, iKey, &iKey);
             if (iErrCode != OK) {
                 Assert (iErrCode == ERROR_DATA_NOT_FOUND);
                 iErrCode = OK;
                 break;
             }
 
-            iErrCode = m_pGameData->ReadData (pszTable, iKey, SystemEmpireTournaments::TournamentKey, &vKey);
+            iErrCode = m_pConn->ReadData (pszTable, iKey, SystemEmpireTournaments::TournamentKey, &vKey);
             if (iErrCode == OK) {
                 iErrCode = DeleteEmpireFromTournament (vKey.GetInteger(), iEmpireKey);
                 Assert (iErrCode == OK);
             }
         }
 
-        iErrCode = m_pGameData->DeleteTable (pszTable);
+        iErrCode = m_pConn->DeleteTable (pszTable);
         Assert (iErrCode2 == OK);
     }
 
     // Best effort delete messages table
     GET_SYSTEM_EMPIRE_MESSAGES (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
-        iErrCode2 = m_pGameData->DeleteTable (pszTable);
+    if (m_pConn->DoesTableExist (pszTable)) {
+        iErrCode2 = m_pConn->DeleteTable (pszTable);
         Assert (iErrCode2 == OK);
     }
 
@@ -1359,7 +1349,7 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
 
     // Delete row from SystemEmpireData table
     IWriteTable* pEmpires = NULL;
-    iErrCode = m_pGameData->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = m_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
     Assert (iErrCode == OK);
 
     if (iErrCode == OK) {
@@ -1408,13 +1398,13 @@ int GameEngine::DoesEmpireExist (const char* pszName, bool* pbExists, unsigned i
     *pbExists = false;
     *piEmpireKey = NO_KEY;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    iErrCode = pEmpires->GetFirstKey (SystemEmpireData::Name, pszName, true, &iEmpireKey);
+    iErrCode = pEmpires->GetFirstKey(SystemEmpireData::Name, pszName, &iEmpireKey);
     if (iErrCode != OK) {
 
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -1471,7 +1461,7 @@ int GameEngine::DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Varian
     int iErrCode;
     IReadTable* pEmps = NULL;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmps);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmps);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1510,7 +1500,7 @@ int GameEngine::CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, boo
 
     *pbMatch = false;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1575,7 +1565,7 @@ int GameEngine::IsPasswordCorrect (int iEmpireKey, const char* pszPassword) {
     int iErrCode;
     Variant vPassword;
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, &vPassword);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, &vPassword);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1598,7 +1588,7 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
     IWriteTable* pTable = NULL;
 
     // Make sure logins are allowed
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::Options, &vLogins);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::Options, &vLogins);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1614,7 +1604,7 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
         return iErrCode;
     }
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1628,7 +1618,7 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
         }
     }
 
-    iErrCode = m_pGameData->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pTable);
+    iErrCode = m_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1711,7 +1701,7 @@ int GameEngine::CheckAllGamesForUpdatesMsg (LongRunningQueryMessage* pMessage) {
 
 int GameEngine::GetNumEmpiresOnServer (int* piNumEmpires) {
 
-    return m_pGameData->GetNumRows (SYSTEM_EMPIRE_DATA, (unsigned int*) piNumEmpires);
+    return m_pConn->GetNumRows (SYSTEM_EMPIRE_DATA, (unsigned int*) piNumEmpires);
 }
 
 // Input:
@@ -1731,10 +1721,10 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
         return iErrCode;
     }
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == OK && vTemp.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
 
-        iErrCode = m_pGameData->WriteAnd (
+        iErrCode = m_pConn->WriteAnd (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::Options, 
@@ -1755,7 +1745,7 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
 //
 // Sets all of an empire's statistics to their default values
 
-int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
+int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
 
     int iErrCode;
     bool bBridierLocked = false;
@@ -1763,7 +1753,7 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     char pszTable [256];
     Variant vPriv, vOldClassicScore, vOldAlmonasterScore, vOldBridierIndex;
 
-    if (iEmpireKey == GUEST_KEY) {
+    if (iEmpireKey == GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
@@ -1775,13 +1765,13 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     }
 
     // Get old scores
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, &vOldClassicScore);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, &vOldClassicScore);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldAlmonasterScore);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldAlmonasterScore);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1799,19 +1789,19 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     }
     bBridierLocked = true;
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, &vOldBridierIndex);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, &vOldBridierIndex);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierRank, BRIDIER_INITIAL_RANK);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierRank, BRIDIER_INITIAL_RANK);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, BRIDIER_INITIAL_INDEX);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, BRIDIER_INITIAL_INDEX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1824,69 +1814,69 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     //
     // Blank statistics
     //
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Nukes, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Nukes, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Nuked, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Nuked, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Draws, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Draws, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Ruins, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Ruins, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::MaxEcon, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::MaxEcon, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::MaxMil, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::MaxMil, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Blank Classic Score
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, CLASSIC_INITIAL_SCORE);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, CLASSIC_INITIAL_SCORE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
     // Blank Almonaster Score, Significance and privilege level
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, ALMONASTER_INITIAL_SCORE);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, ALMONASTER_INITIAL_SCORE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, 0);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, 0);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1894,7 +1884,7 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
 
     if (vPriv.GetInteger() != ADMINISTRATOR) {
 
-        iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
+        iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1904,9 +1894,9 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
     // Blank nuke history fields
     GET_SYSTEM_EMPIRE_NUKER_LIST (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
+    if (m_pConn->DoesTableExist (pszTable)) {
 
-        iErrCode = m_pGameData->DeleteAllRows (pszTable);
+        iErrCode = m_pConn->DeleteAllRows (pszTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1915,9 +1905,9 @@ int GameEngine::BlankEmpireStatistics (int iEmpireKey) {
 
     GET_SYSTEM_EMPIRE_NUKED_LIST (pszTable, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszTable)) {
+    if (m_pConn->DoesTableExist (pszTable)) {
 
-        iErrCode = m_pGameData->DeleteAllRows (pszTable);
+        iErrCode = m_pConn->DeleteAllRows (pszTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1995,22 +1985,20 @@ int GameEngine::GetEmpirePersonalGameClasses (int iEmpireKey, int** ppiGameClass
 
     if (ppvName == NULL) {
 
-        iErrCode = m_pGameData->GetEqualKeys (
+        iErrCode = m_pConn->GetEqualKeys (
             SYSTEM_GAMECLASS_DATA,
             SystemGameClassData::Owner,
             iEmpireKey,
-            false,
             (unsigned int**) ppiGameClassKey,
             (unsigned int*) piNumKeys
             );
     
     } else {
 
-        iErrCode = m_pGameData->ReadColumnWhereEqual (
+        iErrCode = m_pConn->ReadColumnWhereEqual (
             SYSTEM_GAMECLASS_DATA,
             SystemGameClassData::Owner,
             iEmpireKey,
-            false,
             SystemGameClassData::Name,
             (unsigned int**) ppiGameClassKey,
             ppvName,
@@ -2044,16 +2032,16 @@ int GameEngine::GetEmpireData (int iEmpireKey, Variant** ppvEmpData, int* piNumA
     *piNumActiveGames = 0;
 
     // Get num active games
-    if (m_pGameData->DoesTableExist (pszGames)) {
+    if (m_pConn->DoesTableExist (pszGames)) {
 
-        int iErrCode = m_pGameData->GetNumRows (pszGames, (unsigned int*) piNumActiveGames);
+        int iErrCode = m_pConn->GetNumRows (pszGames, (unsigned int*) piNumActiveGames);
         if (iErrCode != OK) {
             return iErrCode;
         }
     }
 
     // Get data
-    return m_pGameData->ReadRow (SYSTEM_EMPIRE_DATA, iEmpireKey, ppvEmpData);
+    return m_pConn->ReadRow (SYSTEM_EMPIRE_DATA, iEmpireKey, ppvEmpData);
 }
 
 
@@ -2080,9 +2068,9 @@ int GameEngine::GetEmpireActiveGames (int iEmpireKey, int** ppiGameClass, int** 
 
     SYSTEM_EMPIRE_ACTIVE_GAMES (pszGames, iEmpireKey);
 
-    if (m_pGameData->DoesTableExist (pszGames)) {
+    if (m_pConn->DoesTableExist (pszGames)) {
 
-        iErrCode = m_pGameData->GetTableForReading (pszGames, &pGames);
+        iErrCode = m_pConn->GetTableForReading (pszGames, &pGames);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2127,7 +2115,7 @@ Cleanup:
     SafeRelease (pGames);
 
     if (ppszGames != NULL) {
-        m_pGameData->FreeData (ppszGames);
+        m_pConn->FreeData(ppszGames);
     }
 
     return iErrCode;
@@ -2164,14 +2152,7 @@ int GameEngine::IsEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey,
     GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
     
     unsigned int iKey = NO_KEY;
-    iErrCode = m_pGameData->GetFirstKey (
-        pszEmpires, 
-        GameEmpires::EmpireKey, 
-        iEmpireKey, 
-        false, 
-        &iKey
-        );
-    
+    iErrCode = m_pConn->GetFirstKey(pszEmpires, GameEmpires::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode == OK) {
         *pbInGame = true;
     }
@@ -2192,12 +2173,11 @@ int GameEngine::IsEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey,
 //
 // Return the privilege level of an empire
 
-int GameEngine::GetEmpirePrivilege (int iEmpireKey, int* piPrivilege) {
+int GameEngine::GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege) {
 
     Variant vPrivilege;
     
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
-    
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
     if (iErrCode == OK) {
         *piPrivilege = vPrivilege.GetInteger();
     }
@@ -2214,13 +2194,13 @@ int GameEngine::GetEmpirePrivilege (int iEmpireKey, int* piPrivilege) {
 //
 // Set the privilege level of an empire
 
-int GameEngine::SetEmpirePrivilege (int iEmpireKey, int iPrivilege) {
+int GameEngine::SetEmpirePrivilege(unsigned int iEmpireKey, int iPrivilege) {
 
-    if (iEmpireKey == ROOT_KEY) {
+    if (iEmpireKey == GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    if (iEmpireKey == GUEST_KEY) {
+    if (iEmpireKey == GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
@@ -2228,7 +2208,7 @@ int GameEngine::SetEmpirePrivilege (int iEmpireKey, int iPrivilege) {
         return ERROR_INVALID_PRIVILEGE;
     }
 
-    int iErrCode = m_pGameData->WriteData (
+    int iErrCode = m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::Privilege, 
@@ -2260,11 +2240,11 @@ int GameEngine::SetEmpirePrivilege (int iEmpireKey, int iPrivilege) {
 //
 // Return an empire's Almonaster score
 
-int GameEngine::GetEmpireAlmonasterScore (int iEmpireKey, float* pfAlmonasterScore) {
+int GameEngine::GetEmpireAlmonasterScore(unsigned int iEmpireKey, float* pfAlmonasterScore) {
 
     Variant vAlmonasterScore;
     
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vAlmonasterScore);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vAlmonasterScore);
     
     if (iErrCode == OK) {
         *pfAlmonasterScore = vAlmonasterScore.GetFloat();
@@ -2282,13 +2262,13 @@ int GameEngine::GetEmpireAlmonasterScore (int iEmpireKey, float* pfAlmonasterSco
 //
 // Set an empire's Almonaster score
 
-int GameEngine::SetEmpireAlmonasterScore (int iEmpireKey, float fAlmonasterScore) {
+int GameEngine::SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonasterScore) {
 
-    if (iEmpireKey == ROOT_KEY) {
+    if (iEmpireKey == GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    if (iEmpireKey == GUEST_KEY) {
+    if (iEmpireKey == GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
@@ -2297,7 +2277,7 @@ int GameEngine::SetEmpireAlmonasterScore (int iEmpireKey, float fAlmonasterScore
     }
     
     Variant vOldScore;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldScore);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldScore);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -2306,7 +2286,7 @@ int GameEngine::SetEmpireAlmonasterScore (int iEmpireKey, float fAlmonasterScore
         return OK;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, fAlmonasterScore);
+    iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, fAlmonasterScore);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -2317,9 +2297,9 @@ int GameEngine::SetEmpireAlmonasterScore (int iEmpireKey, float fAlmonasterScore
     }
 
     if (fAlmonasterScore > vOldScore.GetFloat()) {
-        iErrCode = UpdateTopListOnIncrease (ALMONASTER_SCORE, iEmpireKey);
+        iErrCode = UpdateTopListOnIncrease(ALMONASTER_SCORE, iEmpireKey);
     } else {
-        iErrCode = UpdateTopListOnDecrease (ALMONASTER_SCORE, iEmpireKey);
+        iErrCode = UpdateTopListOnDecrease(ALMONASTER_SCORE, iEmpireKey);
     }
 
     return iErrCode;
@@ -2334,8 +2314,8 @@ int GameEngine::SetEmpireAlmonasterScore (int iEmpireKey, float fAlmonasterScore
 //
 // Return an empire's password
 
-int GameEngine::GetEmpirePassword (int iEmpireKey, Variant* pvPassword) {
-    return m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, pvPassword);
+int GameEngine::GetEmpirePassword (unsigned int iEmpireKey, Variant* pvPassword) {
+    return m_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Password, pvPassword);
 }
 
 
@@ -2348,8 +2328,8 @@ int GameEngine::GetEmpirePassword (int iEmpireKey, Variant* pvPassword) {
 //
 // Get empire data column from SystemEmpireData
 
-int GameEngine::GetEmpireDataColumn (int iEmpireKey, unsigned int iColumn, Variant* pvData) {
-    return m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, iColumn, pvData);
+int GameEngine::GetEmpireDataColumn(int iEmpireKey, const char* pszColumn, Variant* pvData) {
+    return m_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, pszColumn, pvData);
 }
 
 
@@ -2364,7 +2344,7 @@ int GameEngine::GetEmpireDataColumn (int iEmpireKey, unsigned int iColumn, Varia
 int GameEngine::GetNumLogins (int iEmpireKey, int* piNumLogins) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::NumLogins, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::NumLogins, &vTemp);
     
     if (iErrCode == OK) {
         *piNumLogins = vTemp.GetInteger();
@@ -2384,7 +2364,7 @@ int GameEngine::GetNumLogins (int iEmpireKey, int* piNumLogins) {
 
 int GameEngine::GetEmpireIPAddress (int iEmpireKey, Variant* pvIPAddress) {
 
-    return m_pGameData->ReadData (
+    return m_pConn->ReadData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::IPAddress,
@@ -2401,7 +2381,7 @@ int GameEngine::GetEmpireIPAddress (int iEmpireKey, Variant* pvIPAddress) {
 
 int GameEngine::SetEmpireIPAddress (int iEmpireKey, const char* pszIPAddress) {
 
-    return m_pGameData->WriteData (
+    return m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::IPAddress,
@@ -2414,7 +2394,7 @@ int GameEngine::GetEmpireSessionId (int iEmpireKey, int64* pi64SessionId) {
     int iErrCode;
     IReadTable* pSystemEmpireData;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pSystemEmpireData);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pSystemEmpireData);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -2428,7 +2408,7 @@ int GameEngine::GetEmpireSessionId (int iEmpireKey, int64* pi64SessionId) {
 
 int GameEngine::SetEmpireSessionId (int iEmpireKey, int64 i64SessionId) {
 
-    return m_pGameData->WriteData (
+    return m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::SessionId,
@@ -2440,7 +2420,7 @@ int GameEngine::SetEmpireSessionId (int iEmpireKey, int64 i64SessionId) {
 int GameEngine::GetEmpireDefaultBuilderPlanet (int iEmpireKey, int* piDefaultBuildPlanet) {
 
     Variant vValue;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::DefaultBuilderPlanet,
@@ -2462,7 +2442,7 @@ int GameEngine::SetEmpireDefaultBuilderPlanet (int iEmpireKey, int iDefaultBuild
         return ERROR_INVALID_ARGUMENT;
     }
 
-    return m_pGameData->WriteData (
+    return m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::DefaultBuilderPlanet,
@@ -2475,7 +2455,7 @@ int GameEngine::GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTar
 
     Variant vData;
     
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::DefaultMessageTarget, 
@@ -2496,7 +2476,7 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iEmpireKey, int iMessageTarge
         return ERROR_INVALID_ARGUMENT;
     }
 
-    return m_pGameData->WriteData (
+    return m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::DefaultMessageTarget,
@@ -2537,7 +2517,7 @@ int GameEngine::GetEmpireOptions (int iEmpireKey, int* piOptions) {
     int iErrCode;
     Variant vTemp;
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == OK) {
         *piOptions = vTemp.GetInteger();
     }
@@ -2558,7 +2538,7 @@ int GameEngine::GetEmpireOptions2 (int iEmpireKey, int* piOptions) {
     int iErrCode;
     Variant vTemp;
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, &vTemp);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options2, &vTemp);
     if (iErrCode == OK) {
         *piOptions = vTemp.GetInteger();
     }
@@ -2572,7 +2552,7 @@ int GameEngine::GetEmpireLastBridierActivity (int iEmpireKey, UTCTime* ptTime) {
     int iErrCode;
     Variant vTemp;
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::LastBridierActivity, &vTemp);
+    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::LastBridierActivity, &vTemp);
     if (iErrCode == OK) {
         *ptTime = vTemp.GetInteger64();
     }
@@ -2580,14 +2560,14 @@ int GameEngine::GetEmpireLastBridierActivity (int iEmpireKey, UTCTime* ptTime) {
     return iErrCode;
 }
 
-int GameEngine::GetEmpireProperty (int iEmpireKey, unsigned int iProperty, Variant* pvProperty) {
+int GameEngine::GetEmpireProperty (int iEmpireKey, const char* pszColumn, Variant* pvProperty) {
 
-    return m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, iProperty, pvProperty);
+    return m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, pszColumn, pvProperty);
 }
 
-int GameEngine::SetEmpireProperty (int iEmpireKey, unsigned int iProperty, const Variant& vProperty) {
+int GameEngine::SetEmpireProperty (int iEmpireKey, const char* pszColumn, const Variant& vProperty) {
 
-    return m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, iProperty, vProperty);
+    return m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, pszColumn, vProperty);
 }
 
 int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
@@ -2602,7 +2582,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
 
     *pfIdle = false;
 
-    iErrCode = m_pGameData->ReadColumn (pszGames, SystemEmpireActiveGames::GameClassGameNumber, &pvGame, &iNumGames);
+    iErrCode = m_pConn->ReadColumn (pszGames, SystemEmpireActiveGames::GameClassGameNumber, &pvGame, &iNumGames);
     if (iErrCode != OK) {
         if (iErrCode == ERROR_DATA_NOT_FOUND || iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
             iErrCode = OK;
@@ -2616,7 +2596,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         GET_GAME_EMPIRE_DATA (pszGameData, iGameClass, iGameNumber, iEmpireKey);
 
         Variant vOptions;
-        iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::Options, &vOptions);
+        iErrCode = m_pConn->ReadData(pszGameData, GameEmpireData::Options, &vOptions);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -2629,7 +2609,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE)) {
 
             Variant vNumUpdatesIdle;
-            iErrCode = m_pGameData->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
+            iErrCode = m_pConn->ReadData (pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -2647,7 +2627,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
 Cleanup:
 
     if (pvGame != NULL) {
-        m_pGameData->FreeData (pvGame);
+        m_pConn->FreeData(pvGame);
     }
 
     return iErrCode;

@@ -328,7 +328,7 @@ struct SearchField {
     const char* pszInputCheckBox;
     const char* pszInput1;
     const char* pszInput2;
-    unsigned int iSystemEmpireDataColumn;
+    const char* pszSystemEmpireDataColumn;
     SearchFieldType sftType;
     Privilege prvMinPriv;
 };
@@ -452,7 +452,7 @@ protected:
     void RenderSearchField (const SearchField& sfField, bool fAdvanced);
     void RenderDateField (const char* pszField);
     bool ParseDateField (const char* pszField, UTCTime* ptTime);
-    void RenderHiddenSearchVariant (unsigned int iColumn, const char* pszColName, const Variant& vData);
+    void RenderHiddenSearchVariant (const char* pszColumn, const char* pszColName, const Variant& vData);
 
     static bool ms_bLocksInitialized;
     static ReadWriteLock ms_mTextFileLock;

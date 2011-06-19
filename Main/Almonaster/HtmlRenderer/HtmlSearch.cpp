@@ -17,12 +17,12 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "HtmlRenderer.h"
-#include "Database.h"
+#include "SqlDatabase.h"
 
 const SearchField g_AdvancedSearchFields[] = {
 
     { true, NULL, "EmpName", "TEmpName", "SEmpName", SystemEmpireData::Name, SEARCHFIELD_STRING, GUEST },
-    { false, "Empire Key", "EmpKey", "LEmpKey", "REmpKey", NO_KEY, SEARCHFIELD_INTEGER, GUEST },
+    { false, "Empire Key", "EmpKey", "LEmpKey", "REmpKey", NULL, SEARCHFIELD_INTEGER, GUEST },
     { false, NULL, "RealName", "TRealName", "SRealName", SystemEmpireData::RealName, SEARCHFIELD_STRING, GUEST },
     { false, NULL, "Age", "TAge", "SAge", SystemEmpireData::Age, SEARCHFIELD_AGE, GUEST },
     { false, NULL, "Gender", "TGender", NULL, SystemEmpireData::Gender, SEARCHFIELD_GENDER, GUEST },
@@ -57,8 +57,8 @@ const SearchField g_AdvancedSearchFields[] = {
 
 void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
 
-    Assert (MAX_NUM_SEARCH_COLUMNS == countof (g_AdvancedSearchFields));
-    Assert (countof (SYSTEM_EMPIRE_DATA_COLUMN_NAMES) == SystemEmpireData::NumColumns); 
+    Assert(MAX_NUM_SEARCH_COLUMNS == countof (g_AdvancedSearchFields));
+    Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns); 
     
     int iNumEmpires, iErrCode = g_pGameEngine->GetNumEmpiresOnServer (&iNumEmpires);
     if (iErrCode != OK) {
@@ -121,8 +121,8 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
 
     const char* pszName = sfField.pszName;
     if (pszName == NULL) {
-        Assert (sfField.iSystemEmpireDataColumn != NO_KEY);
-        pszName = SYSTEM_EMPIRE_DATA_COLUMN_NAMES [sfField.iSystemEmpireDataColumn];
+        Assert (sfField.pszSystemEmpireDataColumn != NULL);
+        pszName = sfField.pszSystemEmpireDataColumn;
     }
 
     // Common rendering
@@ -390,7 +390,7 @@ int HtmlRenderer::HandleSearchSubmission (SearchDefinition& sd,
         }
 
         // Assign common fields
-        sd.pscColumns[iNumSearchColumns].iColumn = g_AdvancedSearchFields[i].iSystemEmpireDataColumn;
+        sd.pscColumns[iNumSearchColumns].pszColumn = g_AdvancedSearchFields[i].pszSystemEmpireDataColumn;
         sd.pscColumns[iNumSearchColumns].iFlags = 0;
 
         pszFormName [iNumSearchColumns] = g_AdvancedSearchFields[i].pszInputCheckBox;
@@ -565,29 +565,24 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
     for (i = 0; i < iNumSearchColumns; i ++) {
         
         SearchColumn& sc = sd.pscColumns[i];
-        switch (sc.iColumn) {
-            
-        case NO_KEY:
-            
+        if (sc.pszColumn == NULL)
+        {            
             OutputText ("<th align=\"center\" bgcolor=\"");
             m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
             OutputText ("\">");
             OutputText ("<strong>Empire Key</strong></td>");
-            
-            break;
-            
-        case SystemEmpireData::Name:
-            break;
-            
-        default:
-            
+        }
+        else if (strcmp(sc.pszColumn, SystemEmpireData::Name) == 0)
+        {
+            // Do nothing
+        }
+        else
+        {
             OutputText ("<th align=\"center\" bgcolor=\"");
             m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
             OutputText ("\"><strong>"); 
-            m_pHttpResponse->WriteText (SYSTEM_EMPIRE_DATA_COLUMN_NAMES [sc.iColumn]);
+            m_pHttpResponse->WriteText(sc.pszColumn);
             OutputText ("</strong></td>");
-            
-            break;
         }
     }
     
@@ -627,44 +622,42 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
                 Variant vData;
                 
                 SearchColumn& sc = sd.pscColumns[j];
-                unsigned int iCol = sc.iColumn;
+                const char* pszCol = sc.pszColumn;
 
-                if (iCol != SystemEmpireData::Name) {
+                if (pszCol != SystemEmpireData::Name) {
                     
                     OutputText ("<td align=\"center\">");
                     
-                    if (iCol == NO_KEY) {
+                    if (pszCol == NULL) {
                         m_pHttpResponse->WriteText (piSearchEmpireKey[i]);
                     } else {
                         
-                        iErrCode = g_pGameEngine->GetEmpireDataColumn (piSearchEmpireKey[i], iCol, &vData);
+                        iErrCode = g_pGameEngine->GetEmpireDataColumn (piSearchEmpireKey[i], pszCol, &vData);
                         if (iErrCode == OK) {
                             
-                            switch (iCol) {
-                                
-                            case SystemEmpireData::Privilege:
+                            if (strcmp(pszCol, SystemEmpireData::Privilege) == 0)
+                            {
                                 m_pHttpResponse->WriteText (PRIVILEGE_STRING[vData.GetInteger()]);
-                                break;
-                                
-                            case SystemEmpireData::WebPage:
+                            }
+                            else if (strcmp(pszCol, SystemEmpireData::WebPage) == 0)
+                            {
                                 RenderUnsafeHyperText (vData.GetCharPtr(), vData.GetCharPtr());
-                                break;
-
-                            case SystemEmpireData::Gender:
+                            }
+                            else if (strcmp(pszCol, SystemEmpireData::Gender) == 0)
+                            {
                                 Assert (vData.GetInteger() >= EMPIRE_GENDER_UNKNOWN && 
                                         vData.GetInteger() <= EMPIRE_GENDER_FEMALE);
-                                m_pHttpResponse->WriteText (EMPIRE_GENDER_STRING[vData.GetInteger()]);
-                                break;
-
-                            case SystemEmpireData::LastLoginTime:
-                            case SystemEmpireData::CreationTime:
-                            case SystemEmpireData::LastBridierActivity:
-                                m_pHttpResponse->WriteDate (vData.GetInteger64());
-                                break;
-                                
-                            default:
+                                m_pHttpResponse->WriteText(EMPIRE_GENDER_STRING[vData.GetInteger()]);
+                            }
+                            else if (strcmp(pszCol, SystemEmpireData::LastLoginTime) == 0 ||
+                                     strcmp(pszCol, SystemEmpireData::CreationTime) == 0 ||
+                                     strcmp(pszCol, SystemEmpireData::LastBridierActivity) == 0)
+                            {
+                                m_pHttpResponse->WriteDate(vData.GetInteger64());
+                            }
+                            else
+                            {
                                 m_pHttpResponse->WriteText (vData);
-                                break;
                             }
                         }
                     }
@@ -708,10 +701,10 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
             m_pHttpResponse->WriteText (pszFormName[i]);
             OutputText ("\" value=\"1\">");
 
-            RenderHiddenSearchVariant (sc.iColumn, pszColName1[i], sc.vData);
+            RenderHiddenSearchVariant(sc.pszColumn, pszColName1[i], sc.vData);
             
             if (pszColName2[i] != NULL) {
-                RenderHiddenSearchVariant (sc.iColumn, pszColName2[i], sc.vData2);
+                RenderHiddenSearchVariant(sc.pszColumn, pszColName2[i], sc.vData2);
             }
         }
     }
@@ -720,14 +713,12 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
     WriteButton (BID_CANCEL);
 }
 
-void HtmlRenderer::RenderHiddenSearchVariant (unsigned int iColumn, const char* pszColName, const Variant& vData) {
+void HtmlRenderer::RenderHiddenSearchVariant (const char* pszColumn, const char* pszColName, const Variant& vData) {
 
-    switch (iColumn) {
-
-    case SystemEmpireData::LastLoginTime:
-    case SystemEmpireData::CreationTime:
-    case SystemEmpireData::LastBridierActivity:
-
+    if (strcmp(pszColumn, SystemEmpireData::LastLoginTime) == 0 ||
+        strcmp(pszColumn, SystemEmpireData::CreationTime) == 0 ||
+        strcmp(pszColumn, SystemEmpireData::LastBridierActivity) == 0)
+    {
         int iSec, iMin, iHour, iDay, iMonth, iYear;
         DayOfWeek dayOfWeek;
 
@@ -754,16 +745,13 @@ void HtmlRenderer::RenderHiddenSearchVariant (unsigned int iColumn, const char* 
         m_pHttpResponse->WriteText (iDay);
         OutputText ("\">");
 
-        break;
-
-    default:
-
+    }
+    else
+    {
         OutputText ("<input type=\"hidden\" name=\"");
         m_pHttpResponse->WriteText (pszColName);
         OutputText ("\" value=\"");
         m_pHttpResponse->WriteText (vData);
         OutputText ("\">");
-
-        break;
     }
 }

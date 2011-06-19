@@ -198,15 +198,15 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     const char* pszHookLibrary;
     char pszPath [OS::MaxFileNameLength];
 
-    // DatabaseFile
-    iErrCode = g_pConfig->GetParameter ("DatabaseFile", &pszTemp);
+    // DatabaseLibrary
+    iErrCode = g_pConfig->GetParameter ("DatabaseLibrary", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseFile value from the configuration file");
+        g_pReport->WriteReport ("Error: Could not read the DatabaseLibrary value from the configuration file");
         return ERROR_FAILURE;
     }
-    char pszDatabaseFile[OS::MaxFileNameLength];
-    if (File::ResolvePath(pszTemp, pszDatabaseFile) == ERROR_FAILURE) {
-        g_pReport->WriteReport ("Error: The DatabaseFile value from the configuration file was invalid");
+    char pszDatabaseLibrary[OS::MaxFileNameLength];
+    if (File::ResolvePath(pszTemp, pszDatabaseLibrary) == ERROR_FAILURE) {
+        g_pReport->WriteReport ("Error: The DatabaseLibrary value from the configuration file was invalid");
         return ERROR_FAILURE;
     }
 
@@ -291,13 +291,6 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         return ERROR_FAILURE;
     }
     ccConfig.bPostSystemMessages = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("ChatroomStoreMessagesInDatabase", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ChatroomStoreMessagesInDatabase value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    ccConfig.bStoreMessagesInDatabase = atoi (pszTemp) != 0;
 
     iErrCode = g_pConfig->GetParameter ("AutoBackup", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL) {
@@ -404,7 +397,7 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
     g_pReport->WriteReport ("Initializing GameEngine");
 
     g_pGameEngine = new GameEngine(
-        pszDatabaseFile,
+        pszDatabaseLibrary,
         uuidDatabaseClsid,
         pszDatabaseConnectionString,
         pszHookLibrary,

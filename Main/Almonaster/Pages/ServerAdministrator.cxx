@@ -1247,12 +1247,18 @@ case 0:
     IDatabaseBackupEnumerator* pBackupEnumerator = NULL;
 
     Variant* pvServerData = NULL;
+    IDatabaseConnection* pConn = NULL;
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
     if (pDatabase == NULL) {
         goto Cancel;
     }
 
-    iErrCode = pDatabase->ReadRow (SYSTEM_DATA, &pvServerData);
+    pConn = pDatabase->CreateConnection();
+    if (pConn == NULL) {
+        goto Cancel;
+    }
+
+    iErrCode = pConn->ReadRow (SYSTEM_DATA, &pvServerData);
     if (iErrCode != OK) {
         goto Cancel;
     }
@@ -1265,25 +1271,25 @@ case 0:
 
     %><tr><td>Server name:</td><%
     %><td><input type="text" size="25" maxlength="<% Write (MAX_SERVER_NAME_LENGTH); %>" name="NewServerName"<% 
-    %> value="<% Write (pvServerData[SystemData::ServerName].GetCharPtr()); 
+    %> value="<% Write (pvServerData[SystemData::iServerName].GetCharPtr()); 
     %>"><input type="hidden" name="OldServerName" value="<% 
 
-    Write (pvServerData[SystemData::ServerName].GetCharPtr()); %>"></td></tr><%
+    Write (pvServerData[SystemData::iServerName].GetCharPtr()); %>"></td></tr><%
 
 
     %><tr><td>Administrator e-mail address:</td><%
     %><td><input type="text" size="40" maxlength="<% Write (MAX_EMAIL_LENGTH); %>" name="NewAdminEmail"<% 
-    %> value="<% Write (pvServerData[SystemData::AdminEmail].GetCharPtr()); 
+    %> value="<% Write (pvServerData[SystemData::iAdminEmail].GetCharPtr()); 
     %>"><input type="hidden" name="OldAdminEmail" value="<% 
 
-    Write (pvServerData[SystemData::AdminEmail].GetCharPtr()); %>"></td></tr><%
+    Write (pvServerData[SystemData::iAdminEmail].GetCharPtr()); %>"></td></tr><%
 
     %><tr><td>Default alien icon:</td><td><%
 
-    Check (g_pGameEngine->GetAlienAuthorName (pvServerData[SystemData::DefaultAlien], &vAuthorName));
+    Check (g_pGameEngine->GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName));
 
     WriteAlienButtonString (
-        pvServerData[SystemData::DefaultAlien], 
+        pvServerData[SystemData::iDefaultAlien], 
         true,
         "DefaultAlien",
         vAuthorName.GetCharPtr()
@@ -1292,40 +1298,40 @@ case 0:
     %></td></tr><%
 
     %><tr><td>Default UI elements:</td><td><table><tr><%
-    if (pvServerData[SystemData::DefaultUIBackground].GetInteger() == NULL_THEME) { 
+    if (pvServerData[SystemData::iDefaultUIBackground].GetInteger() == NULL_THEME) { 
         %><td width="75" height="75" bgcolor="#000000">&nbsp;</td><% 
     } else { 
         %><td><input type="image" border="0" width="75" height="75" src="<%
-        WriteBackgroundImageSrc (pvServerData[SystemData::DefaultUIBackground].GetInteger());
+        WriteBackgroundImageSrc (pvServerData[SystemData::iDefaultUIBackground].GetInteger());
         %>" name="ChooseUI"></td><% 
     }
     %><td><% 
 
-    GetLivePlanetButtonString (pvServerData[SystemData::DefaultUILivePlanet], 1, 0, NULL, NULL, &strFilter);
+    GetLivePlanetButtonString (pvServerData[SystemData::iDefaultUILivePlanet], 1, 0, NULL, NULL, &strFilter);
     Write (strFilter);
 
     %></td><td><%
 
-    GetDeadPlanetButtonString (pvServerData[SystemData::DefaultUIDeadPlanet], 2, 0, NULL, NULL, &strFilter);
+    GetDeadPlanetButtonString (pvServerData[SystemData::iDefaultUIDeadPlanet], 2, 0, NULL, NULL, &strFilter);
     Write (strFilter);
 
     %></td><td><% 
-    WriteButtonString (pvServerData[SystemData::DefaultUIButtons], "Login", "Login", "ChooseUI");
+    WriteButtonString (pvServerData[SystemData::iDefaultUIButtons], "Login", "Login", "ChooseUI");
     %></td><%
 
-    if (pvServerData[SystemData::DefaultUISeparator].GetInteger() == NULL_THEME) {
+    if (pvServerData[SystemData::iDefaultUISeparator].GetInteger() == NULL_THEME) {
         %><td width="150"><%
         Write (DEFAULT_SEPARATOR_STRING);
     } else { 
         %><td><input type="image" name="ChooseUI" border="0" width="150" src="<% 
-        WriteSeparatorSrc (pvServerData[SystemData::DefaultUISeparator].GetInteger());
+        WriteSeparatorSrc (pvServerData[SystemData::iDefaultUISeparator].GetInteger());
         %>"><% 
     }
 
     %></td><td><input type="image" name="ChooseUI" width="21" height="3" border="0" src="<%
-    WriteHorzSrc (pvServerData[SystemData::DefaultUIHorz].GetInteger());
+    WriteHorzSrc (pvServerData[SystemData::iDefaultUIHorz].GetInteger());
     %>"></td><td><input type="image" name="ChooseUI" width="3" height="21" border="0" src="<%
-    WriteVertSrc (pvServerData[SystemData::DefaultUIVert].GetInteger());
+    WriteVertSrc (pvServerData[SystemData::iDefaultUIVert].GetInteger());
     %>"></td></tr></table></td></tr><%
 
 
@@ -1336,7 +1342,7 @@ case 0:
 
     %><tr><td>The Almonaster scoring system:</td><td><select name="PrivElev"><%
 
-    iSystemOptions = pvServerData[SystemData::Options].GetInteger();
+    iSystemOptions = pvServerData[SystemData::iOptions].GetInteger();
 
     %><option <%
     if (!(iSystemOptions & DISABLE_PRIVILEGE_SCORE_ELEVATION)) {
@@ -1356,25 +1362,25 @@ case 0:
 
     %><tr><td>Almonaster score needed to be an Apprentice:</td><%
     %><td><input type="text" size="7" maxlength="7" name="NewApprentice" value="<% 
-    Write (pvServerData[SystemData::ApprenticeScore]); 
-    %>"><input type="hidden" name="OldApprentice" value="<% Write (pvServerData[SystemData::ApprenticeScore]); 
+    Write (pvServerData[SystemData::iApprenticeScore]); 
+    %>"><input type="hidden" name="OldApprentice" value="<% Write (pvServerData[SystemData::iApprenticeScore]); 
     %>"></td></tr><%
 
     %><tr><td>Almonaster score needed to be an Adept:</td><%
     %><td><input type="text" size="7" maxlength="7" name="NewAdept" value="<% 
-    Write (pvServerData[SystemData::AdeptScore]); 
-    %>"><input type="hidden" name="OldAdept" value="<% Write (pvServerData[SystemData::AdeptScore]); 
+    Write (pvServerData[SystemData::iAdeptScore]); 
+    %>"><input type="hidden" name="OldAdept" value="<% Write (pvServerData[SystemData::iAdeptScore]); 
     %>"></td></tr><%
 
     %><tr><td>Alien icon for system messages:</td><td><%
 
     Check (g_pGameEngine->GetAlienAuthorName (
-        pvServerData[SystemData::SystemMessagesAlienKey].GetInteger(), 
+        pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(), 
         &vAuthorName
         ));
 
     WriteAlienButtonString (
-        pvServerData[SystemData::SystemMessagesAlienKey].GetInteger(),
+        pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(),
         true,
         "SysMsgAlien",
         vAuthorName.GetCharPtr()
@@ -1384,72 +1390,72 @@ case 0:
 
     %><tr><td>Maximum saved system messages:</td><%
     %><td><input type="text" size="6" maxlength="6" name="NewMaxNumSystemMessages" value="<% 
-    Write (pvServerData[SystemData::MaxNumSystemMessages]); %>"><input type="hidden" name="OldMaxNumSystemMessages" value="<% 
-    Write (pvServerData[SystemData::MaxNumSystemMessages]); %>"></td></tr><tr><td>Maximum saved game messages:</td><%
+    Write (pvServerData[SystemData::iMaxNumSystemMessages]); %>"><input type="hidden" name="OldMaxNumSystemMessages" value="<% 
+    Write (pvServerData[SystemData::iMaxNumSystemMessages]); %>"></td></tr><tr><td>Maximum saved game messages:</td><%
 
     %><td><input type="text" size="6" maxlength="6" name="NewMaxNumGameMessages" value="<% 
-    Write (pvServerData[SystemData::MaxNumGameMessages]); %>"><input type="hidden" name="OldMaxNumGameMessages" value="<% 
-    Write (pvServerData[SystemData::MaxNumGameMessages]); %>"></td></tr><tr><td>Default maximum saved system messages:</td><%
+    Write (pvServerData[SystemData::iMaxNumGameMessages]); %>"><input type="hidden" name="OldMaxNumGameMessages" value="<% 
+    Write (pvServerData[SystemData::iMaxNumGameMessages]); %>"></td></tr><tr><td>Default maximum saved system messages:</td><%
 
     %><td><select name="NewDefaultMaxNumSystemMessages"><% 
 
-    for (i = 0; i <= pvServerData[SystemData::MaxNumSystemMessages].GetInteger(); i += 10) {
+    for (i = 0; i <= pvServerData[SystemData::iMaxNumSystemMessages].GetInteger(); i += 10) {
         %><option<%
-        if (pvServerData[SystemData::DefaultMaxNumSystemMessages] == i) {
+        if (pvServerData[SystemData::iDefaultMaxNumSystemMessages] == i) {
             %> selected<% 
         }
         %> value="<% Write (i); %>"><% Write (i); %></option><% 
     }
 
     %></select><input type="hidden" name="OldDefaultMaxNumSystemMessages" value="<% 
-    Write (pvServerData[SystemData::DefaultMaxNumSystemMessages].GetInteger()); %>"><%
+    Write (pvServerData[SystemData::iDefaultMaxNumSystemMessages].GetInteger()); %>"><%
     %></td></tr><%
     
     %><tr><td>Default maximum saved game messages:</td><%
 
     %><td><select name="NewDefaultMaxNumGameMessages"><% 
-    for (i = 0; i <= pvServerData[SystemData::MaxNumGameMessages].GetInteger(); i += 10) {
-        %> <option<% if (pvServerData[SystemData::DefaultMaxNumGameMessages].GetInteger() == i) { %> selected<% }
+    for (i = 0; i <= pvServerData[SystemData::iMaxNumGameMessages].GetInteger(); i += 10) {
+        %> <option<% if (pvServerData[SystemData::iDefaultMaxNumGameMessages].GetInteger() == i) { %> selected<% }
         %> value="<% Write (i); %>"><% Write (i); %></option><% 
     }
 
     %></select><input type="hidden" name="OldDefaultMaxNumGameMessages" value="<% 
-    Write (pvServerData[SystemData::DefaultMaxNumGameMessages]); %>"></td></tr><%
+    Write (pvServerData[SystemData::iDefaultMaxNumGameMessages]); %>"></td></tr><%
 
     %><tr><td>Maximum size of uploaded icons:</td><%
     %><td><input type="text" size="8" maxlength="8" name="MaxSizeIcons" value="<% 
-    Write (pvServerData[SystemData::MaxIconSize].GetInteger()); %>"> bytes<input type="hidden" name="OldMaxSizeIcons" value="<% 
-    Write (pvServerData[SystemData::MaxIconSize].GetInteger()); %>"><%
+    Write (pvServerData[SystemData::iMaxIconSize].GetInteger()); %>"> bytes<input type="hidden" name="OldMaxSizeIcons" value="<% 
+    Write (pvServerData[SystemData::iMaxIconSize].GetInteger()); %>"><%
     %></td></tr><%
 
     %><tr><td>Number of nukes listed in empire nuke histories:</td><%
     %><td><input type="text" size="6" maxlength="6" name="NewNumNukes" value="<% 
-    Write (pvServerData[SystemData::NumNukesListedInNukeHistories].GetInteger()); %>"><%
+    Write (pvServerData[SystemData::iNumNukesListedInNukeHistories].GetInteger()); %>"><%
     %><input type="hidden" name="OldNumNukes" value="<%
-    Write (pvServerData[SystemData::NumNukesListedInNukeHistories].GetInteger()); %>"></td></tr><%
+    Write (pvServerData[SystemData::iNumNukesListedInNukeHistories].GetInteger()); %>"></td></tr><%
 
 
     %><tr><td>Number of nukes listed in the latest nukes screen:</td><%
     %><td><input type="text" size="6" maxlength="6" name="NewSystemNukes" value="<% 
-    Write (pvServerData[SystemData::NumNukesListedInSystemNukeList].GetInteger()); %>"><%
+    Write (pvServerData[SystemData::iNumNukesListedInSystemNukeList].GetInteger()); %>"><%
     %><input type="hidden" name="OldSystemNukes" value="<%
-    Write (pvServerData[SystemData::NumNukesListedInSystemNukeList].GetInteger()); %>"></td></tr><%
+    Write (pvServerData[SystemData::iNumNukesListedInSystemNukeList].GetInteger()); %>"></td></tr><%
 
 
     %><tr><td>Number of games listed in the latest games screen:</td><%
     %><td><input type="text" size="6" maxlength="6" name="NewGamesListed" value="<% 
-    Write (pvServerData[SystemData::NumGamesInLatestGameList].GetInteger()); %>"><%
+    Write (pvServerData[SystemData::iNumGamesInLatestGameList].GetInteger()); %>"><%
     %><input type="hidden" name="OldGamesListed" value="<%
-    Write (pvServerData[SystemData::NumGamesInLatestGameList].GetInteger()); %>"></td></tr><%
+    Write (pvServerData[SystemData::iNumGamesInLatestGameList].GetInteger()); %>"></td></tr><%
 
 
     %><tr><td>Number of updates the server can be down before games are killed (except longterms):</td><td><%
     %><input type="text" size="4" maxlength="10" name="UpdatesDown"<%
-    %> value="<% Write (pvServerData[SystemData::NumUpdatesDownBeforeGameIsKilled].GetInteger()); %>"><%
+    %> value="<% Write (pvServerData[SystemData::iNumUpdatesDownBeforeGameIsKilled].GetInteger()); %>"><%
     %><input type="hidden" name="OldUpdatesDown" value="<%
-    Write (pvServerData[SystemData::NumUpdatesDownBeforeGameIsKilled].GetInteger()); %>"></td></tr><%
+    Write (pvServerData[SystemData::iNumUpdatesDownBeforeGameIsKilled].GetInteger()); %>"></td></tr><%
 
-    sSecondsForLongtermStatus = pvServerData[SystemData::SecondsForLongtermStatus].GetInteger();
+    sSecondsForLongtermStatus = pvServerData[SystemData::iSecondsForLongtermStatus].GetInteger();
 
     %><tr><td>Update period required to be considered a longterm:</td><td><%
     %><input type="hidden" name="OldSecondsForLongtermStatus" value="<% Write (sSecondsForLongtermStatus); %>"><%
@@ -1468,7 +1474,7 @@ case 0:
     %>"> secs<%
     %></td></tr><%
 
-    sBridierScan = pvServerData[SystemData::BridierTimeBombScanFrequency].GetInteger();
+    sBridierScan = pvServerData[SystemData::iBridierTimeBombScanFrequency].GetInteger();
 
     %><tr><td>Bridier idle index decrease scan frequency:</td><td><%
     %><input type="hidden" name="OldBridierScan" value="<% Write (sBridierScan); %>"><%
@@ -1503,7 +1509,7 @@ case 0:
 
     %></select> Disabled reason: <input type="text" size="40" <%
     %>maxlength="<% Write (MAX_REASON_LENGTH); %>" name="LoginsReason" <% 
-    %>value="<% Write (pvServerData[SystemData::LoginsDisabledReason].GetCharPtr()); %>"></td></tr><%
+    %>value="<% Write (pvServerData[SystemData::iLoginsDisabledReason].GetCharPtr()); %>"></td></tr><%
 
     %><tr><td>New empire creation is:</td><td><select name="NewEmps"><%
 
@@ -1517,7 +1523,7 @@ case 0:
 
     %></select> Disabled reason: <input type="text" size="40" <%
     %>maxlength="<% Write (MAX_REASON_LENGTH); %>" name="NewEmpsReason" <% 
-    %>value="<% Write (pvServerData[SystemData::NewEmpiresDisabledReason].GetCharPtr()); %>"></td></tr><%
+    %>value="<% Write (pvServerData[SystemData::iNewEmpiresDisabledReason].GetCharPtr()); %>"></td></tr><%
 
     %><tr><td>New game creation is:</td><td><select name="NewGames"><%
 
@@ -1531,7 +1537,7 @@ case 0:
 
     %></select> Disabled reason: <input type="text" size="40" <%
     %>maxlength="<% Write (MAX_REASON_LENGTH); %>" name="NewGamesReason" <% 
-    %>value="<% Write (pvServerData[SystemData::NewGamesDisabledReason].GetCharPtr()); %>"></td></tr><%
+    %>value="<% Write (pvServerData[SystemData::iNewGamesDisabledReason].GetCharPtr()); %>"></td></tr><%
 
     %><tr><td>Access to the server is:</td><td><select name="Access"><%
 
@@ -1545,7 +1551,7 @@ case 0:
 
     %></select> Disabled reason: <input type="text" size="40" <%
     %>maxlength="<% Write (MAX_REASON_LENGTH); %>" name="AccessReason" <% 
-    %>value="<% Write (pvServerData[SystemData::AccessDisabledReason].GetCharPtr()); %>"></td></tr><%
+    %>value="<% Write (pvServerData[SystemData::iAccessDisabledReason].GetCharPtr()); %>"></td></tr><%
 
     %><tr><td>Shut down the server:</td><td><% 
     WriteButton (BID_SHUTDOWNSERVER);
@@ -1636,7 +1642,7 @@ case 0:
 
         %><tr><%
 
-        if (HTMLFilter (pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN[i]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        if (HTMLFilter(pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false) == OK) {
 
             %><td><% Write (SHIP_TYPE_STRING[i]); %>:</td><%
             %><td><%
@@ -1648,7 +1654,7 @@ case 0:
 
         j = i + NUM_SHIP_TYPES / 2;
 
-        if (HTMLFilter (pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN[j]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        if (HTMLFilter(pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[j]].GetCharPtr(), &strFilter, 0, false) == OK) {
 
             %><td><% Write (SHIP_TYPE_STRING[j]); %>:</td><%
             %><td><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
@@ -1685,12 +1691,11 @@ Cancel:
     WriteButton(BID_CANCEL);
 
     if (pvServerData != NULL) {
-        pDatabase->FreeData (pvServerData);
+        pConn->FreeData (pvServerData);
     }
 
-    if (pDatabase != NULL) {
-        pDatabase->Release();
-    }
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
 
     }
 
@@ -1718,10 +1723,10 @@ case 1:
     for (i = 0; i < iNumAliens; i ++) {
 
         WriteAlienButtonString (
-            ppvAlienData[i][SystemAlienIcons::AlienKey],
-            iAlien == ppvAlienData[i][SystemAlienIcons::AlienKey],
+            ppvAlienData[i][SystemAlienIcons::iAlienKey],
+            iAlien == ppvAlienData[i][SystemAlienIcons::iAlienKey],
             "Alien",
-            ppvAlienData[i][SystemAlienIcons::AuthorName].GetCharPtr()
+            ppvAlienData[i][SystemAlienIcons::iAuthorName].GetCharPtr()
             );
             %> <%
     }
@@ -1742,11 +1747,15 @@ case 2:
     int iB, iL, iD, iS, iT, iH, iV, iC;
 
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
+    Assert(pDatabase != NULL);
+
+    IDatabaseConnection* pConn = pDatabase->CreateConnection();
+    Assert(pConn != NULL);
 
     IReadTable* pSystemData;
     void** ppData;
 
-    iErrCode = pDatabase->GetTableForReading (SYSTEM_DATA, &pSystemData);
+    iErrCode = pConn->GetTableForReading (SYSTEM_DATA, &pSystemData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1757,16 +1766,16 @@ case 2:
         goto Cleanup;
     }
 
-    iB = *((int*) ppData[SystemData::DefaultUIBackground]);
-    iL = *((int*) ppData[SystemData::DefaultUILivePlanet]);
-    iD = *((int*) ppData[SystemData::DefaultUIDeadPlanet]);
-    iS = *((int*) ppData[SystemData::DefaultUISeparator]);
-    iT = *((int*) ppData[SystemData::DefaultUIButtons]);
-    iH = *((int*) ppData[SystemData::DefaultUIHorz]);
-    iV = *((int*) ppData[SystemData::DefaultUIVert]);
-    iC = *((int*) ppData[SystemData::DefaultUIColor]);
+    iB = *((int*) ppData[SystemData::iDefaultUIBackground]);
+    iL = *((int*) ppData[SystemData::iDefaultUILivePlanet]);
+    iD = *((int*) ppData[SystemData::iDefaultUIDeadPlanet]);
+    iS = *((int*) ppData[SystemData::iDefaultUISeparator]);
+    iT = *((int*) ppData[SystemData::iDefaultUIButtons]);
+    iH = *((int*) ppData[SystemData::iDefaultUIHorz]);
+    iV = *((int*) ppData[SystemData::iDefaultUIVert]);
+    iC = *((int*) ppData[SystemData::iDefaultUIColor]);
 
-    pDatabase->FreeData (ppData);
+    pConn->FreeData (ppData);
 
     SafeRelease (pSystemData);
 
@@ -1793,7 +1802,8 @@ case 2:
 
 Cleanup:
 
-    pDatabase->Release();
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
 
     }
     break;
@@ -1914,10 +1924,10 @@ case 6:
     for (i = 0; i < iNumAliens; i ++) {
 
         WriteAlienButtonString (
-            ppvAlienData[i][SystemAlienIcons::AlienKey],
-            iAlien == ppvAlienData[i][SystemAlienIcons::AlienKey],
+            ppvAlienData[i][SystemAlienIcons::iAlienKey],
+            iAlien == ppvAlienData[i][SystemAlienIcons::iAlienKey],
             "Alien",
-            ppvAlienData[i][SystemAlienIcons::AuthorName].GetCharPtr()
+            ppvAlienData[i][SystemAlienIcons::iAuthorName].GetCharPtr()
             );
             %> <%
     }

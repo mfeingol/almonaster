@@ -46,8 +46,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         goto OnError;
     }
 
-    iOptions = pvEmpireData [SystemEmpireData::Options].GetInteger();
-    iOptions2 = pvEmpireData [SystemEmpireData::Options2].GetInteger();
+    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger();
+    iOptions2 = pvEmpireData[SystemEmpireData::iOptions2].GetInteger();
 
     iErrCode = g_pGameEngine->GetJoinedTournaments (iTargetEmpireKey, NULL, NULL, &iNumActiveTournaments);
     if (iErrCode != OK) {
@@ -69,12 +69,12 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
     char pszLoginTime [OS::MaxDateLength], pszCreationTime [OS::MaxDateLength];
     
-    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::LastLoginTime].GetInteger64(), pszLoginTime);
+    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::iLastLoginTime].GetInteger64(), pszLoginTime);
     if (iErrCode != OK) {
         goto OnError;
     }
     
-    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::CreationTime].GetInteger64(), pszCreationTime);
+    iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::iCreationTime].GetInteger64(), pszCreationTime);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -88,14 +88,14 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     OutputText ("<p>");
     
     WriteEmpireIcon (
-        pvEmpireData[SystemEmpireData::AlienKey].GetInteger(),
+        pvEmpireData[SystemEmpireData::iAlienKey].GetInteger(),
         iTargetEmpireKey,
         NULL,
         true
         );
     
     OutputText (" <font size=\"+2\">");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Name].GetCharPtr());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iName].GetCharPtr());
     OutputText ("</font><p>");
     
     if (bShowButtons) {
@@ -165,13 +165,13 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
             WriteButton (BID_VIEWEMPIRESNUKEHISTORY);
         }
 
-        if (pvEmpireData[SystemEmpireData::BridierIndex].GetInteger() != BRIDIER_MAX_INDEX) {
+        if (pvEmpireData[SystemEmpireData::iBridierIndex].GetInteger() != BRIDIER_MAX_INDEX) {
 
             UTCTime tNow;
             Time::GetTime (&tNow);
 
             Seconds sTimeSpent = Time::GetSecondDifference (
-                tNow, pvEmpireData[SystemEmpireData::LastBridierActivity].GetInteger64()
+                tNow, pvEmpireData[SystemEmpireData::iLastBridierActivity].GetInteger64()
                 );
 
             sBridierSecondsLeft = 3 * 30 * DAY_LENGTH_IN_SECONDS - sTimeSpent;
@@ -209,7 +209,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         "<td>"
         );
     
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Wins].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iWins].GetInteger());
     
     OutputText (
         "</td>"\
@@ -222,10 +222,10 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (!bEmpireAdmin || 
         m_iPrivilege < ADMINISTRATOR ||
         m_iEmpireKey == iTargetEmpireKey || 
-        iTargetEmpireKey == ROOT_KEY || 
-        iTargetEmpireKey == GUEST_KEY) {
+        iTargetEmpireKey == g_pGameEngine->GetRootKey() || 
+        iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
         
-        m_pHttpResponse->WriteText (PRIVILEGE_STRING [pvEmpireData[SystemEmpireData::Privilege].GetInteger()]);
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING [pvEmpireData[SystemEmpireData::iPrivilege].GetInteger()]);
         
         if (iOptions2 & ADMINISTRATOR_FIXED_PRIVILEGE) {
             OutputText (" (fixed)");
@@ -238,7 +238,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         bool bFixed = (iOptions2 & ADMINISTRATOR_FIXED_PRIVILEGE) != 0;
         
         OutputText ("<input type=\"hidden\" name=\"OldPriv\" value=\"");
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Privilege].GetInteger());
+        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iPrivilege].GetInteger());
         OutputText (
             "\">"\
             
@@ -255,7 +255,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
             
             OutputText ("<option");
             
-            if (pvEmpireData[SystemEmpireData::Privilege].GetInteger() == i) {
+            if (pvEmpireData[SystemEmpireData::iPrivilege].GetInteger() == i) {
                 OutputText (" selected");
             }
             
@@ -298,7 +298,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         "<td>"
         );
     
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Nukes].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iNukes].GetInteger());
     
     OutputText (
         "</td>"\
@@ -308,13 +308,13 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         "<td>"
         );
     
-    bCanBroadcast = (pvEmpireData[SystemEmpireData::Options].GetInteger() & CAN_BROADCAST) != 0;
+    bCanBroadcast = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & CAN_BROADCAST) != 0;
     
     if (!bEmpireAdmin || 
         m_iPrivilege < ADMINISTRATOR ||
         m_iEmpireKey == iTargetEmpireKey || 
-        iTargetEmpireKey == ROOT_KEY ||
-        iTargetEmpireKey == GUEST_KEY) {
+        iTargetEmpireKey == g_pGameEngine->GetRootKey() ||
+        iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
         
         if (bCanBroadcast) {
             OutputText ("Yes");
@@ -353,7 +353,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         "<td>"
         );
     
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Nuked].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iNuked].GetInteger());
 
     // Creation Time
     OutputText ("</td></tr><tr><td><strong>Creation Time:</strong></td><td>");
@@ -361,25 +361,25 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     
     // Draws
     OutputText ("</td><td>&nbsp;</td><td><strong>Draws:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Draws].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iDraws].GetInteger());
     
     // Real Name
     OutputText ("</td></tr><tr><td><strong>Real Name:</strong></td><td>");
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::RealName].GetCharPtr(), &strHtml, 0, false);
+    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strHtml, 0, false);
     if (iErrCode == OK && !strHtml.IsBlank()) {
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
     }
     
     // Ruins
     OutputText ("</td><td>&nbsp;</td><td><strong>Ruins:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Ruins].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iRuins].GetInteger());
 
     // Age
     OutputText ("</td></tr><tr><td><strong>Age:</strong></td><td>");
-    if (pvEmpireData[SystemEmpireData::Age].GetInteger() == EMPIRE_AGE_UNKNOWN) {
+    if (pvEmpireData[SystemEmpireData::iAge].GetInteger() == EMPIRE_AGE_UNKNOWN) {
         OutputText ("N/A");
     } else {
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Age].GetInteger());
+        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iAge].GetInteger());
     }
     
     // Almonaster Score
@@ -388,10 +388,10 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (bEmpireAdmin &&
         m_iPrivilege >= ADMINISTRATOR &&
         m_iEmpireKey != iTargetEmpireKey && 
-        iTargetEmpireKey != ROOT_KEY &&
-        iTargetEmpireKey != GUEST_KEY) {
+        iTargetEmpireKey != g_pGameEngine->GetRootKey() &&
+        iTargetEmpireKey != g_pGameEngine->GetGuestKey()) {
 
-        float fScore = pvEmpireData[SystemEmpireData::AlmonasterScore].GetFloat();
+        float fScore = pvEmpireData[SystemEmpireData::iAlmonasterScore].GetFloat();
         
         OutputText ("<input type=\"hidden\" name=\"OldAScore\" value=\"");
         m_pHttpResponse->WriteText (fScore);
@@ -403,15 +403,15 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         
     } else {
         
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::AlmonasterScore].GetFloat());
+        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iAlmonasterScore].GetFloat());
     }
 
     // Gender
     OutputText ("</td></tr><tr><td><strong>Gender:</strong></td><td>");
-    if (pvEmpireData[SystemEmpireData::Gender].GetInteger() >= EMPIRE_GENDER_UNKNOWN &&
-        pvEmpireData[SystemEmpireData::Gender].GetInteger() <= EMPIRE_GENDER_FEMALE) {
+    if (pvEmpireData[SystemEmpireData::iGender].GetInteger() >= EMPIRE_GENDER_UNKNOWN &&
+        pvEmpireData[SystemEmpireData::iGender].GetInteger() <= EMPIRE_GENDER_FEMALE) {
 
-        m_pHttpResponse->WriteText (EMPIRE_GENDER_STRING [pvEmpireData[SystemEmpireData::Gender].GetInteger()]);
+        m_pHttpResponse->WriteText (EMPIRE_GENDER_STRING [pvEmpireData[SystemEmpireData::iGender].GetInteger()]);
     
     } else {
         OutputText ("N/A");
@@ -421,10 +421,10 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (bEmpireAdmin &&
         m_iPrivilege >= ADMINISTRATOR &&
         m_iEmpireKey != iTargetEmpireKey && 
-        iTargetEmpireKey != ROOT_KEY &&
-        iTargetEmpireKey != GUEST_KEY) {
+        iTargetEmpireKey != g_pGameEngine->GetRootKey() &&
+        iTargetEmpireKey != g_pGameEngine->GetGuestKey()) {
 
-        int iSignificance = pvEmpireData[SystemEmpireData::AlmonasterScoreSignificance].GetInteger();
+        int iSignificance = pvEmpireData[SystemEmpireData::iAlmonasterScoreSignificance].GetInteger();
 
         OutputText ("<input type=\"hidden\" name=\"OldASignificance\" value=\"");
         m_pHttpResponse->WriteText (iSignificance);
@@ -437,24 +437,24 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     } else {
 
         // Significance
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::AlmonasterScoreSignificance].GetInteger());
+        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iAlmonasterScoreSignificance].GetInteger());
     }
 
     // Location
     OutputText ("</td></tr><tr><td><strong>Location:</strong></td><td>");
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::Location].GetCharPtr(), &strHtml, 0, false);
+    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iLocation].GetCharPtr(), &strHtml, 0, false);
     if (iErrCode == OK && !strHtml.IsBlank()) {
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
     }
     
     // Classic Score
     OutputText ("</td><td>&nbsp;</td><td><strong>Classic Score:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::ClassicScore]);
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iClassicScore]);
 
     // Email address
     OutputText ("</td></tr><tr><td><strong>Email Address:</strong></td><td>");
     
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::Email].GetCharPtr(), &strHtml, 0, false);
+    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iEmail].GetCharPtr(), &strHtml, 0, false);
     if (iErrCode == OK && !strHtml.IsBlank()) {
         OutputText ("<a href=\"mailto:");
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
@@ -465,7 +465,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     
     if (m_iPrivilege >= ADMINISTRATOR || m_iEmpireKey == iTargetEmpireKey) {
         
-        iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::PrivateEmail].GetCharPtr(), &strHtml, 0, false);
+        iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iPrivateEmail].GetCharPtr(), &strHtml, 0, false);
         if (iErrCode == OK && !strHtml.IsBlank()) {
             OutputText (" [<a href=\"mailto:");
             m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
@@ -477,19 +477,19 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     
     // Bridier Rank
     OutputText ("</td><td>&nbsp;</td><td><strong>Bridier Rank:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::BridierRank].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iBridierRank].GetInteger());
     
     // Instant Messenger
     OutputText ("</td></tr><tr><td><strong>Instant Messenger:</strong></td><td>");
 
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::IMId].GetCharPtr(), &strHtml, 0, false);
+    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iIMId].GetCharPtr(), &strHtml, 0, false);
     if (iErrCode == OK && !strHtml.IsBlank()) {
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
     }
     
     // Max Mil
     OutputText ("</td><td>&nbsp;</td><td><strong>Bridier Index:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::BridierIndex].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iBridierIndex].GetInteger());
 
     if (sBridierSecondsLeft != -1) {
 
@@ -508,13 +508,13 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     OutputText ("</td></tr><tr><td><strong>Webpage:</strong></td><td>");
     
     RenderUnsafeHyperText (
-        pvEmpireData[SystemEmpireData::WebPage].GetCharPtr(),
-        pvEmpireData[SystemEmpireData::WebPage].GetCharPtr()
+        pvEmpireData[SystemEmpireData::iWebPage].GetCharPtr(),
+        pvEmpireData[SystemEmpireData::iWebPage].GetCharPtr()
         );
     
     // Max Econ
     OutputText ("</td><td>&nbsp;</td><td><strong>Max Econ:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::MaxEcon].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iMaxEcon].GetInteger());
 
     // Last Login
     OutputText ("</td></tr><tr><td><strong>Last Login:</strong></td><td>");
@@ -522,11 +522,11 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     
     // Max Mil
     OutputText ("</td><td>&nbsp;</td><td><strong>Max Mil:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::MaxMil].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iMaxMil].GetInteger());
     
     // Login count
     OutputText ("</td></tr><tr><td><strong>Login Count:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::NumLogins].GetInteger());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iNumLogins].GetInteger());
     
     // Unread messages
     OutputText ("</td><td>&nbsp;</td><td><strong>Unread Messages:</strong></td><td>");
@@ -534,7 +534,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
     // Browser
     OutputText ("</td></tr><tr><td><strong>Browser:</strong></td><td>");
-    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::Browser].GetCharPtr());
+    m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iBrowser].GetCharPtr());
 
     // Active Games
     OutputText ("</td><td>&nbsp;</td><td><strong>Games:</strong></td><td>");
@@ -543,7 +543,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     // IP Address  
     OutputText ("</td></tr><tr><td><strong>");
 
-    pszIPAddress = pvEmpireData[SystemEmpireData::IPAddress].GetCharPtr();
+    pszIPAddress = pvEmpireData[SystemEmpireData::iIPAddress].GetCharPtr();
     if (String::IsBlank (pszIPAddress)) {
 
         OutputText ("IP Address:</strong></td><td>");
@@ -578,7 +578,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
             
             OutputText ("Hashed IP Address:</strong></td><td>");
 
-            HashIPAddress (pvEmpireData[SystemEmpireData::IPAddress].GetCharPtr(), pszHashedIPAddress);
+            HashIPAddress (pvEmpireData[SystemEmpireData::iIPAddress].GetCharPtr(), pszHashedIPAddress);
             m_pHttpResponse->WriteText (pszHashedIPAddress);
         }
     }
@@ -600,7 +600,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
         OutputText ("<strong>Session Id:</strong></td><td>");
 
-        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::SessionId].GetInteger64());
+        m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iSessionId].GetInteger64());
         
         if (bEmpireAdmin && m_iPrivilege >= ADMINISTRATOR) {
             OutputText ("&nbsp;&nbsp;");
@@ -612,12 +612,12 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     
     bCanBroadcast = (m_iSystemOptions & CAN_BROADCAST) != 0;
     
-    if (!String::IsBlank (pvEmpireData[SystemEmpireData::Quote].GetCharPtr())) {
+    if (!String::IsBlank (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr())) {
 
         OutputText ("<p><table width=\"60%\"><tr><td><font face=\"" DEFAULT_QUOTE_FONT "\">");
 
         String strQuote;
-        iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::Quote].GetCharPtr(), &strQuote, 0, true);
+        iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr(), &strQuote, 0, true);
         if (iErrCode == OK) {
             m_pHttpResponse->WriteText (strQuote.GetCharPtr());
         } else {

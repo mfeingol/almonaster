@@ -54,13 +54,13 @@ void HtmlRenderer::WriteGameMessages() {
         
         for (i = 0; i < iNumMessages; i ++) {
 
-            int iFlags = ppvMessage[i][GameEmpireMessages::Flags].GetInteger();
+            int iFlags = ppvMessage[i][GameEmpireMessages::iFlags].GetInteger();
 
             if (i > 0) {
                 OutputText ("<tr><td>&nbsp;</td></tr>");
             }
             
-            pszSource = ppvMessage[i][GameEmpireMessages::Source].GetCharPtr();
+            pszSource = ppvMessage[i][GameEmpireMessages::iSource].GetCharPtr();
             
             if (iFlags & MESSAGE_BROADCAST) {
                 pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
@@ -70,11 +70,11 @@ void HtmlRenderer::WriteGameMessages() {
 
             // Format message
             if (iFlags & MESSAGE_SYSTEM) {
-                pszMessage = ppvMessage[i][GameEmpireMessages::Text].GetCharPtr();
+                pszMessage = ppvMessage[i][GameEmpireMessages::iText].GetCharPtr();
             } else {
                 
                 if (HTMLFilter (
-                    ppvMessage[i][GameEmpireMessages::Text].GetCharPtr(), 
+                    ppvMessage[i][GameEmpireMessages::iText].GetCharPtr(), 
                     &strFiltered, 
                     MAX_NUM_SPACELESS_CHARS,
                     true
@@ -88,7 +88,7 @@ void HtmlRenderer::WriteGameMessages() {
                 }
             }
             
-            iErrCode = Time::GetDateString (ppvMessage[i][GameEmpireMessages::TimeStamp].GetInteger64(), pszDate);
+            iErrCode = Time::GetDateString (ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
             if (iErrCode != OK) {
                 StrNCpy (pszDate, "The server is out of memory");
             }
@@ -146,7 +146,7 @@ void HtmlRenderer::WriteGameMessages() {
                 }
 
                 OutputText ("<strong>");
-                m_pHttpResponse->WriteText (ppvMessage[i][GameEmpireMessages::Source].GetCharPtr());
+                m_pHttpResponse->WriteText (ppvMessage[i][GameEmpireMessages::iSource].GetCharPtr());
                 OutputText ("</strong>");
                 
                 if (iFlags & MESSAGE_BROADCAST) {
@@ -226,7 +226,7 @@ void HtmlRenderer::WriteSystemMessages() {
         
         for (i = 0; i < iNumMessages; i ++) {
 
-            int iType = ppvMessage[i][SystemEmpireMessages::Type].GetInteger();
+            int iType = ppvMessage[i][SystemEmpireMessages::iType].GetInteger();
 
             // Slight hack to restrict invitations to one per screen
             if (m_bNotifiedTournamentInvitation && iType == MESSAGE_TOURNAMENT_INVITATION) {
@@ -269,8 +269,8 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
     char pszDate [OS::MaxDateLength];
     
     // Get message source
-    int iFlags = pvMessage[SystemEmpireMessages::Flags].GetInteger();
-    const char* pszSource = pvMessage[SystemEmpireMessages::Source].GetCharPtr();
+    int iFlags = pvMessage[SystemEmpireMessages::iFlags].GetInteger();
+    const char* pszSource = pvMessage[SystemEmpireMessages::iSource].GetCharPtr();
 
     // Get system / personal
     bool bSystem = (iFlags & MESSAGE_SYSTEM) != 0;
@@ -278,7 +278,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
     Variant vTemp;
 
     // Get date
-    iErrCode = Time::GetDateString (pvMessage[SystemEmpireMessages::TimeStamp].GetInteger64(), pszDate);
+    iErrCode = Time::GetDateString (pvMessage[SystemEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
     if (iErrCode != OK) {
         StrNCpy (pszDate, "The server is out of memory");
         iMessageKey = NO_KEY;
@@ -356,7 +356,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
     // Select based on message type
     //
 
-    switch (pvMessage[SystemEmpireMessages::Type].GetInteger()) {
+    switch (pvMessage[SystemEmpireMessages::iType].GetInteger()) {
         
     case MESSAGE_NORMAL:
         {
@@ -380,7 +380,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
             OutputText (" a message");
 
-            pszMessage = pvMessage[SystemEmpireMessages::Text].GetCharPtr();
+            pszMessage = pvMessage[SystemEmpireMessages::iText].GetCharPtr();
         
         } else {
 
@@ -404,7 +404,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
             }
             
             pszMessage = HTMLFilter (
-                pvMessage[SystemEmpireMessages::Text].GetCharPtr(), 
+                pvMessage[SystemEmpireMessages::iText].GetCharPtr(), 
                 &strFiltered, 
                 MAX_NUM_SPACELESS_CHARS,
                 true
@@ -443,7 +443,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
             unsigned int iSenderKey, iOwnerKey, iTournamentKey;
 
-            sscanf (pvMessage[SystemEmpireMessages::Data].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
+            sscanf (pvMessage[SystemEmpireMessages::iData].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
 
             OutputText ("invited you to join ");
 
@@ -506,7 +506,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
             Variant vName = NULL;
             unsigned int iTournamentKey, iSenderKey, iOwnerKey;
 
-            sscanf (pvMessage[SystemEmpireMessages::Data].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
+            sscanf (pvMessage[SystemEmpireMessages::iData].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
 
             OutputText ("requested permission to join ");
 
@@ -522,7 +522,7 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
                 goto Cleanup;
             }
 
-            if (iOwnerKey != m_iEmpireKey && !(iOwnerKey == SYSTEM && m_iEmpireKey == ROOT_KEY)) {
+            if (iOwnerKey != m_iEmpireKey && !(iOwnerKey == SYSTEM && m_iEmpireKey == g_pGameEngine->GetRootKey())) {
                 iErrCode = ERROR_WRONG_TOURNAMENT_OWNER;
                 OutputText ("a tournament that you don't own");
                 goto Cleanup;

@@ -24,9 +24,9 @@
 //
 // Return the number of alien icons currently registered as valid empire icons
 
-int GameEngine::GetNumAliens (int* piNumAliens) {
-
-    return m_pGameData->GetNumRows (SYSTEM_ALIEN_ICONS, (unsigned int*) piNumAliens);
+int GameEngine::GetNumAliens(unsigned int* piNumAliens)
+{
+    return m_pConn->GetNumRows(SYSTEM_ALIEN_ICONS, piNumAliens);
 }
 
 // Output:
@@ -39,15 +39,15 @@ int GameEngine::GetNumAliens (int* piNumAliens) {
 
 int GameEngine::GetAlienKeys (Variant*** pppvData, int* piNumAliens) {
 
-    const unsigned int piColumns[] = {
+    const char* pszColumns[] = {
         SystemAlienIcons::AlienKey, 
         SystemAlienIcons::AuthorName
     };
 
-    return m_pGameData->ReadColumns (
+    return m_pConn->ReadColumns (
         SYSTEM_ALIEN_ICONS, 
-        countof (piColumns),
-        piColumns, 
+        countof (pszColumns),
+        pszColumns, 
         pppvData, 
         (unsigned int*) piNumAliens
         );
@@ -65,14 +65,7 @@ int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
     LockAlienIcons();
 
     unsigned int iKey;
-    int iErrCode = m_pGameData->GetFirstKey (
-        SYSTEM_ALIEN_ICONS, 
-        SystemAlienIcons::AlienKey, 
-        iAlienKey, 
-        false, 
-        &iKey
-        );
-
+    int iErrCode = m_pConn->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
 
         Variant pvArray [SystemAlienIcons::NumColumns] = {
@@ -80,7 +73,7 @@ int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
             pszAuthorName,
         };
 
-        iErrCode = m_pGameData->InsertRow (SYSTEM_ALIEN_ICONS, pvArray, &iKey);
+        iErrCode = m_pConn->InsertRow (SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
         Assert (iErrCode == OK);
 
     } else {
@@ -112,7 +105,7 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
 
     LockAlienIcons();
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
+    iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -123,7 +116,7 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, false, &iKey);
+    iErrCode = m_pConn->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
         iErrCode = ERROR_ALIEN_ICON_DOES_NOT_EXIST;
         goto Cleanup;
@@ -135,7 +128,7 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
     }
 
     // Delete the icon!
-    iErrCode = m_pGameData->DeleteRow (SYSTEM_ALIEN_ICONS, iKey);
+    iErrCode = m_pConn->DeleteRow (SYSTEM_ALIEN_ICONS, iKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -162,19 +155,12 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
     if (iAlienKey == UPLOADED_ICON) {
 
-        iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
+        iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
     
     } else {
 
         unsigned int iKey;
-        iErrCode = m_pGameData->GetFirstKey (
-            SYSTEM_ALIEN_ICONS, 
-            SystemAlienIcons::AlienKey, 
-            iAlienKey, 
-            false, 
-            &iKey
-            );
-
+        iErrCode = m_pConn->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
         if (iKey == NO_KEY) {
 
             Assert (iErrCode == ERROR_DATA_NOT_FOUND);
@@ -182,7 +168,7 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
         } else {
         
-            iErrCode = m_pGameData->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
+            iErrCode = m_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
         }
 
     }
@@ -203,10 +189,10 @@ int GameEngine::GetAlienAuthorName (int iAlienKey, Variant* pvAuthorName) {
     int iErrCode;
     unsigned int iKey;
 
-    iErrCode = m_pGameData->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, false, &iKey);
+    iErrCode = m_pConn->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    return m_pGameData->ReadData (SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
+    return m_pConn->ReadData (SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
 }

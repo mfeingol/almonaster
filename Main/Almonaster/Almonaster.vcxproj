@@ -147,7 +147,7 @@
     </ResourceCompile>
     <Link>
       <RegisterOutput>false</RegisterOutput>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;Alajar.lib;Database.lib;Osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osal.lib;alajar.lib;sqldatabasebridge.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <Version>
       </Version>
@@ -227,7 +227,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     </ResourceCompile>
     <Link>
       <RegisterOutput>false</RegisterOutput>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;Alajar.lib;Database.lib;Osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osal.lib;alajar.lib;sqldatabasebridge.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ShowProgress>NotSet</ShowProgress>
       <Version>
       </Version>
@@ -301,7 +301,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;osal.lib;alajar.lib;database.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osal.lib;alajar.lib;sqldatabasebridge.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -373,7 +373,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>odbc32.lib;odbccp32.lib;osal.lib;alajar.lib;database.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osal.lib;alajar.lib;sqldatabasebridge.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -1455,8 +1455,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <Project>{a5498f4e-4124-4680-b43a-d105aa64c814}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\Database\Database.vcxproj">
-      <Project>{208d5299-bdcb-4479-bd23-b544474e8772}</Project>
+    <ProjectReference Include="..\SqlDatabaseBridge\SqlDatabaseBridge.vcxproj">
+      <Project>{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\Osal\Osal.vcxproj">

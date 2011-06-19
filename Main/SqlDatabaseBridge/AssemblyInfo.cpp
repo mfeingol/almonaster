@@ -1,5 +1,3 @@
-#include "stdafx.h"
-
 using namespace System;
 using namespace System::Reflection;
 using namespace System::Runtime::CompilerServices;
@@ -11,12 +9,12 @@ using namespace System::Security::Permissions;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly:AssemblyTitleAttribute("SqlDatabaseBridge")];
+[assembly:AssemblyTitleAttribute("SqlDatabase")];
 [assembly:AssemblyDescriptionAttribute("")];
 [assembly:AssemblyConfigurationAttribute("")];
 [assembly:AssemblyCompanyAttribute("Max Feingold")];
-[assembly:AssemblyProductAttribute("SqlDatabaseBridge")];
-[assembly:AssemblyCopyrightAttribute("Copyright (c) Max Feingold 2011")];
+[assembly:AssemblyProductAttribute("SqlDatabase")];
+[assembly:AssemblyCopyrightAttribute("Copyright(c) Max Feingold 2011")];
 [assembly:AssemblyTrademarkAttribute("")];
 [assembly:AssemblyCultureAttribute("")];
 
@@ -38,3 +36,5 @@ using namespace System::Security::Permissions;
 [assembly:CLSCompliantAttribute(true)];
 
 [assembly:SecurityPermission(SecurityAction::RequestMinimum, UnmanagedCode = true)];
+
+#using <System.Data.dll>

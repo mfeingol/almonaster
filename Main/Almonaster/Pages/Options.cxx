@@ -1661,7 +1661,7 @@ case 1:
 
         for (i = 0; i < iNumMessages; i ++) {
             piIndex[i] = i;
-            ptTime[i] = ppvMessage[i][GameEmpireMessages::TimeStamp].GetInteger64();
+            ptTime[i] = ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64();
         }
 
         Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
@@ -1691,15 +1691,15 @@ case 1:
 
             for (i = 0; i < iNumMessages; i ++) {
 
-                int iFlags = ppvMessage[piIndex[i]][GameEmpireMessages::Flags].GetInteger();
+                int iFlags = ppvMessage[piIndex[i]][GameEmpireMessages::iFlags].GetInteger();
 
-                const char* pszSender = ppvMessage[piIndex[i]][GameEmpireMessages::Source].GetCharPtr();
+                const char* pszSender = ppvMessage[piIndex[i]][GameEmpireMessages::iSource].GetCharPtr();
 
                 %><input type="hidden" name="MsgKey<% Write (i); %>" value ="<% Write (piMessageKey[piIndex[i]]); 
                 %>"><input type="hidden" name="MsgSrc<% Write (i); %>" value ="<% Write (pszSender);
                 %>"><tr><td><strong>Time: </strong> <% 
 
-                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][GameEmpireMessages::TimeStamp].GetInteger64(), pszDate);
+                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][GameEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
                 if (iErrCode != OK) {
                     %>Could not read date<%
                 } else {

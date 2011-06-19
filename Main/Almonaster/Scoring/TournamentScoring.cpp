@@ -8,7 +8,8 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-static const unsigned int s_piEmpireColumn [TOURNAMENT_NUM_EVENTS] = {
+static const char* s_pszEmpireColumn[TOURNAMENT_NUM_EVENTS] =
+{
     SystemTournamentEmpires::Nukes,
     SystemTournamentEmpires::Nuked,
     SystemTournamentEmpires::Wins,
@@ -16,7 +17,8 @@ static const unsigned int s_piEmpireColumn [TOURNAMENT_NUM_EVENTS] = {
     SystemTournamentEmpires::Ruins,
 };
 
-static const unsigned int s_piTeamColumn [TOURNAMENT_NUM_EVENTS] = {
+static const char* s_pszTeamColumn[TOURNAMENT_NUM_EVENTS] =
+{
     SystemTournamentTeams::Nukes,
     SystemTournamentTeams::Nuked,
     SystemTournamentTeams::Wins,
@@ -24,22 +26,25 @@ static const unsigned int s_piTeamColumn [TOURNAMENT_NUM_EVENTS] = {
     SystemTournamentTeams::Ruins,
 };
 
-TournamentScoring::TournamentScoring (IGameEngine* pGameEngine) {
-
+TournamentScoring::TournamentScoring (IGameEngine* pGameEngine)
+{
     m_iNumRefs = 1;
 
     Assert (pGameEngine != NULL);
     m_pGameEngine = pGameEngine; // Weak ref
 
-    m_pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
-    Assert (m_pDatabase != NULL);
+    IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
+    Assert (pDatabase != NULL);
+
+    m_pConn = pDatabase->CreateConnection();
+    Assert (m_pConn != NULL);
+
+    SafeRelease(pDatabase);
 }
 
-TournamentScoring::~TournamentScoring() {
-
-    if (m_pDatabase != NULL) {
-        m_pDatabase->Release();
-    }
+TournamentScoring::~TournamentScoring()
+{
+    SafeRelease(m_pConn);
 }
 
 IScoringSystem* TournamentScoring::CreateInstance (IGameEngine* pGameEngine) {
@@ -54,7 +59,7 @@ int TournamentScoring::IsTournamentGame (int iGameClass, int iGameNumber, unsign
 
     *piTournamentKey = NO_KEY;
 
-    iErrCode = m_pDatabase->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA,
         iGameClass,
         SystemGameClassData::TournamentKey,
@@ -76,19 +81,19 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
 
     SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
 
-    iErrCode = m_pDatabase->GetFirstKey (pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, false, &iKey);
+    iErrCode = m_pConn->GetFirstKey (pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     // Update event count
-    iErrCode = m_pDatabase->Increment (pszEmpires, iKey, s_piEmpireColumn [event], 1);
+    iErrCode = m_pConn->Increment (pszEmpires, iKey, s_pszEmpireColumn [event], 1);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     // Get team
-    iErrCode = m_pDatabase->ReadData (pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
+    iErrCode = m_pConn->ReadData (pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -97,7 +102,7 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
 
         SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
-        iErrCode = m_pDatabase->Increment (pszTeams, vTeamKey.GetInteger(), s_piTeamColumn [event], 1);
+        iErrCode = m_pConn->Increment (pszTeams, vTeamKey.GetInteger(), s_pszTeamColumn [event], 1);
         if (iErrCode != OK) {
             return iErrCode;
         }

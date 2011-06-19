@@ -27,7 +27,7 @@
 // Determine if a given theme exists
 
 int GameEngine::DoesThemeExist (int iThemeKey, bool* pbExist) {
-    return m_pGameData->DoesRowExist (SYSTEM_THEMES, iThemeKey, pbExist);
+    return m_pConn->DoesRowExist (SYSTEM_THEMES, iThemeKey, pbExist);
 }
 
 // Input:
@@ -46,20 +46,20 @@ int GameEngine::CreateTheme (Variant* pvData, unsigned int* piKey) {
 
     *piKey = NO_KEY;
 
-    iErrCode = m_pGameData->GetTableForWriting (SYSTEM_THEMES, &pTable);
+    iErrCode = m_pConn->GetTableForWriting (SYSTEM_THEMES, &pTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Make sure there isn't a name collision
-    iErrCode = pTable->GetFirstKey (SystemThemes::Name, pvData [SystemThemes::Name], true, &iKey);
+    iErrCode = pTable->GetFirstKey(SystemThemes::Name, pvData[SystemThemes::iName], &iKey);
     if (iErrCode == OK) {
         iErrCode = ERROR_THEME_ALREADY_EXISTS;
         goto Cleanup;
     }
 
-    iErrCode = pTable->InsertRow (pvData, &iKey);
+    iErrCode = pTable->InsertRow(SystemThemes::Template, pvData, &iKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -82,7 +82,7 @@ Cleanup:
 
 int GameEngine::GetNumThemes (int* piNumThemes) {
 
-    return m_pGameData->GetNumRows (SYSTEM_THEMES, (unsigned int*) piNumThemes);
+    return m_pConn->GetNumRows (SYSTEM_THEMES, (unsigned int*) piNumThemes);
 }
 
 
@@ -94,7 +94,7 @@ int GameEngine::GetNumThemes (int* piNumThemes) {
 
 int GameEngine::GetThemeKeys (int** ppiThemeKey, int* piNumKeys) {
 
-    int iErrCode = m_pGameData->GetAllKeys (
+    int iErrCode = m_pConn->GetAllKeys (
         SYSTEM_THEMES, 
         (unsigned int**) ppiThemeKey, 
         (unsigned int*) piNumKeys
@@ -116,11 +116,10 @@ int GameEngine::GetThemeKeys (int** ppiThemeKey, int* piNumKeys) {
 
 int GameEngine::GetFullThemeKeys (int** ppiThemeKey, int* piNumKeys) {
 
-    int iErrCode = m_pGameData->GetEqualKeys (
+    int iErrCode = m_pConn->GetEqualKeys (
         SYSTEM_THEMES,
         SystemThemes::Options,
         ALL_THEME_OPTIONS,
-        false,
         (unsigned int**) ppiThemeKey,
         (unsigned int*) piNumKeys
         );
@@ -143,7 +142,7 @@ int GameEngine::GetFullThemeKeys (int** ppiThemeKey, int* piNumKeys) {
 
 int GameEngine::GetThemeData (int iThemeKey, Variant** ppvThemeData) {
 
-    return m_pGameData->ReadRow (SYSTEM_THEMES, iThemeKey, ppvThemeData);
+    return m_pConn->ReadRow (SYSTEM_THEMES, iThemeKey, ppvThemeData);
 }
 
 
@@ -157,7 +156,7 @@ int GameEngine::GetThemeData (int iThemeKey, Variant** ppvThemeData) {
 
 int GameEngine::GetThemeName (int iThemeKey, Variant* pvThemeName) {
 
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pvThemeName);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pvThemeName);
 }
 
 
@@ -171,7 +170,7 @@ int GameEngine::GetThemeName (int iThemeKey, Variant* pvThemeName) {
 
 int GameEngine::GetThemeTableColor (int iThemeKey, Variant* pvTableColor) {
 
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::TableColor, pvTableColor);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::TableColor, pvTableColor);
 }
 
 
@@ -184,23 +183,23 @@ int GameEngine::GetThemeTableColor (int iThemeKey, Variant* pvTableColor) {
 // Return the respective color of the theme
 
 int GameEngine::GetThemeTextColor (int iThemeKey, Variant* pvColor) {
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::TextColor, pvColor);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::TextColor, pvColor);
 }
 
 int GameEngine::GetThemeGoodColor (int iThemeKey, Variant* pvColor) {
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::GoodColor, pvColor);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::GoodColor, pvColor);
 }
 
 int GameEngine::GetThemeBadColor (int iThemeKey, Variant* pvColor) {
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::BadColor, pvColor);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::BadColor, pvColor);
 }
 
 int GameEngine::GetThemePrivateMessageColor (int iThemeKey, Variant* pvColor) {
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::PrivateMessageColor, pvColor);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::PrivateMessageColor, pvColor);
 }
 
 int GameEngine::GetThemeBroadcastMessageColor (int iThemeKey, Variant* pvColor) {
-    return m_pGameData->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::BroadcastMessageColor, pvColor);
+    return m_pConn->ReadData (SYSTEM_THEMES, iThemeKey, SystemThemes::BroadcastMessageColor, pvColor);
 }
 
 
@@ -211,7 +210,7 @@ int GameEngine::GetThemeBroadcastMessageColor (int iThemeKey, Variant* pvColor) 
 
 int GameEngine::DeleteTheme (int iThemeKey) {
 
-    return m_pGameData->DeleteRow (SYSTEM_THEMES, iThemeKey);
+    return m_pConn->DeleteRow (SYSTEM_THEMES, iThemeKey);
 }
 
 
@@ -222,7 +221,7 @@ int GameEngine::DeleteTheme (int iThemeKey) {
 // Set the name of the theme
 
 int GameEngine::SetThemeName (int iThemeKey, const char* pszThemeName) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pszThemeName);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pszThemeName);
 }
 
 
@@ -233,7 +232,7 @@ int GameEngine::SetThemeName (int iThemeKey, const char* pszThemeName) {
 // Set the version of the theme
 
 int GameEngine::SetThemeVersion (int iThemeKey, const char* pszVersion) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::Version, pszVersion);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::Version, pszVersion);
 }
 
 
@@ -244,7 +243,7 @@ int GameEngine::SetThemeVersion (int iThemeKey, const char* pszVersion) {
 // Set the filename of the theme
 
 int GameEngine::SetThemeFileName (int iThemeKey, const char* pszFileName) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::FileName, pszFileName);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::FileName, pszFileName);
 }
 
 // Input:
@@ -254,7 +253,7 @@ int GameEngine::SetThemeFileName (int iThemeKey, const char* pszFileName) {
 // Set the author name of the theme
 
 int GameEngine::SetThemeAuthorName (int iThemeKey, const char* pszAuthorName) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::AuthorName, pszAuthorName);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::AuthorName, pszAuthorName);
 }
 
 
@@ -265,7 +264,7 @@ int GameEngine::SetThemeAuthorName (int iThemeKey, const char* pszAuthorName) {
 // Set the author email of the theme
 
 int GameEngine::SetThemeAuthorEmail (int iThemeKey, const char* pszAuthorEmail) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::AuthorEmail, pszAuthorEmail);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::AuthorEmail, pszAuthorEmail);
 }
 
 
@@ -278,10 +277,10 @@ int GameEngine::SetThemeAuthorEmail (int iThemeKey, const char* pszAuthorEmail) 
 int GameEngine::SetThemeBackground (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BACKGROUND);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BACKGROUND);
     }
     
-    return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BACKGROUND);
+    return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BACKGROUND);
 }
 
 
@@ -294,10 +293,10 @@ int GameEngine::SetThemeBackground (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_LIVE_PLANET);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_LIVE_PLANET);
     }
     
-    return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_LIVE_PLANET);
+    return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_LIVE_PLANET);
 }
 
 
@@ -310,9 +309,9 @@ int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_DEAD_PLANET);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_DEAD_PLANET);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_DEAD_PLANET);
+        return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_DEAD_PLANET);
     }
 }
 
@@ -326,9 +325,9 @@ int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_SEPARATOR);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_SEPARATOR);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_SEPARATOR);
+        return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_SEPARATOR);
     }
 }
 
@@ -342,9 +341,9 @@ int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeButtons (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BUTTONS);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BUTTONS);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BUTTONS);
+        return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BUTTONS);
     }
 }
 
@@ -356,7 +355,7 @@ int GameEngine::SetThemeButtons (int iThemeKey, bool bExists) {
 // Set the description of the theme
 
 int GameEngine::SetThemeDescription (int iThemeKey, const char* pszDescription) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::Description, pszDescription);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::Description, pszDescription);
 }
 
 
@@ -369,9 +368,9 @@ int GameEngine::SetThemeDescription (int iThemeKey, const char* pszDescription) 
 int GameEngine::SetThemeHorz (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_HORZ);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_HORZ);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_HORZ);
+        return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_HORZ);
     }
 }
 
@@ -385,9 +384,9 @@ int GameEngine::SetThemeHorz (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeVert (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return m_pGameData->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_VERT);
+        return m_pConn->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_VERT);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_VERT);
+        return m_pConn->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_VERT);
     }
 }
 
@@ -399,27 +398,27 @@ int GameEngine::SetThemeVert (int iThemeKey, bool bExists) {
 // Set the respective color of the theme
 
 int GameEngine::SetThemeTableColor (int iThemeKey, const char* pszColor) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::TableColor, pszColor);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::TableColor, pszColor);
 }
 
 int GameEngine::SetThemeTextColor (int iThemeKey, const char* pszColor) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::TextColor, pszColor);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::TextColor, pszColor);
 }
 
 int GameEngine::SetThemeGoodColor (int iThemeKey, const char* pszColor) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::GoodColor, pszColor);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::GoodColor, pszColor);
 }
 
 int GameEngine::SetThemeBadColor (int iThemeKey, const char* pszColor) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::BadColor, pszColor);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::BadColor, pszColor);
 }
 
 int GameEngine::SetThemePrivateMessageColor (int iThemeKey, const char* pszColor) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::PrivateMessageColor, pszColor);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::PrivateMessageColor, pszColor);
 }
 
 int GameEngine::SetThemeBroadcastMessageColor (int iThemeKey, const char* pszColor) {
-    return m_pGameData->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::BroadcastMessageColor, pszColor);
+    return m_pConn->WriteData (SYSTEM_THEMES, iThemeKey, SystemThemes::BroadcastMessageColor, pszColor);
 }
 
 // Input:
@@ -434,7 +433,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
 
     if (iThemeKey != INDIVIDUAL_ELEMENTS && iThemeKey != ALTERNATIVE_PATH) {
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UIButtons, 
@@ -445,7 +444,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UIBackground, 
@@ -456,7 +455,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UILivePlanet, 
@@ -467,7 +466,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UIDeadPlanet, 
@@ -478,7 +477,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UISeparator, 
@@ -489,7 +488,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UIHorz, 
@@ -500,7 +499,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UIVert, 
@@ -511,7 +510,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
             return iErrCode;
         }
 
-        iErrCode = m_pGameData->WriteData (
+        iErrCode = m_pConn->WriteData (
             SYSTEM_EMPIRE_DATA, 
             iEmpireKey, 
             SystemEmpireData::UIColor, 
@@ -523,7 +522,7 @@ int GameEngine::SetEmpireThemeKey (int iEmpireKey, int iThemeKey) {
         }
     }
 
-    iErrCode = m_pGameData->WriteData (
+    iErrCode = m_pConn->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::AlmonasterTheme, 

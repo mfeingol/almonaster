@@ -21,7 +21,7 @@
 
 #include "Osal/Variant.h"
 
-#include "Database.h"
+#include "SqlDatabase.h"
 
 #include "GameEngineStrings.h"
 
@@ -33,7 +33,219 @@
 
 namespace SystemData {
     
+    static const char* const DefaultAlien = "DefaultAlien";
+    static const char* const ServerName = "ServerName";
+    static const char* const DefaultMaxNumSystemMessages = "DefaultMaxNumSystemMessages";
+    static const char* const DefaultMaxNumGameMessages = "DefaultMaxNumGameMessages";
+    static const char* const DefaultUIButtons = "DefaultUIButtons";
+    static const char* const DefaultUIBackground = "DefaultUIBackground";
+    static const char* const DefaultUILivePlanet = "DefaultUILivePlanet";
+    static const char* const DefaultUIDeadPlanet = "DefaultUIDeadPlanet";
+    static const char* const DefaultUISeparator = "DefaultUISeparator";
+    static const char* const DefaultPrivilegeLevel = "DefaultPrivilegeLevel";
+    static const char* const AdeptScore = "AdeptScore";
+    static const char* const MaxNumSystemMessages = "MaxNumSystemMessages";
+    static const char* const MaxNumGameMessages = "MaxNumGameMessages";
+    static const char* const LastShutdownTime = "LastShutdownTime";
+    static const char* const DefaultAttackName = "DefaultAttackName";
+    static const char* const DefaultScienceName = "DefaultScienceName";
+    static const char* const DefaultColonyName = "DefaultColonyName";
+    static const char* const DefaultStargateName = "DefaultStargateName";
+    static const char* const DefaultCloakerName = "DefaultCloakerName";
+    static const char* const DefaultSatelliteName = "DefaultSatelliteName";
+    static const char* const DefaultTerraformerName = "DefaultTerraformerName";
+    static const char* const DefaultTroopshipName = "DefaultTroopshipName";
+    static const char* const DefaultDoomsdayName = "DefaultDoomsdayName";
+    static const char* const DefaultMinefieldName = "DefaultMinefieldName";
+    static const char* const DefaultMinesweeperName = "DefaultMinesweeperName";
+    static const char* const DefaultEngineerName = "DefaultEngineerName";
+    static const char* const MaxNumPersonalGameClasses = "MaxNumPersonalGameClasses";
+    static const char* const DefaultUIHorz = "DefaultUIHorz";
+    static const char* const DefaultUIVert = "DefaultUIVert";
+    static const char* const DefaultUIColor = "DefaultUIColor";
+    static const char* const MaxIconSize = "MaxIconSize";
+    static const char* const SystemMaxNumEmpires = "SystemMaxNumEmpires";
+    static const char* const SystemMaxNumPlanets = "SystemMaxNumPlanets";
+    static const char* const SystemMinSecs = "SystemMinSecs";
+    static const char* const SystemMaxSecs = "SystemMaxSecs";
+    static const char* const PersonalMaxNumEmpires = "PersonalMaxNumEmpires";
+    static const char* const PersonalMaxNumPlanets = "PersonalMaxNumPlanets";
+    static const char* const PersonalMinSecs = "PersonalMinSecs";
+    static const char* const PersonalMaxSecs = "PersonalMaxSecs";
+    static const char* const Options = "Options";
+    static const char* const LastBridierTimeBombScan = "LastBridierTimeBombScan";
+    static const char* const BridierTimeBombScanFrequency = "BridierTimeBombScanFrequency";
+    static const char* const PrivilegeForUnlimitedEmpires = "PrivilegeForUnlimitedEmpires";
+    static const char* const LoginsDisabledReason = "LoginsDisabledReason";
+    static const char* const NewEmpiresDisabledReason = "NewEmpiresDisabledReason";
+    static const char* const NewGamesDisabledReason = "NewGamesDisabledReason";
+    static const char* const AccessDisabledReason = "AccessDisabledReason";
+    static const char* const ApprenticeScore = "ApprenticeScore";
+    static const char* const DefaultUIIndependentPlanet = "DefaultUIIndependentPlanet";
+    static const char* const MaxNumUpdatesBeforeClose = "MaxNumUpdatesBeforeClose";
+    static const char* const DefaultNumUpdatesBeforeClose = "DefaultNumUpdatesBeforeClose";
+    static const char* const SessionId = "SessionId";
+    static const char* const MaxResourcesPerPlanet = "MaxResourcesPerPlanet";
+    static const char* const MaxResourcesPerPlanetPersonal = "MaxResourcesPerPlanetPersonal";
+    static const char* const MaxInitialTechLevel = "MaxInitialTechLevel";
+    static const char* const MaxInitialTechLevelPersonal = "MaxInitialTechLevelPersonal";
+    static const char* const MaxTechDev = "MaxTechDev";
+    static const char* const MaxTechDevPersonal = "MaxTechDevPersonal";
+    static const char* const PercentFirstTradeIncrease = "PercentFirstTradeIncrease";
+    static const char* const PercentNextTradeIncrease = "PercentNextTradeIncrease";
+    static const char* const SecondsForLongtermStatus = "SecondsForLongtermStatus";
+    static const char* const NumUpdatesDownBeforeGameIsKilled = "NumUpdatesDownBeforeGameIsKilled";
+    static const char* const NumNukesListedInNukeHistories = "NumNukesListedInNukeHistories";
+    static const char* const NukesForQuarantine = "NukesForQuarantine";
+    static const char* const UpdatesInQuarantine = "UpdatesInQuarantine";
+    static const char* const PercentTechIncreaseForLatecomers = "PercentTechIncreaseForLatecomers";
+    static const char* const PercentDamageUsedToDestroy = "PercentDamageUsedToDestroy";
+    static const char* const AfterWeekendDelay = "AfterWeekendDelay";
+    static const char* const ChanceNewLinkForms = "ChanceNewLinkForms";
+    static const char* const ResourceAllocationRandomizationFactor = "ResourceAllocationRandomizationFactor";
+    static const char* const MapDeviation = "MapDeviation";
+    static const char* const ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap = "ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap";
+    static const char* const ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap = "ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap";
+    static const char* const LargeMapThreshold = "LargeMapThreshold";
+    static const char* const ShipBehavior = "ShipBehavior";
+    static const char* const ColonySimpleBuildFactor = "ColonySimpleBuildFactor";
+    static const char* const ColonyMultipliedBuildFactor = "ColonyMultipliedBuildFactor";
+    static const char* const ColonyMultipliedDepositFactor = "ColonyMultipliedDepositFactor";
+    static const char* const ColonyExponentialDepositFactor = "ColonyExponentialDepositFactor";
+    static const char* const EngineerLinkCost = "EngineerLinkCost";
+    static const char* const StargateGateCost = "StargateGateCost";
+    static const char* const TerraformerPlowFactor = "TerraformerPlowFactor";
+    static const char* const TroopshipInvasionFactor = "TroopshipInvasionFactor";
+    static const char* const TroopshipFailureFactor = "TroopshipFailureFactor";
+    static const char* const TroopshipSuccessFactor = "TroopshipSuccessFactor";
+    static const char* const DoomsdayAnnihilationFactor = "DoomsdayAnnihilationFactor";
+    static const char* const CarrierCost = "CarrierCost";
+    static const char* const BuilderMinBR = "BuilderMinBR";
+    static const char* const MorpherCost = "MorpherCost";
+    static const char* const JumpgateGateCost = "JumpgateGateCost";
+    static const char* const JumpgateRangeFactor = "JumpgateRangeFactor";
+    static const char* const StargateRangeFactor = "StargateRangeFactor";
+    static const char* const DefaultCarrierName = "DefaultCarrierName";
+    static const char* const DefaultBuilderName = "DefaultBuilderName";
+    static const char* const DefaultMorpherName = "DefaultMorpherName";
+    static const char* const DefaultJumpgateName = "DefaultJumpgateName";
+    static const char* const BuilderMultiplier = "BuilderMultiplier";
+    static const char* const NumNukesListedInSystemNukeList = "NumNukesListedInSystemNukeList";
+    static const char* const NumGamesInLatestGameList = "NumGamesInLatestGameList";
+    static const char* const MaxNumPersonalTournaments = "MaxNumPersonalTournaments";
+    static const char* const MaxNumGameClassesPerPersonalTournament = "MaxNumGameClassesPerPersonalTournament";
+    static const char* const SystemMessagesAlienKey = "SystemMessagesAlienKey";
+    static const char* const AdminEmail = "AdminEmail";
+    static const char* const BuilderBRDampener = "BuilderBRDampener";
+
     enum Columns {
+        iDefaultAlien,
+        iServerName,
+        iDefaultMaxNumSystemMessages,
+        iDefaultMaxNumGameMessages,
+        iDefaultUIButtons,
+        iDefaultUIBackground,
+        iDefaultUILivePlanet,
+        iDefaultUIDeadPlanet,
+        iDefaultUISeparator,
+        iDefaultPrivilegeLevel,
+        iAdeptScore,
+        iMaxNumSystemMessages,
+        iMaxNumGameMessages,
+        iLastShutdownTime,
+        iDefaultAttackName,
+        iDefaultScienceName,
+        iDefaultColonyName,
+        iDefaultStargateName,
+        iDefaultCloakerName,
+        iDefaultSatelliteName,
+        iDefaultTerraformerName,
+        iDefaultTroopshipName,
+        iDefaultDoomsdayName,
+        iDefaultMinefieldName,
+        iDefaultMinesweeperName,
+        iDefaultEngineerName,
+        iMaxNumPersonalGameClasses,
+        iDefaultUIHorz,
+        iDefaultUIVert,
+        iDefaultUIColor,
+        iMaxIconSize,
+        iSystemMaxNumEmpires,
+        iSystemMaxNumPlanets,
+        iSystemMinSecs,
+        iSystemMaxSecs,
+        iPersonalMaxNumEmpires,
+        iPersonalMaxNumPlanets,
+        iPersonalMinSecs,
+        iPersonalMaxSecs,
+        iOptions,
+        iLastBridierTimeBombScan,
+        iBridierTimeBombScanFrequency,
+        iPrivilegeForUnlimitedEmpires,
+        iLoginsDisabledReason,
+        iNewEmpiresDisabledReason,
+        iNewGamesDisabledReason,
+        iAccessDisabledReason,
+        iApprenticeScore,
+        iDefaultUIIndependentPlanet,
+        iMaxNumUpdatesBeforeClose,
+        iDefaultNumUpdatesBeforeClose,
+        iSessionId,
+        iMaxResourcesPerPlanet,
+        iMaxResourcesPerPlanetPersonal,
+        iMaxInitialTechLevel,
+        iMaxInitialTechLevelPersonal,
+        iMaxTechDev,
+        iMaxTechDevPersonal,
+        iPercentFirstTradeIncrease,
+        iPercentNextTradeIncrease,
+        iSecondsForLongtermStatus,
+        iNumUpdatesDownBeforeGameIsKilled,
+        iNumNukesListedInNukeHistories,
+        iNukesForQuarantine,
+        iUpdatesInQuarantine,
+        iPercentTechIncreaseForLatecomers,
+        iPercentDamageUsedToDestroy,
+        iAfterWeekendDelay,
+        iChanceNewLinkForms,
+        iResourceAllocationRandomizationFactor,
+        iMapDeviation,
+        iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap,
+        iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap,
+        iLargeMapThreshold,
+        iShipBehavior,
+        iColonySimpleBuildFactor,
+        iColonyMultipliedBuildFactor,
+        iColonyMultipliedDepositFactor,
+        iColonyExponentialDepositFactor,
+        iEngineerLinkCost,
+        iStargateGateCost,
+        iTerraformerPlowFactor,
+        iTroopshipInvasionFactor,
+        iTroopshipFailureFactor,
+        iTroopshipSuccessFactor,
+        iDoomsdayAnnihilationFactor,
+        iCarrierCost,
+        iBuilderMinBR,
+        iMorpherCost,
+        iJumpgateGateCost,
+        iJumpgateRangeFactor,
+        iStargateRangeFactor,
+        iDefaultCarrierName,
+        iDefaultBuilderName,
+        iDefaultMorpherName,
+        iDefaultJumpgateName,
+        iBuilderMultiplier,
+        iNumNukesListedInSystemNukeList,
+        iNumGamesInLatestGameList,
+        iMaxNumPersonalTournaments,
+        iMaxNumGameClassesPerPersonalTournament,
+        iSystemMessagesAlienKey,
+        iAdminEmail,
+        iBuilderBRDampener,
+    };
+
+    static const char* const ColumnNames[] = {
         DefaultAlien,
         ServerName,
         DefaultMaxNumSystemMessages,
@@ -247,7 +459,7 @@ namespace SystemData {
         V_FLOAT,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_SERVER_NAME_LENGTH,
         0,
@@ -359,8 +571,9 @@ namespace SystemData {
     static const TemplateDescription Template = {
         "SystemData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         true,
         0,
         NULL,
@@ -377,7 +590,161 @@ namespace SystemData {
 
 namespace SystemEmpireData {
 
+    static const char* const Name = "Name";
+    static const char* const Password = "Password";
+    static const char* const Privilege = "Privilege";
+    static const char* const RealName = "RealName";
+    static const char* const Email = "Email";
+    static const char* const WebPage = "WebPage";
+    static const char* const Quote = "Quote";
+    static const char* const AlienKey = "AlienKey";
+    static const char* const UIIndependentPlanet = "UIIndependentPlanet";
+    static const char* const Wins = "Wins";
+    static const char* const Nukes = "Nukes";
+    static const char* const Nuked = "Nuked";
+    static const char* const LastLoginTime = "LastLoginTime";
+    static const char* const Draws = "Draws";
+    static const char* const MaxEcon = "MaxEcon";
+    static const char* const MaxMil = "MaxMil";
+    static const char* const IPAddress = "IPAddress";
+    static const char* const Ruins = "Ruins";
+    static const char* const MaxNumSystemMessages = "MaxNumSystemMessages";
+    static const char* const ClassicScore = "ClassicScore";
+    static const char* const AlmonasterScore = "AlmonasterScore";
+    static const char* const UIButtons = "UIButtons";
+    static const char* const UIBackground = "UIBackground";
+    static const char* const UILivePlanet = "UILivePlanet";
+    static const char* const UIDeadPlanet = "UIDeadPlanet";
+    static const char* const UISeparator = "UISeparator";
+    static const char* const AlmonasterTheme = "AlmonasterTheme";
+    static const char* const AlternativeGraphicsPath = "AlternativeGraphicsPath";
+    static const char* const DefaultAttackName = "DefaultAttackName";
+    static const char* const DefaultScienceName = "DefaultScienceName";
+    static const char* const DefaultColonyName = "DefaultColonyName";
+    static const char* const DefaultStargateName = "DefaultStargateName";
+    static const char* const DefaultCloakerName = "DefaultCloakerName";
+    static const char* const DefaultSatelliteName = "DefaultSatelliteName";
+    static const char* const DefaultTerraformerName = "DefaultTerraformerName";
+    static const char* const DefaultTroopshipName = "DefaultTroopshipName";
+    static const char* const DefaultDoomsdayName = "DefaultDoomsdayName";
+    static const char* const DefaultMinefieldName = "DefaultMinefieldName";
+    static const char* const DefaultMinesweeperName = "DefaultMinesweeperName";
+    static const char* const DefaultEngineerName = "DefaultEngineerName";
+    static const char* const UIHorz = "UIHorz";
+    static const char* const UIVert = "UIVert";
+    static const char* const UIColor = "UIColor";
+    static const char* const CustomTableColor = "CustomTableColor";
+    static const char* const Options = "Options";
+    static const char* const MaxNumShipsBuiltAtOnce = "MaxNumShipsBuiltAtOnce";
+    static const char* const CreationTime = "CreationTime";
+    static const char* const NumLogins = "NumLogins";
+    static const char* const Browser = "Browser";
+    static const char* const CustomTextColor = "CustomTextColor";
+    static const char* const CustomGoodColor = "CustomGoodColor";
+    static const char* const CustomBadColor = "CustomBadColor";
+    static const char* const CustomPrivateMessageColor = "CustomPrivateMessageColor";
+    static const char* const CustomBroadcastMessageColor = "CustomBroadcastMessageColor";
+    static const char* const SessionId = "SessionId";
+    static const char* const DefaultBuilderPlanet = "DefaultBuilderPlanet";
+    static const char* const DefaultMessageTarget = "DefaultMessageTarget";
+    static const char* const AlmonasterScoreSignificance = "AlmonasterScoreSignificance";
+    static const char* const VictorySneer = "VictorySneer";
+    static const char* const DefaultCarrierName = "DefaultCarrierName";
+    static const char* const DefaultBuilderName = "DefaultBuilderName";
+    static const char* const DefaultMorpherName = "DefaultMorpherName";
+    static const char* const DefaultJumpgateName = "DefaultJumpgateName";
+    static const char* const BridierRank = "BridierRank";
+    static const char* const BridierIndex = "BridierIndex";
+    static const char* const LastBridierActivity = "LastBridierActivity";
+    static const char* const PrivateEmail = "PrivateEmail";
+    static const char* const Location = "Location";
+    static const char* const IMId = "IMId";
+    static const char* const GameRatios = "GameRatios";
+    static const char* const SecretKey = "SecretKey";
+    static const char* const Options2 = "Options2";
+    static const char* const Gender = "Gender";
+    static const char* const Age = "Age";
+    static const char* const Associations = "Associations";
+
     enum Columns {
+        iName,
+        iPassword,
+        iPrivilege,
+        iRealName,
+        iEmail,
+        iWebPage,
+        iQuote,
+        iAlienKey,
+        iUIIndependentPlanet,
+        iWins,
+        iNukes,
+        iNuked,
+        iLastLoginTime,
+        iDraws,
+        iMaxEcon,
+        iMaxMil,
+        iIPAddress,
+        iRuins,
+        iMaxNumSystemMessages,
+        iClassicScore,
+        iAlmonasterScore,
+        iUIButtons,
+        iUIBackground,
+        iUILivePlanet,
+        iUIDeadPlanet,
+        iUISeparator,
+        iAlmonasterTheme,
+        iAlternativeGraphicsPath,
+        iDefaultAttackName,
+        iDefaultScienceName,
+        iDefaultColonyName,
+        iDefaultStargateName,
+        iDefaultCloakerName,
+        iDefaultSatelliteName,
+        iDefaultTerraformerName,
+        iDefaultTroopshipName,
+        iDefaultDoomsdayName,
+        iDefaultMinefieldName,
+        iDefaultMinesweeperName,
+        iDefaultEngineerName,
+        iUIHorz,
+        iUIVert,
+        iUIColor,
+        iCustomTableColor,
+        iOptions,
+        iMaxNumShipsBuiltAtOnce,
+        iCreationTime,
+        iNumLogins,
+        iBrowser,
+        iCustomTextColor,
+        iCustomGoodColor,
+        iCustomBadColor,
+        iCustomPrivateMessageColor,
+        iCustomBroadcastMessageColor,
+        iSessionId,
+        iDefaultBuilderPlanet,
+        iDefaultMessageTarget,
+        iAlmonasterScoreSignificance,
+        iVictorySneer,
+        iDefaultCarrierName,
+        iDefaultBuilderName,
+        iDefaultMorpherName,
+        iDefaultJumpgateName,
+        iBridierRank,
+        iBridierIndex,
+        iLastBridierActivity,
+        iPrivateEmail,
+        iLocation,
+        iIMId,
+        iGameRatios,
+        iSecretKey,
+        iOptions2,
+        iGender,
+        iAge,
+        iAssociations,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Password,
         Privilege,
@@ -533,7 +900,7 @@ namespace SystemEmpireData {
         V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_EMPIRE_NAME_LENGTH,
         MAX_PASSWORD_LENGTH,
         0,
@@ -611,7 +978,7 @@ namespace SystemEmpireData {
         VARIABLE_LENGTH_STRING,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         Name,
     };
 
@@ -624,95 +991,16 @@ namespace SystemEmpireData {
     static const TemplateDescription Template = {
         "SystemEmpireData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         3000,
         IndexFlags,
     };
 };
-
-// Around for the sake of the profile viewer
-static const char* const SYSTEM_EMPIRE_DATA_COLUMN_NAMES[] = {
-    "Name",
-    "Password",
-    "Privilege Level",
-    "Real Name",
-    "Email",
-    "Web Page",
-    "Quote",
-    "Alien Key",
-    "Deleted",
-    "Wins",
-    "Nukes",
-    "Nuked",
-    "Last Login Time",
-    "Draws",
-    "Max econ",
-    "Max mil",
-    "IP Address",
-    "Num unread system messages",
-    "Max number of system messages",
-    "Classic Score",
-    "Almonaster Score",
-    "UIButtons",
-    "UIBackground",
-    "UILivePlanet",
-    "UIDeadPlanet",
-    "UISeparator",
-    "AlmonasterTheme",
-    "LocalPath",
-    "DefaultAttackName",
-    "DefaultScienceName",
-    "DefaultColonyName",
-    "DefaultStargateName",
-    "DefaultCloakerName",
-    "DefaultSatelliteName",
-    "DefaultTerraformerName",
-    "DefaultTroopshipName",
-    "DefaultDoomsdayName",
-    "DefaultMinefieldName",
-    "DefaultMinesweeperName",
-    "DefaultEngineerName",
-    "UIHorz",
-    "UIVert",
-    "UITableColor",
-    "CustomTableColor",
-    "Options",
-    "Max num ships built at once",
-    "Creation Time",
-    "Logins",
-    "Browser",
-    "Custom Text Color",
-    "Custom Good Color",
-    "Custom Bad Color",
-    "Custom Private Message Color",
-    "Custom Broadcast Message Color",
-    "Session Id",
-    "Default Builder Planet",
-    "Default Message Target",
-    "Almonaster Score Significance",
-    "Victory Sneer",
-    "DefaultCarrierName",
-    "DefaultBuilderName",
-    "DefaultMorpherName",
-    "DefaultJumpgateName",
-    "Bridier Rank",
-    "Bridier Index",
-    "Last Bridier Activity",
-    "Private Email Address",
-    "Location",
-    "Instant Messaging",
-    "Game Ratios",
-    "Secret Key",
-    "Options2",
-    "Gender",
-    "Age",
-    NULL,   // Associations
-};
-
 
 /////////////////////////
 // SystemGameClassData //
@@ -722,13 +1010,101 @@ static const char* const SYSTEM_EMPIRE_DATA_COLUMN_NAMES[] = {
 
 namespace SystemGameClassData {
 
+    static const char* const Name = "Name";
+    static const char* const MaxNumEmpires = "MaxNumEmpires";
+    static const char* const MaxNumPlanets = "MaxNumPlanets";
+    static const char* const MaxTechDev = "MaxTechDev";
+    static const char* const OpenGameNum = "OpenGameNum";
+    static const char* const NumSecPerUpdate = "NumSecPerUpdate";
+    static const char* const Options = "Options";
+    static const char* const MinAvgFuel = "MinAvgFuel";
+    static const char* const MaxNumShips = "MaxNumShips";
+    static const char* const InitialTechLevel = "InitialTechLevel";
+    static const char* const MinNumEmpires = "MinNumEmpires";
+    static const char* const MaxAvgAg = "MaxAvgAg";
+    static const char* const MaxAgHW = "MaxAgHW";
+    static const char* const DiplomacyLevel = "DiplomacyLevel";
+    static const char* const MaxAvgMin = "MaxAvgMin";
+    static const char* const MaxMinHW = "MaxMinHW";
+    static const char* const MaxAvgFuel = "MaxAvgFuel";
+    static const char* const MapsShared = "MapsShared";
+    static const char* const MaxFuelHW = "MaxFuelHW";
+    static const char* const Owner = "Owner";
+    static const char* const MinFuelHW = "MinFuelHW";
+    static const char* const MaxNumTruces = "MaxNumTruces";
+    static const char* const MaxNumTrades = "MaxNumTrades";
+    static const char* const SuperClassKey = "SuperClassKey";
+    static const char* const InitialTechDevs = "InitialTechDevs";
+    static const char* const MaxNumAlliances = "MaxNumAlliances";
+    static const char* const MinNumPlanets = "MinNumPlanets";
+    static const char* const DevelopableTechDevs = "DevelopableTechDevs";
+    static const char* const MinAvgAg = "MinAvgAg";
+    static const char* const MinAgHW = "MinAgHW";
+    static const char* const BuilderPopLevel = "BuilderPopLevel";
+    static const char* const MinAvgMin = "MinAvgMin";
+    static const char* const MinMinHW = "MinMinHW";
+    static const char* const Description = "Description";
+    static const char* const MaxAgRatio = "MaxAgRatio";
+    static const char* const MaxNumActiveGames = "MaxNumActiveGames";
+    static const char* const NumActiveGames = "NumActiveGames";
+    static const char* const NumUpdatesForIdle = "NumUpdatesForIdle";
+    static const char* const NumUpdatesForRuin = "NumUpdatesForRuin";
+    static const char* const RuinFlags = "RuinFlags";
+    static const char* const TournamentKey = "TournamentKey";
+    static const char* const OwnerName = "OwnerName";
+    static const char* const NumInitialTechDevs = "NumInitialTechDevs";
+
     enum Columns {
+        iName,
+        iMaxNumEmpires,
+        iMaxNumPlanets,
+        iMaxTechDev,
+        iOpenGameNum,
+        iNumSecPerUpdate,
+        iOptions,
+        iMinAvgFuel,
+        iMaxNumShips,
+        iInitialTechLevel,
+        iMinNumEmpires,
+        iMaxAvgAg,
+        iMaxAgHW,
+        iDiplomacyLevel,
+        iMaxAvgMin,
+        iMaxMinHW,
+        iMaxAvgFuel,
+        iMapsShared,
+        iMaxFuelHW,
+        iOwner,
+        iMinFuelHW,
+        iMaxNumTruces,
+        iMaxNumTrades,
+        iSuperClassKey,
+        iInitialTechDevs,
+        iMaxNumAlliances,
+        iMinNumPlanets,
+        iDevelopableTechDevs,
+        iMinAvgAg,
+        iMinAgHW,
+        iBuilderPopLevel,
+        iMinAvgMin,
+        iMinMinHW,
+        iDescription,
+        iMaxAgRatio,
+        iMaxNumActiveGames,
+        iNumActiveGames,
+        iNumUpdatesForIdle,
+        iNumUpdatesForRuin,
+        iRuinFlags,
+        iTournamentKey,
+        iOwnerName,
+        iNumInitialTechDevs,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         MaxNumEmpires,
         MaxNumPlanets,
         MaxTechDev,
-        fRESERVED2, //MinEntryScore,
-        fRESERVED3, //MaxEntryScore,
         OpenGameNum,
         NumSecPerUpdate,
         Options,
@@ -775,8 +1151,6 @@ namespace SystemGameClassData {
         V_INT,
         V_INT,
         V_FLOAT,
-        V_FLOAT,
-        V_FLOAT,
         V_INT,
         V_INT,
         V_INT,
@@ -818,7 +1192,7 @@ namespace SystemGameClassData {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_GAME_CLASS_NAME_LENGTH,
         0,
         0,
@@ -852,8 +1226,6 @@ namespace SystemGameClassData {
         0,
         0,
         0,
-        0,
-        0,
         VARIABLE_LENGTH_STRING,
         0,
         0,
@@ -866,7 +1238,7 @@ namespace SystemGameClassData {
         0,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         Owner
     };
 
@@ -879,11 +1251,12 @@ namespace SystemGameClassData {
     static const TemplateDescription Template = {
         "SystemGameClassData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         200,
         IndexFlags,
     };
@@ -898,9 +1271,17 @@ namespace SystemGameClassData {
 
 namespace SystemAlienIcons {
 
+    static const char* const AlienKey = "AlienKey";
+    static const char* const AuthorName = "AuthorName";
+
     enum Columns {      
+        iAlienKey,
+        iAuthorName
+    };
+
+    static const char* const ColumnNames[] = {
         AlienKey,
-        AuthorName
+        AuthorName,
     };
     
     static const VariantType Types[] = {
@@ -908,12 +1289,12 @@ namespace SystemAlienIcons {
         V_STRING
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_ALIEN_AUTHOR_NAME_LENGTH
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         AlienKey
     };
 
@@ -926,11 +1307,12 @@ namespace SystemAlienIcons {
     static const TemplateDescription Template = {
         "SystemAlienIcons",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         150,
         IndexFlags,
     };
@@ -945,7 +1327,13 @@ namespace SystemAlienIcons {
 
 namespace SystemSystemGameClassData {
 
-    enum Columns {
+    static const char* const GameClass = "GameClass";
+
+    /*enum Columns {
+        GameClass
+    };*/
+
+    static const char* const ColumnNames[] = {
         GameClass
     };
 
@@ -953,17 +1341,18 @@ namespace SystemSystemGameClassData {
         V_INT
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0
     };
 
-    static const unsigned int NumColumns = GameClass + 1;
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
     static const TemplateDescription Template = {
         "SystemSystemGameClassData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -981,19 +1370,27 @@ namespace SystemSystemGameClassData {
 
 namespace SystemSuperClassData {
 
+    static const char* const Name = "Name";
+    static const char* const NumGameClasses = "NumGameClasses";
+
     enum Columns {
+        iName,
+        iNumGameClasses
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
-        NumGameClasses
+        NumGameClasses,
     };
 
     static const VariantType Types[] = {
         V_STRING,
-        V_INT
+        V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_SUPER_CLASS_NAME_LENGTH,
-        0
+        0,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
@@ -1001,8 +1398,9 @@ namespace SystemSuperClassData {
     static const TemplateDescription Template = {
         "SystemSuperClassData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1019,7 +1417,37 @@ namespace SystemSuperClassData {
 
 namespace SystemThemes {
 
+    static const char* Name = "Name";
+    static const char* AuthorName = "AuthorName";
+    static const char* Version = "Version";
+    static const char* AuthorEmail = "AuthorEmail";
+    static const char* Description = "Description";
+    static const char* FileName = "FileName";
+    static const char* Options = "Options";
+    static const char* TableColor = "TableColor";
+    static const char* TextColor = "TextColor";
+    static const char* GoodColor = "GoodColor";
+    static const char* BadColor = "BadColor";
+    static const char* PrivateMessageColor = "PrivateMessageColor";
+    static const char* BroadcastMessageColor = "BroadcastMessageColor";
+
     enum Columns {
+        iName,
+        iAuthorName,
+        iVersion,
+        iAuthorEmail,
+        iDescription,
+        iFileName,
+        iOptions,
+        iTableColor,
+        iTextColor,
+        iGoodColor,
+        iBadColor,
+        iPrivateMessageColor,
+        iBroadcastMessageColor,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         AuthorName,
         Version,
@@ -1032,7 +1460,7 @@ namespace SystemThemes {
         GoodColor,
         BadColor,
         PrivateMessageColor,
-        BroadcastMessageColor
+        BroadcastMessageColor,
     };
     
     static const VariantType Types[] = {
@@ -1048,10 +1476,10 @@ namespace SystemThemes {
         V_STRING,
         V_STRING,
         V_STRING,
-        V_STRING
+        V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_THEME_NAME_LENGTH,
         MAX_THEME_AUTHOR_NAME_LENGTH,
         MAX_THEME_VERSION_LENGTH,
@@ -1064,7 +1492,7 @@ namespace SystemThemes {
         MAX_COLOR_LENGTH,
         MAX_COLOR_LENGTH,
         MAX_COLOR_LENGTH,
-        MAX_COLOR_LENGTH
+        MAX_COLOR_LENGTH,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
@@ -1072,8 +1500,9 @@ namespace SystemThemes {
     static const TemplateDescription Template = {
         "SystemThemes",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1091,22 +1520,30 @@ namespace SystemThemes {
 
 namespace SystemActiveGames {
 
+    static const char* const GameClassGameNumber = "GameClassGameNumber";
+    static const char* const State = "State";
+
     enum Columns {
+        iGameClassGameNumber,
+        iState
+    };
+
+    static const char* const ColumnNames[] = {
         GameClassGameNumber,
-        State
+        State,
     };
     
     static const VariantType Types[] = {
         V_STRING,
-        V_INT
+        V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         VARIABLE_LENGTH_STRING,
-        0
+        0,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         GameClassGameNumber
     };
 
@@ -1119,11 +1556,12 @@ namespace SystemActiveGames {
     static const TemplateDescription Template = {
         "SystemActiveGames",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         100,
         IndexFlags,
     };
@@ -1145,7 +1583,25 @@ namespace SystemActiveGames {
 
 namespace SystemEmpireMessages {
 
+    static const char* const Unread = "Unread";
+    static const char* const Source = "Source";
+    static const char* const TimeStamp = "TimeStamp";
+    static const char* const Flags = "Flags";
+    static const char* const Text = "Text";
+    static const char* const Type = "Type";
+    static const char* const Data = "Data";
+
     enum Columns {
+        iUnread,
+        iSource,
+        iTimeStamp,
+        iFlags,
+        iText,
+        iType,
+        iData,
+    };
+
+    static const char* const ColumnNames[] = {
         Unread,
         Source,
         TimeStamp,
@@ -1165,7 +1621,7 @@ namespace SystemEmpireMessages {
         V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1180,8 +1636,9 @@ namespace SystemEmpireMessages {
     static const TemplateDescription Template = {
         "SystemEmpireMessages",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1213,15 +1670,31 @@ namespace SystemEmpireMessages {
                                                             \
     sprintf (pszBuffer, "SystemEmpireNukerList%i", i);
 
-namespace SystemEmpireNukeList {
+namespace SystemEmpireNukeList
+{
+    static const char* AlienKey = "AlienKey";
+    static const char* EmpireName = "EmpireName";
+    static const char* EmpireKey = "EmpireKey";
+    static const char* GameClassName = "GameClassName";
+    static const char* GameNumber = "GameNumber";
+    static const char* TimeStamp = "TimeStamp";
 
     enum Columns {
+        iAlienKey,
+        iEmpireName,
+        iEmpireKey,
+        iGameClassName,
+        iGameNumber,
+        iTimeStamp,
+    };
+
+    static const char* const ColumnNames[] = {
         AlienKey,
         EmpireName,
         EmpireKey,
         GameClassName,
         GameNumber,
-        TimeStamp
+        TimeStamp,
     };
 
     static const VariantType Types[] = {
@@ -1230,16 +1703,16 @@ namespace SystemEmpireNukeList {
         V_INT,
         V_STRING,
         V_INT,
-        V_INT64
+        V_INT64,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
         VARIABLE_LENGTH_STRING,
         0,
-        0
+        0,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
@@ -1247,8 +1720,9 @@ namespace SystemEmpireNukeList {
     static const TemplateDescription Template = {
         "SystemEmpireNukeList",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1265,7 +1739,29 @@ namespace SystemEmpireNukeList {
 
 namespace SystemNukeList {
 
+    static const char* NukerAlienKey = "NukerAlienKey";
+    static const char* NukerEmpireName = "NukerEmpireName";
+    static const char* NukerEmpireKey = "NukerEmpireKey";
+    static const char* NukedAlienKey = "NukedAlienKey";
+    static const char* NukedEmpireName = "NukedEmpireName";
+    static const char* NukedEmpireKey = "NukedEmpireKey";
+    static const char* GameClassName = "GameClassName";
+    static const char* GameNumber = "GameNumber";
+    static const char* TimeStamp = "TimeStamp";
+
     enum Columns {
+        iNukerAlienKey,
+        iNukerEmpireName,
+        iNukerEmpireKey,
+        iNukedAlienKey,
+        iNukedEmpireName,
+        iNukedEmpireKey,
+        iGameClassName,
+        iGameNumber,
+        iTimeStamp,
+    };
+
+    static const char* const ColumnNames[] = {
         NukerAlienKey,
         NukerEmpireName,
         NukerEmpireKey,
@@ -1274,7 +1770,7 @@ namespace SystemNukeList {
         NukedEmpireKey,
         GameClassName,
         GameNumber,
-        TimeStamp
+        TimeStamp,
     };
     
     static const VariantType Types[] = {
@@ -1286,10 +1782,10 @@ namespace SystemNukeList {
         V_INT,
         V_STRING,
         V_INT,
-        V_INT64
+        V_INT64,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1298,7 +1794,7 @@ namespace SystemNukeList {
         0,
         VARIABLE_LENGTH_STRING,
         0,
-        0
+        0,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
@@ -1306,8 +1802,9 @@ namespace SystemNukeList {
     static const TemplateDescription Template = {
         "SystemNukeList",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1325,7 +1822,27 @@ namespace SystemNukeList {
 
 namespace SystemLatestGames {
 
+    static const char* const Name = "Name";
+    static const char* const Number = "Number";
+    static const char* const Created = "Created";
+    static const char* const Ended = "Ended";
+    static const char* const Updates = "Updates";
+    static const char* const Result = "Result";
+    static const char* const Winners = "Winners";
+    static const char* const Losers = "Losers";
+
     enum Columns {
+        iName,
+        iNumber,
+        iCreated,
+        iEnded,
+        iUpdates,
+        iResult,
+        iWinners,
+        iLosers,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Number,
         Created,
@@ -1347,7 +1864,7 @@ namespace SystemLatestGames {
         V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         VARIABLE_LENGTH_STRING,
         0,
         0,
@@ -1363,8 +1880,9 @@ namespace SystemLatestGames {
     static const TemplateDescription Template = {
         "SystemLatestGames",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1388,7 +1906,13 @@ namespace SystemLatestGames {
 
 namespace SystemEmpireActiveGames {
 
-    enum Columns {
+    static const char* const GameClassGameNumber = "GameClassGameNumber";
+
+    /*enum Columns {
+        GameClassGameNumber
+    };*/
+
+    static const char* const ColumnNames[] = {
         GameClassGameNumber
     };
 
@@ -1396,7 +1920,7 @@ namespace SystemEmpireActiveGames {
         V_STRING
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         VARIABLE_LENGTH_STRING
     };
 
@@ -1405,8 +1929,9 @@ namespace SystemEmpireActiveGames {
     static const TemplateDescription Template = {
         "SystemEmpireActiveGames",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1423,7 +1948,25 @@ namespace SystemEmpireActiveGames {
 
 namespace SystemTournaments {
 
+    static const char* const Name = "Name";
+    static const char* const Description = "Description";
+    static const char* const WebPage = "WebPage";
+    static const char* const News = "News";
+    static const char* const Owner = "Owner";
+    static const char* const Icon = "Icon";
+    static const char* const OwnerName = "OwnerName";
+
     enum Columns {
+        iName,
+        iDescription,
+        iWebPage,
+        iNews,
+        iOwner,
+        iIcon,
+        iOwnerName,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Description,
         WebPage,
@@ -1443,7 +1986,7 @@ namespace SystemTournaments {
         V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_TOURNAMENT_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -1453,7 +1996,7 @@ namespace SystemTournaments {
         MAX_EMPIRE_NAME_LENGTH,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         Owner
     };
 
@@ -1466,11 +2009,12 @@ namespace SystemTournaments {
     static const TemplateDescription Template = {
         "SystemTournaments",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
-        IndexColumns,
+        (char**)IndexColumns,
         20,
         IndexFlags,
     };
@@ -1491,7 +2035,29 @@ namespace SystemTournaments {
 
 namespace SystemTournamentTeams {
 
+    static const char* Name = "Name";
+    static const char* Description = "Description";
+    static const char* WebPage = "WebPage";
+    static const char* Icon = "Icon";
+    static const char* Wins = "Wins";
+    static const char* Nukes = "Nukes";
+    static const char* Nuked = "Nuked";
+    static const char* Draws = "Draws";
+    static const char* Ruins = "Ruins";
+
     enum Columns {
+        iName,
+        iDescription,
+        iWebPage,
+        iIcon,
+        iWins,
+        iNukes,
+        iNuked,
+        iDraws,
+        iRuins,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Description,
         WebPage,
@@ -1515,7 +2081,7 @@ namespace SystemTournamentTeams {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_TOURNAMENT_TEAM_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -1532,8 +2098,9 @@ namespace SystemTournamentTeams {
     static const TemplateDescription Template = {
         "SystemTournamentTeams",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1557,7 +2124,25 @@ namespace SystemTournamentTeams {
 
 namespace SystemTournamentEmpires {
 
+    static const char* EmpireKey = "EmpireKey";
+    static const char* TeamKey = "TeamKey";
+    static const char* Wins = "Wins";
+    static const char* Nukes = "Nukes";
+    static const char* Nuked = "Nuked";
+    static const char* Draws = "Draws";
+    static const char* Ruins = "Ruins";
+
     enum Columns {
+        iEmpireKey,
+        iTeamKey,
+        iWins,
+        iNukes,
+        iNuked,
+        iDraws,
+        iRuins,
+    };
+
+    static const char* const ColumnNames[] = {
         EmpireKey,
         TeamKey,
         Wins,
@@ -1577,7 +2162,7 @@ namespace SystemTournamentEmpires {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
@@ -1592,8 +2177,9 @@ namespace SystemTournamentEmpires {
     static const TemplateDescription Template = {
         "SystemTournamentEmpires",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1617,7 +2203,13 @@ namespace SystemTournamentEmpires {
 
 namespace SystemTournamentActiveGames {
 
+    static const char* const GameClassGameNumber = "GameClassGameNumber";
+
     enum Columns {
+        iGameClassGameNumber,
+    };
+
+    static const char* const ColumnNames[] = {
         GameClassGameNumber,
     };
 
@@ -1625,7 +2217,7 @@ namespace SystemTournamentActiveGames {
         V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         VARIABLE_LENGTH_STRING,
     };
 
@@ -1634,8 +2226,9 @@ namespace SystemTournamentActiveGames {
     static const TemplateDescription Template = {
         "SystemTournamentActiveGames",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1673,8 +2266,14 @@ namespace SystemTournamentActiveGames {
     sprintf (pszBuffer, "SystemEmpireTournaments%i", i);
 
 namespace SystemEmpireTournaments {
+    
+    static const char* const TournamentKey = "TournamentKey";
 
     enum Columns {
+        iTournamentKey,
+    };
+
+    static const char* const ColumnNames[] = {
         TournamentKey,
     };
 
@@ -1682,7 +2281,7 @@ namespace SystemEmpireTournaments {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
     };
 
@@ -1691,8 +2290,9 @@ namespace SystemEmpireTournaments {
     static const TemplateDescription Template = {
         "SystemEmpireTournaments",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1716,7 +2316,101 @@ namespace SystemEmpireTournaments {
 
 namespace GameData {
 
+    static const char* const MaxNumEmpires = "MaxNumEmpires";
+    static const char* const NumUpdates = "NumUpdates";
+    static const char* const LastUpdateTime = "LastUpdateTime";
+    static const char* const State = "State";
+    static const char* const MinX = "MinX";
+    static const char* const NumEmpiresUpdated = "NumEmpiresUpdated";
+    static const char* const Password = "Password";
+    static const char* const MaxX = "MaxX";
+    static const char* const MinY = "MinY";
+    static const char* const NumRequestingPause = "NumRequestingPause";
+    static const char* const MaxY = "MaxY";
+    static const char* const SecondsUntilNextUpdateWhilePaused = "SecondsUntilNextUpdateWhilePaused";
+    static const char* const LastUpdateCheck = "LastUpdateCheck";
+    static const char* const CreationTime = "CreationTime";
+    static const char* const NumPlanetsPerEmpire = "NumPlanetsPerEmpire";
+    static const char* const HWAg = "HWAg";
+    static const char* const AvgAg = "AvgAg";
+    static const char* const HWMin = "HWMin";
+    static const char* const AvgMin = "AvgMin";
+    static const char* const HWFuel = "HWFuel";
+    static const char* const AvgFuel = "AvgFuel";
+    static const char* const NumEmpiresResigned = "NumEmpiresResigned";
+    static const char* const Options = "Options";
+    static const char* const NumUpdatesBeforeGameCloses = "NumUpdatesBeforeGameCloses";
+    static const char* const FirstUpdateDelay = "FirstUpdateDelay";
+    static const char* const EnterGameMessage = "EnterGameMessage";
+    static const char* const CreatorName = "CreatorName";
+    static const char* const MinAlmonasterScore = "MinAlmonasterScore";
+    static const char* const MaxAlmonasterScore = "MaxAlmonasterScore";
+    static const char* const MinClassicScore = "MinClassicScore";
+    static const char* const MaxClassicScore = "MaxClassicScore";
+    static const char* const MinBridierRank = "MinBridierRank";
+    static const char* const MaxBridierRank = "MaxBridierRank";
+    static const char* const MinBridierIndex = "MinBridierIndex";
+    static const char* const MaxBridierIndex = "MaxBridierIndex";
+    static const char* const MinBridierRankGain = "MinBridierRankGain";
+    static const char* const MaxBridierRankGain = "MaxBridierRankGain";
+    static const char* const MinWins = "MinWins";
+    static const char* const MaxWins = "MaxWins";
+    static const char* const NumRequestingDraw = "NumRequestingDraw";
+    static const char* const MinBridierRankLoss = "MinBridierRankLoss";
+    static const char* const MaxBridierRankLoss = "MaxBridierRankLoss";
+    static const char* const RealLastUpdateTime = "RealLastUpdateTime";
+    static const char* const MapFairness = "MapFairness";
+    static const char* const MapFairnessStandardDeviationPercentageOfMean = "MapFairnessStandardDeviationPercentageOfMean";
+
     enum Columns {
+        iMaxNumEmpires,
+        iNumUpdates,
+        iLastUpdateTime,
+        iState,
+        iMinX,
+        iNumEmpiresUpdated,
+        iPassword,
+        iMaxX,
+        iMinY,
+        iNumRequestingPause,
+        iMaxY,
+        iSecondsUntilNextUpdateWhilePaused,
+        iLastUpdateCheck,
+        iCreationTime,
+        iNumPlanetsPerEmpire,
+        iHWAg,
+        iAvgAg,
+        iHWMin,
+        iAvgMin,
+        iHWFuel,
+        iAvgFuel,
+        iNumEmpiresResigned,
+        iOptions,
+        iNumUpdatesBeforeGameCloses,
+        iFirstUpdateDelay,
+        iEnterGameMessage,
+        iCreatorName,
+        iMinAlmonasterScore,
+        iMaxAlmonasterScore,
+        iMinClassicScore,
+        iMaxClassicScore,
+        iMinBridierRank,
+        iMaxBridierRank,
+        iMinBridierIndex,
+        iMaxBridierIndex,
+        iMinBridierRankGain,
+        iMaxBridierRankGain,
+        iMinWins,
+        iMaxWins,
+        iNumRequestingDraw,
+        iMinBridierRankLoss,
+        iMaxBridierRankLoss,
+        iRealLastUpdateTime,
+        iMapFairness,
+        iMapFairnessStandardDeviationPercentageOfMean
+    };
+
+    static const char* const ColumnNames[] = {
         MaxNumEmpires,
         NumUpdates,
         LastUpdateTime,
@@ -1761,7 +2455,7 @@ namespace GameData {
         MaxBridierRankLoss,
         RealLastUpdateTime,
         MapFairness,
-        MapFairnessStandardDeviationPercentageOfMean
+        MapFairnessStandardDeviationPercentageOfMean,
     };
 
     static const VariantType Types[] = {
@@ -1812,7 +2506,7 @@ namespace GameData {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
@@ -1865,8 +2559,9 @@ namespace GameData {
     static const TemplateDescription Template = {
         "GameData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         true,
         0,
         NULL,
@@ -1890,8 +2585,24 @@ namespace GameData {
     sprintf (pszBuffer, "GameSecurity%i.%i", i, j);
 
 namespace GameSecurity {
-    
+
+    static const char* EmpireKey = "EmpireKey";
+    static const char* Name = "Name";
+    static const char* Options = "Options";
+    static const char* SessionId = "SessionId";
+    static const char* IPAddress = "IPAddress";
+    static const char* SecretKey = "SecretKey";
+
     enum Columns {
+        iEmpireKey,
+        iName,
+        iOptions,
+        iSessionId,
+        iIPAddress,
+        iSecretKey,
+    };
+
+    static const char* const ColumnNames[] = {
         EmpireKey,
         Name,
         Options,
@@ -1909,7 +2620,7 @@ namespace GameSecurity {
         V_INT64,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1923,8 +2634,9 @@ namespace GameSecurity {
     static const TemplateDescription Template = {
         "GameSecurity",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -1948,7 +2660,13 @@ namespace GameSecurity {
 
 namespace GameEmpires {
 
-    enum Columns {
+    static const char* const EmpireKey = "EmpireKey";
+
+    /*enum Columns {
+        EmpireKey
+    };*/
+
+    static const char* const ColumnNames[] = {
         EmpireKey
     };
     
@@ -1956,11 +2674,11 @@ namespace GameEmpires {
         V_INT
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0
     };
     
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         EmpireKey
     };
 
@@ -1973,11 +2691,12 @@ namespace GameEmpires {
     static const TemplateDescription Template = {
         "GameEmpires",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         20,
         IndexFlags,
     };
@@ -1998,13 +2717,29 @@ namespace GameEmpires {
 
 namespace GameDeadEmpires {
 
+    static const char* const Name = "Name";
+    static const char* const Key = "Key";
+    static const char* const Icon = "Icon";
+    static const char* const Update = "Update";
+    static const char* const Reason = "Reason";
+    static const char* const SecretKey = "SecretKey";
+
     enum Columns {
+        iName,
+        iKey,
+        iIcon,
+        iUpdate,
+        iReason,
+        iSecretKey,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Key,
         Icon,
         Update,
         Reason,
-        SecretKey
+        SecretKey,
     };
 
     static const VariantType Types[] = {
@@ -2016,7 +2751,7 @@ namespace GameDeadEmpires {
         V_INT64,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_EMPIRE_NAME_LENGTH,
         0,
         0,
@@ -2030,8 +2765,9 @@ namespace GameDeadEmpires {
     static const TemplateDescription Template = {
         "GameDeadEmpires",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2056,7 +2792,61 @@ namespace GameDeadEmpires {
 
 namespace GameMap {
     
+    static const char* const Name = "Name";
+    static const char* const Ag = "Ag";
+    static const char* const Minerals = "Minerals";
+    static const char* const Fuel = "Fuel";
+    static const char* const Pop = "Pop";
+    static const char* const MaxPop = "MaxPop";
+    static const char* const Owner = "Owner";
+    static const char* const Nuked = "Nuked";
+    static const char* const Coordinates = "Coordinates";
+    static const char* const NorthPlanetKey = "NorthPlanetKey";
+    static const char* const EastPlanetKey = "EastPlanetKey";
+    static const char* const SouthPlanetKey = "SouthPlanetKey";
+    static const char* const WestPlanetKey = "WestPlanetKey";
+    static const char* const Link = "Link";
+    static const char* const PopLostToColonies = "PopLostToColonies";
+    static const char* const SurrenderNumAllies = "SurrenderNumAllies";
+    static const char* const SurrenderAlmonasterSignificance = "SurrenderAlmonasterSignificance";
+    static const char* const HomeWorld = "HomeWorld";
+    static const char* const Annihilated = "Annihilated";
+    static const char* const NumUncloakedShips = "NumUncloakedShips";
+    static const char* const NumCloakedShips = "NumCloakedShips";
+    static const char* const NumUncloakedBuildShips = "NumUncloakedBuildShips";
+    static const char* const NumCloakedBuildShips = "NumCloakedBuildShips";
+    static const char* const SurrenderEmpireSecretKey = "SurrenderEmpireSecretKey";
+    static const char* const SurrenderAlmonasterScore = "SurrenderAlmonasterScore";
+
     enum Columns {
+        iName,
+        iAg,
+        iMinerals,
+        iFuel,
+        iPop,
+        iMaxPop,
+        iOwner,
+        iNuked,
+        iCoordinates,
+        iNorthPlanetKey,
+        iEastPlanetKey,
+        iSouthPlanetKey,
+        iWestPlanetKey,
+        iLink,
+        iPopLostToColonies,
+        iSurrenderNumAllies,
+        iSurrenderAlmonasterSignificance,
+        iHomeWorld,
+        iAnnihilated,
+        iNumUncloakedShips,
+        iNumCloakedShips,
+        iNumUncloakedBuildShips,
+        iNumCloakedBuildShips,
+        iSurrenderEmpireSecretKey,
+        iSurrenderAlmonasterScore,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Ag,
         Minerals,
@@ -2112,7 +2902,7 @@ namespace GameMap {
         V_FLOAT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_PLANET_NAME_LENGTH,
         0,
         0,
@@ -2140,7 +2930,7 @@ namespace GameMap {
         0,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         Owner,
         Coordinates
     };
@@ -2155,11 +2945,12 @@ namespace GameMap {
     static const TemplateDescription Template = {
         "GameMap",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         countof (IndexColumns),
-        IndexColumns,
+        (char**)IndexColumns,
         100,
         IndexFlags,
     };
@@ -2180,7 +2971,119 @@ namespace GameMap {
 
 namespace GameEmpireData {
 
+    static const char* const NumPlanets = "NumPlanets";
+    static const char* const TotalAg = "TotalAg";
+    static const char* const TotalFuel = "TotalFuel";
+    static const char* const TotalMin = "TotalMin";
+    static const char* const TechLevel = "TechLevel";
+    static const char* const TotalPop = "TotalPop";
+    static const char* const TotalBuild = "TotalBuild";
+    static const char* const TotalMaintenance = "TotalMaintenance";
+    static const char* const TotalFuelUse = "TotalFuelUse";
+    static const char* const LastLogin = "LastLogin";
+    static const char* const EnterGameIPAddress = "EnterGameIPAddress";
+    static const char* const Options = "Options";
+    static const char* const PartialMapCenter = "PartialMapCenter";
+    static const char* const NumAvailableTechUndevs = "NumAvailableTechUndevs";
+    static const char* const Econ = "Econ";
+    static const char* const Mil = "Mil";
+    static const char* const TargetPop = "TargetPop";
+    static const char* const HomeWorld = "HomeWorld";
+    static const char* const NumUpdatesIdle = "NumUpdatesIdle";
+    static const char* const MaxBR = "MaxBR";
+    static const char* const BonusAg = "BonusAg";
+    static const char* const BonusFuel = "BonusFuel";
+    static const char* const BonusMin = "BonusMin";
+    static const char* const NumBuilds = "NumBuilds";
+    static const char* const MinX = "MinX";
+    static const char* const MaxX = "MaxX";
+    static const char* const MinY = "MinY";
+    static const char* const MaxY = "MaxY";
+    static const char* const NextMaintenance = "NextMaintenance";
+    static const char* const NextFuelUse = "NextFuelUse";
+    static const char* const NextTotalPop = "NextTotalPop";
+    static const char* const NextMin = "NextMin";
+    static const char* const NextFuel = "NextFuel";
+    static const char* const NumAlliances = "NumAlliances";
+    static const char* const NumTruces = "NumTruces";
+    static const char* const MaxNumGameMessages = "MaxNumGameMessages";
+    static const char* const TechDevs = "TechDevs";
+    static const char* const TechUndevs = "TechUndevs";
+    static const char* const NumTrades = "NumTrades";
+    static const char* const PartialMapXRadius = "PartialMapXRadius";
+    static const char* const PartialMapYRadius = "PartialMapYRadius";
+    static const char* const Notepad = "Notepad";
+    static const char* const DefaultBuilderPlanet = "DefaultBuilderPlanet";
+    static const char* const LastBuilderPlanet = "LastBuilderPlanet";
+    static const char* const MaxEcon = "MaxEcon";
+    static const char* const MaxMil = "MaxMil";
+    static const char* const NumAlliancesLeaked = "NumAlliancesLeaked";
+    static const char* const DefaultMessageTarget = "DefaultMessageTarget";
+    static const char* const LastMessageTargetMask = "LastMessageTargetMask";
+    static const char* const InitialBridierRank = "InitialBridierRank";
+    static const char* const InitialBridierIndex = "InitialBridierIndex";
+    static const char* const GameRatios = "GameRatios";
+    static const char* const MiniMaps = "MiniMaps";
+    static const char* const MapFairnessResourcesClaimed = "MapFairnessResourcesClaimed";
+
     enum Columns {
+        iNumPlanets,
+        iTotalAg,
+        iTotalFuel,
+        iTotalMin,
+        iTechLevel,
+        iTotalPop,
+        iTotalBuild,
+        iTotalMaintenance,
+        iTotalFuelUse,
+        iLastLogin,
+        iEnterGameIPAddress,
+        iOptions,
+        iPartialMapCenter,
+        iNumAvailableTechUndevs,
+        iEcon,
+        iMil,
+        iTargetPop,
+        iHomeWorld,
+        iNumUpdatesIdle,
+        iMaxBR,
+        iBonusAg,
+        iBonusFuel,
+        iBonusMin,
+        iNumBuilds,
+        iMinX,
+        iMaxX,
+        iMinY,
+        iMaxY,
+        iNextMaintenance,
+        iNextFuelUse,
+        iNextTotalPop,
+        iNextMin,
+        iNextFuel,
+        iNumAlliances,
+        iNumTruces,
+        iMaxNumGameMessages,
+        iTechDevs,
+        iTechUndevs,
+        iNumTrades,
+        iPartialMapXRadius,
+        iPartialMapYRadius,
+        iNotepad,
+        iDefaultBuilderPlanet,
+        iLastBuilderPlanet,
+        iMaxEcon,
+        iMaxMil,
+        iNumAlliancesLeaked,
+        iDefaultMessageTarget,
+        iLastMessageTargetMask,
+        iInitialBridierRank,
+        iInitialBridierIndex,
+        iGameRatios,
+        iMiniMaps,
+        iMapFairnessResourcesClaimed,
+    };
+
+    static const char* const ColumnNames[] = {
         NumPlanets,
         TotalAg,
         TotalFuel,
@@ -2294,7 +3197,7 @@ namespace GameEmpireData {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
@@ -2356,8 +3259,9 @@ namespace GameEmpireData {
     static const TemplateDescription Template = {
         "GameEmpireData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         true,
         0,
         NULL,
@@ -2382,12 +3286,26 @@ namespace GameEmpireData {
 
 namespace GameEmpireMessages {
     
+    static const char* Unread = "Unread";
+    static const char* Source = "Source";
+    static const char* TimeStamp = "TimeStamp";
+    static const char* Flags = "Flags";
+    static const char* Text = "Text";
+
     enum Columns {
+        iUnread,
+        iSource,
+        iTimeStamp,
+        iFlags,
+        iText,
+    };
+
+    static const char* const ColumnNames[] = {
         Unread,
         Source,
         TimeStamp,
         Flags,
-        Text
+        Text,
     };
     
     static const VariantType Types[] = {
@@ -2395,15 +3313,15 @@ namespace GameEmpireMessages {
         V_STRING,
         V_INT64,
         V_INT,
-        V_STRING
+        V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
         0,
-        VARIABLE_LENGTH_STRING
+        VARIABLE_LENGTH_STRING,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
@@ -2411,8 +3329,9 @@ namespace GameEmpireMessages {
     static const TemplateDescription Template = {
         "GameEmpireMessages",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2437,16 +3356,29 @@ namespace GameEmpireMessages {
 
 namespace GameEmpireMap {
     
+    static const char* const PlanetKey = "PlanetKey";
+    static const char* const Explored = "Explored";
+    static const char* const NumUncloakedShips = "NumUncloakedShips";
+    static const char* const NumCloakedBuildShips = "NumCloakedBuildShips";
+    static const char* const NumUncloakedBuildShips = "NumUncloakedBuildShips";
+    static const char* const NumCloakedShips = "NumCloakedShips";
+
     enum Columns {
+        iPlanetKey,
+        iExplored,
+        iNumUncloakedShips,
+        iNumCloakedBuildShips,
+        iNumUncloakedBuildShips,
+        iNumCloakedShips,
+    };
+
+    static const char* const ColumnNames[] = {
         PlanetKey,
         Explored,
-        RESERVED0,
-        RESERVED1,
-        RESERVED2,
         NumUncloakedShips,
         NumCloakedBuildShips,
         NumUncloakedBuildShips,
-        NumCloakedShips
+        NumCloakedShips,
     };
     
     static const VariantType Types[] = {
@@ -2456,24 +3388,18 @@ namespace GameEmpireMap {
         V_INT,
         V_INT,
         V_INT,
-        V_INT,
-        V_INT,
-        V_INT
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
         0,
         0,
         0,
-        0,
-        0,
-        0
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         PlanetKey
     };
 
@@ -2486,11 +3412,12 @@ namespace GameEmpireMap {
     static const TemplateDescription Template = {
         "GameEmpireMap",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         50,
         IndexFlags,
     };
@@ -2512,7 +3439,27 @@ namespace GameEmpireMap {
 
 namespace GameEmpireDiplomacy {
     
-    enum Columns {
+    static const char* const EmpireKey = "EmpireKey";
+    static const char* const DipOffer = "DipOffer";
+    static const char* const CurrentStatus = "CurrentStatus";
+    static const char* const VirtualStatus = "VirtualStatus";
+    static const char* const State = "State";
+    static const char* const SubjectiveEcon = "SubjectiveEcon";
+    static const char* const SubjectiveMil = "SubjectiveMil";
+    static const char* const LastMessageTargetFlag = "LastMessageTargetFlag";
+
+   enum Columns {
+        iEmpireKey,
+        iDipOffer,
+        iCurrentStatus,
+        iVirtualStatus,
+        iState,
+        iSubjectiveEcon,
+        iSubjectiveMil,
+        iLastMessageTargetFlag,
+    };
+
+    static const char* const ColumnNames[] = {
         EmpireKey,
         DipOffer,
         CurrentStatus,
@@ -2534,7 +3481,7 @@ namespace GameEmpireDiplomacy {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
@@ -2545,7 +3492,7 @@ namespace GameEmpireDiplomacy {
         0,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         EmpireKey,
         CurrentStatus
     };
@@ -2560,11 +3507,12 @@ namespace GameEmpireDiplomacy {
     static const TemplateDescription Template = {
         "GameEmpireDiplomacy",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         sizeof (IndexColumns) / sizeof (IndexColumns[0]),
-        IndexColumns,
+        (char**)IndexColumns,
         10,
         IndexFlags,
     };
@@ -2586,7 +3534,33 @@ namespace GameEmpireDiplomacy {
 
 namespace GameEmpireShips {
     
+    static const char* const Name = "Name";
+    static const char* const Type = "Type";
+    static const char* const CurrentBR = "CurrentBR";
+    static const char* const MaxBR = "MaxBR";
+    static const char* const CurrentPlanet = "CurrentPlanet";
+    static const char* const Action = "Action";
+    static const char* const FleetKey = "FleetKey";
+    static const char* const BuiltThisUpdate = "BuiltThisUpdate";
+    static const char* const State = "State";
+    static const char* const GateDestination = "GateDestination";
+    static const char* const ColonyBuildCost = "ColonyBuildCost";
+
     enum Columns {
+        iName,
+        iType,
+        iCurrentBR,
+        iMaxBR,
+        iCurrentPlanet,
+        iAction,
+        iFleetKey,
+        iBuiltThisUpdate,
+        iState,
+        iGateDestination,
+        iColonyBuildCost,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         Type,
         CurrentBR,
@@ -2614,7 +3588,7 @@ namespace GameEmpireShips {
         V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_SHIP_NAME_LENGTH,
         0,
         0,
@@ -2628,7 +3602,7 @@ namespace GameEmpireShips {
         0,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         CurrentPlanet,
         FleetKey
     };
@@ -2643,11 +3617,12 @@ namespace GameEmpireShips {
     static const TemplateDescription Template = {
         "GameEmpireShips",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         2,
-        IndexColumns,
+        (char**)IndexColumns,
         50,
         IndexFlags,
     };
@@ -2669,7 +3644,27 @@ namespace GameEmpireShips {
 
 namespace GameEmpireFleets {
     
+    static const char* const Name = "Name";
+    static const char* const NumShips = "NumShips";
+    static const char* const CurrentStrength = "CurrentStrength";
+    static const char* const MaxStrength = "MaxStrength";
+    static const char* const CurrentPlanet = "CurrentPlanet";
+    static const char* const Action = "Action";
+    static const char* const BuildShips = "BuildShips";
+    static const char* const Flags = "Flags";
+
     enum Columns {
+        iName,
+        iNumShips,
+        iCurrentStrength,
+        iMaxStrength,
+        iCurrentPlanet,
+        iAction,
+        iBuildShips,
+        iFlags,
+    };
+
+    static const char* const ColumnNames[] = {
         Name,
         NumShips,
         CurrentStrength,
@@ -2691,7 +3686,7 @@ namespace GameEmpireFleets {
         V_INT,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_FLEET_NAME_LENGTH,
         0,
         0,
@@ -2702,7 +3697,7 @@ namespace GameEmpireFleets {
         0,
     };
 
-    static unsigned int IndexColumns[] = {
+    static const char* IndexColumns[] = {
         CurrentPlanet
     };
 
@@ -2715,11 +3710,12 @@ namespace GameEmpireFleets {
     static const TemplateDescription Template = {
         "GameEmpireFleets",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         1,
-        IndexColumns,
+        (char**)IndexColumns,
         10,
         IndexFlags,
     };
@@ -2741,7 +3737,18 @@ namespace GameEmpireFleets {
 
 namespace GameIndependentShips {
     
-    enum Columns {
+    static const char* const Name = "Name";
+    static const char* const Type = "Type";
+    static const char* const CurrentBR = "CurrentBR";
+    static const char* const MaxBR = "MaxBR";
+    static const char* const CurrentPlanet = "CurrentPlanet";
+    static const char* const Action = "Action";
+    static const char* const FleetKey = "FleetKey";
+    static const char* const BuiltThisUpdate = "BuiltThisUpdate";
+    static const char* const State = "State";
+    static const char* const GateDestination = "GateDestination";
+
+    /*enum Columns {
         Name,
         Type,
         CurrentBR,
@@ -2751,7 +3758,20 @@ namespace GameIndependentShips {
         FleetKey,
         BuiltThisUpdate,
         State,
-        GateDestination
+        GateDestination,
+    };*/
+
+    static const char* const ColumnNames[] = {
+        Name,
+        Type,
+        CurrentBR,
+        MaxBR,
+        CurrentPlanet,
+        Action,
+        FleetKey,
+        BuiltThisUpdate,
+        State,
+        GateDestination,
     };
     
     static const VariantType Types[] = {
@@ -2764,10 +3784,10 @@ namespace GameIndependentShips {
         V_INT,
         V_INT,
         V_INT,
-        V_INT
+        V_INT,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         MAX_SHIP_NAME_LENGTH,
         0,
         0,
@@ -2785,8 +3805,9 @@ namespace GameIndependentShips {
     static const TemplateDescription Template = {
         "GameIndependentShips",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2802,25 +3823,45 @@ namespace GameIndependentShips {
 
 namespace TopList {
 
+    static const char* EmpireKey = "EmpireKey";
+    static const char* Data = "Data";
+    static const char* Data2 = "Data2";
+
     enum Columns {
+        iEmpireKey,
+        iData,
+        iData2,
+    };
+
+    static const char* const ColumnNames[] = {
         EmpireKey,
         Data,
         Data2,
     };
-
-    static const unsigned int MaxNumColumns = Data2 + 1;
+    
+    static const unsigned int MaxNumColumns = countof(ColumnNames);
 };
 
 #define SYSTEM_ALMONASTER_SCORE_TOPLIST "SystemAlmonasterScoreTopList"
 
 namespace SystemAlmonasterScoreTopList {
     
+    enum Columns {
+        EmpireKey,
+        Data,
+    };
+
+    static const char* const ColumnNames[] = {
+        "EmpireKey",
+        "Data",
+    };
+
     static const VariantType Types[] = {
         V_INT,
         V_FLOAT,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0
     };
@@ -2830,8 +3871,9 @@ namespace SystemAlmonasterScoreTopList {
     static const TemplateDescription Template = {
         "SystemAlmonasterScoreTopList",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2845,12 +3887,22 @@ namespace SystemAlmonasterScoreTopList {
 
 namespace SystemClassicScoreTopList {
     
+    enum Columns {
+        EmpireKey,
+        Data,
+    };
+
+    static const char* const ColumnNames[] = {
+        "EmpireKey",
+        "Data",
+    };
+
     static const VariantType Types[] = {
         V_INT,
         V_FLOAT,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0
     };
@@ -2860,8 +3912,9 @@ namespace SystemClassicScoreTopList {
     static const TemplateDescription Template = {
         "SystemClassicScoreTopList",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2880,13 +3933,19 @@ namespace SystemBridierScoreTopList {
         Index,
     };
 
+    static const char* const ColumnNames[] = {
+        "EmpireKey",
+        "Rank",
+        "Index",
+    };
+
     static const VariantType Types[] = {
         V_INT,
         V_INT,
         V_INT,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
@@ -2897,8 +3956,9 @@ namespace SystemBridierScoreTopList {
     static const TemplateDescription Template = {
         "SystemBridierScoreTopList",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2917,13 +3977,19 @@ namespace SystemBridierScoreEstablishedTopList {
         Index,
     };
 
+    static const char* const ColumnNames[] = {
+        "EmpireKey",
+        "Rank",
+        "Index",
+    };
+
     static const VariantType Types[] = {
         V_INT,
         V_INT,
         V_INT,
     };
     
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         0,
@@ -2934,8 +4000,9 @@ namespace SystemBridierScoreEstablishedTopList {
     static const TemplateDescription Template = {
         "SystemBridierScoreEstablishedTopList",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,
@@ -2951,8 +4018,20 @@ namespace SystemBridierScoreEstablishedTopList {
 #define SYSTEM_CHATROOM_DATA "SystemChatroomData"
 
 namespace SystemChatroomData {
-    
+        
+    static const char* Flags = "Flags";
+    static const char* Time = "Time";
+    static const char* Speaker = "Speaker";
+    static const char* Message = "Message";
+
     enum Columns {
+        iFlags,
+        iTime,
+        iSpeaker,
+        iMessage,
+    };
+
+    static const char* const ColumnNames[] = {
         Flags,
         Time,
         Speaker,
@@ -2966,7 +4045,7 @@ namespace SystemChatroomData {
         V_STRING,
     };
 
-    static const int64 Sizes[] = {
+    static const unsigned int Sizes[] = {
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
@@ -2978,8 +4057,9 @@ namespace SystemChatroomData {
     static const TemplateDescription Template = {
         "SystemChatroomData",
         NumColumns,
+        (char**)ColumnNames,
         (VariantType*)Types,
-        (int64*)Sizes,
+        (unsigned int*)Sizes,
         false,
         0,
         NULL,

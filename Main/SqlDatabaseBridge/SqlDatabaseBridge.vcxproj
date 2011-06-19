@@ -91,17 +91,18 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
+      <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>database.lib;osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;C:\Program files (x86)\Microsoft SQL Server\100\SDK\Assemblies;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
@@ -112,7 +113,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y SqlDatabase.h "%DropSdk%"
 </Command>
       <Message>Copying public files...</Message>
     </PostBuildEvent>
@@ -121,14 +122,14 @@ copy /y Database.h "%DropSdk%"
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>database.lib;osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
@@ -140,23 +141,24 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y SqlDatabase.h "%DropSdk%"
 </Command>
       <Message>Copying public files...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>database.lib;osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;C:\Program files (x86)\Microsoft SQL Server\100\SDK\Assemblies;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
@@ -167,23 +169,24 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y SqlDatabase.h "%DropSdk%"
 </Command>
       <Message>Copying public files...</Message>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <PreprocessorDefinitions>WIN32;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <WarningLevel>Level4</WarningLevel>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>database.lib;osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>osal.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;C:\Program files (x86)\Microsoft SQL Server\100\SDK\Assemblies;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
@@ -194,7 +197,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 set DropSdk=..\Drop\$(Platform)\$(Configuration)\sdk
 if not exist "%DropSdk%" mkdir "%DropSdk%"
 copy /y $(OutDir)$(ProjectName).lib "%DropSdk%"
-copy /y Database.h "%DropSdk%"
+copy /y SqlDatabase.h "%DropSdk%"
 </Command>
       <Message>Copying public files...</Message>
     </PostBuildEvent>
@@ -202,23 +205,26 @@ copy /y Database.h "%DropSdk%"
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="SqlDatabase.h" />
+    <ClInclude Include="SqlDatabaseConnection.h" />
     <ClInclude Include="SqlDatabaseBridge.h" />
-    <ClInclude Include="Stdafx.h" />
+    <ClInclude Include="SqlDatabaseReadTable.h" />
+    <ClInclude Include="SqlDatabaseWriteTable.h" />
+    <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Interface.cpp" />
     <ClCompile Include="SqlDatabaseBridge.cpp" />
-    <ClCompile Include="Stdafx.cpp">
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    </ClCompile>
+    <ClCompile Include="SqlDatabaseConnection.cpp" />
+    <ClCompile Include="SqlDatabaseReadTable.cpp" />
+    <ClCompile Include="SqlDatabaseWriteTable.cpp" />
+    <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

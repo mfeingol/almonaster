@@ -2584,6 +2584,10 @@ case 6:
     bool bStarted, bFalse;
 
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
+    Assert(pDatabase != NULL);
+    IDatabaseConnection* pConn = pDatabase->CreateConnection();
+    Assert(pConn != NULL);
+
     Variant* pvPlanetData = NULL;
 
     GAME_MAP (pszGameMap, iGameClass, iGameNumber);
@@ -2627,13 +2631,13 @@ case 6:
         goto Cleanup;
     }
 
-    iErrCode = pDatabase->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
+    iErrCode = pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;
     }
 
-    iErrCode = pDatabase->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+    iErrCode = pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;
@@ -2660,10 +2664,11 @@ Cleanup:
     g_pGameEngine->SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
 
     if (pvPlanetData != NULL) {
-        pDatabase->FreeData (pvPlanetData);
+        pConn->FreeData (pvPlanetData);
     }
 
-    pDatabase->Release();
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
 
     if (iErrCode != OK) {
         goto AllGames;

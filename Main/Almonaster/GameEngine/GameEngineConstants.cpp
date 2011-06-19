@@ -133,9 +133,8 @@ const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES] = {
 };
 
 
-
-const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN [] = {
-
+const char* const SYSTEM_DATA_SHIP_NAME_COLUMN [] =
+{
     SystemData::DefaultAttackName,
     SystemData::DefaultScienceName,
     SystemData::DefaultColonyName,
@@ -154,8 +153,28 @@ const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN [] = {
     SystemData::DefaultJumpgateName,
 };
 
-const unsigned int SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[] = {
+const unsigned int SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[] =
+{
+    SystemData::iDefaultAttackName,
+    SystemData::iDefaultScienceName,
+    SystemData::iDefaultColonyName,
+    SystemData::iDefaultStargateName,
+    SystemData::iDefaultCloakerName,
+    SystemData::iDefaultSatelliteName,
+    SystemData::iDefaultTerraformerName,
+    SystemData::iDefaultTroopshipName,
+    SystemData::iDefaultDoomsdayName,
+    SystemData::iDefaultMinefieldName,
+    SystemData::iDefaultMinesweeperName,
+    SystemData::iDefaultEngineerName,
+    SystemData::iDefaultCarrierName,
+    SystemData::iDefaultBuilderName,
+    SystemData::iDefaultMorpherName,
+    SystemData::iDefaultJumpgateName,
+};
 
+const char* const SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[] =
+{
     SystemEmpireData::DefaultAttackName,
     SystemEmpireData::DefaultScienceName,
     SystemEmpireData::DefaultColonyName,
@@ -172,6 +191,26 @@ const unsigned int SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[] = {
     SystemEmpireData::DefaultBuilderName,
     SystemEmpireData::DefaultMorpherName,
     SystemEmpireData::DefaultJumpgateName,
+};
+
+const unsigned int SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[] =
+{
+    SystemEmpireData::iDefaultAttackName,
+    SystemEmpireData::iDefaultScienceName,
+    SystemEmpireData::iDefaultColonyName,
+    SystemEmpireData::iDefaultStargateName,
+    SystemEmpireData::iDefaultCloakerName,
+    SystemEmpireData::iDefaultSatelliteName,
+    SystemEmpireData::iDefaultTerraformerName,
+    SystemEmpireData::iDefaultTroopshipName,
+    SystemEmpireData::iDefaultDoomsdayName,
+    SystemEmpireData::iDefaultMinefieldName,
+    SystemEmpireData::iDefaultMinesweeperName,
+    SystemEmpireData::iDefaultEngineerName,
+    SystemEmpireData::iDefaultCarrierName,
+    SystemEmpireData::iDefaultBuilderName,
+    SystemEmpireData::iDefaultMorpherName,
+    SystemEmpireData::iDefaultJumpgateName,
 };
 
 const int MORPH_ORDER[] = {
@@ -298,11 +337,18 @@ const char* const TOPLIST_NAME [NUM_SCORING_SYSTEMS] = {
     "Established Bridier Score",
 };
 
-const char* const TOPLIST_TABLE_NAME [NUM_SCORING_SYSTEMS] = {
+const char* const TOPLIST_TABLE_NAME[NUM_SCORING_SYSTEMS] = {
     SYSTEM_ALMONASTER_SCORE_TOPLIST,
     SYSTEM_CLASSIC_SCORE_TOPLIST,
     SYSTEM_BRIDIER_SCORE_TOPLIST,
     SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST,
+};
+
+const TemplateDescription* TOPLIST_TEMPLATE[NUM_SCORING_SYSTEMS] = {
+    &SystemAlmonasterScoreTopList::Template,
+    &SystemClassicScoreTopList::Template,
+    &SystemBridierScoreTopList::Template,
+    &SystemBridierScoreEstablishedTopList::Template,
 };
 
 const unsigned int TOPLIST_NUM_COLUMNS [NUM_SCORING_SYSTEMS] = {
@@ -319,25 +365,25 @@ const unsigned int TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [NUM_SCORING_SYSTEMS] 
     SystemBridierScoreEstablishedTopList::NumColumns - 1,
 };
 
-const unsigned int ALMONASTER_SCORE_TOPLIST_COLUMNS[] = {
+const char* ALMONASTER_SCORE_TOPLIST_COLUMNS[] = {
     SystemEmpireData::AlmonasterScore,
 };
 
-const unsigned int CLASSIC_SCORE_TOPLIST_COLUMNS[] = {
+const char* CLASSIC_SCORE_TOPLIST_COLUMNS[] = {
     SystemEmpireData::ClassicScore,
 };
 
-const unsigned int BRIDIER_SCORE_TOPLIST_COLUMNS[] = {
+const char* BRIDIER_SCORE_TOPLIST_COLUMNS[] = {
     SystemEmpireData::BridierRank,
     SystemEmpireData::BridierIndex,
 };
 
-const unsigned int BRIDIER_SCORE_ESTABLISHED_TOPLIST_COLUMNS[] = {
+const char* BRIDIER_SCORE_ESTABLISHED_TOPLIST_COLUMNS[] = {
     SystemEmpireData::BridierRank,
     SystemEmpireData::BridierIndex,
 };
 
-const unsigned int* TOPLIST_SYSTEM_EMPIRE_DATA_COLUMNS [NUM_SCORING_SYSTEMS] = {
+const char* const * TOPLIST_SYSTEM_EMPIRE_DATA_COLUMNS [NUM_SCORING_SYSTEMS] = {
     ALMONASTER_SCORE_TOPLIST_COLUMNS,
     CLASSIC_SCORE_TOPLIST_COLUMNS,
     BRIDIER_SCORE_TOPLIST_COLUMNS,

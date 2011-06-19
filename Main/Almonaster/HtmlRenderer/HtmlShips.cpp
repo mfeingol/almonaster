@@ -21,7 +21,6 @@
 int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iShipPlanet,
                                       ShipOrderPlanetInfo& planetInfo, String& strPlanetName) {
 
-    int iErrCode;
     IReadTable* pMap = NULL;
     const char* pszTemp;
 
@@ -33,7 +32,14 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
         return ERROR_FAILURE;
     }
 
-    iErrCode = pDatabase->GetTableForReading (strMap, &pMap);
+    int iErrCode = ERROR_FAILURE;
+    IDatabaseConnection* pConn = pDatabase->CreateConnection();
+    if (pConn == NULL) {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    iErrCode = pConn->GetTableForReading (strMap, &pMap);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -64,8 +70,9 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
 
 Cleanup:
 
-    SafeRelease (pMap);
-    SafeRelease (pDatabase);
+    SafeRelease(pMap);
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
 
     return iErrCode;
 }
@@ -80,6 +87,9 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     IReadTable* pRead = NULL;
     IDatabase* pDatabase = g_pGameEngine->GetDatabase();
     Assert (pDatabase != NULL);
+
+    IDatabaseConnection* pConn = pDatabase->CreateConnection();
+    Assert (pConn != NULL);
 
     // Read ship location column
     FleetOrder* pfoOrders = NULL;
@@ -135,7 +145,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     
     if (pShipsInMap == NULL) {
 
-        iErrCode = pDatabase->GetTableForReading (pszShips, &pRead);
+        iErrCode = pConn->GetTableForReading (pszShips, &pRead);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -155,7 +165,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
 
-        iErrCode = pDatabase->GetTableForReading (pszFleets, &pRead);
+        iErrCode = pConn->GetTableForReading (pszFleets, &pRead);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -186,11 +196,10 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     } else {
         
         // Single planet render
-        iErrCode = pDatabase->GetEqualKeys (
+        iErrCode = pConn->GetEqualKeys (
             pszShips,
             GameEmpireShips::CurrentPlanet,
             pShipsInMap->iPlanetKey,
-            false,
             &piShipKey,
             &iNumShips
             );
@@ -200,11 +209,10 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
         
-        iErrCode = pDatabase->GetEqualKeys (
+        iErrCode = pConn->GetEqualKeys (
             pszFleets,
             GameEmpireFleets::CurrentPlanet,
             pShipsInMap->iPlanetKey,
-            false,
             &piFleetKey,
             &iNumFleets
             );
@@ -322,7 +330,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
         for (i = 0; i < iNumShips; i ++) {
             
-            iErrCode = pDatabase->ReadData (pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
+            iErrCode = pConn->ReadData (pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -355,14 +363,14 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 
             } else {
 
-                iErrCode = pDatabase->ReadRow (pszShips, piShipKey[i], &pvShipData);
+                iErrCode = pConn->ReadRow (pszShips, piShipKey[i], &pvShipData);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
 
                 // ShipOrderPlanetInfo
-                unsigned int iShipPlanet = pvShipData[GameEmpireShips::CurrentPlanet].GetInteger();
+                unsigned int iShipPlanet = pvShipData[GameEmpireShips::iCurrentPlanet].GetInteger();
                 if (iShipPlanet != planetInfo.iPlanetKey) {
 
                     iErrCode = PopulatePlanetInfo (
@@ -374,12 +382,12 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 }
 
                 // ShipOrderShipInfo
-                shipInfo.iShipType = pvShipData[GameEmpireShips::Type].GetInteger();
-                shipInfo.iSelectedAction = pvShipData[GameEmpireShips::Action].GetInteger();
-                shipInfo.iState = pvShipData[GameEmpireShips::State].GetInteger();
-                shipInfo.fBR = pvShipData[GameEmpireShips::CurrentBR].GetFloat();
-                shipInfo.fMaxBR = pvShipData[GameEmpireShips::MaxBR].GetFloat();
-                shipInfo.bBuilding = pvShipData[GameEmpireShips::BuiltThisUpdate].GetInteger() != 0;
+                shipInfo.iShipType = pvShipData[GameEmpireShips::iType].GetInteger();
+                shipInfo.iSelectedAction = pvShipData[GameEmpireShips::iAction].GetInteger();
+                shipInfo.iState = pvShipData[GameEmpireShips::iState].GetInteger();
+                shipInfo.fBR = pvShipData[GameEmpireShips::iCurrentBR].GetFloat();
+                shipInfo.fMaxBR = pvShipData[GameEmpireShips::iMaxBR].GetFloat();
+                shipInfo.bBuilding = pvShipData[GameEmpireShips::iBuiltThisUpdate].GetInteger() != 0;
 
                 if (shipInfo.bBuilding && !bReadLocations) {
 
@@ -416,7 +424,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                     iNumLocations
                     );
 
-                pDatabase->FreeData (pvShipData);
+                pConn->FreeData (pvShipData);
                 pvShipData = NULL;
                 
                 if (iErrCode != OK) {
@@ -473,7 +481,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             unsigned int piShipsByType [NUM_SHIP_TYPES];
             memset (piShipsByType, 0, sizeof (piShipsByType));
             
-            iErrCode = pDatabase->ReadRow (pszFleets, piFleetKey[i], &pvFleetData);
+            iErrCode = pConn->ReadRow (pszFleets, piFleetKey[i], &pvFleetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -497,7 +505,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             Assert (iNumOrders > 1);
 
             // Gather information
-            bCollapsed = (pvFleetData[GameEmpireFleets::Flags].GetInteger() & FLEET_COLLAPSED_DISPLAY) != 0;
+            bCollapsed = (pvFleetData[GameEmpireFleets::iFlags].GetInteger() & FLEET_COLLAPSED_DISPLAY) != 0;
             
 #ifdef _DEBUG
             if (ppiFleetShips == NULL || ppiFleetShips[i] == NULL) {
@@ -511,7 +519,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             } else {
                 Assert (piNumShipsInFleet[i] == iNumShipsInFleet);
             }
-            Assert (iNumShipsInFleet == (unsigned int) pvFleetData[GameEmpireFleets::NumShips].GetInteger());
+            Assert (iNumShipsInFleet == (unsigned int) pvFleetData[GameEmpireFleets::iNumShips].GetInteger());
 #endif
             if (piNumShipsInFleet == NULL) {
                 iNumShipsInFleet = 0;
@@ -543,7 +551,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Orders</th></tr>");
             
-            iErrCode = HTMLFilter (pvFleetData[GameEmpireFleets::Name].GetCharPtr(), &strHtml, 0, false);
+            iErrCode = HTMLFilter (pvFleetData[GameEmpireFleets::iName].GetCharPtr(), &strHtml, 0, false);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -582,8 +590,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             OutputText ("\"></td><td align=\"center\">");
             
-            fCurrentStrength = pvFleetData[GameEmpireFleets::CurrentStrength].GetFloat();
-            fMaxStrength = pvFleetData[GameEmpireFleets::MaxStrength].GetFloat();
+            fCurrentStrength = pvFleetData[GameEmpireFleets::iCurrentStrength].GetFloat();
+            fMaxStrength = pvFleetData[GameEmpireFleets::iMaxStrength].GetFloat();
 
             fNextStrength = fAfterMaxStrength = 0;
 
@@ -591,7 +599,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             if (iNumShipsInFleet > 0) {
 
                 Assert (pRead == NULL);
-                iErrCode = pDatabase->GetTableForReading (pszShips, &pRead);
+                iErrCode = pConn->GetTableForReading (pszShips, &pRead);
                 if (iErrCode == OK) {
 
                     unsigned int iLoopGuard = ppiFleetShips[i][0];
@@ -835,14 +843,14 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                         iIndex = ppiFleetShips[i][j];
 
-                        iErrCode = pDatabase->ReadRow (pszShips, piShipKey[iIndex], &pvShipData);
+                        iErrCode = pConn->ReadRow (pszShips, piShipKey[iIndex], &pvShipData);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
                         }
 
                         // ShipOrderPlanetInfo
-                        unsigned int iShipPlanet = pvShipData[GameEmpireShips::CurrentPlanet].GetInteger();
+                        unsigned int iShipPlanet = pvShipData[GameEmpireShips::iCurrentPlanet].GetInteger();
                         if (iShipPlanet != planetInfo.iPlanetKey) {
 
                             iErrCode = PopulatePlanetInfo (
@@ -854,12 +862,12 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                         }
 
                         // ShipOrderShipInfo
-                        shipInfo.iShipType = pvShipData[GameEmpireShips::Type].GetInteger();
-                        shipInfo.iSelectedAction = pvShipData[GameEmpireShips::Action].GetInteger();
-                        shipInfo.iState = pvShipData[GameEmpireShips::State].GetInteger();
-                        shipInfo.fBR = pvShipData[GameEmpireShips::CurrentBR].GetFloat();
-                        shipInfo.fMaxBR = pvShipData[GameEmpireShips::MaxBR].GetFloat();
-                        shipInfo.bBuilding = pvShipData[GameEmpireShips::BuiltThisUpdate].GetInteger() != 0;
+                        shipInfo.iShipType = pvShipData[GameEmpireShips::iType].GetInteger();
+                        shipInfo.iSelectedAction = pvShipData[GameEmpireShips::iAction].GetInteger();
+                        shipInfo.iState = pvShipData[GameEmpireShips::iState].GetInteger();
+                        shipInfo.fBR = pvShipData[GameEmpireShips::iCurrentBR].GetFloat();
+                        shipInfo.fMaxBR = pvShipData[GameEmpireShips::iMaxBR].GetFloat();
+                        shipInfo.bBuilding = pvShipData[GameEmpireShips::iBuiltThisUpdate].GetInteger() != 0;
 
                         if (shipInfo.bBuilding && !bReadLocations) {
 
@@ -896,7 +904,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                             iNumLocations
                             );
 
-                        pDatabase->FreeData (pvShipData);
+                        pConn->FreeData (pvShipData);
                         pvShipData = NULL;
                         
                         if (iErrCode != OK) {
@@ -915,7 +923,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 pShipsInMap->iCurrentFleet ++;
             }
             
-            pDatabase->FreeData (pvFleetData);
+            pConn->FreeData (pvFleetData);
             pvFleetData = NULL;
 
             g_pGameEngine->FreeFleetOrders (pfoOrders, iNumOrders);
@@ -932,11 +940,11 @@ Cleanup:
     }
     
     if (pvFleetData != NULL) {
-        pDatabase->FreeData (pvFleetData);
+        pConn->FreeData (pvFleetData);
     }
 
     if (pvShipData != NULL) {
-        pDatabase->FreeData (pvShipData);
+        pConn->FreeData (pvShipData);
     }
 
     if (pfoOrders != NULL) {
@@ -946,24 +954,25 @@ Cleanup:
     if (iNumShips > 0) {
         
         if (pShipsInMap == NULL) {
-            pDatabase->FreeData (piShipLoc);
+            pConn->FreeData (piShipLoc);
         }
         if (piShipKey != NULL) {
-            pDatabase->FreeKeys (piShipKey);
+            pConn->FreeKeys (piShipKey);
         }
     }
     
     if (iNumFleets > 0) {
 
         if (pShipsInMap == NULL) {
-            pDatabase->FreeData (piFleetLoc);
+            pConn->FreeData (piFleetLoc);
         }
         if (piFleetKey != NULL) {
-            pDatabase->FreeKeys (piFleetKey);
+            pConn->FreeKeys (piFleetKey);
         }
     }
 
-    SafeRelease (pDatabase);
+    SafeRelease(pConn);
+    SafeRelease(pDatabase);
     
     if (iErrCode != OK) {
         AddMessage ("Error in RenderShips()");
@@ -1275,7 +1284,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
     m_pHttpResponse->WriteText (iIndex);
     
     String strHtml;
-    iErrCode = HTMLFilter (pvShipData[GameEmpireShips::Name].GetCharPtr(), &strHtml, 0, false);
+    iErrCode = HTMLFilter (pvShipData[GameEmpireShips::iName].GetCharPtr(), &strHtml, 0, false);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1290,8 +1299,8 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
     m_pHttpResponse->WriteText (strHtml, strHtml.GetLength());
     OutputText ("\"></td><td align=\"center\"><font color=\"");
 
-    fCurrentBR = pvShipData[GameEmpireShips::CurrentBR].GetFloat();
-    fMaxBR = pvShipData[GameEmpireShips::MaxBR].GetFloat();
+    fCurrentBR = pvShipData[GameEmpireShips::iCurrentBR].GetFloat();
+    fMaxBR = pvShipData[GameEmpireShips::iMaxBR].GetFloat();
 
     if (fCurrentBR < fMaxBR) {
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
@@ -1350,8 +1359,8 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
         OutputText (")</td>");
     }
     
-    iType = pvShipData[GameEmpireShips::Type].GetInteger();
-    iState = pvShipData[GameEmpireShips::State].GetInteger();
+    iType = pvShipData[GameEmpireShips::iType].GetInteger();
+    iState = pvShipData[GameEmpireShips::iState].GetInteger();
     
     OutputText ("<td align=\"center\">");
 
@@ -1408,7 +1417,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
         if (psoOrder[j].sotType == SHIP_ORDER_NORMAL &&
             (iSelectedOrder == psoOrder[j].iKey || 
             (iSelectedOrder == GATE_SHIPS && 
-            pvShipData[GameEmpireShips::GateDestination].GetInteger() == psoOrder[j].iKey))) {
+            pvShipData[GameEmpireShips::iGateDestination].GetInteger() == psoOrder[j].iKey))) {
 
             OutputText ("selected ");
         }

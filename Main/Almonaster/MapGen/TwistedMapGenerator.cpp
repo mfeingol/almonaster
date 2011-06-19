@@ -103,14 +103,14 @@ int TwistedMapGenerator::CompleteTwistedMap() {
         // Execute the transform
         int iMapX, iMapY;
         GetCoordinates(m_ppvNewPlanetData[iMapIndex], &iMapX, &iMapY);
-        int iMapLink = m_ppvNewPlanetData[iMapIndex][GameMap::Link].GetInteger();
+        int iMapLink = m_ppvNewPlanetData[iMapIndex][GameMap::iLink].GetInteger();
 
         int iTwistX, iTwistY, iTwistLink;
         TwistCoordinates(iMapX, iMapY, m_cpChosenEdge, m_iChosenXOffset, m_iChosenYOffset, &iTwistX, &iTwistY);
         TwistLinks(iMapLink, m_cpChosenEdge, &iTwistLink);
 
         // Set link flags
-        m_ppvNewPlanetData[iTwistIndex][GameMap::Link] = iTwistLink;
+        m_ppvNewPlanetData[iTwistIndex][GameMap::iLink] = iTwistLink;
 
         // Set mirrored coordinates
         iErrCode = SetCoordinates(iTwistIndex, iTwistX, iTwistY);
@@ -191,7 +191,7 @@ int TwistedMapGenerator::BuildEdgeDescriptions() {
         int iX, iY;
         GetCoordinates(m_ppvNewPlanetData[i], &iX, &iY);
 
-        bool bHW = m_ppvNewPlanetData[i][GameMap::HomeWorld].GetInteger() == HOMEWORLD;
+        bool bHW = m_ppvNewPlanetData[i][GameMap::iHomeWorld].GetInteger() == HOMEWORLD;
 
         // North, south
         int iNSIndex = iX - m_piExtreme[WEST];

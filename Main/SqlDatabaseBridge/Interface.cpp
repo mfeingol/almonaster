@@ -1,11 +1,11 @@
 //
-// Database.dll - A database library
-// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+// OdbcDatabase.dll - A database library
+// Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Library General Public
 // License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+// version 2 of the License, or(at your option) any later version.
 //
 // This library is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,19 +17,13 @@
 // Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 // Boston, MA  02111-1307, USA.
 
-#define DATABASE_BUILD
-#include "Database.h"
-#include "CDatabase.h"
-#undef DATABASE_BUILD
+#include "SqlDatabaseBridge.h"
 
-// {51593574-72FB-4363-A91D-253338E81468}
-const Uuid CLSID_Database = { 0x51593574, 0x72fb, 0x4363, { 0xa9, 0x1d, 0x25, 0x33, 0x38, 0xe8, 0x14, 0x68 } };
-
-extern "C" DATABASE_EXPORT int CreateInstance (const Uuid& clsidClassId, const Uuid& iidInterface, void** ppObject) {
-
-    if (clsidClassId == CLSID_Database && iidInterface == IID_IDatabase) {
-
-        *ppObject = Database::CreateInstance();
+extern "C" SQL_DATABASE_EXPORT int CreateInstance(const Uuid& clsidClassId, const Uuid& iidInterface, void** ppObject)
+{
+    if(clsidClassId == CLSID_SqlDatabase && iidInterface == IID_IDatabase)
+    {
+        *ppObject = SqlDatabaseBridge::CreateInstance();
         return *ppObject == NULL ? ERROR_FAILURE : OK;
     }
 
@@ -37,11 +31,17 @@ extern "C" DATABASE_EXPORT int CreateInstance (const Uuid& clsidClassId, const U
     return ERROR_NO_INTERFACE;
 }
 
-const Uuid IID_ITransaction = { 0x6538a8cd, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
-const Uuid IID_IReadTable = { 0x6538a8ce, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
-const Uuid IID_IWriteTable = { 0x6538a8cf, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
+// {F0E65B48-F797-4E57-8459-C0EE4FC7BE9C}
+const Uuid CLSID_SqlDatabase = { 0xf0e65b48, 0xf797, 0x4e57, { 0x84, 0x59, 0xc0, 0xee, 0x4f, 0xc7, 0xbe, 0x9c } };
+
 const Uuid IID_IDatabase = { 0x6538a8d0, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
 const Uuid IID_IDatabaseBackup = { 0x6538a8d1, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
+
+// {9EFA75F3-F3B2-4C7B-8C4A-025D02537F05}
+const Uuid IID_IDatabaseConnection = { 0x9efa75f3, 0xf3b2, 0x4c7b, { 0x8c, 0x4a, 0x2, 0x5d, 0x2, 0x53, 0x7f, 0x5 } };
+const Uuid IID_IReadTable = { 0x6538a8ce, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
+const Uuid IID_IWriteTable = { 0x6538a8cf, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
+
 const Uuid IID_IDatabaseBackupEnumerator = { 0x6538a8d2, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
 const Uuid IID_ITableEnumerator = { 0x6538a8d3, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
 const Uuid IID_ITemplateEnumerator = { 0x6538a8d4, 0x8c2c, 0x11d3, { 0xa2, 0x3e, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };

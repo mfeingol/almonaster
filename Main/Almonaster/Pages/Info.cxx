@@ -142,9 +142,9 @@ if (iUpdatedEmpires == 1 || iActiveEmpires == 1) {
 %><tr><%
 
 %><td width = "20%"><strong>Minerals:</strong></td><td><%
-iMin = pvEmpireData[GameEmpireData::TotalMin].GetInteger() + pvEmpireData[GameEmpireData::BonusMin].GetInteger();
+iMin = pvEmpireData[GameEmpireData::iTotalMin].GetInteger() + pvEmpireData[GameEmpireData::iBonusMin].GetInteger();
 Write (iMin); %></td><td><%
-iMinUsed = pvEmpireData[GameEmpireData::TotalBuild].GetInteger() + pvEmpireData[GameEmpireData::TotalMaintenance].GetInteger();
+iMinUsed = pvEmpireData[GameEmpireData::iTotalBuild].GetInteger() + pvEmpireData[GameEmpireData::iTotalMaintenance].GetInteger();
 if (iMin == 0) {
     iRatio = 0;
 } else {
@@ -158,19 +158,19 @@ if (iRatio > 100) {
 Write (iRatio); %>%</font> in use</td><%
 
 %><td><strong>Tech Level:</strong></td><td><% 
-Write (pvEmpireData[GameEmpireData::TechLevel]); %> (BR <% Write (iBattleRank); %>)</td><%
+Write (pvEmpireData[GameEmpireData::iTechLevel]); %> (BR <% Write (iBattleRank); %>)</td><%
 
-%><td width="20%"><strong>Economic Level:</strong></td><td><% Write (pvEmpireData[GameEmpireData::Econ]); %></td><%
+%><td width="20%"><strong>Economic Level:</strong></td><td><% Write (pvEmpireData[GameEmpireData::iEcon]); %></td><%
 
 %></tr><tr><%
 
 %><td><strong>Fuel:</strong></td><td><% 
-iFuel = pvEmpireData[GameEmpireData::TotalFuel].GetInteger() + pvEmpireData[GameEmpireData::BonusFuel].GetInteger();
+iFuel = pvEmpireData[GameEmpireData::iTotalFuel].GetInteger() + pvEmpireData[GameEmpireData::iBonusFuel].GetInteger();
 Write (iFuel); %></td><td><%
 if (iFuel == 0) {
     iRatio = 0;
 } else {
-    iRatio = (100 * pvEmpireData[GameEmpireData::TotalFuelUse].GetInteger()) / iFuel;
+    iRatio = (100 * pvEmpireData[GameEmpireData::iTotalFuelUse].GetInteger()) / iFuel;
 }
 if (iRatio > 100) {
     %><font color="#<% Write (m_vBadColor.GetCharPtr()); %>"><%
@@ -202,12 +202,12 @@ if (fTechDev < (float) 0.0) {
 %></tr><tr><%
 
 %><td><strong>Agriculture:</strong></td><td><%
-iAg = pvEmpireData[GameEmpireData::TotalAg].GetInteger() + pvEmpireData[GameEmpireData::BonusAg].GetInteger();
+iAg = pvEmpireData[GameEmpireData::iTotalAg].GetInteger() + pvEmpireData[GameEmpireData::iBonusAg].GetInteger();
 Write (iAg); %></td><td><%
 if (iAg == 0) {
     iRatio = 0;
 } else {
-    iRatio = (100 * pvEmpireData[GameEmpireData::TotalPop].GetInteger()) / iAg;
+    iRatio = (100 * pvEmpireData[GameEmpireData::iTotalPop].GetInteger()) / iAg;
 }
 if (iRatio > 100) {
     %><font color="#<% Write (m_vBadColor.GetCharPtr()); %>"><%
@@ -221,11 +221,11 @@ Write (iRatio);
 
 %></tr><tr><%
 
-%><td><strong>Population:</strong></td><td><% Write (pvEmpireData[GameEmpireData::TotalPop].GetInteger()); %></td><td><%
-if (pvEmpireData[GameEmpireData::TargetPop].GetInteger() == 0) {
+%><td><strong>Population:</strong></td><td><% Write (pvEmpireData[GameEmpireData::iTotalPop].GetInteger()); %></td><td><%
+if (pvEmpireData[GameEmpireData::iTargetPop].GetInteger() == 0) {
     iRatio = 0;
 } else {
-    iRatio = (100 * pvEmpireData[GameEmpireData::TotalPop].GetInteger() / pvEmpireData[GameEmpireData::TargetPop].GetInteger());
+    iRatio = (100 * pvEmpireData[GameEmpireData::iTotalPop].GetInteger() / pvEmpireData[GameEmpireData::iTargetPop].GetInteger());
 }
 if (iRatio > 100) {
     %><font color="#<% Write (m_vBadColor.GetCharPtr()); %>"><%
@@ -236,7 +236,7 @@ Write (iRatio);
 %>%</font> of target</td><%
 
 %><td><strong>Next Tech Level:</strong></td><td><% 
-fNextTechLevel = pvEmpireData[GameEmpireData::TechLevel].GetFloat() + fTechDev;
+fNextTechLevel = pvEmpireData[GameEmpireData::iTechLevel].GetFloat() + fTechDev;
 iNextBattleRank = g_pGameEngine->GetBattleRank (fNextTechLevel);
 
 if (iNextBattleRank > iBattleRank) {
@@ -251,15 +251,15 @@ if (iNextBattleRank > iBattleRank) {
     }
 } %></td><%
 
-%><td><strong>Planets:</strong></td><td><% Write (pvEmpireData[GameEmpireData::NumPlanets]); %></td><%
+%><td><strong>Planets:</strong></td><td><% Write (pvEmpireData[GameEmpireData::iNumPlanets]); %></td><%
 
 %></tr><tr><%
 
-%><td><strong>Target Population:</strong></td><td><% Write (pvEmpireData[GameEmpireData::TargetPop]); %></td><td><%
+%><td><strong>Target Population:</strong></td><td><% Write (pvEmpireData[GameEmpireData::iTargetPop]); %></td><td><%
 if (iAg == 0) {
     iRatio = 0;
 } else {
-    iRatio = (100 * pvEmpireData[GameEmpireData::TargetPop].GetInteger()) / iAg;
+    iRatio = (100 * pvEmpireData[GameEmpireData::iTargetPop].GetInteger()) / iAg;
 }
 if (iRatio > 100) {
     %><font color="#<% Write (m_vBadColor.GetCharPtr()); %>"><%
@@ -344,11 +344,11 @@ if (fHypAgRatio < (float) 1.0) {
 %></tr><tr><%
 
 %><td><strong>Total Maintenance Cost:</strong></td><%
-%><td><% Write (pvEmpireData[GameEmpireData::TotalMaintenance]); %></td><%
+%><td><% Write (pvEmpireData[GameEmpireData::iTotalMaintenance]); %></td><%
 %><td><strong>Total Fuel Use:</strong></td><%
-%><td><% Write (pvEmpireData[GameEmpireData::TotalFuelUse]); %></td><%
+%><td><% Write (pvEmpireData[GameEmpireData::iTotalFuelUse]); %></td><%
 %><td><strong>Total Build Cost:</strong></td><%
-%><td><% Write (pvEmpireData[GameEmpireData::TotalBuild]);  %></td><%
+%><td><% Write (pvEmpireData[GameEmpireData::iTotalBuild]);  %></td><%
 
 %></tr><%
 %></table><%

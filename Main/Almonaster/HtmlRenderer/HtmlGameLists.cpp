@@ -258,7 +258,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         "<font size=\"-1\" face=\"" DEFAULT_GAMECLASS_DESCRIPTION_FONT "\"><br>"
         );
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::Description].GetCharPtr());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iDescription].GetCharPtr());
     
     // Name
     OutputText ("</font></td></tr><tr><td width=\"20%\"><font size=\"3\">");
@@ -377,7 +377,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     // Next update
     if (!(iState & STARTED)) {
 
-        int iNumNeeded = pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger() - iNumActiveEmpires;
+        int iNumNeeded = pvGameClassInfo[SystemGameClassData::iMinNumEmpires].GetInteger() - iNumActiveEmpires;
         
         OutputText ("<td align=\"center\"><font size=\"2\">When <strong>");
         m_pHttpResponse->WriteText (iNumNeeded);
@@ -482,8 +482,8 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         iState,
         iNumActiveEmpires, 
         strList.GetCharPtr(), 
-        pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
-        pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
+        pvGameClassInfo[SystemGameClassData::iMinNumEmpires].GetInteger(),
+        pvGameClassInfo[SystemGameClassData::iMaxNumEmpires].GetInteger()
         );
     
     // Features
@@ -492,7 +492,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         "<font size=\"2\">"\
         "Updates every "
         );
-    WriteTime (pvGameClassInfo[SystemGameClassData::NumSecPerUpdate].GetInteger());
+    WriteTime (pvGameClassInfo[SystemGameClassData::iNumSecPerUpdate].GetInteger());
     
     if (iNumUpdates == 0 && sFirstUpdateDelay > 0) {
         OutputText ("<br>(");
@@ -501,21 +501,21 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     }
 
     OutputText ("<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinNumPlanets].GetInteger());
     OutputText ("</strong> ");
     
-    if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 
-        pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger()) {
+    if (pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger() == 
+        pvGameClassInfo[SystemGameClassData::iMinNumPlanets].GetInteger()) {
         
         OutputText ("planet");
-        if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() != 1) {
+        if (pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger() != 1) {
             OutputText ("s");
         }
         
     } else {
         
         OutputText ("to <strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger());
         OutputText ("</strong> planets");
     }
 
@@ -546,19 +546,19 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
 
     OutputText ("<br><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::InitialTechLevel].GetFloat());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iInitialTechLevel].GetFloat());
     OutputText ("</strong> initial tech<br><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxTechDev].GetFloat());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxTechDev].GetFloat());
     OutputText ("</strong> delta tech");
 
-    if (pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger() != ALL_TECHS) {    
+    if (pvGameClassInfo[SystemGameClassData::iInitialTechDevs].GetInteger() != ALL_TECHS) {    
 
         OutputText ("<br><strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iNumInitialTechDevs].GetInteger());
         OutputText ("</strong> tech dev");
 
-        if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
+        if (pvGameClassInfo[SystemGameClassData::iNumInitialTechDevs].GetInteger() != 1) {
             OutputText ("s");
         }
     }
@@ -690,7 +690,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
         "<font size=\"-1\" face=\"" DEFAULT_GAMECLASS_DESCRIPTION_FONT "\"><br>"
         );
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::Description].GetCharPtr());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iDescription].GetCharPtr());
     
     // Name
     OutputText ("</font></td></tr><tr><td><font size=\"3\">");
@@ -834,7 +834,7 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
         "<font size=\"-1\" face=\"" DEFAULT_GAMECLASS_DESCRIPTION_FONT "\"><br>"
         );
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::Description].GetCharPtr());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iDescription].GetCharPtr());
     
     // Name
     OutputText ("</font></td></tr><tr><td><font size=\"3\">");
@@ -849,16 +849,16 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
     char pszForm[80];
     
     OutputText (" <strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::OpenGameNum].GetInteger());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iOpenGameNum].GetInteger());
     OutputText ("</strong></font>");
     
     if (m_iPrivilege >= NOVICE) {
         
-        if (!(pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GAMECLASS_HALTED) &&
-            !(pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) &&
-            (pvGameClassInfo[SystemGameClassData::MaxNumActiveGames].GetInteger() == INFINITE_ACTIVE_GAMES ||
-            pvGameClassInfo[SystemGameClassData::NumActiveGames].GetInteger() < 
-            pvGameClassInfo[SystemGameClassData::MaxNumActiveGames].GetInteger())) {
+        if (!(pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_HALTED) &&
+            !(pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) &&
+            (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger() == INFINITE_ACTIVE_GAMES ||
+            pvGameClassInfo[SystemGameClassData::iNumActiveGames].GetInteger() < 
+            pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger())) {
             
             OutputText ("<p>");
             
@@ -872,35 +872,35 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
             
         } else {
             
-            if ((pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GAMECLASS_HALTED) != 0 &&
-                (pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) != 0) {
+            if ((pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_HALTED) != 0 &&
+                (pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) != 0) {
                 OutputText (" (<strong>Halted and marked for deletion</strong>)");
             }
             
-            else if (pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GAMECLASS_HALTED) {
+            else if (pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_HALTED) {
                 OutputText (" (<strong>Halted</strong>)");
             }
             
-            else if (pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) {
+            else if (pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) {
                 OutputText (" (<strong>Marked for deletion</strong>)");
             }
         }
         
-        if (pvGameClassInfo[SystemGameClassData::MaxNumActiveGames].GetInteger() != INFINITE_ACTIVE_GAMES) {
+        if (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger() != INFINITE_ACTIVE_GAMES) {
             
-            if (pvGameClassInfo[SystemGameClassData::NumActiveGames].GetInteger() >= 
-                pvGameClassInfo[SystemGameClassData::MaxNumActiveGames].GetInteger()) {
+            if (pvGameClassInfo[SystemGameClassData::iNumActiveGames].GetInteger() >= 
+                pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger()) {
                 
                 OutputText ("<p>(Active game limit of <strong>");
-                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumActiveGames].GetInteger());
+                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger());
                 OutputText ("</strong> reached)");
                 
             } else {
                 
                 OutputText ("<p>(<strong>");
-                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumActiveGames].GetInteger());
+                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iNumActiveGames].GetInteger());
                 OutputText ("</strong> of <strong>");
-                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumActiveGames].GetInteger());
+                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger());
                 OutputText ("</strong> active games)");
             }
         }
@@ -1032,7 +1032,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
 
     // Time 
     OutputText ("<td align=\"center\"><font size=\"2\">");
-    WriteTime (pvGameClassInfo[SystemGameClassData::NumSecPerUpdate].GetInteger());
+    WriteTime (pvGameClassInfo[SystemGameClassData::iNumSecPerUpdate].GetInteger());
     
     if (iWhichList == OPEN_GAME_LIST) {
         
@@ -1053,8 +1053,8 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         iGameState,
         iNumEmpiresInGame, 
         pszEmpiresInGame, 
-        pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
-        pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger()
+        pvGameClassInfo[SystemGameClassData::iMinNumEmpires].GetInteger(),
+        pvGameClassInfo[SystemGameClassData::iMaxNumEmpires].GetInteger()
         );
 
     // Planets per empire
@@ -1069,7 +1069,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
             OutputText("<strong>");
             m_pHttpResponse->WriteText(vPlanets.GetInteger());
             OutputText("</strong> planet");
-            if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() != 1)
+            if (pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger() != 1)
                 OutputText ("s");
             OutputText(" per empire");
         }
@@ -1077,14 +1077,14 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     } else {
     
         OutputText("<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinNumPlanets].GetInteger());
         
-        if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 
-            pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger()) {
+        if (pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger() == 
+            pvGameClassInfo[SystemGameClassData::iMinNumPlanets].GetInteger()) {
             
             OutputText ("</strong> planet");
             
-            if (pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger() == 1) {
+            if (pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger() == 1) {
                 OutputText (" per empire");
             } else {
                 OutputText ("s per empire");
@@ -1093,7 +1093,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         } else {
             
             OutputText("</strong> to <strong>");
-            m_pHttpResponse->WriteText(pvGameClassInfo[SystemGameClassData::MaxNumPlanets].GetInteger());
+            m_pHttpResponse->WriteText(pvGameClassInfo[SystemGameClassData::iMaxNumPlanets].GetInteger());
             OutputText("</strong> planets per empire");
         }
     }
@@ -1140,25 +1140,25 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         }
     }
 
-    if (pvGameClassInfo[SystemGameClassData::Options].GetInteger() & GENERATE_MAP_FIRST_UPDATE) {
+    if (pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GENERATE_MAP_FIRST_UPDATE) {
         OutputText ("<p>Map on first update");
     }
 
     // Tech
     OutputText ("</font></td><td align=\"center\"><font size=\"2\"><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::InitialTechLevel].GetFloat());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iInitialTechLevel].GetFloat());
     OutputText ("</strong> initial<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxTechDev].GetFloat());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxTechDev].GetFloat());
     OutputText ("</strong> delta");
 
-    if (pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger() != ALL_TECHS) {    
+    if (pvGameClassInfo[SystemGameClassData::iInitialTechDevs].GetInteger() != ALL_TECHS) {    
 
         OutputText ("<br><strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iNumInitialTechDevs].GetInteger());
         OutputText ("</strong> tech dev");
 
-        if (pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger() != 1) {
+        if (pvGameClassInfo[SystemGameClassData::iNumInitialTechDevs].GetInteger() != 1) {
             OutputText ("s");
         }
     }
@@ -1172,12 +1172,12 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
 
     // Init techs
     AddTechList (
-        pvGameClassInfo[SystemGameClassData::InitialTechDevs].GetInteger(),
-        pvGameClassInfo[SystemGameClassData::NumInitialTechDevs].GetInteger()
+        pvGameClassInfo[SystemGameClassData::iInitialTechDevs].GetInteger(),
+        pvGameClassInfo[SystemGameClassData::iNumInitialTechDevs].GetInteger()
         );
 
     // Dev techs
-    AddTechList (pvGameClassInfo[SystemGameClassData::DevelopableTechDevs].GetInteger(), 0);
+    AddTechList (pvGameClassInfo[SystemGameClassData::iDevelopableTechDevs].GetInteger(), 0);
 
     // Bridier, Score
     if (iWhichList == OPEN_GAME_LIST) {
@@ -1215,7 +1215,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
 void HtmlRenderer::AddBridierGame (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
                                    int iGameOptions, bool bDisplayGainLoss) {
 
-    if (pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger() == 2 &&
+    if (pvGameClassInfo[SystemGameClassData::iMaxNumEmpires].GetInteger() == 2 &&
         iGameOptions & GAME_COUNT_FOR_BRIDIER) {
         
         OutputText ("<p><font color=\"#");
@@ -1257,7 +1257,7 @@ void HtmlRenderer::AddBridierGame (int iGameClass, int iGameNumber, const Varian
 
 void HtmlRenderer::AddOptions (int iWhichList, const Variant* pvGameClassInfo, int iGameOptions) {
     
-    int iGameClassOptions = pvGameClassInfo[SystemGameClassData::Options].GetInteger();
+    int iGameClassOptions = pvGameClassInfo[SystemGameClassData::iOptions].GetInteger();
     
     // Weekend
     m_pHttpResponse->WriteText (
@@ -1290,21 +1290,21 @@ void HtmlRenderer::AddOptions (int iWhichList, const Variant* pvGameClassInfo, i
     
     // Pop to build
     OutputText ("<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::BuilderPopLevel].GetInteger());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iBuilderPopLevel].GetInteger());
     OutputText ("</strong> BuildPop");
 
     // MaxShips
-    if (pvGameClassInfo[SystemGameClassData::MaxNumShips].GetInteger() == INFINITE_SHIPS) {
+    if (pvGameClassInfo[SystemGameClassData::iMaxNumShips].GetInteger() == INFINITE_SHIPS) {
         OutputText ("<br><strike>MaxShips</strike>");
     } else {
         OutputText ("<br><strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumShips].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumShips].GetInteger());
         OutputText ("</strong> MaxShips");
     }
     
     // Max ag ratio
     OutputText ("<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxAgRatio].GetFloat());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxAgRatio].GetFloat());
     OutputText ("</strong> MaxAgRatio");
 
     // Ship flags
@@ -1369,9 +1369,9 @@ void HtmlRenderer::AddOptions (int iWhichList, const Variant* pvGameClassInfo, i
     }
     
     // Map shared
-    if (pvGameClassInfo[SystemGameClassData::MapsShared] != NO_DIPLOMACY) {
+    if (pvGameClassInfo[SystemGameClassData::iMapsShared] != NO_DIPLOMACY) {
         OutputText ("MapShared (at <strong>");
-        m_pHttpResponse->WriteText (DIP_STRING (pvGameClassInfo[SystemGameClassData::MapsShared].GetInteger()));
+        m_pHttpResponse->WriteText (DIP_STRING (pvGameClassInfo[SystemGameClassData::iMapsShared].GetInteger()));
         OutputText ("</strong>)");
     } else {
         OutputText ("<strike>MapShared</strike>");
@@ -1407,15 +1407,15 @@ void HtmlRenderer::AddOptions (int iWhichList, const Variant* pvGameClassInfo, i
 
     // Updates for idle
     OutputText ("<br><strong>");
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumUpdatesForIdle].GetInteger());
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iNumUpdatesForIdle].GetInteger());
     OutputText ("</strong> IdleUpdate");
     
-    if (pvGameClassInfo[SystemGameClassData::NumUpdatesForIdle].GetInteger() > 1) {
+    if (pvGameClassInfo[SystemGameClassData::iNumUpdatesForIdle].GetInteger() > 1) {
         OutputText ("s");
     }
     
     // Ruins
-    switch (pvGameClassInfo[SystemGameClassData::RuinFlags].GetInteger()) {
+    switch (pvGameClassInfo[SystemGameClassData::iRuinFlags].GetInteger()) {
     case 0:
         
         OutputText ("<br><strike>Ruins</strike>");
@@ -1437,8 +1437,8 @@ void HtmlRenderer::AddOptions (int iWhichList, const Variant* pvGameClassInfo, i
         break;
     }
     
-    if (pvGameClassInfo[SystemGameClassData::RuinFlags].GetInteger() != 0) {
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::NumUpdatesForRuin].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iRuinFlags].GetInteger() != 0) {
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iNumUpdatesForRuin].GetInteger());
         OutputText ("</strong> updates)");
     }
     
@@ -1453,30 +1453,30 @@ void HtmlRenderer::AddResources (const Variant* pvGameClassInfo) {
     // Planet Res
     //
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinAvgAg].GetInteger());
-    if (pvGameClassInfo[SystemGameClassData::MaxAvgAg].GetInteger() != 
-        pvGameClassInfo[SystemGameClassData::MinAvgAg].GetInteger()) {
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinAvgAg].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iMaxAvgAg].GetInteger() != 
+        pvGameClassInfo[SystemGameClassData::iMinAvgAg].GetInteger()) {
         
         OutputText ("</strong>-<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxAvgAg].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxAvgAg].GetInteger());
     }
     OutputText ("</strong> Ag<br><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinAvgMin].GetInteger());
-    if (pvGameClassInfo[SystemGameClassData::MaxAvgMin].GetInteger() != 
-        pvGameClassInfo[SystemGameClassData::MinAvgMin].GetInteger()) {
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinAvgMin].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iMaxAvgMin].GetInteger() != 
+        pvGameClassInfo[SystemGameClassData::iMinAvgMin].GetInteger()) {
         
         OutputText ("</strong>-<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxAvgMin].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxAvgMin].GetInteger());
     }
     OutputText ("</strong> Min<br><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinAvgFuel].GetInteger());
-    if (pvGameClassInfo[SystemGameClassData::MaxAvgFuel].GetInteger() != 
-        pvGameClassInfo[SystemGameClassData::MinAvgFuel].GetInteger()) {
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinAvgFuel].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iMaxAvgFuel].GetInteger() != 
+        pvGameClassInfo[SystemGameClassData::iMinAvgFuel].GetInteger()) {
         
         OutputText ("</strong>-<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxAvgFuel].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxAvgFuel].GetInteger());
     }
     OutputText ("</strong> Fuel<br><strong>");
     
@@ -1484,30 +1484,30 @@ void HtmlRenderer::AddResources (const Variant* pvGameClassInfo) {
     // HW
     //
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinAgHW].GetInteger());
-    if (pvGameClassInfo[SystemGameClassData::MaxAgHW].GetInteger() != 
-        pvGameClassInfo[SystemGameClassData::MinAgHW].GetInteger()) {
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinAgHW].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iMaxAgHW].GetInteger() != 
+        pvGameClassInfo[SystemGameClassData::iMinAgHW].GetInteger()) {
         
         OutputText ("</strong>-<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxAgHW].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxAgHW].GetInteger());
     }
     OutputText ("</strong> HWAg<br><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinMinHW].GetInteger());
-    if (pvGameClassInfo[SystemGameClassData::MaxMinHW].GetInteger() != 
-        pvGameClassInfo[SystemGameClassData::MinMinHW].GetInteger()) {
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinMinHW].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iMaxMinHW].GetInteger() != 
+        pvGameClassInfo[SystemGameClassData::iMinMinHW].GetInteger()) {
         
         OutputText ("</strong>-<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxMinHW].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxMinHW].GetInteger());
     }
     OutputText ("</strong> HWMin<br><strong>");
     
-    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MinFuelHW].GetInteger());
-    if (pvGameClassInfo[SystemGameClassData::MaxFuelHW].GetInteger() != 
-        pvGameClassInfo[SystemGameClassData::MinFuelHW].GetInteger()) {
+    m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMinFuelHW].GetInteger());
+    if (pvGameClassInfo[SystemGameClassData::iMaxFuelHW].GetInteger() != 
+        pvGameClassInfo[SystemGameClassData::iMinFuelHW].GetInteger()) {
         
         OutputText ("</strong>-<strong>");
-        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxFuelHW].GetInteger());
+        m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxFuelHW].GetInteger());
     }
     OutputText ("</strong> HWFuel");
 
@@ -1516,16 +1516,16 @@ void HtmlRenderer::AddResources (const Variant* pvGameClassInfo) {
 
 void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
     
-    int iOptions = pvGameClassInfo[SystemGameClassData::Options].GetInteger();
+    int iOptions = pvGameClassInfo[SystemGameClassData::iOptions].GetInteger();
     
     OutputText ("<td align=\"center\" width=\"75\"><font size=\"2\"><strong>" WAR_STRING "</strong>");
     
-    int iDip = pvGameClassInfo[SystemGameClassData::DiplomacyLevel].GetInteger();
+    int iDip = pvGameClassInfo[SystemGameClassData::iDiplomacyLevel].GetInteger();
     
     if (g_pGameEngine->GameAllowsDiplomacy (iDip, TRUCE)) {
         OutputText ("<br><strong>" TRUCE_STRING "</strong>");
         
-        switch (pvGameClassInfo[SystemGameClassData::MaxNumTruces].GetInteger()) {
+        switch (pvGameClassInfo[SystemGameClassData::iMaxNumTruces].GetInteger()) {
             
         case UNRESTRICTED_DIPLOMACY:
             break;      
@@ -1538,7 +1538,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
         default:
             
             OutputText (" (<strong>");
-            m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumTruces].GetInteger());
+            m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumTruces].GetInteger());
             OutputText ("</strong>)");
             break;
         }
@@ -1547,7 +1547,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
     if (g_pGameEngine->GameAllowsDiplomacy (iDip, TRADE)) {
         OutputText ("<br><strong>" TRADE_STRING "</strong>");
         
-        switch (pvGameClassInfo[SystemGameClassData::MaxNumTrades].GetInteger()) {
+        switch (pvGameClassInfo[SystemGameClassData::iMaxNumTrades].GetInteger()) {
             
         case UNRESTRICTED_DIPLOMACY:
             break;      
@@ -1560,7 +1560,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
         default:
             
             OutputText (" (<strong>");
-            m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::MaxNumTrades].GetInteger());
+            m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumTrades].GetInteger());
             OutputText ("</strong>)");
             break;
         }
@@ -1570,7 +1570,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
         OutputText ("<br><strong>" ALLIANCE_STRING "</strong>");
         
         bool bOpened = true;
-        int iMax = pvGameClassInfo[SystemGameClassData::MaxNumAlliances].GetInteger();
+        int iMax = pvGameClassInfo[SystemGameClassData::iMaxNumAlliances].GetInteger();
         
         switch (iMax) {
             

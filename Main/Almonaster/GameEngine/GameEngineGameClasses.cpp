@@ -33,7 +33,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
     int iOwner, iErrCode;
     const char* pszGameClassName, * pszOwnerName;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pGameClasses);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pGameClasses);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -91,7 +91,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
 
         SafeRelease (pGameClasses);
 
-        iErrCode = m_pGameData->GetTableForReading (SYSTEM_TOURNAMENTS, &pGameClasses);
+        iErrCode = m_pConn->GetTableForReading (SYSTEM_TOURNAMENTS, &pGameClasses);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -159,7 +159,7 @@ Cleanup:
 int GameEngine::GetGameClassUpdatePeriod (int iGameClass, Seconds* piNumSeconds) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::NumSecPerUpdate, 
@@ -177,7 +177,7 @@ int GameEngine::GetGameClassUpdatePeriod (int iGameClass, Seconds* piNumSeconds)
 int GameEngine::GetMaxNumAllies (int iGameClass, int* piMaxNumAllies) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::MaxNumAlliances, 
@@ -203,7 +203,7 @@ int GameEngine::GetMaxNumAllies (int iGameClass, int* piMaxNumAllies) {
 int GameEngine::GetNextGameNumber (int iGameClass, int* piGameNumber) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::OpenGameNum, 
@@ -240,7 +240,7 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
 
     // Check for gameclass
     bool bExists;
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
@@ -253,7 +253,7 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
 
         // Get owner
         Variant vOwner;
-        iErrCode = m_pGameData->ReadData (
+        iErrCode = m_pConn->ReadData (
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::Owner, 
@@ -271,7 +271,7 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
             
             // Decrement super class counter
             Variant vSuperClassKey;
-            iErrCode = m_pGameData->ReadData (
+            iErrCode = m_pConn->ReadData (
                 SYSTEM_GAMECLASS_DATA, 
                 iGameClass, 
                 SystemGameClassData::SuperClassKey, 
@@ -282,11 +282,10 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
                 goto Cleanup;
             }
 
-            iErrCode = m_pGameData->GetFirstKey (
+            iErrCode = m_pConn->GetFirstKey (
                 SYSTEM_SYSTEM_GAMECLASS_DATA, 
                 SystemSystemGameClassData::GameClass, 
                 iGameClass, 
-                false, 
                 &iKey
                 );
 
@@ -300,7 +299,7 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
                 vSuperClassKey.GetInteger() != TOURNAMENT &&
                 vSuperClassKey.GetInteger() != PERSONAL_GAME);
 
-            iErrCode = m_pGameData->Increment (
+            iErrCode = m_pConn->Increment (
                 SYSTEM_SUPERCLASS_DATA, 
                 vSuperClassKey.GetInteger(), 
                 SystemSuperClassData::NumGameClasses, 
@@ -313,13 +312,13 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
             }
             
             // Delete row
-            iErrCode = m_pGameData->DeleteRow (SYSTEM_SYSTEM_GAMECLASS_DATA, iKey);
+            iErrCode = m_pConn->DeleteRow (SYSTEM_SYSTEM_GAMECLASS_DATA, iKey);
             if (iErrCode != OK) {
 
                 Assert (false);
 
                 // Best effort compensate
-                int iErrCode2 = m_pGameData->Increment (
+                int iErrCode2 = m_pConn->Increment (
                     SYSTEM_SUPERCLASS_DATA, 
                     vSuperClassKey.GetInteger(), 
                     SystemSuperClassData::NumGameClasses, 
@@ -333,13 +332,13 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
         }
 
         // Delete row from SystemGameClassData
-        iErrCode = m_pGameData->DeleteRow (SYSTEM_GAMECLASS_DATA, iGameClass);
+        iErrCode = m_pConn->DeleteRow (SYSTEM_GAMECLASS_DATA, iGameClass);
         Assert (iErrCode == OK);
 
     } else {
         
         // Mark the gameclass for deletion
-        iErrCode = m_pGameData->WriteOr (
+        iErrCode = m_pConn->WriteOr (
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::Options, 
@@ -360,7 +359,7 @@ bool GameEngine::DoesGameClassHaveActiveGames (int iGameClass) {
 
     Variant vNumActiveGames;
 
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA,
         iGameClass,
         SystemGameClassData::NumActiveGames,
@@ -394,14 +393,14 @@ int GameEngine::HaltGameClass (int iGameClass) {
 
     // Check for gameclass
     bool bExists;
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
     // Mark the gameclass as halted
-    iErrCode = m_pGameData->WriteOr (
+    iErrCode = m_pConn->WriteOr (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -438,14 +437,14 @@ int GameEngine::UnhaltGameClass (int iGameClass) {
 
     // Check for gameclass
     bool bExists;
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
     // Is gameclass halted?
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -462,7 +461,7 @@ int GameEngine::UnhaltGameClass (int iGameClass) {
     }
 
     // Mark the gameclass as no longer halted
-    iErrCode = m_pGameData->WriteAnd (
+    iErrCode = m_pConn->WriteAnd (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -496,7 +495,7 @@ Cleanup:
 
 int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* piGameClass) {
 
-    bool bFlag, bDynamic = (pvGameClassData[SystemGameClassData::Options].GetInteger() & DYNAMIC_GAMECLASS) != 0;
+    bool bFlag, bDynamic = (pvGameClassData[SystemGameClassData::iOptions].GetInteger() & DYNAMIC_GAMECLASS) != 0;
     int iErrCode, iSuperClass;
 
     unsigned int iGameClass, iTournamentKey = NO_KEY;
@@ -507,13 +506,13 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     Assert (iCreator != TOURNAMENT);
 
     // Check name length
-    if (String::StrLen (pvGameClassData[SystemGameClassData::Name].GetCharPtr()) > MAX_GAME_CLASS_NAME_LENGTH) {
+    if (String::StrLen (pvGameClassData[SystemGameClassData::iName].GetCharPtr()) > MAX_GAME_CLASS_NAME_LENGTH) {
         iErrCode = ERROR_NAME_IS_TOO_LONG;
         goto Cleanup;
     }
 
     // Check description length
-    if (String::StrLen (pvGameClassData[SystemGameClassData::Description].GetCharPtr()) > MAX_THEME_DESCRIPTION_LENGTH) {
+    if (String::StrLen (pvGameClassData[SystemGameClassData::iDescription].GetCharPtr()) > MAX_THEME_DESCRIPTION_LENGTH) {
         iErrCode = ERROR_DESCRIPTION_IS_TOO_LONG;
         goto Cleanup;
     }
@@ -521,13 +520,13 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     // Make sure empire has privilege and has less than the max num of gameclasses
     if (iCreator == SYSTEM) {
 
-        iSuperClass = pvGameClassData[SystemGameClassData::SuperClassKey].GetInteger();
+        iSuperClass = pvGameClassData[SystemGameClassData::iSuperClassKey].GetInteger();
 
     } else {
 
         iSuperClass = PERSONAL_GAME;
 
-        if (pvGameClassData [SystemGameClassData::Owner].GetInteger() == TOURNAMENT) {
+        if (pvGameClassData [SystemGameClassData::iOwner].GetInteger() == TOURNAMENT) {
 
             // Check the limit on tournament gameclasses
             Variant vLimit;
@@ -541,11 +540,10 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
             bGameClassesLocked = true;
             LockGameClasses();
 
-            iErrCode = m_pGameData->GetEqualKeys (
+            iErrCode = m_pConn->GetEqualKeys (
                 SYSTEM_GAMECLASS_DATA,
                 SystemGameClassData::TournamentKey,
-                pvGameClassData[SystemGameClassData::TournamentKey],
-                false,
+                pvGameClassData[SystemGameClassData::iTournamentKey],
                 NULL,
                 &iNumEqual
                 );
@@ -563,7 +561,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
 
             // Simple access check
             Variant vTemp;
-            iErrCode = m_pGameData->ReadData (SYSTEM_EMPIRE_DATA, iCreator, SystemEmpireData::Privilege, &vTemp);
+            iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iCreator, SystemEmpireData::Privilege, &vTemp);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -574,8 +572,8 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
                     return ERROR_INSUFFICIENT_PRIVILEGE;
                 }
                 
-                pvGameClassData[SystemGameClassData::Options] = 
-                    pvGameClassData[SystemGameClassData::Options].GetInteger() | GAMECLASS_MARKED_FOR_DELETION;
+                pvGameClassData[SystemGameClassData::iOptions] = 
+                    pvGameClassData[SystemGameClassData::iOptions].GetInteger() | GAMECLASS_MARKED_FOR_DELETION;
                 
             } else {
                 
@@ -586,16 +584,15 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
                 
                 // Number of gameclasses check
                 unsigned int iHas;
-                iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::MaxNumPersonalGameClasses, &vTemp);
+                iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::MaxNumPersonalGameClasses, &vTemp);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
                 
-                iErrCode = m_pGameData->GetEqualKeys (
+                iErrCode = m_pConn->GetEqualKeys (
                     SYSTEM_GAMECLASS_DATA,
                     SystemGameClassData::Owner,
                     iCreator,
-                    false,
                     NULL,
                     &iHas
                     );
@@ -617,7 +614,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     }
 
     // Set num active games to zero
-    pvGameClassData[SystemGameClassData::NumActiveGames] = 0;
+    pvGameClassData[SystemGameClassData::iNumActiveGames] = 0;
 
     // Lock
     if (!bGameClassesLocked) {
@@ -629,7 +626,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     LockSuperClasses();
 
     // Make sure tournament exists
-    iTournamentKey = pvGameClassData[SystemGameClassData::TournamentKey].GetInteger();
+    iTournamentKey = pvGameClassData[SystemGameClassData::iTournamentKey].GetInteger();
     if (iTournamentKey != NO_KEY) {
 
         iErrCode = LockTournament (iTournamentKey, &nmTournamentLock);
@@ -639,7 +636,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
         }
         bTournamentLocked = true;
 
-        iErrCode = m_pGameData->DoesRowExist (SYSTEM_TOURNAMENTS, iTournamentKey, &bFlag);
+        iErrCode = m_pConn->DoesRowExist (SYSTEM_TOURNAMENTS, iTournamentKey, &bFlag);
         if (iErrCode != OK || !bFlag) {
             iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
             goto Cleanup;
@@ -647,11 +644,10 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     }
 
     // Make sure name isn't a duplicate
-    iErrCode = m_pGameData->GetFirstKey (
+    iErrCode = m_pConn->GetFirstKey (
         SYSTEM_GAMECLASS_DATA, 
         SystemGameClassData::Name, 
-        pvGameClassData[SystemGameClassData::Name].GetCharPtr(), 
-        true, 
+        pvGameClassData[SystemGameClassData::iName].GetCharPtr(), 
         &iGameClass
         );
 
@@ -663,14 +659,14 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     // Check super class
     if (IS_KEY (iSuperClass)) {
 
-        iErrCode = m_pGameData->DoesRowExist (SYSTEM_SUPERCLASS_DATA, iSuperClass, &bFlag);
+        iErrCode = m_pConn->DoesRowExist (SYSTEM_SUPERCLASS_DATA, iSuperClass, &bFlag);
         if (iErrCode != OK || !bFlag) {
             iErrCode = ERROR_GAMECLASS_HAS_NO_SUPERCLASS;
             goto Cleanup;
         }
 
         // Increment NumGameClasses in superclass, if applicable
-        iErrCode = m_pGameData->Increment (
+        iErrCode = m_pConn->Increment (
             SYSTEM_SUPERCLASS_DATA, 
             iSuperClass,
             SystemSuperClassData::NumGameClasses,
@@ -682,35 +678,25 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
         }
     }
 
-    // Reserved fields
-    pvGameClassData[SystemGameClassData::fRESERVED2] = (float) 0.0;
-    pvGameClassData[SystemGameClassData::fRESERVED3] = (float) 0.0;
-
     // Insert new row into SystemGameClassData and obtain key to that row
-    iErrCode = m_pGameData->InsertRow (SYSTEM_GAMECLASS_DATA, pvGameClassData, &iGameClass);
+    iErrCode = m_pConn->InsertRow (SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template, pvGameClassData, &iGameClass);
     if (iErrCode != OK) {
         
         if (iSuperClass != NO_KEY) {
             
             // Best effort compensate
-            int iErrCode2 = m_pGameData->Increment (
-                SYSTEM_SUPERCLASS_DATA, 
-                iSuperClass,
-                SystemSuperClassData::NumGameClasses,
-                -1
-                );
+            int iErrCode2 = m_pConn->Increment (SYSTEM_SUPERCLASS_DATA, iSuperClass, SystemSuperClassData::NumGameClasses, -1);
             Assert (iErrCode2 == OK);
         }
         goto Cleanup;
     }
 
-    if (pvGameClassData[SystemGameClassData::Owner].GetInteger() == SYSTEM) {
+    if (pvGameClassData[SystemGameClassData::iOwner].GetInteger() == SYSTEM) {
 
         Variant vKey = iGameClass;
 
         // Add row to SystemSystemGameClassData
-        iErrCode = m_pGameData->InsertRow (SYSTEM_SYSTEM_GAMECLASS_DATA, &vKey);
-
+        iErrCode = m_pConn->InsertRow(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::Template, &vKey, NULL);
         if (iErrCode != OK) {
 
             // Best effort compensate
@@ -719,7 +705,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
 
             goto Cleanup;
         }
-
     }
 
     *piGameClass = iGameClass;
@@ -763,14 +748,14 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
 
     // Test if gameclass exists
     bool bExist;
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExist);
+    iErrCode = m_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExist);
     if (iErrCode != OK || !bExist) {
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
     // Is gameclass really marked for deletion?
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -788,7 +773,7 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
     }
 
     // Mark the gameclass as not halted
-    iErrCode = m_pGameData->WriteAnd (
+    iErrCode = m_pConn->WriteAnd (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -829,7 +814,7 @@ int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** p
     *ppbDeleted = NULL;
     *piNumKeys = 0;
 
-    iErrCode = m_pGameData->ReadColumn (
+    iErrCode = m_pConn->ReadColumn (
         SYSTEM_SYSTEM_GAMECLASS_DATA, 
         SystemSystemGameClassData::GameClass, 
         NULL, 
@@ -863,7 +848,7 @@ int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** p
             goto Cleanup;
         }
 
-        iErrCode = m_pGameData->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pSystemGameClassData);
+        iErrCode = m_pConn->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pSystemGameClassData);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -908,7 +893,7 @@ Cleanup:
     SafeRelease (pSystemGameClassData);
 
     if (pvData != NULL) {
-        m_pGameData->FreeData (pvData);
+        m_pConn->FreeData(pvData);
     }
 
     if (iErrCode != OK) {
@@ -951,7 +936,7 @@ int GameEngine::GetStartableSystemGameClassKeys (int** ppiKey, int* piNumKeys) {
     *ppiKey = NULL;
     *piNumKeys = 0;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_SYSTEM_GAMECLASS_DATA, &pReadTable);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_SYSTEM_GAMECLASS_DATA, &pReadTable);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -974,7 +959,7 @@ int GameEngine::GetStartableSystemGameClassKeys (int** ppiKey, int* piNumKeys) {
             goto Cleanup;
         }
 
-        iErrCode = m_pGameData->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pReadTable);
+        iErrCode = m_pConn->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pReadTable);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -1001,7 +986,7 @@ int GameEngine::GetStartableSystemGameClassKeys (int** ppiKey, int* piNumKeys) {
 
         SafeRelease (pReadTable);
 
-        m_pGameData->FreeData (piGameClassKey);
+        m_pConn->FreeData(piGameClassKey);
 
         if (*piNumKeys == 0) {
             delete [] (*ppiKey);
@@ -1035,7 +1020,7 @@ int GameEngine::GetGameClassSuperClassKey (int iGameClass, int* piSuperClassKey)
     int iErrCode = OK;
 
     Variant vSuperClassKey;
-    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, &vSuperClassKey);
+    iErrCode = m_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, &vSuperClassKey);
     
     if (iErrCode == OK) {
         *piSuperClassKey = vSuperClassKey.GetInteger();
@@ -1058,7 +1043,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
 
     LockSuperClasses();
     
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::SuperClassKey, 
@@ -1070,7 +1055,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->Increment (
+    iErrCode = m_pConn->Increment (
         SYSTEM_SUPERCLASS_DATA, 
         vTemp.GetInteger(), 
         SystemSuperClassData::NumGameClasses, 
@@ -1081,7 +1066,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->Increment (
+    iErrCode = m_pConn->Increment (
         SYSTEM_SUPERCLASS_DATA, 
         iSuperClassKey,
         SystemSuperClassData::NumGameClasses, 
@@ -1090,7 +1075,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
     if (iErrCode != OK) {
         iErrCode = ERROR_SUPERCLASS_DOES_NOT_EXIST;
 
-        int iErrCode2 = m_pGameData->Increment (
+        int iErrCode2 = m_pConn->Increment (
             SYSTEM_SUPERCLASS_DATA, 
             vTemp.GetInteger(), 
             SystemSuperClassData::NumGameClasses, 
@@ -1101,7 +1086,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
         goto Cleanup;
     }
 
-    iErrCode = m_pGameData->WriteData (
+    iErrCode = m_pConn->WriteData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::SuperClassKey, 
@@ -1127,7 +1112,7 @@ Cleanup:
 
 int GameEngine::GetGameClassData (int iGameClass, Variant** ppvData) {
 
-    return m_pGameData->ReadRow (SYSTEM_GAMECLASS_DATA, iGameClass, ppvData);
+    return m_pConn->ReadRow (SYSTEM_GAMECLASS_DATA, iGameClass, ppvData);
 }
 
 
@@ -1144,13 +1129,13 @@ int GameEngine::GetGameClassOwner (int iGameClass, unsigned int* piOwner) {
     int iErrCode;
     bool bExists;
 
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
         return ERROR_GAMECLASS_DOES_NOT_EXIST;
     }
 
     Variant vOwner;
-    iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Owner, &vOwner);
+    iErrCode = m_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Owner, &vOwner);
     
     if (iErrCode == OK) {
         *piOwner = vOwner.GetInteger();
@@ -1173,7 +1158,7 @@ int GameEngine::GetDevelopableTechs (int iGameClass, int* piInitialTechs, int* p
     int iErrCode;
     Variant vTech;
 
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::InitialTechDevs,
@@ -1185,7 +1170,7 @@ int GameEngine::GetDevelopableTechs (int iGameClass, int* piInitialTechs, int* p
 
     *piInitialTechs = vTech.GetInteger();
 
-    iErrCode = m_pGameData->ReadData (
+    iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::DevelopableTechDevs,
@@ -1212,7 +1197,7 @@ int GameEngine::GetDevelopableTechs (int iGameClass, int* piInitialTechs, int* p
 int GameEngine::GetNumEmpiresRequiredForGameToStart (int iGameClass, int* piNumEmpiresRequired) {
 
     Variant vNumEmpires;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::MinNumEmpires, 
@@ -1238,7 +1223,7 @@ int GameEngine::GetNumEmpiresRequiredForGameToStart (int iGameClass, int* piNumE
 int GameEngine::GetGameClassMaxTechIncrease (int iGameClass, float* pfMaxTechIncrease) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
 
     if (iErrCode == OK) {
         *pfMaxTechIncrease = vTemp.GetFloat();
@@ -1251,7 +1236,7 @@ int GameEngine::GetGameClassMaxTechIncrease (int iGameClass, float* pfMaxTechInc
 int GameEngine::GetGameClassVisibleBuilds (int iGameClass, bool* pbVisible) {
 
     Variant vOptions;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options,
@@ -1268,7 +1253,7 @@ int GameEngine::GetGameClassVisibleBuilds (int iGameClass, bool* pbVisible) {
 int GameEngine::GetGameClassVisibleDiplomacy (int iGameClass, bool* pbVisible) {
 
     Variant vOptions;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA,
         iGameClass,
         SystemGameClassData::Options,
@@ -1285,7 +1270,7 @@ int GameEngine::GetGameClassVisibleDiplomacy (int iGameClass, bool* pbVisible) {
 int GameEngine::GetMinNumSecsPerUpdateForSystemGameClass (int* piMinNumSecsPerUpdate) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SystemMinSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::SystemMinSecs, &vTemp);
 
     if (iErrCode == OK) {
         *piMinNumSecsPerUpdate = vTemp.GetInteger();
@@ -1297,7 +1282,7 @@ int GameEngine::GetMinNumSecsPerUpdateForSystemGameClass (int* piMinNumSecsPerUp
 int GameEngine::GetMaxNumSecsPerUpdateForSystemGameClass (int* piMaxNumSecsPerUpdate) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SystemMaxSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::SystemMaxSecs, &vTemp);
 
     if (iErrCode == OK) {
         *piMaxNumSecsPerUpdate = vTemp.GetInteger();
@@ -1309,7 +1294,7 @@ int GameEngine::GetMaxNumSecsPerUpdateForSystemGameClass (int* piMaxNumSecsPerUp
 int GameEngine::GetMaxNumEmpiresForSystemGameClass (int* piMaxNumEmpires) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SystemMaxNumEmpires, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::SystemMaxNumEmpires, &vTemp);
 
     if (iErrCode == OK) {
         *piMaxNumEmpires = vTemp.GetInteger();
@@ -1321,7 +1306,7 @@ int GameEngine::GetMaxNumEmpiresForSystemGameClass (int* piMaxNumEmpires) {
 int GameEngine::GetMaxNumPlanetsForSystemGameClass (int* piMaxNumPlanets) {
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SystemMaxNumPlanets, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::SystemMaxNumPlanets, &vTemp);
     
     if (iErrCode == OK) {
         *piMaxNumPlanets = vTemp.GetInteger();
@@ -1333,7 +1318,7 @@ int GameEngine::GetMaxNumPlanetsForSystemGameClass (int* piMaxNumPlanets) {
 int GameEngine::GetMinNumSecsPerUpdateForPersonalGameClass (int* piMinNumSecsPerUpdate) {
     
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PersonalMinSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::PersonalMinSecs, &vTemp);
     
     if (iErrCode == OK) {
         *piMinNumSecsPerUpdate = vTemp.GetInteger();
@@ -1345,7 +1330,7 @@ int GameEngine::GetMinNumSecsPerUpdateForPersonalGameClass (int* piMinNumSecsPer
 int GameEngine::GetMaxNumSecsPerUpdateForPersonalGameClass (int* piMaxNumSecsPerUpdate) {
     
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PersonalMaxSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::PersonalMaxSecs, &vTemp);
     
     if (iErrCode == OK) {
         *piMaxNumSecsPerUpdate = vTemp.GetInteger();
@@ -1357,7 +1342,7 @@ int GameEngine::GetMaxNumSecsPerUpdateForPersonalGameClass (int* piMaxNumSecsPer
 int GameEngine::GetMaxNumEmpiresForPersonalGameClass (int* piMaxNumEmpires) {
     
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PersonalMaxNumEmpires, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::PersonalMaxNumEmpires, &vTemp);
     
     if (iErrCode == OK) {
         *piMaxNumEmpires = vTemp.GetInteger();
@@ -1369,7 +1354,7 @@ int GameEngine::GetMaxNumEmpiresForPersonalGameClass (int* piMaxNumEmpires) {
 int GameEngine::GetMaxNumPlanetsForPersonalGameClass (int* piMaxNumPlanets) {
     
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PersonalMaxNumPlanets, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::PersonalMaxNumPlanets, &vTemp);
     
     if (iErrCode == OK) {
         *piMaxNumPlanets = vTemp.GetInteger();
@@ -1385,7 +1370,7 @@ int GameEngine::SetMinNumSecsPerUpdateForSystemGameClass (int iMinNumSecsPerUpda
     }
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SystemMaxSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::SystemMaxSecs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1394,7 +1379,7 @@ int GameEngine::SetMinNumSecsPerUpdateForSystemGameClass (int iMinNumSecsPerUpda
         return ERROR_FAILURE;
     }
 
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::SystemMinSecs, iMinNumSecsPerUpdate);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::SystemMinSecs, iMinNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumSecsPerUpdateForSystemGameClass (int iMaxNumSecsPerUpdate) {
@@ -1404,7 +1389,7 @@ int GameEngine::SetMaxNumSecsPerUpdateForSystemGameClass (int iMaxNumSecsPerUpda
     }
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::SystemMinSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::SystemMinSecs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1413,7 +1398,7 @@ int GameEngine::SetMaxNumSecsPerUpdateForSystemGameClass (int iMaxNumSecsPerUpda
         return ERROR_FAILURE;
     }
 
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::SystemMaxSecs, iMaxNumSecsPerUpdate);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::SystemMaxSecs, iMaxNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumEmpiresForSystemGameClass (int iMaxNumEmpires) {
@@ -1421,7 +1406,7 @@ int GameEngine::SetMaxNumEmpiresForSystemGameClass (int iMaxNumEmpires) {
     if (iMaxNumEmpires < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::SystemMaxNumEmpires, iMaxNumEmpires);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::SystemMaxNumEmpires, iMaxNumEmpires);
 }
 
 int GameEngine::SetMaxNumPlanetsForSystemGameClass (int iMaxNumPlanets) {
@@ -1429,7 +1414,7 @@ int GameEngine::SetMaxNumPlanetsForSystemGameClass (int iMaxNumPlanets) {
     if (iMaxNumPlanets < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::SystemMaxNumPlanets, iMaxNumPlanets);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::SystemMaxNumPlanets, iMaxNumPlanets);
 }
 
 int GameEngine::SetMinNumSecsPerUpdateForPersonalGameClass (int iMinNumSecsPerUpdate) {
@@ -1439,7 +1424,7 @@ int GameEngine::SetMinNumSecsPerUpdateForPersonalGameClass (int iMinNumSecsPerUp
     }
 
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PersonalMaxSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::PersonalMaxSecs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1448,7 +1433,7 @@ int GameEngine::SetMinNumSecsPerUpdateForPersonalGameClass (int iMinNumSecsPerUp
         return ERROR_FAILURE;
     }
     
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::PersonalMinSecs, iMinNumSecsPerUpdate);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::PersonalMinSecs, iMinNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumSecsPerUpdateForPersonalGameClass (int iMaxNumSecsPerUpdate) {
@@ -1458,7 +1443,7 @@ int GameEngine::SetMaxNumSecsPerUpdateForPersonalGameClass (int iMaxNumSecsPerUp
     }
     
     Variant vTemp;
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::PersonalMinSecs, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::PersonalMinSecs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1467,7 +1452,7 @@ int GameEngine::SetMaxNumSecsPerUpdateForPersonalGameClass (int iMaxNumSecsPerUp
         return ERROR_FAILURE;
     }
 
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::PersonalMaxSecs, iMaxNumSecsPerUpdate);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::PersonalMaxSecs, iMaxNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumEmpiresForPersonalGameClass (int iMaxNumEmpires) {
@@ -1475,7 +1460,7 @@ int GameEngine::SetMaxNumEmpiresForPersonalGameClass (int iMaxNumEmpires) {
     if (iMaxNumEmpires < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::PersonalMaxNumEmpires, iMaxNumEmpires);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::PersonalMaxNumEmpires, iMaxNumEmpires);
 }
 
 int GameEngine::SetMaxNumPlanetsForPersonalGameClass (int iMaxNumPlanets) {
@@ -1483,7 +1468,7 @@ int GameEngine::SetMaxNumPlanetsForPersonalGameClass (int iMaxNumPlanets) {
     if (iMaxNumPlanets < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return m_pGameData->WriteData (SYSTEM_DATA, SystemData::PersonalMaxNumPlanets, iMaxNumPlanets);
+    return m_pConn->WriteData (SYSTEM_DATA, SystemData::PersonalMaxNumPlanets, iMaxNumPlanets);
 }
 
 // Input:
@@ -1497,7 +1482,7 @@ int GameEngine::SetMaxNumPlanetsForPersonalGameClass (int iMaxNumPlanets) {
 int GameEngine::DoesGameClassAllowPrivateMessages (int iGameClass, bool* pbPrivateMessages) {
 
     Variant vOptions;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -1524,7 +1509,7 @@ int GameEngine::DoesGameClassHaveSubjectiveViews (int iGameClass, bool* pbSubjec
 
     Variant vOptions;
 
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -1541,7 +1526,7 @@ int GameEngine::DoesGameClassHaveSubjectiveViews (int iGameClass, bool* pbSubjec
 int GameEngine::GetGameClassDiplomacyLevel (int iGameClass, int* piDiplomacy) {
 
     Variant vLevel;
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::DiplomacyLevel, 
@@ -1559,7 +1544,7 @@ int GameEngine::GetGameClassOptions (int iGameClass, int* piOptions) {
 
     Variant vOptions;
 
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -1577,7 +1562,7 @@ int GameEngine::GetMaxNumEmpires (int iGameClass, int* piMaxNumEmpires) {
 
     Variant vValue;
 
-    int iErrCode = m_pGameData->ReadData (
+    int iErrCode = m_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::MaxNumEmpires, 
@@ -1591,14 +1576,9 @@ int GameEngine::GetMaxNumEmpires (int iGameClass, int* piMaxNumEmpires) {
     return iErrCode;
 }
 
-int GameEngine::GetGameClassProperty (int iGameClass, unsigned int iProperty, Variant* pvProperty) {
-
-    return m_pGameData->ReadData (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        iProperty,
-        pvProperty
-        );
+int GameEngine::GetGameClassProperty (int iGameClass, const char* pszColumn, Variant* pvProperty)
+{
+    return m_pConn->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, pszColumn, pvProperty);
 }
 
 int GameEngine::GetSupportedMapGenerationTypes(int iGameClass, MapGeneration* pmgMapGen) {

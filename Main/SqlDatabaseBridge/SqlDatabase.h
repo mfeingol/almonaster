@@ -1,15 +1,14 @@
-#if !defined(AFX_DATABASE_H__3B5FD4A1_370A_11D3_A10B_0050047FE2E2__INCLUDED_)
-#define AFX_DATABASE_H__3B5FD4A1_370A_11D3_A10B_0050047FE2E2__INCLUDED_
+#pragma once
 
 #include "Osal/IObject.h"
 #include "Osal/Variant.h"
 #include "Osal/FileHeap.h"
 
-#ifndef DATABASE_EXPORT
-#ifdef DATABASE_BUILD
-#define DATABASE_EXPORT EXPORT
+#ifndef SQL_DATABASE_EXPORT
+#ifdef SQL_DATABASE_BUILD
+#define SQL_DATABASE_EXPORT EXPORT
 #else
-#define DATABASE_EXPORT IMPORT
+#define SQL_DATABASE_EXPORT IMPORT
 #endif
 #endif
 
@@ -17,21 +16,17 @@
 // Export //
 ////////////
 
-// Allowed values:
-//
-// CLSID: CLSID_Database
-// IID's: IID_IDatabase
-
-DATABASE_EXPORT extern const Uuid IID_ITransaction;
-DATABASE_EXPORT extern const Uuid IID_IReadTable;
-DATABASE_EXPORT extern const Uuid IID_IWriteTable;
-DATABASE_EXPORT extern const Uuid IID_IDatabase;
-DATABASE_EXPORT extern const Uuid IID_IDatabaseBackup;
-DATABASE_EXPORT extern const Uuid IID_IDatabaseBackupEnumerator;
-DATABASE_EXPORT extern const Uuid IID_ITableEnumerator;
-DATABASE_EXPORT extern const Uuid IID_ITemplateEnumerator;
-DATABASE_EXPORT extern const Uuid IID_IDatabaseBackupNotificationSink;
-DATABASE_EXPORT extern const Uuid IID_ITemplate;
+SQL_DATABASE_EXPORT extern const Uuid CLSID_SqlDatabase;
+SQL_DATABASE_EXPORT extern const Uuid IID_IReadTable;
+SQL_DATABASE_EXPORT extern const Uuid IID_IWriteTable;
+SQL_DATABASE_EXPORT extern const Uuid IID_IDatabase;
+SQL_DATABASE_EXPORT extern const Uuid IID_IDatabaseConnection;
+SQL_DATABASE_EXPORT extern const Uuid IID_IDatabaseBackup;
+SQL_DATABASE_EXPORT extern const Uuid IID_IDatabaseBackupEnumerator;
+SQL_DATABASE_EXPORT extern const Uuid IID_ITableEnumerator;
+SQL_DATABASE_EXPORT extern const Uuid IID_ITemplateEnumerator;
+SQL_DATABASE_EXPORT extern const Uuid IID_IDatabaseBackupNotificationSink;
+SQL_DATABASE_EXPORT extern const Uuid IID_ITemplate;
 
 // Index flags
 #define INDEX_CASE_SENSITIVE (0x00000001)
@@ -40,13 +35,14 @@ DATABASE_EXPORT extern const Uuid IID_ITemplate;
 struct TemplateDescription {
     char* Name;
     unsigned int NumColumns;
+    char** ColumnNames;
     VariantType* Type;
-    int64* Size;
+    unsigned int* Size;
     bool OneRow;
     unsigned int NumIndexes;
-    unsigned int* IndexColumn;
+    char** IndexColumns;
     unsigned int NumRowsGuess;
-    unsigned int* IndexFlags;   // TODO - move up when upgrades from old database are finished
+    unsigned int* IndexFlags;
 };
 
 struct DatabaseStatistics {
@@ -62,7 +58,7 @@ struct DatabaseStatistics {
 
 struct SearchColumn {
 
-    unsigned int iColumn;
+    const char* pszColumn;
     unsigned int iFlags;
     Variant vData;
     Variant vData2;
@@ -82,24 +78,24 @@ struct SearchDefinition {
 //
 
 // Strings
-#define SEARCH_SUBSTRING        (0x00000001)
-#define SEARCH_EXACT            (0x00000002)
-#define SEARCH_BEGINS_WITH      (0x00000004)
-#define SEARCH_CASE_SENSITIVE   (0x00000008)
-#define SEARCH_ENDS_WITH        (0x00000010)
+#define SEARCH_SUBSTRING       (0x00000001)
+#define SEARCH_EXACT           (0x00000002)
+#define SEARCH_BEGINS_WITH     (0x00000004)
+#define SEARCH_CASE_SENSITIVE  (0x00000008)
+#define SEARCH_ENDS_WITH       (0x00000010)
 
 // Integers
-#define SEARCH_AND              (0x00000010)
-#define SEARCH_NOTAND           (0x00000020)
+#define SEARCH_AND             (0x00000010)
+#define SEARCH_NOTAND          (0x00000020)
 
 // Miscellaneous constants
-const int64 VARIABLE_LENGTH_STRING = 0xffffffffffffffff;
+const unsigned int VARIABLE_LENGTH_STRING = 0xffffffff;
 
-#define MAX_NUM_INDEX_BUCKETS   (100000)
+#define MAX_NUM_INDEX_BUCKETS  (100000)
 
-// Initialization flags
-#define DATABASE_CHECK          (0x00000001)
-#define DATABASE_WRITETHROUGH   (0x00000002)
+// Initialization options
+#define DATABASE_CHECK         (0x00000001)
+#define DATABASE_WRITETHROUGH  (0x00000002)
 
 // Error codes
 #define ERROR_TABLE_ALREADY_EXISTS (-1000002)
@@ -150,7 +146,7 @@ const int64 VARIABLE_LENGTH_STRING = 0xffffffffffffffff;
 class IDatabaseBackup : virtual public IObject {
 public:
 
-    virtual int GetDate (int* piDay, int* piMonth, int* piYear, int* piVersion) = 0;
+    virtual int GetDate(int* piDay, int* piMonth, int* piYear, int* piVersion) = 0;
 };
 
 class IDatabaseBackupEnumerator : virtual public IObject {
@@ -163,12 +159,12 @@ public:
 class IDatabaseBackupNotificationSink : virtual public IObject {
 public:
 
-    virtual void BeginBackup (const char* pszBackupDirectory) = 0;
+    virtual void BeginBackup(const char* pszBackupDirectory) = 0;
 
-    virtual void BeginTemplateBackup (unsigned int iNumTemplates) = 0;
+    virtual void BeginTemplateBackup(unsigned int iNumTemplates) = 0;
     virtual void EndTemplateBackup() = 0;
 
-    virtual void BeginTableBackup (unsigned int iNumTables) = 0;
+    virtual void BeginTableBackup(unsigned int iNumTables) = 0;
     virtual void EndTableBackup() = 0;
 
     virtual void BeginVariableLengthDataBackup() = 0;
@@ -177,9 +173,9 @@ public:
     virtual void BeginMetaDataBackup() = 0;
     virtual void EndMetaDataBackup() = 0;
 
-    virtual void EndBackup (IDatabaseBackup* pBackup) = 0;
+    virtual void EndBackup(IDatabaseBackup* pBackup) = 0;
 
-    virtual void AbortBackup (int iErrCode) = 0;
+    virtual void AbortBackup(int iErrCode) = 0;
 };
 
 class ITableEnumerator : virtual public IObject {
@@ -189,279 +185,227 @@ public:
     virtual const char** GetTableNames() = 0;
 };
 
-class ITemplateEnumerator : virtual public IObject {
-public:
-
-    virtual unsigned int GetNumTemplates() = 0;
-    virtual const char** GetTemplateNames() = 0;
-};
-
 class IReadTable : virtual public IObject {
 public:
 
-    virtual unsigned int GetNumRows (unsigned int* piNumRows) = 0;
+    virtual unsigned int GetNumRows(unsigned int* piNumRows) = 0;
 
-    virtual int DoesRowExist (unsigned int iKey, bool* pbExists) = 0;
+    virtual int DoesRowExist(unsigned int iKey, bool* pbExists) = 0;
 
-    virtual int GetFirstKey (unsigned int iColumn, int iData, unsigned int* piKey) = 0;
-    virtual int GetFirstKey (unsigned int iColumn, float fData, unsigned int* piKey) = 0;
-    virtual int GetFirstKey (unsigned int iColumn, const char* pszData, bool bCaseInsensitive, unsigned int* piKey) = 0;
+    virtual int GetFirstKey(const char* pszColumn, int iData, unsigned int* piKey) = 0;
+    virtual int GetFirstKey(const char* pszColumn, float fData, unsigned int* piKey) = 0;
+    virtual int GetFirstKey(const char* pszColumn, const char* pszData, unsigned int* piKey) = 0;
+    virtual int GetFirstKey(const char* pszColumn, int64 i64Data, unsigned int* piKey) = 0;
+    virtual int GetFirstKey(const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
 
-    virtual int GetFirstKey (unsigned int iColumn, int64 i64Data, unsigned int* piKey) = 0;
-    virtual int GetFirstKey (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, unsigned int* piKey) = 0;
+    virtual int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetNextKey(unsigned int iKey, unsigned int* piNextKey) = 0;
 
-    virtual int GetAllKeys (unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-    virtual int GetNextKey (unsigned int iKey, unsigned int* piNextKey) = 0;
+    virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
 
-    virtual int GetEqualKeys (unsigned int iColumn, const Variant& vData, bool bCaseInsensitive, 
-        unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int ReadData(unsigned int iKey, const char* pszColumn, int* piData) = 0;
+    virtual int ReadData(unsigned int iKey, const char* pszColumn, float* pfData) = 0;
+    virtual int ReadData(unsigned int iKey, const char* pszColumn, const char** ppszData) = 0;
 
-    virtual int GetSearchKeys (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
-        unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+    virtual int ReadData(unsigned int iKey, const char* pszColumn, int64* pi64Data) = 0;
+    virtual int ReadData(unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;
 
-    virtual int ReadData (unsigned int iKey, unsigned int iColumn, int* piData) = 0;
-    virtual int ReadData (unsigned int iKey, unsigned int iColumn, float* pfData) = 0;
-    virtual int ReadData (unsigned int iKey, unsigned int iColumn, const char** ppszData) = 0;
-
-    virtual int ReadData (unsigned int iKey, unsigned int iColumn, int64* pi64Data) = 0;
-    virtual int ReadData (unsigned int iKey, unsigned int iColumn, Variant* pvData) = 0;
-
-    virtual int ReadData (unsigned int iColumn, int* piData) = 0;
-    virtual int ReadData (unsigned int iColumn, float* pfData) = 0;
-    virtual int ReadData (unsigned int iColumn, const char** ppszData) = 0;
+    virtual int ReadData(const char* pszColumn, int* piData) = 0;
+    virtual int ReadData(const char* pszColumn, float* pfData) = 0;
+    virtual int ReadData(const char* pszColumn, const char** ppszData) = 0;
     
-    virtual int ReadData (unsigned int iColumn, int64* pi64Data) = 0;
+    virtual int ReadData(const char* pszColumn, int64* pi64Data) = 0;
 
-    virtual int ReadData (unsigned int iColumn, Variant* pvData) = 0;
+    virtual int ReadData(const char* pszColumn, Variant* pvData) = 0;
 
-    virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, float** ppfData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, float** ppfData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows) = 0;
 
-    virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows) = 0;
 
-    virtual int ReadColumn (unsigned int iColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
 
-    virtual int ReadColumn (unsigned int iColumn, int** ppiData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, float** ppfData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, char*** ppszData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, int** ppiData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, float** ppfData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, char*** ppszData, unsigned int* piNumRows) = 0;
     
-    virtual int ReadColumn (unsigned int iColumn, int64** ppi64Data, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (unsigned int iColumn, Variant** ppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, int64** ppi64Data, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszColumn, Variant** ppvData, unsigned int* piNumRows) = 0;
 
-    virtual int ReadColumns (unsigned int iNumColumns, const unsigned int* piColumn, unsigned int** ppiKey, 
+    virtual int ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, 
         Variant*** pppvData, unsigned int* piNumRows) = 0;
 
-    virtual int ReadRow (unsigned int iKey, void*** ppData) = 0;
-    virtual int ReadRow (unsigned int iKey, Variant** ppvData) = 0;
+    virtual int ReadRow(unsigned int iKey, void*** ppData) = 0;
+    virtual int ReadRow(unsigned int iKey, Variant** ppvData) = 0;
 
-    virtual int ReadColumnWhereEqual (unsigned int iEqualColumn, const Variant& vData, bool bCaseInsensitive, 
-        unsigned int iReadColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys) = 0;
+    virtual int ReadColumnWhereEqual(const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
+                                     unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys) = 0;
 };
 
 class IWriteTable : virtual public IReadTable {
 public:
 
-    virtual int WriteData (unsigned int iKey, unsigned int iColumn, int iData) = 0;
-    virtual int WriteData (unsigned int iKey, unsigned int iColumn, float fData) = 0;
-    virtual int WriteData (unsigned int iKey, unsigned int iColumn, const char* pszData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, int iData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, float fData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, const char* pszData) = 0;
 
-    virtual int WriteData (unsigned int iKey, unsigned int iColumn, int64 i64Data) = 0;
-    virtual int WriteData (unsigned int iKey, unsigned int iColumn, const Variant& vData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData) = 0;
 
-    virtual int WriteData (unsigned int iColumn, int iData) = 0;
-    virtual int WriteData (unsigned int iColumn, float fData) = 0;
-    virtual int WriteData (unsigned int iColumn, const char* pszData) = 0;
+    virtual int WriteData(const char* pszColumn, int iData) = 0;
+    virtual int WriteData(const char* pszColumn, float fData) = 0;
+    virtual int WriteData(const char* pszColumn, const char* pszData) = 0;
 
-    virtual int WriteData (unsigned int iColumn, int64 i64Data) = 0;
-    virtual int WriteData (unsigned int iColumn, const Variant& vData) = 0;
+    virtual int WriteData(const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteData(const char* pszColumn, const Variant& vData) = 0;
 
-    virtual int WriteAnd (unsigned int iKey, unsigned int iColumn, unsigned int iBitField) = 0;
-    virtual int WriteAnd (unsigned int iColumn, unsigned int iBitField) = 0;
+    virtual int WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
+    virtual int WriteAnd(const char* pszColumn, unsigned int iBitField) = 0;
 
-    virtual int WriteOr (unsigned int iKey, unsigned int iColumn, unsigned int iBitField) = 0;
-    virtual int WriteOr (unsigned int iColumn, unsigned int iBitField) = 0;
+    virtual int WriteOr(unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
+    virtual int WriteOr(const char* pszColumn, unsigned int iBitField) = 0;
 
-    virtual int WriteXor (unsigned int iKey, unsigned int iColumn, unsigned int iBitField) = 0;
-    virtual int WriteXor (unsigned int iColumn, unsigned int iBitField) = 0;
+    virtual int WriteXor(unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
+    virtual int WriteXor(const char* pszColumn, unsigned int iBitField) = 0;
 
-    virtual int WriteNot (unsigned int iKey, unsigned int iColumn) = 0;
-    virtual int WriteNot (unsigned int iColumn) = 0;
+    virtual int WriteNot(unsigned int iKey, const char* pszColumn) = 0;
+    virtual int WriteNot(const char* pszColumn) = 0;
 
-    virtual int WriteColumn (unsigned int iColumn, int iData) = 0;
-    virtual int WriteColumn (unsigned int iColumn, float fData) = 0;
-    virtual int WriteColumn (unsigned int iColumn, const char* pszData) = 0;
+    virtual int WriteColumn(const char* pszColumn, int iData) = 0;
+    virtual int WriteColumn(const char* pszColumn, float fData) = 0;
+    virtual int WriteColumn(const char* pszColumn, const char* pszData) = 0;
     
-    virtual int WriteColumn (unsigned int iColumn, int64 i64Data) = 0;
-    virtual int WriteColumn (unsigned int iColumn, const Variant& vData) = 0;
+    virtual int WriteColumn(const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteColumn(const char* pszColumn, const Variant& vData) = 0;
 
-    virtual int InsertRow (const Variant* pvColVal, unsigned int* piKey = NULL) = 0;
-    virtual int InsertRow (const Variant* pvColVal, unsigned int iKey) = 0;
+    virtual int InsertRow(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey) = 0;
+    virtual int InsertRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
+    virtual int InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
 
-    virtual int InsertRows (const Variant* pvColVal, unsigned int iNumRows) = 0;
-    virtual int InsertDuplicateRows (const Variant* pvColVal, unsigned int iNumRows) = 0;
+    virtual int Increment(const char* pszColumn, const Variant& vIncrement) = 0;
+    virtual int Increment(const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
 
-    virtual int Increment (unsigned int iColumn, const Variant& vIncrement) = 0;
-    virtual int Increment (unsigned int iColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
+    virtual int Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement) = 0;
+    virtual int Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
 
-    virtual int Increment (unsigned int iKey, unsigned int iColumn, const Variant& vIncrement) = 0;
-    virtual int Increment (unsigned int iKey, unsigned int iColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
-
-    virtual int DeleteRow (unsigned int iKey) = 0;
+    virtual int DeleteRow(unsigned int iKey) = 0;
     virtual int DeleteAllRows() = 0;
 };
 
-class ITemplate : virtual public IObject {
+class IDatabase;
+
+class IDatabaseConnection : virtual public IObject {
 public:
 
-    virtual int GetDescription (TemplateDescription* pttTemplate) = 0;
-};
+    virtual bool DoesTableExist(const char* pszTableName) = 0;
 
-class ITransaction;
+    virtual int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate) = 0;
+    virtual int DeleteTable(const char* pszTableName) = 0;
+
+    virtual int ReadData(const char* pszTableName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  
+    virtual int ReadData(const char* pszTableName, const char* pszColumn, Variant* pvData) = 0;
+    
+    virtual int WriteData(const char* pszTableName, unsigned int iKey, const char* pszColumn, const Variant& vData) = 0;
+    virtual int WriteData(const char* pszTableName, const char* pszColumn, const Variant& vData) = 0;
+    
+    virtual int Increment(const char* pszTableName, unsigned int iKey, const char* pszColumn, const Variant& vIncrement) = 0;
+    virtual int Increment(const char* pszTableName, unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
+    
+    virtual int Increment(const char* pszTableName, const char* pszColumn, const Variant& vIncrement) = 0;
+    virtual int Increment(const char* pszTableName, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
+
+    virtual int WriteAnd(const char* pszTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
+    virtual int WriteAnd(const char* pszTableName, const char* pszColumn, unsigned int iBitField) = 0;
+
+    virtual int WriteOr(const char* pszTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
+    virtual int WriteOr(const char* pszTableName, const char* pszColumn, unsigned int iBitField) = 0;
+
+    virtual int WriteXor(const char* pszTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
+    virtual int WriteXor(const char* pszTableName, const char* pszColumn, unsigned int iBitField) = 0;
+
+    virtual int WriteNot(const char* pszTableName, unsigned int iKey, const char* pszColumn) = 0;
+    virtual int WriteNot(const char* pszTableName, const char* pszColumn) = 0;
+
+    virtual int WriteColumn(const char* pszTableName, const char* pszColumn, const Variant& vData) = 0;
+
+    virtual unsigned int GetNumRows(const char* pszTableName, unsigned int* piNumRows) = 0;
+    virtual int DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists) = 0;
+
+    virtual int InsertRow(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey) = 0;
+    virtual int InsertRows(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
+    virtual int InsertDuplicateRows(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
+
+    virtual int DeleteRow(const char* pszTableName, unsigned int iKey) = 0;
+    virtual int DeleteAllRows(const char* pszTableName) = 0;
+    
+    virtual int ReadRow(const char* pszTableName, unsigned int iKey, Variant** ppvData) = 0;
+    virtual int ReadRow(const char* pszTableName, Variant** ppvData) = 0;
+
+    virtual int ReadColumn(const char* pszTableName, const char* pszColumn, unsigned int** ppiKey, 
+        Variant** ppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumn(const char* pszTableName, const char* pszColumn, Variant** ppvData, 
+        unsigned int* piNumRows) = 0;
+
+    virtual int ReadColumns(const char* pszTableName, unsigned int iNumColumns, const char* const* ppszColumn, 
+        unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumns(const char* pszTableName, unsigned int iNumColumns, const char* const* ppszColumn, 
+        Variant*** pppvData, unsigned int* piNumRows) = 0;
+
+    virtual int ReadColumnWhereEqual(const char* pszTableName, const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
+                                     unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys) = 0;
+
+    virtual int GetAllKeys(const char* pszTableName, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetNextKey(const char* pszTableName, unsigned int iKey, unsigned int* piNextKey) = 0;
+
+    virtual int GetFirstKey(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
+    virtual int GetEqualKeys(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+
+    virtual int GetTableForReading(const char* pszTableName, IReadTable** ppTable) = 0;
+    virtual int GetTableForWriting(const char* pszTableName, IWriteTable** ppTable) = 0;
+
+    virtual void FreeData(void** ppData) = 0;
+
+    virtual void FreeData(Variant* pvData) = 0;
+    virtual void FreeData(Variant** ppvData) = 0;
+
+    virtual void FreeData(int* piData) = 0;
+    virtual void FreeData(unsigned int* puiData) = 0;
+    virtual void FreeData(float* ppfData) = 0;
+    virtual void FreeData(char** ppszData) = 0;
+    virtual void FreeData(int64* pi64Data) = 0;
+
+    virtual void FreeKeys(unsigned int* piKeys) = 0;
+};
 
 class IDatabase : virtual public IObject {
 public:
 
-    virtual int Initialize (const char* pszDatabaseName, unsigned int iOptions) = 0;
+    	// Return OK if database was reloaded, WARNING if new database was created, something else if an error occurred
+    virtual int Initialize(const char* pszConnectionString, unsigned int iOptions) = 0;
 
-    virtual int CreateTemplate (const TemplateDescription& ttTemplate) = 0;
-    virtual int DeleteTemplate (const char* pszTemplateName) = 0;
+    virtual const char* GetConnectionString() = 0;
+    virtual unsigned int GetOptions() = 0;
 
-    virtual int GetTemplate (const char* pszTemplateName, ITemplate** ppTemplate) = 0;
-    virtual int GetTemplateForTable (const char* pszTableName, ITemplate** ppTemplate) = 0;
+    virtual IDatabaseConnection* CreateConnection() = 0;
 
-    virtual bool DoesTemplateExist (const char* pszTemplateName) = 0;
-
-    virtual int CreateTable (const char* pszTableName, const char* pszTemplateName) = 0;
-    virtual int ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) = 0;
-    virtual int DeleteTable (const char* pszTableName) = 0;
-
-    virtual bool DoesTableExist (const char* pszTableName) = 0;
-
-    virtual int Backup (IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) = 0;
-    virtual unsigned int DeleteOldBackups (Seconds iNumSecondsOld) = 0;
+    virtual int Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) = 0;
+    virtual unsigned int DeleteOldBackups(Seconds iNumSecondsOld) = 0;
 
     virtual IDatabaseBackupEnumerator* GetBackupEnumerator() = 0;
 
-    virtual int RestoreBackup (IDatabaseBackup* pBackup) = 0;
-    virtual int DeleteBackup (IDatabaseBackup* pBackup) = 0;
+    virtual int RestoreBackup(IDatabaseBackup* pBackup) = 0;
+    virtual int DeleteBackup(IDatabaseBackup* pBackup) = 0;
 
-    virtual const char* GetDirectory() = 0;
+    virtual int GetStatistics(DatabaseStatistics* pdsStats) = 0;
 
     virtual unsigned int GetNumTables() = 0;
     virtual unsigned int GetNumTemplates() = 0;
 
     virtual ITableEnumerator* GetTableEnumerator() = 0;
-    virtual ITemplateEnumerator* GetTemplateEnumerator() = 0;
-
-    virtual bool IsTemplateEqual (const char* pszTemplateName, const TemplateDescription& ttTemplate) = 0;
 
     virtual int Flush() = 0;
-
-    virtual int ReadData (const char* pszTableName, unsigned int iKey, unsigned int iColumn, Variant* pvData) = 0;  
-    virtual int ReadData (const char* pszTableName, unsigned int iColumn, Variant* pvData) = 0;
-    
-    virtual int WriteData (const char* pszTableName, unsigned int iKey, unsigned int iColumn, 
-        const Variant& vData) = 0;
-    virtual int WriteData (const char* pszTableName, unsigned int iColumn, const Variant& vData) = 0;
-    
-    virtual int Increment (const char* pszTableName, unsigned int iKey, unsigned int iColumn, 
-        const Variant& vIncrement) = 0;
-    virtual int Increment (const char* pszTableName, unsigned int iKey, unsigned int iColumn, 
-        const Variant& vIncrement, Variant* pvOldValue) = 0;
-    
-    virtual int Increment (const char* pszTableName, unsigned int iColumn, const Variant& vIncrement) = 0;
-    virtual int Increment (const char* pszTableName, unsigned int iColumn, const Variant& vIncrement, 
-        Variant* pvOldValue) = 0;
-
-    virtual int WriteAnd (const char* pszTableName, unsigned int iKey, unsigned int iColumn, 
-        unsigned int iBitField) = 0;
-    virtual int WriteAnd (const char* pszTableName, unsigned int iColumn, unsigned int iBitField) = 0;
-
-    virtual int WriteOr (const char* pszTableName, unsigned int iKey, unsigned int iColumn, 
-        unsigned int iBitField) = 0;
-    virtual int WriteOr (const char* pszTableName, unsigned int iColumn, unsigned int iBitField) = 0;
-
-    virtual int WriteXor (const char* pszTableName, unsigned int iKey, unsigned int iColumn, 
-        unsigned int iBitField) = 0;
-    virtual int WriteXor (const char* pszTableName, unsigned int iColumn, unsigned int iBitField) = 0;
-
-    virtual int WriteNot (const char* pszTableName, unsigned int iKey, unsigned int iColumn) = 0;
-    virtual int WriteNot (const char* pszTableName, unsigned int iColumn) = 0;
-
-    virtual int WriteColumn (const char* pszTableName, unsigned int iColumn, const Variant& vData) = 0;
-
-    virtual unsigned int GetNumRows (const char* pszTableName, unsigned int* piNumRows) = 0;
-    virtual int DoesRowExist (const char* pszTableName, unsigned int iKey, bool* pbExists) = 0;
-
-    virtual int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int* piKey = NULL) = 0;
-    virtual int InsertRow (const char* pszTableName, const Variant* pvColVal, unsigned int iKey) = 0;
-
-    virtual int InsertRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows) = 0;
-    virtual int InsertDuplicateRows (const char* pszTableName, const Variant* pvColVal, unsigned int iNumRows) = 0;
-
-    virtual int DeleteRow (const char* pszTableName, unsigned int iKey) = 0;
-    virtual int DeleteAllRows (const char* pszTableName) = 0;
-    
-    virtual int ReadRow (const char* pszTableName, unsigned int iKey, Variant** ppvData) = 0;
-    virtual int ReadRow (const char* pszTableName, Variant** ppvData) = 0;
-
-    virtual int ReadColumn (const char* pszTableName, unsigned int iColumn, unsigned int** ppiKey, 
-        Variant** ppvData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumn (const char* pszTableName, unsigned int iColumn, Variant** ppvData, 
-        unsigned int* piNumRows) = 0;
-
-    virtual int ReadColumns (const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
-        unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
-    virtual int ReadColumns (const char* pszTableName, unsigned int iNumColumns, const unsigned int* piColumn, 
-        Variant*** pppvData, unsigned int* piNumRows) = 0;
-
-    virtual int GetAllKeys (const char* pszTableName, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-    virtual int GetNextKey (const char* pszTableName, unsigned int iKey, unsigned int* piNextKey) = 0;
-
-    virtual int GetFirstKey (const char* pszTableName, unsigned int iColumn, const Variant& vData, 
-        bool bCaseInsensitive, unsigned int* piKey) = 0;
-
-    virtual int GetEqualKeys (const char* pszTableName, unsigned int iColumn, const Variant& vData, 
-        bool bCaseInsensitive, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-    
-    virtual int GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, 
-        unsigned int* piNumHits, unsigned int* piStopKey) = 0;
-
-    virtual int GetTableForReading (const char* pszTableName, IReadTable** ppTable) = 0;
-    virtual int GetTableForWriting (const char* pszTableName, IWriteTable** ppTable) = 0;
-
-    virtual int CreateTransaction (ITransaction** ppTransaction) = 0;
-
-    virtual void FreeData (void** ppData) = 0;
-
-    virtual void FreeData (Variant* pvData) = 0;
-    virtual void FreeData (Variant** ppvData) = 0;
-
-    virtual void FreeData (int* piData) = 0;
-    virtual void FreeData (unsigned int* puiData) = 0;
-    virtual void FreeData (float* ppfData) = 0;
-    virtual void FreeData (char** ppszData) = 0;
-    virtual void FreeData (int64* pi64Data) = 0;
-
-    virtual void FreeKeys (unsigned int* piKeys) = 0;
-
     virtual int Check() = 0;
-
-    virtual int GetStatistics (DatabaseStatistics* pdsStats) = 0;
-    virtual unsigned int GetOptions() = 0;
-
-    virtual int ReadColumnWhereEqual (const char* pszTableName, unsigned int iEqualColumn, const Variant& vData, 
-        bool bCaseInsensitive, unsigned int iReadColumn, unsigned int** ppiKey, Variant** ppvData, 
-        unsigned int* piNumKeys) = 0;
-
 };
-
-class ITransaction : virtual public IDatabase {
-public:
-
-    virtual int SetComplete() = 0;
-    virtual int SetAbort() = 0;
-};
-
-#endif

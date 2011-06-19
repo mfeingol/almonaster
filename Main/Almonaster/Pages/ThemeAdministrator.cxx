@@ -89,7 +89,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::Name].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iName].GetCharPtr(), pszNewValue) != 0) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_AUTHOR_NAME_LENGTH) {
                     AddMessage ("You submitted an invalid theme name");
                 } else {
@@ -105,7 +105,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::Version].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iVersion].GetCharPtr(), pszNewValue) != 0) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_VERSION_LENGTH) {
                     AddMessage ("You submitted an invalid theme version");
                 } else {
@@ -121,7 +121,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::FileName].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iFileName].GetCharPtr(), pszNewValue) != 0) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_FILE_NAME_LENGTH) {
                     AddMessage ("You submitted an invalid theme file name");
                 } else {
@@ -136,7 +136,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::AuthorName].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iAuthorName].GetCharPtr(), pszNewValue) != 0) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_AUTHOR_NAME_LENGTH) {
                     AddMessage ("You submitted an invalid author name");
                 } else {
@@ -151,7 +151,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::AuthorEmail].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iAuthorEmail].GetCharPtr(), pszNewValue) != 0) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_AUTHOR_EMAIL_LENGTH) {
                     AddMessage ("You submitted an invalid theme author email");
                 } else {
@@ -162,7 +162,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Background
             sprintf (pszForm, "BG%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_BACKGROUND) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_BACKGROUND) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeBackground (iThemeKey, bNewValue);
@@ -171,7 +171,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Live Planet
             sprintf (pszForm, "LP%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_LIVE_PLANET) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_LIVE_PLANET) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeLivePlanet (iThemeKey, bNewValue);
@@ -180,7 +180,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Dead Planet
             sprintf (pszForm, "DP%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_DEAD_PLANET) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_DEAD_PLANET) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeDeadPlanet (iThemeKey, bNewValue);
@@ -189,7 +189,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Separator
             sprintf (pszForm, "Sep%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_SEPARATOR) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_SEPARATOR) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeSeparator (iThemeKey, bNewValue);
@@ -198,7 +198,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Buttons
             sprintf (pszForm, "Butt%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_BUTTONS) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_BUTTONS) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeButtons (iThemeKey, bNewValue);
@@ -207,7 +207,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Horz
             sprintf (pszForm, "Horz%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_HORZ) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_HORZ) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeHorz (iThemeKey, bNewValue);
@@ -216,7 +216,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Vert
             sprintf (pszForm, "Vert%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
-            bOldValue = (pvThemeData[SystemThemes::Options].GetInteger() & THEME_VERT) != 0;
+            bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_VERT) != 0;
 
             if (bNewValue != bOldValue) {
                 iErrCode = g_pGameEngine->SetThemeVert (iThemeKey, bNewValue);
@@ -230,13 +230,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::TextColor].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iTextColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = g_pGameEngine->SetThemeTextColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted text color for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 }
             }
@@ -248,13 +248,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::GoodColor].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iGoodColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = g_pGameEngine->SetThemeGoodColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted good color for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 }
             }
@@ -266,13 +266,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::BadColor].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iBadColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = g_pGameEngine->SetThemeBadColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted bad color for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 }
             }
@@ -284,13 +284,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::PrivateMessageColor].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iPrivateMessageColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = g_pGameEngine->SetThemePrivateMessageColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted private color for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 }
             }
@@ -302,13 +302,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::BroadcastMessageColor].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iBroadcastMessageColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = g_pGameEngine->SetThemeBroadcastMessageColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted broadcast color for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 }
             }
@@ -320,13 +320,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::TableColor].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iTableColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = g_pGameEngine->SetThemeTableColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted table color for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 }
             }
@@ -338,10 +338,10 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pvThemeData[SystemThemes::Description].GetCharPtr(), pszNewValue) != 0) {
+            if (String::StrCmp (pvThemeData[SystemThemes::iDescription].GetCharPtr(), pszNewValue) != 0) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_DESCRIPTION_LENGTH) {
                     AddMessage ("The submitted description for theme ");
-                    AppendMessage (pvThemeData[SystemThemes::Name].GetCharPtr());
+                    AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 } else {
                     iErrCode = g_pGameEngine->SetThemeDescription (iThemeKey, pszNewValue);
@@ -367,7 +367,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("You must submit a valid theme name");
                 goto Redirection;
             } else {
-                pvSubmitArray[SystemThemes::Name] = pszNewValue;
+                pvSubmitArray[SystemThemes::iName] = pszNewValue;
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("NewAName")) == NULL ||
@@ -378,7 +378,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("You must submit a valid theme author name");
                 goto Redirection;
             } else {
-                pvSubmitArray[SystemThemes::AuthorName] = pszNewValue;
+                pvSubmitArray[SystemThemes::iAuthorName] = pszNewValue;
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("NewVersion")) == NULL ||
@@ -389,7 +389,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("You must submit a valid theme version");
                 goto Redirection;
             } else {
-                pvSubmitArray[SystemThemes::Version] = pszNewValue;
+                pvSubmitArray[SystemThemes::iVersion] = pszNewValue;
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("NewAEmail")) == NULL ||
@@ -400,7 +400,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("You must submit a valid theme author email");
                 goto Redirection;
             } else {
-                pvSubmitArray[SystemThemes::AuthorEmail] = pszNewValue;
+                pvSubmitArray[SystemThemes::iAuthorEmail] = pszNewValue;
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("NewDesc")) == NULL ||
@@ -411,7 +411,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("You must submit a valid theme description");
                 goto Redirection;
             } else {
-                pvSubmitArray[SystemThemes::Description] = pszNewValue;
+                pvSubmitArray[SystemThemes::iDescription] = pszNewValue;
             }
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("NewFile")) == NULL ||
@@ -422,7 +422,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("You must submit a valid theme filename");
                 goto Redirection;
             } else {
-                pvSubmitArray[SystemThemes::FileName] = pszNewValue;
+                pvSubmitArray[SystemThemes::iFileName] = pszNewValue;
             }
 
             int iOptions = 0;
@@ -462,7 +462,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iOptions |= THEME_VERT;
             }
 
-            pvSubmitArray[SystemThemes::Options] = iOptions;
+            pvSubmitArray[SystemThemes::iOptions] = iOptions;
 
             const char* pszNewColor;
 
@@ -473,7 +473,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewColor = pHttpForm->GetValue();
             if (IsColor (pszNewColor)) {
-                pvSubmitArray[SystemThemes::TextColor] = pszNewColor;
+                pvSubmitArray[SystemThemes::iTextColor] = pszNewColor;
             } else {
                 AddMessage ("You must provide a valid text color for the new theme");
                 goto Redirection;
@@ -486,7 +486,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewColor = pHttpForm->GetValue();
             if (IsColor (pszNewColor)) {
-                pvSubmitArray[SystemThemes::GoodColor] = pszNewColor;
+                pvSubmitArray[SystemThemes::iGoodColor] = pszNewColor;
             } else {
                 AddMessage ("You must provide a valid good color for the new theme");
                 goto Redirection;
@@ -499,7 +499,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewColor = pHttpForm->GetValue();
             if (IsColor (pszNewColor)) {
-                pvSubmitArray[SystemThemes::BadColor] = pszNewColor;
+                pvSubmitArray[SystemThemes::iBadColor] = pszNewColor;
             } else {
                 AddMessage ("You must provide a valid bad color for the new theme");
                 goto Redirection;
@@ -512,7 +512,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewColor = pHttpForm->GetValue();
             if (IsColor (pszNewColor)) {
-                pvSubmitArray[SystemThemes::PrivateMessageColor] = pszNewColor;
+                pvSubmitArray[SystemThemes::iPrivateMessageColor] = pszNewColor;
             } else {
                 AddMessage ("You must private a valid private color for the new theme");
                 goto Redirection;
@@ -525,7 +525,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewColor = pHttpForm->GetValue();
             if (IsColor (pszNewColor)) {
-                pvSubmitArray[SystemThemes::BroadcastMessageColor] = pszNewColor;
+                pvSubmitArray[SystemThemes::iBroadcastMessageColor] = pszNewColor;
             } else {
                 AddMessage ("You must provide a valid broadcast color for the new theme");
                 goto Redirection;
@@ -538,7 +538,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewColor = pHttpForm->GetValue();
             if (IsColor (pszNewColor)) {
-                pvSubmitArray[SystemThemes::TableColor] = pszNewColor;
+                pvSubmitArray[SystemThemes::iTableColor] = pszNewColor;
             } else {
                 AddMessage ("You must provide a valid table color for the new theme");
                 goto Redirection;
@@ -604,19 +604,19 @@ if (iNumThemes > 0) {
 
         %><td><%
         %><input type="text" size="28" maxlength="<% Write (MAX_THEME_AUTHOR_NAME_LENGTH); %>" name="Name<%
-        Write (i); %>" value="<% Write (pvThemeData[SystemThemes::Name].GetCharPtr()); %>"></td><%
+        Write (i); %>" value="<% Write (pvThemeData[SystemThemes::iName].GetCharPtr()); %>"></td><%
 
         %><td><input type="text" size="6" maxlength="10" name="Version<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::Version].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iVersion].GetCharPtr()); %>"></td><%
 
         %><td><input type="text" size="17" maxlength="25" name="File<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::FileName].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iFileName].GetCharPtr()); %>"></td><%
 
         %><td><input type="text" size="27" maxlength="50" name="AName<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::AuthorName].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iAuthorName].GetCharPtr()); %>"></td><%
 
         %><td><input type="text" size="22" maxlength="50" name="AEmail<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::AuthorEmail].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iAuthorEmail].GetCharPtr()); %>"></td><%
 
         %></tr><tr><%
 
@@ -624,7 +624,7 @@ if (iNumThemes > 0) {
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Background:</th><%
         %><td><input type="checkbox"<%
 
-        iOptions = pvThemeData[SystemThemes::Options].GetInteger();
+        iOptions = pvThemeData[SystemThemes::iOptions].GetInteger();
 
         if (iOptions & THEME_BACKGROUND) {
             %> checked <%
@@ -635,7 +635,7 @@ if (iNumThemes > 0) {
         %>Description:</th><%
 
         %><td rowspan="2" colspan="2" align="left"><textarea rows="3" cols="50" wrap="virtual" name="Desc<%
-        Write (i); %>"><% Write (pvThemeData[SystemThemes::Description].GetCharPtr()); 
+        Write (i); %>"><% Write (pvThemeData[SystemThemes::iDescription].GetCharPtr()); 
         %></textarea></td><%
         %></tr><%
 
@@ -658,9 +658,9 @@ if (iNumThemes > 0) {
 
         // Text color
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Text Color:</th><%
-        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::TextColor].GetCharPtr()); %>"><%
+        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::iTextColor].GetCharPtr()); %>"><%
         %><input type="text" size="6" maxlength="6" name="TextColor<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::TextColor].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iTextColor].GetCharPtr()); %>"></td><%
 
         // Separator
         %><tr><td>&nbsp;</td><th bgcolor="<% 
@@ -673,9 +673,9 @@ if (iNumThemes > 0) {
 
         // Good color
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Good Color:</th><%
-        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::GoodColor].GetCharPtr()); %>"><%
+        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::iGoodColor].GetCharPtr()); %>"><%
         %><input type="text" size="6" maxlength="6" name="GoodColor<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::GoodColor].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iGoodColor].GetCharPtr()); %>"></td><%
 
         %></tr><tr><%
 
@@ -689,9 +689,9 @@ if (iNumThemes > 0) {
 
         // Bad color
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Bad Color:</th><%
-        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::BadColor].GetCharPtr()); %>"><%
+        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::iBadColor].GetCharPtr()); %>"><%
         %><input type="text" size="6" maxlength="6" name="BadColor<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::BadColor].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iBadColor].GetCharPtr()); %>"></td><%
 
         %></tr><tr><%
 
@@ -706,9 +706,9 @@ if (iNumThemes > 0) {
 
         // Private color
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Private Color:</th><%
-        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::PrivateMessageColor].GetCharPtr()); %>"><%
+        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::iPrivateMessageColor].GetCharPtr()); %>"><%
         %><input type="text" size="6" maxlength="6" name="PrivateColor<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::PrivateMessageColor].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iPrivateMessageColor].GetCharPtr()); %>"></td><%
 
         %></tr><tr><%
 
@@ -723,16 +723,16 @@ if (iNumThemes > 0) {
 
         // Broadcast color
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Broadcast Color:</th><%
-        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::BroadcastMessageColor].GetCharPtr()); %>"><%
+        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::iBroadcastMessageColor].GetCharPtr()); %>"><%
         %><input type="text" size="6" maxlength="6" name="BroadcastColor<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::BroadcastMessageColor].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iBroadcastMessageColor].GetCharPtr()); %>"></td><%
 
         %></tr><tr><td></td><td></td><td></td><%
 
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Table Color:</th><%
-        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::TableColor].GetCharPtr()); %>"><%
+        %><td align="left" bgcolor="<% Write (pvThemeData[SystemThemes::iTableColor].GetCharPtr()); %>"><%
         %><input type="text" size="6" maxlength="6" name="TableColor<% Write (i); %>" <%
-        %>value="<% Write (pvThemeData[SystemThemes::TableColor].GetCharPtr()); %>"></td><%
+        %>value="<% Write (pvThemeData[SystemThemes::iTableColor].GetCharPtr()); %>"></td><%
 
         // Delete theme
         %><td align="center"><%

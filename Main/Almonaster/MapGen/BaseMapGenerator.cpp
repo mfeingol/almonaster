@@ -126,7 +126,7 @@ int BaseMapGenerator::CreatePlanets (
     if (m_htCoordinates.IsInitialized()) {
         m_htCoordinates.Clear();
     } else {
-        int iMaxNumNewPlanets = m_pvGameClassData[SystemGameClassData::MaxNumPlanets].GetInteger();
+        int iMaxNumNewPlanets = m_pvGameClassData[SystemGameClassData::iMaxNumPlanets].GetInteger();
         if (!m_htCoordinates.Initialize(m_iNumExistingPlanets + iNumNewEmpires * iMaxNumNewPlanets))
             return ERROR_OUT_OF_MEMORY;
     }
@@ -139,7 +139,7 @@ int BaseMapGenerator::CreatePlanets (
     }
 
     // Cache gameclass options
-    m_iGameClassOptions = pvGameClassData[SystemGameClassData::Options].GetInteger();
+    m_iGameClassOptions = pvGameClassData[SystemGameClassData::iOptions].GetInteger();
 
     // If necessary, compute the game's random resource values
     ComputeGameResources();
@@ -184,18 +184,18 @@ void BaseMapGenerator::RestartPlanetChain() {
 
         Assert(m_cpLinkedPlanetInPreviousChainDirection != NO_DIRECTION);
 
-        int iLink = m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::Link].GetInteger();
+        int iLink = m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::iLink].GetInteger();
         int iNewLink = iLink & (~LINK_X[m_cpLinkedPlanetInPreviousChainDirection]);
 
         Assert(iNewLink != iLink);
-        m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::Link] = iNewLink;
+        m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::iLink] = iNewLink;
     }
 
     // Remove planets from lookup table
     unsigned int i, iNumNewPlanetsCreatedAfterRestart = m_iNumNewPlanetsCreated - m_iNumChainPlanetsCreated;
     for (i = iNumNewPlanetsCreatedAfterRestart; i < m_iNumNewPlanetsCreated; i ++) {
 
-        const char* pszCoord = m_ppvNewPlanetData[i][GameMap::Coordinates].GetCharPtr();
+        const char* pszCoord = m_ppvNewPlanetData[i][GameMap::iCoordinates].GetCharPtr();
         bool bRet = m_htCoordinates.DeleteFirst(pszCoord, NULL, NULL);
         Assert(bRet);
     }
@@ -261,14 +261,14 @@ void BaseMapGenerator::ChooseHomeworldForChain() {
 
 			// Check the linked planet from the previous chain
 			if (m_iLinkedPlanetInPreviousChainIndex != NO_KEY &&
-				m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::HomeWorld].GetInteger() == HOMEWORLD) {
+				m_ppvNewPlanetData[m_iLinkedPlanetInPreviousChainIndex][GameMap::iHomeWorld].GetInteger() == HOMEWORLD) {
 				// Try again
 				continue;
 			}
 
 			// Check the linked planet from the map
 			if (m_iExistingPlanetLinkedToChain != NO_KEY &&
-				m_ppvExistingPlanetData[m_iExistingPlanetLinkedToChain][GameMap::HomeWorld].GetInteger() == HOMEWORLD) {
+				m_ppvExistingPlanetData[m_iExistingPlanetLinkedToChain][GameMap::iHomeWorld].GetInteger() == HOMEWORLD) {
 				// Try again
 				continue;
 			}
@@ -278,7 +278,7 @@ void BaseMapGenerator::ChooseHomeworldForChain() {
     }
 
     // Mark the chosen planet as a homeworld
-    m_ppvNewPlanetData[iHWIndex][GameMap::HomeWorld] = HOMEWORLD;
+    m_ppvNewPlanetData[iHWIndex][GameMap::iHomeWorld] = HOMEWORLD;
     m_iChainHomeWorldIndex = iHWIndex;
 }
 
@@ -292,7 +292,7 @@ void BaseMapGenerator::CreateNonDefaultLinksForChain() {
 
         int iX, iY;
         GetCoordinates(m_ppvNewPlanetData[iIndex], &iX, &iY);
-        int iLink = m_ppvNewPlanetData[iIndex][GameMap::Link].GetInteger();
+        int iLink = m_ppvNewPlanetData[iIndex][GameMap::iLink].GetInteger();
 
         int cpDir;
         ENUMERATE_CARDINAL_POINTS (cpDir) {
@@ -326,17 +326,17 @@ void BaseMapGenerator::CreateNonDefaultLinksForChain() {
 
             // Create a new link if both planets aren't homeworlds or the map allows 1 planet per empire
             if (m_iNumPlanetsPerEmpire == 1 || 
-                m_ppvNewPlanetData[iIndex][GameMap::HomeWorld].GetInteger() != HOMEWORLD || 
-                pvNeighborPlanetData[GameMap::HomeWorld].GetInteger() != HOMEWORLD) {
+                m_ppvNewPlanetData[iIndex][GameMap::iHomeWorld].GetInteger() != HOMEWORLD || 
+                pvNeighborPlanetData[GameMap::iHomeWorld].GetInteger() != HOMEWORLD) {
                 
                 // Link 'em up
                 iLink |= LINK_X[cpDir];
-                m_ppvNewPlanetData[iIndex][GameMap::Link] = iLink;
+                m_ppvNewPlanetData[iIndex][GameMap::iLink] = iLink;
                 
                 // If this is a planet in the map, no one will care about this change
                 // If it isn't, this is needed
-                int iNeighborLink = pvNeighborPlanetData[GameMap::Link].GetInteger();
-                pvNeighborPlanetData[GameMap::Link] = iNeighborLink | OPPOSITE_LINK_X[cpDir];
+                int iNeighborLink = pvNeighborPlanetData[GameMap::iLink].GetInteger();
+                pvNeighborPlanetData[GameMap::iLink] = iNeighborLink | OPPOSITE_LINK_X[cpDir];
             }
         }
     }
@@ -359,9 +359,9 @@ void BaseMapGenerator::AssignResources(unsigned int iHWIndex,
 
     unsigned int iNumNonHWPlanets = iNumPlanets;
     if (iHWIndex != NO_KEY) {
-        m_ppvNewPlanetData[iHWIndex][GameMap::Ag] = m_pvGameData[GameData::HWAg].GetInteger();
-        m_ppvNewPlanetData[iHWIndex][GameMap::Minerals] = m_pvGameData[GameData::HWMin].GetInteger();
-        m_ppvNewPlanetData[iHWIndex][GameMap::Fuel] = m_pvGameData[GameData::HWFuel].GetInteger();
+        m_ppvNewPlanetData[iHWIndex][GameMap::iAg] = m_pvGameData[GameData::iHWAg].GetInteger();
+        m_ppvNewPlanetData[iHWIndex][GameMap::iMinerals] = m_pvGameData[GameData::iHWMin].GetInteger();
+        m_ppvNewPlanetData[iHWIndex][GameMap::iFuel] = m_pvGameData[GameData::iHWFuel].GetInteger();
         iNumNonHWPlanets --;
     }
 
@@ -369,9 +369,9 @@ void BaseMapGenerator::AssignResources(unsigned int iHWIndex,
     // Assign resources to rest of planets //
     /////////////////////////////////////////
 
-    unsigned int iAvgPlanetAg = m_pvGameData[GameData::AvgAg].GetInteger();
-    unsigned int iAvgPlanetMin = m_pvGameData[GameData::AvgMin].GetInteger();
-    unsigned int iAvgPlanetFuel = m_pvGameData[GameData::AvgFuel].GetInteger();
+    unsigned int iAvgPlanetAg = m_pvGameData[GameData::iAvgAg].GetInteger();
+    unsigned int iAvgPlanetMin = m_pvGameData[GameData::iAvgMin].GetInteger();
+    unsigned int iAvgPlanetFuel = m_pvGameData[GameData::iAvgFuel].GetInteger();
 
     unsigned int* piAg = (unsigned int*)StackAlloc(iNumNonHWPlanets * 3 * sizeof (unsigned int));
     unsigned int* piMin = piAg + iNumNonHWPlanets;
@@ -460,9 +460,9 @@ void BaseMapGenerator::AssignResources(unsigned int iHWIndex,
         if (i == iHWIndex)
             continue;
 
-        m_ppvNewPlanetData[i][GameMap::Ag] = piAg[iCounter];
-        m_ppvNewPlanetData[i][GameMap::Minerals] = piMin[iCounter];
-        m_ppvNewPlanetData[i][GameMap::Fuel] = piFuel[iCounter];
+        m_ppvNewPlanetData[i][GameMap::iAg] = piAg[iCounter];
+        m_ppvNewPlanetData[i][GameMap::iMinerals] = piMin[iCounter];
+        m_ppvNewPlanetData[i][GameMap::iFuel] = piFuel[iCounter];
 
         iCounter ++;
     }
@@ -474,7 +474,7 @@ void BaseMapGenerator::ComputeGameResources() {
 
     if (m_iNumExistingPlanets > 0) {
 
-        m_iNumPlanetsPerEmpire = m_pvGameData[GameData::NumPlanetsPerEmpire].GetInteger();
+        m_iNumPlanetsPerEmpire = m_pvGameData[GameData::iNumPlanetsPerEmpire].GetInteger();
     
     } else {
 
@@ -484,8 +484,8 @@ void BaseMapGenerator::ComputeGameResources() {
         // Number of planets per empire
         //
 
-        iMin = m_pvGameClassData[SystemGameClassData::MinNumPlanets].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxNumPlanets].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinNumPlanets].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxNumPlanets].GetInteger();
         Assert (iMin <= iMax);
 
         m_iNumPlanetsPerEmpire = iMin;
@@ -493,63 +493,63 @@ void BaseMapGenerator::ComputeGameResources() {
             m_iNumPlanetsPerEmpire = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
         }
 
-        m_pvGameData[GameData::NumPlanetsPerEmpire] = m_iNumPlanetsPerEmpire;
+        m_pvGameData[GameData::iNumPlanetsPerEmpire] = m_iNumPlanetsPerEmpire;
 
         //
         // Homeworld resources
         //
         
         // HWAg
-        iMin = m_pvGameClassData[SystemGameClassData::MinAgHW].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxAgHW].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinAgHW].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxAgHW].GetInteger();
 
         Assert (iMin <= iMax);
         
-        m_pvGameData[GameData::HWAg] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
+        m_pvGameData[GameData::iHWAg] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
         // HWMin
-        iMin = m_pvGameClassData[SystemGameClassData::MinMinHW].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxMinHW].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinMinHW].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxMinHW].GetInteger();
 
         Assert (iMin <= iMax);
 
-        m_pvGameData[GameData::HWMin] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
+        m_pvGameData[GameData::iHWMin] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
         // HWFuel
-        iMin = m_pvGameClassData[SystemGameClassData::MinFuelHW].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxFuelHW].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinFuelHW].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxFuelHW].GetInteger();
 
         Assert (iMin <= iMax);
 
-        m_pvGameData[GameData::HWFuel] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
+        m_pvGameData[GameData::iHWFuel] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
         //
         // Planet resources
         //
         
         // Planet ag
-        iMin = m_pvGameClassData[SystemGameClassData::MinAvgAg].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxAvgAg].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinAvgAg].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxAvgAg].GetInteger();
 
         Assert (iMin <= iMax);
         
-        m_pvGameData[GameData::AvgAg] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
+        m_pvGameData[GameData::iAvgAg] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
         // Planet min
-        iMin = m_pvGameClassData[SystemGameClassData::MinAvgMin].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxAvgMin].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinAvgMin].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxAvgMin].GetInteger();
 
         Assert (iMin <= iMax);
         
-        m_pvGameData[GameData::AvgMin] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
+        m_pvGameData[GameData::iAvgMin] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
         // Planet fuel
-        iMin = m_pvGameClassData[SystemGameClassData::MinAvgFuel].GetInteger();
-        iMax = m_pvGameClassData[SystemGameClassData::MaxAvgFuel].GetInteger();
+        iMin = m_pvGameClassData[SystemGameClassData::iMinAvgFuel].GetInteger();
+        iMax = m_pvGameClassData[SystemGameClassData::iMaxAvgFuel].GetInteger();
 
         Assert (iMin <= iMax);
 
-        m_pvGameData[GameData::AvgFuel] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
+        m_pvGameData[GameData::iAvgFuel] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
     }
 }
 
@@ -559,10 +559,10 @@ int BaseMapGenerator::CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLo
     unsigned int iNewPlanetIndex = m_iNumNewPlanetsCreated;
 
     // Set default values
-    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::Owner] = iEmpireKey;
-    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::HomeWorld] = NOT_HOMEWORLD;
-    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::Link] = 0;
-    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::Coordinates].Clear();
+    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iOwner] = iEmpireKey;
+    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iHomeWorld] = NOT_HOMEWORLD;
+    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iLink] = 0;
+    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iCoordinates].Clear();
 
     if (plLocation->cpDirectionFromCoordinates == NO_DIRECTION) {
 
@@ -609,7 +609,7 @@ int BaseMapGenerator::CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLo
 
 int BaseMapGenerator::InsertIntoCoordinatesTable(unsigned int iPlanetIndex) {
 
-    const char* pszCoord = m_ppvNewPlanetData[iPlanetIndex][GameMap::Coordinates].GetCharPtr();
+    const char* pszCoord = m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates].GetCharPtr();
 
     // Sanity check - shouldn't exist already
     Assert(!m_htCoordinates.FindFirst(pszCoord, (Variant**) NULL));
@@ -626,8 +626,8 @@ int BaseMapGenerator::SetCoordinates(unsigned int iPlanetIndex, int iX, int iY) 
     char pszCoord[MAX_COORDINATE_LENGTH + 1];
     GameEngine::GetCoordinates(iX, iY, pszCoord);
 
-    m_ppvNewPlanetData[iPlanetIndex][GameMap::Coordinates] = pszCoord;
-    if (m_ppvNewPlanetData[iPlanetIndex][GameMap::Coordinates].GetCharPtr() == NULL)
+    m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates] = pszCoord;
+    if (m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates].GetCharPtr() == NULL)
         return ERROR_OUT_OF_MEMORY;
 
     return OK;
@@ -640,9 +640,9 @@ void BaseMapGenerator::AddLink(unsigned int iPlanetIndex, CardinalPoint cp) {
 
 void BaseMapGenerator::AddLink(Variant* pvPlanetData, CardinalPoint cp) {
 
-    int iLink = pvPlanetData[GameMap::Link].GetInteger();
+    int iLink = pvPlanetData[GameMap::iLink].GetInteger();
     Assert((iLink & LINK_X[cp]) == 0);
-    pvPlanetData[GameMap::Link] = iLink | LINK_X[cp];
+    pvPlanetData[GameMap::iLink] = iLink | LINK_X[cp];
 }
 
 int BaseMapGenerator::GetNewPlanetLocation(PlanetLocation* plLocation) {
@@ -667,7 +667,7 @@ int BaseMapGenerator::GetNewPlanetLocation(PlanetLocation* plLocation) {
 
 int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
 
-    int iMaxNumEmpires = m_pvGameClassData[SystemGameClassData::MaxNumEmpires].GetInteger();
+    int iMaxNumEmpires = m_pvGameClassData[SystemGameClassData::iMaxNumEmpires].GetInteger();
     if (iMaxNumEmpires == UNLIMITED_EMPIRES) {
 
         int iErrCode, iNumEmpiresInGame, iUpdatesBeforeClose;
@@ -865,19 +865,19 @@ int BaseMapGenerator::GetNewPlanetLocationFromMap(PlanetLocation* plLocation) {
 
         unsigned int iNumOpenDirections = 0;
 
-        if (m_ppvExistingPlanetData[iRand][GameMap::NorthPlanetKey] == NO_KEY) {
+        if (m_ppvExistingPlanetData[iRand][GameMap::iNorthPlanetKey] == NO_KEY) {
             pcpOpenDirections [iNumOpenDirections ++] = NORTH;
         }
 
-        if (m_ppvExistingPlanetData[iRand][GameMap::EastPlanetKey] == NO_KEY) {
+        if (m_ppvExistingPlanetData[iRand][GameMap::iEastPlanetKey] == NO_KEY) {
             pcpOpenDirections [iNumOpenDirections ++] = EAST;
         }
 
-        if (m_ppvExistingPlanetData[iRand][GameMap::SouthPlanetKey] == NO_KEY) {
+        if (m_ppvExistingPlanetData[iRand][GameMap::iSouthPlanetKey] == NO_KEY) {
             pcpOpenDirections [iNumOpenDirections ++] = SOUTH;
         }
 
-        if (m_ppvExistingPlanetData[iRand][GameMap::WestPlanetKey] == NO_KEY) {
+        if (m_ppvExistingPlanetData[iRand][GameMap::iWestPlanetKey] == NO_KEY) {
             pcpOpenDirections [iNumOpenDirections ++] = WEST;
         }
 
@@ -948,7 +948,7 @@ bool BaseMapGenerator::InsertMapCoordinates() {
     
     for (i = 0; i < m_iNumExistingPlanets; i ++) {
         
-        if (!m_htCoordinates.Insert (m_ppvExistingPlanetData[i][GameMap::Coordinates].GetCharPtr(), m_ppvExistingPlanetData[i])) {
+        if (!m_htCoordinates.Insert (m_ppvExistingPlanetData[i][GameMap::iCoordinates].GetCharPtr(), m_ppvExistingPlanetData[i])) {
             return false;
         }
     }
@@ -1005,7 +1005,7 @@ bool BaseMapGenerator::AllocatePlanetData(unsigned int iNumPlanets) {
 
 void BaseMapGenerator::GetCoordinates(const Variant* pvPlanetData, int* piX, int* piY) {
 
-    GameEngine::GetCoordinates(pvPlanetData[GameMap::Coordinates].GetCharPtr(), piX, piY);
+    GameEngine::GetCoordinates(pvPlanetData[GameMap::iCoordinates].GetCharPtr(), piX, piY);
 }
 
 int BaseMapGenerator::CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData) {

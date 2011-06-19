@@ -101,18 +101,18 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
         }
     }
 
-    if (HTMLFilter (pvData [SystemTournaments::Description].GetCharPtr(), &strDesc, 0, false) != OK ||
-        HTMLFilter (pvData [SystemTournaments::WebPage].GetCharPtr(), &strUrl, 0, false) != OK ||
-        HTMLFilter (pvData [SystemTournaments::News].GetCharPtr(), &strNews, 0, false) != OK) {
+    if (HTMLFilter (pvData[SystemTournaments::iDescription].GetCharPtr(), &strDesc, 0, false) != OK ||
+        HTMLFilter (pvData[SystemTournaments::iWebPage].GetCharPtr(), &strUrl, 0, false) != OK ||
+        HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strNews, 0, false) != OK) {
         OutputText ("<p><strong>The server is out of memory</strong>");
         goto Cleanup;
     }
 
     OutputText ("<p>");
-    WriteTournamentIcon (pvData [SystemTournaments::Icon].GetInteger(), iTournamentKey, NULL, false);
+    WriteTournamentIcon (pvData[SystemTournaments::iIcon].GetInteger(), iTournamentKey, NULL, false);
 
     OutputText (" <font size=\"+1\"><strong>Administer the ");
-    m_pHttpResponse->WriteText (pvData [SystemTournaments::Name].GetCharPtr());
+    m_pHttpResponse->WriteText (pvData[SystemTournaments::iName].GetCharPtr());
     OutputText (
         " tournament:</strong></font>"\
         "<p><table width=\"90%\">"\
@@ -150,7 +150,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
         "<option "
         );
 
-    if (pvData[SystemTournaments::Icon].GetInteger() != NO_KEY) {
+    if (pvData[SystemTournaments::iIcon].GetInteger() != NO_KEY) {
         OutputText ("selected ");
     }
 
@@ -159,7 +159,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
         "<option "
         );
 
-    if (pvData[SystemTournaments::Icon].GetInteger() == NO_KEY) {
+    if (pvData[SystemTournaments::iIcon].GetInteger() == NO_KEY) {
         OutputText ("selected ");
     }
         
@@ -519,17 +519,17 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
         goto Cleanup;
     }
 
-    if (HTMLFilter (pvData [SystemTournamentTeams::Description].GetCharPtr(), &strDesc, 0, false) != OK ||
-        HTMLFilter (pvData [SystemTournamentTeams::WebPage].GetCharPtr(), &strUrl, 0, false) != OK) {
+    if (HTMLFilter (pvData[SystemTournamentTeams::iDescription].GetCharPtr(), &strDesc, 0, false) != OK ||
+        HTMLFilter (pvData[SystemTournamentTeams::iWebPage].GetCharPtr(), &strUrl, 0, false) != OK) {
         OutputText ("<p><strong>The server is out of memory</strong>");
         goto Cleanup;
     }
 
     OutputText ("<p>");
-    WriteTournamentTeamIcon (pvData [SystemTournamentTeams::Icon].GetInteger(), iTournamentKey, iTeamKey, NULL, false);
+    WriteTournamentTeamIcon (pvData[SystemTournamentTeams::iIcon].GetInteger(), iTournamentKey, iTeamKey, NULL, false);
 
     OutputText (" <font size=\"+1\"><strong>Administer the ");
-    m_pHttpResponse->WriteText (pvData [SystemTournamentTeams::Name].GetCharPtr());
+    m_pHttpResponse->WriteText (pvData[SystemTournamentTeams::iName].GetCharPtr());
     OutputText (
         " team:</strong></font>"\
         "<p><table width=\"65%\">"\
@@ -569,7 +569,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
         "<option "
         );
 
-    if (pvData[SystemTournamentTeams::Icon].GetInteger() != NO_KEY) {
+    if (pvData[SystemTournamentTeams::iIcon].GetInteger() != NO_KEY) {
         OutputText ("selected ");
     }
 
@@ -578,7 +578,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
         "<option "
         );
 
-    if (pvData[SystemTournamentTeams::Icon].GetInteger() == NO_KEY) {
+    if (pvData[SystemTournamentTeams::iIcon].GetInteger() == NO_KEY) {
         OutputText ("selected ");
     }
         
@@ -804,7 +804,7 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
         return ERROR_FAILURE;
     }
 
-    pvSubmitArray [SystemTournamentTeams::Name] = pHttpForm->GetValue();
+    pvSubmitArray [SystemTournamentTeams::iName] = pHttpForm->GetValue();
 
     // Description
     pHttpForm = m_pHttpRequest->GetForm ("TeamDescription");
@@ -818,7 +818,7 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
         return ERROR_FAILURE;
     }
 
-    pvSubmitArray [SystemTournamentTeams::Description] = pHttpForm->GetValue();
+    pvSubmitArray [SystemTournamentTeams::iDescription] = pHttpForm->GetValue();
 
     // URL
     pHttpForm = m_pHttpRequest->GetForm ("TeamWebPageURL");
@@ -833,10 +833,10 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
     }
 
     // Web page
-    pvSubmitArray [SystemTournamentTeams::WebPage] = pHttpForm->GetValue();
+    pvSubmitArray [SystemTournamentTeams::iWebPage] = pHttpForm->GetValue();
 
     // Icon
-    pvSubmitArray [SystemTournamentTeams::Icon] = GetDefaultSystemIcon();
+    pvSubmitArray [SystemTournamentTeams::iIcon] = GetDefaultSystemIcon();
 
     return OK;
 }
@@ -1256,7 +1256,7 @@ void HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSi
         );
     
     WriteTournamentIcon (
-        pvData [SystemTournaments::Icon].GetInteger(),
+        pvData[SystemTournaments::iIcon].GetInteger(),
         iTournamentKey,
         NULL,
         true
@@ -1269,7 +1269,7 @@ void HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSi
         "<td align=\"center\">"
         );
     
-    m_pHttpResponse->WriteText (pvData [SystemTournaments::Name].GetCharPtr());
+    m_pHttpResponse->WriteText (pvData[SystemTournaments::iName].GetCharPtr());
     
     OutputText ("</td>");
 
@@ -1277,14 +1277,14 @@ void HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSi
 
         // Owner
         OutputText ("<td align=\"center\">");
-        m_pHttpResponse->WriteText (pvData [SystemTournaments::OwnerName].GetCharPtr());
+        m_pHttpResponse->WriteText (pvData[SystemTournaments::iOwnerName].GetCharPtr());
         OutputText ("</td>");
     }
 
     // Webpage
     OutputText ("<td align=\"center\">");
 
-    pszUrl = pvData [SystemTournaments::WebPage].GetCharPtr();
+    pszUrl = pvData[SystemTournaments::iWebPage].GetCharPtr();
     if (!String::IsBlank (pszUrl)) {
 
         OutputText ("<a href=\"");
@@ -1367,7 +1367,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
 
     // Icon
     WriteTournamentIcon (
-        pvData [SystemTournaments::Icon].GetInteger(),
+        pvData[SystemTournaments::iIcon].GetInteger(),
         iTournamentKey,
         NULL,
         true
@@ -1375,17 +1375,17 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
 
     // Name
     OutputText (" <h3>");
-    m_pHttpResponse->WriteText (pvData [SystemTournaments::Name].GetCharPtr());
+    m_pHttpResponse->WriteText (pvData[SystemTournaments::iName].GetCharPtr());
 
-    if (pvData [SystemTournaments::Owner].GetInteger() != SYSTEM) {
+    if (pvData[SystemTournaments::iOwner].GetInteger() != SYSTEM) {
         OutputText (" (");
-        m_pHttpResponse->WriteText (pvData [SystemTournaments::OwnerName].GetCharPtr());
+        m_pHttpResponse->WriteText (pvData[SystemTournaments::iOwnerName].GetCharPtr());
         OutputText (")");
     }
     OutputText ("</h3>");
 
     // Webpage
-    pszString = pvData [SystemTournaments::WebPage].GetCharPtr();
+    pszString = pvData[SystemTournaments::iWebPage].GetCharPtr();
     if (!String::IsBlank (pszString)) {
 
         OutputText ("<p><a href=\"");
@@ -1395,13 +1395,13 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
         OutputText ("</a>");
     }
 
-    pszString = pvData [SystemTournaments::Description].GetCharPtr();
+    pszString = pvData[SystemTournaments::iDescription].GetCharPtr();
 
     // Description
     if (!String::IsBlank (pszString)) {
 
         OutputText ("<p><table width=\"40%\"><tr><td>\"");
-        m_pHttpResponse->WriteText (pvData [SystemTournaments::Description].GetCharPtr());
+        m_pHttpResponse->WriteText (pvData[SystemTournaments::iDescription].GetCharPtr());
         OutputText ("\"</td></tr></table>");
     }
 
@@ -1482,7 +1482,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 );
             
             WriteTournamentIcon (
-                pvTeamData [SystemTournamentTeams::Icon].GetInteger(),
+                pvTeamData[SystemTournamentTeams::iIcon].GetInteger(),
                 iTournamentKey,
                 NULL,
                 true
@@ -1495,18 +1495,18 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 "<td align=\"center\"><strong>"
                 );
 
-            pszString = pvTeamData [SystemTournamentTeams::WebPage].GetCharPtr();
+            pszString = pvTeamData[SystemTournamentTeams::iWebPage].GetCharPtr();
             if (!String::IsBlank (pszString)) {
 
                 OutputText ("<a href=\"");
                 m_pHttpResponse->WriteText (pszString);
                 OutputText ("\">");
-                m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Name].GetCharPtr());
+                m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iName].GetCharPtr());
                 OutputText ("</a>");
             
             } else {
 
-                m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Name].GetCharPtr());
+                m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iName].GetCharPtr());
             }
 
             OutputText (
@@ -1516,7 +1516,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 "<td align=\"center\"><strong>"
                 );
             
-            m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Wins].GetInteger());
+            m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iWins].GetInteger());
             
             OutputText (
                 "</strong></td>"\
@@ -1525,7 +1525,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 "<td align=\"center\"><strong>"
                 );
             
-            m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Nukes].GetInteger());
+            m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iNukes].GetInteger());
             
             OutputText (
                 "</strong></td>"\
@@ -1534,7 +1534,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 "<td align=\"center\"><strong>"
                 );
             
-            m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Nuked].GetInteger());
+            m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iNuked].GetInteger());
             
             OutputText (
                 "</strong></td>"\
@@ -1543,7 +1543,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 "<td align=\"center\"><strong>"
                 );
             
-            m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Draws].GetInteger());
+            m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iDraws].GetInteger());
             
             OutputText (
                 "</strong></td>"\
@@ -1552,7 +1552,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
                 "<td align=\"center\"><strong>"
                 );
 
-            m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Ruins].GetInteger());
+            m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iRuins].GetInteger());
             
             OutputText (
                 "</strong></td>"\
@@ -1562,7 +1562,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
 
             // Description
 
-            m_pHttpResponse->WriteText (pvTeamData [SystemTournamentTeams::Description].GetCharPtr());
+            m_pHttpResponse->WriteText (pvTeamData[SystemTournamentTeams::iDescription].GetCharPtr());
 
             OutputText (
                 "</td>"\
@@ -1667,10 +1667,10 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
     }
 
     // News
-    if (!String::IsBlank (pvData [SystemTournaments::News].GetCharPtr())) {
+    if (!String::IsBlank (pvData[SystemTournaments::iNews].GetCharPtr())) {
 
         String strFilter;
-        iErrCode = HTMLFilter (pvData [SystemTournaments::News].GetCharPtr(), &strFilter, 0, true);
+        iErrCode = HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strFilter, 0, true);
         if (iErrCode == OK) {
 
             OutputText ("<p><h3>News:</h3><p><table width=\"75%\"><tr><td>");

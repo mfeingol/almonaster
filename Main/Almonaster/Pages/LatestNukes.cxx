@@ -56,7 +56,7 @@ else {
 
     // Sort by timestamp
     for (i = 0; i < iNumNukes; i ++) {
-        ptTime[i] = ppvNukeData[i][SystemNukeList::TimeStamp].GetInteger64();
+        ptTime[i] = ppvNukeData[i][SystemNukeList::iTimeStamp].GetInteger64();
         ppvData[i] = ppvNukeData[i];
     }
 
@@ -94,20 +94,20 @@ else {
         %><tr><%
 
         %><td align="center"><strong><%
-        Write (ppvData[i][SystemNukeList::NukerEmpireName].GetCharPtr()); %></strong></td><%
+        Write (ppvData[i][SystemNukeList::iNukerEmpireName].GetCharPtr()); %></strong></td><%
 
         %><td align="center"><%
 
         sprintf (
             pszEmpire, 
             "View the profile of %s",
-            ppvData[i][SystemNukeList::NukerEmpireName].GetCharPtr()
+            ppvData[i][SystemNukeList::iNukerEmpireName].GetCharPtr()
             );
 
         WriteProfileAlienString (
-            ppvData[i][SystemNukeList::NukerAlienKey].GetInteger(), 
-            ppvData[i][SystemNukeList::NukerEmpireKey].GetInteger(),
-            ppvData[i][SystemNukeList::NukerEmpireName].GetCharPtr(),
+            ppvData[i][SystemNukeList::iNukerAlienKey].GetInteger(), 
+            ppvData[i][SystemNukeList::iNukerEmpireKey].GetInteger(),
+            ppvData[i][SystemNukeList::iNukerEmpireName].GetCharPtr(),
             0,
             "ProfileLink",
             pszEmpire,
@@ -118,20 +118,20 @@ else {
         %></td><%
 
         %><td align="center"><strong><%
-        Write (ppvData[i][SystemNukeList::NukedEmpireName].GetCharPtr()); %></strong></td><%
+        Write (ppvData[i][SystemNukeList::iNukedEmpireName].GetCharPtr()); %></strong></td><%
 
         %><td align="center"><%
 
         sprintf (
             pszEmpire, 
             "View the profile of %s",
-            ppvData[i][SystemNukeList::NukedEmpireName].GetCharPtr()
+            ppvData[i][SystemNukeList::iNukedEmpireName].GetCharPtr()
             );
 
         WriteProfileAlienString (
-            ppvData[i][SystemNukeList::NukedAlienKey].GetInteger(), 
-            ppvData[i][SystemNukeList::NukedEmpireKey].GetInteger(),
-            ppvData[i][SystemNukeList::NukedEmpireName].GetCharPtr(),
+            ppvData[i][SystemNukeList::iNukedAlienKey].GetInteger(), 
+            ppvData[i][SystemNukeList::iNukedEmpireKey].GetInteger(),
+            ppvData[i][SystemNukeList::iNukedEmpireName].GetCharPtr(),
             0,
             "ProfileLink",
             pszEmpire,
@@ -141,13 +141,13 @@ else {
 
         %></td><%
 
-        %><td align="center"><% Write (ppvData[i][SystemNukeList::GameClassName].GetCharPtr()); %> <%
-        Write (ppvData[i][SystemNukeList::GameNumber].GetInteger()); %></td><%
+        %><td align="center"><% Write (ppvData[i][SystemNukeList::iGameClassName].GetCharPtr()); %> <%
+        Write (ppvData[i][SystemNukeList::iGameNumber].GetInteger()); %></td><%
 
         %><td align="center"><%
 
         iErrCode = Time::GetDateString (
-            ppvData[i][SystemNukeList::TimeStamp].GetInteger64(), 
+            ppvData[i][SystemNukeList::iTimeStamp].GetInteger64(), 
             pszDateString
             );
 

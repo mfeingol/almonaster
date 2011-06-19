@@ -79,8 +79,8 @@ void MirroredMapGenerator::AssertGameClassSettings() {
     Assert(m_iNumNewEmpires != 0 && m_iNumNewEmpires % 2 == 0);
 
     // Should have a fixed number of empires
-    Assert(m_pvGameClassData[SystemGameClassData::MinNumEmpires] == 
-           m_pvGameClassData[SystemGameClassData::MaxNumEmpires]);
+    Assert(m_pvGameClassData[SystemGameClassData::iMinNumEmpires] == 
+           m_pvGameClassData[SystemGameClassData::iMaxNumEmpires]);
 }
 
 int MirroredMapGenerator::CreateHalfMap() {
@@ -192,13 +192,13 @@ int MirroredMapGenerator::CompleteMirror() {
         // Execute the transform
         int iMapX, iMapY;
         GetCoordinates(m_ppvNewPlanetData[iMapIndex], &iMapX, &iMapY);
-        int iMapLink = m_ppvNewPlanetData[iMapIndex][GameMap::Link].GetInteger();
+        int iMapLink = m_ppvNewPlanetData[iMapIndex][GameMap::iLink].GetInteger();
 
         int iMirrorX, iMirrorY, iMirrorLink;
         MirrorPlanet(iMapX, iMapY, iMapLink, m_cpMirroredEdge, &iMirrorX, &iMirrorY, &iMirrorLink);
 
         // Set link flags
-        m_ppvNewPlanetData[iMirrorIndex][GameMap::Link] = iMirrorLink;
+        m_ppvNewPlanetData[iMirrorIndex][GameMap::iLink] = iMirrorLink;
 
         // Set mirrored coordinates
         iErrCode = SetCoordinates(iMirrorIndex, iMirrorX, iMirrorY);
@@ -284,7 +284,7 @@ void MirroredMapGenerator::AssignMirroredPlanetOwners() {
     for (unsigned i = 0; i < iHalfNumEmpires; i ++) {
         for (unsigned j = 0; j < m_iNumPlanetsPerEmpire; j ++) {
             unsigned int iEmpireKey = m_piNewEmpireKey[iHalfNumEmpires + i];
-            m_ppvNewPlanetData[iHalfNumPlanets + iPlanetCount][GameMap::Owner] = iEmpireKey;
+            m_ppvNewPlanetData[iHalfNumPlanets + iPlanetCount][GameMap::iOwner] = iEmpireKey;
             iPlanetCount ++;
         }
     }

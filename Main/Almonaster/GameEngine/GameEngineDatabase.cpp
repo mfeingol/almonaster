@@ -489,7 +489,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
             SafeRelease (pEmpires);
 
-            iErrCode = m_pGameData->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
+            iErrCode = m_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
             if (iErrCode != OK) {
                 Assert (false);
                 continue;
@@ -583,11 +583,10 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
                         const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
 
                         unsigned int iKey;
-                        iErrCode = m_pGameData->GetFirstKey (
+                        iErrCode = m_pConn->GetFirstKey (
                             pszTableName,
                             TopList::EmpireKey,
                             iEmpireKey,
-                            false,
                             &iKey
                             );
 
@@ -608,11 +607,11 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
             GET_SYSTEM_EMPIRE_ACTIVE_GAMES (pszText, iEmpireKey);
 
-            if (m_pGameData->DoesTableExist (pszText)) {
+            if (m_pConn->DoesTableExist (pszText)) {
 
                 // Never purge an empire in a game
                 unsigned int iNumGames;
-                iErrCode = m_pGameData->GetNumRows (pszText, &iNumGames);
+                iErrCode = m_pConn->GetNumRows (pszText, &iNumGames);
                 if (iErrCode != OK || iNumGames > 0) {
                     continue;
                 }

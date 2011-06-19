@@ -19,14 +19,14 @@
 #include "GameEngine.h"
 
 
-int GameEngine::GetSystemProperty (int iColumn, Variant* pvProperty) {
+int GameEngine::GetSystemProperty(const char* pszColumn, Variant* pvProperty) {
 
-    return m_pGameData->ReadData (SYSTEM_DATA, iColumn, pvProperty);
+    return m_pConn->ReadData (SYSTEM_DATA, pszColumn, pvProperty);
 }
 
-int GameEngine::SetSystemProperty (int iColumn, const Variant& vProperty) {
+int GameEngine::SetSystemProperty(const char*  pszColumn, const Variant& vProperty) {
 
-    return m_pGameData->WriteData (SYSTEM_DATA, iColumn, vProperty);
+    return m_pConn->WriteData (SYSTEM_DATA, pszColumn, vProperty);
 }
 
 
@@ -50,7 +50,7 @@ int GameEngine::GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLi
     int iErrCode;
     IReadTable* pTable = NULL;
 
-    iErrCode = m_pGameData->GetTableForReading (SYSTEM_DATA, &pTable);
+    iErrCode = m_pConn->GetTableForReading (SYSTEM_DATA, &pTable);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -113,22 +113,22 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
     int iErrCode;
 
     Variant vTemp, vLowerScore, vHigherScore;
-    unsigned int iWriteColumn;
+    const char* pszWriteColumn;
 
     switch (privLevel) {
 
     case APPRENTICE:
 
         vLowerScore = fScore;
-        iWriteColumn = SystemData::ApprenticeScore;
-        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AdeptScore, &vHigherScore);
+        pszWriteColumn = SystemData::ApprenticeScore;
+        iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::AdeptScore, &vHigherScore);
         break;
 
     case ADEPT:
 
         vHigherScore = fScore;
-        iWriteColumn = SystemData::AdeptScore;
-        iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::AdeptScore, &vLowerScore);
+        pszWriteColumn = SystemData::AdeptScore;
+        iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::AdeptScore, &vLowerScore);
         break;
 
     default:
@@ -146,7 +146,7 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = m_pGameData->WriteData (SYSTEM_DATA, iWriteColumn, fScore);
+    iErrCode = m_pConn->WriteData (SYSTEM_DATA, pszWriteColumn, fScore);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -165,16 +165,16 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
     
     int iErrCode;
     Variant vTemp;
-    unsigned int iReadColumn;
+    const char* pszReadColumn;
 
     switch (privLevel) {
 
     case APPRENTICE:
-        iReadColumn = SystemData::ApprenticeScore;
+        pszReadColumn = SystemData::ApprenticeScore;
         break;
 
     case ADEPT:
-        iReadColumn = SystemData::AdeptScore;
+        pszReadColumn = SystemData::AdeptScore;
         break;
 
     default:
@@ -182,7 +182,7 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = m_pGameData->ReadData (SYSTEM_DATA, iReadColumn, &vTemp);
+    iErrCode = m_pConn->ReadData (SYSTEM_DATA, pszReadColumn, &vTemp);
     if (iErrCode == OK) {
         *pfScore = vTemp.GetFloat();
     }
@@ -201,7 +201,7 @@ int GameEngine::ScanEmpiresOnScoreChanges() {
 
     while (true) {
 
-        iErrCode = m_pGameData->GetNextKey (SYSTEM_EMPIRE_DATA, iEmpireKey, &iEmpireKey);
+        iErrCode = m_pConn->GetNextKey (SYSTEM_EMPIRE_DATA, iEmpireKey, &iEmpireKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 iErrCode = OK;
@@ -220,7 +220,7 @@ int GameEngine::GetSystemOptions (int* piOptions) {
 
     Variant vTemp;
 
-    int iErrCode = m_pGameData->ReadData (SYSTEM_DATA, SystemData::Options, &vTemp);
+    int iErrCode = m_pConn->ReadData (SYSTEM_DATA, SystemData::Options, &vTemp);
     if (iErrCode == OK) {
         *piOptions = vTemp.GetInteger();
     }
@@ -236,7 +236,7 @@ int GameEngine::GetDefaultGameOptions (int iGameClass, GameOptions* pgoOptions) 
     Assert (iGameClass != NO_KEY);
 
     bool bExists;
-    iErrCode = m_pGameData->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    iErrCode = m_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -344,7 +344,7 @@ int GameEngine::GetDefaultShipName (int iTech, Variant* pvShipName) {
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return m_pGameData->ReadData (SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iTech], pvShipName);
+    return m_pConn->ReadData (SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iTech], pvShipName);
 }
 
 
@@ -360,14 +360,14 @@ int GameEngine::SetDefaultShipName (int iShipKey, const char* pszShipName) {
         return ERROR_WRONG_SHIP_TYPE;
     }
 
-    return m_pGameData->WriteData (SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iShipKey], pszShipName);
+    return m_pConn->WriteData (SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iShipKey], pszShipName);
 }
 
 int GameEngine::SetSystemOption (int iOption, bool bFlag) {
     
     if (bFlag) {
-        return m_pGameData->WriteOr (SYSTEM_DATA, SystemData::Options, iOption);
+        return m_pConn->WriteOr (SYSTEM_DATA, SystemData::Options, iOption);
     } else {
-        return m_pGameData->WriteAnd (SYSTEM_DATA, SystemData::Options, ~iOption);
+        return m_pConn->WriteAnd (SYSTEM_DATA, SystemData::Options, ~iOption);
     }
 }

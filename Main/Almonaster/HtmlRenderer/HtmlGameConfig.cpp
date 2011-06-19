@@ -1233,9 +1233,9 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
         Assert (pvGameClassInfo != NULL);
 
-        sUpdatePeriod = pvGameClassInfo[SystemGameClassData::NumSecPerUpdate].GetInteger();
-        iGameClassOptions = pvGameClassInfo[SystemGameClassData::Options].GetInteger();
-        iMaxNumEmpires = pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger();
+        sUpdatePeriod = pvGameClassInfo[SystemGameClassData::iNumSecPerUpdate].GetInteger();
+        iGameClassOptions = pvGameClassInfo[SystemGameClassData::iOptions].GetInteger();
+        iMaxNumEmpires = pvGameClassInfo[SystemGameClassData::iMaxNumEmpires].GetInteger();
     
     } else {
 
@@ -1314,9 +1314,9 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     if (iGameClass == NO_KEY) {
 
         g_pGameEngine->GetSupportedMapGenerationTypes(
-            pvGameClassInfo[SystemGameClassData::MinNumEmpires].GetInteger(),
-            pvGameClassInfo[SystemGameClassData::MaxNumEmpires].GetInteger(),
-            pvGameClassInfo[SystemGameClassData::MinNumPlanets].GetInteger(),
+            pvGameClassInfo[SystemGameClassData::iMinNumEmpires].GetInteger(),
+            pvGameClassInfo[SystemGameClassData::iMaxNumEmpires].GetInteger(),
+            pvGameClassInfo[SystemGameClassData::iMinNumPlanets].GetInteger(),
             &mgSupportedMapGen
             );
 

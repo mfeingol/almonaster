@@ -125,7 +125,7 @@ int Dijkstra::Initialize(unsigned int iSource) {
         m_piPrevious[i] = NO_KEY;
         m_pbVisited[i] = false;
 
-        const char* pszCoord = m_ppvPlanetData[i][GameMap::Coordinates].GetCharPtr();
+        const char* pszCoord = m_ppvPlanetData[i][GameMap::iCoordinates].GetCharPtr();
         if (!m_htCoordinates.Insert(pszCoord, i))
             return ERROR_OUT_OF_MEMORY;
     }
@@ -140,14 +140,14 @@ inline unsigned int Dijkstra::GetPlanet(unsigned int iIndex, CardinalPoint cp) {
     // NB - GameMap::NorthPlanetKey may not be set yet, so can't use that
 
     const Variant* pvPlanetData = m_ppvPlanetData[iIndex];
-    int iLink = pvPlanetData[GameMap::Link].GetInteger();
+    int iLink = pvPlanetData[GameMap::iLink].GetInteger();
 
     // Make sure there's a link
     if (!(iLink & LINK_X[cp]))
         return NO_KEY;
 
     int iX, iY;
-    const char* pszCoord = pvPlanetData[GameMap::Coordinates].GetCharPtr();
+    const char* pszCoord = pvPlanetData[GameMap::iCoordinates].GetCharPtr();
     GameEngine::GetCoordinates(pszCoord, &iX, &iY);
     BaseMapGenerator::AdvanceCoordinates(iX, iY, &iX, &iY, cp);
 
@@ -162,5 +162,5 @@ inline unsigned int Dijkstra::GetPlanet(unsigned int iIndex, CardinalPoint cp) {
 }
 
 inline bool Dijkstra::IsHomeWorld(unsigned int iIndex) {
-    return m_ppvPlanetData[iIndex][GameMap::HomeWorld].GetInteger() != HOMEWORLD;
+    return m_ppvPlanetData[iIndex][GameMap::iHomeWorld].GetInteger() != HOMEWORLD;
 }

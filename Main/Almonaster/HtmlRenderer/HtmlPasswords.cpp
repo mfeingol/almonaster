@@ -48,7 +48,7 @@ int HtmlRenderer::LoginEmpire() {
         m_vPassword.GetCharPtr() == NULL ||
         *m_vPassword.GetCharPtr() == '\0') {
         
-        iErrCode = g_pGameEngine->GetEmpirePassword (m_iEmpireKey, &m_vPassword);
+        iErrCode = g_pGameEngine->GetEmpirePassword(m_iEmpireKey, &m_vPassword);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's password could not be read");
             return iErrCode;
