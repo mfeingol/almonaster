@@ -163,9 +163,6 @@ namespace Almonaster.Database.Sql
 
             using (SqlCommand cmd = new SqlCommand())
             {
-                cmd.Connection = this.conn;
-                cmd.Transaction = this.tx;
-
                 string insert = String.Format("INSERT INTO [{0}] ([{1}]", tableName, columns.First().Name);
                 string values = "VALUES (@p0";
 
@@ -193,6 +190,7 @@ namespace Almonaster.Database.Sql
                 values += ");";
 
                 cmd.CommandText = insert + " " + values + " SELECT SCOPE_IDENTITY();";
+                cmd.Connection = this.conn;
 
                 object id = cmd.ExecuteScalar();
                 return (long)(decimal)id;
@@ -266,29 +264,142 @@ namespace Almonaster.Database.Sql
             }
         }
 
-        public object ReadSingleData(string tableName, string columnName)
+        public IEnumerable<long> Search(string tableName, string idColumnName, long maxResults, long skipResults, IEnumerable<ColumnSearchDescription> searchCols)
         {
-            string cmdText = String.Format("SELECT [{0}] FROM [{1}]", columnName, tableName);
+            // TODOTODO - search flags
+            // TODOTODO - skip hits
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            string where = String.Empty;
+            uint index = 0;
+
+            using (SqlCommand cmd = new SqlCommand())
             {
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                foreach (ColumnSearchDescription col in searchCols)
                 {
-                    if (!reader.Read())
+                    if (String.IsNullOrEmpty(where))
                     {
-                        return null;
+                        where = "WHERE ";
                     }
-                    object ret = reader[0];
-                    if (reader.Read())
+                    else
                     {
-                        throw new SqlDatabaseException("Table contains more rows than expected");
+                        where += " AND ";
                     }
-                    return ret;
+
+                    if (col.LessThanOrEqual == col.GreaterThanOrEqual)
+                    {
+                        string param = "@p" + index++;
+                        where += String.Format("[{0}] = {1}", col.Name, param);
+                        cmd.Parameters.Add(new SqlParameter(param, col.LessThanOrEqual));
+                    }
+                    else
+                    {
+                        string lessThanParam = "@p" + index++;
+                        string greaterThanParam = "@p" + index++;
+
+                        where += String.Format("[{0}] >= {1} AND [{0}] <= {2}", col.Name, greaterThanParam, lessThanParam);
+
+                        cmd.Parameters.Add(new SqlParameter(lessThanParam, col.LessThanOrEqual));
+                        cmd.Parameters.Add(new SqlParameter(greaterThanParam, col.GreaterThanOrEqual));
+                    }
+                }
+
+                string cmdText;
+                if (maxResults == Int32.MaxValue)
+                {
+                    cmdText = String.Format("SELECT [{1}] FROM [{2}] {3} GROUP BY [{1}]", maxResults, idColumnName, tableName, where);
+                }
+                else
+                {
+                    cmdText = String.Format("SELECT TOP({0}) [{1}] FROM [{2}] {3} GROUP BY [{1}]", maxResults, idColumnName, tableName, where);
+                }
+
+                cmd.CommandText = cmdText;
+                cmd.Connection = this.conn;
+
+                try
+                {
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        List<long> ids = new List<long>();
+                        while (reader.Read())
+                        {
+                            ids.Add((long)reader[0]);
+                        }
+                        return ids;
+                    }
+                }
+                catch (SqlException e)
+                {
+                    throw new SqlDatabaseException(e);
                 }
             }
         }
 
-        public object ReadData(string tableName, string idColumnName, long id, string columnName)
+        public long SearchCount(string tableName, IEnumerable<ColumnSearchDescription> searchCols)
+        {
+            // TODOTODO - refactor this with Search()
+            // TODOTODO - search flags
+
+            string where = String.Empty;
+            uint index = 0;
+
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                foreach (ColumnSearchDescription col in searchCols)
+                {
+                    if (String.IsNullOrEmpty(where))
+                    {
+                        where = "WHERE ";
+                    }
+                    else
+                    {
+                        where += " AND ";
+                    }
+
+                    if (col.LessThanOrEqual == col.GreaterThanOrEqual)
+                    {
+                        string param = "@p" + index++;
+                        where += String.Format("[{0}] = {1}", col.Name, param);
+                        cmd.Parameters.Add(new SqlParameter(param, col.LessThanOrEqual));
+                    }
+                    else
+                    {
+                        string lessThanParam = "@p" + index++;
+                        string greaterThanParam = "@p" + index++;
+
+                        where += String.Format("[{0}] >= {1} AND [{0}] <= {2}", col.Name, greaterThanParam, lessThanParam);
+
+                        cmd.Parameters.Add(new SqlParameter(lessThanParam, col.LessThanOrEqual));
+                        cmd.Parameters.Add(new SqlParameter(greaterThanParam, col.GreaterThanOrEqual));
+                    }
+                }
+
+                // TODOTODO - DIFFERENCES BEGIN HERE
+                string cmdText = String.Format("SELECT COUNT_BIG(*) FROM [{0}] {1}", tableName, where);
+
+                cmd.CommandText = cmdText;
+                cmd.Connection = this.conn;
+                try
+                {
+                    return (long)GetSingleResult(cmd);
+                }
+                catch (SqlException e)
+                {
+                    throw new SqlDatabaseException(e);
+                }
+            }
+        }
+
+        public object ReadSingle(string tableName, string columnName)
+        {
+            string cmdText = String.Format("SELECT [{0}] FROM [{1}]", columnName, tableName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                return GetSingleResult(cmd);
+            }
+        }
+
+        public object Read(string tableName, string idColumnName, long id, string columnName)
         {
             string cmdText = String.Format("SELECT [{0}] FROM [{1}] WHERE [{2}] = @p0", columnName, tableName, idColumnName);
 
@@ -333,27 +444,23 @@ namespace Almonaster.Database.Sql
             }
         }
 
-        public void WriteData(string tableName, string idColumnName, long id, string columnName, object value)
+        public void Write(string tableName, string idColumnName, long id, string columnName, object value)
         {
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = @p1 WHERE [{2}] = @p0", tableName, columnName, idColumnName);
-
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", value));
-
                 cmd.ExecuteNonQuery();
             }
         }
 
-        public void WriteSingleData(string tableName, string columnName, object value)
+        public void WriteSingle(string tableName, string columnName, object value)
         {
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = @p0", tableName, columnName);
-
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", value));
-
                 cmd.ExecuteNonQuery();
             }
         }
@@ -361,13 +468,21 @@ namespace Almonaster.Database.Sql
         public void Increment(string tableName, string idColumnName, long id, string columnName, object inc)
         {
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = [{1}] + @p1 WHERE [{2}] = @p0", tableName, columnName, idColumnName);
-
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", inc));
-
                 cmd.ExecuteNonQuery();
+            }
+        }
+
+        public object IncrementSingle(string tableName, string columnName, object inc)
+        {
+            string cmdText = String.Format("SELECT [{1}] FROM [{0}]; UPDATE [{0}] SET [{1}] = [{1}] + @p0", tableName, columnName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.Parameters.Add(new SqlParameter("@p0", inc));
+                return GetSingleResult(cmd);
             }
         }
 
@@ -458,5 +573,26 @@ namespace Almonaster.Database.Sql
         //        return reader;
         //    }
         //}
+
+        //
+        // Helper methods
+        //
+
+        object GetSingleResult(SqlCommand cmd)
+        {
+            using (SqlDataReader reader = cmd.ExecuteReader())
+            {
+                if (!reader.Read())
+                {
+                    return null;
+                }
+                object result = reader[0];
+                if (reader.Read())
+                {
+                    throw new SqlDatabaseException("Table contains more rows than expected");
+                }
+                return result;
+            }
+        }
     }
 }

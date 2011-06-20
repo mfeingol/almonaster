@@ -73,6 +73,8 @@ struct EmpireIdentity {
 /////////////////////////////////////////////////////////////////////////////
 // GameEngine
 
+extern __declspec(thread) IDatabaseConnection* t_pConn;
+
 class GameEngine : public IDatabaseBackupNotificationSink, public IGameEngine {
 
     friend class AlmonasterHook;
@@ -80,7 +82,6 @@ class GameEngine : public IDatabaseBackupNotificationSink, public IGameEngine {
 private:
 
     IDatabase* m_pGameData;
-    IDatabaseConnection* m_pConn;
 
     unsigned int m_iRootKey;
     unsigned int m_iGuestKey;

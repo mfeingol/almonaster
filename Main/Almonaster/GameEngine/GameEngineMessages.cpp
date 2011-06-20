@@ -62,7 +62,7 @@ int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int i
         pvData[SystemEmpireMessages::iSource] = (const char*) NULL;
     } else {
         
-        if (m_pConn->ReadData (
+        if (t_pConn->ReadData (
             SYSTEM_EMPIRE_DATA, 
             iSource, 
             SystemEmpireData::Name, 
@@ -101,16 +101,16 @@ int GameEngine::DeliverSystemMessage (int iEmpireKey, const Variant* pvData) {
     SYSTEM_EMPIRE_MESSAGES (strMessages, iEmpireKey);
 
     // Lock
-    if (!m_pConn->DoesTableExist (strMessages)) {
+    if (!t_pConn->DoesTableExist (strMessages)) {
 
-        iErrCode = m_pConn->CreateTable (strMessages, SystemEmpireMessages::Template);
+        iErrCode = t_pConn->CreateTable (strMessages, SystemEmpireMessages::Template);
         if (iErrCode != OK && iErrCode != ERROR_TABLE_ALREADY_EXISTS) {
             Assert (false);
             goto Cleanup;
         }
     }
 
-    iErrCode = m_pConn->ReadData (
+    iErrCode = t_pConn->ReadData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::MaxNumSystemMessages, 
@@ -122,7 +122,7 @@ int GameEngine::DeliverSystemMessage (int iEmpireKey, const Variant* pvData) {
 
     const unsigned int iMaxNumMessages = vTemp.GetInteger();
 
-    iErrCode = m_pConn->GetTableForWriting (strMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForWriting (strMessages, &pMessages);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -174,12 +174,12 @@ int GameEngine::GetNumSystemMessages (int iEmpireKey, unsigned int* piNumber) {
 
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
-    if (!m_pConn->DoesTableExist (pszMessages)) {
+    if (!t_pConn->DoesTableExist (pszMessages)) {
         *piNumber = 0;
         return OK;
     }
 
-    return m_pConn->GetNumRows (pszMessages, piNumber);
+    return t_pConn->GetNumRows (pszMessages, piNumber);
 }
 
 
@@ -198,7 +198,7 @@ int GameEngine::GetNumUnreadSystemMessages (int iEmpireKey, unsigned int* piNumb
 
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
-    iErrCode = m_pConn->GetTableForReading (pszMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForReading (pszMessages, &pMessages);
     if (iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
         *piNumber = 0;
         return OK;
@@ -248,7 +248,7 @@ int GameEngine::SendMessageToAll (int iEmpireKey, const char* pszMessage) {
     // Send messages
     while (true) {
 
-        iErrCode = m_pConn->GetNextKey (SYSTEM_EMPIRE_DATA, iDestKey, &iDestKey);
+        iErrCode = t_pConn->GetNextKey (SYSTEM_EMPIRE_DATA, iDestKey, &iDestKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 iErrCode = OK;
@@ -295,14 +295,14 @@ int GameEngine::GetSavedSystemMessages (int iEmpireKey, unsigned int** ppiMessag
 
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
-    if (!m_pConn->DoesTableExist (pszMessages)) {
+    if (!t_pConn->DoesTableExist (pszMessages)) {
         *ppiMessageKey = NULL;
         *pppvData = NULL;
         *piNumMessages = 0;
         return OK;
     }
 
-    int iErrCode = m_pConn->ReadColumns (
+    int iErrCode = t_pConn->ReadColumns (
         pszMessages,
         g_iNumSystemMessageColumns,
         g_pszSystemMessageColumns,
@@ -352,7 +352,7 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
     *ppiMessageKey = NULL;
     *piNumMessages = 0;
 
-    iErrCode = m_pConn->ReadData (
+    iErrCode = t_pConn->ReadData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::MaxNumSystemMessages, 
@@ -365,7 +365,7 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
     }
     iMaxNumMessages = vTemp.GetInteger();
 
-    iErrCode = m_pConn->GetTableForWriting (strMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForWriting (strMessages, &pMessages);
     if (iErrCode != OK) {
 
         if (iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
@@ -456,7 +456,7 @@ Cleanup:
         for (i = 0; i < iNumMessages; i ++) {
 
             if (ppvMessage[i] != NULL) {
-                m_pConn->FreeData(ppvMessage[i]);
+                t_pConn->FreeData(ppvMessage[i]);
             }
         }
 
@@ -464,15 +464,15 @@ Cleanup:
     }
 
     if (piMessageKey != NULL) {
-        m_pConn->FreeKeys(piMessageKey);
+        t_pConn->FreeKeys(piMessageKey);
     }
 
     if (ptTimeStamp != NULL) {
-        m_pConn->FreeData(ptTimeStamp);
+        t_pConn->FreeData(ptTimeStamp);
     }
 
     if (piKey != NULL) {
-        m_pConn->FreeKeys(piKey);
+        t_pConn->FreeKeys(piKey);
     }
 
     return iErrCode;
@@ -489,7 +489,7 @@ int GameEngine::DeleteSystemMessage (int iEmpireKey, unsigned int iKey) {
 
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
-    return m_pConn->DeleteRow (pszMessages, (unsigned int) iKey);
+    return t_pConn->DeleteRow (pszMessages, (unsigned int) iKey);
 }
 
 
@@ -507,7 +507,7 @@ int GameEngine::GetNumGameMessages (int iGameClass, int iGameNumber, int iEmpire
 
     GAME_EMPIRE_MESSAGES (pszMessages, iGameClass, iGameNumber, iEmpireKey);
 
-    return m_pConn->GetNumRows (pszMessages, piNumber);
+    return t_pConn->GetNumRows (pszMessages, piNumber);
 }
 
 
@@ -529,7 +529,7 @@ int GameEngine::GetNumUnreadGameMessages (int iGameClass, int iGameNumber, int i
 
     GAME_EMPIRE_MESSAGES (pszMessages, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = m_pConn->GetTableForReading (pszMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForReading (pszMessages, &pMessages);
     if (iErrCode == OK) {
         iErrCode = GetNumUnreadGameMessagesPrivate (pMessages, piNumber);
         SafeRelease (pMessages);
@@ -581,7 +581,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     // Make sure private messages are allowed
     if (!(iFlags & (MESSAGE_BROADCAST | MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
-        iErrCode = m_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+        iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return ERROR_EMPIRE_DOES_NOT_EXIST;
@@ -624,7 +624,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = m_pConn->ReadData (strEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
+    iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -647,7 +647,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     
     } else {
 
-        if (m_pConn->ReadData (
+        if (t_pConn->ReadData (
             SYSTEM_EMPIRE_DATA, 
             iSourceKey, 
             SystemEmpireData::Name, 
@@ -673,7 +673,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     IWriteTable* pMessages = NULL;
 
     // Lock
-    iErrCode = m_pConn->GetTableForWriting (strGameEmpireMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForWriting (strGameEmpireMessages, &pMessages);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -765,11 +765,11 @@ int GameEngine::DeleteOverflowMessages(IWriteTable* pMessages, const char* pszTi
 Cleanup:
 
     if (ptTime != NULL) {
-        m_pConn->FreeData(ptTime);
+        t_pConn->FreeData(ptTime);
     }
 
     if (piKey != NULL) {
-        m_pConn->FreeKeys(piKey);
+        t_pConn->FreeKeys(piKey);
     }
 
     return iErrCode;
@@ -810,7 +810,7 @@ int GameEngine::GetSavedGameMessages (int iGameClass, int iGameNumber, int iEmpi
 
     GAME_EMPIRE_MESSAGES (pszMessages, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = m_pConn->ReadColumns (
+    iErrCode = t_pConn->ReadColumns (
         pszMessages, 
         g_iNumGameMessageColumns,
         g_pszGameMessageColumns,
@@ -862,14 +862,14 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     *pppvMessage = NULL;
     *piNumMessages = 0;
 
-    iErrCode = m_pConn->ReadData (strGameEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
+    iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     iMaxNumMessages = vTemp.GetInteger();
 
-    iErrCode = m_pConn->GetTableForWriting (strMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForWriting (strMessages, &pMessages);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -948,7 +948,7 @@ Cleanup:
         for (i = 0; i < iNumMessages; i ++) {
 
             if (ppvMessage[i] != NULL) {
-                m_pConn->FreeData(ppvMessage[i]);
+                t_pConn->FreeData(ppvMessage[i]);
             }
         }
 
@@ -956,11 +956,11 @@ Cleanup:
     }
 
     if (piKey != NULL) {
-        m_pConn->FreeKeys(piKey);
+        t_pConn->FreeKeys(piKey);
     }
 
     if (ptTimeStamp != NULL) {
-        m_pConn->FreeData(ptTimeStamp);
+        t_pConn->FreeData(ptTimeStamp);
     }
 
     return iErrCode;
@@ -979,7 +979,7 @@ int GameEngine::DeleteGameMessage (int iGameClass, int iGameNumber, int iEmpireK
 
     GAME_EMPIRE_MESSAGES (pszMessages, iGameClass, iGameNumber, iEmpireKey);
 
-    return m_pConn->DeleteRow (pszMessages, iKey);
+    return t_pConn->DeleteRow (pszMessages, iKey);
 }
 
 
@@ -1041,7 +1041,7 @@ int GameEngine::BroadcastGameMessage (int iGameClass, int iGameNumber, const cha
 
         Variant vEmpireKey;
 
-        iErrCode = m_pConn->GetNextKey (strGameEmpires, iKey, &iKey);
+        iErrCode = t_pConn->GetNextKey (strGameEmpires, iKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = OK;
             break;
@@ -1052,7 +1052,7 @@ int GameEngine::BroadcastGameMessage (int iGameClass, int iGameNumber, const cha
             break;
         }
 
-        iErrCode = m_pConn->ReadData (strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
+        iErrCode = t_pConn->ReadData (strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
         if (iErrCode == OK) {
 
             iErrCode = SendGameMessage (
@@ -1090,7 +1090,7 @@ int GameEngine::GetMessageProperty (const char* strMessages, unsigned int iMessa
 
     IReadTable* pMessages = NULL;
 
-    iErrCode = m_pConn->GetTableForReading (strMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForReading (strMessages, &pMessages);
     if (iErrCode != OK) {
         return iErrCode;
     }

@@ -15,7 +15,7 @@ class BridierObject {
 protected:
 
     IGameEngine* m_pGameEngine;
-    IDatabaseConnection* m_pConn;
+    IDatabaseConnection* t_pConn;
 
     BridierObject (IGameEngine* pGameEngine);
     ~BridierObject();

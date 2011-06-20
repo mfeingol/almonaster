@@ -1244,21 +1244,12 @@ case 0:
     String strFilter;
     Variant vAuthorName;
 
+    IDatabase* pDatabase = NULL;
     IDatabaseBackupEnumerator* pBackupEnumerator = NULL;
 
     Variant* pvServerData = NULL;
-    IDatabaseConnection* pConn = NULL;
-    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
-    if (pDatabase == NULL) {
-        goto Cancel;
-    }
 
-    pConn = pDatabase->CreateConnection();
-    if (pConn == NULL) {
-        goto Cancel;
-    }
-
-    iErrCode = pConn->ReadRow (SYSTEM_DATA, &pvServerData);
+    iErrCode = t_pConn->ReadRow (SYSTEM_DATA, &pvServerData);
     if (iErrCode != OK) {
         goto Cancel;
     }
@@ -1575,43 +1566,41 @@ case 0:
 
     %><tr><td>Administer database backups:</td><td><%
 
+    pDatabase = g_pGameEngine->GetDatabase();
+    Assert(pDatabase != NULL);
+
     pBackupEnumerator = pDatabase->GetBackupEnumerator();
-    if (pBackupEnumerator == NULL) {
-        %>Could not enumerate backups<%
+    Assert(pBackupEnumerator != NULL);
+
+    int iDay, iMonth, iYear, iVersion;
+
+    IDatabaseBackup** ppBackups = pBackupEnumerator->GetBackups();
+    unsigned int iNumBackups = pBackupEnumerator->GetNumBackups();
+    if (ppBackups == NULL || iNumBackups == 0) {
+        %>There are no backups to restore<%
     } else {
 
-        int iDay, iMonth, iYear, iVersion;
+        %><select name="DBRestore"><%
 
-        IDatabaseBackup** ppBackups = pBackupEnumerator->GetBackups();
-        unsigned int iNumBackups = pBackupEnumerator->GetNumBackups();
-        if (ppBackups == NULL || iNumBackups == 0) {
-            %>There are no backups to restore<%
-        } else {
+        for (i = 0; i < (int) iNumBackups; i ++) {
 
-            %><select name="DBRestore"><%
+            ppBackups[i]->GetDate (&iDay, &iMonth, &iYear, &iVersion);
 
-            for (i = 0; i < (int) iNumBackups; i ++) {
+            %><option value="<% Write (iDay); %>.<% Write (iMonth); %>.<% Write (iYear); %>.<% Write (iVersion); %>"><%
 
-                ppBackups[i]->GetDate (&iDay, &iMonth, &iYear, &iVersion);
+            Write (Time::GetMonthName (iMonth)); %> <%
+            Write (iDay); %>, <%
+            Write (iYear);
 
-                %><option value="<% Write (iDay); %>.<% Write (iMonth); %>.<% Write (iYear); %>.<% Write (iVersion); %>"><%
-
-                Write (Time::GetMonthName (iMonth)); %> <%
-                Write (iDay); %>, <%
-                Write (iYear);
-
-                if (iVersion != 0) {
-                    %> (<% Write (iVersion); %>)<%
-                }
-                %></option><%
+            if (iVersion != 0) {
+                %> (<% Write (iVersion); %>)<%
             }
-            %></select> <%
-
-            WriteButton (BID_RESTOREBACKUP);
-            WriteButton (BID_DELETEBACKUP);
+            %></option><%
         }
+        %></select> <%
 
-        pBackupEnumerator->Release();
+        WriteButton (BID_RESTOREBACKUP);
+        WriteButton (BID_DELETEBACKUP);
     }
 
     %></td></tr><%
@@ -1691,10 +1680,10 @@ Cancel:
     WriteButton(BID_CANCEL);
 
     if (pvServerData != NULL) {
-        pConn->FreeData (pvServerData);
+        t_pConn->FreeData (pvServerData);
     }
 
-    SafeRelease(pConn);
+    SafeRelease(pBackupEnumerator);
     SafeRelease(pDatabase);
 
     }
@@ -1746,16 +1735,10 @@ case 2:
 
     int iB, iL, iD, iS, iT, iH, iV, iC;
 
-    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
-    Assert(pDatabase != NULL);
-
-    IDatabaseConnection* pConn = pDatabase->CreateConnection();
-    Assert(pConn != NULL);
-
     IReadTable* pSystemData;
     void** ppData;
 
-    iErrCode = pConn->GetTableForReading (SYSTEM_DATA, &pSystemData);
+    iErrCode = t_pConn->GetTableForReading (SYSTEM_DATA, &pSystemData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1775,7 +1758,7 @@ case 2:
     iV = *((int*) ppData[SystemData::iDefaultUIVert]);
     iC = *((int*) ppData[SystemData::iDefaultUIColor]);
 
-    pConn->FreeData (ppData);
+    t_pConn->FreeData (ppData);
 
     SafeRelease (pSystemData);
 
@@ -1801,9 +1784,7 @@ case 2:
     WriteButton (BID_CANCEL);
 
 Cleanup:
-
-    SafeRelease(pConn);
-    SafeRelease(pDatabase);
+    ;
 
     }
     break;

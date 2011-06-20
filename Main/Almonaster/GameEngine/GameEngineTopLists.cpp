@@ -47,7 +47,7 @@ int GameEngine::GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsig
 
     const char* pszTableName = TOPLIST_TABLE_NAME [ssListType];
 
-    iErrCode = m_pConn->ReadColumns (
+    iErrCode = t_pConn->ReadColumns (
         pszTableName,
         iNumColumns,
         ppszColumn,
@@ -164,7 +164,7 @@ int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery) {
     }
 
     // If empire is on the list, see if we need to shuffle him up
-    iErrCode = m_pConn->GetFirstKey(pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
+    iErrCode = t_pConn->GetFirstKey(pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode == OK) {
 
         // He's on the list, so move him up if he deserves it
@@ -182,7 +182,7 @@ int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery) {
 
             unsigned int iNumRows;
             
-            iErrCode = m_pConn->GetNumRows (pszTableName, &iNumRows);
+            iErrCode = t_pConn->GetNumRows (pszTableName, &iNumRows);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -203,7 +203,7 @@ int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery) {
                 // Read min score to be on list
                 for (i = 0; i < iNumColumns; i ++) {
                 
-                    iErrCode = m_pConn->ReadData (pszTableName, iNumRows - 1, TopList::Data + i, pvData + i);
+                    iErrCode = t_pConn->ReadData (pszTableName, iNumRows - 1, TopList::Data + i, pvData + i);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -249,7 +249,7 @@ int GameEngine::UpdateTopListOnDecrease (TopListQuery* pQuery) {
     const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
 
     // If empire is on the list, see if we need to shuffle him down
-    iErrCode = m_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
+    iErrCode = t_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode == OK) {
 
         Variant pvOurData [MAX_SCORING_SYSTEM_COLUMNS];
@@ -290,7 +290,7 @@ int GameEngine::UpdateTopListOnDeletion (TopListQuery* pQuery) {
     ScoringSystem ssTopList = pQuery->TopList;
 
     // If empire is on the list, we need to shuffle everyone else up
-    iErrCode = m_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
+    iErrCode = t_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode == OK) {
 
         Variant** ppvData = NULL, ** ppvStackData;
@@ -344,7 +344,7 @@ int GameEngine::UpdateTopListOnDeletion (TopListQuery* pQuery) {
 Cleanup:
 
         if (ppvData != NULL) {
-            m_pConn->FreeData(ppvData);
+            t_pConn->FreeData(ppvData);
         }
     }
     
@@ -413,7 +413,7 @@ int GameEngine::MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, 
 
         for (i = 0; i < iNumColumns; i ++) {
 
-            iErrCode = m_pConn->WriteData (pszTableName, iKey, TopList::Data + i, pvOurData[i]);
+            iErrCode = t_pConn->WriteData (pszTableName, iKey, TopList::Data + i, pvOurData[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -424,7 +424,7 @@ int GameEngine::MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, 
 Cleanup:
         
     if (ppvData != NULL) {
-        m_pConn->FreeData(ppvData);
+        t_pConn->FreeData(ppvData);
     }
 
     return iErrCode;
@@ -527,7 +527,7 @@ int GameEngine::MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey
 
         for (i = 0; i < iNumColumns; i ++) {
 
-            iErrCode = m_pConn->WriteData (pszTableName, iKey, TopList::Data + i, pvOurData[i]);
+            iErrCode = t_pConn->WriteData (pszTableName, iKey, TopList::Data + i, pvOurData[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -538,7 +538,7 @@ int GameEngine::MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey
 Cleanup:
         
     if (ppvData != NULL) {
-        m_pConn->FreeData(ppvData);
+        t_pConn->FreeData(ppvData);
     }
 
     return iErrCode;
@@ -678,7 +678,7 @@ int GameEngine::PrivateFindNewEmpireForTopList (ScoringSystem ssTopList, Variant
         if (pScoringSystem->CompareScores (pvData, pvReplacementData) > 0) {
             
             // If they're not on the list already...
-            iErrCode = m_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, (int) piKey[i], &iListKey);
+            iErrCode = t_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, (int) piKey[i], &iListKey);
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
 
                 iErrCode = OK;
@@ -702,7 +702,7 @@ Cleanup:
     pScoringSystem->Release();
 
     if (piKey != NULL) {
-        m_pConn->FreeKeys(piKey);
+        t_pConn->FreeKeys(piKey);
     }
 
     if (iErrCode != OK) {
@@ -791,7 +791,7 @@ int GameEngine::InitializeEmptyTopList (ScoringSystem ssTopList) {
 
 #ifdef _DEBUG
     const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
-    iErrCode = m_pConn->GetNumRows (pszTableName, &iNumRowsFull);
+    iErrCode = t_pConn->GetNumRows (pszTableName, &iNumRowsFull);
     Assert (iErrCode == OK && iNumRowsFull == 0);
 
     iNumRowsFull = 0;
@@ -874,7 +874,7 @@ Cleanup:
 
     // Clean up!
     if (piKey != NULL) {
-        m_pConn->FreeKeys(piKey);
+        t_pConn->FreeKeys(piKey);
     }
 
     pScoringSystem->Release();
@@ -946,7 +946,7 @@ int GameEngine::AddEmpireToTopList (ScoringSystem ssTopList, int iEmpireKey, con
 Cleanup:
 
     if (ppvData != NULL) {
-        m_pConn->FreeData(ppvData);
+        t_pConn->FreeData(ppvData);
     }
 
     return iErrCode;
@@ -963,7 +963,7 @@ int GameEngine::PrivateFlushTopListData (ScoringSystem ssTopList, Variant** ppvD
 
     IWriteTable* pWriteTable = NULL;
 
-    iErrCode = m_pConn->GetTableForWriting (pszTable, &pWriteTable);
+    iErrCode = t_pConn->GetTableForWriting (pszTable, &pWriteTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1034,7 +1034,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
     IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
 
-    iErrCode = m_pConn->GetNumRows (pszTable, &iNumRows);
+    iErrCode = t_pConn->GetNumRows (pszTable, &iNumRows);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1049,7 +1049,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
     for (i = 0; i < iNumRows; i ++) {
         
         // If row doesn't exist, the table is corrupt
-        iErrCode = m_pConn->DoesRowExist (pszTable, i, &bExist);
+        iErrCode = t_pConn->DoesRowExist (pszTable, i, &bExist);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1061,14 +1061,14 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
         }
 
         // If empire doesn't exist, the table is corrupt
-        iErrCode = m_pConn->ReadData (pszTable, i, TopList::EmpireKey, &vData);
+        iErrCode = t_pConn->ReadData (pszTable, i, TopList::EmpireKey, &vData);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         iEmpireKey = vData.GetInteger();
 
-        iErrCode = m_pConn->DoesRowExist (SYSTEM_EMPIRE_DATA, iEmpireKey, &bExist);
+        iErrCode = t_pConn->DoesRowExist (SYSTEM_EMPIRE_DATA, iEmpireKey, &bExist);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1080,7 +1080,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
         }
 
         // If key is in table twice, the table is corrupt
-        iErrCode = m_pConn->GetFirstKey (pszTable, TopList::EmpireKey, iEmpireKey, &iTestKey);
+        iErrCode = t_pConn->GetFirstKey (pszTable, TopList::EmpireKey, iEmpireKey, &iTestKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1094,7 +1094,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
         // If our score doesn't match our empire, the table is corrupt
         for (j = 0; j < iNumColumns; j ++) {
 
-            iErrCode = m_pConn->ReadData (pszTable, i, TopList::Data + j, pvThisData + j);
+            iErrCode = t_pConn->ReadData (pszTable, i, TopList::Data + j, pvThisData + j);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1117,7 +1117,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
             // If we have a lower score than the next guy, the table is corrupt
             unsigned int iNextRow = i + 1;
 
-            iErrCode = m_pConn->DoesRowExist (pszTable, iNextRow, &bExist);
+            iErrCode = t_pConn->DoesRowExist (pszTable, iNextRow, &bExist);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1130,7 +1130,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
             
             for (j = 0; j < iNumColumns; j ++) {
                 
-                iErrCode = m_pConn->ReadData (pszTable, iNextRow, TopList::Data + j, pvNextData + j);
+                iErrCode = t_pConn->ReadData (pszTable, iNextRow, TopList::Data + j, pvNextData + j);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;

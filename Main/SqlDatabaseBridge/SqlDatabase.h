@@ -81,12 +81,7 @@ struct SearchDefinition {
 #define SEARCH_SUBSTRING       (0x00000001)
 #define SEARCH_EXACT           (0x00000002)
 #define SEARCH_BEGINS_WITH     (0x00000004)
-#define SEARCH_CASE_SENSITIVE  (0x00000008)
-#define SEARCH_ENDS_WITH       (0x00000010)
-
-// Integers
-#define SEARCH_AND             (0x00000010)
-#define SEARCH_NOTAND          (0x00000020)
+#define SEARCH_ENDS_WITH       (0x00000008)
 
 // Miscellaneous constants
 const unsigned int VARIABLE_LENGTH_STRING = 0xffffffff;

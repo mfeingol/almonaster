@@ -18,8 +18,8 @@ ClassicScore::ClassicScore (IGameEngine* pGameEngine) {
     IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
     Assert (pDatabase != NULL);
 
-    m_pConn = pDatabase->CreateConnection();
-    Assert (m_pConn != NULL);
+    t_pConn = pDatabase->CreateConnection();
+    Assert (t_pConn != NULL);
 
     SafeRelease(pDatabase);
 
@@ -28,7 +28,7 @@ ClassicScore::ClassicScore (IGameEngine* pGameEngine) {
 
 ClassicScore::~ClassicScore()
 {
-    SafeRelease(m_pConn);
+    SafeRelease(t_pConn);
 }
 
 IScoringSystem* ClassicScore::CreateInstance (IGameEngine* pGameEngine) {
@@ -49,7 +49,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
     if (iEmpireNuker != NO_KEY) {
 
         // Reward nuker
-        iErrCode = m_pConn->Increment (
+        iErrCode = t_pConn->Increment (
             SYSTEM_EMPIRE_DATA, 
             iEmpireNuker,
             SystemEmpireData::ClassicScore, 
@@ -76,7 +76,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
     if (iEmpireNuked != NO_KEY) {
 
         // Punish nuked
-        iErrCode = m_pConn->Increment (
+        iErrCode = t_pConn->Increment (
             SYSTEM_EMPIRE_DATA, 
             iEmpireNuked,
             SystemEmpireData::ClassicScore, 
@@ -134,7 +134,7 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // Reward winner
-    iErrCode = m_pConn->Increment (
+    iErrCode = t_pConn->Increment (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
@@ -165,7 +165,7 @@ int ClassicScore::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // Reward for draw
-    iErrCode = m_pConn->Increment (
+    iErrCode = t_pConn->Increment (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
@@ -197,7 +197,7 @@ int ClassicScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // 'Reward' for ruin
-    iErrCode = m_pConn->Increment (
+    iErrCode = t_pConn->Increment (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
@@ -247,13 +247,13 @@ int ClassicScore::CompareScores (const Variant* pvLeft, const Variant* pvRight) 
 
 int ClassicScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) {
 
-    return m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, pvScore);
+    return t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, pvScore);
 }
 
 int ClassicScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
 
     if (pvScore == NULL) {
-        return m_pConn->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
+        return t_pConn->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
     }
 
     SearchColumn sc;    
@@ -269,7 +269,7 @@ int ClassicScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppi
     sd.iNumColumns = 1;
     sd.pscColumns = &sc;
 
-    return m_pConn->GetSearchKeys (
+    return t_pConn->GetSearchKeys (
         SYSTEM_EMPIRE_DATA,
         sd,
         ppiKey, 

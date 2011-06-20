@@ -12,11 +12,8 @@ namespace Almonaster.Database.Sql
             SqlDataType sqlDataType = Convert(sqlDbType);
             switch (sqlDataType)
             {
-                case SqlDataType.Binary:
-                case SqlDataType.Char:
-                case SqlDataType.NChar:
-                case SqlDataType.NText:
-                    return new DataType(sqlDataType, size);
+                case SqlDataType.NVarChar:
+                    return size == Int32.MaxValue ? DataType.NVarCharMax : DataType.NVarChar(size);
                 default:
                     return new DataType(sqlDataType);
             }
@@ -51,7 +48,7 @@ namespace Almonaster.Database.Sql
                 case SqlDbType.NText:
                     return SqlDataType.NText;
                 case SqlDbType.NVarChar:
-                    return SqlDataType.NVarCharMax; // TODO - really?
+                    return SqlDataType.NVarChar;
                 case SqlDbType.Real:
                     return SqlDataType.Real;
                 case SqlDbType.UniqueIdentifier:

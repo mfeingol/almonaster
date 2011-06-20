@@ -56,7 +56,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     // Read the GameEmpireData
     Variant* pvEmpData = NULL, vTemp;
 
-    iErrCode = m_pConn->ReadRow (strEmpireData, &pvEmpData);
+    iErrCode = t_pConn->ReadRow (strEmpireData, &pvEmpData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -68,7 +68,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
         goto Cleanup;
     }
 
-    iErrCode = m_pConn->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
+    iErrCode = t_pConn->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -85,7 +85,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     *pfHypAgRatio = ratInfo.fNextAgRatio;
     *pfNextTechIncrease = ratInfo.fNextTechDev;
 
-    iErrCode = m_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
+    iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -97,7 +97,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
 Cleanup:
 
     if (pvEmpData != NULL) {
-        m_pConn->FreeData(pvEmpData);
+        t_pConn->FreeData(pvEmpData);
     }
 
     return iErrCode;
@@ -123,7 +123,7 @@ int GameEngine::GetEmpireAgRatio (int iGameClass, int iGameNumber, int iEmpireKe
     
     GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = m_pConn->GetTableForReading (pszEmpireData, &pGameEmpireData);
+    iErrCode = t_pConn->GetTableForReading (pszEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -145,7 +145,7 @@ int GameEngine::GetEmpireAgRatio (int iGameClass, int iGameNumber, int iEmpireKe
 
     SafeRelease (pGameEmpireData);
 
-    iErrCode = m_pConn->ReadData (
+    iErrCode = t_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::MaxAgRatio, 

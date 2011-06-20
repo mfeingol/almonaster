@@ -27,6 +27,7 @@ using namespace System::IO;
 using namespace System::Runtime::InteropServices;
 
 SqlDatabaseBridge::SqlDatabaseBridge()
+    : m_iOptions(0)
 {
 }
 
@@ -41,6 +42,8 @@ SqlDatabaseBridge* SqlDatabaseBridge::CreateInstance()
 
 int SqlDatabaseBridge::Initialize(const char* pszConnString, unsigned int iOptions)
 {
+    // TODOTODO - options?
+    m_iOptions = iOptions;
     m_sqlDatabase = gcnew SqlDatabase(gcnew System::String(pszConnString));
 
     int iErrCode;
@@ -52,7 +55,6 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, unsigned int iOptio
     {
         iErrCode = ERROR_FAILURE;
     }
-
     return iErrCode;
 }
 
@@ -102,9 +104,7 @@ const char* SqlDatabaseBridge::GetConnectionString()
 
 unsigned int SqlDatabaseBridge::GetOptions()
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return 0;
+    return m_iOptions;
 }
 
 unsigned int SqlDatabaseBridge::GetNumTables()

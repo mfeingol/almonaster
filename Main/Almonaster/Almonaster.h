@@ -40,4 +40,51 @@ extern GameEngine* g_pGameEngine;
 
 extern char* g_pszResourceDir;
 
+//
+// Page source class
+//
+class Almonaster : public IPageSource, public IAlmonasterUIEventSink {
+private:
+
+    Almonaster();
+    ~Almonaster();
+
+    bool m_bIsDefault;
+    bool m_bNoBuffering;
+
+    char* m_pszUri1;
+    char* m_pszUri2;
+
+    int OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+
+public:
+
+    static Almonaster* CreateInstance();
+
+    IMPLEMENT_INTERFACE (IPageSource);
+
+    // IPageSource
+    int OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pControl);
+    int OnFinalize();
+
+    int OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+    int OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+    int OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+
+    const char* GetAuthenticationRealm (IHttpRequest* pHttpRequest);
+
+    int OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
+    int OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
+
+    // IAlmonasterUIEventSink
+    int OnLoginEmpire (int iEmpireKey);
+    int OnCreateEmpire (int iEmpireKey);
+    int OnDeleteEmpire (int iEmpireKey);
+    int OnCreateGame (int iGameClass, int iGameNumber);
+    int OnCleanupGame (int iGameClass, int iGameNumber);
+
+    int OnDeleteTournament (unsigned int iTournamentKey);
+    int OnDeleteTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);
+};
+
 #endif

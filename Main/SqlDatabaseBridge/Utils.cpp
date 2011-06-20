@@ -1,6 +1,8 @@
 #include "Utils.h"
 #include "SqlDatabase.h"
 
+using namespace System::Collections::Generic;
+using namespace System::Linq;
 using namespace System::Runtime::InteropServices;
 
 System::Object^ Convert(const Variant& v)
@@ -47,19 +49,12 @@ void Convert(System::Object^ object, Variant* pv)
     }
 }
 
-SqlDbType Convert(VariantType type, int size)
+SqlDbType Convert(VariantType type)
 {
     switch(type)
     {
     case V_STRING:
-        if (size == VARIABLE_LENGTH_STRING)
-        {
-           return SqlDbType::NVarChar;
-        }
-        else
-        {
-            return SqlDbType::NChar;
-        }
+        return SqlDbType::NVarChar;
     case V_INT:
         return SqlDbType::Int;
     case V_FLOAT:
@@ -70,6 +65,26 @@ SqlDbType Convert(VariantType type, int size)
         Assert(false);
         return SqlDbType::Int;
     }
+}
+
+unsigned int* ConvertIdsToKeys(IEnumerable<int64>^ ids, unsigned int* piCount)
+{
+    unsigned int* piKey = NULL;
+    unsigned int iCount = Enumerable::Count(ids);
+    if (iCount > 0)
+    {
+        piKey = new unsigned int[iCount];
+        Assert(piKey != NULL);
+
+        unsigned int i = 0;
+        for each (int64 id in ids)
+        {
+            piKey[i++] = (unsigned int)id;
+        }
+    }
+
+    *piCount = iCount;
+    return piKey;
 }
 
 void Trace(System::String^ fmt, ... array<System::Object^>^ params)

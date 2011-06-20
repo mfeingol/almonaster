@@ -31,6 +31,7 @@ class SqlDatabaseBridge : public IDatabase
 {
 private:
     gcroot<SqlDatabase^> m_sqlDatabase;
+    int m_iOptions;
 
 public:
 	SqlDatabaseBridge();

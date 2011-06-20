@@ -38,8 +38,8 @@ int SqlDatabaseConnection::CreateTable(const char* pszTableName, const TemplateD
     for (unsigned int i = 0; i < ttTemplate.NumColumns; i ++)
     {
         colDesc.Name = gcnew System::String(ttTemplate.ColumnNames[i]);
-        colDesc.Type = Convert(ttTemplate.Type[i], ttTemplate.Size[i]);
-        colDesc.Size = ttTemplate.Size[i];
+        colDesc.Type = Convert(ttTemplate.Type[i]);
+        colDesc.Size = ttTemplate.Size[i] == VARIABLE_LENGTH_STRING ? System::Int32::MaxValue : ttTemplate.Size[i];
         colDesc.IsPrimaryKey = false;
         cols->Add(colDesc);
     }
@@ -306,9 +306,15 @@ int SqlDatabaseConnection::ReadColumnWhereEqual(const char* pszTableName, const 
 
 int SqlDatabaseConnection::GetTableForReading(const char* pszTableName, IReadTable** ppTable)
 {
-    Trace("GetTableForReading {0}", gcnew System::String(pszTableName));
+    System::String^ tableName = gcnew System::String(pszTableName);
+    Trace("GetTableForReading {0}", tableName);
 
-    *ppTable = new SqlDatabaseReadTable(m_cmd, gcnew System::String(pszTableName));
+    if (!m_cmd->DoesTableExist(tableName))
+    {
+        return ERROR_UNKNOWN_TABLE_NAME;
+    }
+
+    *ppTable = new SqlDatabaseReadTable(m_cmd, tableName);
     if (*ppTable == NULL)
     {
         return ERROR_OUT_OF_MEMORY;
@@ -318,9 +324,15 @@ int SqlDatabaseConnection::GetTableForReading(const char* pszTableName, IReadTab
 
 int SqlDatabaseConnection::GetTableForWriting(const char* pszTableName, IWriteTable** ppTable)
 {
-    Trace("GetTableForWriting {0}", gcnew System::String(pszTableName));
+    System::String^ tableName = gcnew System::String(pszTableName);
+    Trace("GetTableForWriting {0}", tableName);
 
-    *ppTable = new SqlDatabaseWriteTable(m_cmd, gcnew System::String(pszTableName));
+    if (!m_cmd->DoesTableExist(tableName))
+    {
+        return ERROR_UNKNOWN_TABLE_NAME;
+    }
+
+    *ppTable = new SqlDatabaseWriteTable(m_cmd, tableName);
     if (*ppTable == NULL)
     {
         return ERROR_OUT_OF_MEMORY;

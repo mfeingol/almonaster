@@ -25,16 +25,9 @@
 
 Chatroom::Chatroom (const ChatroomConfig& ccConf, IDatabase* pDatabase) 
     : 
-    m_hSpeakerTable(NULL, NULL),
-    m_pDatabase(NULL),
-    m_pConn(NULL)
+    m_hSpeakerTable(NULL, NULL)
 {
     m_ccConf = ccConf;
-
-    m_pDatabase = pDatabase;
-    m_pDatabase->AddRef();
-    m_pConn = m_pDatabase->CreateConnection();
-    Assert(m_pConn != NULL);
 }
 
 Chatroom::~Chatroom() {
@@ -43,9 +36,6 @@ Chatroom::~Chatroom() {
     while (m_hSpeakerTable.GetNextIterator (&htiSpeaker)) {
         delete htiSpeaker.GetData();
     }
-
-    SafeRelease(m_pConn);
-    SafeRelease(m_pDatabase);
 }
 
 int Chatroom::Initialize() {
@@ -131,7 +121,7 @@ int Chatroom::GetMessages(ChatroomMessage** ppcmMessage, unsigned int* piNumMess
     ChatroomMessage* pcmMessage = NULL;
 
     Variant** ppvData;
-    int iErrCode = m_pConn->ReadColumns(SYSTEM_CHATROOM_DATA, SystemChatroomData::NumColumns, SystemChatroomData::ColumnNames, &ppvData, &iNumMessages);
+    int iErrCode = t_pConn->ReadColumns(SYSTEM_CHATROOM_DATA, SystemChatroomData::NumColumns, SystemChatroomData::ColumnNames, &ppvData, &iNumMessages);
     if (iErrCode != OK)
     {
         goto Cleanup;
@@ -152,7 +142,7 @@ int Chatroom::GetMessages(ChatroomMessage** ppcmMessage, unsigned int* piNumMess
         pcmMessage[i].iFlags = ppvData[i][SystemChatroomData::iFlags].GetInteger();
     }
 
-    m_pConn->FreeData(ppvData);
+    t_pConn->FreeData(ppvData);
 
 Cleanup:
 
@@ -187,7 +177,7 @@ int Chatroom::PostMessage (const char* pszSpeakerName, const char* pszMessage, i
 
 int Chatroom::ClearMessages()
 {
-    return m_pConn->DeleteAllRows(SYSTEM_CHATROOM_DATA);
+    return t_pConn->DeleteAllRows(SYSTEM_CHATROOM_DATA);
 }
 
 int Chatroom::PostMessageWithTime(const char* pszSpeakerName, const char* pszMessage, const UTCTime& tTime, int iFlags, unsigned int iKey)
@@ -218,7 +208,7 @@ int Chatroom::PostMessageWithTime(const char* pszSpeakerName, const char* pszMes
     }
 
     // Insert into the table
-    int iErrCode = m_pConn->InsertRow(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template, pvColVal, NULL);
+    int iErrCode = t_pConn->InsertRow(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template, pvColVal, NULL);
     if (iErrCode != OK)
     {
         return iErrCode;

@@ -11,7 +11,7 @@ class AlmonasterScore : public IScoringSystem {
 protected:
 
     IGameEngine* m_pGameEngine;
-    IDatabaseConnection* m_pConn;
+    IDatabaseConnection* t_pConn;
 
     AlmonasterScore (IGameEngine* pGameEngine);
     ~AlmonasterScore();

@@ -11,7 +11,7 @@ class ClassicScore : public IScoringSystem {
 protected:
 
     IGameEngine* m_pGameEngine;
-    IDatabaseConnection* m_pConn;
+    IDatabaseConnection* t_pConn;
 
     ClassicScore (IGameEngine* pGameEngine);
     ~ClassicScore();

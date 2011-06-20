@@ -185,7 +185,7 @@ int GameEngine::WaitForUpdate (int iGameClass, int iGameNumber) {
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Write state to database
-    int iErrCode = m_pConn->WriteOr (strGameData, GameData::State, GAME_WAITING_TO_UPDATE);
+    int iErrCode = t_pConn->WriteOr (strGameData, GameData::State, GAME_WAITING_TO_UPDATE);
     if (iErrCode != OK) {
         return ERROR_GAME_DOES_NOT_EXIST;
     }
@@ -204,13 +204,13 @@ int GameEngine::WaitForUpdate (int iGameClass, int iGameNumber) {
     }
 
     // Set database state - this should succeed
-    iErrCode = m_pConn->WriteAnd (strGameData, GameData::State, ~GAME_WAITING_TO_UPDATE);
+    iErrCode = t_pConn->WriteAnd (strGameData, GameData::State, ~GAME_WAITING_TO_UPDATE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = m_pConn->WriteOr (strGameData, GameData::State, GAME_UPDATING);
+    iErrCode = t_pConn->WriteOr (strGameData, GameData::State, GAME_UPDATING);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -230,7 +230,7 @@ int GameEngine::SignalAfterUpdate (int iGameClass, int iGameNumber) {
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Best effort - set game state while we hold the writer lock
-    m_pConn->WriteAnd (strGameData, GameData::State, ~GAME_UPDATING);
+    t_pConn->WriteAnd (strGameData, GameData::State, ~GAME_UPDATING);
     
     return SignalGameWriter (iGameClass, iGameNumber);
 }

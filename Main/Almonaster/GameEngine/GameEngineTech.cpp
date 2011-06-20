@@ -34,7 +34,7 @@ int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpi
 
     Variant vNumAvailableTechs;
     
-    int iErrCode = m_pConn->ReadData (
+    int iErrCode = t_pConn->ReadData (
         strGameEmpireData, 
         GameEmpireData::NumAvailableTechUndevs, 
         &vNumAvailableTechs
@@ -46,7 +46,7 @@ int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpi
 
     Variant vTechUndevs;
     
-    iErrCode = m_pConn->ReadData (strGameEmpireData, GameEmpireData::TechUndevs, &vTechUndevs);
+    iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::TechUndevs, &vTechUndevs);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -74,14 +74,14 @@ int GameEngine::GetDevelopedTechs (int iGameClass, int iGameNumber, int iEmpireK
     GAME_EMPIRE_DATA (strGameData, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vTemp;
-    int iErrCode = m_pConn->ReadData (strGameData, GameEmpireData::TechDevs, &vTemp);
+    int iErrCode = t_pConn->ReadData (strGameData, GameEmpireData::TechDevs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     *piTechDevs = vTemp.GetInteger();
 
-    iErrCode = m_pConn->ReadData (strGameData, GameEmpireData::TechUndevs, &vTemp);
+    iErrCode = t_pConn->ReadData (strGameData, GameEmpireData::TechUndevs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -108,14 +108,14 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     Variant vTech;
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = m_pConn->ReadData (strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
+    iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
     if (iErrCode != OK || vTech.GetInteger() == 0) {
         iErrCode = ERROR_NO_TECHNOLOGY_AVAILABLE;
         goto Cleanup;
     }
 
     // Make sure the tech dev can be selected
-    iErrCode = m_pConn->ReadData (strEmpireData, GameEmpireData::TechUndevs, &vTech);
+    iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::TechUndevs, &vTech);
 
     if (iErrCode != OK || !(vTech.GetInteger() & TECH_BITS[iTechKey])) {
         iErrCode = ERROR_WRONG_TECHNOLOGY;
@@ -123,32 +123,32 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     }
 
     // Add tech to developed field
-    iErrCode = m_pConn->WriteOr (strEmpireData, GameEmpireData::TechDevs, TECH_BITS[iTechKey]);
+    iErrCode = t_pConn->WriteOr (strEmpireData, GameEmpireData::TechDevs, TECH_BITS[iTechKey]);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Delete tech from undeveloped field
-    iErrCode = m_pConn->WriteAnd (strEmpireData, GameEmpireData::TechUndevs, ~TECH_BITS[iTechKey]);
+    iErrCode = t_pConn->WriteAnd (strEmpireData, GameEmpireData::TechUndevs, ~TECH_BITS[iTechKey]);
     if (iErrCode != OK) {
         Assert (false);
 
-        iErrCode2 = m_pConn->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
+        iErrCode2 = t_pConn->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
         Assert (iErrCode2 == OK);
 
         goto Cleanup;
     }
 
     // Subtract one from number of available techs to develop
-    iErrCode = m_pConn->Increment (strEmpireData, GameEmpireData::NumAvailableTechUndevs, -1);
+    iErrCode = t_pConn->Increment (strEmpireData, GameEmpireData::NumAvailableTechUndevs, -1);
     if (iErrCode != OK) {
         Assert (false);
 
-        iErrCode2 = m_pConn->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
+        iErrCode2 = t_pConn->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
         Assert (iErrCode2 == OK);
 
-        iErrCode2 = m_pConn->WriteOr (strEmpireData, GameEmpireData::TechUndevs, TECH_BITS[iTechKey]);
+        iErrCode2 = t_pConn->WriteOr (strEmpireData, GameEmpireData::TechUndevs, TECH_BITS[iTechKey]);
         Assert (iErrCode2 == OK);
 
         goto Cleanup;
@@ -175,7 +175,7 @@ int GameEngine::GetDefaultEmpireShipName (int iEmpireKey, int iTechKey, Variant*
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return m_pConn->ReadData (
+    return t_pConn->ReadData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[iTechKey], 
@@ -198,7 +198,7 @@ int GameEngine::SetDefaultEmpireShipName (int iEmpireKey, int iTechKey, const ch
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return m_pConn->WriteData (
+    return t_pConn->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN [iTechKey], 

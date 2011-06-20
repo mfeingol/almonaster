@@ -27,7 +27,7 @@ int GameEngine::GetAssociations (unsigned int iEmpireKey, unsigned int** ppiEmpi
     int iErrCode;
 
     Variant vAssoc;
-    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
+    iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -82,7 +82,7 @@ int GameEngine::CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch,
     *pbAuth = false;
 
     Variant vAssoc;
-    iErrCode = m_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
+    iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -108,7 +108,7 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
 
     IWriteTable* pEmpires = NULL;
 
-    iErrCode = m_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = t_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -340,7 +340,7 @@ int GameEngine::DeleteAssociation (unsigned int iEmpireKey, unsigned int iSecond
     int iErrCode;
     IWriteTable* pEmpires = NULL;
 
-    iErrCode = m_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = t_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

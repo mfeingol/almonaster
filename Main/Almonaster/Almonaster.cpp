@@ -21,6 +21,7 @@
 #include "GameEngine/GameEngine.h"
 #include "HtmlRenderer/HtmlRenderer.h"
 #include "Chatroom/CChatroom.h"
+#include "SqlDatabase.h"
 
 #include "Osal/File.h"
 #include "Osal/Vector.h"
@@ -36,58 +37,6 @@ const Uuid IID_IAlmonasterHook = { 0xb7365052, 0xbf4f, 0x11d3, { 0xa2, 0xb6, 0x0
 const Uuid IID_IAlmonasterUIEventSink = { 0xb7365053, 0xbf4f, 0x11d3, { 0xa2, 0xb6, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
 const Uuid IID_IMapGenerator = { 0x2751ca22, 0x493a, 0x4bdb, { 0x85, 0xcd, 0x7b, 0x59, 0xa2, 0xf8, 0x88, 0x79 } };
 const Uuid IID_IScoringSystem = { 0xde61fe7e, 0xb8e8, 0x4bcd, { 0x96, 0xeb, 0xdc, 0xf7, 0x96, 0x52, 0xe, 0xb } };
-
-//
-// Page source class
-//
-class Almonaster : public IPageSource, public IAlmonasterUIEventSink {
-private:
-
-    Almonaster();
-    ~Almonaster();
-
-    bool m_bIsDefault;
-    bool m_bNoBuffering;
-
-    char* m_pszUri1;
-    char* m_pszUri2;
-
-    int OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-
-public:
-
-    static Almonaster* CreateInstance();
-
-    IMPLEMENT_INTERFACE (IPageSource);
-
-    // IPageSource
-    int OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pControl);
-    int OnFinalize();
-
-    int OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-    int OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-    int OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-
-    const char* GetAuthenticationRealm (IHttpRequest* pHttpRequest);
-
-    int OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
-    int OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated);
-
-    // IAlmonasterUIEventSink
-    int OnLoginEmpire (int iEmpireKey);
-    int OnCreateEmpire (int iEmpireKey);
-    int OnDeleteEmpire (int iEmpireKey);
-    int OnCreateGame (int iGameClass, int iGameNumber);
-    int OnCleanupGame (int iGameClass, int iGameNumber);
-
-    int OnDeleteTournament (unsigned int iTournamentKey);
-    int OnDeleteTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);
-};
-
-
-//
-// Implementation
-//
 
 Almonaster* Almonaster::CreateInstance() {
     return new Almonaster();
@@ -145,6 +94,34 @@ IFileCache* g_pFileCache = NULL;
 GameEngine* g_pGameEngine = NULL;
 
 char* g_pszResourceDir = NULL;
+
+//
+// TLS connection management
+//
+
+// Yes, not Linux-friendly. Sorry.
+__declspec(thread) IDatabaseConnection* t_pConn = NULL;
+
+void TlsCreateConnection()
+{
+    Assert(t_pConn == NULL);
+    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
+    if (pDatabase != NULL)
+    {
+        t_pConn = pDatabase->CreateConnection();
+        Assert(t_pConn);
+        SafeRelease(pDatabase);
+    }
+}
+
+void TlsReleaseConnection()
+{
+    SafeRelease(t_pConn);
+}
+
+//
+// PageSource implementation
+//
 
 int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl) {
 
@@ -407,44 +384,34 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         scConfig,
         ccConfig
         );
-
-    if (g_pGameEngine == NULL) {
-        goto OutOfMemory;
-    }
+    Assert(g_pGameEngine != NULL);
 
     // Copy resource dir
     g_pszResourceDir = String::StrDup (pszResourceDir);
-    if (g_pszResourceDir == NULL) {
-        goto OutOfMemory;
-    }
+    Assert(g_pszResourceDir != NULL);
 
-    // Initialize HtmlRenderer
+    // Initialize HtmlRenderer statics
     iErrCode = HtmlRenderer::Initialize();
-    if (iErrCode != OK) {
-        g_pReport->WriteReport ("The server is out of memory");
-        return iErrCode;
+    if (iErrCode == OK)
+    {
+        iErrCode = g_pGameEngine->Initialize();
     }
-
-    if (g_pGameEngine->Initialize() != OK) {
+    if (iErrCode != OK)
+    {
         g_pReport->WriteReport ("The Almonaster GameEngine could not be initialized successfully");
-        goto Error;
+        g_pReport->WriteReport ("Almonaster_OnInitialize failed");
+    }
+    else
+    {
+        g_pReport->WriteReport ("Finished initializing GameEngine");
+
+        g_pReport->WriteReport ("Almonaster will now begin");
+        g_pReport->WriteReport ("===================================================");
     }
 
-    g_pReport->WriteReport ("Finished initializing GameEngine");
+    TlsReleaseConnection();
 
-    g_pReport->WriteReport ("Almonaster will now begin");
-    g_pReport->WriteReport ("===================================================");
-
-    return OK;
-
-OutOfMemory:
-    g_pReport->WriteReport ("An object allocation returned NULL in Almonaster::OnInitialize");
-
-Error:
-    
-    g_pReport->WriteReport ("Almonaster_OnInitialize failed");
-
-    return ERROR_FAILURE;
+    return iErrCode;
 }
 
 // A get will mostly be a request for an image file or the login screen
@@ -465,7 +432,6 @@ int Almonaster::OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 
     return OnPost (pHttpRequest, pHttpResponse);
 }
-
 
 // Here we know that someone has POSTED information to our page source,
 // so we need to reply with some page or other
@@ -488,9 +454,15 @@ int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
         pHttpResponse->SetNoBuffering();
     }
 
+    TlsCreateConnection();
+
     // Call the function
     HtmlRenderer htmlRenderer (pageId, pHttpRequest, pHttpResponse);
-    return htmlRenderer.Render();
+    int iErrCode = htmlRenderer.Render();
+
+    TlsReleaseConnection();
+
+    return iErrCode;
 }
 
 

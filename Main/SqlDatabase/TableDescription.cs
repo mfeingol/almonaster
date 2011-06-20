@@ -35,6 +35,13 @@ namespace Almonaster.Database.Sql
         public object Value;
     }
 
+    public struct ColumnSearchDescription
+    {
+        public string Name;
+        public object GreaterThanOrEqual;
+        public object LessThanOrEqual;
+    }
+
     public struct RowValues
     {
         public IEnumerable<object> Values;

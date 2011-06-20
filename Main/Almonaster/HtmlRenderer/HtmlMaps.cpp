@@ -30,9 +30,6 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
 
     size_t stTemp;
     
-    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
-    IDatabaseConnection* pConn = pDatabase->CreateConnection();
-    
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
     GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
 
@@ -164,7 +161,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             goto Cleanup;
         }
         
-        iErrCode = pConn->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
+        iErrCode = t_pConn->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -393,7 +390,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     memcpy (pszHorz + stTemp + strHorz.GetLength(), "</td>", sizeof ("</td>"));
     memcpy (pszVert + stTemp + strVert.GetLength(), "</td>", sizeof ("</td>"));
     
-    iErrCode = pConn->ReadData (
+    iErrCode = t_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -416,7 +413,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iPlanetKey = pvPlanetKey[i].GetInteger();
             iProxyKey = piProxyKey[i];
             
-            iErrCode = pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
+            iErrCode = t_pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -426,33 +423,33 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
             // Partial map filtering
             if (pPartialMapInfo != NULL && (iX > iMaxX || iX < iMinX || iY > iMaxY || iY < iMinY)) {
-                pConn->FreeData (pvPlanetData);
+                t_pConn->FreeData (pvPlanetData);
                 pvPlanetData = NULL;
                 continue;
             }
             
-            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
+            iErrCode = t_pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumUncloakedShips = vTemp.GetInteger();
             
-            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
+            iErrCode = t_pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumCloakedShips = vTemp.GetInteger();
             
-            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
+            iErrCode = t_pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumUncloakedBuildShips = vTemp.GetInteger();
             
-            iErrCode = pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
+            iErrCode = t_pConn->ReadData (strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -466,7 +463,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iPlanetKey = piPlanetKey[i];
             iProxyKey = 0;
             
-            iErrCode = pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
+            iErrCode = t_pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -837,7 +834,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             }
         }
         
-        pConn->FreeData (pvPlanetData);
+        t_pConn->FreeData (pvPlanetData);
         pvPlanetData = NULL;
     }
     
@@ -873,35 +870,32 @@ Cleanup:
     if (!bAdmin && !bSpectators) {
         
         if (pvPlanetKey != pvEasyWayOut) {
-            pConn->FreeData (pvPlanetKey);
+            t_pConn->FreeData (pvPlanetKey);
         }
 
         if (piProxyKey != piEasyProxyKeys) {
-            pConn->FreeKeys (piProxyKey);
+            t_pConn->FreeKeys (piProxyKey);
         }
         
     } else {
             
         if (piPlanetKey != NULL) {
-            pConn->FreeKeys (piPlanetKey);
+            t_pConn->FreeKeys (piPlanetKey);
         }
     }
     
     if (pvEmpireKey != NULL) {
-        pConn->FreeData (pvEmpireKey);
+        t_pConn->FreeData (pvEmpireKey);
     }
     
     if (pvPlanetData != NULL) {
-        pConn->FreeData (pvPlanetData);
+        t_pConn->FreeData (pvPlanetData);
     }
     
     if (pstrGrid != NULL) {
         delete [] pstrGrid;
     }
 
-    SafeRelease(pConn);
-    SafeRelease(pDatabase);
-    
     return iErrCode;
 }
 

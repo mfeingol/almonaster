@@ -519,16 +519,11 @@ const char* pszBad = m_vBadColor.GetCharPtr();
 
 char pszProfile [MAX_EMPIRE_NAME_LENGTH + 128];
 
-IDatabase* pDatabase = g_pGameEngine->GetDatabase();
-Assert(pDatabase != NULL);
-IDatabaseConnection* pConn = pDatabase->CreateConnection();
-Assert(pConn != NULL);
-
 IReadTable* pGameEmpireTable = NULL, * pSystemEmpireDataTable = NULL;
 
 GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
-iErrCode = pConn->GetTableForReading (
+iErrCode = t_pConn->GetTableForReading (
     pszEmpireData, 
     &pGameEmpireTable
     );
@@ -587,7 +582,7 @@ if (iErrCode != OK) {
 
 SafeRelease (pGameEmpireTable);
 
-iErrCode = pConn->GetTableForReading (
+iErrCode = t_pConn->GetTableForReading (
     SYSTEM_EMPIRE_DATA, 
     &pSystemEmpireDataTable
     );
@@ -925,7 +920,7 @@ if (iGameOptions & UPDATED) {
 } %></td></tr><%
 
 // Other empires
-iErrCode = pConn->ReadColumns (
+iErrCode = t_pConn->ReadColumns (
     strGameEmpireDiplomacy,
     countof (pszColumns),
     pszColumns,
@@ -997,7 +992,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
 
     // Get empire data
-    iErrCode = pConn->GetTableForReading (pszEmpireData, &pGameEmpireTable);
+    iErrCode = t_pConn->GetTableForReading (pszEmpireData, &pGameEmpireTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1025,7 +1020,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
         SafeRelease (pGameEmpireTable);
 
-        iErrCode = pConn->ReadData (
+        iErrCode = t_pConn->ReadData (
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
             GameEmpireDiplomacy::SubjectiveEcon,
@@ -1038,7 +1033,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         }
         iEcon = vTemp.GetInteger();
 
-        iErrCode = pConn->ReadData (
+        iErrCode = t_pConn->ReadData (
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
             GameEmpireDiplomacy::SubjectiveMil,
@@ -1070,7 +1065,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     }
 
     // Do this every time to improve concurrency with logins, etc.
-    iErrCode = pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
+    iErrCode = t_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1674,9 +1669,6 @@ if (pGameEmpireTable != NULL) {
 if (pSystemEmpireDataTable != NULL) {
     pSystemEmpireDataTable->Release();
 }
-
-SafeRelease(pConn);
-SafeRelease(pDatabase);
 
 if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %> occurred processing the Diplomacy page<%

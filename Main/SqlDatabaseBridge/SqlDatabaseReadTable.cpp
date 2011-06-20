@@ -2,6 +2,7 @@
 #include "Utils.h"
 
 using namespace System::Collections::Generic;
+using namespace System::Data::SqlClient;
 using namespace System::Linq;
 
 SqlDatabaseReadTable::SqlDatabaseReadTable(SqlCommandManager^ cmd, System::String^ tableName)
@@ -134,16 +135,83 @@ int SqlDatabaseReadTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 
 int SqlDatabaseReadTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    array<ColumnSearchDescription>^ cols = gcnew array<ColumnSearchDescription>(1);
+    cols[0].Name = gcnew System::String(pszColumn);
+    cols[0].GreaterThanOrEqual = Convert(vData);
+    cols[0].LessThanOrEqual = cols[0].GreaterThanOrEqual;
+
+    try
+    {
+        if (ppiKey == NULL)
+        {
+            int64 count = m_cmd->SearchCount(m_tableName, cols);
+            *piNumKeys = (unsigned int)count;
+        }
+        else
+        {
+            IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(IdColumnName), System::Int32::MaxValue, 0, cols);
+            *ppiKey = ConvertIdsToKeys(results, piNumKeys);
+        }
+    }
+    catch (SqlDatabaseException^ e)
+    {
+        SqlException^ sqe = safe_cast<SqlException^>(e->InnerException);
+        if (sqe != nullptr)
+        {
+            if (sqe->ErrorCode == 0x80131904)
+            {
+                return ERROR_UNKNOWN_TABLE_NAME;
+            }
+        }
+        return ERROR_FAILURE;
+    }
+
+    if (*piNumKeys == 0)
+    {
+        return ERROR_DATA_NOT_FOUND;
+    }
     return OK;
 }
 
 int SqlDatabaseReadTable::GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    array<ColumnSearchDescription>^ cols = gcnew array<ColumnSearchDescription>(sdSearch.iNumColumns);
+
+    for (unsigned int i = 0; i < sdSearch.iNumColumns; i ++)
+    {
+        cols[i].Name = gcnew System::String(sdSearch.pscColumns[i].pszColumn);
+        cols[i].GreaterThanOrEqual = Convert(sdSearch.pscColumns[i].vData);
+        cols[i].LessThanOrEqual = Convert(sdSearch.pscColumns[i].vData2);
+
+        // TODOTODO - Flags
+    }
+
+    int64 maxHits = sdSearch.iMaxNumHits == 0 ? System::Int32::MaxValue : sdSearch.iMaxNumHits + 1;
+    IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(IdColumnName), maxHits, sdSearch.iSkipHits, cols);
+
+    unsigned int iNumHits;
+    *ppiKey = ConvertIdsToKeys(results, &iNumHits);
+
+    if (sdSearch.iMaxNumHits > 0 && iNumHits > sdSearch.iMaxNumHits)
+    {
+        if (piStopKey != NULL)
+        {
+            *piStopKey = (*ppiKey)[iNumHits - 1];
+        }
+
+        *piNumHits = sdSearch.iMaxNumHits;
+        return ERROR_TOO_MANY_HITS;
+    }
+    else
+    {
+        if (piStopKey != NULL)
+        {
+            *piStopKey = NO_KEY;
+        }
+
+        *piNumHits = iNumHits;
+        return OK;
+    }
 }
 
 int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, int* piData)
@@ -169,8 +237,15 @@ int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, con
 
 int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, int64* pi64Data)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+
+    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
+    if (read == nullptr)
+    {
+        return ERROR_DATA_NOT_FOUND;
+    }
+
+    *pi64Data = (int64)read;
     return OK;
 }
 
@@ -178,7 +253,7 @@ int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, Var
 {
     Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
-    System::Object^ read = m_cmd->ReadData(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
+    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
     if (read == nullptr)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -192,7 +267,7 @@ int SqlDatabaseReadTable::ReadData(const char* pszColumn, int* piData)
 {
     Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
-    System::Object^ read = m_cmd->ReadSingleData(m_tableName, gcnew System::String(pszColumn));
+    System::Object^ read = m_cmd->ReadSingle(m_tableName, gcnew System::String(pszColumn));
     if (read == nullptr)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -204,8 +279,15 @@ int SqlDatabaseReadTable::ReadData(const char* pszColumn, int* piData)
 
 int SqlDatabaseReadTable::ReadData(const char* pszColumn, float* pfData)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+
+    System::Object^ read = m_cmd->ReadSingle(m_tableName, gcnew System::String(pszColumn));
+    if (read == nullptr)
+    {
+        return ERROR_DATA_NOT_FOUND;
+    }
+
+    *pfData = (float)(double)read;
     return OK;
 }
 
@@ -228,7 +310,7 @@ int SqlDatabaseReadTable::ReadData(const char* pszColumn, Variant* pvData)
     Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
     // Must be OneRow table
-    System::Object^ read = m_cmd->ReadSingleData(m_tableName, gcnew System::String(pszColumn));
+    System::Object^ read = m_cmd->ReadSingle(m_tableName, gcnew System::String(pszColumn));
     if (read == nullptr)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -440,3 +522,8 @@ int SqlDatabaseReadTable::ReadColumnWhereEqual(const char* pszEqualColumn, const
     Assert(false);
     return OK;
 }
+
+//
+// Helper methods
+//
+

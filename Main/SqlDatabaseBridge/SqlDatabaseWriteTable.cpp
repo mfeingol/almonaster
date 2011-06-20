@@ -28,19 +28,19 @@ int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, f
 
 int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, const char* pszData)
 {
-    Assert(false);
+    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), gcnew System::String(pszData));
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, int64 i64Data)
 {
-    Assert(false);
+    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), i64Data);
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData)
 {
-    m_cmd->WriteData(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), Convert(vData));
+    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), Convert(vData));
     return OK;
 }
 
@@ -70,7 +70,7 @@ int SqlDatabaseWriteTable::WriteData(const char* pszColumn, int64 i64Data)
 
 int SqlDatabaseWriteTable::WriteData(const char* pszColumn, const Variant& vData)
 {
-    m_cmd->WriteSingleData(m_tableName, gcnew System::String(pszColumn), Convert(vData));
+    m_cmd->WriteSingle(m_tableName, gcnew System::String(pszColumn), Convert(vData));
     return OK;
 }
 
@@ -165,7 +165,7 @@ int SqlDatabaseWriteTable::InsertRow(const TemplateDescription& ttTemplate, cons
     for (unsigned int i = 0; i < ttTemplate.NumColumns; i ++)
     {
         values[i].Name = gcnew System::String(ttTemplate.ColumnNames[i]);
-        values[i].Type = Convert(ttTemplate.Type[i], ttTemplate.Size[i]);
+        values[i].Type = Convert(ttTemplate.Type[i]);
         values[i].Value = Convert(pvColVal[i]);
     }
 
@@ -198,7 +198,8 @@ int SqlDatabaseWriteTable::Increment(const char* pszColumn, const Variant& vIncr
 
 int SqlDatabaseWriteTable::Increment(const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
-    Assert(false);
+    System::Object^ oldValue = m_cmd->IncrementSingle(m_tableName, gcnew System::String(pszColumn), Convert(vIncrement));
+    Convert(oldValue, pvOldValue);
     return OK;
 }
 

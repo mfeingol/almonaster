@@ -21,7 +21,7 @@ class TournamentScoring : public IScoringSystem {
 protected:
 
     IGameEngine* m_pGameEngine;
-    IDatabaseConnection* m_pConn;
+    IDatabaseConnection* t_pConn;
 
     TournamentScoring (IGameEngine* pGameEngine);
     ~TournamentScoring();

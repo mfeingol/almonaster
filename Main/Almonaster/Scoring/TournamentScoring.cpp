@@ -36,15 +36,15 @@ TournamentScoring::TournamentScoring (IGameEngine* pGameEngine)
     IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
     Assert (pDatabase != NULL);
 
-    m_pConn = pDatabase->CreateConnection();
-    Assert (m_pConn != NULL);
+    t_pConn = pDatabase->CreateConnection();
+    Assert (t_pConn != NULL);
 
     SafeRelease(pDatabase);
 }
 
 TournamentScoring::~TournamentScoring()
 {
-    SafeRelease(m_pConn);
+    SafeRelease(t_pConn);
 }
 
 IScoringSystem* TournamentScoring::CreateInstance (IGameEngine* pGameEngine) {
@@ -59,7 +59,7 @@ int TournamentScoring::IsTournamentGame (int iGameClass, int iGameNumber, unsign
 
     *piTournamentKey = NO_KEY;
 
-    iErrCode = m_pConn->ReadData (
+    iErrCode = t_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA,
         iGameClass,
         SystemGameClassData::TournamentKey,
@@ -81,19 +81,19 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
 
     SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
 
-    iErrCode = m_pConn->GetFirstKey (pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
+    iErrCode = t_pConn->GetFirstKey (pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     // Update event count
-    iErrCode = m_pConn->Increment (pszEmpires, iKey, s_pszEmpireColumn [event], 1);
+    iErrCode = t_pConn->Increment (pszEmpires, iKey, s_pszEmpireColumn [event], 1);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     // Get team
-    iErrCode = m_pConn->ReadData (pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
+    iErrCode = t_pConn->ReadData (pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -102,7 +102,7 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
 
         SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
-        iErrCode = m_pConn->Increment (pszTeams, vTeamKey.GetInteger(), s_pszTeamColumn [event], 1);
+        iErrCode = t_pConn->Increment (pszTeams, vTeamKey.GetInteger(), s_pszTeamColumn [event], 1);
         if (iErrCode != OK) {
             return iErrCode;
         }

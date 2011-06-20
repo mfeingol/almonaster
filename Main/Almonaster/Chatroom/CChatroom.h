@@ -67,9 +67,6 @@ private:
     // Structures
     HashTable<const char*, ChatroomSpeaker*, SpeakerHashValue, SpeakerEquals> m_hSpeakerTable;
 
-    IDatabase* m_pDatabase;
-    IDatabaseConnection* m_pConn;
-
     int InitializeFromDatabase();
 
     // Locks
