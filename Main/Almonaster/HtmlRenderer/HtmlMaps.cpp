@@ -62,7 +62,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         bHighlightShips = (iOptions & SHIP_MAP_HIGHLIGHTING) != 0;
         
         // Get map geography information
-        iErrCode = g_pGameEngine->GetMapLimits (
+        iErrCode = GetMapLimits (
             iGameClass, 
             iGameNumber, 
             iEmpireKey, 
@@ -86,7 +86,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             bPartialMapShortcut = true;
             
             // Scan 8 surrounding planets
-            iErrCode = g_pGameEngine->GetVisitedSurroundingPlanetKeys (
+            iErrCode = GetVisitedSurroundingPlanetKeys (
                 iGameClass, 
                 iGameNumber, 
                 iEmpireKey,
@@ -114,7 +114,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
         } else {
             
-            iErrCode = g_pGameEngine->GetVisitedPlanetKeys (
+            iErrCode = GetVisitedPlanetKeys (
                 iGameClass, 
                 iGameNumber, 
                 iEmpireKey,
@@ -147,7 +147,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         bHighlightShips = (iOptions & SHIP_MAP_HIGHLIGHTING) != 0;
 
         // Get map geography information
-        iErrCode = g_pGameEngine->GetMapLimits (
+        iErrCode = GetMapLimits (
             iGameClass, 
             iGameNumber,
             &iMapMinX, 
@@ -188,7 +188,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 
             } else {
                 
-                iErrCode = g_pGameEngine->GetPlanetCoordinates (
+                iErrCode = GetPlanetCoordinates (
                     iGameClass,
                     iGameNumber,
                     pPartialMapInfo->iCenterKey,
@@ -257,7 +257,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 m_pHttpResponse->WriteText (pvPlanetKey[i].GetInteger());
                 OutputText ("\">");
                 
-                iErrCode = g_pGameEngine->GetPlanetNameWithCoordinates (
+                iErrCode = GetPlanetNameWithCoordinates (
                     strGameMap, 
                     pvPlanetKey[i].GetInteger(), 
                     pszName
@@ -338,19 +338,19 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         
         Variant vValue;
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
         iHorzKey = vValue.GetInteger();
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
         iVertKey = vValue.GetInteger();
 
-        iErrCode = g_pGameEngine->GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -419,7 +419,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 goto Cleanup;
             }
             
-            g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
+            GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
             
             // Partial map filtering
             if (pPartialMapInfo != NULL && (iX > iMaxX || iX < iMinX || iY > iMaxY || iY < iMinY)) {
@@ -469,7 +469,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 goto Cleanup;
             }
             
-            g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
+            GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
             
             iNumOwnShips = iNumUncloakedShips = iNumCloakedShips = iNumUncloakedBuildShips = 
                 iNumCloakedBuildShips = 0;
@@ -546,7 +546,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 
             default:
                 
-                iErrCode = g_pGameEngine->GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
+                iErrCode = GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -572,7 +572,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                         pszColor = NULL;
                     } else {
                         
-                        iErrCode = g_pGameEngine->GetDiplomaticStatus (
+                        iErrCode = GetDiplomaticStatus (
                             iGameClass,
                             iGameNumber,
                             iEmpireKey,
@@ -711,7 +711,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         
         if (bShipColoring) {
             
-            iErrCode = g_pGameEngine->GetLowestDiplomacyLevelForShipsOnPlanet (
+            iErrCode = GetLowestDiplomacyLevelForShipsOnPlanet (
                 iGameClass,
                 iGameNumber,
                 iEmpireKey,
@@ -1281,7 +1281,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     iCurrent = TRUCE;
                 } else {
                     
-                    iErrCode = g_pGameEngine->GetDiplomaticStatus (
+                    iErrCode = GetDiplomaticStatus (
                         m_iGameClass, 
                         m_iGameNumber, 
                         iEmpireKey, 
@@ -1303,14 +1303,14 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 }
                 
                 Variant vTemp;
-                iErrCode = g_pGameEngine->GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
+                iErrCode = GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     return iErrCode;
                 }
                 iAlienKey = vTemp.GetInteger();
                 
-                iErrCode = g_pGameEngine->GetEmpireName (iOwner, &vEmpireName);
+                iErrCode = GetEmpireName (iOwner, &vEmpireName);
                 if (iErrCode != OK) {
                     Assert (false);
                     return iErrCode;
@@ -1422,7 +1422,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 pszEmpireName = INDEPENDENT_NAME;
             } else {
                 
-                iErrCode = g_pGameEngine->GetEmpireName (iOwner, &vEmpireName);
+                iErrCode = GetEmpireName (iOwner, &vEmpireName);
                 if (iErrCode != OK) {
                     Assert (false);
                     return iErrCode;
@@ -1553,7 +1553,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         
         Assert (iCost >= 0 && iCost <= iPop);
         
-        int iNextPop = g_pGameEngine->GetNextPopulation (
+        int iNextPop = GetNextPopulation (
             iPop - iCost,
             fEmpireAgRatio
             );
@@ -1590,7 +1590,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     OutputText ("</td><td align=\"center\">");
     
     int iX, iY;
-    g_pGameEngine->GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
+    GetCoordinates (pvPlanetData[GameMap::iCoordinates].GetCharPtr(), &iX, &iY);
     
     int iLink = pvPlanetData[GameMap::iLink].GetInteger();
     bool bLinkNorth = (iLink & LINK_NORTH) != 0;
@@ -1644,7 +1644,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         for (i = 0; i < iNumJumps; i ++) {
             
             // Get neighbouring planet's key
-            iErrCode = g_pGameEngine->GetNeighbourPlanetKey (
+            iErrCode = GetNeighbourPlanetKey (
                 m_iGameClass, 
                 m_iGameNumber, 
                 iPlanetKey, 
@@ -1661,7 +1661,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             
             if (!bAdmin && !bSpectator) {
                 
-                iErrCode = g_pGameEngine->GetPlanetNameWithSecurity (
+                iErrCode = GetPlanetNameWithSecurity (
                     m_iGameClass, 
                     m_iGameNumber, 
                     iEmpireKey, 
@@ -1671,7 +1671,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
 
             } else {
                 
-                iErrCode = g_pGameEngine->GetPlanetName (
+                iErrCode = GetPlanetName (
                     m_iGameClass, 
                     m_iGameNumber, 
                     iNeighbourKey, 
@@ -1718,7 +1718,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     if (iTotalNumShips > 0) {
         
         unsigned int* piOwnerData = NULL;
-        iErrCode = g_pGameEngine->GetPlanetShipOwnerData (
+        iErrCode = GetPlanetShipOwnerData (
             m_iGameClass, 
             m_iGameNumber, 
             iEmpireKey, 
@@ -1819,7 +1819,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     } else {
                         
                         Variant vTemp;
-                        iErrCode = g_pGameEngine->GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienKey, &vTemp);
+                        iErrCode = GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienKey, &vTemp);
                         if (iErrCode != OK) {
                             Assert (false);
                             delete [] piOwnerData;
@@ -1827,7 +1827,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         }
                         iAlienKey = vTemp.GetInteger();
                         
-                        iErrCode = g_pGameEngine->GetEmpireName (piOwnerKey[i], &vEmpireName);
+                        iErrCode = GetEmpireName (piOwnerKey[i], &vEmpireName);
                         if (iErrCode != OK) {
                             Assert (false);
                             delete [] piOwnerData;
@@ -1870,7 +1870,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         pszEmpireName = INDEPENDENT_NAME;
                     } else {
                         
-                        iErrCode = g_pGameEngine->GetEmpireName (piOwnerKey[i], &vEmpireName);
+                        iErrCode = GetEmpireName (piOwnerKey[i], &vEmpireName);
                         if (iErrCode != OK) {
                             Assert (false);
                             delete [] piOwnerData;
@@ -1883,7 +1883,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                             iDip = TRUCE;
                         } else {
                             
-                            iErrCode = g_pGameEngine->GetDiplomaticStatus (
+                            iErrCode = GetDiplomaticStatus (
                                 m_iGameClass, 
                                 m_iGameNumber, 
                                 iEmpireKey, 

@@ -5,6 +5,13 @@
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
 // as published by the Free Software Foundation; either version 2
+//
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
 // of the License, or (at your option) any later version.
 
 // This program is distributed in the hope that it will be useful,
@@ -16,10 +23,9 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_BASEMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
-#define AFX_BASEMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
+#pragma once
 
-#include "../GameEngine/GameEngine.h"
+#include "GameEngine.h"
 
 #include "Osal/HashTable.h"
 
@@ -67,7 +73,7 @@ class BaseMapGenerator : public IMapGenerator {
 
 protected:
 
-    IGameEngine* m_pGameEngine;
+    GameEngine* m_pGameEngine;
 
     //
     // Data provided by caller
@@ -167,14 +173,12 @@ protected:
     void GetCoordinates(const Variant* pvPlanetData, int* piX, int* piY);
     int CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData);
 
-    BaseMapGenerator(IGameEngine* pGameEngine);
-    ~BaseMapGenerator();
-
     virtual int CreatePlanetChains() = 0;
 
 public:
 
-    IMPLEMENT_INTERFACE (IMapGenerator);
+    BaseMapGenerator(GameEngine* pGameEngine);
+    virtual ~BaseMapGenerator();
 
     int CreatePlanets(
 
@@ -198,5 +202,3 @@ public:
 
     static void AdvanceCoordinates (int iX, int iY, int* piX, int* piY, CardinalPoint cpDirection);
 };
-
-#endif // !defined(AFX_BASEMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

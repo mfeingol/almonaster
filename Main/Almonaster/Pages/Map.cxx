@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 #include <stdio.h>
 
 // Almonaster
@@ -51,7 +51,7 @@ if (m_bOwnPost && !m_bRedirection) {
         PartialMapInfo pmiPartialMapInfo;
         unsigned int iNewValue;
 
-        iErrCode = g_pGameEngine->GetEmpirePartialMapData (
+        iErrCode = GetEmpirePartialMapData (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
@@ -81,7 +81,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     if (iNewValue != PARTIAL_MAP_NATURAL_CENTER) {
 
-                        iErrCode = g_pGameEngine->HasEmpireVisitedPlanet (
+                        iErrCode = HasEmpireVisitedPlanet (
                             m_iGameClass,
                             m_iGameNumber,
                             m_iEmpireKey,
@@ -95,7 +95,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         }
                     }
 
-                    iErrCode = g_pGameEngine->SetEmpireGameProperty(
+                    iErrCode = SetEmpireGameProperty(
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
@@ -123,7 +123,7 @@ iXRadius:
 
                         if (iMinX == MAX_COORDINATE) {
 
-                            iErrCode = g_pGameEngine->GetMapLimits (
+                            iErrCode = GetMapLimits (
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -145,7 +145,7 @@ iXRadius:
 
                                 } else {
 
-                                    iErrCode = g_pGameEngine->GetPlanetCoordinates (
+                                    iErrCode = GetPlanetCoordinates (
                                         m_iGameClass,
                                         m_iGameNumber,
                                         pmiPartialMapInfo.iCenterKey,
@@ -173,7 +173,7 @@ iXRadius:
                         }
                     }
 
-                    if ((iErrCode = g_pGameEngine->SetEmpireGameProperty(
+                    if ((iErrCode = SetEmpireGameProperty(
                             m_iGameClass,
                             m_iGameNumber,
                             m_iEmpireKey,
@@ -198,7 +198,7 @@ iYRadius:
 
                         if (iMinX == MAX_COORDINATE) {
 
-                            iErrCode = g_pGameEngine->GetMapLimits (
+                            iErrCode = GetMapLimits (
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -220,7 +220,7 @@ iYRadius:
 
                                 } else {
 
-                                    iErrCode = g_pGameEngine->GetPlanetCoordinates (
+                                    iErrCode = GetPlanetCoordinates (
                                         m_iGameClass,
                                         m_iGameNumber,
                                         pmiPartialMapInfo.iCenterKey,
@@ -248,7 +248,7 @@ iYRadius:
                         }
                     }
 
-                    if ((iErrCode = g_pGameEngine->SetEmpireGameProperty(
+                    if ((iErrCode = SetEmpireGameProperty(
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -326,7 +326,7 @@ EndPartialMaps:
                         AddMessage ("The new planet name was too long");
                     } else {
 
-                        iErrCode = g_pGameEngine->RenamePlanet (
+                        iErrCode = RenamePlanet (
                             m_iGameClass,
                             m_iGameNumber,
                             m_iEmpireKey,
@@ -355,7 +355,7 @@ EndPartialMaps:
 
                 if (iOldMaxPop != iNewMaxPop) {
 
-                    iErrCode = g_pGameEngine->SetPlanetMaxPop (
+                    iErrCode = SetPlanetMaxPop (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey, 
@@ -446,7 +446,7 @@ if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
 Variant vMiniMaps = MINIMAPS_NEVER;
 if (bMapGenerated && iMapSubPage == 0) {
 
-    GameCheck (g_pGameEngine->GetEmpireGameProperty (
+    GameCheck (GetEmpireGameProperty (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -506,7 +506,7 @@ case 0:
         PartialMapInfo pmiPartialMapInfo;
         bool bPartialMaps = false;
 
-        GameCheck (g_pGameEngine->GetEmpirePartialMapData (
+        GameCheck (GetEmpirePartialMapData (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
@@ -542,7 +542,7 @@ case 1:
     unsigned int iNumShipsRendered = 0, iNumFleetsRendered = 0;
 
     unsigned int iLivePlanetKey, iDeadPlanetKey;
-    iErrCode = g_pGameEngine->GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
 
     if (iErrCode != OK) {
         AddMessage ("Error reading empire's planet icons from database");
@@ -575,7 +575,7 @@ case 1:
         GAME_MAP (pszGameMap, m_iGameClass, m_iGameNumber);
 
         // Make sure we've explored that planet
-        iErrCode = g_pGameEngine->HasEmpireExploredPlanet (
+        iErrCode = HasEmpireExploredPlanet (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey, 
@@ -612,7 +612,7 @@ case 1:
             goto RenderWholeMap;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
+        iErrCode = GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
         if (iErrCode != OK) {
             AddMessage ("Error reading empire's ag ratio. The error was ");
             AppendMessage (iErrCode);
@@ -662,9 +662,9 @@ case 1:
             int iBR;
             float fMaintRatio, fNextMaintRatio;
 
-            GameCheck (g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
-            GameCheck (g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
-            GameCheck (g_pGameEngine->GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
+            GameCheck (GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
+            GameCheck (GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
+            GameCheck (GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
 
             // Render ships
             RenderShips (

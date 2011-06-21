@@ -46,7 +46,7 @@ namespace SystemData {
     static const char* const AdeptScore = "AdeptScore";
     static const char* const MaxNumSystemMessages = "MaxNumSystemMessages";
     static const char* const MaxNumGameMessages = "MaxNumGameMessages";
-    static const char* const LastShutdownTime = "LastShutdownTime";
+    static const char* const LastShutdownTimeUNUSED = "LastShutdownTimeUNUSED";
     static const char* const DefaultAttackName = "DefaultAttackName";
     static const char* const DefaultScienceName = "DefaultScienceName";
     static const char* const DefaultColonyName = "DefaultColonyName";
@@ -152,7 +152,7 @@ namespace SystemData {
         iAdeptScore,
         iMaxNumSystemMessages,
         iMaxNumGameMessages,
-        iLastShutdownTime,
+        iLastShutdownTimeUNUSED,
         iDefaultAttackName,
         iDefaultScienceName,
         iDefaultColonyName,
@@ -259,7 +259,7 @@ namespace SystemData {
         AdeptScore,
         MaxNumSystemMessages,
         MaxNumGameMessages,
-        LastShutdownTime,
+        LastShutdownTimeUNUSED,
         DefaultAttackName,
         DefaultScienceName,
         DefaultColonyName,

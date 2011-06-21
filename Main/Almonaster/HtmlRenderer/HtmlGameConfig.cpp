@@ -59,14 +59,14 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
 
     unsigned int iNumBlocks = 0;
 
-    iErrCode = g_pGameEngine->GetSystemOptions (&iSystemOptions);
+    iErrCode = GetSystemOptions (&iSystemOptions);
     if (iErrCode != OK) {
         goto OnError;
     }
 
     if (iGameClass != NO_KEY) {
 
-        iErrCode = g_pGameEngine->GetGameClassOptions (iGameClass, &iGameClassOptions);
+        iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
         if (iErrCode != OK) {
             goto OnError;
         }
@@ -77,7 +77,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     }
     
     // MaxUpdatesBeforeGameCloses
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxUpdatesBeforeGameCloses);
+    iErrCode = GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxUpdatesBeforeGameCloses);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -86,7 +86,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     if (iGameClass == NO_KEY) {
         iMaxNumEmpires = 2;
     } else {
-        iErrCode = g_pGameEngine->GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
+        iErrCode = GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
         if (iErrCode != OK) {
             goto OnError;
         }
@@ -176,7 +176,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumUpdatesForClose")) != NULL) {
             vNumUpdatesBeforeGameCloses = pHttpForm->GetIntValue();
         } else {
-            iErrCode = g_pGameEngine->GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vNumUpdatesBeforeGameCloses);
+            iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vNumUpdatesBeforeGameCloses);
             if (iErrCode != OK) {
                 goto OnError;
             }
@@ -501,7 +501,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     if (iGameClass == NO_KEY) {
         mgSupportedMapGen = MAPGEN_ALL;
     } else {
-        iErrCode = g_pGameEngine->GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
+        iErrCode = GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
         if (iErrCode != OK) {
             goto OnError;
         }
@@ -1135,7 +1135,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
                     Variant vRealName;
 
                     // Make sure empire exists
-                    iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bExists, &iFilterEmpireKey, &vRealName, NULL);
+                    iErrCode = DoesEmpireExist (pszName, &bExists, &iFilterEmpireKey, &vRealName, NULL);
                     if (iErrCode == OK && bExists && iFilterEmpireKey != m_iEmpireKey) {
 
                         Assert (iFilterEmpireKey != NO_KEY);
@@ -1224,7 +1224,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     }
     
     // MaxUpdatesBeforeGameCloses
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxUpdatesBeforeGameCloses);
+    iErrCode = GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxUpdatesBeforeGameCloses);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -1241,17 +1241,17 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
         Assert (pvGameClassInfo == NULL);
 
-        iErrCode = g_pGameEngine->GetGameClassUpdatePeriod (iGameClass, &sUpdatePeriod);
+        iErrCode = GetGameClassUpdatePeriod (iGameClass, &sUpdatePeriod);
         if (iErrCode != OK) {
             goto OnError;
         }
 
-        iErrCode = g_pGameEngine->GetGameClassOptions (iGameClass, &iGameClassOptions);
+        iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
         if (iErrCode != OK) {
             goto OnError;
         }
 
-        iErrCode = g_pGameEngine->GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
+        iErrCode = GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
         if (iErrCode != OK) {
             goto OnError;
         }
@@ -1313,7 +1313,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     MapGeneration mgSupportedMapGen;
     if (iGameClass == NO_KEY) {
 
-        g_pGameEngine->GetSupportedMapGenerationTypes(
+        GetSupportedMapGenerationTypes(
             pvGameClassInfo[SystemGameClassData::iMinNumEmpires].GetInteger(),
             pvGameClassInfo[SystemGameClassData::iMaxNumEmpires].GetInteger(),
             pvGameClassInfo[SystemGameClassData::iMinNumPlanets].GetInteger(),
@@ -1322,7 +1322,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
     } else {
 
-        iErrCode = g_pGameEngine->GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
+        iErrCode = GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -1871,7 +1871,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                         int64 iSecretKey;
 
                         // Make sure empire exists
-                        iErrCode = g_pGameEngine->DoesEmpireExist (pszName, &bFlag, &iFilterEmpireKey, NULL, &iSecretKey);
+                        iErrCode = DoesEmpireExist (pszName, &bFlag, &iFilterEmpireKey, NULL, &iSecretKey);
                         if (iErrCode == OK && bFlag && iFilterEmpireKey != m_iEmpireKey) {
 
                             Assert (iFilterEmpireKey != NO_KEY);

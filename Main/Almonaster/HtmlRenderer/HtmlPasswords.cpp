@@ -24,7 +24,7 @@
 // Authentication
 //
 
-int HtmlRenderer::LoginEmpire() {
+int HtmlRenderer::HtmlLoginEmpire() {
 
     //
     // If this function is called, it means we've been authenticated
@@ -37,7 +37,7 @@ int HtmlRenderer::LoginEmpire() {
         m_vEmpireName.GetCharPtr() == NULL ||
         *m_vEmpireName.GetCharPtr() == '\0') {
         
-        iErrCode = g_pGameEngine->GetEmpireName (m_iEmpireKey, &m_vEmpireName);
+        iErrCode = GetEmpireName (m_iEmpireKey, &m_vEmpireName);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's name could not be read");
             return iErrCode;
@@ -48,7 +48,7 @@ int HtmlRenderer::LoginEmpire() {
         m_vPassword.GetCharPtr() == NULL ||
         *m_vPassword.GetCharPtr() == '\0') {
         
-        iErrCode = g_pGameEngine->GetEmpirePassword(m_iEmpireKey, &m_vPassword);
+        iErrCode = GetEmpirePassword(m_iEmpireKey, &m_vPassword);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's password could not be read");
             return iErrCode;
@@ -58,7 +58,7 @@ int HtmlRenderer::LoginEmpire() {
     if (m_i64SecretKey == 0) {
 
         Variant vValue;
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::SecretKey, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::SecretKey, &vValue);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's secret key could not be read");
             return iErrCode;
@@ -67,7 +67,7 @@ int HtmlRenderer::LoginEmpire() {
     }
     
     // Get last login time
-    iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::LastLoginTime, &vValue);
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::LastLoginTime, &vValue);
     if (iErrCode != OK) {
         AddMessage ("Login failed: the empire's last login time could not be read");
         return iErrCode;
@@ -75,7 +75,7 @@ int HtmlRenderer::LoginEmpire() {
     UTCTime lastLoginTime = vValue.GetInteger64();
 
     // We're authenticated, so register a login
-    iErrCode = g_pGameEngine->LoginEmpire (m_iEmpireKey, m_pHttpRequest->GetBrowserName(), m_pHttpRequest->GetClientIP());
+    iErrCode = LoginEmpire (m_iEmpireKey, m_pHttpRequest->GetBrowserName(), m_pHttpRequest->GetClientIP());
     if (iErrCode != OK) {
         
         if (iErrCode == ERROR_DISABLED) {
@@ -83,7 +83,7 @@ int HtmlRenderer::LoginEmpire() {
             String strMessage = "The server is refusing logins at this time. ";
             
             Variant vReason;
-            g_pGameEngine->GetSystemProperty (SystemData::LoginsDisabledReason, &vReason);
+            GetSystemProperty (SystemData::LoginsDisabledReason, &vReason);
 
             const char* pszReason = NULL;
             
@@ -117,7 +117,7 @@ int HtmlRenderer::LoginEmpire() {
         // Get theme key
         int iThemeKey;
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's theme key could not be read");
             return iErrCode;
@@ -130,21 +130,21 @@ int HtmlRenderer::LoginEmpire() {
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Privilege, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Privilege, &vValue);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's privilege level could not be read");
             return iErrCode;
         }
         m_iPrivilege = vValue.GetInteger();
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's alien key could not be read");
             return iErrCode;
         }
         m_iAlienKey = vValue.GetInteger();
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IPAddress, &m_vPreviousIPAddress);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IPAddress, &m_vPreviousIPAddress);
         if (iErrCode != OK) {
             AddMessage ("Login failed: the empire's old IP address could not be read");
             return iErrCode;
@@ -170,7 +170,7 @@ int HtmlRenderer::LoginEmpire() {
         }
 
         // Add to report
-        ReportLoginSuccess (g_pReport, m_vEmpireName.GetCharPtr(), m_bAutoLogon);
+        ReportLoginSuccess(global.GetReport(), m_vEmpireName.GetCharPtr(), m_bAutoLogon);
     
         // Take a ticket
         m_bAuthenticated = true;
@@ -180,28 +180,20 @@ int HtmlRenderer::LoginEmpire() {
 }
 
 
-int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
-    
+int HtmlRenderer::InitializeEmpire (bool bAutoLogon)
+{
     int iErrCode;
-    
     IHttpForm* pHttpForm;
     bool bExists;
     
-    // Make sure we're not backing up
-    if (g_pGameEngine->IsDatabaseBackingUp()) {     
-        WriteBackupMessage();
-        return ERROR_FAILURE;
-    }
-    
-    if (bAutoLogon ||
-        ((pHttpForm = m_pHttpRequest->GetForm ("PageId")) != NULL && pHttpForm->GetIntValue() == m_pgPageId)) {
-
+    if (bAutoLogon || ((pHttpForm = m_pHttpRequest->GetForm ("PageId")) != NULL && pHttpForm->GetIntValue() == m_pgPageId))
+    {
         m_bOwnPost = true;
 
         if (m_bAuthenticated) {
 
             Assert (m_iEmpireKey != NO_KEY);
-            iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
+            iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
             if (iErrCode != OK || !bExists) {       
                 AddMessage ("That empire no longer exists");
                 return ERROR_FAILURE;
@@ -218,7 +210,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
                 m_iEmpireKey = pHttpForm->GetIntValue();
                 
                 // Make sure empire key exists
-                iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists, &m_vEmpireName);
+                iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, &m_vEmpireName);
                 if (iErrCode != OK || !bExists) {
                     AddMessage ("That empire no longer exists");
                     return ERROR_FAILURE;
@@ -237,7 +229,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
                 } else {
                     
                     // Look up name
-                    iErrCode = g_pGameEngine->DoesEmpireExist (
+                    iErrCode = DoesEmpireExist (
                         pszName, 
                         &bExists, 
                         &m_iEmpireKey, 
@@ -255,13 +247,13 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
         }
 
         // Get empire options
-        iErrCode = g_pGameEngine->GetEmpireOptions (m_iEmpireKey, &m_iSystemOptions);
+        iErrCode = GetEmpireOptions (m_iEmpireKey, &m_iSystemOptions);
         if (iErrCode != OK) {
             AddMessage ("That empire no longer exists");
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireOptions2 (m_iEmpireKey, &m_iSystemOptions2);
+        iErrCode = GetEmpireOptions2 (m_iEmpireKey, &m_iSystemOptions2);
         if (iErrCode != OK) {
             AddMessage ("That empire no longer exists");
             return iErrCode;
@@ -282,14 +274,14 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
             //
 
             // Get empire's password
-            iErrCode = g_pGameEngine->GetEmpirePassword (m_iEmpireKey, &m_vPassword);
+            iErrCode = GetEmpirePassword (m_iEmpireKey, &m_vPassword);
             if (iErrCode != OK) {
                 AddMessage ("That empire no longer exists");
                 return iErrCode;
             }
             
             // Get empire's recorded IP address
-            iErrCode = g_pGameEngine->GetEmpireIPAddress (m_iEmpireKey, &m_vPreviousIPAddress);
+            iErrCode = GetEmpireIPAddress (m_iEmpireKey, &m_vPreviousIPAddress);
             if (iErrCode != OK) {
                 AddMessage ("That empire no longer exists");
                 return iErrCode;
@@ -297,7 +289,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
 
             // Get empire's secret key
             Variant vValue;
-            iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::SecretKey, &vValue);
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::SecretKey, &vValue);
             if (iErrCode != OK) {
                 AddMessage ("That empire no longer exists");
                 return iErrCode;
@@ -376,7 +368,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
         if (bUpdateSessionId) {
             
             // Write the empire's new session id
-            iErrCode = g_pGameEngine->SetEmpireSessionId (m_iEmpireKey, m_i64SessionId);
+            iErrCode = SetEmpireSessionId (m_iEmpireKey, m_i64SessionId);
             if (iErrCode != OK) {
                 AddMessage ("That empire no longer exists");
                 return iErrCode;
@@ -396,7 +388,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
         // Update IP address
         if (strcmp (m_pHttpRequest->GetClientIP(), m_vPreviousIPAddress.GetCharPtr()) != 0) {
             
-            iErrCode = g_pGameEngine->SetEmpireIPAddress (
+            iErrCode = SetEmpireIPAddress (
                 m_iEmpireKey,
                 m_pHttpRequest->GetClientIP()
                 );
@@ -407,16 +399,16 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
         }
         
         Variant vValue;
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);       
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);       
         if (iErrCode == OK) {
 
             m_iThemeKey = vValue.GetInteger();
 
-            iErrCode = g_pGameEngine->GetEmpirePrivilege (m_iEmpireKey, &m_iPrivilege);
+            iErrCode = GetEmpirePrivilege (m_iEmpireKey, &m_iPrivilege);
         
             if (iErrCode == OK) {
                 Variant vTemp;
-                iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vTemp);
+                iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vTemp);
                 if (iErrCode == OK) {
                     m_iAlienKey = vTemp.GetInteger();
                 }
@@ -447,7 +439,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
     } else {
         
         bool bExists;
-        iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
+        iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
         if (iErrCode != OK || !bExists) {
             AddMessage ("That empire no longer exists");
             return ERROR_FAILURE;
@@ -456,7 +448,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
     
     // Make sure access is allowed
     int iOptions;
-    iErrCode = g_pGameEngine->GetSystemOptions (&iOptions);
+    iErrCode = GetSystemOptions (&iOptions);
     if (iErrCode != OK) {
         AddMessage ("Could not read system options");
         return ERROR_FAILURE;
@@ -468,7 +460,7 @@ int HtmlRenderer::InitializeEmpire (bool bAutoLogon) {
         AddMessage ("Access is denied at this time. ");
         
         Variant vReason;
-        if (g_pGameEngine->GetSystemProperty (SystemData::AccessDisabledReason, &vReason) == OK) {
+        if (GetSystemProperty (SystemData::AccessDisabledReason, &vReason) == OK) {
             AppendMessage (vReason.GetCharPtr());
         }
         

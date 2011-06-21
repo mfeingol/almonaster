@@ -17,6 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "GameEngine.h"
+#include "Global.h"
 
 // Input:
 // iNukerKey -> Nuking empire
@@ -32,21 +33,18 @@ int GameEngine::UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* ps
     int iErrCode;
 
     // Report
-    if (m_scConfig.bReport) {
+    char pszMessage [MAX_EMPIRE_NAME_LENGTH * 2 + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
+    sprintf (
+        pszMessage, 
+        "%s %s %s in %s %i", 
+        pszNukerName, 
+        reason == EMPIRE_SURRENDERED ? "accepted surrender from" : "nuked",
+        pszNukedName, 
+        pszGameClassName, 
+        iGameNumber
+        );
 
-        char pszMessage [MAX_EMPIRE_NAME_LENGTH * 2 + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
-        sprintf (
-            pszMessage, 
-            "%s %s %s in %s %i", 
-            pszNukerName, 
-            reason == EMPIRE_SURRENDERED ? "accepted surrender from" : "nuked",
-            pszNukedName, 
-            pszGameClassName, 
-            iGameNumber
-            );
-
-        m_pReport->WriteReport (pszMessage);
-    }
+    global.GetReport()->WriteReport (pszMessage);
 
     // Increment nukes and nuked
     iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iNukerKey, SystemEmpireData::Nukes, 1);
@@ -184,13 +182,9 @@ int GameEngine::UpdateScoresOn30StyleSurrender (int iLoserKey, const char* pszLo
     int iErrCode;
 
     // Report
-    if (m_scConfig.bReport) {
-
-        char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 64];
-        sprintf (pszMessage, "%s surrendered out of %s %i", pszLoserName, pszGameClassName, iGameNumber);
-
-        m_pReport->WriteReport (pszMessage);
-    }
+    char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 64];
+    sprintf (pszMessage, "%s surrendered out of %s %i", pszLoserName, pszGameClassName, iGameNumber);
+    global.GetReport()->WriteReport(pszMessage);
 
     // Increment nuked for loser
     iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iLoserKey, SystemEmpireData::Nuked, 1);
@@ -222,8 +216,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     Variant vPlanetName, vEmpireSecretKey, vNukedKey, vTemp;
     char pszNukedName [MAX_EMPIRE_NAME_LENGTH + 1] = "";
 
-    bool bEmpireLocked = false, bValid;
-    NamedMutex nmEmpireMutex;
+    bool bValid;
 
     iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Name, &vPlanetName);
     if (iErrCode != OK) {
@@ -232,21 +225,18 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     }
 
     // Report
-    if (m_scConfig.bReport) {
+    char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + MAX_PLANET_NAME_LENGTH + 64];
         
-        char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + MAX_PLANET_NAME_LENGTH + 64];
-        
-        sprintf (
-            pszMessage,
-            "%s colonized %s in %s %i",
-            pszWinnerName,
-            vPlanetName.GetCharPtr(),
-            pszGameClassName,
-            iGameNumber
-            );
+    sprintf (
+        pszMessage,
+        "%s colonized %s in %s %i",
+        pszWinnerName,
+        vPlanetName.GetCharPtr(),
+        pszGameClassName,
+        iGameNumber
+        );
 
-        m_pReport->WriteReport (pszMessage);
-    }
+    global.GetReport()->WriteReport (pszMessage);
 
     // Give empire credit for nuke
     iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iWinnerKey, SystemEmpireData::Nukes, 1);
@@ -281,13 +271,6 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     Assert (vNukedKey.GetInteger() != NO_KEY);
 
-    iErrCode = LockEmpire (vNukedKey.GetInteger(), &nmEmpireMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    bEmpireLocked = true;
-
     iErrCode = CheckSecretKey (vNukedKey.GetInteger(), vEmpireSecretKey.GetInteger64(), &bValid, NULL, NULL);
     if (iErrCode != OK) {
         Assert (false);
@@ -297,10 +280,6 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     if (bValid) {
         iLoserKey = vNukedKey.GetInteger();
     } else {
-
-        UnlockEmpire (nmEmpireMutex);
-        bEmpireLocked = false;
-
         iLoserKey = NO_KEY;
     }
 
@@ -394,11 +373,6 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         goto Cleanup;
     }
 
-    if (bEmpireLocked) {
-        UnlockEmpire (nmEmpireMutex);
-        bEmpireLocked = false;
-    }
-
     {   // Scope
         ScoringChanges scChanges;
         scChanges.pszNukedName = pszNukedName;
@@ -418,138 +392,134 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
 Cleanup:
 
-    if (bEmpireLocked) {
-        UnlockEmpire (nmEmpireMutex);
-    }
-
     return iErrCode;
 }
 
 
-int GameEngine::UpdateScoresOnGameEnd (int iGameClass, int iGameNumber) {
-
-    int i, iErrCode;
-
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->OnGameEnd (iGameClass, iGameNumber);
+int GameEngine::UpdateScoresOnGameEnd (int iGameClass, int iGameNumber)
+{
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        int iErrCode = pScoringSystem->OnGameEnd(iGameClass, iGameNumber);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
-int GameEngine::UpdateScoresOnNuke (int iGameClass, int iGameNumber, int iNukerKey, int iNukedKey, ScoringChanges* pscChanges) {
-
-    int i, iErrCode;
-
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->OnNuke (iGameClass, iGameNumber, iNukerKey, iNukedKey, pscChanges);
+int GameEngine::UpdateScoresOnNuke (int iGameClass, int iGameNumber, int iNukerKey, int iNukedKey, ScoringChanges* pscChanges)
+{
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        int iErrCode = pScoringSystem->OnNuke(iGameClass, iGameNumber, iNukerKey, iNukedKey, pscChanges);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
-int GameEngine::UpdateScoresOnSurrender (int iGameClass, int iGameNumber, int iWinnerKey, int iLoserKey, ScoringChanges* pscChanges) {
-    
-    int i, iErrCode;
-
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->OnSurrender (iGameClass, iGameNumber, iWinnerKey, iLoserKey, pscChanges);
+int GameEngine::UpdateScoresOnSurrender (int iGameClass, int iGameNumber, int iWinnerKey, int iLoserKey, ScoringChanges* pscChanges)
+{
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        int iErrCode = pScoringSystem->OnSurrender(iGameClass, iGameNumber, iWinnerKey, iLoserKey, pscChanges);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
-int GameEngine::UpdateScoresOn30StyleSurrender (int iGameClass, int iGameNumber, int iLoserKey, ScoringChanges* pscChanges) {
-    
-    int i, iErrCode;
-
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->On30StyleSurrender (iGameClass, iGameNumber, iLoserKey, pscChanges);
+int GameEngine::UpdateScoresOn30StyleSurrender (int iGameClass, int iGameNumber, int iLoserKey, ScoringChanges* pscChanges)
+{
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        int iErrCode = pScoringSystem->On30StyleSurrender(iGameClass, iGameNumber, iLoserKey, pscChanges);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
-int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey,
-                                                            int iPlanetKey, ScoringChanges* pscChanges) {
-    
-    int i, iErrCode;
-
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->On30StyleSurrenderColonization (
-            iGameClass, 
-            iGameNumber, 
-            iWinnerKey, 
-            iPlanetKey,
-            pscChanges
-            );
+int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey, int iPlanetKey, ScoringChanges* pscChanges)
+{
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        int iErrCode = pScoringSystem->On30StyleSurrenderColonization(iGameClass, iGameNumber, iWinnerKey, iPlanetKey, pscChanges);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
-int GameEngine::UpdateScoresOnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
-
-    int iErrCode, i;
-    
+int GameEngine::UpdateScoresOnWin (int iGameClass, int iGameNumber, int iEmpireKey)
+{
     // Add win to empires' statistics
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, 1);
+    int iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->OnWin (iGameClass, iGameNumber, iEmpireKey);
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        iErrCode = pScoringSystem->OnWin(iGameClass, iGameNumber, iEmpireKey);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
-int GameEngine::UpdateScoresOnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
-
-    int iErrCode, i;
-
+int GameEngine::UpdateScoresOnDraw (int iGameClass, int iGameNumber, int iEmpireKey)
+{
     // Add draw to empires' statistics
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Draws, 1);
+    int iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Draws, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->OnDraw (iGameClass, iGameNumber, iEmpireKey);
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        iErrCode = pScoringSystem->OnDraw(iGameClass, iGameNumber, iEmpireKey);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
 }
 
 
-int GameEngine::UpdateScoresOnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
-
-    int iErrCode, i;
-
+int GameEngine::UpdateScoresOnRuin (int iGameClass, int iGameNumber, int iEmpireKey)
+{
     // Add ruin to empires' statistics
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Ruins, 1);
+    int iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Ruins, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        iErrCode = m_ppScoringSystem[i]->OnRuin (iGameClass, iGameNumber, iEmpireKey);
+    int i;
+    ENUMERATE_SCORING_SYSTEMS(i)
+    {
+        IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
+        iErrCode = pScoringSystem->OnRuin(iGameClass, iGameNumber, iEmpireKey);
         Assert (iErrCode == OK);
+        delete pScoringSystem;
     }
-
     return OK;
-
 }
 
 // Input:
@@ -616,15 +586,13 @@ int GameEngine::GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppv
         SystemEmpireNukeList::TimeStamp
     };
 
-    const unsigned int iNumColumns = sizeof (pszNukeColumns) / sizeof (unsigned int);
-
     *piNumNuked = *piNumNukers = 0;
     *pppvNukedData = *pppvNukerData = NULL;
 
     // Get Nuked data
     iErrCode = t_pConn->ReadColumns (
         strNuked, 
-        iNumColumns,
+        countof(pszNukeColumns),
         pszNukeColumns,
         pppvNukedData,
         (unsigned int*) piNumNuked
@@ -637,7 +605,7 @@ int GameEngine::GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppv
     // Get Nuker data
     iErrCode = t_pConn->ReadColumns (
         strNuker, 
-        iNumColumns,
+        countof(pszNukeColumns),
         pszNukeColumns,
         pppvNukerData,
         (unsigned int*) piNumNukers
@@ -673,11 +641,9 @@ int GameEngine::GetSystemNukeHistory (int* piNumNukes, Variant*** pppvNukedData)
         SystemNukeList::TimeStamp
     };
 
-    const unsigned int iNumColumns = sizeof (pszNukeColumns) / sizeof (unsigned int);
-
     int iErrCode = t_pConn->ReadColumns (
         SYSTEM_NUKE_LIST, 
-        iNumColumns,
+        countof(pszNukeColumns),
         pszNukeColumns,
         pppvNukedData,
         (unsigned int*) piNumNukes
@@ -704,11 +670,9 @@ int GameEngine::GetSystemLatestGames (int* piNumGames, Variant*** pppvGameData) 
         SystemLatestGames::Losers,
     };
 
-    const unsigned int iNumColumns = sizeof (pszColumns) / sizeof (unsigned int);
-
     int iErrCode = t_pConn->ReadColumns (
         SYSTEM_LATEST_GAMES,
-        iNumColumns,
+        countof(pszColumns),
         pszColumns,
         pppvGameData,
         (unsigned int*) piNumGames
@@ -1454,15 +1418,16 @@ int GameEngine::TriggerBridierTimeBombIfNecessary() {
     }
 
     if (Time::GetSecondDifference (tNow, vLastScan.GetInteger64()) > vFrequency.GetInteger()) {
-        iErrCode = SendLongRunningQueryMessage (TriggerBridierTimeBombIfNecessaryMsg, NULL);
+        iErrCode = global.GetAsyncManager()->QueueTask(TriggerBridierTimeBombIfNecessaryMsg, NULL);
     }
 
     return iErrCode;
 }
 
-int GameEngine::TriggerBridierTimeBombIfNecessaryMsg (LongRunningQueryMessage* pMessage) {
-
-    return pMessage->pGameEngine->TriggerBridierTimeBombIfNecessaryCallback();
+int GameEngine::TriggerBridierTimeBombIfNecessaryMsg (AsyncTask* pMessage)
+{
+    GameEngine gameEngine;
+    return gameEngine.TriggerBridierTimeBombIfNecessaryCallback();
 }
 
 int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
@@ -1471,18 +1436,11 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
 
     unsigned int iKey = NO_KEY;
     
-    NamedMutex nmBridierLock;
     Variant vLastAct, vIndex;
 
     UTCTime tNow;
     Time::GetTime (&tNow);
-
-    iErrCode = t_pConn->WriteData (SYSTEM_DATA, SystemData::LastShutdownTime, tNow);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-    
+        
     while (true) {
         
         iErrCode = t_pConn->GetNextKey (SYSTEM_EMPIRE_DATA, iKey, &iKey);
@@ -1506,22 +1464,14 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
             
             Seconds sDiff;
             
-            // Take a lock
-            iErrCode = LockEmpireBridier (iKey, &nmBridierLock);
-            if (iErrCode != OK) {
-                continue;
-            }
-            
             // Refresh
-            iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);
+            iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);
             if (iErrCode != OK) {
-                UnlockEmpireBridier (nmBridierLock);
                 continue;
             }
             
             iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::BridierIndex, &vIndex);
             if (iErrCode != OK) {
-                UnlockEmpireBridier (nmBridierLock);
                 continue;
             }
             
@@ -1568,28 +1518,23 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
                     iErrCode = UpdateTopListOnDecrease (BRIDIER_SCORE_ESTABLISHED, iKey);
                     Assert (iErrCode == OK);
                     
-                    if (m_scConfig.bReport) {
-
-                        Variant vName;
-                        iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::Name, &vName);
-                        if (iErrCode == OK) {
+                    Variant vName;
+                    iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::Name, &vName);
+                    if (iErrCode == OK) {
                             
-                            char pszMessage [MAX_EMPIRE_NAME_LENGTH + 128];
-                            sprintf (
-                                pszMessage, 
-                                "The Bridier Index for %s has been adjusted from %i to %i",
-                                vName.GetCharPtr(),
-                                vIndex.GetInteger(),
-                                iFinalIndex
-                                );
+                        char pszMessage [MAX_EMPIRE_NAME_LENGTH + 128];
+                        sprintf (
+                            pszMessage, 
+                            "The Bridier Index for %s has been adjusted from %i to %i",
+                            vName.GetCharPtr(),
+                            vIndex.GetInteger(),
+                            iFinalIndex
+                            );
                             
-                            m_pReport->WriteReport (pszMessage);
-                        }
+                        global.GetReport()->WriteReport (pszMessage);
                     }
                 }
             }
-            
-            UnlockEmpireBridier (nmBridierLock);
         }
     }
 

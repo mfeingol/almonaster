@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include "Osal/Algorithm.h"
 
@@ -84,7 +84,7 @@ SearchResults:
 
                         if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
                             iTargetEmpireKey = piSearchEmpireKey[0];
-                            g_pGameEngine->FreeKeys (piSearchEmpireKey);
+                            FreeKeys (piSearchEmpireKey);
                             iProfileViewerPage = 2;
                         } else {
                             iProfileViewerPage = 1;
@@ -172,11 +172,11 @@ SearchResults:
                 Variant vSentName;
                 if (pszMessage != NULL && pszTargetEmpire != NULL) {
 
-                    iErrCode = g_pGameEngine->SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
+                    iErrCode = SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                     switch (iErrCode) {
 
                     case OK:
-                        Check (g_pGameEngine->GetEmpireName (iTargetEmpireKey, &vSentName));
+                        Check (GetEmpireName (iTargetEmpireKey, &vSentName));
                         AddMessage ("Your message was sent to ");
                         AppendMessage (vSentName.GetCharPtr());
                         break;
@@ -244,7 +244,7 @@ SearchResults:
                     unsigned int iSwitch = pHttpForm->GetIntValue();
 
                     bool bAuth;
-                    if (g_pGameEngine->CheckAssociation (m_iEmpireKey, iSwitch, &bAuth) == OK && bAuth) {
+                    if (CheckAssociation (m_iEmpireKey, iSwitch, &bAuth) == OK && bAuth) {
 
                         m_iReserved = 0;
                         m_i64SecretKey = 0;
@@ -253,7 +253,7 @@ SearchResults:
 
                         m_iEmpireKey = iSwitch;
 
-                        iErrCode = LoginEmpire();
+                        iErrCode = HtmlLoginEmpire();
                         if (iErrCode == OK) {
                             iErrCode = InitializeEmpire (false);
                             if (iErrCode == OK) {
@@ -299,7 +299,7 @@ SearchResults:
                     break;
                 }
 
-                iErrCode = g_pGameEngine->GetDefaultGameOptions (iGameClassKey, &goOptions);
+                iErrCode = GetDefaultGameOptions (iGameClassKey, &goOptions);
                 if (iErrCode != OK) {
                     AddMessage ("Could not read default game options");
                     goto Redirection;
@@ -309,7 +309,7 @@ SearchResults:
                 goOptions.piEmpireKey = &m_iEmpireKey;
 
                 // Create the game
-                iErrCode = g_pGameEngine->CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
+                iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
 
                 HANDLE_CREATE_GAME_OUTPUT (iErrCode);
             }
@@ -322,14 +322,14 @@ SearchResults:
                 bRedirectTest = false;
 
                 unsigned int iOwnerKey;
-                iErrCode = g_pGameEngine->GetGameClassOwner (iGameClassKey, &iOwnerKey);
+                iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
                         ) {
 
-                        iErrCode = g_pGameEngine->DeleteGameClass (iGameClassKey, &bFlag);
+                        iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
 
                         if (iErrCode == OK) {
                             if (bFlag) {
@@ -354,14 +354,14 @@ SearchResults:
                 sscanf (pszStart, "UndeleteGameClass%d", &iGameClassKey) == 1) {
 
                 unsigned int iOwnerKey;
-                iErrCode = g_pGameEngine->GetGameClassOwner (iGameClassKey, &iOwnerKey);
+                iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
                         ) {
 
-                        iErrCode = g_pGameEngine->UndeleteGameClass (iGameClassKey);
+                        iErrCode = UndeleteGameClass (iGameClassKey);
                         switch (iErrCode) {
 
                         case OK:
@@ -396,14 +396,14 @@ SearchResults:
                 sscanf (pszStart, "HaltGameClass%d", &iGameClassKey) == 1) {
 
                 unsigned int iOwnerKey;
-                iErrCode = g_pGameEngine->GetGameClassOwner (iGameClassKey, &iOwnerKey);
+                iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
                         ) {
 
-                        iErrCode = g_pGameEngine->HaltGameClass (iGameClassKey);
+                        iErrCode = HaltGameClass (iGameClassKey);
 
                         if (iErrCode == OK) {
                             AddMessage ("The GameClass was halted");
@@ -426,14 +426,14 @@ SearchResults:
                 sscanf (pszStart, "UnhaltGameClass%d", &iGameClassKey) == 1) {
 
                 unsigned int iOwnerKey;
-                iErrCode = g_pGameEngine->GetGameClassOwner (iGameClassKey, &iOwnerKey);
+                iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
                 if (iErrCode == OK) {
 
                     if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != g_pGameEngine->GetRootKey() || m_iEmpireKey == g_pGameEngine->GetRootKey()))
+                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
                         ) {
 
-                        iErrCode = g_pGameEngine->UnhaltGameClass (iGameClassKey);
+                        iErrCode = UnhaltGameClass (iGameClassKey);
                         switch (iErrCode) {
 
                         case OK:
@@ -501,7 +501,7 @@ SearchResults:
                 goOptions.piEmpireKey = &m_iEmpireKey;
 
                 // Create the game
-                iErrCode = g_pGameEngine->CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
+                iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
 
                 ClearGameOptions (&goOptions);
 
@@ -553,7 +553,7 @@ case 1:
         iLastKey
         );
 
-    g_pGameEngine->FreeKeys (piSearchEmpireKey);
+    FreeKeys (piSearchEmpireKey);
 
     }
 
@@ -614,8 +614,8 @@ case 6:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check (g_pGameEngine->GetGameClassName (iGameClassKey, pszGameClassName));
-    Check (g_pGameEngine->GetNextGameNumber (iGameClassKey, &iGameNumber));
+    Check (GetGameClassName (iGameClassKey, pszGameClassName));
+    Check (GetNextGameNumber (iGameClassKey, &iGameNumber));
 
     %><input type="hidden" name="ProfileViewerPage" value="6"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%

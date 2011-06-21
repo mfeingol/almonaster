@@ -27,8 +27,6 @@
 
 int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
     
-    LockSuperClasses();
-
     unsigned int iKey = NO_KEY;
     int iErrCode = t_pConn->GetFirstKey (
         SYSTEM_SUPERCLASS_DATA, 
@@ -58,8 +56,6 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
     }
 
 Cleanup:
-
-    UnlockSuperClasses();
 
     return iErrCode;
 }
@@ -169,8 +165,6 @@ int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    LockSuperClasses();
-
     iErrCode = t_pConn->DoesRowExist (SYSTEM_SUPERCLASS_DATA, iKey, &bExists);
     if (iErrCode != OK) {
         goto Cleanup;
@@ -185,8 +179,6 @@ int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {
     Assert (iErrCode == OK);
 
 Cleanup:
-
-    UnlockSuperClasses();
 
     return iErrCode;
 }

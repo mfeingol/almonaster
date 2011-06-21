@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -68,7 +68,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
             }
 
-            iErrCode = g_pGameEngine->GetDefaultGameOptions (iGameClassKey, &goOptions);
+            iErrCode = GetDefaultGameOptions (iGameClassKey, &goOptions);
             if (iErrCode != OK) {
                 AddMessage ("Could not read default game options");
                 goto Redirection;
@@ -117,7 +117,7 @@ if (m_bOwnPost && !m_bRedirection) {
             goOptions.piEmpireKey = &m_iEmpireKey;
 
             // Create the game
-            iErrCode = g_pGameEngine->CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
+            iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
 
             ClearGameOptions (&goOptions);
 
@@ -175,7 +175,7 @@ case 0:
 
     int iNumGameClasses, iNumSuperClasses = 0;
     int* piGameClassKey;
-    Check (g_pGameEngine->GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
+    Check (GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
 
     Algorithm::AutoDelete<int> autoDelete (piGameClassKey);
 
@@ -185,7 +185,7 @@ case 0:
 
         // Get superclass list
         int* piSuperClassKey, iSuperClassKey;
-        Check (g_pGameEngine->GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         bool bDraw = false;
         int** ppiTable = NULL;
@@ -220,7 +220,7 @@ case 0:
 
             for (i = 0; i < iNumGameClasses; i ++) {
 
-                iErrCode = g_pGameEngine->GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
+                iErrCode = GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
                 if (iErrCode == OK) {
 
                     for (j = 0; j < iNumSuperClasses; j ++) {
@@ -257,7 +257,7 @@ case 0:
             for (i = 0; i < iNumSuperClasses; i ++) {
 
                 if (ppiTable [i][iNumGameClasses] > 0 &&
-                    g_pGameEngine->GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
+                    GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
 
                     %><p><h3><% Write (vName.GetCharPtr()); %>:</h3><%
 
@@ -268,7 +268,7 @@ case 0:
                         iGameClass = ppiTable[i][j];
 
                         // Read game class data
-                        if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                        if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
 
                             // Best effort
                             iErrCode = WriteSystemGameListData (
@@ -277,7 +277,7 @@ case 0:
                                 );
                         }
                         if (pvGameClassInfo != NULL) {
-                            g_pGameEngine->FreeData (pvGameClassInfo);
+                            FreeData (pvGameClassInfo);
                             pvGameClassInfo = NULL;
                         }
                     }
@@ -288,7 +288,7 @@ case 0:
 
         // Clean up
         if (iNumSuperClasses > 0) {
-            g_pGameEngine->FreeKeys (piSuperClassKey);
+            FreeKeys (piSuperClassKey);
         }
     }
 
@@ -300,8 +300,8 @@ case 1:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check (g_pGameEngine->GetGameClassName (iGameClassKey, pszGameClassName));
-    Check (g_pGameEngine->GetNextGameNumber (iGameClassKey, &iGameNumber));
+    Check (GetGameClassName (iGameClassKey, pszGameClassName));
+    Check (GetNextGameNumber (iGameClassKey, &iGameNumber));
 
     %><input type="hidden" name="SystemGameListPage" value="1"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%

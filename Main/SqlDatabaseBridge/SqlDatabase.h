@@ -201,17 +201,12 @@ public:
 
     virtual int ReadData(unsigned int iKey, const char* pszColumn, int* piData) = 0;
     virtual int ReadData(unsigned int iKey, const char* pszColumn, float* pfData) = 0;
-    virtual int ReadData(unsigned int iKey, const char* pszColumn, const char** ppszData) = 0;
-
     virtual int ReadData(unsigned int iKey, const char* pszColumn, int64* pi64Data) = 0;
     virtual int ReadData(unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;
 
     virtual int ReadData(const char* pszColumn, int* piData) = 0;
     virtual int ReadData(const char* pszColumn, float* pfData) = 0;
-    virtual int ReadData(const char* pszColumn, const char** ppszData) = 0;
-    
     virtual int ReadData(const char* pszColumn, int64* pi64Data) = 0;
-
     virtual int ReadData(const char* pszColumn, Variant* pvData) = 0;
 
     virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows) = 0;

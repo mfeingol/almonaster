@@ -18,6 +18,7 @@
 
 #include "Osal/Algorithm.h"
 
+#include "Global.h"
 #include "FairMapGenerator.h"
 #include "MapFairnessEvaluator.h"
 
@@ -25,25 +26,12 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-FairMapGenerator::FairMapGenerator(IGameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness) 
+FairMapGenerator::FairMapGenerator(GameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness) 
     :
-    m_iNumRefs(1),
     m_pGameEngine(pGameEngine),
     m_pInner(pInner),
     m_gfoFairness(gfoFairness)
 {
-    m_pGameEngine->AddRef();
-    m_pInner->AddRef();
-}
-
-FairMapGenerator::~FairMapGenerator() {
-
-    SafeRelease(m_pGameEngine);
-    SafeRelease(m_pInner);
-}
-
-IMapGenerator* FairMapGenerator::CreateInstance(IGameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness) {
-    return new FairMapGenerator(pGameEngine, pInner, gfoFairness);
 }
 
 int FairMapGenerator::CreatePlanets(
@@ -135,10 +123,8 @@ int FairMapGenerator::CreatePlanets(
     return OK;
 }
 
-void FairMapGenerator::WriteReport(bool bAcceptable, unsigned int iAttempts) {
-
-    IReport* pReport = m_pGameEngine->GetReport();
-
+void FairMapGenerator::WriteReport(bool bAcceptable, unsigned int iAttempts)
+{
     char pszReport[256];
 
     if (bAcceptable) {
@@ -149,8 +135,7 @@ void FairMapGenerator::WriteReport(bool bAcceptable, unsigned int iAttempts) {
         sprintf(pszReport, "Failed to generate fair map after %d attempts", iAttempts);
     }
 
-    pReport->WriteReport(pszReport);
-    SafeRelease(pReport);
+    global.GetReport()->WriteReport(pszReport);
 }
 
 int FairMapGenerator::EvaluateMap(int iGameClass, int iGameNumber,

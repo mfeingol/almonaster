@@ -1,12 +1,22 @@
-// TournamentScoring.cpp: implementation of the TournamentScoring class.
 //
-//////////////////////////////////////////////////////////////////////
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "TournamentScoring.h"
-
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
 
 static const char* s_pszEmpireColumn[TOURNAMENT_NUM_EVENTS] =
 {
@@ -26,30 +36,9 @@ static const char* s_pszTeamColumn[TOURNAMENT_NUM_EVENTS] =
     SystemTournamentTeams::Ruins,
 };
 
-TournamentScoring::TournamentScoring (IGameEngine* pGameEngine)
+TournamentScoring::TournamentScoring(GameEngine* pGameEngine)
 {
-    m_iNumRefs = 1;
-
-    Assert (pGameEngine != NULL);
-    m_pGameEngine = pGameEngine; // Weak ref
-
-    IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
-    Assert (pDatabase != NULL);
-
-    t_pConn = pDatabase->CreateConnection();
-    Assert (t_pConn != NULL);
-
-    SafeRelease(pDatabase);
-}
-
-TournamentScoring::~TournamentScoring()
-{
-    SafeRelease(t_pConn);
-}
-
-IScoringSystem* TournamentScoring::CreateInstance (IGameEngine* pGameEngine) {
-
-    return new TournamentScoring (pGameEngine);
+    m_pGameEngine = pGameEngine;
 }
 
 int TournamentScoring::IsTournamentGame (int iGameClass, int iGameNumber, unsigned int* piTournamentKey) {

@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_FAIRMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
-#define AFX_FAIRMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
+#pragma once
 
 #include "BaseMapGenerator.h"
 
@@ -30,10 +29,6 @@ private:
     GameFairnessOption m_gfoFairness;
 
     int m_iStdDevPercentageOfMean;
-
-    // Methods
-    FairMapGenerator(IGameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness);
-    ~FairMapGenerator();
 
     int CheckEnforceFairness(int iGameClass, int iGameNumber, bool* pbEnforce);
 
@@ -50,9 +45,7 @@ private:
 
 public:
 
-    IMPLEMENT_INTERFACE (IMapGenerator);
-
-    static IMapGenerator* CreateInstance(IGameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness);
+    FairMapGenerator(GameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness);
 
     virtual int CreatePlanets (
         
@@ -74,5 +67,3 @@ public:
 
     virtual void FreePlanetData(Variant** ppvNewPlanetData);
 };
-
-#endif // !defined(AFX_FAIRMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 #include <stdio.h>
 
 // Almonaster
@@ -55,7 +55,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Enter game!
             int iNumUpdatesTranspired;
-            iErrCode = g_pGameEngine->EnterGame (
+            iErrCode = EnterGame (
                 iGameClassKey,
                 iGameNumber,
                 m_iEmpireKey,
@@ -64,9 +64,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 &iNumUpdatesTranspired,
                 true,
                 false,
-                true,
-                NULL,
-                NULL
+                true
                 );
 
             HANDLE_ENTER_GAME_OUTPUT (iErrCode);
@@ -81,7 +79,7 @@ if (bConfirmPage) {
     bool bFlag;
 
     // Make sure game exists
-    iErrCode = g_pGameEngine->DoesGameExist (iGameClassKey, iGameNumber, &bFlag);
+    iErrCode = DoesGameExist (iGameClassKey, iGameNumber, &bFlag);
     if (iErrCode != OK || !bFlag) {
         AddMessage ("That game no longer exists");
         bConfirmPage = false;
@@ -98,7 +96,7 @@ if (bConfirmPage) {
 
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    iErrCode = g_pGameEngine->GetGameClassName (iGameClassKey, pszGameClassName);
+    iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         return Redirect (OPEN_GAME_LIST);
@@ -127,7 +125,7 @@ if (bConfirmPage) {
     // Get open games
     int iNumOpenGames = 0, * piGameClass, * piGameNumber;
 
-    iErrCode = g_pGameEngine->GetOpenGames (&piGameClass, &piGameNumber, &iNumOpenGames);
+    iErrCode = GetOpenGames (&piGameClass, &piGameNumber, &iNumOpenGames);
     if (iErrCode != OK) {
         %><h3>The open game list could not be read. The error was <% Write (iErrCode); %></h3><% 
     }
@@ -143,7 +141,7 @@ if (bConfirmPage) {
 
         int* piSuperClassKey, iNumSuperClasses;
         bool bDraw = false;
-        Check (g_pGameEngine->GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         if (iNumSuperClasses == 0) {
             %><h3>There are no open games on this server</h3><% 
@@ -173,14 +171,14 @@ if (bConfirmPage) {
                 iGameNumber = piGameNumber[i];
 
                 // Check everything
-                if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
-                    g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
-                    g_pGameEngine->IsGameOpen (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
-                    g_pGameEngine->IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag) == OK && !bFlag &&
-                    g_pGameEngine->GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
+                if (CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
+                    DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
+                    IsGameOpen (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
+                    IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag) == OK && !bFlag &&
+                    GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
 
                     GameAccessDeniedReason rReason;
-                    iErrCode = g_pGameEngine->GameAccessCheck (iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
+                    iErrCode = GameAccessCheck (iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
                     if (iErrCode == OK) {
 
                         if (!bFlag) {
@@ -291,7 +289,7 @@ if (bConfirmPage) {
                         iGameClass = ppiGameClass[iNumSuperClasses][j];
                         iGameNumber = ppiGameNumber[iNumSuperClasses][j];
 
-                        if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                        if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
 
                             // Best effort
                             iErrCode = WriteOpenGameListData (
@@ -302,7 +300,7 @@ if (bConfirmPage) {
                         }
 
                         if (pvGameClassInfo != NULL) {
-                            g_pGameEngine->FreeData (pvGameClassInfo);
+                            FreeData (pvGameClassInfo);
                             pvGameClassInfo = NULL;
                         }
                     }
@@ -314,7 +312,7 @@ if (bConfirmPage) {
                 for (i = 0; i < iNumSuperClasses; i ++) {
 
                     if (ppiTable [i][iNumOpenGames] > 0 && 
-                        g_pGameEngine->GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
+                        GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
 
                         %><p><h3><% Write (vName.GetCharPtr()); %>:</h3><%
                         WriteOpenGameListHeader (m_vTableColor.GetCharPtr());
@@ -368,7 +366,7 @@ if (bConfirmPage) {
                             iGameClass = ppiGameClass[i][j];
                             iGameNumber = ppiGameNumber[i][j];
 
-                            if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                            if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
 
                                 WriteOpenGameListData (
                                     iGameClass, 
@@ -378,7 +376,7 @@ if (bConfirmPage) {
                             }
 
                             if (pvGameClassInfo != NULL) {
-                                g_pGameEngine->FreeData (pvGameClassInfo);
+                                FreeData (pvGameClassInfo);
                                 pvGameClassInfo = NULL;
                             }
                         }
@@ -388,7 +386,7 @@ if (bConfirmPage) {
                 }
             }
 
-            g_pGameEngine->FreeKeys (piSuperClassKey);
+            FreeKeys (piSuperClassKey);
         }
 
         delete [] piGameClass;

@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -46,7 +46,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle planet name change or maxpop change submissions
         unsigned int iNumTestPlanets;
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumOurPlanets")) == NULL) {
-            GameCheck (g_pGameEngine->GetNumVisitedPlanets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTestPlanets));
+            GameCheck (GetNumVisitedPlanets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTestPlanets));
         } else {
             iNumTestPlanets = pHttpForm->GetIntValue();
         }
@@ -90,7 +90,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 } else {
 
                     // Best effort
-                    if (g_pGameEngine->RenamePlanet (
+                    if (RenamePlanet (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
@@ -129,7 +129,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iUpdatePlanetKey = pHttpForm->GetIntValue();
                 }
 
-                if (g_pGameEngine->SetPlanetMaxPop (
+                if (SetPlanetMaxPop (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -171,7 +171,7 @@ GAME_OPEN
 // Individual page stuff starts here
 unsigned int iLivePlanetKey, iDeadPlanetKey, iNumPlanets;
 
-GameCheck (g_pGameEngine->GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
+GameCheck (GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
 
 if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
     GameCheck (WriteRatiosString (NULL));
@@ -182,7 +182,7 @@ if (bMapGenerated) {
     Variant* pvPlanetKey;
     unsigned int* piProxyKey, iCounter = 0;
     bool bOurPlanet;
-    GameCheck (g_pGameEngine->GetVisitedPlanetKeys (
+    GameCheck (GetVisitedPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -231,7 +231,7 @@ if (bMapGenerated) {
             goto Cleanup;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
+        iErrCode = GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -241,19 +241,19 @@ if (bMapGenerated) {
 
         if (bShips) {
 
-            iErrCode = g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
+            iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
 
-            iErrCode = g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
+            iErrCode = GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
 
-            iErrCode = g_pGameEngine->GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
+            iErrCode = GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -327,11 +327,11 @@ Cleanup:
         }
 
         if (pvPlanetKey != NULL) {
-            g_pGameEngine->FreeData (pvPlanetKey);
+            FreeData (pvPlanetKey);
         }
 
         if (piProxyKey != NULL) {
-            g_pGameEngine->FreeKeys ((unsigned int*) piProxyKey);
+            FreeKeys ((unsigned int*) piProxyKey);
         }
 
         if (iErrCode != OK) {

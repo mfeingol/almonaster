@@ -31,7 +31,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
     IReadTable* pGameClasses = NULL;
 
     int iOwner, iErrCode;
-    const char* pszGameClassName, * pszOwnerName;
+    Variant vOwnerName, vTournamentName, vGameClassName;
 
     iErrCode = t_pConn->GetTableForReading (SYSTEM_GAMECLASS_DATA, &pGameClasses);
     if (iErrCode != OK) {
@@ -56,7 +56,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
 
 #endif
 
-    iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::Name, &pszGameClassName);
+    iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::Name, &vGameClassName);
     if (iErrCode != OK) {
         Assert (false);
         if (iErrCode == ERROR_UNKNOWN_ROW_KEY) {
@@ -74,14 +74,12 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
     switch (iOwner) {
         
     case SYSTEM:
-
-        strcpy (pszName, pszGameClassName);
+        strcpy(pszName, vGameClassName.GetCharPtr());
         break;
 
     case TOURNAMENT:
 
         int iTournamentKey;
-        const char* pszTournamentName;
 
         iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::TournamentKey, &iTournamentKey);
         if (iErrCode != OK) {
@@ -97,7 +95,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
             goto Cleanup;
         }
         
-        iErrCode = pGameClasses->ReadData (iTournamentKey, SystemTournaments::Name, &pszTournamentName);
+        iErrCode = pGameClasses->ReadData (iTournamentKey, SystemTournaments::Name, &vTournamentName);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -111,17 +109,17 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
 
         if (iOwner == SYSTEM) {
 
-            sprintf (pszName, "%s [%s]", pszGameClassName, pszTournamentName);
+            sprintf (pszName, "%s [%s]", vGameClassName.GetCharPtr(), vTournamentName.GetCharPtr());
 
         } else {
 
-            iErrCode = pGameClasses->ReadData (iTournamentKey, SystemTournaments::OwnerName, &pszOwnerName);
+            iErrCode = pGameClasses->ReadData (iTournamentKey, SystemTournaments::OwnerName, &vOwnerName);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
 
-            sprintf (pszName, "%s [%s (%s)]", pszGameClassName, pszTournamentName, pszOwnerName);
+            sprintf (pszName, "%s [%s (%s)]", vGameClassName.GetCharPtr(), vTournamentName.GetCharPtr(), vOwnerName.GetCharPtr());
         }
 
         break;
@@ -130,13 +128,13 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
     case DELETED_EMPIRE_KEY:
     default:
 
-        iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::OwnerName, &pszOwnerName);
+        iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::OwnerName, &vOwnerName);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         
-        sprintf (pszName, "%s (%s)", pszGameClassName, pszOwnerName);
+        sprintf (pszName, "%s (%s)", vGameClassName.GetCharPtr(), vOwnerName.GetCharPtr());
         break;
     }
 
@@ -229,18 +227,9 @@ int GameEngine::GetNextGameNumber (int iGameClass, int* piGameNumber) {
 
 int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
 
-    // Lock gameclass
-    int iErrCode;
-    NamedMutex nmMutex;
-    iErrCode = LockGameClass (iGameClass, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
     // Check for gameclass
     bool bExists;
-    iErrCode = t_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
+    int iErrCode = t_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
     if (iErrCode != OK || !bExists) {
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
@@ -349,9 +338,6 @@ int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
 
 Cleanup:
 
-    // Release lock
-    UnlockGameClass (nmMutex);
-
     return iErrCode;
 }
 
@@ -383,14 +369,6 @@ int GameEngine::HaltGameClass (int iGameClass) {
 
     int iErrCode;
 
-    // Lock gameclass
-    NamedMutex nmMutex;
-    iErrCode = LockGameClass (iGameClass, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
     // Check for gameclass
     bool bExists;
     iErrCode = t_pConn->DoesRowExist (SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
@@ -410,9 +388,6 @@ int GameEngine::HaltGameClass (int iGameClass) {
 
 Cleanup:
 
-    // Unlock
-    UnlockGameClass (nmMutex);
-
     return iErrCode;
 }
 
@@ -426,14 +401,6 @@ int GameEngine::UnhaltGameClass (int iGameClass) {
 
     int iErrCode;
     Variant vHalted;
-
-    // Lock gameclass
-    NamedMutex nmMutex;
-    iErrCode = LockGameClass (iGameClass, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
 
     // Check for gameclass
     bool bExists;
@@ -471,9 +438,6 @@ int GameEngine::UnhaltGameClass (int iGameClass) {
 
 Cleanup:
 
-    // Unlock
-    UnlockGameClass (nmMutex);
-
     return iErrCode;
 }
 
@@ -499,9 +463,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     int iErrCode, iSuperClass;
 
     unsigned int iGameClass, iTournamentKey = NO_KEY;
-
-    NamedMutex nmTournamentLock;
-    bool bTournamentLocked = false, bGameClassesLocked = false, bSuperClassesLocked = false;
 
     Assert (iCreator != TOURNAMENT);
 
@@ -536,9 +497,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
             if (iErrCode != OK) {
                 goto Cleanup;
             }
-
-            bGameClassesLocked = true;
-            LockGameClasses();
 
             iErrCode = t_pConn->GetEqualKeys (
                 SYSTEM_GAMECLASS_DATA,
@@ -616,25 +574,9 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     // Set num active games to zero
     pvGameClassData[SystemGameClassData::iNumActiveGames] = 0;
 
-    // Lock
-    if (!bGameClassesLocked) {
-        bGameClassesLocked = true;
-        LockGameClasses();
-    }
-
-    bSuperClassesLocked = true;
-    LockSuperClasses();
-
     // Make sure tournament exists
     iTournamentKey = pvGameClassData[SystemGameClassData::iTournamentKey].GetInteger();
     if (iTournamentKey != NO_KEY) {
-
-        iErrCode = LockTournament (iTournamentKey, &nmTournamentLock);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-        bTournamentLocked = true;
 
         iErrCode = t_pConn->DoesRowExist (SYSTEM_TOURNAMENTS, iTournamentKey, &bFlag);
         if (iErrCode != OK || !bFlag) {
@@ -710,19 +652,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     *piGameClass = iGameClass;
 
 Cleanup:
-
-    if (bTournamentLocked) {
-        UnlockTournament (nmTournamentLock);
-    }
-
-    if (bSuperClassesLocked) {
-        UnlockSuperClasses();
-    }
-
-    if (bGameClassesLocked) {
-        UnlockGameClasses();
-    }
-
+    
     return iErrCode;
 }
 
@@ -738,13 +668,6 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
 
     int iErrCode;
     Variant vOptions;
-
-    NamedMutex nmMutex;
-    iErrCode = LockGameClass (iGameClass, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
 
     // Test if gameclass exists
     bool bExist;
@@ -786,8 +709,6 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
     }
 
 Cleanup:
-
-    UnlockGameClass (nmMutex);
 
     return iErrCode;
 }
@@ -1041,8 +962,6 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
     Variant vTemp;
     int iErrCode;
 
-    LockSuperClasses();
-    
     iErrCode = t_pConn->ReadData (
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
@@ -1095,8 +1014,6 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey) {
     Assert (iErrCode == OK);
 
 Cleanup:
-
-    UnlockSuperClasses();
 
     return iErrCode;
 }

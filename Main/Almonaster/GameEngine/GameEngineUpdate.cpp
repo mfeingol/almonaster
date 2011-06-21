@@ -33,19 +33,12 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
 
     *pbUpdate = false;
 
-    bool bGameOver = false, bExist, bGameWriter = false, bGameReader = false;
+    bool bGameOver = false, bExist;
     int iSecondsSince, iSecondsUntil, iNumUpdates, iState;
 
     Variant vNumPrevUpdates;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
-
-    // Lock game for reading
-    iErrCode = WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    bGameReader = true;
 
     // Get time
     UTCTime tNow;
@@ -108,24 +101,9 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
 
             const UTCTime* ptUpdateTime = vecUpdateTimes.GetData();
 
-            // Release the game lock
-            iErrCode = SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-            bGameReader = false;
-
             // Yes, we're going to update
             *pbUpdate = true;
-            
-            iErrCode = WaitForUpdate (iGameClass, iGameNumber);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-            bGameWriter = true;
-                    
+
             for (i = 0; i < iNumNewUpdates && !bGameOver; i ++) {
 
                 // Execute an update
@@ -149,18 +127,9 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
                 }
             }
 
-            SignalAfterUpdate (iGameClass, iGameNumber);
-            bGameWriter = false;
-
             // Lock game for reading again
-            if (!bGameOver) {
-
-                iErrCode = WaitGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
-                if (iErrCode != OK) {
-                    return iErrCode;
-                }
-                bGameReader = true;
-
+            if (!bGameOver)
+            {
                 // Refresh game state
                 iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);
                 if (iErrCode != OK) {
@@ -215,23 +184,6 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
                 goto Cleanup;
             }
             
-            if (!bGameWriter) {
-
-                // Release the game lock
-                iErrCode = SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-                bGameReader = false;
-
-                if (WaitForUpdate (iGameClass, iGameNumber) != OK) {
-                    bGameOver = true;
-                    break;
-                }
-                bGameWriter = true;
-            }
-            
             // Execute an update
             iErrCode = RunUpdate (iGameClass, iGameNumber, tNow, &bGameOver);
             if (iErrCode != OK) {
@@ -253,15 +205,6 @@ Cleanup:
             Assert (false);
             goto Cleanup;
         }
-    }
-
-    // Release the lock
-    if (bGameWriter) {
-        SignalAfterUpdate (iGameClass, iGameNumber);
-    }
-
-    if (bGameReader) {
-        SignalGameReader (iGameClass, iGameNumber, NO_KEY, NULL);
     }
 
     return iErrCode;
@@ -535,7 +478,6 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
 
     int iErrCode;
     IWriteTable* pGameData = NULL;
-    bool bUnlock = false;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
@@ -551,12 +493,6 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
         iErrCode = ERROR_GAME_DOES_NOT_EXIST;
         goto Cleanup;
     }
-
-    if (WaitGameWriter (iGameClass, iGameNumber) != OK) {
-        iErrCode = ERROR_GAME_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
-    bUnlock = true;
 
     iErrCode = t_pConn->GetTableForWriting (strGameData, &pGameData);
     if (iErrCode != OK) {
@@ -592,11 +528,7 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
 
 Cleanup:
 
-    SafeRelease (pGameData);
-
-    if (bUnlock) {
-        SignalGameWriter (iGameClass, iGameNumber);
-    }
+    SafeRelease(pGameData);
 
     return iErrCode;
 }
@@ -721,19 +653,12 @@ int GameEngine::ForceUpdate (int iGameClass, int iGameNumber) {
         return ERROR_FAILURE;
     }
 
-    // Lock
-    iErrCode = WaitForUpdate (iGameClass, iGameNumber);
-    if (iErrCode == OK) {
+    UTCTime tUpdateTime;
+    Time::GetTime (&tUpdateTime);
 
-        UTCTime tUpdateTime;
-        Time::GetTime (&tUpdateTime);
-
-        bool bGameOver;
-        iErrCode = RunUpdate (iGameClass, iGameNumber, tUpdateTime, &bGameOver);
-        Assert (iErrCode == OK);
-
-        SignalAfterUpdate (iGameClass, iGameNumber);
-    }
+    bool bGameOver;
+    iErrCode = RunUpdate (iGameClass, iGameNumber, tUpdateTime, &bGameOver);
+    Assert (iErrCode == OK);
 
     return iErrCode;
 }

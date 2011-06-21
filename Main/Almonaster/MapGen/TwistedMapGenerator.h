@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_TWISTEDMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
-#define AFX_TWISTEDMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
+#pragma once
 
 #include "MirroredMapGenerator.h"
 
@@ -38,7 +37,8 @@ struct BestJoin {
     int yOffset;
 };
 
-class TwistedMapGenerator : public MirroredMapGenerator {
+class TwistedMapGenerator : public MirroredMapGenerator
+{
 private:
 
     EdgeDescription m_ed[NUM_CARDINAL_POINTS];
@@ -50,9 +50,6 @@ private:
     CardinalPoint m_cpChosenEdge;
     int m_iChosenXOffset;
     int m_iChosenYOffset;
-
-    TwistedMapGenerator(IGameEngine* pGameEngine);
-    ~TwistedMapGenerator();
 
     virtual int CreatePlanetChains();
 
@@ -73,7 +70,6 @@ private:
 
 public:
 
-    static IMapGenerator* CreateInstance(IGameEngine* pGameEngine);
+    TwistedMapGenerator(GameEngine* pGameEngine);
+    virtual ~TwistedMapGenerator();
 };
-
-#endif // !defined(AFX_DEFAULTMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -32,7 +32,7 @@ SYSTEM_OPEN (false)
 int iNumGames;
 Variant** ppvGameData = NULL;
 
-if (g_pGameEngine->GetSystemLatestGames (&iNumGames, &ppvGameData) != OK) {
+if (GetSystemLatestGames (&iNumGames, &ppvGameData) != OK) {
 
     %><p><strong>The latest games could not be read</strong><%
 }
@@ -190,7 +190,7 @@ else {
 
     %></table><%
 
-    g_pGameEngine->FreeData (ppvGameData);
+    FreeData (ppvGameData);
 }
 
 

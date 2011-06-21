@@ -19,15 +19,14 @@
 #include "Osal/Time.h"
 
 #include "CChatroom.h"
-#include "../GameEngine/GameEngine.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
-Chatroom::Chatroom (const ChatroomConfig& ccConf, IDatabase* pDatabase) 
+Chatroom::Chatroom() 
     : 
     m_hSpeakerTable(NULL, NULL)
 {
-    m_ccConf = ccConf;
 }
 
 Chatroom::~Chatroom() {
@@ -38,23 +37,23 @@ Chatroom::~Chatroom() {
     }
 }
 
-int Chatroom::Initialize() {
+int Chatroom::Initialize(const ChatroomConfig& ccConf) {
 
-    int iErrCode;
+    m_ccConf = ccConf;
 
-    iErrCode = m_rwSpeakerLock.Initialize();
+    int iErrCode = m_rwSpeakerLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    if (!m_hSpeakerTable.Initialize (m_ccConf.iMaxNumSpeakers)) {
+    if (!m_hSpeakerTable.Initialize (ccConf.iMaxNumSpeakers)) {
         return ERROR_OUT_OF_MEMORY;
     }
 
     return iErrCode;
 }
 
-int Chatroom::GetSpeakers (ChatroomSpeaker** ppcsSpeaker, unsigned int* piNumSpeakers) {
+int Chatroom::GetSpeakers(ChatroomSpeaker** ppcsSpeaker, unsigned int* piNumSpeakers) {
 
     ChatroomSpeaker* pcsSpeaker = NULL;
     HashTableIterator<const char*, ChatroomSpeaker*> htiSpeaker;
@@ -122,27 +121,29 @@ int Chatroom::GetMessages(ChatroomMessage** ppcmMessage, unsigned int* piNumMess
 
     Variant** ppvData;
     int iErrCode = t_pConn->ReadColumns(SYSTEM_CHATROOM_DATA, SystemChatroomData::NumColumns, SystemChatroomData::ColumnNames, &ppvData, &iNumMessages);
-    if (iErrCode != OK)
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        goto Cleanup;
+        iErrCode = OK;
     }
-
-    pcmMessage = new ChatroomMessage[iNumMessages];
-    if (pcmMessage == NULL)
+    else if (iErrCode == OK)
     {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto Cleanup;
-    }
+        pcmMessage = new ChatroomMessage[iNumMessages];
+        if (pcmMessage == NULL)
+        {
+            iErrCode = ERROR_OUT_OF_MEMORY;
+            goto Cleanup;
+        }
 
-    for (unsigned int i = 0; i < iNumMessages; i ++)
-    {
-        pcmMessage[i].strMessageText = ppvData[i][SystemChatroomData::iMessage].GetCharPtr();
-        pcmMessage[i].strSpeaker = ppvData[i][SystemChatroomData::iSpeaker].GetCharPtr();
-        pcmMessage[i].tTime = ppvData[i][SystemChatroomData::iTime].GetInteger64();
-        pcmMessage[i].iFlags = ppvData[i][SystemChatroomData::iFlags].GetInteger();
-    }
+        for (unsigned int i = 0; i < iNumMessages; i ++)
+        {
+            pcmMessage[i].strMessageText = ppvData[i][SystemChatroomData::iMessage].GetCharPtr();
+            pcmMessage[i].strSpeaker = ppvData[i][SystemChatroomData::iSpeaker].GetCharPtr();
+            pcmMessage[i].tTime = ppvData[i][SystemChatroomData::iTime].GetInteger64();
+            pcmMessage[i].iFlags = ppvData[i][SystemChatroomData::iFlags].GetInteger();
+        }
 
-    t_pConn->FreeData(ppvData);
+        t_pConn->FreeData(ppvData);
+    }
 
 Cleanup:
 

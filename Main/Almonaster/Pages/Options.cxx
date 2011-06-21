@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -36,9 +36,9 @@ Variant vTemp;
 
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
-GameCheck (g_pGameEngine->GetGameClassOptions (m_iGameClass, &iGameClassOptions));
-GameCheck (g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires));
-GameCheck (g_pGameEngine->GetGameClassDiplomacyLevel (m_iGameClass, &iDiplomacy));
+GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));
+GameCheck (GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires));
+GameCheck (GetGameClassDiplomacyLevel (m_iGameClass, &iDiplomacy));
 
 if (m_bOwnPost && !m_bRedirection) {
 
@@ -74,7 +74,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bUpdate = iNewValue != 0;
 
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, AUTO_REFRESH, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, AUTO_REFRESH, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= AUTO_REFRESH;
@@ -102,7 +102,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_REPEATED_BUTTONS, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_REPEATED_BUTTONS, bUpdate) == OK) {
 
                     m_bRepeatedButtons = bUpdate;
 
@@ -132,7 +132,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_DISPLAY_TIME, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_DISPLAY_TIME, bUpdate) == OK) {
 
                     m_bTimeDisplay = bUpdate;
 
@@ -162,7 +162,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= DISPLACE_ENDTURN_BUTTON;
@@ -190,7 +190,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, COUNTDOWN, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, COUNTDOWN, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= COUNTDOWN;
@@ -217,7 +217,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iOldValue != iNewValue) {
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, MAP_COLORING, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, MAP_COLORING, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= MAP_COLORING;
@@ -245,7 +245,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_COLORING, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_COLORING, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= SHIP_MAP_COLORING;
@@ -273,7 +273,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= SHIP_MAP_HIGHLIGHTING;
@@ -300,7 +300,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iOldValue != iNewValue) {
                 bUpdate = iNewValue != 0;
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SENSITIVE_MAPS, bUpdate) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SENSITIVE_MAPS, bUpdate) == OK) {
 
                     if (bUpdate) {
                         m_iGameOptions |= SENSITIVE_MAPS;
@@ -323,7 +323,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & PARTIAL_MAPS) != 0;
             if (bFlag != (iNewValue != 0)) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, PARTIAL_MAPS, !bFlag)) == OK) {
+                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, PARTIAL_MAPS, !bFlag)) == OK) {
                     if (!bFlag) {
                         m_iGameOptions |= PARTIAL_MAPS;
                         AddMessage ("Partial maps are now enabled");
@@ -350,7 +350,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iNewValue != iOldValue && iNewValue >= MINIMAPS_NEVER && iNewValue <= MINIMAPS_PRIMARY) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireGameProperty(
+                if ((iErrCode = SetEmpireGameProperty(
                     m_iGameClass, 
                     m_iGameNumber, 
                     m_iEmpireKey, 
@@ -375,7 +375,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & SHIPS_ON_MAP_SCREEN) != 0;
             if (bFlag != ((iNewValue & SHIPS_ON_MAP_SCREEN) != 0)) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bFlag)) == OK) {
+                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bFlag)) == OK) {
                     if (!bFlag) {
                         m_iGameOptions |= SHIPS_ON_MAP_SCREEN;
                         AddMessage ("Ship menus will now be displayed on map screen planet views");
@@ -392,7 +392,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & SHIPS_ON_PLANETS_SCREEN) != 0;
             if (bFlag != ((iNewValue & SHIPS_ON_PLANETS_SCREEN) != 0)) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bFlag)) == OK) {
+                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bFlag)) == OK) {
                     if (!bFlag) {
                         m_iGameOptions |= SHIPS_ON_PLANETS_SCREEN;
                         AddMessage ("Ship menus will now be displayed on the planets screen");
@@ -415,7 +415,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & BUILD_ON_MAP_SCREEN) != 0;
             if (bFlag != ((iNewValue & BUILD_ON_MAP_SCREEN) != 0)) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bFlag)) == OK) {
+                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bFlag)) == OK) {
                     if (!bFlag) {
                         m_iGameOptions |= BUILD_ON_MAP_SCREEN;
                         AddMessage ("Build menus will now be displayed on map screen planet views");
@@ -432,7 +432,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) != 0;
             if (bFlag != ((iNewValue & BUILD_ON_PLANETS_SCREEN) != 0)) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bFlag)) == OK) {
+                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bFlag)) == OK) {
                     if (!bFlag) {
                         m_iGameOptions |= BUILD_ON_PLANETS_SCREEN;
                         AddMessage ("Build menus will now be displayed on the planets screen");
@@ -455,7 +455,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
             if (bFlag != (iNewValue != 0)) {
 
-                if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bFlag)) == OK) {
+                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bFlag)) == OK) {
                     if (!bFlag) {
                         m_iGameOptions |= LOCAL_MAPS_IN_UPCLOSE_VIEWS;
                         AddMessage ("Local maps will now be displayed in up-close map views");
@@ -478,7 +478,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iNewValue != m_iGameRatios && 
                 iNewValue >= RATIOS_DISPLAY_NEVER && iNewValue <= RATIOS_DISPLAY_ALWAYS) {
 
-                GameCheck (g_pGameEngine->SetEmpireGameProperty (
+                GameCheck (SetEmpireGameProperty (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -499,7 +499,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iNewValue = pHttpForm->GetIntValue();
 
             int iRealPlanet;
-            GameCheck (g_pGameEngine->GetEmpireDefaultBuilderPlanet (
+            GameCheck (GetEmpireDefaultBuilderPlanet (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -509,7 +509,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iNewValue != iOldValue) {
 
-                iErrCode = g_pGameEngine->SetEmpireDefaultBuilderPlanet (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
+                iErrCode = SetEmpireDefaultBuilderPlanet (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
                 if (iErrCode == OK) {
                     AddMessage ("The default builder planet was updated");
                 } else {
@@ -529,7 +529,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 bFlag = (m_iGameOptions & REJECT_INDEPENDENT_SHIP_GIFTS) != 0;
                 if (bFlag != (iNewValue != 0)) {
 
-                    if ((iErrCode = g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, REJECT_INDEPENDENT_SHIP_GIFTS, !bFlag)) == OK) {
+                    if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, REJECT_INDEPENDENT_SHIP_GIFTS, !bFlag)) == OK) {
                         if (!bFlag) {
                             m_iGameOptions |= REJECT_INDEPENDENT_SHIP_GIFTS;
                             AddMessage ("Independent ship gifts will now be rejected");
@@ -550,7 +550,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            GameCheck (g_pGameEngine->GetEmpireDefaultMessageTarget (
+            GameCheck (GetEmpireDefaultMessageTarget (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -559,7 +559,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iNewValue != iOldValue) {
 
-                iErrCode = g_pGameEngine->SetEmpireDefaultMessageTarget (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
+                iErrCode = SetEmpireDefaultMessageTarget (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
                 if (iErrCode == OK) {
                     AddMessage ("The default message target was updated");
                 } else {
@@ -580,7 +580,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iOldValue != iNewValue) {
-                if (g_pGameEngine->SetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, 
+                if (SetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, 
                     iNewValue) == OK) {
 
                     char pszMessage [256];
@@ -603,7 +603,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iOldValue != iNewValue) {
-                if (g_pGameEngine->SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, IGNORE_BROADCASTS, iNewValue != 0) == OK) {
+                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, IGNORE_BROADCASTS, iNewValue != 0) == OK) {
                     if (iNewValue != 0) {
                         m_iGameOptions |= IGNORE_BROADCASTS;
                         AddMessage ("You will now ignore all broadcasts");
@@ -626,22 +626,14 @@ if (m_bOwnPost && !m_bRedirection) {
                     iPause = pHttpForm->GetIntValue();
 
                     // Get selected dip option
-                    GameCheck (g_pGameEngine->IsEmpireRequestingPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldPause));
+                    GameCheck (IsEmpireRequestingPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldPause));
 
                     // Only update if we changed the status
                     if ((iPause != 0) != bOldPause) {
 
-                        iErrCode = g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                        m_pgeLock = NULL;
-
-                        if (iErrCode != OK || g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-                            AddMessage ("That game no longer exists");
-                            return Redirect (ACTIVE_GAME_LIST);
-                        }
-
                         if (iPause != 0) {
 
-                            GameCheck (g_pGameEngine->RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                            GameCheck (RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                             if (m_iGameState & ADMIN_PAUSED) {
                                 AddMessage ("The game was already paused by an admin");
@@ -659,7 +651,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         } else {
 
-                            GameCheck (g_pGameEngine->RequestNoPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                            GameCheck (RequestNoPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                             if (m_iGameState & ADMIN_PAUSED) {
                                 AddMessage ("The game has been paused by an administrator and will remain paused");
@@ -675,13 +667,6 @@ if (m_bOwnPost && !m_bRedirection) {
 
                             m_iGameOptions &= ~REQUEST_PAUSE;
                         }
-
-                        if (g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber) != OK || 
-                            g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
-
-                            AddMessage ("That game no longer exists");
-                            return Redirect (ACTIVE_GAME_LIST);
-                        }
                     }
                 }
 
@@ -695,71 +680,48 @@ if (m_bOwnPost && !m_bRedirection) {
                         iDraw = pHttpForm->GetIntValue();
 
                         // Get selected dip option
-                        GameCheck (g_pGameEngine->IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
+                        GameCheck (IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
 
                         // Only update if we changed the status
                         if ((iDraw != 0) != bOldDraw) {
 
                             if (iDraw != 0) {
 
-                                GameCheck (g_pGameEngine->RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                                GameCheck (RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                                 m_iGameOptions |= REQUEST_DRAW;
 
-                                if (!(m_iGameState & GAME_ENDED)) {
+                                if (!(m_iGameState & GAME_ENDED))
+                                {
                                     AddMessage ("You are now requesting a draw");
-                                } else {
+                                }
+                                else
+                                {
+                                    bool bEndGame = false;
 
-                                    // Release the read lock
-                                    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                                    m_pgeLock = NULL;
+                                    // Try to end the game
+                                    iErrCode = CheckGameForEndConditions (
+                                        m_iGameClass,
+                                        m_iGameNumber,
+                                        NULL,
+                                        &bEndGame
+                                        );
 
-                                    // Take a write lock
-                                    if (g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-
-                                        // The game ended
-                                        AddMessage ("That game no longer exists");
+                                    // Did the game end because of us?
+                                    if (iErrCode == OK && bEndGame) {
                                         return Redirect (ACTIVE_GAME_LIST);
-
-                                    } else {
-
-                                        bool bEndGame = false;
-
-                                        // Try to end the game
-                                        iErrCode = g_pGameEngine->CheckGameForEndConditions (
-                                            m_iGameClass,
-                                            m_iGameNumber,
-                                            NULL,
-                                            &bEndGame
-                                            );
-
-                                        // Release the write lock
-                                        g_pGameEngine->SignalGameWriter (m_iGameClass, m_iGameNumber);
-
-                                        // Did the game end because of us?
-                                        if (iErrCode == OK && bEndGame) {
-                                            return Redirect (ACTIVE_GAME_LIST);
-                                        }
-
-                                        // Get the reader lock again
-                                        if (g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK) {
-
-                                            // The game ended after all
-                                            AddMessage ("That game no longer exists");
-                                            return Redirect (ACTIVE_GAME_LIST);
-                                        }
-
-                                        // Refresh game state
-                                        GameCheck (g_pGameEngine->GetGameState (m_iGameClass, m_iGameNumber, &m_iGameState));
-
-                                        // Proceed...
-                                        AddMessage ("You are now requesting a draw");
                                     }
+
+                                    // Refresh game state
+                                    GameCheck(GetGameState (m_iGameClass, m_iGameNumber, &m_iGameState));
+
+                                    // Proceed...
+                                    AddMessage ("You are now requesting a draw");
                                 }
 
                             } else {
 
-                                GameCheck (g_pGameEngine->RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+                                GameCheck (RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
                                 AddMessage ("You are no longer requesting a draw");
 
                                 m_iGameOptions &= ~REQUEST_DRAW;
@@ -775,7 +737,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
 
-            iErrCode = g_pGameEngine->UpdateGameEmpireNotepad (
+            iErrCode = UpdateGameEmpireNotepad (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -831,8 +793,6 @@ if (m_bOwnPost && !m_bRedirection) {
             if (m_iGameState & STARTED) {
 
                 if (WasButtonPressed (BID_RESIGN)) {
-                    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                    m_pgeLock = NULL;
                     m_iReserved = BID_RESIGN;
                     return Redirect (QUIT);
                 }
@@ -845,12 +805,10 @@ if (m_bOwnPost && !m_bRedirection) {
                     // Make sure this is allowed
                     if ((iGameClassOptions & USE_SC30_SURRENDERS) ||
 
-                        ((g_pGameEngine->GameAllowsDiplomacy (iDiplomacy, SURRENDER) ||
+                        ((GameAllowsDiplomacy (iDiplomacy, SURRENDER) ||
                          (iGameClassOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES)) &&
                          iNumEmpires == 2)) {
 
-                        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                        m_pgeLock = NULL;
                         m_iReserved = BID_SURRENDER;
                         return Redirect (QUIT);
                     }
@@ -889,7 +847,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iMessageKey = pHttpForm->GetIntValue();
 
                     // Delete message
-                    if (g_pGameEngine->DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey) == OK) {
+                    if (DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey) == OK) {
                         iDeletedMessages ++;
                     }
                 }
@@ -915,7 +873,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             iMessageKey = pHttpForm->GetIntValue();
 
                             // Delete message
-                            if (g_pGameEngine->DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey) == OK) {
+                            if (DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey) == OK) {
                                 iDeletedMessages ++;
                             }
                         }
@@ -938,7 +896,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             }
                             iMessageKey = pHttpForm->GetIntValue();
 
-                            if (g_pGameEngine->GetGameMessageProperty(
+                            if (GetGameMessageProperty(
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -949,7 +907,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                                 (vFlags.GetInteger() & MESSAGE_SYSTEM) &&
 
-                                g_pGameEngine->DeleteGameMessage (
+                                DeleteGameMessage (
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -982,7 +940,7 @@ if (m_bOwnPost && !m_bRedirection) {
                                 }
                                 iMessageKey = pHttpForm->GetIntValue();
 
-                                if (g_pGameEngine->GetGameMessageProperty(
+                                if (GetGameMessageProperty(
                                     m_iGameClass,
                                     m_iGameNumber,
                                     m_iEmpireKey,
@@ -993,7 +951,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                                     String::StrCmp (vSource.GetCharPtr(), pszSrcEmpire) == 0 &&
 
-                                    g_pGameEngine->DeleteGameMessage (
+                                    DeleteGameMessage (
                                     m_iGameClass,
                                     m_iGameNumber,
                                     m_iEmpireKey,
@@ -1177,7 +1135,7 @@ case 0:
     } %></select></td></tr><%
     
     
-    GameCheck (g_pGameEngine->GetEmpireGameProperty (
+    GameCheck (GetEmpireGameProperty (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1268,7 +1226,7 @@ case 0:
     } %></select></td></tr><%
 
 
-    GameCheck (g_pGameEngine->GetEmpireGameProperty (
+    GameCheck (GetEmpireGameProperty (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1301,7 +1259,7 @@ case 0:
     %><tr><td>Default builder planet:</td><td><select name="DefaultBuilderPlanet"><%
 
     int iRealPlanet;
-    GameCheck (g_pGameEngine->GetEmpireDefaultBuilderPlanet (
+    GameCheck (GetEmpireDefaultBuilderPlanet (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1328,7 +1286,7 @@ case 0:
     %>value="<% Write (NO_DEFAULT_BUILDER_PLANET); %>">No default builder planet</option><%
 
     unsigned int* piBuilderKey = NULL, iNumBuilderKeys;
-    GameCheck (g_pGameEngine->GetBuilderPlanetKeys (
+    GameCheck (GetBuilderPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1343,7 +1301,7 @@ case 0:
 
         for (i = 0; (unsigned int) i < iNumBuilderKeys; i ++) {
 
-            iErrCode = g_pGameEngine->GetPlanetNameWithCoordinates (
+            iErrCode = GetPlanetNameWithCoordinates (
                 m_iGameClass,
                 m_iGameNumber,
                 piBuilderKey[i],
@@ -1365,11 +1323,11 @@ case 0:
             }
         }
 
-        g_pGameEngine->FreeKeys (piBuilderKey);
+        FreeKeys (piBuilderKey);
         piBuilderKey = NULL;
     }
 
-    GameCheck (g_pGameEngine->GetEmpireDefaultMessageTarget (
+    GameCheck (GetEmpireDefaultMessageTarget (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1453,7 +1411,7 @@ case 0:
 
     unsigned int iNumMessages;
 
-    GameCheck (g_pGameEngine->GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages)); 
+    GameCheck (GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages)); 
     if (iNumMessages > 0) {
         Write (iNumMessages);
         %>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<%
@@ -1467,8 +1425,8 @@ case 0:
     
     Variant vMaxNumMessages;
 
-    GameCheck (g_pGameEngine->GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages));
-    GameCheck (g_pGameEngine->GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages));
+    GameCheck (GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages));
+    GameCheck (GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages));
     
     unsigned int iMaxNumMessages = vMaxNumMessages.GetInteger();
 
@@ -1523,7 +1481,7 @@ case 0:
 
         %></select><%
 
-        GameCheck (g_pGameEngine->GetNumEmpiresRequestingPause (m_iGameClass, m_iGameNumber, &i));
+        GameCheck (GetNumEmpiresRequestingPause (m_iGameClass, m_iGameNumber, &i));
 
         %> <strong><% Write (i); %></strong> of <strong><% Write (iNumEmpires); %></strong> empire<%
 
@@ -1560,7 +1518,7 @@ case 0:
 
         %></select><%
 
-        GameCheck (g_pGameEngine->GetNumEmpiresRequestingDraw (m_iGameClass, m_iGameNumber, &i));
+        GameCheck (GetNumEmpiresRequestingDraw (m_iGameClass, m_iGameNumber, &i));
 
         %> <strong><% Write (i); %></strong> of <strong><% Write (iNumEmpires); %></strong> empire<%
 
@@ -1584,7 +1542,7 @@ case 0:
 
 
     Variant vNotepad;
-    GameCheck (g_pGameEngine->GetEmpireNotepad (m_iGameClass, m_iGameNumber, m_iEmpireKey, &vNotepad));
+    GameCheck (GetEmpireNotepad (m_iGameClass, m_iGameNumber, m_iEmpireKey, &vNotepad));
     Write (vNotepad.GetCharPtr());
     %></textarea></td><%
 
@@ -1604,7 +1562,7 @@ case 0:
 
         if ((iGameClassOptions & USE_SC30_SURRENDERS) ||
 
-            ((g_pGameEngine->GameAllowsDiplomacy (iDiplomacy, SURRENDER) ||
+            ((GameAllowsDiplomacy (iDiplomacy, SURRENDER) ||
              (iGameClassOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES)) &&
              iNumEmpires == 2)) {
 
@@ -1640,7 +1598,7 @@ case 1:
     unsigned int* piMessageKey = NULL, iNumMessages;
     Variant** ppvMessage = NULL;
 
-    GameCheck (g_pGameEngine->GetSavedGameMessages (
+    GameCheck (GetSavedGameMessages (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1775,8 +1733,8 @@ case 1:
                 %></select><%
             }
 
-            g_pGameEngine->FreeData (ppvMessage);
-            g_pGameEngine->FreeKeys (piMessageKey);
+            FreeData (ppvMessage);
+            FreeKeys (piMessageKey);
         }
     }
 

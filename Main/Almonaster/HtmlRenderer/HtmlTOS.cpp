@@ -58,9 +58,9 @@ void HtmlRenderer::WriteConfirmTOSDecline() {
 void HtmlRenderer::WriteTOSFile() {
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" TOS_FILE, g_pszResourceDir);
+    sprintf (pszFileName, "%s/" TOS_FILE, global.GetResourceDir());
 
-    ICachedFile* pcfCachedFile = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfCachedFile != NULL) {
         m_pHttpResponse->WriteTextFile (pcfCachedFile);
         pcfCachedFile->Release();

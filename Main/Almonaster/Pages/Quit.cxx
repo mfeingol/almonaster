@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -32,70 +32,47 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
     if (WasButtonPressed (BID_CANCEL)) {
 
         // Cancelled - redirect to options
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-        m_pgeLock = NULL;
         return Redirect (OPTIONS);
     }
 
     else if (WasButtonPressed (BID_RESIGN)) {
 
-        // Upgrade to write lock
-        GameEmpireLock* pgeLock = m_pgeLock;
-        m_pgeLock = NULL;
-
-        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, pgeLock) != OK || 
-            g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-
-            AddMessage ("That game no longer exists");
-            pageRedirect = ACTIVE_GAME_LIST;
-
+        if (!(m_iGameState & STARTED)) {
+            AddMessage ("You cannot resign until the game starts");
         } else {
 
-            if (!(m_iGameState & STARTED)) {
-                AddMessage ("You cannot resign until the game starts");
+            // Resign
+            iErrCode = ResignEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey);
+            if (iErrCode != OK) {
+                AddMessage ("You could not resign from the game; the error was ");
+                AppendMessage (iErrCode);
             } else {
 
-                // Resign
-                iErrCode = g_pGameEngine->ResignEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey);
-                if (iErrCode != OK) {
-                    AddMessage ("You could not resign from the game; the error was ");
-                    AppendMessage (iErrCode);
-                } else {
+                pageRedirect = ACTIVE_GAME_LIST;
+                AddMessage ("You resigned from ");
+                AppendMessage (m_pszGameClassName);
+                AppendMessage (" ");
+                AppendMessage (m_iGameNumber);
 
-                    pageRedirect = ACTIVE_GAME_LIST;
-                    AddMessage ("You resigned from ");
-                    AppendMessage (m_pszGameClassName);
-                    AppendMessage (" ");
-                    AppendMessage (m_iGameNumber);
+                // Add to report
+                char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
+                sprintf(pszReport, "%s resigned from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
+                global.GetReport()->WriteReport (pszReport);
 
-                    // Add to report
-                    SystemConfiguration scConfig;
-                    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-                        
-                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
-                        sprintf (pszReport, "%s resigned from %s %i", 
-                            m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
-                        g_pReport->WriteReport (pszReport);
-                    }
-
-                    // Make sure we still exist after quitting
-                    bool bFlag;
-                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
-                    if (iErrCode != OK || !bFlag) {
-                        pageRedirect = LOGIN;
-                        AddMessage ("The empire ");
-                        AppendMessage (m_vEmpireName.GetCharPtr());
-                        AppendMessage ("has been deleted");
-                    }
+                // Make sure we still exist after quitting
+                bool bFlag;
+                iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
+                if (iErrCode != OK || !bFlag) {
+                    pageRedirect = LOGIN;
+                    AddMessage ("The empire ");
+                    AppendMessage (m_vEmpireName.GetCharPtr());
+                    AppendMessage ("has been deleted");
                 }
             }
 
-            // Release write lock we took above
-            g_pGameEngine->SignalGameWriter(m_iGameClass, m_iGameNumber);
-
             // Check game for updates - redirect will handle error
             bool bFlag;
-            iErrCode = g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, true, &bFlag);
+            iErrCode = CheckGameForUpdates (m_iGameClass, m_iGameNumber, true, &bFlag);
         }
 
         return Redirect (pageRedirect);
@@ -103,60 +80,39 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
     else if (WasButtonPressed (BID_QUIT)) {
 
-        // Upgrade to write lock
-        GameEmpireLock* pgeLock = m_pgeLock;
-        m_pgeLock = NULL;
-
-        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, pgeLock) != OK || 
-            g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-
-            AddMessage ("That game no longer exists");
-            pageRedirect = ACTIVE_GAME_LIST;
-
+        if (m_iGameState & STARTED) {
+            AddMessage ("You cannot quit because the game has started");
         } else {
 
-            if (m_iGameState & STARTED) {
-                AddMessage ("You cannot quit because the game has started");
+            // Quit
+            iErrCode = QuitEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey);
+            if (iErrCode != OK) {
+                AddMessage ("You could not quit from the game; the error was ");
+                AppendMessage (iErrCode);
             } else {
 
-                // Quit
-                iErrCode = g_pGameEngine->QuitEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey);
-                if (iErrCode != OK) {
-                    AddMessage ("You could not quit from the game; the error was ");
-                    AppendMessage (iErrCode);
-                } else {
+                pageRedirect = ACTIVE_GAME_LIST;
+                AddMessage ("You quit from ");
+                AppendMessage (m_pszGameClassName);
+                AppendMessage (" ");
+                AppendMessage (m_iGameNumber);
 
-                    pageRedirect = ACTIVE_GAME_LIST;
-                    AddMessage ("You quit from ");
-                    AppendMessage (m_pszGameClassName);
-                    AppendMessage (" ");
-                    AppendMessage (m_iGameNumber);
+                // Add to report
+                char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
+                sprintf (pszReport, "%s quit from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
+                global.GetReport()->WriteReport (pszReport);
 
-                    // Add to report
-                    SystemConfiguration scConfig;
-                    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-                        
-                        char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
-                        sprintf (pszReport, "%s quit from %s %i", 
-                            m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
-                        g_pReport->WriteReport (pszReport);
-                    }
+                // Make sure we still exist after quitting
+                bool bFlag;
+                iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
 
-                    // Make sure we still exist after quitting
-                    bool bFlag;
-                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
-
-                    if (iErrCode != OK || !bFlag) {
-                        pageRedirect = LOGIN;
-                        AddMessage ("The empire ");
-                        AppendMessage (m_vEmpireName.GetCharPtr());
-                        AppendMessage (" has been deleted");
-                    }
+                if (iErrCode != OK || !bFlag) {
+                    pageRedirect = LOGIN;
+                    AddMessage ("The empire ");
+                    AppendMessage (m_vEmpireName.GetCharPtr());
+                    AppendMessage (" has been deleted");
                 }
             }
-
-            // Release write lock we took above
-            g_pGameEngine->SignalGameWriter(m_iGameClass, m_iGameNumber);
         }
 
         return Redirect (pageRedirect);
@@ -168,66 +124,48 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
         SurrenderType sType = SC30_SURRENDER;
 
         int iOptions;
-        iErrCode = g_pGameEngine->GetGameClassOptions (m_iGameClass, &iOptions);
+        iErrCode = GetGameClassOptions (m_iGameClass, &iOptions);
         if (iErrCode != OK || !(iOptions & USE_SC30_SURRENDERS)) {
 
             // See if two empires are left - otherwise, we've been lied to
             int iNumEmpires;
-            iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
-            if (iErrCode != OK || iNumEmpires != 2) {
-
-                g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                m_pgeLock = NULL;
+            iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
+            if (iErrCode != OK || iNumEmpires != 2)
+            {
                 return Redirect (OPTIONS);
             }
 
             sType = NORMAL_SURRENDER;
         }
 
-        // Upgrade to write lock
-        GameEmpireLock* pgeLock = m_pgeLock;
-        m_pgeLock = NULL;
-
-        if (g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, pgeLock) != OK || 
-            g_pGameEngine->WaitGameWriter (m_iGameClass, m_iGameNumber) != OK) {
-
-            AddMessage ("That game no longer exists");
-            pageRedirect = ACTIVE_GAME_LIST;
-
+        if (m_iGameState & STILL_OPEN) {
+            AddMessage ("You cannot surrender until the game has closed");
         } else {
 
-            if (m_iGameState & STILL_OPEN) {
-                AddMessage ("You cannot surrender until the game has closed");
+            // Surrender
+            iErrCode = SurrenderEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, sType);
+            if (iErrCode != OK) {
+                AddMessage ("You could not surrender from the game; the error was ");
+                AppendMessage (iErrCode);
             } else {
 
-                // Surrender
-                iErrCode = g_pGameEngine->SurrenderEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, sType);
-                if (iErrCode != OK) {
-                    AddMessage ("You could not surrender from the game; the error was ");
-                    AppendMessage (iErrCode);
-                } else {
+                pageRedirect = ACTIVE_GAME_LIST;
+                AddMessage ("You surrendered from ");
+                AppendMessage (m_pszGameClassName);
+                AppendMessage (" ");
+                AppendMessage (m_iGameNumber);
 
-                    pageRedirect = ACTIVE_GAME_LIST;
-                    AddMessage ("You surrendered from ");
-                    AppendMessage (m_pszGameClassName);
-                    AppendMessage (" ");
-                    AppendMessage (m_iGameNumber);
+                // Make sure we still exist after surrendering
+                bool bFlag;
+                iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
 
-                    // Make sure we still exist after surrendering
-                    bool bFlag;
-                    iErrCode = g_pGameEngine->DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
-
-                    if (iErrCode != OK || !bFlag) {
-                        pageRedirect = LOGIN;
-                        AddMessage ("The empire ");
-                        AppendMessage (m_vEmpireName.GetCharPtr());
-                        AppendMessage (" has been deleted");
-                    }
+                if (iErrCode != OK || !bFlag) {
+                    pageRedirect = LOGIN;
+                    AddMessage ("The empire ");
+                    AppendMessage (m_vEmpireName.GetCharPtr());
+                    AppendMessage (" has been deleted");
                 }
             }
-
-            // Release write lock we took above
-            g_pGameEngine->SignalGameWriter(m_iGameClass, m_iGameNumber);
         }
 
         return Redirect (pageRedirect);

@@ -22,7 +22,7 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
                                       ShipOrderPlanetInfo& planetInfo, String& strPlanetName) {
 
     IReadTable* pMap = NULL;
-    const char* pszTemp;
+    Variant vTemp;
 
     GAME_MAP (strMap, iGameClass, iGameNumber);
 
@@ -31,12 +31,12 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
         goto Cleanup;
     }
 
-    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Name, &pszTemp);
+    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Name, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    if (String::AtoHtml (pszTemp, &strPlanetName, 0, false) == NULL) {
+    if (String::AtoHtml(vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
         iErrCode = ERROR_OUT_OF_MEMORY;
         goto Cleanup;
     }
@@ -48,12 +48,12 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
         goto Cleanup;
     }
 
-    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Coordinates, &pszTemp);
+    iErrCode = pMap->ReadData (iShipPlanet, GameMap::Coordinates, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    g_pGameEngine->GetCoordinates (pszTemp, &planetInfo.iX, &planetInfo.iY);
+    GetCoordinates(vTemp.GetCharPtr(), &planetInfo.iX, &planetInfo.iY);
 
 Cleanup:
 
@@ -108,7 +108,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
     char pszExpandButton [64];
 
-    iErrCode = g_pGameEngine->GetGameClassOptions (m_iGameClass, &gameInfo.iGameClassOptions);
+    iErrCode = GetGameClassOptions (m_iGameClass, &gameInfo.iGameClassOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -117,7 +117,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     gameInfo.fNextMaintRatio = fNextMaintRatio;
 
     GameConfiguration gcConfig;
-    iErrCode = g_pGameEngine->GetGameConfiguration (&gcConfig);
+    iErrCode = GetGameConfiguration (&gcConfig);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -252,7 +252,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             for (i = 0; i < iNumFleets; i ++) {
                 
-                iErrCode = g_pGameEngine->GetNumShipsInFleet (
+                iErrCode = GetNumShipsInFleet (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -373,7 +373,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                     Assert (pblLocations == NULL);
 
-                    iErrCode = g_pGameEngine->GetBuildLocations (
+                    iErrCode = GetBuildLocations (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
@@ -467,7 +467,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 goto Cleanup;
             }
 
-            iErrCode = g_pGameEngine->GetFleetOrders (
+            iErrCode = GetFleetOrders (
                 m_iGameClass, 
                 m_iGameNumber, 
                 m_iEmpireKey, 
@@ -853,7 +853,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                             Assert (pblLocations == NULL);
 
-                            iErrCode = g_pGameEngine->GetBuildLocations (
+                            iErrCode = GetBuildLocations (
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -906,7 +906,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             t_pConn->FreeData (pvFleetData);
             pvFleetData = NULL;
 
-            g_pGameEngine->FreeFleetOrders (pfoOrders, iNumOrders);
+            FreeFleetOrders (pfoOrders, iNumOrders);
             pfoOrders = NULL;
         }
 
@@ -928,7 +928,7 @@ Cleanup:
     }
 
     if (pfoOrders != NULL) {
-        g_pGameEngine->FreeFleetOrders (pfoOrders, iNumOrders);
+        FreeFleetOrders (pfoOrders, iNumOrders);
     }
     
     if (iNumShips > 0) {
@@ -975,7 +975,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
     iNumShips = pHttpForm->GetIntValue();
     
     // Danger!
-    iErrCode = g_pGameEngine->GetNumShips (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iRealNumber);
+    iErrCode = GetNumShips (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iRealNumber);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1027,7 +1027,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                         iKey = pHttpForm->GetIntValue();
                         
                         // Update ship name, best effort
-                        iErrCode = g_pGameEngine->UpdateShipName (
+                        iErrCode = UpdateShipName (
                             m_iGameClass, 
                             m_iGameNumber, 
                             m_iEmpireKey, 
@@ -1073,7 +1073,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                     soOrder.pszText = NULL;
                     soOrder.sotType = (ShipOrderType) iNewOrderType;
 
-                    iErrCode = g_pGameEngine->UpdateShipOrders (
+                    iErrCode = UpdateShipOrders (
                         m_iGameClass, 
                         m_iGameNumber, 
                         m_iEmpireKey, 
@@ -1092,7 +1092,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
     iNumFleets = pHttpForm->GetIntValue();
     
     // Danger!
-    iErrCode = g_pGameEngine->GetNumFleets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iRealNumber);
+    iErrCode = GetNumFleets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iRealNumber);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1144,7 +1144,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                         iKey = pHttpForm->GetIntValue();
                         
                         // Update fleet name, best effort
-                        iErrCode = g_pGameEngine->UpdateFleetName (
+                        iErrCode = UpdateFleetName (
                             m_iGameClass, 
                             m_iGameNumber, 
                             m_iEmpireKey, 
@@ -1190,7 +1190,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                     foOrder.pszText = NULL;
 
                     // Update fleet orders, best effort
-                    iErrCode = g_pGameEngine->UpdateFleetOrders (
+                    iErrCode = UpdateFleetOrders (
                         m_iGameClass, 
                         m_iGameNumber, 
                         m_iEmpireKey, 
@@ -1222,7 +1222,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
         if (sscanf (pHttpForm->GetName(), "FltClpse%c%d", &cSign, &iFleetKey) == 2) {
 
             // Best effort
-            iErrCode = g_pGameEngine->SetFleetFlag (
+            iErrCode = SetFleetFlag (
                 m_iGameClass, 
                 m_iGameNumber, 
                 m_iEmpireKey,
@@ -1361,7 +1361,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
     OutputText ("</td><td align=\"center\">");
     
     // Get orders
-    iErrCode = g_pGameEngine->GetShipOrders (
+    iErrCode = GetShipOrders (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1418,7 +1418,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
 Cleanup:
 
     if (psoOrder != NULL) {
-        g_pGameEngine->FreeShipOrders (psoOrder, iNumOrders);
+        FreeShipOrders (psoOrder, iNumOrders);
     }
 
     return iErrCode;

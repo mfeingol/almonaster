@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -98,7 +98,7 @@ Page0:
     %><input type="hidden" name="TopListPage" value="0"><%
 
     int iNumEmpires;
-    Check (g_pGameEngine->GetNumEmpiresOnServer (&iNumEmpires));
+    Check (GetNumEmpiresOnServer (&iNumEmpires));
 
     %><p>There <%
     if (iNumEmpires == 1) {
@@ -180,7 +180,7 @@ case 1:
 
     const char* pszTableColor = m_vTableColor.GetCharPtr();
 
-    Check (g_pGameEngine->GetTopList (ssListType, &ppvData, &iNumEmpires));
+    Check (GetTopList (ssListType, &ppvData, &iNumEmpires));
 
     if (iNumEmpires == 0) {
         %><p><strong>No empires are currently on the <% Write (TOPLIST_NAME [ssListType]); %> list</strong><%
@@ -224,7 +224,7 @@ case 1:
     case BRIDIER_SCORE_ESTABLISHED:
 
         // Best effort ask for Bridier time bomb scan
-        iErrCode = g_pGameEngine->TriggerBridierTimeBombIfNecessary();
+        iErrCode = TriggerBridierTimeBombIfNecessary();
         Assert (iErrCode == OK);
 
         %>Rank</th><%
@@ -247,7 +247,7 @@ case 1:
 
     for (i = 0; i < iNumEmpires; i ++) {
 
-        if (g_pGameEngine->GetEmpireData (
+        if (GetEmpireData (
             ppvData[i][TopList::iEmpireKey].GetInteger(), 
             &pvEmpData,
             &iNumActiveGames
@@ -315,13 +315,13 @@ case 1:
         %></td><td align="center"><% Write (iNumActiveGames); %></td><%
         %></tr><%
 
-        g_pGameEngine->FreeData (pvEmpData);
+        FreeData (pvEmpData);
     }
     %></table><%
 
     NotifyProfileLink();
 
-    g_pGameEngine->FreeData (ppvData);
+    FreeData (ppvData);
 
     }
     break;

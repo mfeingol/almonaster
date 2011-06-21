@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 #include <stdio.h>
 
 // Almonaster
@@ -36,7 +36,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         // Make sure empire is in game
         bool bFlag;
-        iErrCode = g_pGameEngine->IsEmpireInGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag);
+        iErrCode = IsEmpireInGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag);
         if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
             AddMessage ("That game no longer exists");
             return Redirect (ACTIVE_GAME_LIST);
@@ -48,7 +48,7 @@ if (m_bOwnPost && !m_bRedirection) {
             return Redirect (ACTIVE_GAME_LIST);
         }
 
-        g_pGameEngine->HasEmpireResignedFromGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag);
+        HasEmpireResignedFromGame (iGameClassKey, iGameNumber, m_iEmpireKey, &bFlag);
         if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
             AddMessage ("That game no longer exists");
             return Redirect (ACTIVE_GAME_LIST);
@@ -74,14 +74,14 @@ SYSTEM_OPEN (false)
 
 // Begin individual page
 int iNumGames, * piGameClassKey, * piGameNumber;
-Check (g_pGameEngine->GetEmpireActiveGames (m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
+Check (GetEmpireActiveGames (m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
 
 // Check for updates in active games
 if (iNumGames > 0) {
 
     bool bUpdateOccurred, bReloadGameList = false;
     for (i = 0; i < iNumGames; i ++) {
-        Check (g_pGameEngine->CheckGameForUpdates (piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred));
+        Check (CheckGameForUpdates (piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred));
         if (bUpdateOccurred) {
             bReloadGameList = true;
         }
@@ -92,7 +92,7 @@ if (iNumGames > 0) {
         delete [] piGameClassKey;
         delete [] piGameNumber;
 
-        Check (g_pGameEngine->GetEmpireActiveGames (m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
+        Check (GetEmpireActiveGames (m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
     }
 }
 
@@ -102,7 +102,7 @@ if (iNumGames == 0) {
 
     int* piSuperClassKey, iSuperClassKey, iNumSuperClasses, iNumRenderGames = 0;
 
-    Check (g_pGameEngine->GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+    Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
     if (iNumSuperClasses > 0) {
 
@@ -131,17 +131,17 @@ if (iNumGames == 0) {
 
             bool bFlag;
 
-            iErrCode = g_pGameEngine->DoesGameExist (piGameClassKey[i], piGameNumber[i], &bFlag);
+            iErrCode = DoesGameExist (piGameClassKey[i], piGameNumber[i], &bFlag);
             if (iErrCode != OK || !bFlag) {
                 continue;
             }
 
-            iErrCode = g_pGameEngine->HasEmpireResignedFromGame (piGameClassKey[i], piGameNumber[i], m_iEmpireKey, &bFlag);
+            iErrCode = HasEmpireResignedFromGame (piGameClassKey[i], piGameNumber[i], m_iEmpireKey, &bFlag);
             if (iErrCode != OK || bFlag) {
                 continue;
             }
 
-            iErrCode = g_pGameEngine->GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
+            iErrCode = GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
             if (iErrCode != OK) {
                 continue;
             }
@@ -207,7 +207,7 @@ if (iNumGames == 0) {
                     %>Tournament Games<%
                 }
 
-                else if (g_pGameEngine->GetSuperClassName (piSuperClassKey[i], &vName) == OK) { 
+                else if (GetSuperClassName (piSuperClassKey[i], &vName) == OK) { 
                     Write (vName.GetCharPtr());
                 }
 
@@ -267,7 +267,7 @@ if (iNumGames == 0) {
                     iGameClass = ppiGameClass[i][j];
                     iGameNumber = ppiGameNumber[i][j];
 
-                    if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                    if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
                         WriteActiveGameListData (
                             iGameClass,
                             iGameNumber,
@@ -276,7 +276,7 @@ if (iNumGames == 0) {
                     }
 
                     if (pvGameClassInfo != NULL) {
-                        g_pGameEngine->FreeData (pvGameClassInfo);
+                        FreeData (pvGameClassInfo);
                         pvGameClassInfo = NULL;
                     }
                 }
@@ -284,7 +284,7 @@ if (iNumGames == 0) {
             }
         }
 
-        g_pGameEngine->FreeKeys (piSuperClassKey);
+        FreeKeys (piSuperClassKey);
     }
 
     delete [] piGameClassKey;

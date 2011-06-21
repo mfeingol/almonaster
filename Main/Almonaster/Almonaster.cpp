@@ -17,6 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Almonaster.h"
+#include "Global.h"
 
 #include "GameEngine/GameEngine.h"
 #include "HtmlRenderer/HtmlRenderer.h"
@@ -30,20 +31,8 @@
 // PageSource implementation //
 ///////////////////////////////
 
-const Uuid CLSID_Almonaster = { 0x8b631302, 0x8cfa, 0x11d3, { 0xa2, 0x40, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
-
-const Uuid IID_IGameEngine = { 0xb7365051, 0xbf4f, 0x11d3, { 0xa2, 0xb6, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
-const Uuid IID_IAlmonasterHook = { 0xb7365052, 0xbf4f, 0x11d3, { 0xa2, 0xb6, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
-const Uuid IID_IAlmonasterUIEventSink = { 0xb7365053, 0xbf4f, 0x11d3, { 0xa2, 0xb6, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
-const Uuid IID_IMapGenerator = { 0x2751ca22, 0x493a, 0x4bdb, { 0x85, 0xcd, 0x7b, 0x59, 0xa2, 0xf8, 0x88, 0x79 } };
-const Uuid IID_IScoringSystem = { 0xde61fe7e, 0xb8e8, 0x4bcd, { 0x96, 0xeb, 0xdc, 0xf7, 0x96, 0x52, 0xe, 0xb } };
-
-Almonaster* Almonaster::CreateInstance() {
-    return new Almonaster();
-}
-
-Almonaster::Almonaster() {
-
+Almonaster::Almonaster()
+{
     m_bIsDefault = false;
     m_bNoBuffering = false;
 
@@ -55,86 +44,31 @@ Almonaster::Almonaster() {
     memset (&HtmlRenderer::m_sStats, 0, sizeof (AlmonasterStatistics));
 }
 
-Almonaster::~Almonaster() {
-
-    if (!m_bIsDefault && m_pszUri1 != NULL) {
+Almonaster::~Almonaster()
+{
+    if (!m_bIsDefault && m_pszUri1 != NULL)
+    {
         delete [] m_pszUri1;
     }
 }
 
-extern "C" EXPORT int CreateInstance (const Uuid& uuidClsid, const Uuid& uuidIid, void** ppObject) {
-    
-    if (uuidClsid == CLSID_Almonaster) {
-        
-        if (uuidIid == IID_IPageSource) {
-            *ppObject = (void*) static_cast<IPageSource*> (Almonaster::CreateInstance());
-            return *ppObject == NULL ? ERROR_OUT_OF_MEMORY : OK;
-        }
-
-        if (uuidIid == IID_IObject) {
-            *ppObject = (void*) static_cast<IObject*> (Almonaster::CreateInstance());
-            return *ppObject == NULL ? ERROR_OUT_OF_MEMORY : OK;
-        }
-        
-        return ERROR_NO_INTERFACE;
-    }
-    
-    return ERROR_NO_CLASS;
+Almonaster* Almonaster::CreateInstance()
+{
+    return new Almonaster();
 }
 
-// System globals
-IHttpServer* g_pHttpServer = NULL;
-IReport* g_pReport = NULL;
-IConfigFile* g_pConfig = NULL;
-ILog* g_pLog = NULL;
-IPageSourceControl* g_pPageSourceControl = NULL;
-IFileCache* g_pFileCache = NULL;
-
-// Game objects
-GameEngine* g_pGameEngine = NULL;
-
-char* g_pszResourceDir = NULL;
-
-//
-// TLS connection management
-//
-
-// Yes, not Linux-friendly. Sorry.
-__declspec(thread) IDatabaseConnection* t_pConn = NULL;
-
-void TlsCreateConnection()
+int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl)
 {
-    Assert(t_pConn == NULL);
-    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
-    if (pDatabase != NULL)
+    // Initialize global state
+    int iErrCode = global.Initialize(pHttpServer, pPageSourceControl);
+    if (iErrCode != OK)
     {
-        t_pConn = pDatabase->CreateConnection();
-        Assert(t_pConn);
-        SafeRelease(pDatabase);
+        return iErrCode;
     }
-}
 
-void TlsReleaseConnection()
-{
-    SafeRelease(t_pConn);
-}
-
-//
-// PageSource implementation
-//
-
-int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl) {
-
-    int iErrCode;
-
-    // Save weak refs
-    g_pHttpServer = pHttpServer;
-    g_pPageSourceControl = pPageSourceControl;
-
-    g_pFileCache = pHttpServer->GetFileCache();
-    g_pReport = g_pPageSourceControl->GetReport();
-    g_pLog = g_pPageSourceControl->GetLog();
-    g_pConfig = g_pPageSourceControl->GetConfigFile();
+    // Weak refs
+    IReport* pReport = global.GetReport();
+    IConfigFile* pConfig = global.GetConfigFile();
 
     // Prepare URI's
     m_bIsDefault = pPageSourceControl->IsDefault();
@@ -146,7 +80,7 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
 
     } else {
 
-        const char* pszPageSourceName = g_pPageSourceControl->GetName();
+        const char* pszPageSourceName = pPageSourceControl->GetName();
         size_t stLen = strlen (pszPageSourceName) + 1;
 
         m_pszUri1 = new char [stLen * 2 + 3];
@@ -163,253 +97,38 @@ int Almonaster::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPag
         m_pszUri2[stLen + 1] = '\0';
     }
 
-    g_pReport->WriteReport ("Reading parameters from configuration");
-
-    // Read setup parameters
-    char* pszTemp = NULL;
-
-    SystemConfiguration scConfig;
-    ChatroomConfig ccConfig;
-    ccConfig.cchMaxSpeakerNameLen = MAX_EMPIRE_NAME_LENGTH;
-
-    const char* pszHookLibrary;
-    char pszPath [OS::MaxFileNameLength];
-
-    // DatabaseLibrary
-    iErrCode = g_pConfig->GetParameter ("DatabaseLibrary", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseLibrary value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    char pszDatabaseLibrary[OS::MaxFileNameLength];
-    if (File::ResolvePath(pszTemp, pszDatabaseLibrary) == ERROR_FAILURE) {
-        g_pReport->WriteReport ("Error: The DatabaseLibrary value from the configuration file was invalid");
-        return ERROR_FAILURE;
-    }
-
-    // DatabaseClsid
-    iErrCode = g_pConfig->GetParameter("DatabaseClsid", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseClsid value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    Uuid uuidDatabaseClsid;
-    iErrCode = OS::UuidFromString(pszTemp, &uuidDatabaseClsid);
-    if (iErrCode != OK) {
-        g_pReport->WriteReport ("Error: The DatabaseClsid value from the configuration file was invalid");
-        return ERROR_FAILURE;
-    }
-
-    // DatabaseConnectionString
-    char* pszDatabaseConnectionString;
-    iErrCode = g_pConfig->GetParameter("DatabaseConnectionString", &pszDatabaseConnectionString);
-    if (iErrCode != OK || pszDatabaseConnectionString == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseConnectionString value from the configuration file");
-        return ERROR_FAILURE;
-    }
-
-    iErrCode = g_pConfig->GetParameter ("DatabaseCheck", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseCheck value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bCheckDatabase = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("DatabaseWriteThrough", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the DatabaseWriteThrough value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bDatabaseWriteThrough = atoi (pszTemp) != 0;
-
-    // Resource directory
-    iErrCode = g_pConfig->GetParameter ("ResourceDirectory", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ResourceDirectory value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    char pszResourceDir [OS::MaxFileNameLength];
-    if (File::ResolvePath (pszTemp, pszResourceDir) == ERROR_FAILURE) {
-        g_pReport->WriteReport ("Error: The ResourceDirectory value from the configuration file was invalid");
-        return ERROR_FAILURE;
-    }
-
-    iErrCode = g_pConfig->GetParameter ("ChatroomMaxNumSpeakers", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ChatroomMaxNumSpeakers value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    ccConfig.iMaxNumSpeakers = atoi (pszTemp);
-
-    iErrCode = g_pConfig->GetParameter ("ChatroomNumMessages", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ChatroomNumMessages value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    ccConfig.iMaxNumMessages = atoi (pszTemp);
-
-    iErrCode = g_pConfig->GetParameter ("ChatroomMaxMessageLength", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ChatroomMaxMessageLength value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    ccConfig.iMaxMessageLength = atoi (pszTemp);
-
-    iErrCode = g_pConfig->GetParameter ("ChatroomTimeOut", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ChatroomTimeOut value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    ccConfig.sTimeOut = atoi (pszTemp);
-
-    iErrCode = g_pConfig->GetParameter ("ChatroomPostSystemMessages", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ChatroomPostSystemMessages value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    ccConfig.bPostSystemMessages = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("AutoBackup", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the AutoBackup value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bAutoBackup = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("NumHoursBetweenBackups", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the NumHoursBetweenBackups value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.iSecondsBetweenBackups = atoi (pszTemp) * 60 * 60;
-
-    iErrCode = g_pConfig->GetParameter ("BackupLifeTime", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the BackupLifeTime value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.iBackupLifeTimeInSeconds = atoi (pszTemp) * 24 * 60 * 60;
-
-    iErrCode = g_pConfig->GetParameter ("ReportEvents", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the ReportEvents value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bReport = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("HookLibrary", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the HookLibrary value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    if (pszTemp == NULL || *pszTemp == '\0') {
-        pszHookLibrary = NULL;
-    } else {
-
-        if (File::ResolvePath (pszTemp, pszPath) == ERROR_FAILURE) {
-            g_pReport->WriteReport ("Error: The HookLibrary value from the configuration file was invalid");
-            return ERROR_FAILURE;
-        }
-        pszHookLibrary = pszPath;
-    }
-
-    iErrCode = g_pConfig->GetParameter ("BackupOnStartup", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the BackupOnStartup value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bBackupOnStartup = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("RebuildTopListsOnStartup", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the RebuildTopListsOnStartup value from the configuration file");
-        return ERROR_FAILURE;
-    }
-    scConfig.bRebuildTopListsOnStartup = atoi (pszTemp) != 0;
-
-    iErrCode = g_pConfig->GetParameter ("BufferedPageRendering", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL) {
-        g_pReport->WriteReport ("Error: Could not read the BufferedPageRendering value from the configuration file");
-        return ERROR_FAILURE;
+    char* pszTemp;
+    iErrCode = pConfig->GetParameter ("BufferedPageRendering", &pszTemp);
+    if (iErrCode != OK || pszTemp == NULL)
+    {
+        pReport->WriteReport ("Error: Could not read the BufferedPageRendering value from the configuration file");
+        iErrCode = ERROR_FAILURE;
+        goto Cleanup;
     }
     m_bNoBuffering = atoi (pszTemp) == 0;
 
-
-    g_pReport->WriteReport ("Finished reading parameters from configuration file");
-
-    // Sanity checks
-    if (scConfig.bAutoBackup && scConfig.iSecondsBetweenBackups == 0) {
-        g_pReport->WriteReport ("Error: The value for NumHoursBetweenBackups in the configuration file is illegal");
-        return ERROR_FAILURE;
-    }
-
-    if (scConfig.bAutoBackup && scConfig.iBackupLifeTimeInSeconds == 0) {
-        g_pReport->WriteReport ("Error: The value for BackupLifeTime in the configuration file is illegal");
-        return ERROR_FAILURE;
-    }
-
-    if (scConfig.bAutoBackup && scConfig.iBackupLifeTimeInSeconds <= scConfig.iSecondsBetweenBackups) {
-        g_pReport->WriteReport ("Error: The value for BackupLifeTime and NumHoursBetweenBackups in the configuration file is illegal");
-        return ERROR_FAILURE;
-    }
-
-    if (ccConfig.iMaxNumSpeakers < 2) {
-        g_pReport->WriteReport ("Error: The value for ChatroomMaxNumSpeakers in the configuration file is illegal");
-        return ERROR_FAILURE;
-    }
-
-    if (ccConfig.iMaxNumMessages < 5) {
-        g_pReport->WriteReport ("Error: The value for ChatroomNumMessages in the configuration file is illegal");
-        return ERROR_FAILURE;
-    }
-
-    if (ccConfig.iMaxMessageLength < 32) {
-        g_pReport->WriteReport ("Error: The value for ChatroomMaxMessageLength in the configuration file is illegal");
-        return ERROR_FAILURE;
-    }
-
-    g_pReport->WriteReport ("Finished checking parameters from configuration");
-
-    // Create new game engine object
-    g_pReport->WriteReport ("Initializing GameEngine");
-
-    g_pGameEngine = new GameEngine(
-        pszDatabaseLibrary,
-        uuidDatabaseClsid,
-        pszDatabaseConnectionString,
-        pszHookLibrary,
-        this,
-        g_pReport,
-        g_pPageSourceControl,
-        scConfig,
-        ccConfig
-        );
-    Assert(g_pGameEngine != NULL);
-
-    // Copy resource dir
-    g_pszResourceDir = String::StrDup (pszResourceDir);
-    Assert(g_pszResourceDir != NULL);
-
     // Initialize HtmlRenderer statics
     iErrCode = HtmlRenderer::Initialize();
-    if (iErrCode == OK)
-    {
-        iErrCode = g_pGameEngine->Initialize();
-    }
     if (iErrCode != OK)
     {
-        g_pReport->WriteReport ("The Almonaster GameEngine could not be initialized successfully");
-        g_pReport->WriteReport ("Almonaster_OnInitialize failed");
+        pReport->WriteReport ("Error: HtmlRenderer::Initialize failed");
+        iErrCode = ERROR_FAILURE;
+        goto Cleanup;
+    }
+
+Cleanup:
+
+    if (iErrCode != OK)
+    {
+        pReport->WriteReport ("Almonaster could not be initialize successfully");
     }
     else
     {
-        g_pReport->WriteReport ("Finished initializing GameEngine");
+        pReport->WriteReport ("Finished initializing GameEngine");
 
-        g_pReport->WriteReport ("Almonaster will now begin");
-        g_pReport->WriteReport ("===================================================");
+        pReport->WriteReport ("Almonaster will now begin");
+        pReport->WriteReport ("===================================================");
     }
-
-    TlsReleaseConnection();
 
     return iErrCode;
 }
@@ -454,13 +173,13 @@ int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
         pHttpResponse->SetNoBuffering();
     }
 
-    TlsCreateConnection();
+    global.TlsOpenConnection();
 
     // Call the function
     HtmlRenderer htmlRenderer (pageId, pHttpRequest, pHttpResponse);
     int iErrCode = htmlRenderer.Render();
 
-    TlsReleaseConnection();
+    global.TlsCloseConnection();
 
     return iErrCode;
 }
@@ -468,36 +187,12 @@ int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
 
 int Almonaster::OnFinalize() {
     
-    g_pReport->WriteReport ("Shutting down GameEngine");
+    IReport* pReport = global.GetReport();
 
-    // Delete game engine object
-    if (g_pGameEngine != NULL) {
-#ifdef _DEBUG
-        int iRefs = g_pGameEngine->Release();
-        Assert (iRefs == 0);
-#else
-        g_pGameEngine->Release();
-#endif
-        g_pGameEngine = NULL;
-    }
-
-    g_pReport->WriteReport ("Finished shutting down GameEngine");
-    g_pReport->WriteReport ("Shutting down objects and cleaning up data");
-
-    if (g_pszResourceDir != NULL) {
-        OS::HeapFree (g_pszResourceDir);
-        g_pszResourceDir = NULL;
-    }
-
-    g_pReport->WriteReport ("Finished shutting down objects and cleaning up data");
-    g_pReport->WriteReport ("===================================================");
-
-    SafeRelease(g_pFileCache);
-
-    g_pReport = NULL;
-    g_pLog = NULL;
-
-    SafeRelease(g_pConfig);
+    pReport->WriteReport ("Shutting down Almonaster");
+    global.Close();
+    pReport->WriteReport ("Finished shutting down Almonaster");
+    pReport->WriteReport ("===================================================");
 
     return OK;
 }
@@ -573,43 +268,4 @@ int Almonaster::OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthent
 int Almonaster::OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {  
     *pbAuthenticated = false;
     return OK;
-}
-
-//
-// IAlmonasterUIEventSink
-//
-
-int Almonaster::OnCreateEmpire (int iEmpireKey) {
-
-    return HtmlRenderer::OnCreateEmpire (iEmpireKey);
-}
-
-int Almonaster::OnDeleteEmpire (int iEmpireKey) {
-
-    return HtmlRenderer::OnDeleteEmpire (iEmpireKey);
-}
-
-int Almonaster::OnLoginEmpire (int iEmpireKey) {
-
-    return HtmlRenderer::OnLoginEmpire (iEmpireKey);
-}
-
-int Almonaster::OnCreateGame (int iGameClass, int iGameNumber) {
-
-    return HtmlRenderer::OnCreateGame (iGameClass, iGameNumber);
-}
-
-int Almonaster::OnCleanupGame (int iGameClass, int iGameNumber) {
-
-    return HtmlRenderer::OnCleanupGame (iGameClass, iGameNumber);
-}
-
-int Almonaster::OnDeleteTournament (unsigned int iTournamentKey) {
-
-    return HtmlRenderer::OnDeleteTournament (iTournamentKey);
-}
-
-int Almonaster::OnDeleteTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey) {
-
-    return HtmlRenderer::OnDeleteTournamentTeam (iTournamentKey, iTeamKey);
 }

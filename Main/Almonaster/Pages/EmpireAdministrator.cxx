@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -66,7 +66,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     (pszString = pHttpForm->GetValue()) != NULL &&
                     *pszString != '\0') {
 
-                    iErrCode = g_pGameEngine->SendMessageToAll (m_iEmpireKey, pszString);
+                    iErrCode = SendMessageToAll (m_iEmpireKey, pszString);
 
                     if (iErrCode == OK) {
                         AddMessage ("Your message was broadcast to all empires");
@@ -105,7 +105,7 @@ SearchResults:
 
                             if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
                                 iTargetEmpireKey = piSearchEmpireKey[0];
-                                g_pGameEngine->FreeKeys (piSearchEmpireKey);
+                                FreeKeys (piSearchEmpireKey);
                                 piSearchEmpireKey = NULL;
                                 iEmpireAdminPage = 3;
                             } else {
@@ -190,7 +190,7 @@ SearchResults:
 
                 if (iTargetEmpireKey != m_iEmpireKey) {
 
-                    if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                    if (iTargetEmpireKey == global.GetRootKey()) {
                         AddMessage ("You cannot update root's password");
                         return Redirect (m_pgPageId);
                     }
@@ -205,13 +205,13 @@ SearchResults:
                         return Redirect (m_pgPageId);
                     }
 
-                    if (g_pGameEngine->GetEmpirePassword (iTargetEmpireKey, &vOldPassword) != OK ||
-                        g_pGameEngine->GetEmpirePrivilege (iTargetEmpireKey, &iPrivilege) != OK) {
+                    if (GetEmpirePassword (iTargetEmpireKey, &vOldPassword) != OK ||
+                        GetEmpirePrivilege (iTargetEmpireKey, &iPrivilege) != OK) {
                         AddMessage ("The empire no longer exists");
                         return Redirect (m_pgPageId);
                     }
 
-                    if (iPrivilege >= ADMINISTRATOR && m_iEmpireKey != g_pGameEngine->GetRootKey()) {
+                    if (iPrivilege >= ADMINISTRATOR && m_iEmpireKey != global.GetRootKey()) {
                         AddMessage ("You cannot change an administrator's password");
                         return Redirect (m_pgPageId);
                     }
@@ -229,7 +229,7 @@ SearchResults:
                             return Redirect (m_pgPageId);
                         }
 
-                        iErrCode = g_pGameEngine->SetEmpirePassword (iTargetEmpireKey, pszValue);
+                        iErrCode = SetEmpirePassword (iTargetEmpireKey, pszValue);
                         if (iErrCode == OK) {
                             AddMessage ("The empire's password was successfully changed");
                         } else {
@@ -274,17 +274,17 @@ SearchResults:
                     AddMessage ("You cannot change your own privilege settings");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s privilege settings");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s privilege settings");
                 }
 
                 else {
 
-                    if (g_pGameEngine->SetEmpireOption2 (iTargetEmpireKey, ADMINISTRATOR_FIXED_PRIVILEGE, bValue) == OK) {
+                    if (SetEmpireOption2 (iTargetEmpireKey, ADMINISTRATOR_FIXED_PRIVILEGE, bValue) == OK) {
                         AddMessage ("The empire's privilege settings were successfully updated");
                     } else {
                         AddMessage ("The empire's privilege settings could not be updated");
@@ -308,11 +308,11 @@ SearchResults:
                     AddMessage ("You cannot change your own privilege level");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s privilege level");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s privilege level");
                 }
 
@@ -322,7 +322,7 @@ SearchResults:
 
                 else {
 
-                    if (g_pGameEngine->SetEmpirePrivilege (iTargetEmpireKey, iValue) == OK) {
+                    if (SetEmpirePrivilege (iTargetEmpireKey, iValue) == OK) {
                         AddMessage ("The empire's privilege level was successfully updated");
                     } else {
                         AddMessage ("The empire's privilege level could not be updated");
@@ -347,17 +347,17 @@ SearchResults:
                     AddMessage ("You cannot change your own Almonaster score");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s Almonaster score");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s Almonaster score");
                 }
 
                 else {
 
-                    if (g_pGameEngine->SetEmpireAlmonasterScore (iTargetEmpireKey, fValue) == OK) {
+                    if (SetEmpireAlmonasterScore (iTargetEmpireKey, fValue) == OK) {
                         AddMessage ("The empire's Almonaster score was successfully updated");
                     } else {
                         AddMessage ("The submitted Almonaster score was incorrect");
@@ -386,17 +386,17 @@ SearchResults:
                     AddMessage ("You cannot change your own Almonaster significance");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s Almonaster significance");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s Almonaster significance");
                 }
 
                 else {
 
-                    EmpireCheck (g_pGameEngine->SetEmpireProperty (iTargetEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, iValue));
+                    EmpireCheck (SetEmpireProperty (iTargetEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, iValue));
                     AddMessage ("The empire's Almonaster significance was successfully updated");
                 }
             }
@@ -418,17 +418,17 @@ SearchResults:
                     AddMessage ("You cannot change your own broadcast setting");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s broadcast setting");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s broadcast setting");
                 }
 
                 else {
 
-                    if (g_pGameEngine->SetEmpireOption (iTargetEmpireKey, CAN_BROADCAST, bValue) == OK) {
+                    if (SetEmpireOption (iTargetEmpireKey, CAN_BROADCAST, bValue) == OK) {
                         if (bValue) {
                             AddMessage ("The empire can now broadcast messages");
                         } else {
@@ -442,7 +442,7 @@ SearchResults:
 
             if (WasButtonPressed (BID_RESET)) {
 
-                iErrCode = g_pGameEngine->ResetEmpireSessionId (iTargetEmpireKey);
+                iErrCode = ResetEmpireSessionId (iTargetEmpireKey);
                 if (iErrCode == OK) {
                     AddMessage ("The empire's session id will be reset on its next login");
                 } else {
@@ -474,11 +474,11 @@ SearchResults:
                     AddMessage ("You cannot obliterate yourself");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot obliterate " ROOT_NAME);
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot obliterate " GUEST_NAME);
                 }
 
@@ -515,17 +515,17 @@ SearchResults:
                     AddMessage ("You cannot obliterate yourself");
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetRootKey()) {
+                else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot obliterate " ROOT_NAME);
                 }
 
-                else if (iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+                else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot obliterate " GUEST_NAME);
                 }
 
                 else {
 
-                    iErrCode = g_pGameEngine->ObliterateEmpire (iTargetEmpireKey, i64TargetEmpireSecret, m_iEmpireKey);
+                    iErrCode = ObliterateEmpire (iTargetEmpireKey, i64TargetEmpireSecret, m_iEmpireKey);
 
                     if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST) {
                         AddMessage ("The empire no longer exists");
@@ -596,7 +596,7 @@ case 1:
         iLastKey
         );
 
-    g_pGameEngine->FreeKeys (piSearchEmpireKey);
+    FreeKeys (piSearchEmpireKey);
 
     }
 
@@ -609,8 +609,8 @@ case 2:
     %><input type="hidden" name="TargetEmpire" value="<% Write (iTargetEmpireKey); %>"><%
 
     Variant vTargetPassword, vTargetName;
-    if (g_pGameEngine->GetEmpirePassword (iTargetEmpireKey, &vTargetPassword) != OK ||
-        g_pGameEngine->GetEmpireName (iTargetEmpireKey, &vTargetName) != OK) {
+    if (GetEmpirePassword (iTargetEmpireKey, &vTargetPassword) != OK ||
+        GetEmpireName (iTargetEmpireKey, &vTargetName) != OK) {
         %><strong>The empire no longer exists</strong><%
     } else {
 
@@ -644,13 +644,13 @@ case 3:
     if (m_iEmpireKey != iTargetEmpireKey) {
 
         int iTargetPrivilege;
-        iErrCode = g_pGameEngine->GetEmpirePrivilege (iTargetEmpireKey, &iTargetPrivilege);
+        iErrCode = GetEmpirePrivilege (iTargetEmpireKey, &iTargetPrivilege);
 
-        if (iErrCode == OK && iTargetPrivilege < ADMINISTRATOR || m_iEmpireKey == g_pGameEngine->GetRootKey()) {
+        if (iErrCode == OK && iTargetPrivilege < ADMINISTRATOR || m_iEmpireKey == global.GetRootKey()) {
 
             WriteButton (BID_CHANGEEMPIRESPASSWORD);
 
-            if (iTargetEmpireKey != g_pGameEngine->GetGuestKey() && iTargetEmpireKey != g_pGameEngine->GetRootKey()) {
+            if (iTargetEmpireKey != global.GetGuestKey() && iTargetEmpireKey != global.GetRootKey()) {
                 WriteButton (BID_OBLITERATEEMPIRE);
             }
         }
@@ -674,8 +674,8 @@ case 4:
 
     %><p><%
 
-    if (g_pGameEngine->GetEmpireName (iTargetEmpireKey, &vEmpireName) != OK ||
-        g_pGameEngine->GetEmpireProperty (iTargetEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) != OK) {
+    if (GetEmpireName (iTargetEmpireKey, &vEmpireName) != OK ||
+        GetEmpireProperty (iTargetEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) != OK) {
         %>That empire no longer exists<%
         %><p><% WriteButton (BID_CANCEL);
     } else {

@@ -18,20 +18,29 @@ namespace Almonaster.Database.Sql
 
         public bool CreateIfNecessary()
         {
-            using (var cmd = CreateCommandManager())
+            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.connString);
+            string databaseName = builder.InitialCatalog;
+            builder.InitialCatalog = String.Empty;
+
+            using (var cmd = CreateCommandManager(builder.ToString(), IsolationLevel.Unspecified))
             {
-                return cmd.CreateDatabaseIfNecessary();
+                return cmd.CreateDatabaseIfNecessary(databaseName);
             }
         }
 
         public SqlCommandManager CreateCommandManager()
         {
-            return CreateCommandManager(IsolationLevel.Unspecified);
+            return CreateCommandManager(this.connString, IsolationLevel.Unspecified);
         }
 
         public SqlCommandManager CreateCommandManager(IsolationLevel isoLevel)
         {
             return new SqlCommandManager(this.connString, isoLevel);
+        }
+
+        SqlCommandManager CreateCommandManager(string connString, IsolationLevel isoLevel)
+        {
+            return new SqlCommandManager(connString, isoLevel);
         }
     }
 }

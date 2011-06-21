@@ -211,7 +211,7 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
 
     unsigned int* piPlanetKey = NULL, iNumPlanets = 0, iNumNewPlanets;
 
-    IMapGenerator* pMapGen = NULL;
+    IMapGenerator* pMapGen = NULL, * pInner = NULL;
 
     // Nothing committed yet
     *pbCommit = false;
@@ -238,11 +238,11 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
 
     // Create a new map generator
     if (iGameOptions & GAME_MIRRORED_MAP) {
-        pMapGen = MirroredMapGenerator::CreateInstance(this);
+        pMapGen = new MirroredMapGenerator(this);
     } else if (iGameOptions & GAME_TWISTED_MAP) {
-        pMapGen = TwistedMapGenerator::CreateInstance(this);
+        pMapGen = new TwistedMapGenerator(this);
     } else {
-        pMapGen = DefaultMapGenerator::CreateInstance(this);
+        pMapGen = new DefaultMapGenerator(this);
     }
 
     if (pMapGen == NULL) {
@@ -251,9 +251,8 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
     }
 
     // Wrap map generator in a fair map generator
-    IMapGenerator* pRelease = pMapGen;
-    pMapGen = FairMapGenerator::CreateInstance(this, pMapGen, gfoFairness);
-    pRelease->Release();
+    pInner = pMapGen;
+    pMapGen = new FairMapGenerator(this, pInner, gfoFairness);
 
     // Get existing map
     iErrCode = t_pConn->ReadColumns (
@@ -367,7 +366,8 @@ Cleanup:
         pMapGen->FreePlanetData(ppvNewPlanetData);
     }
 
-    SafeRelease (pMapGen);
+    delete pMapGen;
+    delete pInner;
 
     return iErrCode;    
 }
@@ -1181,7 +1181,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     int iGameClassOptions, iGameOptions;
 
     char** ppszCoord = NULL, pszNewCoord [MAX_COORDINATE_LENGTH + 1];
-    const char* pszCoord;
+    Variant vCoord;
 
     bool* pbVisited, bExists;
 
@@ -1358,13 +1358,13 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
                 }
 
                 // Make sure that planet has the right coordinates
-                iErrCode = pGameMap->ReadData (iPlanet, GameMap::Coordinates, &pszCoord);
+                iErrCode = pGameMap->ReadData (iPlanet, GameMap::Coordinates, &vCoord);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
 
-                if (strcmp (pszCoord, pszNewCoord) != 0) {
+                if (strcmp (vCoord.GetCharPtr(), pszNewCoord) != 0) {
                     Assert (!"Planet has wrong coordinates");
                     iErrCode = ERROR_FAILURE;
                     goto Cleanup;
@@ -2470,7 +2470,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
 
     unsigned int iKey;
     int iGameMapKey;
-    const char* pszCoordinates;
+    Variant vCoordinates;
     char pszSearchCoord [128];
 
     int piPlanetKey[NUM_CARDINAL_POINTS];
@@ -2573,12 +2573,12 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
             
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &pszCoordinates);
+            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
-            GetCoordinates (pszCoordinates, &iX, &iY);
+            GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
         }
 
         GetCoordinates (iX + 1, iY + 1, pszSearchCoord);
@@ -2633,12 +2633,12 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
             
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &pszCoordinates);
+            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
-            GetCoordinates (pszCoordinates, &iX, &iY);
+            GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
         }
         
         GetCoordinates(iX + 1, iY - 1, pszSearchCoord);
@@ -2688,12 +2688,12 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
 
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &pszCoordinates);
+            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
-            GetCoordinates (pszCoordinates, &iX, &iY);
+            GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
         }
 
         GetCoordinates (iX - 1, iY - 1, pszSearchCoord);
@@ -2747,12 +2747,12 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
             
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &pszCoordinates);
+            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
-            GetCoordinates (pszCoordinates, &iX, &iY);
+            GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
         }
         
         GetCoordinates (iX - 1, iY + 1, pszSearchCoord);
@@ -2786,7 +2786,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
             goto Cleanup;
         }
         
-        iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &pszCoordinates);
+        iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2794,7 +2794,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
 
         SafeRelease (pRead);
         
-        GetCoordinates (pszCoordinates, &iX, &iY);
+        GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
     }
     
     *piMinX = pbPlanetInLine[WEST] ? iX - 1 : iX;

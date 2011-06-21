@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -37,11 +37,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_ACCEPT)) {
 
-            GameCheck (g_pGameEngine->SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
+            GameCheck (SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
             m_iSystemOptions2 |= EMPIRE_ACCEPTED_TOS;
-
-            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-            m_pgeLock = NULL;
 
             AddMessage ("You accepted the Terms of Service");
 
@@ -59,10 +56,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_TOS_DECLINE)) {
             
             // Best effort
-            g_pGameEngine->DeleteEmpire (m_iEmpireKey, NULL, true, false);
-
-            g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-            m_pgeLock = NULL;
+            DeleteEmpire (m_iEmpireKey, NULL, true, false);
 
             return Redirect (LOGIN);
         }

@@ -31,7 +31,7 @@ void HtmlRenderer::WriteGameMessages() {
     Variant** ppvMessage;
     unsigned int iNumMessages, i;
     
-    int iErrCode = g_pGameEngine->GetUnreadGameMessages (
+    int iErrCode = GetUnreadGameMessages (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -97,16 +97,16 @@ void HtmlRenderer::WriteGameMessages() {
             
             if (iFlags & MESSAGE_SYSTEM) {
 
-                iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlienKey);
+                iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlienKey);
                 if (iErrCode == OK) {
                     WriteIcon (vAlienKey.GetInteger(), NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
                 }
 
             } else {
                 
-                if (g_pGameEngine->DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL) == OK && bExists) {
+                if (DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL) == OK && bExists) {
 
-                    if (g_pGameEngine->GetEmpireProperty (
+                    if (GetEmpireProperty (
                         iSrcEmpireKey, 
                         SystemEmpireData::AlienKey, 
                         &vAlienKey
@@ -185,7 +185,7 @@ void HtmlRenderer::WriteGameMessages() {
             WriteFormattedMessage (pszMessage);
             OutputText ("</font></td></tr>");
             
-            g_pGameEngine->FreeData (ppvMessage[i]);
+            FreeData (ppvMessage[i]);
             
         }   // End empire loop
 
@@ -211,7 +211,7 @@ void HtmlRenderer::WriteSystemMessages() {
     Variant** ppvMessage = NULL;
     unsigned int* piMessageKey = NULL, iNumMessages, i;
     
-    int iErrCode = g_pGameEngine->GetUnreadSystemMessages (
+    int iErrCode = GetUnreadSystemMessages (
         m_iEmpireKey,
         &ppvMessage,
         &piMessageKey,
@@ -246,7 +246,7 @@ void HtmlRenderer::WriteSystemMessages() {
                 iNumMessagesFromPeople ++;
             }
 
-            g_pGameEngine->FreeData (ppvMessage[i]);    
+            FreeData (ppvMessage[i]);    
         }
 
         OutputText ("</table><p>");
@@ -256,7 +256,7 @@ void HtmlRenderer::WriteSystemMessages() {
         }
         
         delete [] ppvMessage;
-        g_pGameEngine->FreeKeys (piMessageKey);
+        FreeKeys (piMessageKey);
     }
 }
 
@@ -289,17 +289,17 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
     // Get source empire and icon
     if (bSystem) {
 
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vTemp);
+        iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vTemp);
         if (iErrCode == OK) {
             iAlienKey = vTemp.GetInteger();
         }
         
     } else {
 
-        iErrCode = g_pGameEngine->DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL);
+        iErrCode = DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL);
         if (iErrCode == OK && bExists) {
 
-            iErrCode = g_pGameEngine->GetEmpireProperty (
+            iErrCode = GetEmpireProperty (
                 iSrcEmpireKey, 
                 SystemEmpireData::AlienKey,
                 &vTemp
@@ -447,13 +447,13 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
             OutputText ("invited you to join ");
 
-            iErrCode = g_pGameEngine->GetTournamentName (iTournamentKey, &vName);
+            iErrCode = GetTournamentName (iTournamentKey, &vName);
             if (iErrCode != OK) {
                 OutputText ("a tournament that no longer exists");
                 goto Cleanup;
             }
 
-            iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iOwnerKey);
+            iErrCode = GetTournamentOwner (iTournamentKey, &iOwnerKey);
             if (iErrCode != OK) {
                 OutputText ("a tournament that no longer exists");
                 goto Cleanup;
@@ -510,19 +510,19 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
             OutputText ("requested permission to join ");
 
-            iErrCode = g_pGameEngine->GetTournamentName (iTournamentKey, &vName);
+            iErrCode = GetTournamentName (iTournamentKey, &vName);
             if (iErrCode != OK) {
                 OutputText ("a tournament that no longer exists");
                 goto Cleanup;
             }
 
-            iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iOwnerKey);
+            iErrCode = GetTournamentOwner (iTournamentKey, &iOwnerKey);
             if (iErrCode != OK) {
                 OutputText ("a tournament that no longer exists");
                 goto Cleanup;
             }
 
-            if (iOwnerKey != m_iEmpireKey && !(iOwnerKey == SYSTEM && m_iEmpireKey == g_pGameEngine->GetRootKey())) {
+            if (iOwnerKey != m_iEmpireKey && !(iOwnerKey == SYSTEM && m_iEmpireKey == global.GetRootKey())) {
                 iErrCode = ERROR_WRONG_TOURNAMENT_OWNER;
                 OutputText ("a tournament that you don't own");
                 goto Cleanup;
@@ -553,7 +553,7 @@ Cleanup:
     OutputText ("</td></tr>");
 
     if (iErrCode != OK && iMessageKey != NO_KEY) {
-        g_pGameEngine->DeleteSystemMessage (m_iEmpireKey, iMessageKey);
+        DeleteSystemMessage (m_iEmpireKey, iMessageKey);
     }
 
     return bEmpireLink;

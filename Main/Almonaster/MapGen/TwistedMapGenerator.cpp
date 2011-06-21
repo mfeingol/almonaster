@@ -18,28 +18,19 @@
 
 #include "TwistedMapGenerator.h"
 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
-
-TwistedMapGenerator::TwistedMapGenerator(IGameEngine* pGameEngine) 
+TwistedMapGenerator::TwistedMapGenerator(GameEngine* pGameEngine) 
     :
-    MirroredMapGenerator(pGameEngine) {
-
+    MirroredMapGenerator(pGameEngine)
+{
     memset(m_ed, 0, sizeof(m_ed));
 }
 
-TwistedMapGenerator::~TwistedMapGenerator() {
-
+TwistedMapGenerator::~TwistedMapGenerator()
+{
     int cp;
     ENUMERATE_CARDINAL_POINTS(cp) {
         delete [] m_ed[cp].pcEdgePlanet;
     }
-}
-
-IMapGenerator* TwistedMapGenerator::CreateInstance(IGameEngine* pGameEngine) {
-
-    return new TwistedMapGenerator(pGameEngine);
 }
 
 int TwistedMapGenerator::CreatePlanetChains() {

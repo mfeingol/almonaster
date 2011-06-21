@@ -111,7 +111,7 @@
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;.;Chatroom;GameEngine;HtmlRenderer;Scoring;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
@@ -129,8 +129,7 @@
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -140,6 +139,7 @@
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -191,7 +191,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <FavorSizeOrSpeed>Size</FavorSizeOrSpeed>
       <OmitFramePointers>true</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;.;Chatroom;GameEngine;HtmlRenderer;Scoring;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
       <PreprocessToFile>false</PreprocessToFile>
@@ -209,8 +209,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PrecompiledHeader>
-      </PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -220,6 +219,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -271,7 +271,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;.;Chatroom;GameEngine;HtmlRenderer;Scoring;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -295,6 +295,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -343,7 +345,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;.;Chatroom;GameEngine;HtmlRenderer;Scoring;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>Sync</ExceptionHandling>
@@ -367,6 +369,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <ShowIncludes>false</ShowIncludes>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <ForcedIncludeFiles>StdAfx.h</ForcedIncludeFiles>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -401,6 +405,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="AlmonasterEventSink.cpp" />
+    <ClCompile Include="AsyncManager.cpp" />
     <ClCompile Include="GameEngine\GameEngine.cpp" />
     <ClCompile Include="GameEngine\GameEngineAliens.cpp" />
     <ClCompile Include="GameEngine\GameEngineAssociations.cpp" />
@@ -415,7 +421,6 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="GameEngine\GameEngineGameObject.cpp" />
     <ClCompile Include="GameEngine\GameEngineGames.cpp" />
     <ClCompile Include="GameEngine\GameEngineInfo.cpp" />
-    <ClCompile Include="GameEngine\GameEngineLocks.cpp" />
     <ClCompile Include="GameEngine\GameEngineMessages.cpp" />
     <ClCompile Include="GameEngine\GameEngineOptions.cpp" />
     <ClCompile Include="GameEngine\GameEnginePlanets.cpp" />
@@ -433,6 +438,12 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="GameEngine\GameEngineTournaments.cpp" />
     <ClCompile Include="GameEngine\GameEngineUpdate.cpp" />
     <ClCompile Include="GameEngine\GameEngineUpdateAlgorithm.cpp" />
+    <ClCompile Include="StdAfx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <CustomBuild Include="Pages\ActiveGameList.cxx">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ObjectFileName Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(IntDir)%(Filename)1.obj</ObjectFileName>
@@ -1353,6 +1364,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
 </Command>
     </CustomBuild>
     <ClCompile Include="Almonaster.cpp" />
+    <ClCompile Include="Global.cpp" />
+    <ClCompile Include="Interface.cpp" />
     <ClCompile Include="Pages\ActiveGameList.cpp" />
     <ClCompile Include="Pages\Build.cpp" />
     <ClCompile Include="Pages\Chatroom.cpp" />
@@ -1427,6 +1440,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="Chatroom\CChatroom.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AlmonasterEventSink.h" />
+    <ClInclude Include="AsyncManager.h" />
     <ClInclude Include="GameEngine\GameEngine.h" />
     <ClInclude Include="GameEngine\GameEngineConstants.h" />
     <ClInclude Include="GameEngine\GameEngineGameObject.h" />
@@ -1436,6 +1451,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClInclude Include="GameEngine\GameEngineUI.h" />
     <ClInclude Include="GameEngine\IGameEngine.h" />
     <ClInclude Include="Almonaster.h" />
+    <ClInclude Include="Global.h" />
+    <ClInclude Include="Interface.h" />
     <ClInclude Include="Scoring\AlmonasterScore.h" />
     <ClInclude Include="Scoring\BridierScore.h" />
     <ClInclude Include="Scoring\ClassicScore.h" />
@@ -1449,6 +1466,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClInclude Include="MapGen\MirroredMapGenerator.h" />
     <ClInclude Include="MapGen\TwistedMapGenerator.h" />
     <ClInclude Include="Chatroom\CChatroom.h" />
+    <ClInclude Include="StdAfx.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AlajarDll\AlajarDll.vcxproj">

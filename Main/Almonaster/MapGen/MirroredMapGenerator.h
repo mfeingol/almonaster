@@ -16,21 +16,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_MIRROREDMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
-#define AFX_MIRROREDMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
+#pragma once
 
 #include "BaseMapGenerator.h"
 
-class MirroredMapGenerator : public BaseMapGenerator {
+class MirroredMapGenerator : public BaseMapGenerator
+{
 protected:
 
     CardinalPoint m_cpMirroredEdge;
     int m_iEdgeCoordinate;
     unsigned int m_iNumEdgePlanets;
     unsigned int m_iBufferPlanetDepth;
-
-    // Methods
-    MirroredMapGenerator(IGameEngine* pGameEngine);
 
     virtual int CreatePlanetChains();
 
@@ -51,7 +48,5 @@ protected:
 
 public:
 
-    static IMapGenerator* CreateInstance(IGameEngine* pGameEngine);
+    MirroredMapGenerator(GameEngine* pGameEngine);
 };
-
-#endif // !defined(AFX_DEFAULTMAPGENERATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

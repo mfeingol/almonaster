@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -40,7 +40,7 @@ const char* pszRedrawMessage = NULL;
 
 // Read default message target
 int iDefaultMessageTarget;
-iErrCode = g_pGameEngine->GetEmpireDefaultMessageTarget (
+iErrCode = GetEmpireDefaultMessageTarget (
     m_iGameClass,
     m_iGameNumber,
     m_iEmpireKey,
@@ -88,7 +88,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 Assert (iNumTargets > 0);
 
-                iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
+                iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
                 if (iErrCode != OK) {
                     AddMessage ("An error occurred reading data from the database");
                     goto Redirection;
@@ -144,7 +144,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (bBroadcast) {
 
-                    iErrCode = g_pGameEngine->BroadcastGameMessage (
+                    iErrCode = BroadcastGameMessage (
                         m_iGameClass, 
                         m_iGameNumber, 
                         pszSentMessage,
@@ -157,32 +157,21 @@ if (m_bOwnPost && !m_bRedirection) {
                     case OK:
                         AddMessage ("Your message was broadcast to everyone");
                         break;
-
                     case ERROR_CANNOT_SEND_MESSAGE:
-
                         AddMessage ("Your empire is not allowed to broadcast messages");
                         break;
-
                     case ERROR_STRING_IS_TOO_LONG:
-
                         AddMessage ("Your message was too long");
                         break;
-
                     case ERROR_EMPIRE_IS_NOT_IN_GAME:
-
-                        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-                        m_pgeLock = NULL;
                         AddMessage ("Your empire is not in that game");
                         break;
-
                     default:
-
                         {
                         char pszMessage [256];
                         sprintf (pszMessage, "Error %i occurred sending your message", iErrCode);
                         AddMessage (pszMessage);
                         }
-
                         break;
                     }
 
@@ -199,7 +188,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         for (i = 0; i < iDelayEmpireKeys; i ++) {
 
-                            iErrCode = g_pGameEngine->GetDiplomaticStatus (
+                            iErrCode = GetDiplomaticStatus (
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -249,7 +238,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         piAlliance = piTrade + iNumEmpires;
 
                         // Add all lists
-                        iErrCode = g_pGameEngine->GetEmpiresAtDiplomaticStatus (
+                        iErrCode = GetEmpiresAtDiplomaticStatus (
                             m_iGameClass,
                             m_iGameNumber,
                             m_iEmpireKey,
@@ -296,12 +285,12 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     for (i = 0; i < iDelayEmpireKeys; i ++) {
 
-                        iErrCode = g_pGameEngine->GetEmpireName (piDelayEmpireKey[i], &vTheEmpireName);
+                        iErrCode = GetEmpireName (piDelayEmpireKey[i], &vTheEmpireName);
                         if (iErrCode != OK) {
                             continue;
                         }
 
-                        iErrCode = g_pGameEngine->SendGameMessage (
+                        iErrCode = SendGameMessage (
                             m_iGameClass,
                             m_iGameNumber,
                             piDelayEmpireKey[i],
@@ -380,7 +369,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 // Update last used, if necessary
                 if (iDefaultMessageTarget == MESSAGE_TARGET_LAST_USED) {
 
-                    iErrCode = g_pGameEngine->SetLastUsedMessageTarget (
+                    iErrCode = SetLastUsedMessageTarget (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
@@ -424,7 +413,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            iErrCode = g_pGameEngine->GetEmpireIgnoreMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, iFoeKey, &bIgnore);
+            iErrCode = GetEmpireIgnoreMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, iFoeKey, &bIgnore);
 
             if (iErrCode == OK) {
 
@@ -433,7 +422,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iOldValue != iNewValue) {
 
                     // Best effort
-                    iErrCode = g_pGameEngine->SetEmpireIgnoreMessages (
+                    iErrCode = SetEmpireIgnoreMessages (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
@@ -461,7 +450,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iSelectedDip != iDipOffer) {
 
                 // Best effort
-                iErrCode = g_pGameEngine->UpdateDiplomaticOffer (
+                iErrCode = UpdateDiplomaticOffer (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -651,50 +640,50 @@ Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
 
-iMil = g_pGameEngine->GetMilitaryValue (fMil);
+iMil = GetMilitaryValue (fMil);
 
 if (bGameStarted) {
 
     bool bVisible;
     int iMaxNumTruces, iMaxNumTrades, iMaxNumAlliances, m_iGameClassOptions, m_iGameClassDip;
 
-    iErrCode = g_pGameEngine->GetGameClassVisibleDiplomacy(m_iGameClass, &bVisible);
+    iErrCode = GetGameClassVisibleDiplomacy(m_iGameClass, &bVisible);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->DoesGameClassHaveSubjectiveViews (m_iGameClass, &bSubjective);
+    iErrCode = DoesGameClassHaveSubjectiveViews (m_iGameClass, &bSubjective);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRUCE, &iMaxNumTruces);
+    iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRUCE, &iMaxNumTruces);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRADE, &iMaxNumTrades);
+    iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRADE, &iMaxNumTrades);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, ALLIANCE, &iMaxNumAlliances);
+    iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, ALLIANCE, &iMaxNumAlliances);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetGameClassOptions (m_iGameClass, &m_iGameClassOptions);
+    iErrCode = GetGameClassOptions (m_iGameClass, &m_iGameClassOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetGameClassDiplomacyLevel (m_iGameClass, &m_iGameClassDip);
+    iErrCode = GetGameClassDiplomacyLevel (m_iGameClass, &m_iGameClassDip);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -955,7 +944,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     iWeOffer = ppvEmpireData[i][1].GetInteger();
     iCurrentStatus = ppvEmpireData[i][2].GetInteger();
 
-    iErrCode = g_pGameEngine->GetDiplomaticStatus (
+    iErrCode = GetDiplomaticStatus (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -973,7 +962,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     if (bGameStarted) {
 
-        iErrCode = g_pGameEngine->GetDiplomaticOptions (
+        iErrCode = GetDiplomaticOptions (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
@@ -1061,7 +1050,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
         SafeRelease (pGameEmpireTable);
 
-        iMil = g_pGameEngine->GetMilitaryValue (fMil);
+        iMil = GetMilitaryValue (fMil);
     }
 
     // Do this every time to improve concurrency with logins, etc.
@@ -1284,7 +1273,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     %><td align="center"><% 
     %><select name="Ignore<% Write (i); %>"><%
 
-    iErrCode = g_pGameEngine->GetEmpireIgnoreMessages (
+    iErrCode = GetEmpireIgnoreMessages (
         m_iGameClass, 
         m_iGameNumber, 
         m_iEmpireKey, 
@@ -1380,13 +1369,13 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 // Messages
 //
 
-iErrCode = g_pGameEngine->DoesGameClassAllowPrivateMessages (m_iGameClass, &bPrivateMessages);
+iErrCode = DoesGameClassAllowPrivateMessages (m_iGameClass, &bPrivateMessages);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires);
+iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
@@ -1411,7 +1400,7 @@ if (iActiveEmpires > 1) {
 
         if (bAllTargets) {
 
-            iErrCode = g_pGameEngine->GetNumEmpiresAtDiplomaticStatus (
+            iErrCode = GetNumEmpiresAtDiplomaticStatus (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -1468,7 +1457,7 @@ if (iActiveEmpires > 1) {
             int iLastUsedMask, iNumLastUsed;
             int* piLastUsedProxyKeyArray = NULL;
 
-            iErrCode = g_pGameEngine->GetLastUsedMessageTarget (
+            iErrCode = GetLastUsedMessageTarget (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -1529,7 +1518,7 @@ if (iActiveEmpires > 1) {
                     }
                 }
 
-                g_pGameEngine->FreeKeys (piLastUsedProxyKeyArray);
+                FreeKeys (piLastUsedProxyKeyArray);
             }
 
             }
@@ -1615,7 +1604,7 @@ if (iActiveEmpires > 1) {
 
                 iKnownEmpireKey = ppvEmpireData[i][0].GetInteger();
 
-                iErrCode = g_pGameEngine->GetEmpireIgnoreMessages (
+                iErrCode = GetEmpireIgnoreMessages (
                     m_iGameClass,
                     m_iGameNumber, 
                     iKnownEmpireKey,
@@ -1629,7 +1618,7 @@ if (iActiveEmpires > 1) {
 
                 if (!bIgnore) {
 
-                    iErrCode = g_pGameEngine->GetEmpireName (iKnownEmpireKey, &vSendEmpireName);
+                    iErrCode = GetEmpireName (iKnownEmpireKey, &vSendEmpireName);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -1655,11 +1644,11 @@ if (iActiveEmpires > 1) {
 Cleanup:
 
 if (piProxyEmpireKey != NULL) {
-    g_pGameEngine->FreeKeys (piProxyEmpireKey);
+    FreeKeys (piProxyEmpireKey);
 }
 
 if (ppvEmpireData != NULL) {
-    g_pGameEngine->FreeData (ppvEmpireData);
+    FreeData (ppvEmpireData);
 }
 
 if (pGameEmpireTable != NULL) {

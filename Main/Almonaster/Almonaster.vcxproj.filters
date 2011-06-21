@@ -74,9 +74,6 @@
     <ClCompile Include="GameEngine\GameEngineInfo.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
-    <ClCompile Include="GameEngine\GameEngineLocks.cpp">
-      <Filter>GameEngine Source</Filter>
-    </ClCompile>
     <ClCompile Include="GameEngine\GameEngineMessages.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
@@ -347,6 +344,21 @@
     <ClCompile Include="Pages\Tournaments.cpp">
       <Filter>PagesGenerated</Filter>
     </ClCompile>
+    <ClCompile Include="Interface.cpp">
+      <Filter>Almonaster</Filter>
+    </ClCompile>
+    <ClCompile Include="Global.cpp">
+      <Filter>Almonaster</Filter>
+    </ClCompile>
+    <ClCompile Include="AlmonasterEventSink.cpp">
+      <Filter>Almonaster</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncManager.cpp">
+      <Filter>Almonaster</Filter>
+    </ClCompile>
+    <ClCompile Include="StdAfx.cpp">
+      <Filter>Almonaster</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">
@@ -414,6 +426,21 @@
     </ClInclude>
     <ClInclude Include="Chatroom\CChatroom.h">
       <Filter>Chatroom</Filter>
+    </ClInclude>
+    <ClInclude Include="Global.h">
+      <Filter>Almonaster</Filter>
+    </ClInclude>
+    <ClInclude Include="AlmonasterEventSink.h">
+      <Filter>Almonaster</Filter>
+    </ClInclude>
+    <ClInclude Include="Interface.h">
+      <Filter>Almonaster</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncManager.h">
+      <Filter>Almonaster</Filter>
+    </ClInclude>
+    <ClInclude Include="StdAfx.h">
+      <Filter>Almonaster</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

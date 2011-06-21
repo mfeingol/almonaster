@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -37,17 +37,14 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_ACCEPT)) {
 
-            EmpireCheck (g_pGameEngine->SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
+            EmpireCheck (SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
             m_iSystemOptions2 |= EMPIRE_ACCEPTED_TOS;
 
             AddMessage ("You accepted the Terms of Service");
 
-            SystemConfiguration scConfig;
-	        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-	            char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
-	            sprintf (pszText, "%s accepted the Terms of Service", m_vEmpireName.GetCharPtr());
-                g_pReport->WriteReport (pszText);
-	        }
+	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
+	        sprintf (pszText, "%s accepted the Terms of Service", m_vEmpireName.GetCharPtr());
+            global.GetReport()->WriteReport (pszText);
 
             return Redirect (ACTIVE_GAME_LIST);
         }
@@ -56,12 +53,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iTosPage = 1;
             bRedirectTest = false;
 
-            SystemConfiguration scConfig;
-	        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-	            char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
-	            sprintf (pszText, "%s declined the Terms of Service", m_vEmpireName.GetCharPtr());
-                g_pReport->WriteReport (pszText);
-	        }
+	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
+	        sprintf (pszText, "%s declined the Terms of Service", m_vEmpireName.GetCharPtr());
+            global.GetReport()->WriteReport (pszText);
         }
         break;
 
@@ -70,7 +64,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_TOS_DECLINE)) {
             
             // Best effort
-            g_pGameEngine->DeleteEmpire (m_iEmpireKey, NULL, true, false);
+            DeleteEmpire (m_iEmpireKey, NULL, true, false);
             return Redirect (LOGIN);
         }
 

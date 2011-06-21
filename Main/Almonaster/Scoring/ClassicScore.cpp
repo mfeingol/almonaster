@@ -8,32 +8,10 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-ClassicScore::ClassicScore (IGameEngine* pGameEngine) {
-
-    m_iNumRefs = 1;
-
-    Assert (pGameEngine != NULL);
-    m_pGameEngine = pGameEngine; // Weak ref
-
-    IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
-    Assert (pDatabase != NULL);
-
-    t_pConn = pDatabase->CreateConnection();
-    Assert (t_pConn != NULL);
-
-    SafeRelease(pDatabase);
-
-    m_pszColumn = SystemEmpireData::ClassicScore;
-}
-
-ClassicScore::~ClassicScore()
+ClassicScore::ClassicScore(GameEngine* pGameEngine)
 {
-    SafeRelease(t_pConn);
-}
-
-IScoringSystem* ClassicScore::CreateInstance (IGameEngine* pGameEngine) {
-
-    return new ClassicScore (pGameEngine);
+    m_pGameEngine = pGameEngine;
+    m_pszColumn = SystemEmpireData::ClassicScore;
 }
 
 bool ClassicScore::HasTopList() {

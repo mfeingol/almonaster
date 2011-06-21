@@ -1,6 +1,6 @@
 <% #include "Osal/Algorithm.h"
-#include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+#include "Almonaster.h"
+#include "GameEngine.h"
 #include "SqlDatabase.h"
 
 // Almonaster
@@ -42,7 +42,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     // Handle cancel all builds
     if (WasButtonPressed (BID_CANCELALLBUILDS)) {
-        GameCheck (g_pGameEngine->CancelAllBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+        GameCheck (CancelAllBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey));
         bRedirectTest = false;
     }
 }
@@ -52,7 +52,7 @@ GAME_REDIRECT_ON_SUBMIT
 GAME_OPEN
 
 int iGameClassOptions;
-GameCheck (g_pGameEngine->GetGameClassOptions (m_iGameClass, &iGameClassOptions));
+GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));
 
 // Individual page stuff starts here
 if (!bMapGenerated) {
@@ -64,8 +64,6 @@ if (!bMapGenerated) {
     }
 
 } else {
-
-    IDatabase* pDatabase = g_pGameEngine->GetDatabase();
 
     int iBR;
     float fMaintRatio, fNextMaintRatio;
@@ -81,9 +79,9 @@ if (!bMapGenerated) {
 
     } else {
 
-        GameCheck (g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
-        GameCheck (g_pGameEngine->GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
-        GameCheck (g_pGameEngine->GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
+        GameCheck (GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
+        GameCheck (GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
+        GameCheck (GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
     }
 
     // Render ships
@@ -100,10 +98,8 @@ if (!bMapGenerated) {
         NULL
         );
 
-    pDatabase->Release();
-
     int iNumBuilds;
-    GameCheck (g_pGameEngine->GetNumBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumBuilds));
+    GameCheck (GetNumBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumBuilds));
 
     if (iNumBuilds > 0) {
         %><p><%

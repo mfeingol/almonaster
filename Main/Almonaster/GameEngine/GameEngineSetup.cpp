@@ -17,10 +17,9 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "GameEngine.h"
+#include "Global.h"
 
 int GameEngine::Setup() {
-
-    int iErrCode;
 
     bool bNewDatabase, bGoodDatabase;
     const char* pszBadTable;
@@ -29,35 +28,28 @@ int GameEngine::Setup() {
     // Check system tables //
     /////////////////////////
 
-    m_pReport->WriteReport("GameEngine setup attempting to reuse an existing database");
+    global.GetReport()->WriteReport("GameEngine setup attempting to reuse an existing database");
     VerifySystemTables(&bNewDatabase, &bGoodDatabase, &pszBadTable);
 
     if (bNewDatabase)
     {
         // Create a new database and we're done
-        iErrCode = CreateNewDatabase();
-        m_bGoodDatabase = (iErrCode == OK);
-        return iErrCode;
+        return InitializeNewDatabase();
     }
-    else if (!bGoodDatabase) {
+
+    if (!bGoodDatabase) {
 
         // Bad database - report error 
         char* pszMessage = (char*)StackAlloc(strlen(pszBadTable) + 256);
+        sprintf(pszMessage, "GameEngine setup found errors in the %s table", pszBadTable);
 
-        sprintf(
-            pszMessage,
-            "GameEngine setup found errors in the %s table or its template",
-            pszBadTable
-            );
-
-        m_pReport->WriteReport(pszMessage);
-        m_pReport->WriteReport("GameEngine setup could not successfully reuse an existing database");
+        global.GetReport()->WriteReport(pszMessage);
+        global.GetReport()->WriteReport("GameEngine setup could not successfully reuse an existing database");
         
-        m_bGoodDatabase = false;
         return ERROR_FAILURE;
     }
 
-    // Test the reloaded database
+    // Reload the database
     return ReloadDatabase();
 }
 
@@ -72,21 +64,10 @@ int GameEngine::ReloadDatabase() {
 
     iErrCode = VerifySystem();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify system data");
+        global.GetReport()->WriteReport("GameEngine setup failed to verify system data");
         return iErrCode;
     }
-    m_pReport->WriteReport("GameEngine setup successfully verified system data");
-
-    //
-    // Empires
-    //
-
-    iErrCode = VerifyEmpires();
-    if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify empire data");
-        return iErrCode;
-    }
-    m_pReport->WriteReport("GameEngine setup successfully verified empire data");
+    global.GetReport()->WriteReport("GameEngine setup successfully verified system data");
 
     //
     // Gameclasses
@@ -94,10 +75,10 @@ int GameEngine::ReloadDatabase() {
 
     iErrCode = VerifyGameClasses();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify gameclasses");
+        global.GetReport()->WriteReport("GameEngine setup failed to verify gameclasses");
         return iErrCode;
     }
-    m_pReport->WriteReport("GameEngine setup successfully verified gameclasses");
+    global.GetReport()->WriteReport("GameEngine setup successfully verified gameclasses");
 
     //
     // Games
@@ -105,10 +86,10 @@ int GameEngine::ReloadDatabase() {
 
     iErrCode = VerifyActiveGames();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify active games");
+        global.GetReport()->WriteReport("GameEngine setup failed to verify active games");
         return iErrCode;
     }
-    m_pReport->WriteReport("GameEngine setup successfully verified active games");    
+    global.GetReport()->WriteReport("GameEngine setup successfully verified active games");    
 
     //
     // Marked gameclasses
@@ -116,10 +97,10 @@ int GameEngine::ReloadDatabase() {
 
     iErrCode = VerifyMarkedGameClasses();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify marked gameclasses");
+        global.GetReport()->WriteReport("GameEngine setup failed to verify marked gameclasses");
         return iErrCode;
     }
-    m_pReport->WriteReport("GameEngine setup successfully verified marked gameclasses");
+    global.GetReport()->WriteReport("GameEngine setup successfully verified marked gameclasses");
 
     //
     // Tournaments
@@ -127,10 +108,10 @@ int GameEngine::ReloadDatabase() {
 
     iErrCode = VerifyTournaments();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify tournaments");
+        global.GetReport()->WriteReport("GameEngine setup failed to verify tournaments");
         return iErrCode;
     }
-    m_pReport->WriteReport("GameEngine setup successfully verified tournaments");
+    global.GetReport()->WriteReport("GameEngine setup successfully verified tournaments");
 
     //
     // Top lists
@@ -138,17 +119,16 @@ int GameEngine::ReloadDatabase() {
 
     iErrCode = VerifyTopLists();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup failed to verify top lists");
+        global.GetReport()->WriteReport("GameEngine setup failed to verify top lists");
         return iErrCode;
     }
-    m_pReport->WriteReport("GameEngine setup successfully verified top lists");
+    global.GetReport()->WriteReport("GameEngine setup successfully verified top lists");
 
     //////////
     // Done //
     //////////
 
-    m_bGoodDatabase = true;
-    m_pReport->WriteReport("GameEngine setup successfully reused the existing database");
+    global.GetReport()->WriteReport("GameEngine setup successfully reused the existing database");
 
     return OK;
 }
@@ -623,7 +603,7 @@ Cleanup:
         char* pszMessage =(char*) StackAlloc(strlen(strBadTable) + 256);
         sprintf(pszMessage, "GameEngine setup found an inconsistency in the %s table", strBadTable);
 
-        m_pReport->WriteReport(pszMessage);
+        global.GetReport()->WriteReport(pszMessage);
     }
 }
 
@@ -692,76 +672,6 @@ Cleanup:
     return iErrCode;
 }
 
-int GameEngine::VerifyEmpires() {
-
-    int iErrCode = OK;
-
-    IWriteTable* pEmpires = NULL;
-
-    Variant vTemp;
-    Seconds sDiff;
-
-    UTCTime tLastShutdownTime, tNow;
-    Time::GetTime(&tNow);
-
-    iErrCode = GetSystemProperty(SystemData::LastShutdownTime, &vTemp);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-    tLastShutdownTime = vTemp.GetInteger64();
-
-    sDiff = Time::GetSecondDifference(tNow, tLastShutdownTime);
-
-    // If the server was down longer than a week, 
-    if (sDiff > 7 * DAY_LENGTH_IN_SECONDS) {
-
-        unsigned int iKey = NO_KEY;
-
-        iErrCode = t_pConn->GetTableForWriting(SYSTEM_EMPIRE_DATA, &pEmpires);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-
-        // Update every empire's Bridier timebomb
-        while(true) {
-
-            UTCTime tBridier, tNewBridier;
-
-            iErrCode = pEmpires->GetNextKey(iKey, &iKey);
-            if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                iErrCode = OK;
-                break;
-            }
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-
-            iErrCode = pEmpires->ReadData(iKey, SystemEmpireData::LastBridierActivity, &tBridier);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-
-            Time::AddSeconds(tBridier, sDiff, &tNewBridier);
-
-            iErrCode = pEmpires->WriteData(iKey, SystemEmpireData::LastBridierActivity, tNewBridier);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-        }
-    }    
-
-Cleanup:
-
-    SafeRelease(pEmpires);
-
-    return iErrCode;
-}
-
 int GameEngine::VerifyGameClasses() {
 
     int iErrCode;
@@ -778,6 +688,7 @@ int GameEngine::VerifyGameClasses() {
 
     for(i = 0; i < iNumGameClasses; i ++) {
 
+        // TODOTODO - why?
         // Set number of active games in gameclass to 0
         iErrCode = t_pConn->WriteData(
             SYSTEM_GAMECLASS_DATA,
@@ -855,7 +766,7 @@ int GameEngine::VerifyMarkedGameClasses() {
                         "GameEngine setup deleted gameclass %i because it was marked for deletion",
                         piGameClassKey[i]
                         );
-                    m_pReport->WriteReport(pszBuffer);
+                    global.GetReport()->WriteReport(pszBuffer);
                 }
             }
         }
@@ -935,13 +846,6 @@ int GameEngine::VerifyActiveGames() {
         VerifyGameTables(iGameClass, iGameNumber, &bGoodDatabase);
         if (!bGoodDatabase) {
             iErrCode = ERROR_DATA_CORRUPTION;
-            goto Cleanup;
-        }
-
-        // Add the game to our game table
-        iErrCode = AddToGameTable(iGameClass, iGameNumber);
-        if (iErrCode != OK) {
-            Assert(false);
             goto Cleanup;
         }
 
@@ -1151,7 +1055,7 @@ int GameEngine::VerifyActiveGames() {
                 iReason
                 );
 
-            m_pReport->WriteReport(pszBuffer);
+            global.GetReport()->WriteReport(pszBuffer);
             continue;
         }
 
@@ -1177,7 +1081,7 @@ int GameEngine::VerifyActiveGames() {
                 iGameClass
                 );
 
-            m_pReport->WriteReport(pszBuffer);
+            global.GetReport()->WriteReport(pszBuffer);
             continue;
         }
 
@@ -1198,7 +1102,7 @@ int GameEngine::VerifyActiveGames() {
                 iGameClass
                 );
                 
-            m_pReport->WriteReport(pszBuffer);
+            global.GetReport()->WriteReport(pszBuffer);
             continue;
         }
 
@@ -1226,37 +1130,37 @@ Cleanup:
 // Creation
 //
 
-int GameEngine::CreateNewDatabase() {
+int GameEngine::InitializeNewDatabase() {
     
     int iErrCode;
 
-    m_pReport->WriteReport("GameEngine setup is initializing a new database");
+    global.GetReport()->WriteReport("GameEngine setup is initializing a new database");
             
     iErrCode = CreateDefaultSystemTemplates();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup could not create the default system templates");
+        global.GetReport()->WriteReport("GameEngine setup could not create the default system templates");
         return iErrCode;
     }
 
     iErrCode = CreateDefaultSystemTables();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup could not create the default system tables");
+        global.GetReport()->WriteReport("GameEngine setup could not create the default system tables");
         return iErrCode;
     }
 
     iErrCode = SetupDefaultSystemTables();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup could not set up the default system tables");
+        global.GetReport()->WriteReport("GameEngine setup could not set up the default system tables");
         return iErrCode;
     }
 
     iErrCode = SetupDefaultSystemGameClasses();
     if (iErrCode != OK) {
-        m_pReport->WriteReport("GameEngine setup could not set up the default system gameclasses");
+        global.GetReport()->WriteReport("GameEngine setup could not set up the default system gameclasses");
         return iErrCode;
     }
     
-    m_pReport->WriteReport("GameEngine setup finished initializing a new database");
+    global.GetReport()->WriteReport("GameEngine setup finished initializing a new database");
     return iErrCode;
 }
 
@@ -1633,7 +1537,7 @@ int GameEngine::SetupDefaultSystemTables() {
        (float) 100.0,  // AdeptScore
         20,             // MaxNumSystemMessages
         20,             // MaxNumGameMessages
-        tTime,          // LastShutDownTime
+        tTime,          // LastShutDownTimeUnused
         "Needle",       // DefaultAttackName
         "Probe",        // Science
         "Seed",         // Colony
@@ -3276,8 +3180,7 @@ int GameEngine::VerifyTournaments() {
 int GameEngine::VerifyTopLists() {
 
     int i, iErrCode;
-
-    bool bRebuild = m_scConfig.bRebuildTopListsOnStartup;
+    bool bRebuild = false;
     
     ENUMERATE_SCORING_SYSTEMS(i) {
         

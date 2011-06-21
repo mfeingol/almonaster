@@ -1,36 +1,31 @@
-// BridierScore.cpp: implementation of the BridierScore class.
 //
-//////////////////////////////////////////////////////////////////////
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "BridierScore.h"
-
 #include <math.h>
-
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
 
 //
 // BridierObject
 //
 
-BridierObject::BridierObject (IGameEngine* pGameEngine) {
-
-    Assert (pGameEngine != NULL);
-    m_pGameEngine = pGameEngine; // Weak ref
-
-    IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
-    Assert (pDatabase != NULL);
-
-    t_pConn = pDatabase->CreateConnection();
-    Assert (t_pConn != NULL);
-
-    SafeRelease(pDatabase);
-}
-
-BridierObject::~BridierObject()
+BridierObject::BridierObject(GameEngine* pGameEngine)
 {
-    SafeRelease(t_pConn);
+    m_pGameEngine = pGameEngine;
 }
 
 int BridierObject::IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridier) {
@@ -38,7 +33,7 @@ int BridierObject::IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridi
     int iErrCode;
     Variant vOptions;
 
-    GAME_DATA (pszGameData, iGameClass, iGameNumber);
+    GAME_DATA(pszGameData, iGameClass, iGameNumber);
 
     iErrCode = t_pConn->ReadData (pszGameData, GameData::Options, &vOptions);
     if (iErrCode != OK) {
@@ -163,14 +158,6 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
     Variant pvScore [NUM_BRIDIER_COLUMNS];
 
     UTCTime tNow;
-
-    NamedMutex nmMutex;
-    iErrCode = m_pGameEngine->LockEmpireBridier (iEmpireKey, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
     Time::GetTime (&tNow);
     
     // Update activity time
@@ -308,8 +295,6 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
 
 Cleanup:
 
-    m_pGameEngine->UnlockEmpireBridier (nmMutex);
-
     return iErrCode;
 }
 
@@ -394,14 +379,8 @@ int BridierObject::GetReplacementKeys (bool bEstablished, const Variant* pvScore
 // BridierScore
 //
 
-BridierScore::BridierScore (IGameEngine* pGameEngine)  : BridierObject (pGameEngine) {
-
-    m_iNumRefs = 1;
-}
-
-IScoringSystem* BridierScore::CreateInstance (IGameEngine* pGameEngine) {
-
-    return new BridierScore (pGameEngine);
+BridierScore::BridierScore(GameEngine* pGameEngine) : BridierObject(pGameEngine)
+{
 }
 
 bool BridierScore::HasTopList() {
@@ -603,14 +582,8 @@ int BridierScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppi
 // BridierScoreEstablished
 //
 
-BridierScoreEstablished::BridierScoreEstablished (IGameEngine* pGameEngine) : BridierObject (pGameEngine) {
-
-    m_iNumRefs = 1;
-}
-
-IScoringSystem* BridierScoreEstablished::CreateInstance (IGameEngine* pGameEngine) {
-
-    return new BridierScoreEstablished (pGameEngine);
+BridierScoreEstablished::BridierScoreEstablished(GameEngine* pGameEngine) : BridierObject (pGameEngine)
+{
 }
 
 bool BridierScoreEstablished::HasTopList() {

@@ -23,6 +23,7 @@
 #include "Osal/TempFile.h"
 
 #include "HtmlRenderer.h"
+#include "Global.h"
 
 #include "../MapGen/MapFairnessEvaluator.h"
 
@@ -64,8 +65,8 @@ unsigned int HtmlRenderer::m_siNumGamingEmpires;
 //////////////////////////////////////////////////////////////////////
 
 
-HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
-
+HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+{
     m_pHttpRequest = pHttpRequest;
     m_pHttpResponse = pHttpResponse;
     
@@ -119,13 +120,10 @@ HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResp
     m_i64SessionId = NO_SESSION_ID;
 
     m_iNumOldUpdates = 0;
-
-    m_pgeLock = NULL;
 }
 
-HtmlRenderer::~HtmlRenderer() {
-
-    Assert (m_pgeLock == NULL);
+HtmlRenderer::~HtmlRenderer()
+{
 }
 
 int HtmlRenderer::Initialize() {
@@ -150,11 +148,11 @@ int HtmlRenderer::Initialize() {
     m_stEmpiresInGamesCheck = NULL_TIME;
     m_siNumGamingEmpires = 0;
 
-    Assert (g_pszResourceDir != NULL);
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" NEWS_FILE, g_pszResourceDir);
+    sprintf (pszFileName, "%s/" NEWS_FILE, global.GetResourceDir());
 
-    if (File::DoesFileExist (pszFileName)) {
+    if (File::DoesFileExist(pszFileName))
+    {
         iErrCode = File::GetLastModifiedTime (pszFileName, &m_stServerNewsLastUpdate);
     }
 
@@ -183,19 +181,19 @@ int HtmlRenderer::Redirect (PageId pageId) {
 
 void HtmlRenderer::ShutdownServer() {
     
-    g_pHttpServer->Shutdown();
+    global.GetHttpServer()->Shutdown();
     AddMessage ("The server will shut down now");
 }
 
 void HtmlRenderer::RestartServer() {
     
-    g_pHttpServer->Restart (NULL);
+    global.GetHttpServer()->Restart (NULL);
     AddMessage ("The server will now restart");
 }
 
 void HtmlRenderer::RestartAlmonaster() {
     
-    g_pPageSourceControl->Restart();
+    global.GetPageSourceControl()->Restart();
     AddMessage ("Almonaster will now restart");
 }
 
@@ -401,11 +399,11 @@ int HtmlRenderer::VerifyCategoryName (const char* pszCategory, const char* pszNa
 
 void HtmlRenderer::WriteVersionString() {
     
-    m_pHttpResponse->WriteText (g_pGameEngine->GetSystemVersion());
+    m_pHttpResponse->WriteText (GetSystemVersion());
     OutputText (" @ ");
     
     Variant vServerName;
-    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::ServerName, &vServerName);
+    int iErrCode = GetSystemProperty (SystemData::ServerName, &vServerName);
     if (iErrCode == OK) {   
         m_pHttpResponse->WriteText (vServerName.GetCharPtr());
     }
@@ -480,7 +478,7 @@ void HtmlRenderer::WriteContactLine() {
 
     Variant vEmail;
     String strFilter;
-    int iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AdminEmail, &vEmail);
+    int iErrCode = GetSystemProperty (SystemData::AdminEmail, &vEmail);
     
     if (iErrCode == OK && 
         !String::IsBlank(vEmail.GetCharPtr()) &&
@@ -859,7 +857,7 @@ bool HtmlRenderer::VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash) {
     unsigned int iRealHash;
     Variant vName;
     
-    iErrCode = g_pGameEngine->GetEmpireName (iEmpireKey, &vName);
+    iErrCode = GetEmpireName (iEmpireKey, &vName);
     if (iErrCode != OK) {
         return false;
     }
@@ -1033,7 +1031,7 @@ bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
         if (m_iNumNewUpdates == m_iNumOldUpdates) {
         
             // End turn
-            iErrCode = g_pGameEngine->SetEmpireReadyForUpdate (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+            iErrCode = SetEmpireReadyForUpdate (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
             Assert (iErrCode == OK);
             
             // Redirect to same page
@@ -1056,7 +1054,7 @@ bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
         if (m_iNumNewUpdates == m_iNumOldUpdates) {
 
             // Unend turn
-            iErrCode = g_pGameEngine->SetEmpireNotReadyForUpdate (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+            iErrCode = SetEmpireNotReadyForUpdate (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
             
             // Redirect to same page
             if (bFlag) {
@@ -1154,9 +1152,6 @@ False:
     
 True:
     
-    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-    m_pgeLock = NULL;
-
     return true;
 }
 
@@ -1204,7 +1199,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     }
 
     // Verify empire's presence in game
-    iErrCode = g_pGameEngine->IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
     if (iErrCode != OK || !bFlag) {
 
         if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
@@ -1222,7 +1217,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         Variant vTemp;
 
         // Get game options
-        iErrCode = g_pGameEngine->GetEmpireOptions (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameOptions);
+        iErrCode = GetEmpireOptions (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameOptions);
         if (iErrCode != OK) {
             AddMessage ("That empire no longer exists");
             *ppageRedirect = LOGIN;
@@ -1230,7 +1225,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         }
 
         // Get gameclass name
-        iErrCode = g_pGameEngine->GetGameClassName (m_iGameClass, m_pszGameClassName);
+        iErrCode = GetGameClassName (m_iGameClass, m_pszGameClassName);
         if (iErrCode != OK) {
             AddMessage ("That game no longer exists");
             *ppageRedirect = ACTIVE_GAME_LIST;
@@ -1242,7 +1237,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         m_bTimeDisplay = (m_iGameOptions & GAME_DISPLAY_TIME) != 0;
 
         // Get game ratios
-        iErrCode = g_pGameEngine->GetEmpireGameProperty (
+        iErrCode = GetEmpireGameProperty (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
@@ -1264,10 +1259,8 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     ///////////////////////
     
     bool bUpdate;
-    if (g_pGameEngine->CheckGameForUpdates (m_iGameClass, m_iGameNumber, false, &bUpdate) != OK ||
-        g_pGameEngine->WaitGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_pgeLock) != OK
-        ) {
-        
+    if (CheckGameForUpdates (m_iGameClass, m_iGameNumber, false, &bUpdate) != OK)
+    {
         // Remove update message after update
         if (bUpdate && m_strMessage.Equals ("You are now ready for an update")) {
             m_strMessage.Clear();
@@ -1279,11 +1272,8 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     }
     
     // Re-verify empire's presence in game
-    iErrCode = g_pGameEngine->IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
     if (iErrCode != OK || !bFlag) {
-
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-        m_pgeLock = NULL;
 
         AddMessage ("You are no longer in that game");
         *ppageRedirect = ACTIVE_GAME_LIST;
@@ -1291,12 +1281,9 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     }
     
     // Verify not resigned
-    iErrCode = g_pGameEngine->HasEmpireResignedFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    iErrCode = HasEmpireResignedFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
     if (iErrCode != OK || bFlag) {
         
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-        m_pgeLock = NULL;
-
         AddMessage ("Your empire has resigned from that game");
         *ppageRedirect = ACTIVE_GAME_LIST;
         return ERROR_FAILURE;
@@ -1307,7 +1294,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIntoGame) {
         
         int iNumUpdatesIdle;
-        iErrCode = g_pGameEngine->LogEmpireIntoGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumUpdatesIdle);       
+        iErrCode = LogEmpireIntoGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumUpdatesIdle);       
         if (iErrCode != OK) {
             AddMessage ("Your empire could not be logged into the game");
             *ppageRedirect = ACTIVE_GAME_LIST;
@@ -1320,7 +1307,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
 
             // Check for all empires idle case
             bool bIdle;
-            iErrCode = g_pGameEngine->AreAllEmpiresIdle (m_iGameClass, m_iGameNumber, &bIdle);
+            iErrCode = AreAllEmpiresIdle (m_iGameClass, m_iGameNumber, &bIdle);
             if (iErrCode != OK) {
                 AddMessage ("That game no longer exists");
                 *ppageRedirect = ACTIVE_GAME_LIST;
@@ -1353,7 +1340,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     }
     
     // Get game update information
-    if (g_pGameEngine->GetGameUpdateData (
+    if (GetGameUpdateData (
         m_iGameClass, 
         m_iGameNumber, 
         &m_sSecondsSince, 
@@ -1364,9 +1351,6 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         ) {
         
         Assert (false);
-
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-        m_pgeLock = NULL;
 
         AddMessage ("The game no longer exists");
         *ppageRedirect = ACTIVE_GAME_LIST;
@@ -1467,7 +1451,7 @@ void HtmlRenderer::WriteGameNextUpdateString() {
     }
 
     int iNumEmpires;
-    iErrCode = g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
+    iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         return;
@@ -1479,7 +1463,7 @@ void HtmlRenderer::WriteGameNextUpdateString() {
             
             int iNumNeeded, iTotal, 
             
-            iErrCode = g_pGameEngine->GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
+            iErrCode = GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
             if (iErrCode != OK) {
                 Assert (false);
                 return;
@@ -1557,7 +1541,7 @@ void HtmlRenderer::WriteGameNextUpdateString() {
     if (m_iGameState & STARTED) {
 
         int iUpdated;
-        iErrCode = g_pGameEngine->GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
+        iErrCode = GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
         if (iErrCode != OK) {
             Assert (false);
             return;
@@ -1613,10 +1597,6 @@ int HtmlRenderer::PostGamePageInformation() {
 
 void HtmlRenderer::CloseGamePage() {
     
-    // Unlock the game by decrementing the thread count
-    g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock);
-    m_pgeLock = NULL;
-
     OutputText ("<p>");
     WriteSeparatorString (m_iSeparatorKey);
     OutputText ("<p><strong><font size=\"3\">");
@@ -1683,7 +1663,7 @@ int HtmlRenderer::GetGoodBadResourceLimits (int iGameClass, int iGameNumber, int
     
     int iAg, iMin, iFuel;
     
-    int iErrCode = g_pGameEngine->GetGameAveragePlanetResources (iGameClass, iGameNumber, &iAg, &iMin, &iFuel);
+    int iErrCode = GetGameAveragePlanetResources (iGameClass, iGameNumber, &iAg, &iMin, &iFuel);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1709,7 +1689,7 @@ void HtmlRenderer::SearchForDuplicateIPAddresses (int iGameClass, int iGameNumbe
     
     char pszBuffer [512];
     
-    int iErrCode = g_pGameEngine->SearchForDuplicates (
+    int iErrCode = SearchForDuplicates (
         iGameClass, 
         iGameNumber,
         SystemEmpireData::IPAddress,
@@ -1752,7 +1732,7 @@ void HtmlRenderer::SearchForDuplicateIPAddresses (int iGameClass, int iGameNumbe
                 
                 for (j = iIndex; j < iLimit; j ++) {
                     
-                    iErrCode = g_pGameEngine->GetEmpireName (piDuplicateKeys[j], &vName);
+                    iErrCode = GetEmpireName (piDuplicateKeys[j], &vName);
                     if (iErrCode == OK) {
                         
                         strList += vName.GetCharPtr();
@@ -1765,7 +1745,7 @@ void HtmlRenderer::SearchForDuplicateIPAddresses (int iGameClass, int iGameNumbe
                 }
                 iIndex = iLimit + 1;
                 
-                iErrCode = g_pGameEngine->GetEmpireName (piDuplicateKeys[j], &vName);
+                iErrCode = GetEmpireName (piDuplicateKeys[j], &vName);
                 if (iErrCode == OK) {
                     strList += vName.GetCharPtr();
                 }
@@ -1789,7 +1769,7 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
     
     char pszBuffer [512];
     
-    int iErrCode = g_pGameEngine->SearchForDuplicates (
+    int iErrCode = SearchForDuplicates (
         iGameClass, 
         iGameNumber,
         SystemEmpireData::SessionId,
@@ -1832,7 +1812,7 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
                 
                 for (j = iIndex; j < iLimit; j ++) {
                     
-                    iErrCode = g_pGameEngine->GetEmpireName (piDuplicateKeys[j], &vName);
+                    iErrCode = GetEmpireName (piDuplicateKeys[j], &vName);
                     if (iErrCode == OK) {
                         
                         strList += vName.GetCharPtr();
@@ -1845,7 +1825,7 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
                 }
                 iIndex = iLimit + 1;
                 
-                iErrCode = g_pGameEngine->GetEmpireName (piDuplicateKeys[j], &vName);
+                iErrCode = GetEmpireName (piDuplicateKeys[j], &vName);
                 if (iErrCode == OK) {
                     strList += vName.GetCharPtr();
                 }
@@ -1863,46 +1843,34 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
 }
 
 
-void HtmlRenderer::ReportLoginFailure (IReport* pReport, const char* pszEmpireName) {
-    
-    SystemConfiguration scConfig;
-    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+void HtmlRenderer::ReportLoginFailure (IReport* pReport, const char* pszEmpireName)
+{
+    char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
+    sprintf (pszMessage, "Logon failure for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
         
-        char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
-        sprintf (pszMessage, "Logon failure for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
-        
-        pReport->WriteReport (pszMessage);
-    }
+    pReport->WriteReport (pszMessage);
 }
 
-void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon) {
-    
-    SystemConfiguration scConfig;
-    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-        
-        char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
+void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon)
+{
+    char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
 
-        if (bAutoLogon) {
-            sprintf (pszMessage, "Autologon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
-        } else {
-            sprintf (pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
-        }
-
-        pReport->WriteReport (pszMessage);
+    if (bAutoLogon) {
+        sprintf (pszMessage, "Autologon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+    } else {
+        sprintf (pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
     }
+
+    pReport->WriteReport (pszMessage);
 }
 
 
-void HtmlRenderer::ReportEmpireCreation (IReport* pReport, const char* pszEmpireName) {
-    
-    SystemConfiguration scConfig;
-    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+void HtmlRenderer::ReportEmpireCreation (IReport* pReport, const char* pszEmpireName)
+{
+    char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
+    sprintf (pszMessage, "Creation success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
         
-        char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
-        sprintf (pszMessage, "Creation success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
-        
-        pReport->WriteReport (pszMessage);
-    }
+    pReport->WriteReport (pszMessage);
 }
 
 void HtmlRenderer::WriteSystemTitleString() {
@@ -2009,7 +1977,7 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
     
     // Personal Game Classes
     if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES ||
-        (g_pGameEngine->GetEmpirePersonalGameClasses (m_iEmpireKey, NULL, NULL, (int*) &iNumber) == OK && iNumber > 0)
+        (GetEmpirePersonalGameClasses (m_iEmpireKey, NULL, NULL, (int*) &iNumber) == OK && iNumber > 0)
         ) {
 
         WriteButton (BID_PERSONALGAMECLASSES);
@@ -2017,7 +1985,7 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
 
     // Personal Tournaments
     if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_TOURNAMENTS ||
-        (g_pGameEngine->GetOwnedTournaments (m_iEmpireKey, NULL, NULL, &iNumber) == OK && iNumber > 0)
+        (GetOwnedTournaments (m_iEmpireKey, NULL, NULL, &iNumber) == OK && iNumber > 0)
         ) {
 
         WriteButton (BID_PERSONALTOURNAMENTS);
@@ -2050,63 +2018,7 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
 
 
 void HtmlRenderer::WriteBackupMessage() {
-    
-    int iErrCode;
-
-    String strTimeElapsed, strTimeRemaining;
-
-    DatabaseBackupStage dbsStage;
-    
-    unsigned int iNumber;
-    Seconds iElapsedTime;
-
-    g_pGameEngine->GetDatabaseBackupProgress (&dbsStage, &iElapsedTime, &iNumber);
-
-    char pszElapsed [MAX_HTML_TIME_LENGTH] = "";
-
-    iErrCode = ConvertTime (iElapsedTime, pszElapsed);
-    if (iErrCode != OK) {
-        pszElapsed[0] = '\0';
-    }
-
-    AddMessage ("Access to the server is denied. The database is being backed up.");
-
-    switch (dbsStage) {
-
-    case DATABASE_BACKUP_TABLES:
-
-        AppendMessage ("<br>");
-        AppendMessage ((int) iNumber);
-        AppendMessage (" tables are being written to disk.");
-        break;
-
-    case DATABASE_BACKUP_TEMPLATES:
-
-        AppendMessage ("<br>");
-        AppendMessage ((int) iNumber);
-        AppendMessage (" templates are being written to disk.");
-        break;
-
-    case DATABASE_BACKUP_VARIABLE_LENGTH_DATA:
-
-        AppendMessage ("<br>The variable length data is being written to disk.");
-        break;
-
-    case DATABASE_BACKUP_METADATA:
-
-        AppendMessage ("<br>The variable length data is being written to disk.");
-        break;
-
-    default:
-
-        break;
-    }
-
-    if (pszElapsed[0] != '\0') {
-
-        AppendMessage ("<br>Elapsed time is ");
-        AppendMessage (pszElapsed);
-    }
+   // TODOTODO - Remove this codepath 
 }
 
 int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCookie) {
@@ -2116,13 +2028,13 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
     // Check for force reset
     if (m_iSystemOptions & RESET_SESSION_ID) {
 
-        iErrCode = g_pGameEngine->GetNewSessionId (&m_i64SessionId);
+        iErrCode = GetNewSessionId (&m_i64SessionId);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->EndResetEmpireSessionId (m_iEmpireKey);
+        iErrCode = EndResetEmpireSessionId (m_iEmpireKey);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -2135,7 +2047,7 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
     *pbUpdateSessionId = *pbUpdateCookie = false;
     
     // First, get the empire's session id
-    iErrCode = g_pGameEngine->GetEmpireSessionId (m_iEmpireKey, &m_i64SessionId);
+    iErrCode = GetEmpireSessionId (m_iEmpireKey, &m_i64SessionId);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -2153,7 +2065,7 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
         if (m_i64SessionId == NO_SESSION_ID) {
             
             // Generate a new session id
-            iErrCode = g_pGameEngine->GetNewSessionId (&m_i64SessionId);
+            iErrCode = GetNewSessionId (&m_i64SessionId);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
@@ -2266,9 +2178,6 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
     }
     
     if (WasButtonPressed (BID_EXIT)) {
-        if (m_pgeLock != NULL) {
-            m_pgeLock->SetActive (false);
-        }
         *ppageRedirect = LOGIN;
         return true;
     }
@@ -2394,7 +2303,7 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
 
             if (bAccept || bDecline) {
 
-                iErrCode = g_pGameEngine->RespondToTournamentInvitation (m_iEmpireKey, iMessageKey, bAccept);
+                iErrCode = RespondToTournamentInvitation (m_iEmpireKey, iMessageKey, bAccept);
                 if (iErrCode != OK) {
 
                     if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
@@ -2440,7 +2349,7 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
 
             if (bAccept || bDecline) {
 
-                iErrCode = g_pGameEngine->RespondToTournamentJoinRequest (m_iEmpireKey, iMessageKey, bAccept);
+                iErrCode = RespondToTournamentJoinRequest (m_iEmpireKey, iMessageKey, bAccept);
                 if (iErrCode != OK) {
 
                     if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
@@ -2607,7 +2516,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
     
     if (iEmpireKey == SYSTEM) {
         
-        iErrCode = g_pGameEngine->GetSuperClassKeys (&piSuperClassKey, &pvSuperClassName, &iNumSuperClasses);
+        iErrCode = GetSuperClassKeys (&piSuperClassKey, &pvSuperClassName, &iNumSuperClasses);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -2630,67 +2539,67 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
                 OutputText ("</option>");
             }
             
-            g_pGameEngine->FreeKeys ((unsigned int*) piSuperClassKey);
-            g_pGameEngine->FreeData (pvSuperClassName);
+            FreeKeys ((unsigned int*) piSuperClassKey);
+            FreeData (pvSuperClassName);
         }
         
         OutputText ("</select></td></tr>");
         
-        iErrCode = g_pGameEngine->GetMinNumSecsPerUpdateForSystemGameClass (&iMinNumSecsPerUpdate);
+        iErrCode = GetMinNumSecsPerUpdateForSystemGameClass (&iMinNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumSecsPerUpdateForSystemGameClass (&iMaxNumSecsPerUpdate);
+        iErrCode = GetMaxNumSecsPerUpdateForSystemGameClass (&iMaxNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumEmpiresForSystemGameClass (&iMaxNumEmpires);
+        iErrCode = GetMaxNumEmpiresForSystemGameClass (&iMaxNumEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
 
         iActualMaxNumEmpires = UNLIMITED_EMPIRES;
         
-        iErrCode = g_pGameEngine->GetMaxNumPlanetsForSystemGameClass (&iMaxNumPlanets);
+        iErrCode = GetMaxNumPlanetsForSystemGameClass (&iMaxNumPlanets);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet);
+        iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxInitialTechLevel, &vMaxInitialTechLevel);
+        iErrCode = GetSystemProperty (SystemData::MaxInitialTechLevel, &vMaxInitialTechLevel);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxTechDev, &vMaxTechDev);
+        iErrCode = GetSystemProperty (SystemData::MaxTechDev, &vMaxTechDev);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
     } else {
         
-        iErrCode = g_pGameEngine->GetMinNumSecsPerUpdateForPersonalGameClass (&iMinNumSecsPerUpdate);
+        iErrCode = GetMinNumSecsPerUpdateForPersonalGameClass (&iMinNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumSecsPerUpdateForPersonalGameClass (&iMaxNumSecsPerUpdate);
+        iErrCode = GetMaxNumSecsPerUpdateForPersonalGameClass (&iMaxNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumEmpiresForPersonalGameClass (&iMaxNumEmpires);
+        iErrCode = GetMaxNumEmpiresForPersonalGameClass (&iMaxNumEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege);
+        iErrCode = GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege);
 
         if (m_iPrivilege >= vUnlimitedEmpirePrivilege.GetInteger()) {
             iActualMaxNumEmpires = UNLIMITED_EMPIRES;
@@ -2698,22 +2607,22 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
             iActualMaxNumEmpires = min (iMaxNumEmpires, 8);
         }
 
-        iErrCode = g_pGameEngine->GetMaxNumPlanetsForPersonalGameClass (&iMaxNumPlanets);
+        iErrCode = GetMaxNumPlanetsForPersonalGameClass (&iMaxNumPlanets);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanet);
+        iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanet);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxInitialTechLevelPersonal, &vMaxInitialTechLevel);
+        iErrCode = GetSystemProperty (SystemData::MaxInitialTechLevelPersonal, &vMaxInitialTechLevel);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxTechDevPersonal, &vMaxTechDev);
+        iErrCode = GetSystemProperty (SystemData::MaxTechDevPersonal, &vMaxTechDev);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -4407,7 +4316,7 @@ int HtmlRenderer::ProcessCreateGameClassForms (unsigned int iOwnerKey, unsigned 
 
         unsigned int iRealOwner;
 
-        iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iRealOwner);
+        iErrCode = GetTournamentOwner (iTournamentKey, &iRealOwner);
         if (iErrCode != OK) {
             AddMessage ("That tournament no longer exists");
             return iErrCode;
@@ -4427,7 +4336,7 @@ int HtmlRenderer::ProcessCreateGameClassForms (unsigned int iOwnerKey, unsigned 
     }
 
     // Create the gameclass, finally
-    iErrCode = g_pGameEngine->CreateGameClass (iOwnerKey, pvSubmitArray, &iGameClass);
+    iErrCode = CreateGameClass (iOwnerKey, pvSubmitArray, &iGameClass);
     switch (iErrCode) {
 
     case OK:
@@ -4488,7 +4397,7 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
     pvSubmitArray[SystemGameClassData::iOptions] = pvSubmitArray[SystemGameClassData::iOptions].GetInteger() | DYNAMIC_GAMECLASS;
     
     // Create the gameclass
-    iErrCode = g_pGameEngine->CreateGameClass (iOwnerKey, pvSubmitArray, piGameClass);
+    iErrCode = CreateGameClass (iOwnerKey, pvSubmitArray, piGameClass);
     if (iErrCode != OK) {
         
         switch (iErrCode) {
@@ -4530,18 +4439,18 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
     goOptions.iNumEmpires = 1;
     goOptions.piEmpireKey = &iOwnerKey;
     
-    iErrCode = g_pGameEngine->CreateGame (*piGameClass, iOwnerKey, goOptions, piGameNumber);
+    iErrCode = CreateGame (*piGameClass, iOwnerKey, goOptions, piGameNumber);
     if (iErrCode == OK) {
         
         // Halt the gameclass
-        int iErrCode2 = g_pGameEngine->HaltGameClass (*piGameClass);
+        int iErrCode2 = HaltGameClass (*piGameClass);
         Assert (iErrCode2 == OK);
         
     } else {
         
         // Delete the gameclass
         bool bDeleted;
-        int iErrCode2 = g_pGameEngine->DeleteGameClass (*piGameClass, &bDeleted);
+        int iErrCode2 = DeleteGameClass (*piGameClass, &bDeleted);
         Assert (iErrCode2 == OK);
     }
 
@@ -4568,54 +4477,54 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     
     if (iOwnerKey == SYSTEM) {
         
-        iErrCode = g_pGameEngine->GetMinNumSecsPerUpdateForSystemGameClass (&iMinNumSecsPerUpdate);
+        iErrCode = GetMinNumSecsPerUpdateForSystemGameClass (&iMinNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumSecsPerUpdateForSystemGameClass (&iMaxNumSecsPerUpdate);
+        iErrCode = GetMaxNumSecsPerUpdateForSystemGameClass (&iMaxNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumEmpiresForSystemGameClass (&iMaxNumEmpires);
+        iErrCode = GetMaxNumEmpiresForSystemGameClass (&iMaxNumEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumPlanetsForSystemGameClass (&iMaxNumPlanets);
+        iErrCode = GetMaxNumPlanetsForSystemGameClass (&iMaxNumPlanets);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet);
+        iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
     } else {
         
-        iErrCode = g_pGameEngine->GetMinNumSecsPerUpdateForPersonalGameClass (&iMinNumSecsPerUpdate);
+        iErrCode = GetMinNumSecsPerUpdateForPersonalGameClass (&iMinNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumSecsPerUpdateForPersonalGameClass (&iMaxNumSecsPerUpdate);
+        iErrCode = GetMaxNumSecsPerUpdateForPersonalGameClass (&iMaxNumSecsPerUpdate);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumEmpiresForPersonalGameClass (&iMaxNumEmpires);
+        iErrCode = GetMaxNumEmpiresForPersonalGameClass (&iMaxNumEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetMaxNumPlanetsForPersonalGameClass (&iMaxNumPlanets);
+        iErrCode = GetMaxNumPlanetsForPersonalGameClass (&iMaxNumPlanets);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanet);
+        iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanet);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -5013,7 +4922,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     // Owner name
     if (iTournamentKey != NO_KEY) {
 
-        iErrCode = g_pGameEngine->GetTournamentName (iTournamentKey, pvSubmitArray + SystemGameClassData::iOwnerName);
+        iErrCode = GetTournamentName (iTournamentKey, pvSubmitArray + SystemGameClassData::iOwnerName);
         if (iErrCode != OK) {
             AddMessage ("That tournament no longer exists");
             return iErrCode;
@@ -5032,7 +4941,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
 
         default:
 
-            iErrCode = g_pGameEngine->GetEmpireName (iOwnerKey, pvSubmitArray + SystemGameClassData::iOwnerName);
+            iErrCode = GetEmpireName (iOwnerKey, pvSubmitArray + SystemGameClassData::iOwnerName);
             if (iErrCode != OK) {
                 AddMessage ("The creator's name could not be read");
                 return iErrCode;
@@ -5582,7 +5491,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     }
     
     // Diplomacy
-    if (!g_pGameEngine->IsLegalDiplomacyLevel (iDip)) {
+    if (!IsLegalDiplomacyLevel (iDip)) {
         AddMessage ("Illegal Diplomacy level");
         return ERROR_FAILURE;
     }
@@ -5605,7 +5514,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     case TRADE:
     case ALLIANCE:
         
-        if (!g_pGameEngine->GameAllowsDiplomacy (
+        if (!GameAllowsDiplomacy (
             iDip, 
             pvSubmitArray[SystemGameClassData::iMapsShared].GetInteger())
             ) {
@@ -5784,8 +5693,8 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
     Variant** ppvNukedData, ** ppvNukerData;
     int iNumNuked, iNumNukers, i;   
     
-    if (g_pGameEngine->GetEmpireName (iTargetEmpireKey, &vNukeEmpireName) != OK || 
-        g_pGameEngine->GetNukeHistory (iTargetEmpireKey, &iNumNuked, &ppvNukedData, &iNumNukers, 
+    if (GetEmpireName (iTargetEmpireKey, &vNukeEmpireName) != OK || 
+        GetNukeHistory (iTargetEmpireKey, &iNumNuked, &ppvNukedData, &iNumNukers, 
         &ppvNukerData) != OK) {
         
         OutputText ("<p><strong>The empire's nuke history could not be read</strong>");
@@ -5879,7 +5788,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     OutputText ("</td></tr>");
                 }
                 
-                g_pGameEngine->FreeData (ppvNukedData);
+                FreeData (ppvNukedData);
                 
                 OutputText ("</table>");
             }
@@ -5947,7 +5856,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     OutputText ("</td></tr>");
                 }
                 
-                g_pGameEngine->FreeData (ppvNukerData);
+                FreeData (ppvNukerData);
                 
                 OutputText ("</table>");
             }
@@ -5959,7 +5868,7 @@ void HtmlRenderer::WritePersonalGameClasses (int iTargetEmpireKey) {
     
     int i, iErrCode, iNumGameClasses, * piGameClassKey;
     
-    iErrCode = g_pGameEngine->GetEmpirePersonalGameClasses (iTargetEmpireKey, &piGameClassKey, NULL, &iNumGameClasses);
+    iErrCode = GetEmpirePersonalGameClasses (iTargetEmpireKey, &piGameClassKey, NULL, &iNumGameClasses);
     if (iErrCode != OK || iNumGameClasses == 0) {
         OutputText ("<p><strong>There are no personal GameClasses available</strong>");
     } else {
@@ -5985,22 +5894,22 @@ void HtmlRenderer::WritePersonalGameClasses (int iTargetEmpireKey) {
             iGameClass = piGameClassKey[i];
 
             // Read game class data
-            if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK &&
-                g_pGameEngine->GetDevelopableTechs (iGameClass, &iInitTechs, &iDevTechs) == OK) {
+            if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK &&
+                GetDevelopableTechs (iGameClass, &iInitTechs, &iDevTechs) == OK) {
                 
                 // Best effort
                 iErrCode = WriteSystemGameListData (iGameClass, pvGameClassInfo);
             }
             
             if (pvGameClassInfo != NULL) {
-                g_pGameEngine->FreeData (pvGameClassInfo);
+                FreeData (pvGameClassInfo);
                 pvGameClassInfo = NULL;
             }
         }
 
         OutputText ("</table>");
 
-        g_pGameEngine->FreeKeys (piGameClassKey);
+        FreeKeys (piGameClassKey);
     }
 }
 
@@ -6011,7 +5920,7 @@ void HtmlRenderer::WritePersonalTournaments (int iTargetEmpireKey) {
     unsigned int* piTournamentKey = NULL, iTournaments;
 
     // List all joined tournaments
-    iErrCode = g_pGameEngine->GetOwnedTournaments (iTargetEmpireKey, &piTournamentKey, NULL, &iTournaments);
+    iErrCode = GetOwnedTournaments (iTargetEmpireKey, &piTournamentKey, NULL, &iTournaments);
     if (iErrCode != OK || iTournaments == 0) {
         OutputText ("<p><strong>There are no personal Tournaments available</strong>");
     } else {
@@ -6031,7 +5940,7 @@ void HtmlRenderer::WritePersonalTournaments (int iTargetEmpireKey) {
         RenderTournaments (piTournamentKey, iTournaments, false);
 
         if (piTournamentKey != NULL) {
-            g_pGameEngine->FreeData (piTournamentKey);   // Not a bug
+            FreeData (piTournamentKey);   // Not a bug
         }
     }
 }
@@ -6042,13 +5951,13 @@ void HtmlRenderer::WritePersonalTournaments() {
     unsigned int* piTournamentKey = NULL, iTournaments;
 
     // List all joined tournaments
-    iErrCode = g_pGameEngine->GetOwnedTournaments (m_iEmpireKey, &piTournamentKey, NULL, &iTournaments);
+    iErrCode = GetOwnedTournaments (m_iEmpireKey, &piTournamentKey, NULL, &iTournaments);
     if (iErrCode == OK && iTournaments > 0) {
 
         RenderTournaments (piTournamentKey, iTournaments, true);
 
         if (piTournamentKey != NULL) {
-            g_pGameEngine->FreeData (piTournamentKey);   // Not a bug
+            FreeData (piTournamentKey);   // Not a bug
         }
     }
 }
@@ -6209,7 +6118,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
     const char* pszTableColor = m_vTableColor.GetCharPtr();
     
     int* piThemeKey, iNumThemes, i, j;
-    int iErrCode = g_pGameEngine->GetThemeKeys (&piThemeKey, &iNumThemes);
+    int iErrCode = GetThemeKeys (&piThemeKey, &iNumThemes);
     if (iErrCode != OK || iNumThemes == 0) {
         return iErrCode;
     }
@@ -6324,7 +6233,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
     
     for (i = 0; i < iNumThemes; i ++) {
         
-        iErrCode = g_pGameEngine->GetThemeData (piThemeKey[i], &pvThemeData);
+        iErrCode = GetThemeData (piThemeKey[i], &pvThemeData);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -6476,10 +6385,10 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         OutputText ("</tr>");
         
-        g_pGameEngine->FreeData (pvThemeData);
+        FreeData (pvThemeData);
     }
     
-    g_pGameEngine->FreeKeys (piThemeKey);
+    FreeKeys (piThemeKey);
     
     return OK;
 }
@@ -6487,7 +6396,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
 int HtmlRenderer::DisplayThemeData (int iThemeKey) {
     
     Variant* pvThemeData;
-    int iErrCode = g_pGameEngine->GetThemeData (iThemeKey, &pvThemeData);
+    int iErrCode = GetThemeData (iThemeKey, &pvThemeData);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -6517,7 +6426,7 @@ int HtmlRenderer::DisplayThemeData (int iThemeKey) {
     
     WriteButton (BID_CANCEL);
     
-    g_pGameEngine->FreeData (pvThemeData);
+    FreeData (pvThemeData);
     
     return iErrCode;
 }
@@ -6542,7 +6451,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
     }
     
     unsigned int* piOwnerData = NULL;
-    iErrCode = g_pGameEngine->GetPlanetShipOwnerData (
+    iErrCode = GetPlanetShipOwnerData (
         iGameClass,
         iGameNumber,
         iEmpireKey,
@@ -6590,7 +6499,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
             
             else {
                 
-                iErrCode = g_pGameEngine->GetEmpireName (iOwnerKey, &vEmpireName);
+                iErrCode = GetEmpireName (iOwnerKey, &vEmpireName);
                 if (iErrCode != OK) {
                     Assert (false);
                     continue;
@@ -6648,7 +6557,7 @@ int HtmlRenderer::OnCreateEmpire (int iEmpireKey) {
     return OK;
 }
 
-int HtmlRenderer::OnDeleteEmpire (int iEmpireKey) {
+int HtmlRenderer::OnDeleteEmpire(int iEmpireKey) {
     
     int iErrCode;
     char pszDestFileName[OS::MaxFileNameLength];
@@ -6656,12 +6565,12 @@ int HtmlRenderer::OnDeleteEmpire (int iEmpireKey) {
     sprintf (
         pszDestFileName, 
         "%s/" BASE_UPLOADED_ALIEN_DIR "/" ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
-        g_pszResourceDir,
+        global.GetResourceDir(),
         iEmpireKey
         );
     
     // Just in case...
-    g_pFileCache->ReleaseFile (pszDestFileName);
+    global.GetFileCache()->ReleaseFile (pszDestFileName);
     
     // Attempt to delete an uploaded file
     bool bFileDeleted = File::DeleteFile (pszDestFileName) == OK;
@@ -6670,25 +6579,22 @@ int HtmlRenderer::OnDeleteEmpire (int iEmpireKey) {
     Algorithm::AtomicIncrement (&m_sStats.EmpiresDeleted);
 
     // Report
-    SystemConfiguration scConfig;
-    if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+    char pszEmpireName [MAX_EMPIRE_NAME_LENGTH + 1];
 
-        char pszEmpireName [MAX_EMPIRE_NAME_LENGTH + 1];
-        iErrCode = g_pGameEngine->GetEmpireName (iEmpireKey, pszEmpireName);
-        if (iErrCode == OK) {
+    GameEngine gameEngine;
+    iErrCode = gameEngine.GetEmpireName(iEmpireKey, pszEmpireName);
+    if (iErrCode == OK) {
 
-            char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
+        char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
             
-            sprintf (pszMessage, "%s was deleted", pszEmpireName);
-            g_pReport->WriteReport (pszMessage);
+        sprintf (pszMessage, "%s was deleted", pszEmpireName);
+        global.GetReport()->WriteReport (pszMessage);
 
-            if (bFileDeleted) {
-                sprintf (pszMessage, "Uploaded icon %i was deleted", iEmpireKey);
-                g_pReport->WriteReport (pszMessage);
-            }
+        if (bFileDeleted)
+        {
+            sprintf (pszMessage, "Uploaded icon %i was deleted", iEmpireKey);
+            global.GetReport()->WriteReport (pszMessage);
         }
-
-        else Assert (false);
     }
     
     return OK;
@@ -6722,12 +6628,12 @@ int HtmlRenderer::OnDeleteTournament (unsigned int iTournamentKey) {
     sprintf (
         pszDestFileName, 
         "%s/" BASE_UPLOADED_TOURNAMENT_ICON_DIR "/" ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
-        g_pszResourceDir,
+        global.GetResourceDir(),
         iTournamentKey
         );
     
     // Just in case...
-    g_pFileCache->ReleaseFile (pszDestFileName);
+    global.GetFileCache()->ReleaseFile (pszDestFileName);
     
     // Attempt to delete an uploaded file
     File::DeleteFile (pszDestFileName);
@@ -6742,13 +6648,13 @@ int HtmlRenderer::OnDeleteTournamentTeam (unsigned int iTournamentKey, unsigned 
     sprintf (
         pszDestFileName, 
         "%s/" BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR "/" ALIEN_NAME "%i.%i" DEFAULT_IMAGE_EXTENSION, 
-        g_pszResourceDir,
+        global.GetResourceDir(),
         iTournamentKey,
         iTeamKey
         );
     
     // Just in case...
-    g_pFileCache->ReleaseFile (pszDestFileName);
+    global.GetFileCache()->ReleaseFile (pszDestFileName);
     
     // Attempt to delete an uploaded file
     File::DeleteFile (pszDestFileName);
@@ -6845,7 +6751,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
     Time::GetTime (&tCurrentTime);
 
-    iErrCode = g_pGameEngine->GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumEmpires);
+    iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumEmpires);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -6857,7 +6763,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
     for (i = 0; i < iNumEmpires; i ++) {
 
 #ifdef _DEBUG
-        g_pGameEngine->CheckTargetPop (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        CheckTargetPop (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 #endif
         GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 
@@ -6956,7 +6862,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         iOptions = piOptions[i];
 
         // Name
-        iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i].GetInteger(), &vValue);
+        iErrCode = GetEmpireName (pvEmpireKey[i].GetInteger(), &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -6976,7 +6882,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         OutputText ("</td>");
 
         // Alien
-        iErrCode = g_pGameEngine->GetEmpireProperty (pvEmpireKey[i].GetInteger(), SystemEmpireData::AlienKey, &vTemp);
+        iErrCode = GetEmpireProperty (pvEmpireKey[i].GetInteger(), SystemEmpireData::AlienKey, &vTemp);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -7018,7 +6924,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         fValue = vValue.GetFloat();
 
         OutputText ("<td align=\"center\">");
-        m_pHttpResponse->WriteText (g_pGameEngine->GetMilitaryValue (fValue));
+        m_pHttpResponse->WriteText (GetMilitaryValue (fValue));
         OutputText ("</td>");
 
         if (bAdmin) {
@@ -7062,7 +6968,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             OutputText ("</td>");
 
             Variant vProp;
-            iErrCode = g_pGameEngine->GetEmpireGameProperty(
+            iErrCode = GetEmpireGameProperty(
                 iGameClass, 
                 iGameNumber, 
                 pvEmpireKey[i].GetInteger(),
@@ -7116,7 +7022,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
                 }
                 iFoeKey = vValue.GetInteger();
 
-                iErrCode = g_pGameEngine->GetEmpireName (iFoeKey, &vName);
+                iErrCode = GetEmpireName (iFoeKey, &vName);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -7373,7 +7279,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 Cleanup:
 
     if (pvEmpireKey != NULL) {
-        g_pGameEngine->FreeData (pvEmpireKey);
+        FreeData (pvEmpireKey);
     }
 }
 
@@ -7454,7 +7360,7 @@ int HtmlRenderer::ProcessCreateTournament (int iEmpireKey) {
     }
     
     // Create the tournament, finally
-    iErrCode = g_pGameEngine->CreateTournament (pvSubmitArray, &iTournamentKey);
+    iErrCode = CreateTournament (pvSubmitArray, &iTournamentKey);
     switch (iErrCode) {
 
     case OK:
@@ -7537,7 +7443,7 @@ int HtmlRenderer::ParseCreateTournamentForms (Variant* pvSubmitArray, int iEmpir
         pvSubmitArray[SystemTournaments::iOwnerName] = (const char*) NULL;
     } else {
         
-        iErrCode = g_pGameEngine->GetEmpireName (iEmpireKey, pvSubmitArray + SystemTournaments::iOwnerName);
+        iErrCode = GetEmpireName (iEmpireKey, pvSubmitArray + SystemTournaments::iOwnerName);
         if (iErrCode != OK) {
             AddMessage ("Error reading empire name");
             return iErrCode;
@@ -7561,7 +7467,7 @@ void HtmlRenderer::WriteTournamentAdministrator (int iEmpireKey) {
     Variant* pvTournamentName = NULL;
     unsigned int* piTournamentKey = NULL;
 
-    iErrCode = g_pGameEngine->GetOwnedTournaments (iEmpireKey, &piTournamentKey, &pvTournamentName, &iNumTournaments);
+    iErrCode = GetOwnedTournaments (iEmpireKey, &piTournamentKey, &pvTournamentName, &iNumTournaments);
     if (iErrCode != OK) {
         OutputText ("<p>Error reading tournament data");
         return;
@@ -7692,8 +7598,8 @@ void HtmlRenderer::WriteTournamentAdministrator (int iEmpireKey) {
             "</tr>"
             );
 
-        g_pGameEngine->FreeKeys (piTournamentKey);
-        g_pGameEngine->FreeData (pvTournamentName);
+        FreeKeys (piTournamentKey);
+        FreeData (pvTournamentName);
     }
 
     OutputText ("</table>");
@@ -7714,7 +7620,7 @@ void HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* p
     switch (iIconSelect) {
     case 0:
 
-        iErrCode = g_pGameEngine->GetAlienKeys (&ppvAlienData, &iNumAliens);
+        iErrCode = GetAlienKeys (&ppvAlienData, &iNumAliens);
         if (iErrCode == OK) {
 
             OutputText (
@@ -7740,7 +7646,7 @@ void HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* p
         WriteButton (BID_CANCEL);
 
         if (ppvAlienData != NULL) {
-            g_pGameEngine->FreeData (ppvAlienData);
+            FreeData (ppvAlienData);
         }
 
         break;
@@ -7952,15 +7858,15 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
     for (i = 0; i < iNumActiveGames; i ++) {
 
         // Check game for updates
-        if (g_pGameEngine->CheckGameForUpdates (piGameClass[i], piGameNumber[i], true, &bExists) != OK ||
-            g_pGameEngine->DoesGameExist (piGameClass[i], piGameNumber[i], &bExists) != OK || !bExists ||
-            g_pGameEngine->GetGameClassName (piGameClass[i], pszGameClassName) != OK ||
-            g_pGameEngine->GetGameClassUpdatePeriod (piGameClass[i], &iSeconds) != OK ||
-            g_pGameEngine->GetGameProperty(piGameClass[i], piGameNumber[i], GameData::Password, &vGamePassword) != OK ||
-            g_pGameEngine->GetGameCreationTime (piGameClass[i], piGameNumber[i], &tCreationTime) != OK ||
-            g_pGameEngine->GetEmpiresInGame (piGameClass[i], piGameNumber[i], &pvEmpireKey, 
+        if (CheckGameForUpdates (piGameClass[i], piGameNumber[i], true, &bExists) != OK ||
+            DoesGameExist (piGameClass[i], piGameNumber[i], &bExists) != OK || !bExists ||
+            GetGameClassName (piGameClass[i], pszGameClassName) != OK ||
+            GetGameClassUpdatePeriod (piGameClass[i], &iSeconds) != OK ||
+            GetGameProperty(piGameClass[i], piGameNumber[i], GameData::Password, &vGamePassword) != OK ||
+            GetGameCreationTime (piGameClass[i], piGameNumber[i], &tCreationTime) != OK ||
+            GetEmpiresInGame (piGameClass[i], piGameNumber[i], &pvEmpireKey, 
                 &iNumActiveEmpires) != OK ||
-            g_pGameEngine->GetGameUpdateData (piGameClass[i], piGameNumber[i], &iSecondsSince, 
+            GetGameUpdateData (piGameClass[i], piGameNumber[i], &iSecondsSince, 
                 &iSecondsUntil, &iNumUpdates, &iGameState) != OK
             ) {
             continue;
@@ -7983,7 +7889,7 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
 
             for (j = 0; j < iNumActiveEmpires; j ++) {
 
-                iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[j], pvEmpireName + j);
+                iErrCode = GetEmpireName (pvEmpireKey[j], pvEmpireName + j);
                 if (iErrCode != OK) {
                     pvEmpireName[j] = "";
                 }
@@ -8007,7 +7913,7 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             pszAdmin
             );
 
-        g_pGameEngine->FreeData (pvEmpireKey);
+        FreeData (pvEmpireKey);
 
         OutputText ("</td></tr>");
     }
@@ -8026,15 +7932,15 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
 
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists) != OK ||
+    if (CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists) != OK ||
 
-        g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bExists) != OK || !bExists ||
-        g_pGameEngine->GetGameClassName (iGameClass, pszGameClassName) != OK ||
-        g_pGameEngine->GetGameClassUpdatePeriod (iGameClass, &iSeconds) != OK ||
-        g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::Password, &vGamePassword) != OK ||
-        g_pGameEngine->GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires) != OK ||
-        g_pGameEngine->GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime) != OK ||
-        g_pGameEngine->GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iSecondsUntil, 
+        DoesGameExist (iGameClass, iGameNumber, &bExists) != OK || !bExists ||
+        GetGameClassName (iGameClass, pszGameClassName) != OK ||
+        GetGameClassUpdatePeriod (iGameClass, &iSeconds) != OK ||
+        GetGameProperty(iGameClass, iGameNumber, GameData::Password, &vGamePassword) != OK ||
+        GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires) != OK ||
+        GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime) != OK ||
+        GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iSecondsUntil, 
             &iNumUpdates, &iGameState) != OK
         ) {
 
@@ -8056,7 +7962,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
 
     for (i = 0; i < iNumActiveEmpires; i ++) {
 
-        iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i], pvEmpireName + i);
+        iErrCode = GetEmpireName (pvEmpireKey[i], pvEmpireName + i);
         if (iErrCode != OK) {
             pvEmpireName[i] = "";
         }
@@ -8079,7 +7985,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
 
     // Read game class data
     Variant* pvGameClassInfo = NULL;
-    if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+    if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
 
         OutputText ("<p>");
         WriteGameAdministratorListHeader (m_vTableColor.GetCharPtr());
@@ -8091,7 +7997,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
     }
 
     if (pvGameClassInfo != NULL) {
-        g_pGameEngine->FreeData (pvGameClassInfo);
+        FreeData (pvGameClassInfo);
         pvGameClassInfo = NULL;
     }
 
@@ -8182,7 +8088,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
     }
 
     int iNumResigned, * piResignedKey;
-    iErrCode = g_pGameEngine->GetResignedEmpiresInGame (iGameClass, iGameNumber, &piResignedKey, &iNumResigned);
+    iErrCode = GetResignedEmpiresInGame (iGameClass, iGameNumber, &piResignedKey, &iNumResigned);
 
     if (iErrCode == OK && iNumResigned > 0) {
 
@@ -8192,7 +8098,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
 
         for (i = 0; i < iNumResigned; i ++) {
 
-            iErrCode = g_pGameEngine->GetEmpireName (piResignedKey[i], &vName);
+            iErrCode = GetEmpireName (piResignedKey[i], &vName);
             if (iErrCode == OK) {
 
                 OutputText ("<option value=\"");
@@ -8245,7 +8151,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         "</table>"
         );
 
-    g_pGameEngine->FreeData (pvEmpireKey);
+    FreeData (pvEmpireKey);
 
     delete [] pvEmpireName;
 }
@@ -8259,24 +8165,24 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
 
     Variant* pvTournamentEmpireData = NULL, vTemp;
 
-    iErrCode = g_pGameEngine->GetEmpireName (iEmpireKey, pszName);
+    iErrCode = GetEmpireName (iEmpireKey, pszName);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienKey, &vTemp);
+    iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienKey, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     iAlienKey = vTemp.GetInteger();
 
-    iErrCode = g_pGameEngine->GetTournamentEmpireData (iTournamentKey, iEmpireKey, &pvTournamentEmpireData);
+    iErrCode = GetTournamentEmpireData (iTournamentKey, iEmpireKey, &pvTournamentEmpireData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
     int iOptions;
-    iErrCode = g_pGameEngine->GetEmpireOptions2(iEmpireKey, &iOptions);
+    iErrCode = GetEmpireOptions2(iEmpireKey, &iOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -8371,6 +8277,6 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
 Cleanup:
 
     if (pvTournamentEmpireData != NULL) {
-        g_pGameEngine->FreeData (pvTournamentEmpireData);
+        FreeData (pvTournamentEmpireData);
     }
 }

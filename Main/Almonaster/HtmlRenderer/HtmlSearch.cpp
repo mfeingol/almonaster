@@ -60,7 +60,7 @@ void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
     Assert(MAX_NUM_SEARCH_COLUMNS == countof (g_AdvancedSearchFields));
     Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns); 
     
-    int iNumEmpires, iErrCode = g_pGameEngine->GetNumEmpiresOnServer (&iNumEmpires);
+    int iNumEmpires, iErrCode = GetNumEmpiresOnServer (&iNumEmpires);
     if (iErrCode != OK) {
         OutputText ("<p>Error reading empire list");
         return;
@@ -421,9 +421,8 @@ int HtmlRenderer::HandleSearchSubmission (SearchDefinition& sd,
         case SEARCHFIELD_STRING:
 
             sd.pscColumns[iNumSearchColumns].vData = pHttpForm1->GetValue();
-
+            sd.pscColumns[iNumSearchColumns].vData2 = (const char*)NULL;
             sd.pscColumns[iNumSearchColumns].iFlags = pHttpForm2->GetIntValue();
-            sd.pscColumns[iNumSearchColumns].vData2 = sd.pscColumns[iNumSearchColumns].iFlags;
             break;
 
         case SEARCHFIELD_PRIVILEGE:
@@ -508,7 +507,7 @@ int HtmlRenderer::HandleSearchSubmission (SearchDefinition& sd,
     sd.iStartKey = iStartKey;
     sd.iNumColumns = iNumSearchColumns;
     
-    iErrCode = g_pGameEngine->PerformMultipleSearch (
+    iErrCode = PerformMultipleSearch (
         sd,
         ppiSearchEmpireKey,
         piNumSearchEmpires,
@@ -595,8 +594,8 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
     
     for (i = 0; i < iNumSearchEmpires; i ++) {
         
-        if (g_pGameEngine->GetEmpireName (piSearchEmpireKey[i], &vName) == OK &&
-            g_pGameEngine->GetEmpireProperty (piSearchEmpireKey[i], SystemEmpireData::AlienKey, &vAlien) == OK) {
+        if (GetEmpireName (piSearchEmpireKey[i], &vName) == OK &&
+            GetEmpireProperty (piSearchEmpireKey[i], SystemEmpireData::AlienKey, &vAlien) == OK) {
             
             OutputText ("<tr><td align=\"center\"><strong>");
             m_pHttpResponse->WriteText (vName.GetCharPtr());
@@ -632,7 +631,7 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
                         m_pHttpResponse->WriteText (piSearchEmpireKey[i]);
                     } else {
                         
-                        iErrCode = g_pGameEngine->GetEmpireDataColumn (piSearchEmpireKey[i], pszCol, &vData);
+                        iErrCode = GetEmpireDataColumn (piSearchEmpireKey[i], pszCol, &vData);
                         if (iErrCode == OK) {
                             
                             if (strcmp(pszCol, SystemEmpireData::Privilege) == 0)

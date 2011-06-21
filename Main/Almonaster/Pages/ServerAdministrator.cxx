@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 #include <stdio.h>
 
 // Almonaster
@@ -53,7 +53,7 @@ if (m_bOwnPost && !m_bRedirection) {
             const char* pszNewValue, * pszOldValue;
 
             int iSystemOptions;
-            Check (g_pGameEngine->GetSystemOptions (&iSystemOptions));
+            Check (GetSystemOptions (&iSystemOptions));
 
             // Create alien
             if (WasButtonPressed (BID_CREATEALIENICON)) {
@@ -88,7 +88,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             if (VerifyGIF (pszFileName)) {
 
                                 // The gif was OK, so insert the key and copy it to its destination
-                                switch (g_pGameEngine->CreateAlienIcon (iNewValue, pszNewValue)) {
+                                switch (CreateAlienIcon (iNewValue, pszNewValue)) {
 
                                 case OK:
                                     if (CopyNewAlien (pszFileName, iNewValue) != OK) {
@@ -123,7 +123,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("The key must be an integer greater than zero");
                 } else {
 
-                    switch (g_pGameEngine->DeleteAlienIcon (iNewValue)) {
+                    switch (DeleteAlienIcon (iNewValue)) {
                     case OK:
                         DeleteAlien (iNewValue);
                         AddMessage ("The alien icon was deleted successfully");
@@ -160,7 +160,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pszNewValue, pszOldValue) != 0) {
 
                 if (VerifyCategoryName ("Server", pszNewValue, MAX_SERVER_NAME_LENGTH, true) == OK) {
-                    if (g_pGameEngine->SetSystemProperty (SystemData::ServerName, pszNewValue) == OK) {
+                    if (SetSystemProperty (SystemData::ServerName, pszNewValue) == OK) {
                         AddMessage ("The server name was updated");
                     } else {
                         AddMessage ("The server name could not be updated");
@@ -183,7 +183,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("The administrator e-mail address was too long");
                 } else {
 
-                    if (g_pGameEngine->SetSystemProperty (SystemData::AdminEmail, pszNewValue) == OK) {
+                    if (SetSystemProperty (SystemData::AdminEmail, pszNewValue) == OK) {
                         AddMessage ("The administrator e-mail address was updated");
                     } else {
                         AddMessage ("The administrator e-mail address could not be updated");
@@ -200,7 +200,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (iSystemOptions & DISABLE_PRIVILEGE_SCORE_ELEVATION) != 0;
 
             if (bNewValue != bOldValue) {
-                if (g_pGameEngine->SetSystemOption (DISABLE_PRIVILEGE_SCORE_ELEVATION, bNewValue) == OK) {
+                if (SetSystemOption (DISABLE_PRIVILEGE_SCORE_ELEVATION, bNewValue) == OK) {
 
                     if (bNewValue) {
                         AddMessage ("The Almonaster scoring system will no longer cause empire privilege changes");
@@ -225,7 +225,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             fOldValue = pHttpForm->GetFloatValue();
             if (fNewValue != fOldValue) {
-                if (g_pGameEngine->SetScoreForPrivilege (ADEPT, fNewValue) == OK) {
+                if (SetScoreForPrivilege (ADEPT, fNewValue) == OK) {
                     AddMessage ("The score needed for adepthood was updated");
                 } else {
                     AddMessage ("The score needed for adepthood could not be updated");
@@ -243,7 +243,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (g_pGameEngine->SetSystemProperty (SystemData::MaxNumSystemMessages, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::MaxNumSystemMessages, iNewValue) == OK) {
                     AddMessage ("The max number of saved system messages was updated");
                 } else {
                     AddMessage ("The max number of saved system messages could not be updated");
@@ -261,7 +261,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (g_pGameEngine->SetSystemProperty (SystemData::MaxNumGameMessages, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::MaxNumGameMessages, iNewValue) == OK) {
                     AddMessage ("The max number of saved game messages was updated");
                 } else {
                     AddMessage ("The max number of saved game messages could not be updated");
@@ -279,7 +279,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (g_pGameEngine->SetSystemProperty (SystemData::DefaultMaxNumSystemMessages, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::DefaultMaxNumSystemMessages, iNewValue) == OK) {
                     AddMessage ("The default max number of saved system messages was updated");
                 } else {
                     AddMessage ("The default max number of saved system messages could not be updated");
@@ -297,7 +297,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (g_pGameEngine->SetSystemProperty (SystemData::DefaultMaxNumGameMessages, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::DefaultMaxNumGameMessages, iNewValue) == OK) {
                     AddMessage ("The default max number of saved game messages was updated");
                 } else {
                     AddMessage ("The default max number of saved game messages could not be updated");
@@ -314,7 +314,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetSystemProperty (SystemData::MaxIconSize, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::MaxIconSize, iNewValue) == OK) {
                     AddMessage ("The max icon size was updated");
                 } else {
                     AddMessage ("The max icon size could not be updated");
@@ -337,7 +337,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
 
-                Check (g_pGameEngine->SetSystemOption (LOGINS_ENABLED, bFlag));
+                Check (SetSystemOption (LOGINS_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("Empire logins are now enabled");
@@ -351,9 +351,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszValue = pHttpForm->GetValue();
 
-            if (g_pGameEngine->GetSystemProperty (SystemData::LoginsDisabledReason, &vReason) == OK &&
+            if (GetSystemProperty (SystemData::LoginsDisabledReason, &vReason) == OK &&
                 String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                g_pGameEngine->SetSystemProperty (SystemData::LoginsDisabledReason, pszValue) != OK) {
+                SetSystemProperty (SystemData::LoginsDisabledReason, pszValue) != OK) {
                 AddMessage ("The logins disabled reason was too long");
             }
 
@@ -367,7 +367,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check (g_pGameEngine->SetSystemOption (NEW_EMPIRES_ENABLED, bFlag));
+                Check (SetSystemOption (NEW_EMPIRES_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("New empire creation is now enabled");
@@ -380,9 +380,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszValue = pHttpForm->GetValue();
-            if (g_pGameEngine->GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason) == OK &&
+            if (GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason) == OK &&
                 String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                g_pGameEngine->SetSystemProperty (SystemData::NewEmpiresDisabledReason, pszValue) != OK) {
+                SetSystemProperty (SystemData::NewEmpiresDisabledReason, pszValue) != OK) {
                 AddMessage ("The new empire creation disabled reason was too long");
             }
 
@@ -396,7 +396,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check (g_pGameEngine->SetSystemOption (NEW_GAMES_ENABLED, bFlag));
+                Check (SetSystemOption (NEW_GAMES_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("New game creation is now enabled");
@@ -409,9 +409,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszValue = pHttpForm->GetValue();
-            if (g_pGameEngine->GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason) == OK &&
+            if (GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason) == OK &&
                 String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                g_pGameEngine->SetSystemProperty (SystemData::NewGamesDisabledReason, pszValue) != OK) {
+                SetSystemProperty (SystemData::NewGamesDisabledReason, pszValue) != OK) {
                 AddMessage ("The new game creation disabled reason was too long");
             }
 
@@ -425,7 +425,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check (g_pGameEngine->SetSystemOption (ACCESS_ENABLED, bFlag));
+                Check (SetSystemOption (ACCESS_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("Server access for non-administrators is now enabled");
@@ -438,9 +438,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszValue = pHttpForm->GetValue();
-            if (g_pGameEngine->GetSystemProperty (SystemData::AccessDisabledReason, &vReason) == OK &&
+            if (GetSystemProperty (SystemData::AccessDisabledReason, &vReason) == OK &&
                 String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                g_pGameEngine->SetSystemProperty (SystemData::AccessDisabledReason, pszValue) != OK) {
+                SetSystemProperty (SystemData::AccessDisabledReason, pszValue) != OK) {
                 AddMessage ("The access disabled reason was too long");
             }
 
@@ -454,7 +454,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetSystemProperty (SystemData::NumNukesListedInNukeHistories, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::NumNukesListedInNukeHistories, iNewValue) == OK) {
                     AddMessage ("The number of nukes listed in nuke histories was updated");
                 } else {
                     AddMessage ("The number of nukes listed in nuke histories could not be updated");
@@ -471,7 +471,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetSystemProperty (SystemData::NumNukesListedInSystemNukeList, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::NumNukesListedInSystemNukeList, iNewValue) == OK) {
                     AddMessage ("The number of nukes listed in the latest nukes screen was updated");
                 } else {
                     AddMessage ("The number of nukes listed in the latest nukes screen could not be updated");
@@ -488,7 +488,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetSystemProperty (SystemData::NumGamesInLatestGameList, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::NumGamesInLatestGameList, iNewValue) == OK) {
                     AddMessage ("The number of games listed in the latest games screen was updated");
                 } else {
                     AddMessage ("The number of games listed in the latest games screen could not be updated");
@@ -505,7 +505,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetSystemProperty (SystemData::NumUpdatesDownBeforeGameIsKilled, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::NumUpdatesDownBeforeGameIsKilled, iNewValue) == OK) {
                     AddMessage ("The number of updates down before a game will be killed was updated");
                 } else {
                     AddMessage ("The number of updates down before a game will be killed was updated");
@@ -532,7 +532,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetSystemProperty (SystemData::SecondsForLongtermStatus, iNewValue) == OK) {
+                if (SetSystemProperty (SystemData::SecondsForLongtermStatus, iNewValue) == OK) {
                     AddMessage ("The update period for a game to be considered a longterm was updated");
                 } else {
                     AddMessage ("The update period for a game to be considered a longterm could not be updated");
@@ -559,7 +559,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iNewValue != iOldValue) {
-                if (g_pGameEngine->SetBridierTimeBombScanFrequency (iNewValue) == OK) {
+                if (SetBridierTimeBombScanFrequency (iNewValue) == OK) {
                     AddMessage ("The Bridier idle index decrease scan frequency was updated");
                 } else {
                     AddMessage ("The Bridier idle index decrease scan frequency could not be updated");
@@ -589,10 +589,10 @@ if (m_bOwnPost && !m_bRedirection) {
                     AppendMessage (" is illegal");
                 } else {
 
-                    Check (g_pGameEngine->GetDefaultShipName (i, &vOldName));
+                    Check (GetDefaultShipName (i, &vOldName));
 
                     if (strcmp (pszNewValue, vOldName.GetCharPtr()) != 0) {
-                        if (g_pGameEngine->SetDefaultShipName (i, pszNewValue) == OK) {
+                        if (SetDefaultShipName (i, pszNewValue) == OK) {
                             iNumNames ++;
                         }
                     }
@@ -648,23 +648,6 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
             }
 
-            // Flush tables?
-            if (WasButtonPressed (BID_FLUSH)) {
-
-                bRedirectTest = false;
-
-                iErrCode = g_pGameEngine->FlushDatabase (m_iEmpireKey);
-
-                if (iErrCode == OK) {
-                    AddMessage ("All database tables will be flushed to disk");
-                } else {
-                    AddMessage ("An error occurred preparing to flush the database: ");
-                    AppendMessage (iErrCode);
-                }
-
-                break;
-            }
-
             // Purge DB?
             if (WasButtonPressed (BID_PURGE)) {
                 bRedirectTest = false;
@@ -672,24 +655,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
             }
 
-            // Backup DB?
-            if (WasButtonPressed (BID_BACKUP)) {
-
-                bRedirectTest = false;
-
-                iErrCode = g_pGameEngine->BackupDatabase (m_iEmpireKey);
-
-                if (iErrCode == OK) {
-                    AddMessage ("The database will be backed up");
-                } else {
-                    AddMessage ("An unexpected error occurred: ");
-                    AppendMessage (iErrCode);
-                }
-                break;
-            }
-
             if (WasButtonPressed (BID_REBUILD)) {
-                iErrCode = g_pGameEngine->RebuildTopLists();
+                iErrCode = RebuildTopLists();
 
                 if (iErrCode == OK) {
                     AddMessage ("The Top Lists were rebuilt");
@@ -697,6 +664,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("An unexpected error occurred: ");
                     AppendMessage (iErrCode);
                 }
+                break;
             }
 
             // Shutdown Server?
@@ -704,7 +672,6 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bRedirectTest = false;
                 ShutdownServer();
-
                 break;
             }
 
@@ -713,7 +680,6 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bRedirectTest = false;
                 RestartServer();
-
                 break;
             }
 
@@ -722,61 +688,6 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bRedirectTest = false;
                 RestartAlmonaster();
-
-                break;
-            }
-
-            // Restore backup?
-            if (WasButtonPressed (BID_RESTOREBACKUP)) {
-
-                bRedirectTest = false;
-                iServerAdminPage = 4;
-                break;
-            }
-
-            // Delete backup?
-            if (WasButtonPressed (BID_DELETEBACKUP)) {
-
-                bRedirectTest = false;
-
-                pHttpForm = m_pHttpRequest->GetForm ("DBRestore");
-                if (pHttpForm == NULL || (pszValue = pHttpForm->GetValue()) == NULL) {
-
-                    AddMessage ("No backup to restore");
-
-                } else {
-
-                    int iDay, iMonth, iYear, iVersion;
-                    if (sscanf (pszValue, "%i.%i.%i.%i", &iDay, &iMonth, &iYear, &iVersion) != 4) {
-                        AddMessage ("No backup to restore");
-                    } else {
-
-                        if (g_pGameEngine->DeleteDatabaseBackup (m_iEmpireKey, iDay, iMonth, iYear, iVersion) != OK) {
-                            AddMessage ("The backup could not be deleted");
-                        } else {
-
-                            char pszVer[128];
-                            if (iVersion == 0) {
-                                memcpy (pszVer, " ", sizeof (" "));
-                            } else {
-                                sprintf (pszVer, "(%i) ", iVersion);
-                            }
-
-                            char pszMessage [512];
-                            sprintf (
-                                pszMessage,
-                                "The %i_%i_%i%sbackup will be deleted",
-                                iYear,
-                                iMonth,
-                                iDay,
-                                pszVer
-                                );
-
-                            AddMessage (pszMessage);
-                        }
-                    }
-                }
-
                 break;
             }
 
@@ -816,11 +727,11 @@ if (m_bOwnPost && !m_bRedirection) {
                 sscanf (pszStart, "Alien%d.x", &i) == 1) {
 
                 Variant vDefAlien;
-                iErrCode = g_pGameEngine->GetSystemProperty (SystemData::DefaultAlien, &vDefAlien);
+                iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vDefAlien);
 
                 if (i != vDefAlien.GetInteger()) {
 
-                    switch (g_pGameEngine->SetSystemProperty (SystemData::DefaultAlien, i)) {
+                    switch (SetSystemProperty (SystemData::DefaultAlien, i)) {
                     case OK:
                         AddMessage ("The default alien icon was updated");
                         break;
@@ -845,7 +756,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             unsigned int iBackground, iLivePlanet, iDeadPlanet, iButtons, iSeparator, iHorz, iVert, iColor;
 
-            Check (g_pGameEngine->GetDefaultUIKeys (
+            Check (GetDefaultUIKeys (
                 &iBackground,
                 &iLivePlanet,
                 &iDeadPlanet,
@@ -863,7 +774,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iBackground) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUIBackground, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUIBackground, iKey));
                 AddMessage ("The default background key was updated");
             }
 
@@ -873,7 +784,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iLivePlanet) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUILivePlanet, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUILivePlanet, iKey));
                 AddMessage ("The default live planet key was updated");
             }
 
@@ -883,7 +794,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iDeadPlanet) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUIDeadPlanet, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUIDeadPlanet, iKey));
                 AddMessage ("The default dead planet key was updated");
             }
 
@@ -893,7 +804,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iButtons) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUIButtons, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUIButtons, iKey));
                 AddMessage ("The default button key was updated");
             }
 
@@ -903,7 +814,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iSeparator) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUISeparator, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUISeparator, iKey));
                 AddMessage ("The default separator key was updated");
             }
 
@@ -913,7 +824,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iHorz) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUIHorz, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUIHorz, iKey));
                 AddMessage ("The default horizontal link bar was updated");
             }
 
@@ -923,7 +834,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iVert) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUIVert, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUIVert, iKey));
                 AddMessage ("The default vertical link bar was updated");
             }
 
@@ -933,7 +844,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iColor) {
-                Check (g_pGameEngine->SetSystemProperty (SystemData::DefaultUIColor, iKey));
+                Check (SetSystemProperty (SystemData::DefaultUIColor, iKey));
                 AddMessage ("The default color scheme was updated");
             }
 
@@ -952,62 +863,12 @@ if (m_bOwnPost && !m_bRedirection) {
             break;
 
         case 3:
-
             break;
 
         case 4:
-            {
-
-            const char* pszValue;
-
-            if (WasButtonPressed (BID_RESTOREBACKUP)) {
-
-                bRedirectTest = false;
-
-                pHttpForm = m_pHttpRequest->GetForm ("DBRestore");
-                if (pHttpForm == NULL || (pszValue = pHttpForm->GetValue()) == NULL) {
-
-                    AddMessage ("There are no backups to restore");
-
-                } else {
-
-                    int iDay, iMonth, iYear, iVersion;
-                    if (sscanf (pszValue, "%i.%i.%i.%i", &iDay, &iMonth, &iYear, &iVersion) != 4) {
-                        AddMessage ("No backup to restore");
-                    } else {
-
-                        if (g_pGameEngine->RestoreDatabaseBackup (m_iEmpireKey, iDay, iMonth, iYear, iVersion) != OK) {
-                            AddMessage ("The backup could not be restored");
-                        } else {
-
-                            char pszVer[128];
-                            if (iVersion == 0) {
-                                pszVer[0] = '\0';
-                            } else {
-                                sprintf (pszVer, "(%i)", iVersion);
-                            }
-
-                            char pszMessage [512];
-                            sprintf (
-                                pszMessage,
-                                "The %i_%i_%i%s backup will be restored",
-                                iYear,
-                                iMonth,
-                                iDay,
-                                pszVer
-                                );
-
-                            AddMessage (pszMessage);
-                        }
-                    }
-                }
-            }
-
-            }
             break;
 
         case 5:
-
             {
 
             if (WasButtonPressed (BID_PURGE)) {
@@ -1052,7 +913,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         iCriteria |= TEST_PURGE_ONLY;
                     }
 
-                    iErrCode = g_pGameEngine->PurgeDatabase (m_iEmpireKey, iCriteria);
+                    iErrCode = PurgeDatabase (m_iEmpireKey, iCriteria);
 
                     if (iErrCode == OK) {
 
@@ -1081,11 +942,11 @@ if (m_bOwnPost && !m_bRedirection) {
                 sscanf (pszStart, "Alien%d.x", &i) == 1) {
 
                 Variant vSysMsgAlien;
-                iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vSysMsgAlien);
+                iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vSysMsgAlien);
 
                 if (i != vSysMsgAlien.GetInteger()) {
 
-                    switch (g_pGameEngine->SetSystemProperty (SystemData::SystemMessagesAlienKey, i)) {
+                    switch (SetSystemProperty (SystemData::SystemMessagesAlienKey, i)) {
                     case OK:
                         AddMessage ("The alien icon for system messages was updated");
                         break;
@@ -1177,14 +1038,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Test empire existence
-                iErrCode = g_pGameEngine->DoesEmpireExist (pszStandardizedName, &bFlag, &iNewEmpireKey, NULL, NULL);
+                iErrCode = DoesEmpireExist (pszStandardizedName, &bFlag, &iNewEmpireKey, NULL, NULL);
                 if (iErrCode != OK || bFlag) {
                     AddMessage ("That empire already exists");
                     iServerAdminPage = 7;
                     goto Redirection;
                 }
 
-                iErrCode = g_pGameEngine->CreateEmpire (
+                iErrCode = CreateEmpire (
                     pszStandardizedName,
                     pszNewPass,
                     iPrivilege,
@@ -1234,7 +1095,6 @@ SYSTEM_OPEN (iServerAdminPage == 0)
 // Individual page stuff starts here
 switch (iServerAdminPage) {
 
-Main:
 case 0:
     {
 
@@ -1277,7 +1137,7 @@ case 0:
 
     %><tr><td>Default alien icon:</td><td><%
 
-    Check (g_pGameEngine->GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName));
+    Check (GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName));
 
     WriteAlienButtonString (
         pvServerData[SystemData::iDefaultAlien], 
@@ -1365,7 +1225,7 @@ case 0:
 
     %><tr><td>Alien icon for system messages:</td><td><%
 
-    Check (g_pGameEngine->GetAlienAuthorName (
+    Check (GetAlienAuthorName (
         pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(), 
         &vAuthorName
         ));
@@ -1556,58 +1416,9 @@ case 0:
     WriteButton (BID_RESTARTALMONASTER);
     %></td></tr><%
 
-    %><tr><td>Flush all database tables:</td><%
-    %><td><% WriteButton (BID_FLUSH);
-    %></td></tr><%
-
     %><tr><td>Run a custom purge of the empire database:</td><%
     %><td><% WriteButton (BID_PURGE);
     %></td></tr><%
-
-    %><tr><td>Administer database backups:</td><td><%
-
-    pDatabase = g_pGameEngine->GetDatabase();
-    Assert(pDatabase != NULL);
-
-    pBackupEnumerator = pDatabase->GetBackupEnumerator();
-    Assert(pBackupEnumerator != NULL);
-
-    int iDay, iMonth, iYear, iVersion;
-
-    IDatabaseBackup** ppBackups = pBackupEnumerator->GetBackups();
-    unsigned int iNumBackups = pBackupEnumerator->GetNumBackups();
-    if (ppBackups == NULL || iNumBackups == 0) {
-        %>There are no backups to restore<%
-    } else {
-
-        %><select name="DBRestore"><%
-
-        for (i = 0; i < (int) iNumBackups; i ++) {
-
-            ppBackups[i]->GetDate (&iDay, &iMonth, &iYear, &iVersion);
-
-            %><option value="<% Write (iDay); %>.<% Write (iMonth); %>.<% Write (iYear); %>.<% Write (iVersion); %>"><%
-
-            Write (Time::GetMonthName (iMonth)); %> <%
-            Write (iDay); %>, <%
-            Write (iYear);
-
-            if (iVersion != 0) {
-                %> (<% Write (iVersion); %>)<%
-            }
-            %></option><%
-        }
-        %></select> <%
-
-        WriteButton (BID_RESTOREBACKUP);
-        WriteButton (BID_DELETEBACKUP);
-    }
-
-    %></td></tr><%
-
-    %></tr><tr><td>Backup the database:</td><td><p><% 
-    WriteButton (BID_BACKUP); 
-    %></tr><%
 
     %><tr><td>Create a new alien icon:</td><%
     %><td><table><tr><td>Key:</td><td><%
@@ -1696,11 +1507,11 @@ case 1:
     int iNumAliens;
     Variant vAlien;
 
-    Check (g_pGameEngine->GetSystemProperty (SystemData::DefaultAlien, &vAlien));
+    Check (GetSystemProperty (SystemData::DefaultAlien, &vAlien));
     int iAlien = vAlien.GetInteger();
 
     Variant** ppvAlienData;
-    Check (g_pGameEngine->GetAlienKeys (&ppvAlienData, &iNumAliens));
+    Check (GetAlienKeys (&ppvAlienData, &iNumAliens));
     %><input type="hidden" name="ServerAdminPage" value="1"><%
 
     %><p><%
@@ -1721,7 +1532,7 @@ case 1:
     }
 
     if (iNumAliens > 0) {
-        g_pGameEngine->FreeData (ppvAlienData);
+        FreeData (ppvAlienData);
     }
 
     %></td></tr></table><%
@@ -1800,24 +1611,6 @@ case 3:
     break;
 
 case 4:
-    {
-
-    const char* pszValue;
-
-    pHttpForm = m_pHttpRequest->GetForm ("DBRestore");
-    if (pHttpForm == NULL || (pszValue = pHttpForm->GetValue()) == NULL) {
-        goto Main;
-    }
-
-    %><input type="hidden" name="ServerAdminPage" value="4"><%
-    %><input type="hidden" name="DBRestore" value="<% Write (pszValue); %>"><%
-
-    %><p>You have chosen to restore a database backup.  Are you sure you want to do this?<p><%
-
-    WriteButton (BID_CANCEL);
-    WriteButton (BID_RESTOREBACKUP);
-
-    }
     break;
 
 case 5:
@@ -1825,7 +1618,7 @@ case 5:
     {
 
     int iNumEmpires;
-    Check (g_pGameEngine->GetNumEmpiresOnServer (&iNumEmpires));
+    Check (GetNumEmpiresOnServer (&iNumEmpires));
     %><input type="hidden" name="ServerAdminPage" value="5"><%
 
     %><p>There <%
@@ -1889,11 +1682,11 @@ case 6:
     int iNumAliens;
     Variant vAlien;
 
-    Check (g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien));
+    Check (GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien));
     int iAlien = vAlien.GetInteger();
 
     Variant** ppvAlienData;
-    Check (g_pGameEngine->GetAlienKeys (&ppvAlienData, &iNumAliens));
+    Check (GetAlienKeys (&ppvAlienData, &iNumAliens));
     %><input type="hidden" name="ServerAdminPage" value="6"><%
 
     %><p><%
@@ -1914,7 +1707,7 @@ case 6:
     }
 
     if (iNumAliens > 0) {
-        g_pGameEngine->FreeData (ppvAlienData);
+        FreeData (ppvAlienData);
     }
 
     %></td></tr></table><%

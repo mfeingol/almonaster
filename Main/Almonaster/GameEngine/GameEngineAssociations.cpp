@@ -104,7 +104,7 @@ int GameEngine::CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch,
 int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecondEmpire, const char* pszPassword) {
 
     int iErrCode;
-    const char* pszTemp;
+    Variant vTemp;
 
     IWriteTable* pEmpires = NULL;
 
@@ -145,12 +145,12 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
     }
 
     // Check the second empire's password
-    iErrCode = pEmpires->ReadData (iSecondKey, SystemEmpireData::Password, &pszTemp);
+    iErrCode = pEmpires->ReadData (iSecondKey, SystemEmpireData::Password, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
-    if (strcmp (pszPassword, pszTemp) != 0) {
+    if (strcmp (pszPassword, vTemp.GetCharPtr()) != 0) {
         iErrCode = ERROR_PASSWORD;
         goto Cleanup;
     }
@@ -158,18 +158,18 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
     // Read the two empire's associations, making local copies
     char* pszFirstAssoc, * pszSecondAssoc, * pszToken;
 
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &pszTemp);
+    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    pszFirstAssoc = (char*) StackAlloc (String::StrLen (pszTemp) + 33);
-    if (String::IsBlank (pszTemp)) {
+    pszFirstAssoc = (char*)StackAlloc(String::StrLen(vTemp.GetCharPtr()) + 33);
+    if (String::IsBlank(vTemp.GetCharPtr())) {
         pszFirstAssoc[0] = '\0';
     } else {
 
-        strcpy (pszFirstAssoc, pszTemp);
+        strcpy (pszFirstAssoc, vTemp.GetCharPtr());
 
         // Make sure the association doesn't exist already
         pszToken = strtok (pszFirstAssoc, ";");
@@ -194,18 +194,18 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
         strcat (pszFirstAssoc, ";");
     }
 
-    iErrCode = pEmpires->ReadData (iSecondKey, SystemEmpireData::Associations, &pszTemp);
+    iErrCode = pEmpires->ReadData(iSecondKey, SystemEmpireData::Associations, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    pszSecondAssoc = (char*) StackAlloc (String::StrLen (pszTemp) + 33);
-    if (String::IsBlank (pszTemp)) {
+    pszSecondAssoc = (char*)StackAlloc(String::StrLen (vTemp.GetCharPtr()) + 33);
+    if (String::IsBlank(vTemp.GetCharPtr())) {
         pszSecondAssoc[0] = '\0';
     } else {
 
-        strcpy (pszSecondAssoc, pszTemp);
+        strcpy(pszSecondAssoc, vTemp.GetCharPtr());
 
 #ifdef _DEBUG
         // Do it for the other empire too
@@ -263,20 +263,20 @@ Cleanup:
 int GameEngine::DeleteAssociation (IWriteTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
 
     int iErrCode;
-    const char* pszTemp;
+    Variant vTemp;
 
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &pszTemp);
+    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    if (String::IsBlank (pszTemp)) {
+    if (String::IsBlank (vTemp.GetCharPtr())) {
         return ERROR_ASSOCIATION_NOT_FOUND;
     }
 
-    size_t stAssocLen = strlen (pszTemp);
+    size_t stAssocLen = strlen (vTemp.GetCharPtr());
     char* pszAssociation = (char*) StackAlloc (stAssocLen + 1);
-    strcpy (pszAssociation, pszTemp);
+    strcpy (pszAssociation, vTemp.GetCharPtr());
 
     bool bFound = false;
     char* pszToken = strtok (pszAssociation, ";");
@@ -368,18 +368,18 @@ int GameEngine::RemoveDeadEmpireAssociations (IWriteTable* pEmpires, unsigned in
 
     int iErrCode;
 
-    const char* pszTemp;
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &pszTemp);
+    Variant vTemp;
+    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    if (String::IsBlank (pszTemp)) {
+    if (String::IsBlank(vTemp.GetCharPtr())) {
         return OK;
     }
 
-    char* pszAssoc = (char*) StackAlloc (strlen (pszTemp) + 1);
-    strcpy (pszAssoc, pszTemp);
+    char* pszAssoc = (char*)StackAlloc (strlen (vTemp.GetCharPtr()) + 1);
+    strcpy (pszAssoc, vTemp.GetCharPtr());
 
     unsigned int* piAssoc, i, iAssoc;
     iErrCode = GetAssociations (pszAssoc, &piAssoc, &iAssoc);

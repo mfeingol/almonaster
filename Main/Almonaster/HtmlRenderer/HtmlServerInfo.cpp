@@ -49,59 +49,59 @@ void HtmlRenderer::WriteServerRules() {
     UTCTime tNow;
     Time::GetTime (&tNow);
     
-    iErrCode = g_pGameEngine->GetGameConfiguration (&gcConfig);
+    iErrCode = GetGameConfiguration (&gcConfig);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetMapConfiguration (&mcConfig);
+    iErrCode = GetMapConfiguration (&mcConfig);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::NumUpdatesDownBeforeGameIsKilled, &vNumUpdatesDown);
+    iErrCode = GetSystemProperty (SystemData::NumUpdatesDownBeforeGameIsKilled, &vNumUpdatesDown);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SecondsForLongtermStatus, &vSecondsForLongtermStatus);
+    iErrCode = GetSystemProperty (SystemData::SecondsForLongtermStatus, &vSecondsForLongtermStatus);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::AfterWeekendDelay, &vAfterWeekendDelay);
+    iErrCode = GetSystemProperty (SystemData::AfterWeekendDelay, &vAfterWeekendDelay);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::NumNukesListedInNukeHistories, &vNumNukesListed);
+    iErrCode = GetSystemProperty (SystemData::NumNukesListedInNukeHistories, &vNumNukesListed);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetSystemOptions (&iSystemOptions);
+    iErrCode = GetSystemOptions (&iSystemOptions);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesForClose);
+    iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesForClose);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
 
-    iErrCode = g_pGameEngine->GetBridierTimeBombScanFrequency (&sBridierScanFrequency);
+    iErrCode = GetBridierTimeBombScanFrequency (&sBridierScanFrequency);
     if (iErrCode != OK) {
         goto ErrorExit;
     }
     
     OutputText ("<p><h2>Server information</h2></center><ul><li>The web server is <strong>");
-    m_pHttpResponse->WriteText (g_pHttpServer->GetServerName());
+    m_pHttpResponse->WriteText (global.GetHttpServer()->GetServerName());
     OutputText ("</strong>, running at <strong>");
-    m_pHttpResponse->WriteText (g_pHttpServer->GetIPAddress());
+    m_pHttpResponse->WriteText (global.GetHttpServer()->GetIPAddress());
     OutputText ("</strong> on ");
 
-    short httpPort = g_pHttpServer->GetHttpPort();
-    short httpsPort = g_pHttpServer->GetHttpsPort();
+    short httpPort = global.GetHttpServer()->GetHttpPort();
+    short httpsPort = global.GetHttpServer()->GetHttpsPort();
 
     if (httpPort != 0) {
         OutputText ("HTTP port <strong>");
@@ -119,7 +119,7 @@ void HtmlRenderer::WriteServerRules() {
         OutputText ("</strong>");
     }
 
-    unsigned int iNumThreads = g_pHttpServer->GetNumThreads();
+    unsigned int iNumThreads = global.GetHttpServer()->GetNumThreads();
     OutputText ("</strong></li><li>The web server is using <strong>");
     m_pHttpResponse->WriteText (iNumThreads);
     OutputText ("</strong> thread");
@@ -149,8 +149,8 @@ void HtmlRenderer::WriteServerRules() {
         OutputText ("<li>Process time information is not available</li>");
     }
     
-    iNumFiles = g_pFileCache->GetNumFiles();
-    stFileCacheSize = g_pFileCache->GetSize();
+    iNumFiles = global.GetFileCache()->GetNumFiles();
+    stFileCacheSize = global.GetFileCache()->GetSize();
     
     OutputText ("<li>The server file cache contains <strong>");
     m_pHttpResponse->WriteText (iNumFiles);
@@ -166,7 +166,7 @@ void HtmlRenderer::WriteServerRules() {
     OutputText ("</li>");
     
     // Stats
-    iErrCode = g_pHttpServer->GetStatistics (&stats);
+    iErrCode = global.GetHttpServer()->GetStatistics (&stats);
     if (iErrCode == OK) {
         
         OutputText ("<li>The server has handled <strong>");
@@ -178,13 +178,12 @@ void HtmlRenderer::WriteServerRules() {
         OutputText ("</strong> KB sent</li>");
     }
     
-    pDatabase = g_pGameEngine->GetDatabase();
-    Assert (pDatabase != NULL);
+    pDatabase = global.GetDatabase();
+    Assert(pDatabase != NULL);
 
     iDBOptions = pDatabase->GetOptions();
-
     iErrCode = pDatabase->GetStatistics (&dsStats);
-    pDatabase->Release();
+    Assert(iErrCode == OK);
 
     if (iErrCode == OK) {
     
@@ -383,8 +382,8 @@ void HtmlRenderer::WriteServerRules() {
     }
     OutputText (" ended</li></ul></li>");
     
-    if (g_pGameEngine->GetNumOpenGames (&iNumOpenGames) == OK &&
-        g_pGameEngine->GetNumClosedGames (&iNumClosedGames) == OK) {
+    if (GetNumOpenGames (&iNumOpenGames) == OK &&
+        GetNumClosedGames (&iNumClosedGames) == OK) {
         
         iNumActiveGames = iNumOpenGames + iNumClosedGames;
         
@@ -418,7 +417,7 @@ void HtmlRenderer::WriteServerRules() {
                     // Yep, the people who lost the race will get the stale value until the query finishes
                     // That's just too bad...
 
-                    iErrCode = g_pGameEngine->GetNumEmpiresInGames (&iNumGamingEmpires);
+                    iErrCode = GetNumEmpiresInGames (&iNumGamingEmpires);
                     if (iErrCode == OK) {
                         m_siNumGamingEmpires = iNumGamingEmpires;
                     }
@@ -443,7 +442,7 @@ void HtmlRenderer::WriteServerRules() {
                     OutputText ("</strong> empires are in games on the server</li>");
                 }
 
-                iErrCode = g_pGameEngine->GetNumRecentActiveEmpiresInGames (&iNumGamingEmpires);
+                iErrCode = GetNumRecentActiveEmpiresInGames (&iNumGamingEmpires);
                 if (iErrCode == OK) {
 
                     if (iNumGamingEmpires == 0) {
@@ -946,17 +945,17 @@ void HtmlRenderer::WriteServerRules() {
         "<li>Empire names and user input are fully filtered for HTML content</li>"\
         "<li>The chatroom will allow a maximum of <strong>");
     
-    m_pHttpResponse->WriteText (g_pGameEngine->GetChatroom()->GetMaxNumSpeakers());
+    m_pHttpResponse->WriteText(global.GetChatroom()->GetMaxNumSpeakers());
     OutputText ("</strong> simultaneous empires</li>");
     
     OutputText ("<li>The chatroom will display the last <strong>");
-    m_pHttpResponse->WriteText (g_pGameEngine->GetChatroom()->GetMaxNumMessages());
+    m_pHttpResponse->WriteText(global.GetChatroom()->GetMaxNumMessages());
     OutputText ("</strong> messages</li>");
     
     OutputText ("<li>Empires time out of the chatroom when they are idle for ");
-    WriteTime (g_pGameEngine->GetChatroom()->GetTimeOut());
+    WriteTime(global.GetChatroom()->GetTimeOut());
     
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxIconSize, &vValue);
+    iErrCode = GetSystemProperty (SystemData::MaxIconSize, &vValue);
     if (iErrCode == OK) {
         OutputText ("</li><li>The maximum size of an uploaded alien icon is <strong>");
         m_pHttpResponse->WriteText (vValue.GetInteger());
@@ -967,7 +966,7 @@ void HtmlRenderer::WriteServerRules() {
     WriteEmpireIcon (GetDefaultSystemIcon(), NO_KEY, NULL, false);
     OutputText ("</li>");
 
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);
+    iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);
     if (iErrCode == OK) {
         OutputText ("<li>The icon used for system messages is: ");
         WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
@@ -1027,7 +1026,7 @@ void HtmlRenderer::WriteServerRules() {
 
     } else {
     
-        if (g_pGameEngine->GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMES, &fValue) == OK) {
+        if (GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMES, &fValue) == OK) {
             
             OutputText ("<li>Empires with Almonaster scores greater than <strong>");
             m_pHttpResponse->WriteText (fValue);    
@@ -1036,8 +1035,8 @@ void HtmlRenderer::WriteServerRules() {
             OutputText ("</strong> and have the right to create their own personal games</li>");
         }
         
-        if (g_pGameEngine->GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fValue) == OK &&
-            g_pGameEngine->GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vValue) == OK) {
+        if (GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fValue) == OK &&
+            GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vValue) == OK) {
             
             OutputText ("<li>Empires with Almonaster scores greater than <strong>");
             m_pHttpResponse->WriteText (fValue);
@@ -1049,7 +1048,7 @@ void HtmlRenderer::WriteServerRules() {
         }
     }
 
-    if (g_pGameEngine->GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege) == OK) {
+    if (GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege) == OK) {
 
         OutputText ("<li>Empires with a privilege level of <strong>");
         m_pHttpResponse->WriteText (PRIVILEGE_STRING [vUnlimitedEmpirePrivilege.GetInteger()]);

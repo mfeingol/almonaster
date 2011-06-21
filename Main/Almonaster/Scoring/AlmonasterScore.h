@@ -1,20 +1,34 @@
-// AlmonasterScore.h: interface for the AlmonasterScore class.
 //
-//////////////////////////////////////////////////////////////////////
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 
-#if !defined(AFX_ALMONASTERSCORE_H__516DA67C_C8D9_4CC0_91F7_D5A71AF2F3F0__INCLUDED_)
-#define AFX_ALMONASTERSCORE_H__516DA67C_C8D9_4CC0_91F7_D5A71AF2F3F0__INCLUDED_
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#include "../GameEngine/GameEngine.h"
+#pragma once
 
-class AlmonasterScore : public IScoringSystem {
-protected:
+#include "Interface.h"
+#include "GameEngine.h"
 
-    IGameEngine* m_pGameEngine;
-    IDatabaseConnection* t_pConn;
+class AlmonasterScore : public IScoringSystem
+{
+private:
+    GameEngine* m_pGameEngine;
 
-    AlmonasterScore (IGameEngine* pGameEngine);
-    ~AlmonasterScore();
+public:
+
+    AlmonasterScore(GameEngine* pGameEngine);
 
     void GetAlmonasterScoreChanges (float fNukerScore, float fNukedScore, int iNukerSignificance,
         int iNukedSignificance, int iNumNukerAllies, int iNumNukedAllies, float* pfNukerIncrease, 
@@ -32,10 +46,6 @@ protected:
         unsigned int iNumEmpires);
 
 public:
-
-    IMPLEMENT_INTERFACE (IScoringSystem);
-
-    static IScoringSystem* CreateInstance (IGameEngine* pGameEngine);
 
     // IScoringSystem
     bool HasTopList();
@@ -57,5 +67,3 @@ public:
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
     int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires);
 };
-
-#endif // !defined(AFX_ALMONASTERSCORE_H__516DA67C_C8D9_4CC0_91F7_D5A71AF2F3F0__INCLUDED_)

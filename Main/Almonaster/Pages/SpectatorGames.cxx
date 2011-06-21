@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 #include <stdio.h>
 
 // Almonaster
@@ -122,32 +122,21 @@ SYSTEM_REDIRECT_ON_SUBMIT
 
 char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH] = "";
 
-if (iSpectatorGamesPage > 0) {
-
+if (iSpectatorGamesPage > 0)
+{
+    // Make sure game exists
     bool bFlag;
-
-    if (g_pGameEngine->WaitGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL) != OK) {
+    iErrCode = DoesGameExist (iGameClassKey, iGameNumber, &bFlag);
+    if (iErrCode != OK || !bFlag) {
 
         AddMessage ("That game no longer exists");
         iSpectatorGamesPage = 0;
 
     } else {
 
-        // Make sure game exists
-        iErrCode = g_pGameEngine->DoesGameExist (iGameClassKey, iGameNumber, &bFlag);
-        if (iErrCode != OK || !bFlag) {
-
-            g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
-
-            AddMessage ("That game no longer exists");
-            iSpectatorGamesPage = 0;
-
-        } else {
-
-            iErrCode = g_pGameEngine->GetGameClassName (iGameClassKey, pszGameClassName);
-            if (iErrCode != OK) {
-                pszGameClassName[0] = '\0';
-            }
+        iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+        if (iErrCode != OK) {
+            pszGameClassName[0] = '\0';
         }
     }
 }
@@ -165,7 +154,7 @@ case 0:
     // Get open games
     int iNumClosedGames = 0, * piGameClass, * piGameNumber;
 
-    iErrCode = g_pGameEngine->GetClosedGames (&piGameClass, &piGameNumber, &iNumClosedGames);
+    iErrCode = GetClosedGames (&piGameClass, &piGameNumber, &iNumClosedGames);
     if (iErrCode != OK) {
         %><h3>The list of spectator games could not be read. The error was <% Write (iErrCode); %></h3><% 
     }
@@ -181,7 +170,7 @@ case 0:
 
         int* piSuperClassKey, iNumSuperClasses;
         bool bDraw = false;
-        Check (g_pGameEngine->GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         if (iNumSuperClasses == 0) {
             %><h3>There are no spectator games on this server</h3><% 
@@ -211,10 +200,10 @@ case 0:
                 iGameNumber = piGameNumber[i];
 
                 // Check everything
-                if (g_pGameEngine->CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
-                    g_pGameEngine->DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
-                    g_pGameEngine->IsSpectatorGame (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
-                    g_pGameEngine->GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
+                if (CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
+                    DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
+                    IsSpectatorGame (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
+                    GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
 
                     for (j = 0; j < iNumSuperClasses; j ++) {
                         if (piSuperClassKey[j] == iSuperClassKey) {
@@ -307,14 +296,14 @@ case 0:
                         iGameClass = ppiGameClass[iNumSuperClasses][j];
                         iGameNumber = ppiGameNumber[iNumSuperClasses][j];
 
-                        if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                        if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
 
                             // Best effort
                             iErrCode = WriteSpectatorGameListData (iGameClass, iGameNumber, pvGameClassInfo);
                         }
 
                         if (pvGameClassInfo != NULL) {
-                            g_pGameEngine->FreeData (pvGameClassInfo);
+                            FreeData (pvGameClassInfo);
                             pvGameClassInfo = NULL;
                         }
                     }
@@ -326,7 +315,7 @@ case 0:
                 for (i = 0; i < iNumSuperClasses; i ++) {
 
                     if (ppiTable [i][iNumClosedGames] > 0 && 
-                        g_pGameEngine->GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
+                        GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
 
                         %><p><h3><% Write (vName.GetCharPtr()); %>:</h3><%
                         WriteSpectatorGameListHeader (m_vTableColor.GetCharPtr());
@@ -380,7 +369,7 @@ case 0:
                             iGameClass = ppiGameClass[i][j];
                             iGameNumber = ppiGameNumber[i][j];
 
-                            if (g_pGameEngine->GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                            if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
 
                                 WriteSpectatorGameListData (
                                     iGameClass, 
@@ -390,7 +379,7 @@ case 0:
                             }
 
                             if (pvGameClassInfo != NULL) {
-                                g_pGameEngine->FreeData (pvGameClassInfo);
+                                FreeData (pvGameClassInfo);
                                 pvGameClassInfo = NULL;
                             }
                         }
@@ -400,7 +389,7 @@ case 0:
                 }
             }
 
-            g_pGameEngine->FreeKeys (piSuperClassKey);
+            FreeKeys (piSuperClassKey);
         }
 
         delete [] piGameClass;
@@ -416,7 +405,7 @@ case 1:
 
     bool bTrue;
 
-    iErrCode = g_pGameEngine->IsSpectatorGame (iGameClassKey, iGameNumber, &bTrue);
+    iErrCode = IsSpectatorGame (iGameClassKey, iGameNumber, &bTrue);
     if (iErrCode != OK || !bTrue) {
         %><h3>That game is not available to spectators</h3><%
     } else {
@@ -448,8 +437,6 @@ case 1:
         %><input type="hidden" name="GameNumber" value="<% Write (iGameNumber); %>"><%
     }
 
-    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
-
     break;
 
 case 2:
@@ -468,7 +455,7 @@ case 2:
 
     GAME_MAP (pszGameMap, iGameClassKey, iGameNumber);
 
-    iErrCode = g_pGameEngine->IsSpectatorGame (iGameClassKey, iGameNumber, &bTrue);
+    iErrCode = IsSpectatorGame (iGameClassKey, iGameNumber, &bTrue);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -478,12 +465,12 @@ case 2:
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetGameClassOptions (iGameClassKey, &iGameClassOptions);
+    iErrCode = GetGameClassOptions (iGameClassKey, &iGameClassOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -538,8 +525,6 @@ case 2:
         &bTrue
         );
 
-    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
-
     %></table><%
 
 Cleanup:
@@ -570,8 +555,6 @@ case 3:
     %><p><table width="90%"><%
 
     RenderEmpireInformation (iGameClassKey, iGameNumber, false);
-
-    g_pGameEngine->SignalGameReader (iGameClassKey, iGameNumber, NO_KEY, NULL);
 
     break;
 

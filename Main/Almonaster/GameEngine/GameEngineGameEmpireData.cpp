@@ -17,6 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "GameEngine.h"
+#include "Global.h"
 
 // Delete the player's tables from the given game:
 //
@@ -871,13 +872,15 @@ int GameEngine::QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey) {
     pid->iEmpireKey = iEmpireKey;
     pid->i64SecretKey = i64SecretKey;
 
-    return SendLongRunningQueryMessage (DeleteEmpireMsg, pid);
+    return global.GetAsyncManager()->QueueTask(DeleteEmpireMsg, pid);
 }
 
-int GameEngine::DeleteEmpireMsg (LongRunningQueryMessage* pMessage) {
+int GameEngine::DeleteEmpireMsg(AsyncTask* pMessage) {
 
-    EmpireIdentity* pid = (EmpireIdentity*) pMessage->pArguments;
-    int iErrCode = pMessage->pGameEngine->DeleteEmpire (pid->iEmpireKey, &pid->i64SecretKey, false, false);
+    EmpireIdentity* pid = (EmpireIdentity*)pMessage->pArguments;
+
+    GameEngine gameEngine;
+    int iErrCode = gameEngine.DeleteEmpire(pid->iEmpireKey, &pid->i64SecretKey, false, false);
 
     delete pid;
     return iErrCode;
@@ -2551,7 +2554,7 @@ int GameEngine::UpdateGameEmpireString (int iGameClass, int iGameNumber, int iEm
     int iErrCode;
 
     IWriteTable* pWriteTable = NULL;
-    const char* pszOldString;
+    Variant vOldString;
 
     GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
@@ -2562,13 +2565,13 @@ int GameEngine::UpdateGameEmpireString (int iGameClass, int iGameNumber, int iEm
         goto Cleanup;
     }
 
-    iErrCode = pWriteTable->ReadData (pszColumn, &pszOldString);
+    iErrCode = pWriteTable->ReadData (pszColumn, &vOldString);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    if (String::StrCmp (pszString, pszOldString) != 0) {
+    if (String::StrCmp (pszString, vOldString.GetCharPtr()) != 0) {
 
         char* pszNew = NULL;
 

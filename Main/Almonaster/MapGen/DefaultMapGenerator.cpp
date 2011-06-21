@@ -22,14 +22,9 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-DefaultMapGenerator::DefaultMapGenerator (IGameEngine* pGameEngine) 
+DefaultMapGenerator::DefaultMapGenerator(GameEngine* pGameEngine) 
     :
     BaseMapGenerator(pGameEngine) {
-}
-
-IMapGenerator* DefaultMapGenerator::CreateInstance (IGameEngine* pGameEngine) {
-
-    return new DefaultMapGenerator (pGameEngine);
 }
 
 int DefaultMapGenerator::CreatePlanetChains() {

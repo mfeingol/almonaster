@@ -22,15 +22,12 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-BaseMapGenerator::BaseMapGenerator (IGameEngine* pGameEngine) 
+BaseMapGenerator::BaseMapGenerator(GameEngine* pGameEngine) 
     : 
-    m_htCoordinates (NULL, NULL) {
-
-    m_iNumRefs = 1;
-
+    m_htCoordinates (NULL, NULL)
+{
     Assert (pGameEngine != NULL);
     m_pGameEngine = pGameEngine;
-    m_pGameEngine->AddRef();
 
     m_iGameClass = NO_KEY;
     m_iGameNumber = 0;
@@ -51,12 +48,12 @@ BaseMapGenerator::BaseMapGenerator (IGameEngine* pGameEngine)
     m_ppvNewPlanetData = NULL;
 }
 
-BaseMapGenerator::~BaseMapGenerator() {
-
-    SafeRelease(m_pGameEngine);
-
+BaseMapGenerator::~BaseMapGenerator()
+{
     if (m_ppvNewPlanetData != NULL)
+    {
         FreePlanetData(m_ppvNewPlanetData);
+    }
 }
 
 // IMapGenerator

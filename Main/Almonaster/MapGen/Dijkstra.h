@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_DIJKSTRA_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
-#define AFX_DIJKSTRA_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
+#pragma once
 
 #include "Osal/Variant.h"
 #include "../GameEngine/GameEngineConstants.h"
@@ -25,7 +24,8 @@
 
 #define NO_PATH (-1)
 
-class Dijkstra {
+class Dijkstra
+{
 private:
 
     const unsigned int m_iNumPlanets;
@@ -49,11 +49,8 @@ private:
 public:
 
     Dijkstra(const Variant** ppvPlanetData, unsigned int iNumPlanets);
-
     ~Dijkstra();
 
     int Run(unsigned int iSourceIndex, bool bTraverseHomeworlds);
     unsigned int GetShortestPathLength(unsigned int iDestination);
 };
-
-#endif // !defined(AFX_DIJKSTRA_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

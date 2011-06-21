@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 #include <stdio.h>
 
 // Almonaster
@@ -39,7 +39,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         bRedirectTest = false;
 
-        iErrCode = g_pGameEngine->RegisterNewTechDevelopment (m_iGameClass, m_iGameNumber, m_iEmpireKey, iTechKey);
+        iErrCode = RegisterNewTechDevelopment (m_iGameClass, m_iGameNumber, m_iEmpireKey, iTechKey);
         if (iErrCode == OK) {
             AddMessage ("You have developed ");
         } else {
@@ -65,7 +65,7 @@ if (!(m_iGameState & STARTED)) {
 
     int iTechDevs, iTechUndevs;
 
-    GameCheck (g_pGameEngine->GetDevelopedTechs (
+    GameCheck (GetDevelopedTechs (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -74,7 +74,7 @@ if (!(m_iGameState & STARTED)) {
         ));
 
     int iNumAvailableTechs;
-    GameCheck (g_pGameEngine->GetNumAvailableTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumAvailableTechs));
+    GameCheck (GetNumAvailableTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumAvailableTechs));
 
     int i, iNumDevKeys = 0, iNumUndevKeys = 0, piDevKey[NUM_SHIP_TYPES], piUndevKey[NUM_SHIP_TYPES];
 

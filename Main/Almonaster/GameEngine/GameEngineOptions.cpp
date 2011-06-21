@@ -412,14 +412,7 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
     GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
     Variant vTemp, vOldNum;
-
-#ifdef _DEBUG
-    // Only call this function holding an exclusive lock
-    GameObject* pGameObj = GetGameObject (iGameClass, iGameNumber);
-    Assert (pGameObj != NULL && pGameObj->HeldExclusive (NULL));
-    SafeRelease (pGameObj);
-#endif
-
+    
     iErrCode = t_pConn->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
@@ -564,13 +557,6 @@ int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey,
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
-
-#ifdef _DEBUG
-    // Only call this function holding an exclusive lock
-    GameObject* pGameObj = GetGameObject (iGameClass, iGameNumber);
-    Assert (pGameObj != NULL && pGameObj->HeldExclusive (NULL));
-    SafeRelease (pGameObj);
-#endif
 
     iErrCode = t_pConn->ReadData (strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {

@@ -179,25 +179,25 @@ int HtmlRenderer::GetUIData (int iThemeKey) {
     
     if (iThemeKey == INDIVIDUAL_ELEMENTS) {
         
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
         m_iButtonKey = vValue.GetInteger();
         
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIBackground, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIBackground, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
         m_iBackgroundKey = vValue.GetInteger();
         
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UISeparator, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UISeparator, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
         m_iSeparatorKey = vValue.GetInteger();
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -223,7 +223,7 @@ int HtmlRenderer::GetUIData (int iThemeKey) {
         
         else if (iThemeKey == ALTERNATIVE_PATH) {
 
-            iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -233,7 +233,7 @@ int HtmlRenderer::GetUIData (int iThemeKey) {
                 return iErrCode;
             }
 
-            iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &m_vLocalPath);
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &m_vLocalPath);
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -270,32 +270,32 @@ int HtmlRenderer::GetTextColorData (int iEmpireColorKey) {
         
     case CUSTOM_COLORS:
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &m_vTableColor);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &m_vTableColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &m_vTextColor);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &m_vTextColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &m_vGoodColor);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &m_vGoodColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &m_vBadColor);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &m_vBadColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &m_vPrivateMessageColor);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &m_vPrivateMessageColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &m_vBroadcastMessageColor);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &m_vBroadcastMessageColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -304,32 +304,32 @@ int HtmlRenderer::GetTextColorData (int iEmpireColorKey) {
         
     default:
         
-        iErrCode = g_pGameEngine->GetThemeTextColor (iEmpireColorKey, &m_vTextColor);
+        iErrCode = GetThemeTextColor (iEmpireColorKey, &m_vTextColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
         
-        iErrCode = g_pGameEngine->GetThemeGoodColor (iEmpireColorKey, &m_vGoodColor);
+        iErrCode = GetThemeGoodColor (iEmpireColorKey, &m_vGoodColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
         
-        iErrCode = g_pGameEngine->GetThemeBadColor (iEmpireColorKey, &m_vBadColor);
+        iErrCode = GetThemeBadColor (iEmpireColorKey, &m_vBadColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
         
-        iErrCode = g_pGameEngine->GetThemePrivateMessageColor (iEmpireColorKey, &m_vPrivateMessageColor);
+        iErrCode = GetThemePrivateMessageColor (iEmpireColorKey, &m_vPrivateMessageColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
         
-        iErrCode = g_pGameEngine->GetThemeBroadcastMessageColor (iEmpireColorKey, &m_vBroadcastMessageColor);
+        iErrCode = GetThemeBroadcastMessageColor (iEmpireColorKey, &m_vBroadcastMessageColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
         
-        iErrCode = g_pGameEngine->GetThemeTableColor (iEmpireColorKey, &m_vTableColor);
+        iErrCode = GetThemeTableColor (iEmpireColorKey, &m_vTableColor);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -442,7 +442,7 @@ void HtmlRenderer::WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2,
                 sprintf (
                     pszDestFileName, 
                     "%s/%s/" ALIEN_NAME "%i.%i" DEFAULT_IMAGE_EXTENSION, 
-                    g_pszResourceDir,
+                    global.GetResourceDir(),
                     pszUploadDir,
                     iEntityKey,
                     iEntityKey2
@@ -453,7 +453,7 @@ void HtmlRenderer::WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2,
                 sprintf (
                     pszDestFileName, 
                     "%s/%s/" ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
-                    g_pszResourceDir,
+                    global.GetResourceDir(),
                     pszUploadDir,
                     iEntityKey
                     );
@@ -525,7 +525,7 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
             sprintf (
                 pszDestFileName, 
                 "%s/" BASE_UPLOADED_ALIEN_DIR "/" ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
-                g_pszResourceDir,
+                global.GetResourceDir(),
                 iEmpireKey
                 );
             
@@ -616,7 +616,7 @@ bool HtmlRenderer::VerifyGIF (const char* pszFileName) {
     }
     
     Variant vMaxIconSize;
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::MaxIconSize, &vMaxIconSize);
+    iErrCode = GetSystemProperty (SystemData::MaxIconSize, &vMaxIconSize);
     if (iErrCode != OK) {
         Assert (false);
         AddMessage ("The max icon size could could not be read");
@@ -678,7 +678,7 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
         sprintf (
             pszDestFileName, 
             "%s/%s/" ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION,
-            g_pszResourceDir,
+            global.GetResourceDir(),
             pszUploadDir,
             iKey1
             );
@@ -688,7 +688,7 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
         sprintf (
             pszDestFileName, 
             "%s/%s/" ALIEN_NAME "%i.%i" DEFAULT_IMAGE_EXTENSION,
-            g_pszResourceDir,
+            global.GetResourceDir(),
             pszUploadDir,
             iKey1,
             iKey2
@@ -699,7 +699,7 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
     unsigned int iTries = 0;
     while (iTries < 20) {
         
-        g_pFileCache->ReleaseFile (pszDestFileName);
+        global.GetFileCache()->ReleaseFile (pszDestFileName);
         
         iErrCode = File::CopyFile (pszFileName, pszDestFileName);
         if (iErrCode == OK) {
@@ -721,11 +721,11 @@ int HtmlRenderer::CopyNewAlien (const char* pszFileName, int iAlienKey) {
     sprintf (
         pszDestFileName, 
         "%s/" BASE_ALIEN_DIR ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
-        g_pszResourceDir,
+        global.GetResourceDir(),
         iAlienKey
         );
     
-    g_pFileCache->ReleaseFile (pszDestFileName);
+    global.GetFileCache()->ReleaseFile (pszDestFileName);
     
     return File::CopyFile (pszFileName, pszDestFileName);
 }
@@ -737,11 +737,11 @@ int HtmlRenderer::DeleteAlien (int iAlienKey) {
     sprintf (
         pszDestFileName, 
         "%s/" BASE_ALIEN_DIR ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
-        g_pszResourceDir,
+        global.GetResourceDir(),
         iAlienKey
         );
     
-    g_pFileCache->ReleaseFile (pszDestFileName);
+    global.GetFileCache()->ReleaseFile (pszDestFileName);
     
     return File::DeleteFile (pszDestFileName);
 }
@@ -753,7 +753,7 @@ int HtmlRenderer::GetDefaultSystemIcon() {
         int iErrCode;
         Variant vAlien;
 
-        iErrCode = g_pGameEngine->GetSystemProperty (SystemData::DefaultAlien, &vAlien);
+        iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vAlien);
         if (iErrCode != OK) {
             return 1;
         }

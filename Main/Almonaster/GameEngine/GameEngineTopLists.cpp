@@ -19,7 +19,12 @@
 #include <math.h>
 
 #include "GameEngine.h"
+#include "Global.h"
 
+#include "AlmonasterScore.h"
+#include "BridierScore.h"
+#include "ClassicScore.h"
+#include "TournamentScoring.h"
 
 // Input:
 // iListType -> Type of top list
@@ -31,37 +36,19 @@
 //
 // Returns the empire keys on a given top list
 
-int GameEngine::GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsigned int* piNumEmpires) {
-
-    int iErrCode;
-
+int GameEngine::GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsigned int* piNumEmpires)
+{
     Assert (ssListType >= FIRST_SCORING_SYSTEM && ssListType < NUM_SCORING_SYSTEMS);
 
-    const unsigned int iNumColumns = TOPLIST_NUM_COLUMNS [ssListType];
-    unsigned int i;
-    const char* ppszColumn[TopList::MaxNumColumns];
+    const TemplateDescription* ptTemplate = TOPLIST_TEMPLATE[ssListType];
+    const char* pszTableName = TOPLIST_TABLE_NAME[ssListType];
 
-    for (i = 0; i < iNumColumns; i ++) {
-        ppszColumn[i] = TopList::ColumnNames[TopList::iEmpireKey + i];
-    }
-
-    const char* pszTableName = TOPLIST_TABLE_NAME [ssListType];
-
-    iErrCode = t_pConn->ReadColumns (
-        pszTableName,
-        iNumColumns,
-        ppszColumn,
-        pppvData,
-        piNumEmpires
-        );
-
+    int iErrCode = t_pConn->ReadColumns(pszTableName, ptTemplate->NumColumns, ptTemplate->ColumnNames, pppvData, piNumEmpires);
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
-
     return iErrCode;
 }
-
 
 int GameEngine::UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey) {
 
@@ -74,9 +61,8 @@ int GameEngine::UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey
     pQuery->TopList = ssTopList;
     pQuery->EmpireKey = iEmpireKey;
 
-    return SendLongRunningQueryMessage (UpdateTopListOnIncreaseMsg, pQuery);
+    return global.GetAsyncManager()->QueueTask(UpdateTopListOnIncreaseMsg, pQuery);
 }
-
 
 int GameEngine::UpdateTopListOnDecrease (ScoringSystem ssTopList, int iEmpireKey) {
 
@@ -89,7 +75,7 @@ int GameEngine::UpdateTopListOnDecrease (ScoringSystem ssTopList, int iEmpireKey
     pQuery->TopList = ssTopList;
     pQuery->EmpireKey = iEmpireKey;
 
-    return SendLongRunningQueryMessage (UpdateTopListOnDecreaseMsg, pQuery);
+    return global.GetAsyncManager()->QueueTask(UpdateTopListOnDecreaseMsg, pQuery);
 }
 
 int GameEngine::UpdateTopListOnDeletion (ScoringSystem ssTopList, int iEmpireKey) {
@@ -103,58 +89,74 @@ int GameEngine::UpdateTopListOnDeletion (ScoringSystem ssTopList, int iEmpireKey
     pQuery->TopList = ssTopList;
     pQuery->EmpireKey = iEmpireKey;
 
-    return SendLongRunningQueryMessage (UpdateTopListOnDeletionMsg, pQuery);
+    return global.GetAsyncManager()->QueueTask(UpdateTopListOnDeletionMsg, pQuery);
 }
 
-
-int GameEngine::UpdateTopListOnIncreaseMsg (LongRunningQueryMessage* pMessage) {
+int GameEngine::UpdateTopListOnIncreaseMsg (AsyncTask* pMessage) {
 
     TopListQuery* pQuery = (TopListQuery*) pMessage->pArguments;
 
-    int iErrCode = pMessage->pGameEngine->UpdateTopListOnIncrease (pQuery);
+    GameEngine gameEngine;
+    int iErrCode = gameEngine.UpdateTopListOnIncrease (pQuery);
 
     delete pQuery;
     return iErrCode;
 }
 
-int GameEngine::UpdateTopListOnDecreaseMsg (LongRunningQueryMessage* pMessage) {
+int GameEngine::UpdateTopListOnDecreaseMsg (AsyncTask* pMessage) {
 
     TopListQuery* pQuery = (TopListQuery*) pMessage->pArguments;
 
-    int iErrCode = pMessage->pGameEngine->UpdateTopListOnDecrease (pQuery);
+    GameEngine gameEngine;
+    int iErrCode = gameEngine.UpdateTopListOnDecrease (pQuery);
 
     delete pQuery;
     return iErrCode;
 }
 
-int GameEngine::UpdateTopListOnDeletionMsg (LongRunningQueryMessage* pMessage) {
+int GameEngine::UpdateTopListOnDeletionMsg (AsyncTask* pMessage) {
 
     TopListQuery* pQuery = (TopListQuery*) pMessage->pArguments;
 
-    int iErrCode = pMessage->pGameEngine->UpdateTopListOnDeletion (pQuery);
+    GameEngine gameEngine;
+    int iErrCode = gameEngine.UpdateTopListOnDeletion (pQuery);
 
     delete pQuery;
     return iErrCode;
 }
 
+IScoringSystem* GameEngine::CreateScoringSystem(ScoringSystem ssTopList)
+{
+    switch (ssTopList)
+    {
+    case ALMONASTER_SCORE:
+        return new AlmonasterScore(this);
+    case CLASSIC_SCORE:
+        return new ClassicScore(this);
+    case BRIDIER_SCORE:
+        return new BridierScore(this);
+    case BRIDIER_SCORE_ESTABLISHED:
+        return new BridierScoreEstablished(this);
+    case TOURNAMENT_SCORING:
+        return new TournamentScoring(this);
+    default:
+        Assert(false);
+        return NULL;
+    }
+}
 
-//
-//
-//
-
-int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery) {
-
+int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery)
+{
     Variant pvData [MAX_SCORING_SYSTEM_COLUMNS], pvOurData [MAX_SCORING_SYSTEM_COLUMNS];
 
     int iEmpireKey = pQuery->EmpireKey, iErrCode;
     unsigned int iKey;
 
     ScoringSystem ssTopList = pQuery->TopList;
+    const char* pszTableName = TOPLIST_TABLE_NAME[ssTopList];
 
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem(ssTopList);
     Assert (pScoringSystem != NULL);
-
-    const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
 
     // Read empire's current score
     iErrCode = pScoringSystem->GetEmpireScore (iEmpireKey, pvOurData);
@@ -231,7 +233,7 @@ int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery) {
 
 Cleanup:
 
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     return iErrCode;
 }
@@ -242,7 +244,7 @@ int GameEngine::UpdateTopListOnDecrease (TopListQuery* pQuery) {
     int iEmpireKey = pQuery->EmpireKey, iErrCode;
     ScoringSystem ssTopList = pQuery->TopList;
 
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
 
     unsigned int iKey;
@@ -275,7 +277,7 @@ int GameEngine::UpdateTopListOnDecrease (TopListQuery* pQuery) {
 
 Cleanup:
 
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     return iErrCode;
 }
@@ -440,7 +442,7 @@ int GameEngine::PrivateMoveEmpireUpInTopList (ScoringSystem ssTopList, Variant**
 
     Variant* pvTempData;
 
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem(ssTopList);
     Assert (pScoringSystem != NULL);
     Assert (ppvData[iKey][TopList::iEmpireKey].GetInteger() == iEmpireKey);
 
@@ -468,7 +470,7 @@ int GameEngine::PrivateMoveEmpireUpInTopList (ScoringSystem ssTopList, Variant**
         *pbMoved = true;
     }
 
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     return iErrCode;
 }
@@ -555,7 +557,7 @@ int GameEngine::PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant
 
     Variant* pvTempData;
 
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
     Assert (ppvData[iKey][TopList::iEmpireKey].GetInteger() == iEmpireKey);
 
@@ -612,7 +614,7 @@ int GameEngine::PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant
 
 Cleanup:
 
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     return iErrCode;
 }
@@ -630,7 +632,7 @@ int GameEngine::PrivateFindNewEmpireForTopList (ScoringSystem ssTopList, Variant
     
     Variant pvReplacementData [MAX_SCORING_SYSTEM_COLUMNS], pvData [MAX_SCORING_SYSTEM_COLUMNS];
 
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
 
     iLastRow = iNumRows - 1;
@@ -699,7 +701,7 @@ int GameEngine::PrivateFindNewEmpireForTopList (ScoringSystem ssTopList, Variant
 Cleanup:
 
     // Okay, we're done with the long part
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     if (piKey != NULL) {
         t_pConn->FreeKeys(piKey);
@@ -786,7 +788,7 @@ int GameEngine::InitializeEmptyTopList (ScoringSystem ssTopList) {
     Variant pvVariantData [TOPLIST_SIZE * TopList::MaxNumColumns], pvData [MAX_SCORING_SYSTEM_COLUMNS];
     const unsigned int iNumColumns = TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [ssTopList];
     
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
 
 #ifdef _DEBUG
@@ -877,7 +879,7 @@ Cleanup:
         t_pConn->FreeKeys(piKey);
     }
 
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     return iErrCode;
 }
@@ -1017,8 +1019,13 @@ Cleanup:
     return iErrCode;
 }
 
-bool GameEngine::HasTopList (ScoringSystem ssTopList) {
-    return m_ppScoringSystem[ssTopList]->HasTopList();
+bool GameEngine::HasTopList(ScoringSystem ssTopList)
+{
+    IScoringSystem* pScoringSystem = CreateScoringSystem(ssTopList);
+    Assert (pScoringSystem != NULL);
+    bool has = pScoringSystem->HasTopList();
+    delete pScoringSystem;
+    return has;
 }
 
 int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
@@ -1031,7 +1038,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
     const char* pszTable = TOPLIST_TABLE_NAME [ssTopList];
     unsigned int iNumColumns = TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [ssTopList];
 
-    IScoringSystem* pScoringSystem = GetScoringSystem (ssTopList);
+    IScoringSystem* pScoringSystem = CreateScoringSystem (ssTopList);
     Assert (pScoringSystem != NULL);
 
     iErrCode = t_pConn->GetNumRows (pszTable, &iNumRows);
@@ -1146,7 +1153,7 @@ int GameEngine::VerifyTopList (ScoringSystem ssTopList) {
 
 Cleanup:
 
-    pScoringSystem->Release();
+    delete pScoringSystem;
 
     return iErrCode;
 }

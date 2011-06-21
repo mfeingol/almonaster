@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -39,17 +39,17 @@ int iNumShips, iBattleRank, iMilVal, iMin, iFuel, iAg, iUpdatedEmpires, iNextBat
 float fTechDev, fMaintRatio, fFuelRatio, fAgRatio, fHypAgRatio, fHypMaintRatio, fHypFuelRatio, 
     fNextTechIncrease, fNextTechLevel, fMaxTechDev;
 
-GameCheck (g_pGameEngine->GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdatedEmpires));
-GameCheck (g_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires));
+GameCheck (GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdatedEmpires));
+GameCheck (GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires));
 
-GameCheck (g_pGameEngine->GetEmpireGameInfo (m_iGameClass, m_iGameNumber, m_iEmpireKey, &pvEmpireData, &iNumShips,
+GameCheck (GetEmpireGameInfo (m_iGameClass, m_iGameNumber, m_iEmpireKey, &pvEmpireData, &iNumShips,
     &iBattleRank, &iMilVal, &fTechDev, &fMaintRatio, &fFuelRatio, &fAgRatio, &fHypMaintRatio, &fHypFuelRatio, 
     &fHypAgRatio, &fNextTechIncrease, &iMaxNumShips));
 
-GameCheck (g_pGameEngine->GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev));
+GameCheck (GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev));
 
-GameCheck (g_pGameEngine->GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxAgRatio, &vMaxAgRatio));
-GameCheck (g_pGameEngine->GetGameClassProperty (m_iGameClass, SystemGameClassData::BuilderPopLevel, &vPopNeeded));
+GameCheck (GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxAgRatio, &vMaxAgRatio));
+GameCheck (GetGameClassProperty (m_iGameClass, SystemGameClassData::BuilderPopLevel, &vPopNeeded));
 
 if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
     GameCheck (WriteRatiosString (NULL));
@@ -78,7 +78,7 @@ if (bGameStarted) {
 } else {
     
     int iMinNumEmpires, iTotal;
-    iErrCode = g_pGameEngine->GetNumEmpiresRequiredForGameToStart (m_iGameClass, &iMinNumEmpires);
+    iErrCode = GetNumEmpiresRequiredForGameToStart (m_iGameClass, &iMinNumEmpires);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -96,7 +96,7 @@ if (m_iGameOptions & UPDATED) {
     %><font color="#<% Write (m_vBadColor.GetCharPtr()); %>"><strong>not ready</strong></font><% 
 } %> for an update</td><td align="center"><%
 
-iErrCode = g_pGameEngine->IsGameOpen (m_iGameClass, m_iGameNumber, &bIsOpen);
+iErrCode = IsGameOpen (m_iGameClass, m_iGameNumber, &bIsOpen);
 if (iErrCode != OK) {
     goto Cleanup;
 }
@@ -237,7 +237,7 @@ Write (iRatio);
 
 %><td><strong>Next Tech Level:</strong></td><td><% 
 fNextTechLevel = pvEmpireData[GameEmpireData::iTechLevel].GetFloat() + fTechDev;
-iNextBattleRank = g_pGameEngine->GetBattleRank (fNextTechLevel);
+iNextBattleRank = GetBattleRank (fNextTechLevel);
 
 if (iNextBattleRank > iBattleRank) {
     %><font color="#<% Write (m_vGoodColor.GetCharPtr()); %>"><% 
@@ -381,7 +381,7 @@ if (iMaxNumShips == INFINITE_SHIPS) {
 
 Cleanup:
 
-g_pGameEngine->FreeData (pvEmpireData);
+FreeData (pvEmpireData);
 
 if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %>occurred reading from the database<%

@@ -62,8 +62,6 @@ int GameEngine::GetAlienKeys (Variant*** pppvData, int* piNumAliens) {
 
 int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
 
-    LockAlienIcons();
-
     unsigned int iKey;
     int iErrCode = t_pConn->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
@@ -85,8 +83,6 @@ int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
         else Assert (false);
     }
 
-    UnlockAlienIcons();
-
     return iErrCode;
 }
 
@@ -102,8 +98,6 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
     int iErrCode;
 
     Variant vDefaultAlien;
-
-    LockAlienIcons();
 
     iErrCode = t_pConn->ReadData (SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
     if (iErrCode != OK) {
@@ -136,8 +130,6 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
 
 Cleanup:
 
-    UnlockAlienIcons();
-
     return iErrCode;
 }
 
@@ -150,8 +142,6 @@ Cleanup:
 int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
     int iErrCode = OK;
-
-    LockAlienIcons();
 
     if (iAlienKey == UPLOADED_ICON) {
 
@@ -172,8 +162,6 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
         }
 
     }
-
-    UnlockAlienIcons();
 
     return iErrCode;
 }

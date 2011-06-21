@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 #include <stdio.h>
 
@@ -68,7 +68,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bRedirectTest = false;
 
-                if (g_pGameEngine->DeleteTheme (iThemeKey) == OK) {
+                if (DeleteTheme (iThemeKey) == OK) {
                     AddMessage ("The theme was deleted");
                 } else {
                     AddMessage ("The theme could not be deleted");
@@ -77,7 +77,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Get theme data
-            iErrCode = g_pGameEngine->GetThemeData (iThemeKey, &pvThemeData);
+            iErrCode = GetThemeData (iThemeKey, &pvThemeData);
             if (iErrCode != OK) {
                 continue;
             }
@@ -85,7 +85,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Name
             sprintf (pszForm, "Name%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                g_pGameEngine->FreeData (pvThemeData);  goto Redirection;
+                FreeData (pvThemeData);  goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -93,14 +93,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_AUTHOR_NAME_LENGTH) {
                     AddMessage ("You submitted an invalid theme name");
                 } else {
-                    iErrCode = g_pGameEngine->SetThemeName (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeName (iThemeKey, pszNewValue);
                 }
             }
 
             // Version
             sprintf (pszForm, "Version%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                g_pGameEngine->FreeData (pvThemeData);
+                FreeData (pvThemeData);
                 goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
@@ -109,14 +109,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_VERSION_LENGTH) {
                     AddMessage ("You submitted an invalid theme version");
                 } else {
-                    iErrCode = g_pGameEngine->SetThemeVersion (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeVersion (iThemeKey, pszNewValue);
                 }
             }
 
             // FileName
             sprintf (pszForm, "File%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                g_pGameEngine->FreeData (pvThemeData);
+                FreeData (pvThemeData);
                 goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
@@ -125,14 +125,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_FILE_NAME_LENGTH) {
                     AddMessage ("You submitted an invalid theme file name");
                 } else {
-                    iErrCode = g_pGameEngine->SetThemeFileName (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeFileName (iThemeKey, pszNewValue);
                 }
             }
 
             // Author's Name
             sprintf (pszForm, "AName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                g_pGameEngine->FreeData (pvThemeData);  goto Redirection;
+                FreeData (pvThemeData);  goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -140,14 +140,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_AUTHOR_NAME_LENGTH) {
                     AddMessage ("You submitted an invalid author name");
                 } else {
-                    iErrCode = g_pGameEngine->SetThemeAuthorName (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeAuthorName (iThemeKey, pszNewValue);
                 }
             }
 
             // Author's Email
             sprintf (pszForm, "AEmail%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                g_pGameEngine->FreeData (pvThemeData);  goto Redirection;
+                FreeData (pvThemeData);  goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -155,7 +155,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pszNewValue == NULL || strlen (pszNewValue) > MAX_THEME_AUTHOR_EMAIL_LENGTH) {
                     AddMessage ("You submitted an invalid theme author email");
                 } else {
-                    iErrCode = g_pGameEngine->SetThemeAuthorEmail (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeAuthorEmail (iThemeKey, pszNewValue);
                 }
             }
 
@@ -165,7 +165,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_BACKGROUND) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeBackground (iThemeKey, bNewValue);
+                iErrCode = SetThemeBackground (iThemeKey, bNewValue);
             }
 
             // Live Planet
@@ -174,7 +174,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_LIVE_PLANET) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeLivePlanet (iThemeKey, bNewValue);
+                iErrCode = SetThemeLivePlanet (iThemeKey, bNewValue);
             }
 
             // Dead Planet
@@ -183,7 +183,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_DEAD_PLANET) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeDeadPlanet (iThemeKey, bNewValue);
+                iErrCode = SetThemeDeadPlanet (iThemeKey, bNewValue);
             }
 
             // Separator
@@ -192,7 +192,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_SEPARATOR) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeSeparator (iThemeKey, bNewValue);
+                iErrCode = SetThemeSeparator (iThemeKey, bNewValue);
             }
 
             // Buttons
@@ -201,7 +201,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_BUTTONS) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeButtons (iThemeKey, bNewValue);
+                iErrCode = SetThemeButtons (iThemeKey, bNewValue);
             }
 
             // Horz
@@ -210,7 +210,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_HORZ) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeHorz (iThemeKey, bNewValue);
+                iErrCode = SetThemeHorz (iThemeKey, bNewValue);
             }
 
             // Vert
@@ -219,7 +219,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_VERT) != 0;
 
             if (bNewValue != bOldValue) {
-                iErrCode = g_pGameEngine->SetThemeVert (iThemeKey, bNewValue);
+                iErrCode = SetThemeVert (iThemeKey, bNewValue);
             }
 
 
@@ -233,7 +233,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pvThemeData[SystemThemes::iTextColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
-                    iErrCode = g_pGameEngine->SetThemeTextColor (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeTextColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted text color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -251,7 +251,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pvThemeData[SystemThemes::iGoodColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
-                    iErrCode = g_pGameEngine->SetThemeGoodColor (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeGoodColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted good color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -269,7 +269,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pvThemeData[SystemThemes::iBadColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
-                    iErrCode = g_pGameEngine->SetThemeBadColor (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeBadColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted bad color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -287,7 +287,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pvThemeData[SystemThemes::iPrivateMessageColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
-                    iErrCode = g_pGameEngine->SetThemePrivateMessageColor (iThemeKey, pszNewValue);
+                    iErrCode = SetThemePrivateMessageColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted private color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -305,7 +305,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pvThemeData[SystemThemes::iBroadcastMessageColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
-                    iErrCode = g_pGameEngine->SetThemeBroadcastMessageColor (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeBroadcastMessageColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted broadcast color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -323,7 +323,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pvThemeData[SystemThemes::iTableColor].GetCharPtr(), pszNewValue) != 0) {
 
                 if (IsColor (pszNewValue)) { 
-                    iErrCode = g_pGameEngine->SetThemeTableColor (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeTableColor (iThemeKey, pszNewValue);
                 } else {
                     AddMessage ("The submitted table color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -344,11 +344,11 @@ if (m_bOwnPost && !m_bRedirection) {
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
                     AppendMessage (" was invalid");
                 } else {
-                    iErrCode = g_pGameEngine->SetThemeDescription (iThemeKey, pszNewValue);
+                    iErrCode = SetThemeDescription (iThemeKey, pszNewValue);
                 }
             }
 
-            g_pGameEngine->FreeData (pvThemeData);
+            FreeData (pvThemeData);
         }
 
         ///////////////
@@ -545,7 +545,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             unsigned int iKey;
-            if ((iErrCode = g_pGameEngine->CreateTheme (pvSubmitArray, &iKey)) == OK) {
+            if ((iErrCode = CreateTheme (pvSubmitArray, &iKey)) == OK) {
                 AddMessage ("The theme has been created with directory key ");
                 AppendMessage (iKey);
             } else {
@@ -565,7 +565,7 @@ SYSTEM_OPEN (false)
 
 // Individual page stuff starts here
 int* piThemeKey, iNumThemes;
-Check (g_pGameEngine->GetThemeKeys (&piThemeKey, &iNumThemes));
+Check (GetThemeKeys (&piThemeKey, &iNumThemes));
 
 %><input type="hidden" name="NumThemes" value="<% Write (iNumThemes); %>"><p>There <% 
 if (iNumThemes == 1) { 
@@ -584,7 +584,7 @@ if (iNumThemes > 0) {
 
     for (i = 0; i < iNumThemes; i ++) {
 
-        if (g_pGameEngine->GetThemeData (piThemeKey[i], &pvThemeData) != OK) {
+        if (GetThemeData (piThemeKey[i], &pvThemeData) != OK) {
             continue;
         }
 
@@ -743,11 +743,11 @@ if (iNumThemes > 0) {
         // Space between themes
         %></tr><tr><td>&nbsp;</td></tr><%
 
-        g_pGameEngine->FreeData (pvThemeData);
+        FreeData (pvThemeData);
     }
     %></table><%
 
-    g_pGameEngine->FreeKeys (piThemeKey);
+    FreeKeys (piThemeKey);
 }
 
 %><p><h3>Create a new theme:</h3><%

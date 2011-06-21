@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_MAPFAIRNESSEVALUATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)
-#define AFX_MAPFAIRNESSEVALUATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_
+#pragma once
 
 #include "Osal/LinkedList.h"
 #include "Osal/Variant.h"
@@ -31,7 +30,8 @@ struct PlanetClaim {
     bool bValid;
 };
 
-class MapFairnessEvaluator {
+class MapFairnessEvaluator
+{
 private:
 
     unsigned int m_iNumPlanets, m_iNumEmpires;
@@ -58,5 +58,3 @@ public:
     int Run();
     unsigned int GetResourceClaim(unsigned int iEmpireKey);
 };
-
-#endif // !defined(AFX_MAPFAIRNESSEVALUATOR_H__DB071C4C_B823_4571_B2C9_56FE5DC4D31A__INCLUDED_)

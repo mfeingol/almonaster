@@ -31,14 +31,14 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
     Variant* pvPlanetKey = NULL;
 
     // Get empire's preferences
-    iErrCode = g_pGameEngine->GetEmpirePlanetIcons (iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    iErrCode = GetEmpirePlanetIcons (iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Get map geography information
-    iErrCode = g_pGameEngine->GetMapLimits (
+    iErrCode = GetMapLimits (
         iGameClass,
         iGameNumber,
         iEmpireKey,
@@ -79,7 +79,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
     }
 
     // Get visited planets
-    iErrCode = g_pGameEngine->GetVisitedPlanetKeys (
+    iErrCode = GetVisitedPlanetKeys (
         iGameClass, 
         iGameNumber, 
         iEmpireKey,
@@ -103,13 +103,13 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
 
         Variant vValue;
 
-        iErrCode = g_pGameEngine->GetPlanetCoordinates (iGameClass, iGameNumber, iPlanetKey, &iX, &iY);
+        iErrCode = GetPlanetCoordinates (iGameClass, iGameNumber, iPlanetKey, &iX, &iY);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = g_pGameEngine->GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Owner, &vValue);
+        iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Owner, &vValue);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -134,7 +134,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
             
         case SYSTEM:
 
-            iErrCode = g_pGameEngine->GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Annihilated, &vValue);
+            iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Annihilated, &vValue);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -154,7 +154,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
 
         default:
 
-            iErrCode = g_pGameEngine->GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienKey, &vValue);
+            iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienKey, &vValue);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -229,11 +229,11 @@ Cleanup:
     }
 
     if (pvPlanetKey != NULL) {
-        g_pGameEngine->FreeData (pvPlanetKey);
+        FreeData (pvPlanetKey);
     }
 
     if (piProxyKey != NULL) {
-        g_pGameEngine->FreeKeys (piProxyKey);
+        FreeKeys (piProxyKey);
     }
     
     if (iErrCode != OK) {
@@ -248,7 +248,7 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
     String strPlanetString;
 
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
-    g_pGameEngine->GetCoordinates (mmEntry.iX, mmEntry.iY, pszCoord);
+    GetCoordinates (mmEntry.iX, mmEntry.iY, pszCoord);
 
     switch (mmEntry.iiIcon) {
 

@@ -222,9 +222,8 @@ int SqlDatabaseConnection::DeleteAllRows(const char* pszTableName)
 
 int SqlDatabaseConnection::ReadRow(const char* pszTableName, unsigned int iKey, Variant** ppvData)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
+    return read.ReadRow(iKey, ppvData);
 }
 
 int SqlDatabaseConnection::ReadRow(const char* pszTableName, Variant** ppvData)

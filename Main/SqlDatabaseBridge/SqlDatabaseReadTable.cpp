@@ -181,7 +181,14 @@ int SqlDatabaseReadTable::GetSearchKeys(const SearchDefinition& sdSearch, unsign
     {
         cols[i].Name = gcnew System::String(sdSearch.pscColumns[i].pszColumn);
         cols[i].GreaterThanOrEqual = Convert(sdSearch.pscColumns[i].vData);
-        cols[i].LessThanOrEqual = Convert(sdSearch.pscColumns[i].vData2);
+        if (sdSearch.pscColumns[i].vData.GetType() == V_STRING)
+        {
+            cols[i].LessThanOrEqual = cols[i].GreaterThanOrEqual;
+        }
+        else
+        {
+            cols[i].LessThanOrEqual = Convert(sdSearch.pscColumns[i].vData2);
+        }
 
         // TODOTODO - Flags
     }
@@ -222,13 +229,6 @@ int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, int
 }
 
 int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, float* pfData)
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
-}
-
-int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, const char** ppszData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -288,13 +288,6 @@ int SqlDatabaseReadTable::ReadData(const char* pszColumn, float* pfData)
     }
 
     *pfData = (float)(double)read;
-    return OK;
-}
-
-int SqlDatabaseReadTable::ReadData(const char* pszColumn, const char** ppszData)
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
     return OK;
 }
 
@@ -501,7 +494,7 @@ int SqlDatabaseReadTable::ReadColumns(unsigned int iNumColumns, const char* cons
     return OK;
 }
 
-int SqlDatabaseReadTable::ReadRow(unsigned int iKey, void*** ppData)
+int SqlDatabaseReadTable::ReadRow(unsigned int iKey, void*** pppData)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -510,8 +503,23 @@ int SqlDatabaseReadTable::ReadRow(unsigned int iKey, void*** ppData)
 
 int SqlDatabaseReadTable::ReadRow(unsigned int iKey, Variant** ppvData)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    RowValues row = m_cmd->ReadRow(m_tableName, gcnew System::String(IdColumnName), iKey);
+    IEnumerable<System::Object^>^ values = row.Values;
+    if (values == nullptr)
+    {
+        return ERROR_UNKNOWN_ROW_KEY;
+    }
+
+    unsigned int iNumCols = Enumerable::Count(values);
+    Variant* pvData = new Variant[iNumCols];
+    Assert(pvData != NULL);
+
+    for (unsigned int i = 1; i < iNumCols; i ++)
+    {
+        Convert(Enumerable::ElementAt(values, i), pvData + i - 1);
+    }
+
+    *ppvData = pvData;
     return OK;
 }
 

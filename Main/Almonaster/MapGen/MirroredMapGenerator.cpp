@@ -18,18 +18,10 @@
 
 #include "MirroredMapGenerator.h"
 
-//////////////////////////////////////////////////////////////////////
-// Construction/Destruction
-//////////////////////////////////////////////////////////////////////
-
-MirroredMapGenerator::MirroredMapGenerator(IGameEngine* pGameEngine) 
+MirroredMapGenerator::MirroredMapGenerator(GameEngine* pGameEngine) 
     :
-    BaseMapGenerator(pGameEngine) {
-}
-
-IMapGenerator* MirroredMapGenerator::CreateInstance(IGameEngine* pGameEngine) {
-
-    return new MirroredMapGenerator(pGameEngine);
+    BaseMapGenerator(pGameEngine)
+{
 }
 
 int MirroredMapGenerator::CreatePlanetChains() {

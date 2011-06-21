@@ -1,6 +1,3 @@
-// GameEngine.h: Definition of the GameEngine class
-//
-//////////////////////////////////////////////////////////////////////
 //
 // Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -33,7 +30,7 @@
 #include "GameEngineGameObject.h"
 #include "GameEngineLocks.h"
 #include "IGameEngine.h"
-#include "../Chatroom/CChatroom.h"
+#include "AsyncManager.h"
 
 #include "Osal/Thread.h"
 #include "Osal/Event.h"
@@ -45,8 +42,6 @@
 
 #undef ALMONASTER_BUILD
 
-class GameEngine;
-
 // Remove annoying warning
 #ifdef _WIN32
 #pragma warning (disable : 4245)
@@ -55,15 +50,6 @@ class GameEngine;
 //
 // Types
 //
-
-struct LongRunningQueryMessage;
-typedef int (THREAD_CALL *Fxn_QueryCallBack) (LongRunningQueryMessage*);
-
-struct LongRunningQueryMessage {
-    GameEngine* pGameEngine;
-    Fxn_QueryCallBack pQueryCall;
-    void* pArguments;
-};
 
 struct EmpireIdentity {
     int iEmpireKey;
@@ -75,103 +61,11 @@ struct EmpireIdentity {
 
 extern __declspec(thread) IDatabaseConnection* t_pConn;
 
-class GameEngine : public IDatabaseBackupNotificationSink, public IGameEngine {
-
-    friend class AlmonasterHook;
-
+class GameEngine : public IGameEngine
+{
 private:
-
-    IDatabase* m_pGameData;
-
-    unsigned int m_iRootKey;
-    unsigned int m_iGuestKey;
-
-    Chatroom* m_pChatroom;
-
-    // Game objects
-    class GameObjectHashValue {
-    public:
-        static unsigned int GetHashValue (const char* pData, unsigned int iNumBuckets, const void* pHashHint);
-    };
-
-    class GameObjectEquals {
-    public:
-        static bool Equals (const char* pLeft, const char* pRight, const void* pEqualsHint);
-    };
-
-    HashTable<const char*, GameObject*, GameObjectHashValue, GameObjectEquals> m_htGameObjectTable;
-    ReadWriteLock m_rwGameObjectTableLock;
-
-    // UI Event sink
-    IAlmonasterUIEventSink* m_pUIEventSink;
-
-    // Report, page source control
-    IReport* m_pReport;
-    IPageSourceControl* m_pPageSourceControl;
-
-    // Almonaster hook
-    Library m_libHook;
-    IAlmonasterHook* m_pAlmonasterHook;
-
-    // Scoring systems
-    IScoringSystem* m_ppScoringSystem[NUM_SCORING_SYSTEMS];
-
-    // Autobackup
-    bool m_bGoodDatabase;
-
-    Thread m_tAutoBackupThread;
-    Event m_eAutoBackupEvent;
-
-    static int THREAD_CALL AutomaticBackup (void* pvGameEngine);
-    int AutomaticBackup();
-
-    // Backup status
-    DatabaseBackupStage m_dbsStage;
-
-    unsigned int m_iMaxNumTemplates;
-    unsigned int m_iMaxNumTables;
-
-    bool m_bActiveBackup;
-    UTCTime m_tBackupStartTime;
-
-    // Configuration
-    SystemConfiguration m_scConfig;
-    ChatroomConfig m_ccConfig;
-
-    ReadWriteLock m_rwGameConfigLock;
-    ReadWriteLock m_rwMapConfigLock;
-
-    // Database
-    Library m_libDatabase;
-    char* m_pszDatabaseFile;
-    Uuid m_uuidDatabaseClsid;
-    char* m_pszDatabaseConnectionString;
-
-    // Synchronization
-    ReadWriteLock m_mConfigLock;
-
-    Mutex m_mGameClasses;
-    Mutex m_mSuperClasses;
-    Mutex m_mAlienIcons;
-
-    // GameEmpireLock management
-    GameEmpireLockManager m_lockMgr;
-
-    // Long running queries
-    Event m_eQueryEvent;
-
-    Thread m_tLongRunningQueries;
-    ThreadSafeFifoQueue<LongRunningQueryMessage*> m_tsfqQueryQueue;
-
-    static int THREAD_CALL LongRunningQueryProcessor (void* pVoid);
-    int LongRunningQueryProcessorLoop();
-
-    int SendLongRunningQueryMessage (Fxn_QueryCallBack pfxFunction, void* pVoid);
-
-    // Setup
-    int Setup();
-    
-    int CreateNewDatabase();
+   
+    int InitializeNewDatabase();
     int ReloadDatabase();
 
     int CreateDefaultSystemTemplates();
@@ -181,7 +75,6 @@ private:
     int SetupDefaultSystemGameClasses();
 
     int VerifySystem();
-    int VerifyEmpires();
     int VerifyGameClasses();
     int VerifyMarkedGameClasses();
     int VerifyActiveGames();
@@ -205,12 +98,7 @@ private:
 
     int GetGames (bool bOpen, int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
 
-    int AddToGameTable (int iGameClass, int iGameNumber);
-    int RemoveFromGameTable (int iGameClass, int iGameNumber);
-
     int RuinEmpire (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage);
-
-    GameObject* GetGameObject (int iGameClass, int iGameNumber);
 
     int PauseGameAt (int iGameClass, int iGameNumber, const UTCTime& tNow);
     int PauseGameInternal (int iGameClass, int iGameNumber, const UTCTime& tNow, bool bAdmin, bool bBroadcast);
@@ -223,7 +111,7 @@ private:
     int UpdateEmpireString (int iEmpireKey, const char* pszColumn, const char* pszString, size_t stMaxLen, bool* pbTruncated);
 
     int QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey);
-    static int THREAD_CALL DeleteEmpireMsg (LongRunningQueryMessage* pMessage);
+    static int THREAD_CALL DeleteEmpireMsg (AsyncTask* pMessage);
 
     // Planets
     int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, 
@@ -305,30 +193,19 @@ private:
     int UpdateScoresOnDraw (int iGameClass, int iGameNumber, int iEmpireKey);
     int UpdateScoresOnRuin (int iGameClass, int iGameNumber, int iEmpireKey);
 
-    int CalculatePrivilegeLevel (int iEmpireKey);
-
-    int AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
-        int iEmpireKey, const char* pszEmpireName, int iAlienKey,
-        int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey);
-
     int GetBridierScore (int iEmpireKey, int* piRank, int* piIndex);
     
     int TriggerBridierTimeBombIfNecessaryCallback();
-    static int THREAD_CALL TriggerBridierTimeBombIfNecessaryMsg (LongRunningQueryMessage* pMessage);
+    static int THREAD_CALL TriggerBridierTimeBombIfNecessaryMsg (AsyncTask* pMessage);
 
     int ScanEmpiresOnScoreChanges();
 
     // Options
     int CheckForDelayedPause (int iGameClass, int iGameNumber, const UTCTime& tNow, bool* pbNewlyPaused);
 
-    // Top Lists
-    int UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey);
-    int UpdateTopListOnDecrease (ScoringSystem ssTopList, int iEmpireKey);
-    int UpdateTopListOnDeletion (ScoringSystem ssTopList, int iEmpireKey);
-
-    static int THREAD_CALL UpdateTopListOnIncreaseMsg (LongRunningQueryMessage* pMessage);
-    static int THREAD_CALL UpdateTopListOnDecreaseMsg (LongRunningQueryMessage* pMessage);
-    static int THREAD_CALL UpdateTopListOnDeletionMsg (LongRunningQueryMessage* pMessage);
+    static int THREAD_CALL UpdateTopListOnIncreaseMsg (AsyncTask* pMessage);
+    static int THREAD_CALL UpdateTopListOnDecreaseMsg (AsyncTask* pMessage);
+    static int THREAD_CALL UpdateTopListOnDeletionMsg (AsyncTask* pMessage);
 
     int UpdateTopListOnIncrease (TopListQuery* pQuery);
     int UpdateTopListOnDecrease (TopListQuery* pQuery);
@@ -498,22 +375,8 @@ private:
     bool DoesGameClassHaveActiveGames (int iGameClass);
 
     // Database ops
-    int FlushDatabasePrivate (int iEmpireKey);
-    static int THREAD_CALL FlushDatabaseMsg (LongRunningQueryMessage* pMessage);
-
-    int BackupDatabasePrivate (int iEmpireKey);
-    static int THREAD_CALL BackupDatabaseMsg (LongRunningQueryMessage* pMessage);
-
-    int RestoreDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMonth, int iYear, int iVersion);
-    static int THREAD_CALL RestoreDatabaseBackupMsg (LongRunningQueryMessage* pMessage);
-
-    int DeleteDatabaseBackupPrivate (int iEmpireKey, int iDay, int iMonth, int iYear, int iVersion);
-    static int THREAD_CALL DeleteDatabaseBackupMsg (LongRunningQueryMessage* pMessage);
-
     int PurgeDatabasePrivate (int iEmpireKey, int iCriteria);
-    static int THREAD_CALL PurgeDatabaseMsg (LongRunningQueryMessage* pMessage);
-
-    int DeleteOldDatabaseBackups();
+    static int THREAD_CALL PurgeDatabaseMsg (AsyncTask* pMessage);
 
     // Diplomacy
     int AddDiplomaticOption (int iGameClass, int iGameNumber, int iTargetEmpireKey,
@@ -568,25 +431,8 @@ private:
 
 public:
 
-    // Constructor/destructor
-    GameEngine (
-        
-        const char* pszDatabaseFile,
-        const Uuid& uuidDatabaseClsid,
-        const char* pszDatabaseConnectionString,
-
-        const char* pszHookLibrary,
-
-        IAlmonasterUIEventSink* pUIEventSink, 
-
-        IReport* pReport, 
-        IPageSourceControl* pPageSourceControl,
-
-        const SystemConfiguration& scConfig,
-        const ChatroomConfig& ccConfig
-        );
-    
-    ~GameEngine();
+    // Setup
+    int Setup();
 
     void FreeData (void** ppData);
     void FreeData (Variant* pvData);
@@ -599,8 +445,6 @@ public:
     void FreeKeys (unsigned int* piKeys);
     void FreeKeys (int* piKeys);
 
-    int Initialize();
-
     int FlushDatabase (int iEmpireKey);
     int BackupDatabase (int iEmpireKey);
     int PurgeDatabase (int iEmpireKey, int iCriteria);
@@ -608,16 +452,7 @@ public:
     int RestoreDatabaseBackup (int iEmpireKey, int iDay, int iMonth, int iYear, int iVersion);
     int DeleteDatabaseBackup (int iEmpireKey, int iDay, int iMonth, int iYear, int iVersion);
 
-    IDatabase* GetDatabase();
-    Chatroom* GetChatroom();
-    IScoringSystem* GetScoringSystem (ScoringSystem ssScoringSystem);
-
-    IReport* GetReport();
-
     const char* GetSystemVersion();
-
-    unsigned int GetRootKey();
-    unsigned int GetGuestKey();
 
     int GetNewSessionId (int64* pi64SessionId);
 
@@ -626,8 +461,6 @@ public:
 
     int SetGameConfiguration (const GameConfiguration& gcConfig);
     int SetMapConfiguration (const MapConfiguration& mcConfig);
-
-    int GetSystemConfiguration (SystemConfiguration* pscConfig);
 
     // Rules
     int GetBattleRank (float fTech);
@@ -679,49 +512,6 @@ public:
     bool IsLegalPrivilege (int iPrivilege);
 
     int GetNextDiplomaticStatus (int iOffer1, int iOffer2, int iCurrentStatus);
-
-    // Locks: don't use these unless you know what you're doing!
-    int LockGameClass (int iGameClass, NamedMutex* pnmMutex);
-    void UnlockGameClass (const NamedMutex& nmMutex);
-
-    void LockGameClasses();
-    void UnlockGameClasses();
-
-    void LockSuperClasses();
-    void UnlockSuperClasses();
-
-    int LockEmpireBridier (int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpireBridier (const NamedMutex& nmMutex);
-
-    void LockAlienIcons();
-    void UnlockAlienIcons();
-
-    int LockTournament (unsigned int iTournamentKey, NamedMutex* pnmMutex);
-    void UnlockTournament (const NamedMutex& nmMutex);
-
-    int LockEmpire (int iEmpireKey, NamedMutex* pnmMutex);
-    void UnlockEmpire (const NamedMutex& nmMutex);
-
-    int WaitGameReader (int iGameClass, int iGameNumber, int iEmpireKey, GameEmpireLock** ppgeLock);
-    int SignalGameReader (int iGameClass, int iGameNumber, int iEmpireKey, GameEmpireLock* pgeLock);
-
-    int WaitGameWriter (int iGameClass, int iGameNumber);
-    int SignalGameWriter (int iGameClass, int iGameNumber);
-
-    int WaitForUpdate (int iGameClass, int iGameNumber);
-    int SignalAfterUpdate (int iGameClass, int iGameNumber);
-
-    void LockGameConfigurationForReading();
-    void UnlockGameConfigurationForReading();
-
-    void LockGameConfigurationForWriting();
-    void UnlockGameConfigurationForWriting();
-
-    void LockMapConfigurationForReading();
-    void UnlockMapConfigurationForReading();
-
-    void LockMapConfigurationForWriting();
-    void UnlockMapConfigurationForWriting();
 
     // Update
     int ForceUpdate (int iGameClass, int iGameNumber);
@@ -873,8 +663,7 @@ public:
 
     int CreateGame (int iGameClass, int iEmpireCreator, const GameOptions& goGameOptions, int* piGameNumber);
     int EnterGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszPassword,
-        const GameOptions* pgoGameOptions, int* piNumUpdates, bool bSendMessages, bool bCreatingGame, 
-        bool bCheckSecurity, NamedMutex* pempireMutex, bool* pbUnlocked);
+        const GameOptions* pgoGameOptions, int* piNumUpdates, bool bSendMessages, bool bCreatingGame, bool bCheckSecurity);
 
     int SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszIPAddress);
 
@@ -1132,6 +921,18 @@ public:
     int GetBridierTimeBombScanFrequency (Seconds* piFrequency);
     int SetBridierTimeBombScanFrequency (Seconds iFrequency);
 
+    int UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey);
+    int UpdateTopListOnDecrease (ScoringSystem ssTopList, int iEmpireKey);
+    int UpdateTopListOnDeletion (ScoringSystem ssTopList, int iEmpireKey);
+
+    IScoringSystem* CreateScoringSystem(ScoringSystem ssTopList);
+
+    int CalculatePrivilegeLevel (int iEmpireKey);
+
+    int AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
+        int iEmpireKey, const char* pszEmpireName, int iAlienKey,
+        int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey);
+
     // System Config
     int GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLivePlanet, 
         unsigned int* piDeadPlanet, unsigned int* piButtons, unsigned int* piSeparator, 
@@ -1173,7 +974,7 @@ public:
     int CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpdateCheckTime, bool* pbUpdate);
     int CheckAllGamesForUpdates (bool fUpdateCheckTime);
 
-    static int THREAD_CALL CheckAllGamesForUpdatesMsg (LongRunningQueryMessage* pMessage);
+    static int THREAD_CALL CheckAllGamesForUpdatesMsg (AsyncTask* pMessage);
 
     //////////
     // Game //
@@ -1437,34 +1238,6 @@ public:
     int CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch, bool* pbAuth);
     int CreateAssociation (unsigned int iEmpireKey, const char* pszSecondEmpire, const char* pszPassword);
     int DeleteAssociation (unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
-
-    //
-    // Interfaces
-    //
-    IMPLEMENT_TWO_INTERFACES (IDatabaseBackupNotificationSink, IGameEngine);
-
-    // IDatabaseBackupNotificationSink
-    void BeginBackup (const char* pszBackupDirectory);
-    
-    void BeginTemplateBackup (unsigned int iNumTemplates);
-    void EndTemplateBackup();
-
-    void BeginTableBackup (unsigned int iNumTables);
-    void EndTableBackup();
-
-    void BeginVariableLengthDataBackup();
-    void EndVariableLengthDataBackup();
-
-    void BeginMetaDataBackup();
-    void EndMetaDataBackup();
-
-    void EndBackup (IDatabaseBackup* pBackup);
-
-    void AbortBackup (int iErrCode);
-
-    // Auxiliary database functions
-    bool IsDatabaseBackingUp();
-    void GetDatabaseBackupProgress (DatabaseBackupStage* pdbsStage, Seconds* piElapsedTime, unsigned int* piNumber);
 };
 
 struct PlanetData {

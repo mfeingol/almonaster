@@ -1514,7 +1514,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         iNewUpdateCount
         );
 
-    m_pReport->WriteReport (pszUpdateReport);
+    global.GetReport()->WriteReport (pszUpdateReport);
 
     if (iGameState & PAUSED) {
 

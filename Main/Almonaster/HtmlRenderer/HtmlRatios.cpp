@@ -28,12 +28,12 @@ int HtmlRenderer::WriteRatiosString (RatioInformation* pratInfo) {
         pratInfo = (RatioInformation*) StackAlloc (sizeof (RatioInformation));
     }
     
-    iErrCode = g_pGameEngine->GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev);
+    iErrCode = GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev);
     if (iErrCode != OK) {
         return iErrCode;
     }
     
-    iErrCode = g_pGameEngine->GetRatioInformation (m_iGameClass, m_iGameNumber, m_iEmpireKey, pratInfo);
+    iErrCode = GetRatioInformation (m_iGameClass, m_iGameNumber, m_iEmpireKey, pratInfo);
     if (iErrCode != OK) {
         return iErrCode;
     }

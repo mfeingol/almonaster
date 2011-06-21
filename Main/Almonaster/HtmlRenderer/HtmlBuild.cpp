@@ -41,13 +41,13 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     size_t stTableColorLen;
 
     // Make sure planet is a builder
-    iErrCode = g_pGameEngine->IsPlanetBuilder (m_iGameClass, m_iGameNumber, m_iEmpireKey, iPlanetKey, &bBuilder);
+    iErrCode = IsPlanetBuilder (m_iGameClass, m_iGameNumber, m_iEmpireKey, iPlanetKey, &bBuilder);
     if (iErrCode != OK || !bBuilder) {
         goto Cleanup;
     }
 
     // Check BR
-    iErrCode = g_pGameEngine->GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
+    iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -57,7 +57,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     }
 
     // Check ship limits
-    iErrCode = g_pGameEngine->GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
+    iErrCode = GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -65,7 +65,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     if (vTemp.GetInteger() != INFINITE_SHIPS) {
 
         int iNumShips;
-        iErrCode = g_pGameEngine->GetNumShips (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumShips);
+        iErrCode = GetNumShips (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumShips);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -76,12 +76,12 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     }
 
     // Get empire data
-    iErrCode = g_pGameEngine->GetDevelopedTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iTechDevs, &iTechUndevs);
+    iErrCode = GetDevelopedTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iTechDevs, &iTechUndevs);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vTemp);
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -99,7 +99,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetBuildLocations (
+    iErrCode = GetBuildLocations (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -295,7 +295,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
             default:
 
                 Variant vFleetName;
-                iErrCode = g_pGameEngine->GetFleetProperty (
+                iErrCode = GetFleetProperty (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -314,7 +314,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
 
                 m_pHttpResponse->WriteText (strFleetName.GetCharPtr(), strFleetName.GetLength());
 
-                iErrCode = g_pGameEngine->GetNumShipsInFleet (
+                iErrCode = GetNumShipsInFleet (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -418,17 +418,18 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
     if (pHttpForm != NULL) {
 
         iFleet = pHttpForm->GetUIntValue();
-        if (iFleet == FLEET_NEWFLEETKEY) {
-
-            iErrCode = CreateRandomFleet (iPlanetKey, &iFleet);
-            if (iErrCode != OK) {
+        if (iFleet == FLEET_NEWFLEETKEY)
+        {
+            iErrCode = HtmlCreateRandomFleet (iPlanetKey, &iFleet);
+            if (iErrCode != OK)
+            {
                 goto Cleanup;
             }
         }
     }
 
     // Get names
-    iErrCode = g_pGameEngine->GetPlanetCoordinates(
+    iErrCode = GetPlanetCoordinates(
         m_iGameClass, 
         m_iGameNumber, 
         iPlanetKey, 
@@ -440,7 +441,7 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetPlanetName (
+    iErrCode = GetPlanetName (
         m_iGameClass, 
         m_iGameNumber, 
         iPlanetKey, 
@@ -461,7 +462,7 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
 
     } else {
 
-        iErrCode = g_pGameEngine->GetFleetProperty (
+        iErrCode = GetFleetProperty (
             m_iGameClass, 
             m_iGameNumber,
             m_iEmpireKey,
@@ -479,7 +480,7 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
         }
     }
 
-    iErrCode = g_pGameEngine->BuildNewShips (
+    iErrCode = BuildNewShips (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -510,12 +511,12 @@ Cleanup:
 }
 
 
-int HtmlRenderer::CreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFleetKey) {
+int HtmlRenderer::HtmlCreateRandomFleet(unsigned int iPlanetKey, unsigned int* piFleetKey) {
 
     const char* pszFleetName = "";
     Variant vName;
 
-    int iErrCode = g_pGameEngine->CreateRandomFleet (
+    int iErrCode = CreateRandomFleet(
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -525,7 +526,7 @@ int HtmlRenderer::CreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFl
 
     if (iErrCode == OK) {
 
-        if (g_pGameEngine->GetFleetProperty (
+        if (GetFleetProperty (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,

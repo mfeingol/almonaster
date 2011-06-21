@@ -351,13 +351,6 @@ const TemplateDescription* TOPLIST_TEMPLATE[NUM_SCORING_SYSTEMS] = {
     &SystemBridierScoreEstablishedTopList::Template,
 };
 
-const unsigned int TOPLIST_NUM_COLUMNS [NUM_SCORING_SYSTEMS] = {
-    SystemAlmonasterScoreTopList::NumColumns,
-    SystemClassicScoreTopList::NumColumns,
-    SystemBridierScoreTopList::NumColumns,
-    SystemBridierScoreEstablishedTopList::NumColumns,
-};
-
 const unsigned int TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [NUM_SCORING_SYSTEMS] = {
     SystemAlmonasterScoreTopList::NumColumns - 1,
     SystemClassicScoreTopList::NumColumns - 1,

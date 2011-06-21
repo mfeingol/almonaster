@@ -57,11 +57,8 @@ namespace Almonaster.Database.Sql
             this.setComplete = true;
         }
 
-        internal bool CreateDatabaseIfNecessary()
+        internal bool CreateDatabaseIfNecessary(string databaseName)
         {
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.conn.ConnectionString);
-            string databaseName = builder.InitialCatalog;
-
             ServerConnection serverConn = new ServerConnection(this.conn);
             Server server = new Server(serverConn);
 
@@ -522,6 +519,33 @@ namespace Almonaster.Database.Sql
             }
 
             return rows;
+        }
+
+        public RowValues ReadRow(string tableName, string idColumnName, long id)
+        {
+            string cmdText = String.Format("SELECT * FROM [{0}] WHERE [{1}] = @p0", tableName, idColumnName);
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.Parameters.Add(new SqlParameter("@p0", id));
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    RowValues row = new RowValues();
+                    if (reader.Read())
+                    {
+                        int cols = reader.VisibleFieldCount;
+                        object[] values = new object[cols];
+                        row.Values = values;
+
+                        for (int i = 0; i < cols; i++)
+                        {
+                            values[i] = reader[i];
+                        }
+                    }
+                    return row;
+                }
+            }
         }
 
         public void DeleteAllRows(string tableName)

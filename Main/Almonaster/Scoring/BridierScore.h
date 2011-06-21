@@ -1,26 +1,39 @@
-// BridierScore.h: interface for the BridierScore class.
 //
-//////////////////////////////////////////////////////////////////////
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
 
-#if !defined(AFX_BRIDIERSCORE_H__73488604_ED55_4BC5_8981_A395C3928D12__INCLUDED_)
-#define AFX_BRIDIERSCORE_H__73488604_ED55_4BC5_8981_A395C3928D12__INCLUDED_
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#include "../GameEngine/GameEngine.h"
+#pragma once
+
+#include "Interface.h"
+#include "GameEngine.h"
 
 //
 // BridierObject
 //
 
-class BridierObject {
+class BridierObject
+{
 protected:
-
-    IGameEngine* m_pGameEngine;
-    IDatabaseConnection* t_pConn;
-
-    BridierObject (IGameEngine* pGameEngine);
-    ~BridierObject();
+    GameEngine* m_pGameEngine;
 
 public:
+
+    BridierObject(GameEngine* pGameEngine);
+    ~BridierObject();
 
     int IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridier);
     int CompareScores (const Variant* pvLeft, const Variant* pvRight);
@@ -41,17 +54,12 @@ public:
 // BridierScore
 //
 
-class BridierScore : public IScoringSystem, protected BridierObject {
-protected:
-
-    BridierScore (IGameEngine* pGameEngine);
-
+class BridierScore : public IScoringSystem, protected BridierObject
+{
 public:
 
-    IMPLEMENT_INTERFACE (IScoringSystem);
-
-    static IScoringSystem* CreateInstance (IGameEngine* pGameEngine);
-
+    BridierScore(GameEngine* pGameEngine);
+    
     // IScoringSystem
     bool HasTopList();
 
@@ -83,15 +91,9 @@ protected:
 //
 
 class BridierScoreEstablished : public IScoringSystem, protected BridierObject {
-protected:
-
-    BridierScoreEstablished (IGameEngine* pGameEngine);
-
 public:
 
-    IMPLEMENT_INTERFACE (IScoringSystem);
-
-    static IScoringSystem* CreateInstance (IGameEngine* pGameEngine);
+    BridierScoreEstablished(GameEngine* pGameEngine);
 
     // IScoringSystem
     bool HasTopList();
@@ -113,5 +115,3 @@ public:
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
     int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires);
 };
-
-#endif // !defined(AFX_BRIDIERSCORE_H__73488604_ED55_4BC5_8981_A395C3928D12__INCLUDED_)

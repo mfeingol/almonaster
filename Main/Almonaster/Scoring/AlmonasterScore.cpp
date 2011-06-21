@@ -1,38 +1,32 @@
-// AlmonasterScore.cpp: implementation of the AlmonasterScore class.
 //
-//////////////////////////////////////////////////////////////////////
+// Almonaster.dll:  a component of Almonaster
+// Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
+//
+// This program is free software; you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation; either version 2
+// of the License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program; if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "AlmonasterScore.h"
+#include "GameEngine.h"
+#include "ClassicScore.h"
 
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-AlmonasterScore::AlmonasterScore (IGameEngine* pGameEngine)
+AlmonasterScore::AlmonasterScore(GameEngine* pGameEngine)
 {
-    m_iNumRefs = 1;
-
-    Assert (pGameEngine != NULL);
-
-    m_pGameEngine = pGameEngine; // Weak ref
-    
-    IDatabase* pDatabase = m_pGameEngine->GetDatabase(); // AddRef()
-    Assert (pDatabase != NULL);
-
-    t_pConn = pDatabase->CreateConnection();
-    Assert (t_pConn != NULL);
-
-    SafeRelease(pDatabase);
-}
-
-AlmonasterScore::~AlmonasterScore()
-{
-    SafeRelease(t_pConn);
-}
-
-IScoringSystem* AlmonasterScore::CreateInstance (IGameEngine* pGameEngine) {
-
-    return new AlmonasterScore (pGameEngine);
+    m_pGameEngine = pGameEngine;
 }
 
 bool AlmonasterScore::HasTopList() {
@@ -189,10 +183,9 @@ int AlmonasterScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iL
 }
 
 int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey, 
-                                                     int iPlanetKey, ScoringChanges* pscChanges) {
-    NamedMutex nmEmpireLock;
-
-    bool bLocked = false, bValid;
+                                                     int iPlanetKey, ScoringChanges* pscChanges)
+{
+    bool bValid;
 
     float fWinnerScore, fLoserScore, fWinnerIncrease, fLoserDecrease;
     int iErrCode, iLoserSignificance, iLoserNumAllies, iWinnerNumAllies, iWinnerSignificance, iLoserKey;
@@ -281,13 +274,6 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
 
     // Try to find the loser
     // This doesn't really belong here, but it's a convenient place to do it for perf
-    iErrCode = m_pGameEngine->LockEmpire (iLoserKey, &nmEmpireLock);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    bLocked = true;
-
     iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
     if (iErrCode != OK) {
         Assert (false);
@@ -334,10 +320,6 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
     }
     
 Cleanup:
-
-    if (bLocked) {
-        m_pGameEngine->UnlockEmpire (nmEmpireLock);
-    }
 
     return iErrCode;
 }
@@ -880,13 +862,10 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
 
     int64 i64EmpireSecretKey;
 
-    bool bEmpireLocked = false, bValid;
+    bool bValid;
 
     Variant vPlanetName, vTemp, vNukerNewScore;
-    IScoringSystem* pClassicScore = NULL;
     ScoringChanges scChanges;
-
-    NamedMutex nmEmpireLock;
 
     // Get loser's stats
     iErrCode = GetRelevantStatisticsFromPlanet (
@@ -951,13 +930,6 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
         }
     }
 
-    iErrCode = m_pGameEngine->LockEmpire (iLoserKey, &nmEmpireLock);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    bEmpireLocked = true;
-    
     // If empire is valid, decrement its score
     iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
     if (iErrCode != OK) {
@@ -1156,11 +1128,10 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
         }
 
         // Notify classic score
-        pClassicScore = m_pGameEngine->GetScoringSystem (CLASSIC_SCORE);
-        Assert (pClassicScore != NULL);
+        ClassicScore classicScore(m_pGameEngine);
 
         // We ignore scoring changes when accounting this nuke
-        iErrCode = pClassicScore->OnNuke (iGameClass, iGameNumber, iNukerEmpireKey, NO_KEY, &scChanges);
+        iErrCode = classicScore.OnNuke (iGameClass, iGameNumber, iNukerEmpireKey, NO_KEY, &scChanges);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1221,21 +1192,12 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame (int iGameClass, int iG
 
 Cleanup:
 
-    if (bEmpireLocked) {
-        m_pGameEngine->UnlockEmpire (nmEmpireLock);
-    }
-
-    if (pClassicScore != NULL) {
-        pClassicScore->Release();
-    }
-
     return iErrCode;
 }
 
 bool AlmonasterScore::IsValidScore (const Variant* pvScore) {
 
     float fScore = pvScore->GetFloat();
-
     return fScore >= CLASSIC_MIN_SCORE && fScore <= CLASSIC_MAX_SCORE;
 }
 

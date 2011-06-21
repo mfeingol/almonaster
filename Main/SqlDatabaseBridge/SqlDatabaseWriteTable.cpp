@@ -296,11 +296,6 @@ int SqlDatabaseWriteTable::ReadData(unsigned int iKey, const char* pszColumn, fl
     return m_readTable.ReadData(iKey, pszColumn, pfData);
 }
 
-int SqlDatabaseWriteTable::ReadData(unsigned int iKey, const char* pszColumn, const char** ppszData)
-{
-    return m_readTable.ReadData(iKey, pszColumn, ppszData);
-}
-
 int SqlDatabaseWriteTable::ReadData(unsigned int iKey, const char* pszColumn, int64* pi64Data)
 {
     return m_readTable.ReadData(iKey, pszColumn, pi64Data);
@@ -319,11 +314,6 @@ int SqlDatabaseWriteTable::ReadData(const char* pszColumn, int* piData)
 int SqlDatabaseWriteTable::ReadData(const char* pszColumn, float* pfData)
 {
     return m_readTable.ReadData(pszColumn, pfData);
-}
-
-int SqlDatabaseWriteTable::ReadData(const char* pszColumn, const char** ppszData)
-{
-    return m_readTable.ReadData(pszColumn, ppszData);
 }
 
 int SqlDatabaseWriteTable::ReadData(const char* pszColumn, int64* pi64Data)

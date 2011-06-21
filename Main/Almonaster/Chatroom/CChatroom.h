@@ -82,10 +82,10 @@ private:
 
 public:
 
-    Chatroom(const ChatroomConfig& ccConf, IDatabase* pDatabase);
+    Chatroom();
     ~Chatroom();
 
-    int Initialize();
+    int Initialize(const ChatroomConfig& ccConf);
 
     int GetSpeakers(ChatroomSpeaker** ppcsSpeakers, unsigned int* piNumSpeakers);
     void FreeSpeakers(ChatroomSpeaker* pcsSpeakers);

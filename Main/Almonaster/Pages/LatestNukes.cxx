@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -32,7 +32,7 @@ SYSTEM_OPEN (false)
 int iNumNukes;
 Variant** ppvNukeData;
 
-if (g_pGameEngine->GetSystemNukeHistory (&iNumNukes, &ppvNukeData) != OK) {
+if (GetSystemNukeHistory (&iNumNukes, &ppvNukeData) != OK) {
 
     %><p><strong>The latest nukes could not be read</strong><%
 }
@@ -164,7 +164,7 @@ else {
 
     %></table><%
 
-    g_pGameEngine->FreeData (ppvNukeData);
+    FreeData (ppvNukeData);
 }
 
 

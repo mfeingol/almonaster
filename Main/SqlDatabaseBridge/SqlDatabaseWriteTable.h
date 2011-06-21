@@ -40,17 +40,12 @@ public:
 
     int ReadData(unsigned int iKey, const char* pszColumn, int* piData);
     int ReadData(unsigned int iKey, const char* pszColumn, float* pfData);
-    int ReadData(unsigned int iKey, const char* pszColumn, const char** ppszData);
-
     int ReadData(unsigned int iKey, const char* pszColumn, int64* pi64Data);
     int ReadData(unsigned int iKey, const char* pszColumn, Variant* pvData);
 
     int ReadData(const char* pszColumn, int* piData);
     int ReadData(const char* pszColumn, float* pfData);
-    int ReadData(const char* pszColumn, const char** ppszData);
-    
     int ReadData(const char* pszColumn, int64* pi64Data);
-
     int ReadData(const char* pszColumn, Variant* pvData);
 
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows);

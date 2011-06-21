@@ -1,6 +1,8 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
-#include "../Chatroom/CChatroom.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
+#include "CChatroom.h"
+#include "Global.h"
+ 
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -27,7 +29,7 @@ IHttpForm* pHttpForm;
 
 unsigned int i;
 InChatroom iInChatroom = CHATROOM_UNCHECKED;
-Chatroom* pChatroom = g_pGameEngine->GetChatroom();
+Chatroom* pChatroom = global.GetChatroom();
 
 // Make sure we have broadcast rights
 int iErrCode;

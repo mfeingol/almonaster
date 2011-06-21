@@ -41,7 +41,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     m_pHttpResponse->WriteText (iTargetEmpireKey);
     OutputText ("\">");
     
-    iErrCode = g_pGameEngine->GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
+    iErrCode = GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -49,19 +49,19 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger();
     iOptions2 = pvEmpireData[SystemEmpireData::iOptions2].GetInteger();
 
-    iErrCode = g_pGameEngine->GetJoinedTournaments (iTargetEmpireKey, NULL, NULL, &iNumActiveTournaments);
+    iErrCode = GetJoinedTournaments (iTargetEmpireKey, NULL, NULL, &iNumActiveTournaments);
     if (iErrCode != OK) {
         goto OnError;
     }
     
     if (iTargetEmpireKey != iEmpireKey) {
 
-        iErrCode = g_pGameEngine->GetEmpirePersonalGameClasses (iTargetEmpireKey, NULL, NULL, &iNumPersonalGameClasses);
+        iErrCode = GetEmpirePersonalGameClasses (iTargetEmpireKey, NULL, NULL, &iNumPersonalGameClasses);
         if (iErrCode != OK) {
             goto OnError;
         }
 
-        iErrCode = g_pGameEngine->GetOwnedTournaments (iTargetEmpireKey, NULL, NULL, &iNumPersonalTournaments);
+        iErrCode = GetOwnedTournaments (iTargetEmpireKey, NULL, NULL, &iNumPersonalTournaments);
         if (iErrCode != OK) {
             goto OnError;
         }
@@ -79,7 +79,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         goto OnError;
     }
     
-    iErrCode = g_pGameEngine->GetNumUnreadSystemMessages (iTargetEmpireKey, &iNumUnreadMessages);
+    iErrCode = GetNumUnreadSystemMessages (iTargetEmpireKey, &iNumUnreadMessages);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -104,7 +104,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
             unsigned int* piAssoc, iAssoc;
 
-            iErrCode = g_pGameEngine->GetAssociations (iEmpireKey, &piAssoc, &iAssoc);
+            iErrCode = GetAssociations (iEmpireKey, &piAssoc, &iAssoc);
             if (iErrCode == OK && iAssoc > 0) {
 
                 char pszName [MAX_EMPIRE_NAME_LENGTH + 1];
@@ -114,7 +114,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
                 
                 if (iAssoc == 1) {
 
-                    if (g_pGameEngine->GetEmpireName (piAssoc[0], pszName) == OK) {
+                    if (GetEmpireName (piAssoc[0], pszName) == OK) {
                         m_pHttpResponse->WriteText (pszName);
                         OutputText ("<input type=\"hidden\" name=\"Switch\" value=\"");
                         m_pHttpResponse->WriteText (piAssoc[0]);
@@ -127,7 +127,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
                     for (unsigned int i = 0; i < iAssoc; i ++) {
 
-                        if (g_pGameEngine->GetEmpireName (piAssoc[i], pszName) == OK) {
+                        if (GetEmpireName (piAssoc[i], pszName) == OK) {
                             OutputText ("<option value=\"");
                             m_pHttpResponse->WriteText (piAssoc[i]);
                             OutputText ("\">");
@@ -145,7 +145,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
         int iNumNukes, iNumNuked;
 
-        iErrCode = g_pGameEngine->GetNumEmpiresInNukeHistory (iTargetEmpireKey, &iNumNukes, &iNumNuked);
+        iErrCode = GetNumEmpiresInNukeHistory (iTargetEmpireKey, &iNumNukes, &iNumNuked);
         if (iErrCode != OK) {
             goto OnError;
         }
@@ -222,8 +222,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (!bEmpireAdmin || 
         m_iPrivilege < ADMINISTRATOR ||
         m_iEmpireKey == iTargetEmpireKey || 
-        iTargetEmpireKey == g_pGameEngine->GetRootKey() || 
-        iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+        iTargetEmpireKey == global.GetRootKey() || 
+        iTargetEmpireKey == global.GetGuestKey()) {
         
         m_pHttpResponse->WriteText (PRIVILEGE_STRING [pvEmpireData[SystemEmpireData::iPrivilege].GetInteger()]);
         
@@ -313,8 +313,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (!bEmpireAdmin || 
         m_iPrivilege < ADMINISTRATOR ||
         m_iEmpireKey == iTargetEmpireKey || 
-        iTargetEmpireKey == g_pGameEngine->GetRootKey() ||
-        iTargetEmpireKey == g_pGameEngine->GetGuestKey()) {
+        iTargetEmpireKey == global.GetRootKey() ||
+        iTargetEmpireKey == global.GetGuestKey()) {
         
         if (bCanBroadcast) {
             OutputText ("Yes");
@@ -388,8 +388,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (bEmpireAdmin &&
         m_iPrivilege >= ADMINISTRATOR &&
         m_iEmpireKey != iTargetEmpireKey && 
-        iTargetEmpireKey != g_pGameEngine->GetRootKey() &&
-        iTargetEmpireKey != g_pGameEngine->GetGuestKey()) {
+        iTargetEmpireKey != global.GetRootKey() &&
+        iTargetEmpireKey != global.GetGuestKey()) {
 
         float fScore = pvEmpireData[SystemEmpireData::iAlmonasterScore].GetFloat();
         
@@ -421,8 +421,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (bEmpireAdmin &&
         m_iPrivilege >= ADMINISTRATOR &&
         m_iEmpireKey != iTargetEmpireKey && 
-        iTargetEmpireKey != g_pGameEngine->GetRootKey() &&
-        iTargetEmpireKey != g_pGameEngine->GetGuestKey()) {
+        iTargetEmpireKey != global.GetRootKey() &&
+        iTargetEmpireKey != global.GetGuestKey()) {
 
         int iSignificance = pvEmpireData[SystemEmpireData::iAlmonasterScoreSignificance].GetInteger();
 
@@ -632,14 +632,14 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         WriteButton (BID_SENDMESSAGE);
     }
     
-    g_pGameEngine->FreeData (pvEmpireData);
+    FreeData (pvEmpireData);
     
     return;
 
 OnError:
 
     if (pvEmpireData != NULL) {
-        g_pGameEngine->FreeData (pvEmpireData);
+        FreeData (pvEmpireData);
     }
     
     OutputText ("<p><strong>Error ");

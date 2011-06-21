@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -25,13 +25,13 @@ bool bFlag, bVerified = false, bRepost = false;
 // Make sure this is allowed
 
 int iOptions;
-iErrCode = g_pGameEngine->GetSystemOptions (&iOptions);
+iErrCode = GetSystemOptions (&iOptions);
 if (iErrCode != OK || !(iOptions & NEW_EMPIRES_ENABLED)) {
 
     String strMessage = "New empires cannot be created on this server";
     Variant vReason;
 
-    iErrCode = g_pGameEngine->GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason);
+    iErrCode = GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason);
     if (iErrCode == OK) {
 
         const char* pszReason = vReason.GetCharPtr();
@@ -138,7 +138,7 @@ if (!m_bRedirection &&
     if (m_iButtonKey == INDIVIDUAL_ELEMENTS) {
     
         Variant vValue;
-        iErrCode = g_pGameEngine->GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -180,7 +180,7 @@ if (!m_bRedirection &&
                     if (VerifyPassword (pHttpForm->GetValue()) == OK) {
 
                         Variant vParentName;
-                        iErrCode = g_pGameEngine->DoesEmpireExist (
+                        iErrCode = DoesEmpireExist (
                             pszStandardParentName, 
                             &bFlag, 
                             &iParentEmpireKey, 
@@ -194,7 +194,7 @@ if (!m_bRedirection &&
                             AppendMessage (" does not exist");
                         } else {
 
-                            iErrCode = g_pGameEngine->IsPasswordCorrect (iParentEmpireKey, pHttpForm->GetValue());
+                            iErrCode = IsPasswordCorrect (iParentEmpireKey, pHttpForm->GetValue());
 
                             if (iErrCode != OK) {
                                 AddMessage ("That was the wrong password for the parent empire");
@@ -225,7 +225,7 @@ if (!m_bRedirection &&
                 }
                 pszPassword = pHttpForm->GetValue();
 
-                iErrCode = g_pGameEngine->CreateEmpire (
+                iErrCode = CreateEmpire (
                     pszEmpireName, 
                     pszPassword, 
                     NOVICE, 
@@ -238,13 +238,13 @@ if (!m_bRedirection &&
 
                 case OK:
 
-                    ReportEmpireCreation (g_pReport, pszEmpireName);
+                    ReportEmpireCreation (global.GetReport(), pszEmpireName);
                     SendWelcomeMessage (pszEmpireName);
 
                     m_iEmpireKey = iEmpireKey;
                     m_iReserved = 0;
 
-                    iErrCode = LoginEmpire();
+                    iErrCode = HtmlLoginEmpire();
                     if (iErrCode == OK) {
                         return Redirect (ACTIVE_GAME_LIST);
                     }
@@ -260,7 +260,7 @@ if (!m_bRedirection &&
                     Variant vReason;
 
                     Check (
-                        g_pGameEngine->GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason)
+                        GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason)
                         );
 
                     const char* pszReason = vReason.GetCharPtr();
@@ -356,7 +356,7 @@ ICookie* pCookie = m_pHttpRequest->GetCookie ("LastEmpireUsed");
 if (pCookie != NULL && pCookie->GetValue() != NULL) {
 
     iEmpireKey = pCookie->GetUIntValue();
-    iErrCode = g_pGameEngine->DoesEmpireExist (iEmpireKey, &bFlag, NULL);
+    iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, NULL);
     if (!bFlag || iErrCode != OK) {
         iEmpireKey = NO_KEY;
     }

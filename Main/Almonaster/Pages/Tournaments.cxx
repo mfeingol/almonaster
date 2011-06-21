@@ -1,5 +1,5 @@
-<% #include "../Almonaster.h"
-#include "../GameEngine/GameEngine.h"
+<% #include "Almonaster.h"
+#include "GameEngine.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -69,13 +69,13 @@ if (m_bOwnPost && !m_bRedirection) {
 
             iTournamentKey = pHttpForm->GetIntValue();
 
-            iErrCode = g_pGameEngine->InviteSelfIntoTournament (iTournamentKey, m_iEmpireKey);
+            iErrCode = InviteSelfIntoTournament (iTournamentKey, m_iEmpireKey);
             if (iErrCode == OK) {
                 AddMessage ("A request to join the tournament was sent to the tournament owner");
 
                 // Figure out where to redirect next
                 unsigned int iTourneyOwner;
-                iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iTourneyOwner);
+                iErrCode = GetTournamentOwner (iTournamentKey, &iTourneyOwner);
                 if (iErrCode == OK) {
                     
                     if (iTourneyOwner == m_iEmpireKey) {
@@ -105,13 +105,13 @@ if (m_bOwnPost && !m_bRedirection) {
 
             iTournamentKey = pHttpForm->GetIntValue();
 
-            iErrCode = g_pGameEngine->DeleteEmpireFromTournament (iTournamentKey, m_iEmpireKey);
+            iErrCode = DeleteEmpireFromTournament (iTournamentKey, m_iEmpireKey);
             if (iErrCode == OK) {
                 AddMessage ("Your empire was deleted from the tournament");
 
                 // Figure out where to redirect next
                 unsigned int iTourneyOwner;
-                iErrCode = g_pGameEngine->GetTournamentOwner (iTournamentKey, &iTourneyOwner);
+                iErrCode = GetTournamentOwner (iTournamentKey, &iTourneyOwner);
                 if (iErrCode == OK) {
                     
                     if (iTourneyOwner == m_iEmpireKey) {
@@ -153,7 +153,7 @@ case 0:
     %><input type="hidden" name="TournamentsPage" value="0"><%
 
     // List all system tournaments
-    iErrCode = g_pGameEngine->GetOwnedTournaments (SYSTEM, &piTournamentKey, NULL, &iTournaments);
+    iErrCode = GetOwnedTournaments (SYSTEM, &piTournamentKey, NULL, &iTournaments);
     if (iErrCode != OK) {
         %><p>Error <% Write (iErrCode); %> occurred<%
     }
@@ -196,7 +196,7 @@ default:
 // Cleanup
 
 if (piTournamentKey != NULL) {
-    g_pGameEngine->FreeKeys (piTournamentKey);
+    FreeKeys (piTournamentKey);
 }
 
 SYSTEM_CLOSE

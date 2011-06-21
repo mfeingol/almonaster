@@ -20,6 +20,7 @@
 #include "Osal/Crypto.h"
 
 #include "GameEngine.h"
+#include "Global.h"
 
 #include <stdio.h>
 
@@ -457,9 +458,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     }
 
     // Notification
-    if (m_pUIEventSink != NULL) {
-        m_pUIEventSink->OnCreateEmpire (iKey);
-    }
+    global.GetEventSink()->OnCreateEmpire (iKey);
 
     // Return value
     *piEmpireKey = iKey;
@@ -501,7 +500,7 @@ int GameEngine::GetEmpireName (int iEmpireKey, char pszName [MAX_EMPIRE_NAME_LEN
     int iErrCode;
     IReadTable* pTable = NULL;
 
-    const char* pszDataName;
+    Variant vTemp;
 
     iErrCode = t_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pTable);
     if (iErrCode != OK) {
@@ -509,13 +508,13 @@ int GameEngine::GetEmpireName (int iEmpireKey, char pszName [MAX_EMPIRE_NAME_LEN
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (iEmpireKey, SystemEmpireData::Name, &pszDataName);
+    iErrCode = pTable->ReadData (iEmpireKey, SystemEmpireData::Name, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    strcpy (pszName, pszDataName);
+    strcpy (pszName, vTemp.GetCharPtr());
 
 Cleanup:
 
@@ -545,7 +544,7 @@ int GameEngine::SetEmpireName (int iEmpireKey, const char* pszName) {
 
 int GameEngine::SetEmpirePassword(unsigned int iEmpireKey, const char* pszPassword)
 {
-    if (iEmpireKey == GetRootKey()) {
+    if (iEmpireKey == global.GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
@@ -561,7 +560,7 @@ int GameEngine::SetEmpirePassword(unsigned int iEmpireKey, const char* pszPasswo
 
 int GameEngine::ChangeEmpirePassword(unsigned int iEmpireKey, const char* pszPassword) {
 
-    if (iEmpireKey == GetGuestKey()) {
+    if (iEmpireKey == global.GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
@@ -856,20 +855,20 @@ int GameEngine::UpdateEmpireString(int iEmpireKey, const char* pszColumn, const 
 
     *pbTruncated = false;
 
-    const char* pszOldString;
+    Variant vTemp;
 
     int iErrCode = t_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pWriteTable);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pWriteTable->ReadData(iEmpireKey, pszColumn, &pszOldString);
+    iErrCode = pWriteTable->ReadData(iEmpireKey, pszColumn, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    if (String::StrCmp (pszString, pszOldString) != 0) {
+    if (String::StrCmp (pszString, vTemp.GetCharPtr()) != 0) {
 
         char* pszNew = NULL;
 
@@ -966,13 +965,7 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
     unsigned int iNumGames = 0;
     Variant vTemp;
 
-    NamedMutex nmMutex;
-    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-    bool bEmpireLocked = true, bExists;
+    bool bExists;
 
     iErrCode = DoesEmpireExist (iEmpireKey, &bExists, NULL);
     if (iErrCode != OK || !bExists) {
@@ -1060,15 +1053,10 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
     } else {
 
         // Delete empire now
-        Assert (bEmpireLocked);
         iErrCode = RemoveEmpire (iEmpireKey);
     }
 
 Cleanup:
-
-    if (bEmpireLocked) {
-        UnlockEmpire (nmMutex);
-    }
 
     return iErrCode;
 }
@@ -1104,25 +1092,18 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
 
     int iErrCode;
 
-    if (iEmpireKey == GetRootKey()) {
+    if (iEmpireKey == global.GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    if (iEmpireKey == GetGuestKey()) {
+    if (iEmpireKey == global.GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
     Assert (iEmpireKey != NO_KEY);
     Assert (iKillerEmpire != NO_KEY);
     
-    // Lock empire
-    NamedMutex nmMutex;
-    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-    bool bFlag, bEmpireLocked = true;
+    bool bFlag;
 
     // Check secret key
     Variant vTemp;
@@ -1143,9 +1124,6 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
         Assert (false);
         goto Cleanup;
     }
-
-    UnlockEmpire (nmMutex);
-    bEmpireLocked = false;
 
     // At this point, the empire cannot have entered any new games
     // Nuke him out of any game he might be in
@@ -1177,13 +1155,6 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
 
                 GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
 
-                // Pretend we're an update
-                iErrCode = WaitGameWriter (iGameClass, iGameNumber);
-                if (iErrCode != OK) {
-                    // Game must be dead - just continue with the next game
-                    continue;
-                }
-
                 // Is empire in the game
                 iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bFlag);
                 if (iErrCode == OK && bFlag) {
@@ -1197,8 +1168,6 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
                         Assert (iErrCode == OK);
                     }
                 }
-
-                SignalGameWriter (iGameClass, iGameNumber);
             }
 
             t_pConn->FreeData(pvGame);
@@ -1213,10 +1182,6 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
     }
 
 Cleanup:
-
-    if (bEmpireLocked) {
-        UnlockEmpire (nmMutex);
-    }
 
     return iErrCode;
 }
@@ -1343,9 +1308,7 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
     }
 
     // Notification
-    if (m_pUIEventSink != NULL) {
-        m_pUIEventSink->OnDeleteEmpire (iEmpireKey);
-    }
+    global.GetEventSink()->OnDeleteEmpire (iEmpireKey);
 
     // Delete row from SystemEmpireData table
     IWriteTable* pEmpires = NULL;
@@ -1597,13 +1560,6 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
     UTCTime tTime;
     Time::GetTime (&tTime);
 
-    NamedMutex nmMutex;
-    iErrCode = LockEmpire (iEmpireKey, &nmMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
     iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
         goto Cleanup;
@@ -1670,18 +1626,14 @@ Cleanup:
 
     SafeRelease (pTable);
 
-    UnlockEmpire (nmMutex);
-
     // Outside the lock...  if we're an admin, best effort test all closed games for an update
     if (iErrCode == OK) {
         
         // Notification
-        if (m_pUIEventSink != NULL) {
-            m_pUIEventSink->OnLoginEmpire (iEmpireKey);
-        }
+        global.GetEventSink()->OnLoginEmpire (iEmpireKey);
         
         if (vPriv.GetInteger() >= ADMINISTRATOR) {
-            SendLongRunningQueryMessage (CheckAllGamesForUpdatesMsg, NULL);
+            global.GetAsyncManager()->QueueTask(CheckAllGamesForUpdatesMsg, NULL);
         }
     }
 
@@ -1689,9 +1641,10 @@ Cleanup:
 }
 
 
-int GameEngine::CheckAllGamesForUpdatesMsg (LongRunningQueryMessage* pMessage) {
-
-    return pMessage->pGameEngine->CheckAllGamesForUpdates (true);
+int GameEngine::CheckAllGamesForUpdatesMsg(AsyncTask* pMessage)
+{
+    GameEngine gameEngine;
+    return gameEngine.CheckAllGamesForUpdates(true);
 }
 
 // Output:
@@ -1714,13 +1667,6 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
     int iErrCode;
     Variant vTemp;
 
-    NamedMutex nmEmpireMutex;
-    iErrCode = LockEmpire (iEmpireKey, &nmEmpireMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
     iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == OK && vTemp.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
 
@@ -1735,8 +1681,6 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
         iErrCode = ERROR_CANNOT_UNDELETE_EMPIRE;
     }
 
-    UnlockEmpire (nmEmpireMutex);
-
     return iErrCode;
 }
 
@@ -1748,20 +1692,12 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
 int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
 
     int iErrCode;
-    bool bBridierLocked = false;
 
     char pszTable [256];
     Variant vPriv, vOldClassicScore, vOldAlmonasterScore, vOldBridierIndex;
 
-    if (iEmpireKey == GetGuestKey()) {
+    if (iEmpireKey == global.GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
-    }
-
-    NamedMutex nmEmpireMutex, nmBridierMutex;
-    iErrCode = LockEmpire (iEmpireKey, &nmEmpireMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
     }
 
     // Get old scores
@@ -1781,14 +1717,6 @@ int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
     // Blank Bridier Score
     //
 
-    // Lock
-    iErrCode = LockEmpireBridier (iEmpireKey, &nmBridierMutex);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-    bBridierLocked = true;
-
     iErrCode = t_pConn->ReadData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, &vOldBridierIndex);
     if (iErrCode != OK) {
         Assert (false);
@@ -1806,10 +1734,6 @@ int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
         Assert (false);
         goto Cleanup;
     }
-
-    // Unlock
-    UnlockEmpireBridier (nmBridierMutex);
-    bBridierLocked = false;
 
     //
     // Blank statistics
@@ -1956,13 +1880,6 @@ int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
     }
 
 Cleanup:
-
-    if (bBridierLocked) {
-        UnlockEmpireBridier (nmBridierMutex);
-        bBridierLocked = false;
-    }
-
-    UnlockEmpire (nmEmpireMutex);
 
     return iErrCode;
 }
@@ -2196,11 +2113,11 @@ int GameEngine::GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege) {
 
 int GameEngine::SetEmpirePrivilege(unsigned int iEmpireKey, int iPrivilege) {
 
-    if (iEmpireKey == GetRootKey()) {
+    if (iEmpireKey == global.GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    if (iEmpireKey == GetGuestKey()) {
+    if (iEmpireKey == global.GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
@@ -2264,11 +2181,11 @@ int GameEngine::GetEmpireAlmonasterScore(unsigned int iEmpireKey, float* pfAlmon
 
 int GameEngine::SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonasterScore) {
 
-    if (iEmpireKey == GetRootKey()) {
+    if (iEmpireKey == global.GetRootKey()) {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
-    if (iEmpireKey == GetGuestKey()) {
+    if (iEmpireKey == global.GetGuestKey()) {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 

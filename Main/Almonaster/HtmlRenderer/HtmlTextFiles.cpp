@@ -27,9 +27,9 @@ void HtmlRenderer::WriteFaq() {
     OutputText ("<p>Printer-friendly documentation can be found <a href=\"" BASE_RESOURCE_DIR FAQ_FILE "\">here</a>.<p>");
     
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" FAQ_FILE, g_pszResourceDir);
+    sprintf (pszFileName, "%s/" FAQ_FILE, global.GetResourceDir());
     
-    ICachedFile* pcfFaq = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfFaq = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFaq == NULL) {
         OutputText ("<p><strong>The documentation file could not be found; please alert your system administrator</strong>");
     } else {
@@ -68,9 +68,9 @@ void HtmlRenderer::WriteServerNews() {
 void HtmlRenderer::WriteContributions() {
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" CONTRIBUTIONS_FILE, g_pszResourceDir);
+    sprintf (pszFileName, "%s/" CONTRIBUTIONS_FILE, global.GetResourceDir());
 
-    ICachedFile* pcfFile = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFile == NULL) {
         OutputText ("<p><strong>The contributions file could not be found; please alert your system administrator</strong>");
     } else {
@@ -86,9 +86,9 @@ void HtmlRenderer::WriteContributions() {
 void HtmlRenderer::WriteCredits() {
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" CREDITS_FILE, g_pszResourceDir);
+    sprintf (pszFileName, "%s/" CREDITS_FILE, global.GetResourceDir());
 
-    ICachedFile* pcfFile = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFile == NULL) {
         OutputText ("<p><strong>The credits file could not be found; please alert your system administrator</strong>");
     } else {
@@ -100,9 +100,9 @@ void HtmlRenderer::WriteCredits() {
 void HtmlRenderer::WriteIntro() {
     
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" INTRO_FILE, g_pszResourceDir);
+    sprintf (pszFileName, "%s/" INTRO_FILE, global.GetResourceDir());
     
-    ICachedFile* pcfFile = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFile == NULL) {
         OutputText ("<p><strong>The intro file could not be found; please alert your system administrator</strong>");
     } else {
@@ -137,12 +137,12 @@ int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile,
     int iErrCode = OK;
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/%s", g_pszResourceDir, pszFile);
+    sprintf (pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
 
     ms_mTextFileLock.WaitReader();
 
     size_t cbFileSize = 0;
-    ICachedFile* pcfCachedFile = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfCachedFile != NULL) {
 
         cbFileSize = pcfCachedFile->GetSize();
@@ -273,7 +273,7 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
 
     // Go ahead and update the file
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/%s", g_pszResourceDir, pszFile);
+    sprintf (pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
 
     ms_mTextFileLock.WaitWriter();
     iErrCode = UpdateCachedFile (pszFileName, pszText);
@@ -289,7 +289,7 @@ int HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText
 
     File fCachedFile;
     
-    ICachedFile* pcfCachedFile = g_pFileCache->GetFile (pszFileName);
+    ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfCachedFile == NULL || (stSize = pcfCachedFile->GetSize()) == 0) {
 
         if (pszText == NULL || *pszText == '\0') {
@@ -309,7 +309,7 @@ int HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText
     }
 
     if (pcfCachedFile != NULL) {
-        g_pFileCache->ReleaseFile (pszFileName);
+        global.GetFileCache()->ReleaseFile (pszFileName);
         SafeRelease (pcfCachedFile);
     }
 

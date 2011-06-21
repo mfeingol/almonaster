@@ -166,12 +166,12 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     // Read data
     //
 
-    iErrCode = g_pGameEngine->GetEmpireOptions (iGameClass, iGameNumber, m_iEmpireKey, &iEmpireGameOptions);
+    iErrCode = GetEmpireOptions (iGameClass, iGameNumber, m_iEmpireKey, &iEmpireGameOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::MapFairness, &vTemp);
+    iErrCode = GetGameProperty(iGameClass, iGameNumber, GameData::MapFairness, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -179,7 +179,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
 
     bReadyForUpdate = (iEmpireGameOptions & UPDATED) != 0;
 
-    iErrCode = g_pGameEngine->GetGameUpdateData (
+    iErrCode = GetGameUpdateData (
         iGameClass, 
         iGameNumber, 
         &iSecondsSince,
@@ -192,28 +192,28 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         goto Cleanup;
     }
     
-    iErrCode = g_pGameEngine->GetNumUnreadGameMessages (iGameClass, iGameNumber, iEmpireKey, &iNumUnreadMessages);
+    iErrCode = GetNumUnreadGameMessages (iGameClass, iGameNumber, iEmpireKey, &iNumUnreadMessages);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = g_pGameEngine->IsGameOpen (iGameClass, iGameNumber, &bOpen);
+    iErrCode = IsGameOpen (iGameClass, iGameNumber, &bOpen);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     
-    iErrCode = g_pGameEngine->GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime);
+    iErrCode = GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     
-    iErrCode = g_pGameEngine->GetNumUpdatesBeforeGameCloses (iGameClass, iGameNumber, &iNumUpdatesBeforeGameCloses);
+    iErrCode = GetNumUpdatesBeforeGameCloses (iGameClass, iGameNumber, &iNumUpdatesBeforeGameCloses);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
     if (iNumUpdates == 0) {
-        iErrCode = g_pGameEngine->GetFirstUpdateDelay (iGameClass, iGameNumber, &sFirstUpdateDelay);
+        iErrCode = GetFirstUpdateDelay (iGameClass, iGameNumber, &sFirstUpdateDelay);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -224,21 +224,21 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         goto Cleanup;
     }
     
-    iErrCode = g_pGameEngine->GetGameEntryRestrictions (iGameClass, iGameNumber, &iGameOptions, pvMin, pvMax);
+    iErrCode = GetGameEntryRestrictions (iGameClass, iGameNumber, &iGameOptions, pvMin, pvMax);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
     if (iGameOptions & GAME_NAMES_LISTED) {
 
-        iErrCode = g_pGameEngine->GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires);
+        iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
     } else {
         
-        iErrCode = g_pGameEngine->GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumActiveEmpires);
+        iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumActiveEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -246,7 +246,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     
     if (iState & STARTED) {
         
-        iErrCode = g_pGameEngine->GetNumUpdatedEmpires (iGameClass, iGameNumber, &iNumUpdatedEmpires);
+        iErrCode = GetNumUpdatedEmpires (iGameClass, iGameNumber, &iNumUpdatedEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -263,7 +263,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     // Name
     OutputText ("</font></td></tr><tr><td width=\"20%\"><font size=\"3\">");
     
-    iErrCode = g_pGameEngine->GetGameClassName (iGameClass, pszGameClassName);
+    iErrCode = GetGameClassName (iGameClass, pszGameClassName);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -300,7 +300,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
 
         OutputText ("<font size=\"4\" color=\"#");
         
-        iErrCode = g_pGameEngine->GetEmpireGameProperty (
+        iErrCode = GetEmpireGameProperty (
             iGameClass,
             iGameNumber,
             m_iEmpireKey,
@@ -450,8 +450,8 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
             
             unsigned int iEmpireKey = pvEmpireKey[i].GetInteger();
 
-            if (g_pGameEngine->GetEmpireName (iEmpireKey, &vName) == OK &&
-                g_pGameEngine->GetEmpireGameProperty (iGameClass, iGameNumber, iEmpireKey, GameEmpireData::Options, &vOptions) == OK) {
+            if (GetEmpireName (iEmpireKey, &vName) == OK &&
+                GetEmpireGameProperty (iGameClass, iGameNumber, iEmpireKey, GameEmpireData::Options, &vOptions) == OK) {
 
                 bool bUpdated = (vOptions.GetInteger() & UPDATED) != 0;
                 if (bUpdated) {
@@ -581,7 +581,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
 Cleanup:
 
     if (pvEmpireKey != NULL) {
-        g_pGameEngine->FreeData (pvEmpireKey);
+        FreeData (pvEmpireKey);
     }   
 
     return iErrCode;
@@ -612,7 +612,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
     char pszEnter [64];
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH + 1];
 
-    iErrCode = g_pGameEngine->GetGameOptions (iGameClass, iGameNumber, &iGameOptions);
+    iErrCode = GetGameOptions (iGameClass, iGameNumber, &iGameOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -621,7 +621,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
 
         // Make empire list
         Variant* pvEmpireKey, vTemp;
-        iErrCode = g_pGameEngine->GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumEmpiresInGame);
+        iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumEmpiresInGame);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -630,22 +630,22 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
 
         int i, iLoopGuard = iNumEmpiresInGame - 1;
         for (i = 0; i < iLoopGuard; i ++) {
-            iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i], &vTemp);
+            iErrCode = GetEmpireName (pvEmpireKey[i], &vTemp);
             if (iErrCode == OK) {
                 strList += vTemp.GetCharPtr();
                 strList += ", ";
             }
         }
-        iErrCode = g_pGameEngine->GetEmpireName (pvEmpireKey[i], &vTemp);
+        iErrCode = GetEmpireName (pvEmpireKey[i], &vTemp);
         if (iErrCode == OK) {
             strList += vTemp.GetCharPtr();
         }
         
-        g_pGameEngine->FreeData (pvEmpireKey);
+        FreeData (pvEmpireKey);
         
     } else {
         
-        iErrCode = g_pGameEngine->GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumEmpiresInGame);
+        iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumEmpiresInGame);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -655,19 +655,19 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
     
     // Password
     bool bFlag;
-    iErrCode = g_pGameEngine->IsGamePasswordProtected (iGameClass, iGameNumber, &bFlag);
+    iErrCode = IsGamePasswordProtected (iGameClass, iGameNumber, &bFlag);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     
     int iNumUpdates, iSecondsSince, iSecondsUntil, iState;
-    iErrCode = g_pGameEngine->GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iSecondsUntil, &iNumUpdates, &iState);
+    iErrCode = GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iSecondsUntil, &iNumUpdates, &iState);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     
     UTCTime tCreationTime;
-    iErrCode = g_pGameEngine->GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime);
+    iErrCode = GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -679,7 +679,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
     }
     
     int iNumUpdatesBeforeGameCloses;
-    iErrCode = g_pGameEngine->GetNumUpdatesBeforeGameCloses (iGameClass, iGameNumber, &iNumUpdatesBeforeGameCloses);
+    iErrCode = GetNumUpdatesBeforeGameCloses (iGameClass, iGameNumber, &iNumUpdatesBeforeGameCloses);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -695,7 +695,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
     // Name
     OutputText ("</font></td></tr><tr><td><font size=\"3\">");
     
-    iErrCode = g_pGameEngine->GetGameClassName (iGameClass, pszGameClassName);
+    iErrCode = GetGameClassName (iGameClass, pszGameClassName);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -839,7 +839,7 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
     // Name
     OutputText ("</font></td></tr><tr><td><font size=\"3\">");
     
-    iErrCode = g_pGameEngine->GetGameClassName (iGameClass, pszGameClassName);
+    iErrCode = GetGameClassName (iGameClass, pszGameClassName);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1017,13 +1017,13 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
 
         Assert (iGameClass != NO_KEY);
 
-        iErrCode = g_pGameEngine->GetGameOptions (iGameClass, iGameNumber, &iGameOptions);
+        iErrCode = GetGameOptions (iGameClass, iGameNumber, &iGameOptions);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
         Variant vTemp;
-        iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::MapFairness, &vTemp);
+        iErrCode = GetGameProperty(iGameClass, iGameNumber, GameData::MapFairness, &vTemp);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -1037,7 +1037,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     if (iWhichList == OPEN_GAME_LIST) {
         
         Seconds sDelay;
-        int iErrCode = g_pGameEngine->GetFirstUpdateDelay (iGameClass, iGameNumber, &sDelay);
+        int iErrCode = GetFirstUpdateDelay (iGameClass, iGameNumber, &sDelay);
         if (iErrCode == OK && sDelay > 0) {
             
             OutputText ("<p>(");
@@ -1063,7 +1063,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     if (bAdmin && (iGameState & GAME_MAP_GENERATED)) {
 
         Variant vPlanets;
-        iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber, GameData::NumPlanetsPerEmpire, &vPlanets);
+        iErrCode = GetGameProperty(iGameClass, iGameNumber, GameData::NumPlanetsPerEmpire, &vPlanets);
         if (iErrCode == OK) {
 
             OutputText("<strong>");
@@ -1128,7 +1128,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         if (bAdmin && (iGameState & GAME_MAP_GENERATED) && gfoFairness != GAME_FAIRNESS_RANDOM) {
 
             Variant vDev;
-            iErrCode = g_pGameEngine->GetGameProperty(iGameClass, iGameNumber,
+            iErrCode = GetGameProperty(iGameClass, iGameNumber,
                                                       GameData::MapFairnessStandardDeviationPercentageOfMean,
                                                       &vDev);
             if (iErrCode == OK) {
@@ -1186,7 +1186,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
         
         Variant pvMin [NUM_ENTRY_SCORE_RESTRICTIONS], pvMax [NUM_ENTRY_SCORE_RESTRICTIONS];
         
-        int iErrCode = g_pGameEngine->GetGameEntryRestrictions (
+        int iErrCode = GetGameEntryRestrictions (
             iGameClass, 
             iGameNumber, 
             &iOptions, 
@@ -1226,7 +1226,7 @@ void HtmlRenderer::AddBridierGame (int iGameClass, int iGameNumber, const Varian
             
             int iErrCode, iGain, iLoss;
             
-            iErrCode = g_pGameEngine->GetBridierRankPotentialGainLoss (
+            iErrCode = GetBridierRankPotentialGainLoss (
                 iGameClass, 
                 iGameNumber, 
                 m_iEmpireKey, 
@@ -1522,7 +1522,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
     
     int iDip = pvGameClassInfo[SystemGameClassData::iDiplomacyLevel].GetInteger();
     
-    if (g_pGameEngine->GameAllowsDiplomacy (iDip, TRUCE)) {
+    if (GameAllowsDiplomacy (iDip, TRUCE)) {
         OutputText ("<br><strong>" TRUCE_STRING "</strong>");
         
         switch (pvGameClassInfo[SystemGameClassData::iMaxNumTruces].GetInteger()) {
@@ -1544,7 +1544,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
         }
     }
     
-    if (g_pGameEngine->GameAllowsDiplomacy (iDip, TRADE)) {
+    if (GameAllowsDiplomacy (iDip, TRADE)) {
         OutputText ("<br><strong>" TRADE_STRING "</strong>");
         
         switch (pvGameClassInfo[SystemGameClassData::iMaxNumTrades].GetInteger()) {
@@ -1566,7 +1566,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
         }
     }
     
-    if (g_pGameEngine->GameAllowsDiplomacy (iDip, ALLIANCE)) {
+    if (GameAllowsDiplomacy (iDip, ALLIANCE)) {
         OutputText ("<br><strong>" ALLIANCE_STRING "</strong>");
         
         bool bOpened = true;
@@ -1620,7 +1620,7 @@ void HtmlRenderer::AddDiplomacy (const Variant* pvGameClassInfo) {
         }
     }
     
-    if (g_pGameEngine->GameAllowsDiplomacy (iDip, SURRENDER) || (iOptions & USE_SC30_SURRENDERS)) {
+    if (GameAllowsDiplomacy (iDip, SURRENDER) || (iOptions & USE_SC30_SURRENDERS)) {
         
         OutputText ("<br><strong>" SURRENDER_STRING "</strong>");
         

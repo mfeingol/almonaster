@@ -644,7 +644,6 @@ enum ScoringSystem {
 extern const char* const TOPLIST_NAME [NUM_SCORING_SYSTEMS];
 extern const char* const TOPLIST_TABLE_NAME [NUM_SCORING_SYSTEMS];
 extern const TemplateDescription* TOPLIST_TEMPLATE[NUM_SCORING_SYSTEMS];
-extern const unsigned int TOPLIST_NUM_COLUMNS [NUM_SCORING_SYSTEMS];
 extern const unsigned int TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [NUM_SCORING_SYSTEMS];
 extern const char* const* TOPLIST_SYSTEM_EMPIRE_DATA_COLUMNS [NUM_SCORING_SYSTEMS];
 

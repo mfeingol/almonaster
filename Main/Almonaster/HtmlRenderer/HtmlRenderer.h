@@ -16,15 +16,14 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#ifndef _HtmlRenderer_H_
-#define _HtmlRenderer_H_
+#pragma once
 
 #include "Alajar.h"
 
-#include "../Almonaster.h"
+#include "Almonaster.h"
 
-#include "../GameEngine/GameEngine.h"
-#include "../Chatroom/CChatroom.h"
+#include "GameEngine.h"
+#include "CChatroom.h"
 
 #include "Osal/String.h"
 #include "Osal/Time.h"
@@ -159,7 +158,7 @@ enum ButtonId {
     BID_ALL,
     BID_ALMONASTERSCORE,
     BID_ATTACK,
-    BID_BACKUP,
+//    BID_BACKUP,
     BID_BLANKEMPIRESTATISTICS,
     BID_BUILD,
     BID_CANCEL,
@@ -177,7 +176,7 @@ enum ButtonId {
     BID_CREATENEWSUPERCLASS,
     BID_CREATENEWTHEME,
     BID_DELETEALIENICON,
-    BID_DELETEBACKUP,
+//    BID_DELETEBACKUP,
     BID_DELETEEMPIRE,
     BID_DELETEGAMECLASS,
     BID_DELETESUPERCLASS,
@@ -191,7 +190,7 @@ enum ButtonId {
     BID_ENTER,
     BID_EXIT,
     BID_DOCUMENTATION,
-    BID_FLUSH,
+//    BID_FLUSH,
     BID_FORCEUPDATE,
     BID_GAMEADMINISTRATOR,
     BID_HALTGAMECLASS,
@@ -216,7 +215,7 @@ enum ButtonId {
     BID_REFRESHMESSAGES,
     BID_RESTARTALMONASTER,
     BID_RESTARTSERVER,
-    BID_RESTOREBACKUP,
+//    BID_RESTOREBACKUP,
     BID_RESTOREEMPIRE,
     BID_SATELLITE,
     BID_SCIENCE,
@@ -341,7 +340,8 @@ extern const SearchField g_AdvancedSearchFields[];
 // Globals
 //
 
-class HtmlRenderer {
+class HtmlRenderer : public GameEngine
+{
 protected:
 
     // Data
@@ -408,9 +408,6 @@ protected:
     // Submission control
     int m_iNumOldUpdates;
     int m_iNumNewUpdates;
-
-    // Lock control
-    GameEmpireLock* m_pgeLock;
 
     // Methods
 
@@ -742,7 +739,7 @@ public:
     void SearchForDuplicateIPAddresses (int iGameClass, int iGameNumber);
     void SearchForDuplicateSessionIds (int iGameClass, int iGameNumber);
 
-    int LoginEmpire();
+    int HtmlLoginEmpire();
 
     void RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
         int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString,
@@ -756,7 +753,7 @@ public:
     void RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar);
     void HandleMiniBuild (unsigned int iPlanetKey);
 
-    int CreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFleetKey);
+    int HtmlCreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFleetKey);
 
     void AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, int iBR, int iTechKey,
         const char* pszPlanetName, int iX, int iY, const char* pszFleetName, bool bBuildReduced);
@@ -1214,8 +1211,6 @@ const ThreadFunction g_pfxnRenderPage[] = {
         AppendMessage (" on line ");                                                \
         AppendMessage (__LINE__);                                                   \
         AppendMessage ("; please contact the administrator");                       \
-        g_pGameEngine->SignalGameReader (m_iGameClass, m_iGameNumber, m_iEmpireKey, m_pgeLock); \
-        m_pgeLock = NULL;                                                           \
         return Redirect (ACTIVE_GAME_LIST);                                         \
     }
 
@@ -1335,8 +1330,8 @@ Redirection:                                                                    
         /* Go to info screen! */                                                                \
         m_iGameClass = iGameClassKey;                                                           \
         m_iGameNumber = iGameNumber;                                                            \
-        Check (g_pGameEngine->SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
-        Check (g_pGameEngine->GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
+        Check (SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
+        Check (GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
         sprintf (pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                        \
         return Redirect (INFO);                                                                         \
@@ -1344,7 +1339,7 @@ Redirection:                                                                    
     case ERROR_DISABLED:                                                                                \
         {                                                                                               \
         Variant vReason;                                                                                \
-        Check (g_pGameEngine->GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason));        \
+        Check (GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason));        \
         AddMessage ("New game creation is disabled on the server at this time. ");                      \
         if (String::IsBlank (vReason.GetCharPtr())) {                                                   \
             AppendMessage ("Please try back later.");                                                   \
@@ -1405,8 +1400,8 @@ Redirection:                                                                    
         /* Go to info screen! */                                                                \
         m_iGameClass = iGameClassKey;                                                           \
         m_iGameNumber = iGameNumber;                                                            \
-        Check (g_pGameEngine->SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
-        Check (g_pGameEngine->GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
+        Check (SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
+        Check (GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
         sprintf (pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                \
         return Redirect (INFO);                                                                 \
@@ -1447,7 +1442,7 @@ Redirection:                                                                    
     case ERROR_COULD_NOT_CREATE_PLANETS:                                                        \
         /* Fatal error:  we should never reach this case */                                     \
         Assert (false);                                                                         \
-        iErrCode = g_pGameEngine->DeleteGame (iGameClassKey, iGameNumber, SYSTEM, NULL, MAP_CREATION_ERROR);                                                                \
+        iErrCode = DeleteGame (iGameClassKey, iGameNumber, SYSTEM, NULL, MAP_CREATION_ERROR);                                                                \
         break;                                                                                  \
     default:                                                                                    \
         AddMessage ("Unknown error ");                                                          \
@@ -1455,5 +1450,3 @@ Redirection:                                                                    
         AppendMessage (" occurred while entering a game");                                      \
         return Redirect (m_pgPageId);                                                           \
     }
-
-#endif
