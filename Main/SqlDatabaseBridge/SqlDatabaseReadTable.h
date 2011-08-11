@@ -48,16 +48,11 @@ public:
 
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows);
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, float** ppfData, unsigned int* piNumRows);
-    int ReadColumn(const char* pszColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows);
-
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows);
-
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);
 
     int ReadColumn(const char* pszColumn, int** ppiData, unsigned int* piNumRows);
     int ReadColumn(const char* pszColumn, float** ppfData, unsigned int* piNumRows);
-    int ReadColumn(const char* pszColumn, char*** ppszData, unsigned int* piNumRows);
-    
     int ReadColumn(const char* pszColumn, int64** ppi64Data, unsigned int* piNumRows);
     int ReadColumn(const char* pszColumn, Variant** ppvData, unsigned int* piNumRows);
 

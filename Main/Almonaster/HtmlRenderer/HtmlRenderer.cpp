@@ -1905,6 +1905,18 @@ void HtmlRenderer::WriteSystemHeaders (bool bFileUpload) {
     OutputText ("<input type=\"hidden\" name=\"PageId\" value=\"");
     m_pHttpResponse->WriteText ((int) m_pgPageId);
     OutputText ("\">");
+
+    
+    
+    
+    // TODOTODOTODO - HACKHACKHACK
+    OutputText("<p><strong><font size=\"3\">");
+    OutputText("Script time: ");
+    MilliSeconds msTime = GetTimerCount();
+    m_pHttpResponse->WriteText((int) msTime);
+    OutputText(" ms</font></strong>");
+
+
     
     const char* pszName = m_vEmpireName.GetCharPtr();
     
@@ -2411,16 +2423,16 @@ void HtmlRenderer::CloseSystemPage() {
         WriteButton (BID_TOS);
     }
     
-    OutputText ("<p><strong><font size=\"3\">");
+    OutputText("<p><strong><font size=\"3\">");
     WriteVersionString();
-    OutputText ("<br>Script time: ");
     
+    OutputText("<br>Script time: ");
     MilliSeconds msTime = GetTimerCount();
-    
-    OnPageRender (msTime);
-    
-    m_pHttpResponse->WriteText ((int) msTime);
-    OutputText (" ms</font></strong></center></form></body></html>");
+    m_pHttpResponse->WriteText((int) msTime);
+    OutputText(" ms</font></strong>");
+
+    OutputText("</center></form></body></html>");
+    OnPageRender(msTime);
 }
 
 int HtmlRenderer::PostSystemPageInformation() {
@@ -6767,7 +6779,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 #endif
         GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
 
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::Options, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -6780,7 +6792,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         if (piOptions[i] & LOGGED_IN_THIS_UPDATE) {
             piNumUpdatesIdle[i] = 0;
         } else {
-            iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -6906,7 +6918,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         OutputText ("</td>");
 
         // Econ
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::Econ, &vValue);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::Econ, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -6917,7 +6929,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         OutputText ("</td>");
 
         // Mil
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::Mil, &vValue);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::Mil, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -6930,7 +6942,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         if (bAdmin) {
 
             // Tech
-            iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::TechLevel, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::TechLevel, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -6942,7 +6954,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         }
 
         // Planets
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::NumPlanets, &vValue);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::NumPlanets, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -7010,13 +7022,13 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
                     goto Cleanup;
                 }
 
-                iErrCode = t_pConn->ReadData (pszGameEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vValue);
+                iErrCode = t_pConn->ReadData(pszGameEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vValue);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
                 iValue = vValue.GetInteger();
 
-                iErrCode = t_pConn->ReadData (pszGameEmpireDip, iKey, GameEmpireDiplomacy::EmpireKey, &vValue);
+                iErrCode = t_pConn->ReadData(pszGameEmpireDip, iKey, GameEmpireDiplomacy::EmpireKey, &vValue);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -7118,7 +7130,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         }
 
         // Pause
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::Options, &vValue);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::Options, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -7136,7 +7148,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         bool bUpdated = iValue & UPDATED;
 
         // LastLogin, idle
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::LastLogin, &vValue);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::LastLogin, &vValue);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -7217,19 +7229,19 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
                 goto Cleanup;
             }
             
-            iErrCode = t_pConn->ReadData (strGameEmpireData, iKey, GameDeadEmpires::Icon, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Icon, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
             iIcon = vValue.GetInteger();
             
-            iErrCode = t_pConn->ReadData (strGameEmpireData, iKey, GameDeadEmpires::Key, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Key, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
             iDeadEmpireKey = vValue.GetInteger();
 
-            iErrCode = t_pConn->ReadData (strGameEmpireData, iKey, GameDeadEmpires::Name, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Name, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -7254,7 +7266,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
             OutputText ("</td><td colspan=\"2\" align=\"center\">");
 
-            iErrCode = t_pConn->ReadData (strGameEmpireData, iKey, GameDeadEmpires::Update, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Update, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -7262,7 +7274,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
             OutputText ("</td><td colspan=\"2\" align=\"center\">");
 
-            iErrCode = t_pConn->ReadData (strGameEmpireData, iKey, GameDeadEmpires::Reason, &vValue);
+            iErrCode = t_pConn->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Reason, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }

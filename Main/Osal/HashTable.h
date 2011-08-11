@@ -63,7 +63,7 @@ protected:
     const void* m_pEqualsHint;
 
     ObjectCache <HashTableNode<CKey, CData>, HashTableNode<CKey, CData> > m_ocNodeCache;
-    LinkedList<HashTableNode<CKey, CData>*>* m_pBuckets;
+    ::LinkedList<HashTableNode<CKey, CData>*>* m_pBuckets;
 
     HashTable& operator=(HashTable& htCopy);
 
@@ -100,7 +100,7 @@ public:
         }
 
         m_iNumBuckets = iNumBuckets;
-        m_pBuckets = new LinkedList<HashTableNode<CKey, CData>*> [m_iNumBuckets];
+        m_pBuckets = new ::LinkedList<HashTableNode<CKey, CData>*> [m_iNumBuckets];
         return m_pBuckets != NULL;
     }
 

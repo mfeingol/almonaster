@@ -143,7 +143,7 @@ public:
     int GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, 
     unsigned int* piNumHits, unsigned int* piStopKey);
 
-    int GetTableForReading (const char* pszTableName, IReadTable** ppTable);
+    int GetTableForReading(const char* pszTableName, IReadTable** ppTable);
     int GetTableForWriting (const char* pszTableName, IWriteTable** ppTable);
 
     int CreateTransaction (ITransaction** ppTransaction);

@@ -156,6 +156,8 @@ int Almonaster::OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 // so we need to reply with some page or other
 int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
 
+    int iErrCode;
+
     // Find the right function to dispatch to
     PageId pageId = LOGIN;
     IHttpForm* pHttpForm = pHttpRequest->GetForm ("PageId");
@@ -175,9 +177,49 @@ int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
 
     global.TlsOpenConnection();
 
+
+
+
+    // TODOTODOTODO - HACKHACKHACK
+    const char* ppszTableName[] = 
+    {
+        SYSTEM_DATA,
+        SYSTEM_EMPIRE_DATA,
+        SYSTEM_THEMES,
+        SYSTEM_GAMECLASS_DATA,
+        SYSTEM_SYSTEM_GAMECLASS_DATA,
+        SYSTEM_SUPERCLASS_DATA,
+    };
+
+    const char* ppszViewName[] = 
+    {
+        SYSTEM_DATA,
+        "SystemEmpireData1",
+        SYSTEM_THEMES,
+        SYSTEM_GAMECLASS_DATA,
+        SYSTEM_SYSTEM_GAMECLASS_DATA,
+        SYSTEM_SUPERCLASS_DATA,
+    }; 
+
+    const unsigned int piKeys[] = 
+    {
+        NO_KEY,
+        1,
+        NO_KEY,
+        NO_KEY,
+        NO_KEY,
+        NO_KEY,
+    };
+
+    iErrCode = t_pConn->GetViews()->CreateViews(ppszTableName, ppszViewName, piKeys, countof(ppszTableName));
+    Assert(iErrCode == OK);
+
+
+
+
     // Call the function
     HtmlRenderer htmlRenderer (pageId, pHttpRequest, pHttpResponse);
-    int iErrCode = htmlRenderer.Render();
+    iErrCode = htmlRenderer.Render();
 
     global.TlsCloseConnection();
 

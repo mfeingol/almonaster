@@ -588,6 +588,10 @@ namespace SystemData {
 
 #define SYSTEM_EMPIRE_DATA "SystemEmpireData"
 
+#define SYSTEM_EMPIRE_DATA_EMPIRE(pszBuffer, i)       \
+    char pszBuffer [sizeof("SystemEmpireData") + 32]; \
+    sprintf (pszBuffer, "SystemEmpireData%i", i);
+
 namespace SystemEmpireData {
 
     static const char* const Name = "Name";

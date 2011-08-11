@@ -512,7 +512,7 @@ IReadTable* pGameEmpireTable = NULL, * pSystemEmpireDataTable = NULL;
 
 GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
-iErrCode = t_pConn->GetTableForReading (
+iErrCode = t_pConn->GetTableForReading(
     pszEmpireData, 
     &pGameEmpireTable
     );
@@ -571,7 +571,7 @@ if (iErrCode != OK) {
 
 SafeRelease (pGameEmpireTable);
 
-iErrCode = t_pConn->GetTableForReading (
+iErrCode = t_pConn->GetTableForReading(
     SYSTEM_EMPIRE_DATA, 
     &pSystemEmpireDataTable
     );
@@ -981,7 +981,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
 
     // Get empire data
-    iErrCode = t_pConn->GetTableForReading (pszEmpireData, &pGameEmpireTable);
+    iErrCode = t_pConn->GetTableForReading(pszEmpireData, &pGameEmpireTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1009,7 +1009,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
         SafeRelease (pGameEmpireTable);
 
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
             GameEmpireDiplomacy::SubjectiveEcon,
@@ -1022,7 +1022,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         }
         iEcon = vTemp.GetInteger();
 
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
             GameEmpireDiplomacy::SubjectiveMil,
@@ -1054,7 +1054,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     }
 
     // Do this every time to improve concurrency with logins, etc.
-    iErrCode = t_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
+    iErrCode = t_pConn->GetTableForReading(SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

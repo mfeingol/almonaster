@@ -452,7 +452,7 @@ void GameEngine::VerifyGameTables(int iGameClass, int iGameNumber, bool* pbGoodD
     int iGameOptions, iGameClassOptions;
 
     // Gameclass options
-    iErrCode = t_pConn->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         bGoodDatabase = false;
@@ -811,14 +811,14 @@ int GameEngine::VerifyActiveGames() {
     }
 
     // Read some system data
-    iErrCode = t_pConn->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         goto Cleanup;
     }
     sSecondsForLongtermStatus = vTemp.GetInteger();
 
-    iErrCode = t_pConn->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         goto Cleanup;

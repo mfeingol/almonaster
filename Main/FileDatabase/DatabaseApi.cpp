@@ -807,7 +807,7 @@ int Database::ReadColumnWhereEqual (const char* pszTableName, unsigned int iEqua
 // Direct APIs
 //
 
-int Database::GetTableForReading (const char* pszTableName, IReadTable** ppTable) {
+int Database::GetTableForReading(const char* pszTableName, IReadTable** ppTable) {
 
     Table* pTable = FindTable (pszTableName);
     if (pTable == NULL) {
@@ -815,7 +815,7 @@ int Database::GetTableForReading (const char* pszTableName, IReadTable** ppTable
         return ERROR_UNKNOWN_TABLE_NAME;
     }
 
-    pTable->GetTableForReading (ppTable);
+    pTable->GetTableForReading(ppTable);
     pTable->Release();
 
     return OK;

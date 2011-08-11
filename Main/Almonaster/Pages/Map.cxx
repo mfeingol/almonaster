@@ -619,7 +619,7 @@ case 1:
             goto RenderWholeMap;
         }
 
-        iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
+        iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
         if (iErrCode != OK) {
             AddMessage ("Database error "); AppendMessage (iErrCode);
             goto RenderWholeMap;

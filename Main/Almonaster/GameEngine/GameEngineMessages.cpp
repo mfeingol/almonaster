@@ -62,7 +62,7 @@ int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int i
         pvData[SystemEmpireMessages::iSource] = (const char*) NULL;
     } else {
         
-        if (t_pConn->ReadData (
+        if (t_pConn->ReadData(
             SYSTEM_EMPIRE_DATA, 
             iSource, 
             SystemEmpireData::Name, 
@@ -110,7 +110,7 @@ int GameEngine::DeliverSystemMessage (int iEmpireKey, const Variant* pvData) {
         }
     }
 
-    iErrCode = t_pConn->ReadData (
+    iErrCode = t_pConn->ReadData(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::MaxNumSystemMessages, 
@@ -198,7 +198,7 @@ int GameEngine::GetNumUnreadSystemMessages (int iEmpireKey, unsigned int* piNumb
 
     SYSTEM_EMPIRE_MESSAGES (pszMessages, iEmpireKey);
 
-    iErrCode = t_pConn->GetTableForReading (pszMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForReading(pszMessages, &pMessages);
     if (iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
         *piNumber = 0;
         return OK;
@@ -352,7 +352,7 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
     *ppiMessageKey = NULL;
     *piNumMessages = 0;
 
-    iErrCode = t_pConn->ReadData (
+    iErrCode = t_pConn->ReadData(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::MaxNumSystemMessages, 
@@ -529,7 +529,7 @@ int GameEngine::GetNumUnreadGameMessages (int iGameClass, int iGameNumber, int i
 
     GAME_EMPIRE_MESSAGES (pszMessages, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->GetTableForReading (pszMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForReading(pszMessages, &pMessages);
     if (iErrCode == OK) {
         iErrCode = GetNumUnreadGameMessagesPrivate (pMessages, piNumber);
         SafeRelease (pMessages);
@@ -581,7 +581,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     // Make sure private messages are allowed
     if (!(iFlags & (MESSAGE_BROADCAST | MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
-        iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+        iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return ERROR_EMPIRE_DOES_NOT_EXIST;
@@ -624,7 +624,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -647,7 +647,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     
     } else {
 
-        if (t_pConn->ReadData (
+        if (t_pConn->ReadData(
             SYSTEM_EMPIRE_DATA, 
             iSourceKey, 
             SystemEmpireData::Name, 
@@ -862,7 +862,7 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     *pppvMessage = NULL;
     *piNumMessages = 0;
 
-    iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
+    iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1052,7 +1052,7 @@ int GameEngine::BroadcastGameMessage (int iGameClass, int iGameNumber, const cha
             break;
         }
 
-        iErrCode = t_pConn->ReadData (strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
+        iErrCode = t_pConn->ReadData(strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
         if (iErrCode == OK) {
 
             iErrCode = SendGameMessage (
@@ -1090,7 +1090,7 @@ int GameEngine::GetMessageProperty (const char* strMessages, unsigned int iMessa
 
     IReadTable* pMessages = NULL;
 
-    iErrCode = t_pConn->GetTableForReading (strMessages, &pMessages);
+    iErrCode = t_pConn->GetTableForReading(strMessages, &pMessages);
     if (iErrCode != OK) {
         return iErrCode;
     }

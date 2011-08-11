@@ -46,4 +46,19 @@ namespace Almonaster.Database.Sql
     {
         public IEnumerable<object> Values;
     }
+
+    // ...
+
+    public struct BulkTableReadRequest
+    {
+        public string TableName;
+        public string ColumnName;
+        public object ColumnValue;
+    }
+
+    public class BulkTableReadResult
+    {
+        public string TableName;
+        public IEnumerable<IDictionary<string, object>> Rows;
+    }
 }

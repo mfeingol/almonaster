@@ -181,7 +181,7 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
     }
 
     // Get the tables we need for reading and writing
-    iErrCode = pSrcDatabase->GetTableForReading (pszTableName, &pReadTable);
+    iErrCode = pSrcDatabase->GetTableForReading(pszTableName, &pReadTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

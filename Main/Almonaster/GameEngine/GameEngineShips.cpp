@@ -39,7 +39,7 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
 
         // Get ship's locaton
         Variant vPlanetKey;
-        iErrCode = t_pConn->ReadData (strIndependentShips, iShipKey, GameEmpireShips::CurrentPlanet, &vPlanetKey);
+        iErrCode = t_pConn->ReadData(strIndependentShips, iShipKey, GameEmpireShips::CurrentPlanet, &vPlanetKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -53,7 +53,7 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
 
 #ifdef _DEBUG
         Variant vTemp;
-        iErrCode = t_pConn->ReadData (strGameMap, vPlanetKey, GameMap::NumUncloakedShips, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameMap, vPlanetKey, GameMap::NumUncloakedShips, &vTemp);
         Assert (iErrCode == OK && vTemp >= 0);
 #endif
 
@@ -74,14 +74,14 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
     GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
 
     // Was ship just built?
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::BuiltThisUpdate, &vCancelBuild);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::BuiltThisUpdate, &vCancelBuild);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Was ship in a fleet?
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::FleetKey, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -89,27 +89,27 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
     iFleetKey = vTemp.GetInteger();
 
     // Was ship cloaked?
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::State, &vState);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::State, &vState);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Get ship's type
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::Type, &vTechKey);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::Type, &vTechKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Get ship's locaton
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentPlanet, &vPlanetKey);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentPlanet, &vPlanetKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -125,7 +125,7 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
         
         // Get ship's current mil
         Variant vCurMil;
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurMil);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurMil);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -189,31 +189,31 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
 
         int iPlanetKey = vPlanetKey.GetInteger();
 
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::ColonyBuildCost, &vCost);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::ColonyBuildCost, &vCost);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Pop, &vPop);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::MaxPop, &vMaxPop);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::MaxPop, &vMaxPop);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -236,19 +236,19 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
         Assert (vPopLostToColonies.GetInteger() >= 0);
         Assert (vPopLostToColonies.GetInteger() - vCost.GetInteger() >= 0);
 
-        iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::TotalAg, &vTotalAg);
+        iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TotalAg, &vTotalAg);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::TotalPop, &vTotalPop);
+        iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TotalPop, &vTotalPop);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxAgRatio, 
@@ -294,13 +294,13 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
         }
 
         // Get planet data
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -422,7 +422,7 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
         
 #ifdef _DEBUG
         Variant vTotalFuelUse;
-        iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::TotalFuelUse, &vTotalFuelUse);
+        iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TotalFuelUse, &vTotalFuelUse);
         Assert (vTotalFuelUse.GetInteger() >= 0);
 #endif
         if (vState.GetInteger() & CLOAKED) {
@@ -507,7 +507,7 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
     }
 
     IReadTable* pTable = NULL;
-    iErrCode = t_pConn->GetTableForReading (strGameEmpireData, &pTable);
+    iErrCode = t_pConn->GetTableForReading(strGameEmpireData, &pTable);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -594,25 +594,25 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
 
     SafeRelease (pTable);
 
-    iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     fMaxTechDev = vTemp.GetFloat();
 
-    iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     fMaxAgRatio = vTemp.GetFloat();
 
-    iErrCode = t_pConn->ReadData (SYSTEM_DATA, SystemData::PercentFirstTradeIncrease, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::PercentFirstTradeIncrease, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     iPercentFirstTradeIncrease = vTemp.GetInteger();
 
-    iErrCode = t_pConn->ReadData (SYSTEM_DATA, SystemData::PercentNextTradeIncrease, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::PercentNextTradeIncrease, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -759,28 +759,28 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
 
     } else {
 
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         fBR = vTemp.GetFloat();
 
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         fMaxBR = vTemp.GetFloat();
 
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::Type, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::Type, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         iShipType = vTemp.GetInteger();
 
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::Action, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::Action, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -788,7 +788,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         iSelectedAction = vTemp.GetInteger();
 
         // Get ship state
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::State, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::State, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -796,7 +796,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         iState = vTemp.GetInteger();
 
         // Check for newly built ship
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::BuiltThisUpdate, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::BuiltThisUpdate, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -834,21 +834,21 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
     
     } else {
 
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentPlanet, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentPlanet, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         iPlanetKey = vTemp.GetInteger();
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         iPlanetOwner = vTemp.GetInteger();
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Name, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Name, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -861,7 +861,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         }
         pszPlanetName = strPlanetNameString.GetCharPtr();
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Coordinates, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Coordinates, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -940,7 +940,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
             } else if (bMobile) {
                 
                 // Get fleet name
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strEmpireFleets, pblLocations[i].iFleetKey, GameEmpireFleets::Name, &vTemp
                     );
                 if (iErrCode != OK) {
@@ -1172,7 +1172,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         String strNewPlanetName;
 
         // Read explored
-        iErrCode = t_pConn->ReadData (strEmpireMap, iProxyPlanetKey, GameEmpireMap::Explored, &vTemp);
+        iErrCode = t_pConn->ReadData(strEmpireMap, iProxyPlanetKey, GameEmpireMap::Explored, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1180,7 +1180,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         iExplored = vTemp.GetInteger();
         
         // Loop through all cardinal points
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Link, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Link, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1197,7 +1197,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 if (!pbMustExplore[i]) {
                 
                     // Read planet key
-                    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::NorthPlanetKey + i, &vTemp);
+                    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::NorthPlanetKey + i, &vTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -1206,7 +1206,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                     Assert (iNewPlanetKey != NO_KEY);
 
                     // Get name
-                    iErrCode = t_pConn->ReadData (strGameMap, iNewPlanetKey, GameMap::Name, &vTemp);
+                    iErrCode = t_pConn->ReadData(strGameMap, iNewPlanetKey, GameMap::Name, &vTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -1381,7 +1381,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
             if (gcConfig.iShipBehavior & STARGATE_LIMIT_RANGE) {
 
                 // Get src planet coords
-                iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Coordinates, &vTemp);
+                iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Coordinates, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -1411,7 +1411,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 }
 
                 // Get coordinates
-                iErrCode = t_pConn->ReadData (strGameMap, iKey, GameMap::Coordinates, &vTemp);
+                iErrCode = t_pConn->ReadData(strGameMap, iKey, GameMap::Coordinates, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     t_pConn->FreeKeys(piKey);
@@ -1429,7 +1429,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                     ) {
 
                     // Get name
-                    iErrCode = t_pConn->ReadData (strGameMap, iKey, GameMap::Name, &vTemp);
+                    iErrCode = t_pConn->ReadData(strGameMap, iKey, GameMap::Name, &vTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         t_pConn->FreeKeys(piKey);
@@ -1640,7 +1640,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
 
             int iExplored;
 
-            iErrCode = t_pConn->ReadData (strEmpireMap, iProxyPlanetKey, GameEmpireMap::Explored, &vTemp);
+            iErrCode = t_pConn->ReadData(strEmpireMap, iProxyPlanetKey, GameEmpireMap::Explored, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1665,7 +1665,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                         pszNewPlanet = "Unknown";
                     } else {
 
-                        iErrCode = t_pConn->ReadData (
+                        iErrCode = t_pConn->ReadData(
                             strGameMap, 
                             iPlanetKey, 
                             GameMap::NorthPlanetKey + i, 
@@ -1676,7 +1676,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                             goto Cleanup;
                         }
 
-                        iErrCode = t_pConn->ReadData (strGameMap, vTemp.GetInteger(), GameMap::Name, &vTemp);
+                        iErrCode = t_pConn->ReadData(strGameMap, vTemp.GetInteger(), GameMap::Name, &vTemp);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -1694,7 +1694,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 } else {    // if (!pbLink[i])
 
                     // See if there's a planet at all
-                    iErrCode = t_pConn->ReadData (
+                    iErrCode = t_pConn->ReadData(
                         strGameMap, 
                         iPlanetKey, 
                         GameMap::NorthPlanetKey + i, 
@@ -1718,7 +1718,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                         pszNewPlanet = "Unknown";
                     } else {
 
-                        iErrCode = t_pConn->ReadData (strGameMap, iNewPlanetKey, GameMap::Name, &vTemp);
+                        iErrCode = t_pConn->ReadData(strGameMap, iNewPlanetKey, GameMap::Name, &vTemp);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -1765,7 +1765,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
 
             ENUMERATE_CARDINAL_POINTS(i) {
                 
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strGameMap, 
                     iPlanetKey, 
                     GameMap::NorthPlanetKey + i, 
@@ -1814,7 +1814,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
             if (gcConfig.iShipBehavior & JUMPGATE_LIMIT_RANGE) {
 
                 // Get src planet coords
-                iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Coordinates, &vTemp);
+                iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Coordinates, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -1843,7 +1843,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 if (iKey != iPlanetKey) {
                     
                     // Check range
-                    iErrCode = t_pConn->ReadData (strGameMap, iKey, GameMap::Coordinates, &vTemp);
+                    iErrCode = t_pConn->ReadData(strGameMap, iKey, GameMap::Coordinates, &vTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         t_pConn->FreeData(pvPlanetKey);
@@ -1860,7 +1860,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                         ) {
                         
                         // Check annihilated status
-                        iErrCode = t_pConn->ReadData (strGameMap, iKey, GameMap::Annihilated, &vTemp);
+                        iErrCode = t_pConn->ReadData(strGameMap, iKey, GameMap::Annihilated, &vTemp);
                         if (iErrCode != OK) {
                             Assert (false);
                             t_pConn->FreeData(pvPlanetKey);
@@ -1870,7 +1870,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                         if (vTemp.GetInteger() == NOT_ANNIHILATED) {
 
                             // Get name
-                            iErrCode = t_pConn->ReadData (strGameMap, iKey, GameMap::Name, &vTemp);
+                            iErrCode = t_pConn->ReadData(strGameMap, iKey, GameMap::Name, &vTemp);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 t_pConn->FreeData(pvPlanetKey);
@@ -1921,7 +1921,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
         
         // Get developed techs
-        iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::TechDevs, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::TechDevs, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1974,7 +1974,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
         
         if (iNumFleets > 0) {
 
-            iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::FleetKey, &vTemp);
+            iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 t_pConn->FreeKeys(piFleetKey);
@@ -1987,7 +1987,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 if (iFleetKey == piFleetKey[i]) {
                     
                     // Remain in own fleet
-                    iErrCode = t_pConn->ReadData (
+                    iErrCode = t_pConn->ReadData(
                         strEmpireFleets, 
                         iFleetKey, 
                         GameEmpireFleets::Name, 
@@ -2031,7 +2031,7 @@ int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber
                 } else {
 
                     // Join another fleet
-                    iErrCode = t_pConn->ReadData (
+                    iErrCode = t_pConn->ReadData(
                         strEmpireFleets, 
                         piFleetKey[i], 
                         GameEmpireFleets::Name, 
@@ -2226,7 +2226,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     Assert (soOrder.sotType == SHIP_ORDER_NORMAL);
 
     // Check for same order
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::Action, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::Action, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2239,7 +2239,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     }
 
     // Get ship behavior
-    iErrCode = t_pConn->ReadData (SYSTEM_DATA, SystemData::ShipBehavior, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2247,7 +2247,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     iShipBehavior = vTemp.GetInteger();
 
     // Get gameclass options
-    iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2255,7 +2255,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     iGameClassOptions = vTemp.GetInteger();
 
     // Get ship state
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::State, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::State, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2267,14 +2267,14 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
 
     // Get ship's fleet and location
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::FleetKey, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     iOldFleetKey = vTemp.GetInteger();
     
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentPlanet, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentPlanet, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2283,7 +2283,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     Assert (iShipPlanet != NO_KEY);
     
     // Check for a fleet change for ships built this update
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::BuiltThisUpdate, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::BuiltThisUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2301,7 +2301,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         } else {
             
             Variant vCurrentBR;
-            iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurrentBR);
+            iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurrentBR);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2368,7 +2368,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 
                 // Make sure that the fleet is on the same planet as the ship
                 Variant vFleetPlanet;
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strEmpireFleets, 
                     iNewShipOrder, 
                     GameEmpireFleets::CurrentPlanet, 
@@ -2491,7 +2491,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     // The ship is not being built, so we need to verify the legitimacy of the request //
     /////////////////////////////////////////////////////////////////////////////////////
 
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::Type, &vTemp);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::Type, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2510,7 +2510,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
         // Are fleet and ship on the same planet?
         Variant vFleetPlanet;
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             strEmpireFleets,
             iNewShipOrder,
             GameEmpireFleets::CurrentPlanet,
@@ -2536,13 +2536,13 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         
         // Get ship's BR
         Variant vCurrentBR, vMaxBR;
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurrentBR);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurrentBR);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2602,7 +2602,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         // so let's check for leave, stand by, dismantle, nuke, remain, move or explore requests //
         ///////////////////////////////////////////////////////////////////////////////////////////
 
-        iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Owner, &vTemp);
+        iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Owner, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2631,13 +2631,13 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 // Get ship's BR
                 Variant vCurrentBR, vMaxBR;
                 
-                iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurrentBR);
+                iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::CurrentBR, &vCurrentBR);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
 
-                iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
+                iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -2693,7 +2693,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
             Variant vFleetPlanet;
 
-            iErrCode = t_pConn->ReadData (
+            iErrCode = t_pConn->ReadData(
                 strEmpireFleets, 
                 iOldFleetKey, 
                 GameEmpireFleets::CurrentPlanet,
@@ -2739,7 +2739,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
 
                 Variant vLink;
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Link, &vLink);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Link, &vLink);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -2754,7 +2754,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
 
                 // Make sure we've explored the planet
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strEmpireMap, 
                     iPlanetProxyKey, 
                     GameEmpireMap::Explored, 
@@ -2773,7 +2773,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 #ifdef _DEBUG
                 // Make sure there's a planet
                 Variant vNewPlanetKey;
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strGameMap, 
                     iShipPlanet, 
                     GameMap::NorthPlanetKey + i, 
@@ -2817,7 +2817,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 i = EXPLORE_NORTH - iNewShipOrder;
                         
                 // Check for link
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Link, &vLink);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Link, &vLink);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -2829,7 +2829,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
                 
                 // Check for explored
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strEmpireMap, 
                     iPlanetProxyKey, 
                     GameEmpireMap::Explored, 
@@ -2849,7 +2849,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 #ifdef _DEBUG
                 // Make sure there's a planet
                 Variant vNewPlanetKey;
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strGameMap, 
                     iShipPlanet, 
                     GameMap::NorthPlanetKey + i, 
@@ -2908,7 +2908,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                     goto Cleanup;
                 }
                 
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strDiplomacy, 
                     iKey, 
                     GameEmpireDiplomacy::CurrentStatus, 
@@ -2937,7 +2937,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
             }
             
             // Make sure the planet has 0 pop and wasn't annihilated and doesn't belong to us
-            iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Pop, &vTemp);
+            iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Pop, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2948,7 +2948,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 goto Cleanup;
             }
             
-            iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Owner, &vTemp);
+            iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Owner, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2959,7 +2959,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 goto Cleanup;
             }
             
-            iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Annihilated, &vTemp);
+            iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Annihilated, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -3052,19 +3052,19 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 Variant vAg, vMin, vFuel;
 
                 // Make sure that there's something to terraform
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Ag, &vAg);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Ag, &vAg);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
 
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Fuel, &vFuel);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Fuel, &vFuel);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
                 }
 
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Minerals, &vMin);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Minerals, &vMin);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3122,7 +3122,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                     goto Cleanup;
                 }
                 
-                iErrCode = t_pConn->ReadData (strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
+                iErrCode = t_pConn->ReadData(strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3157,7 +3157,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                             goto Cleanup;
                         }
                         
-                        iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::HomeWorld, &vHW);
+                        iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::HomeWorld, &vHW);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -3187,7 +3187,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                             goto Cleanup;
                         }
                         
-                        iErrCode = t_pConn->ReadData (strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
+                        iErrCode = t_pConn->ReadData(strDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -3200,7 +3200,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                                 goto Cleanup;
                             }
 
-                            iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::HomeWorld, &vHW);
+                            iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::HomeWorld, &vHW);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto Cleanup;
@@ -3245,7 +3245,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 
                 // Make sure the link doesn't exist
                 Variant vLink;
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Link, &vLink);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Link, &vLink);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3258,7 +3258,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 
                 // Make sure planet exists
                 Variant vNeighbourKey;
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strGameMap, 
                     iShipPlanet, 
                     GameMap::NorthPlanetKey + iDirection, 
@@ -3294,7 +3294,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 
                 // Make sure the link doesn't exist
                 Variant vLink;
-                iErrCode = t_pConn->ReadData (strGameMap, iShipPlanet, GameMap::Link, &vLink);
+                iErrCode = t_pConn->ReadData(strGameMap, iShipPlanet, GameMap::Link, &vLink);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3327,7 +3327,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
                 // Make sure planet doesn't exist
                 Variant vPlanetKey;
-                iErrCode = t_pConn->ReadData (
+                iErrCode = t_pConn->ReadData(
                     strGameMap, 
                     iShipPlanet, 
                     GameMap::NorthPlanetKey + iDirection, 
@@ -3383,7 +3383,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
                 // Make sure tech has been developed
-                iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::TechDevs, &vTemp);
+                iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::TechDevs, &vTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3427,7 +3427,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 if (iShipType == STARGATE) {
 
                     // Make sure we own the planet
-                    iErrCode = t_pConn->ReadData (strGameMap, iNewShipOrder, GameMap::Owner, &vTemp);
+                    iErrCode = t_pConn->ReadData(strGameMap, iNewShipOrder, GameMap::Owner, &vTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -3463,7 +3463,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                     Assert (iPlanetProxyKey != NO_KEY);
 
                     // Enforce annihilation rules
-                    iErrCode = t_pConn->ReadData (strGameMap, iNewShipOrder, GameMap::Annihilated, &vTemp);
+                    iErrCode = t_pConn->ReadData(strGameMap, iNewShipOrder, GameMap::Annihilated, &vTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -3511,7 +3511,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         
         // Fix up predictions if we didn't used to be dismantling and now are
         Variant vMaxBR;
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -3542,7 +3542,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
         // Fix up predictions if we used to be dismantling and now we aren't
         Variant vMaxBR;
-        iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
+        iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::MaxBR, &vMaxBR);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -3609,7 +3609,7 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
 #ifdef _DEBUG
 
     Variant vOldState, vNumShips;
-    iErrCode = t_pConn->ReadData (strEmpireShips, iShipKey, GameEmpireShips::State, &vOldState);
+    iErrCode = t_pConn->ReadData(strEmpireShips, iShipKey, GameEmpireShips::State, &vOldState);
     Assert (iErrCode == OK);
 
 #endif
@@ -3691,7 +3691,7 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
 
 #ifdef _DEBUG
 
-    iErrCode = t_pConn->ReadData (strEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vNumShips);
+    iErrCode = t_pConn->ReadData(strEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vNumShips);
     Assert (iErrCode == OK);
 
     if (bCloaked) {
@@ -3700,7 +3700,7 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
         Assert (vNumShips.GetInteger() >= 1);
     }
 
-    iErrCode = t_pConn->ReadData (strEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vNumShips);
+    iErrCode = t_pConn->ReadData(strEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vNumShips);
     Assert (iErrCode == OK);
 
     if (bCloaked) {
@@ -3709,7 +3709,7 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
         Assert (vNumShips.GetInteger() >= 0);
     }
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::NumUncloakedShips, &vNumShips);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::NumUncloakedShips, &vNumShips);
     Assert (iErrCode == OK);
 
     if (bCloaked) {
@@ -3718,7 +3718,7 @@ int GameEngine::ChangeShipCloakingState (int iShipKey, int iPlanetKey, bool bClo
         Assert (vNumShips.GetInteger() >= 1);
     }
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::NumCloakedShips, &vNumShips);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::NumCloakedShips, &vNumShips);
     Assert (iErrCode == OK);
 
     if (bCloaked) {
@@ -3746,7 +3746,7 @@ int GameEngine::GetColonyOrders (unsigned int iGameClass, int iGameNumber, unsig
 
     *pbColonize = *pbSettle = false;
 
-    iErrCode = t_pConn->GetTableForReading (strGameMap, &pMap);
+    iErrCode = t_pConn->GetTableForReading(strGameMap, &pMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3812,7 +3812,7 @@ int GameEngine::GetTerraformerOrders (unsigned int iGameClass, int iGameNumber, 
 
         Variant vOwner;
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -3826,19 +3826,19 @@ int GameEngine::GetTerraformerOrders (unsigned int iGameClass, int iGameNumber, 
     // All planets can be terraformed, if their statistics allow it 
     // (even enemy-owned or uncolonized ones)
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Ag, &vAg);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Ag, &vAg);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3872,7 +3872,7 @@ int GameEngine::GetTroopshipOrders (unsigned int iGameClass, int iGameNumber, un
     Variant vOwner, vDipStatus;
     unsigned int iKey;
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3892,7 +3892,7 @@ int GameEngine::GetTroopshipOrders (unsigned int iGameClass, int iGameNumber, un
                 goto Cleanup;
             }
 
-            iErrCode = t_pConn->ReadData (strEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
+            iErrCode = t_pConn->ReadData(strEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -3928,7 +3928,7 @@ int GameEngine::GetDoomsdayOrders (unsigned int iGameClass, int iGameNumber, uns
     // Get owner
     Variant vOwner, vHW;
 
-    iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
+    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3940,7 +3940,7 @@ int GameEngine::GetDoomsdayOrders (unsigned int iGameClass, int iGameNumber, uns
             return OK;
         }
 
-        iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::HomeWorld, &vHW);
+        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::HomeWorld, &vHW);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -3972,7 +3972,7 @@ int GameEngine::GetDoomsdayOrders (unsigned int iGameClass, int iGameNumber, uns
                 goto Cleanup;
             }
 
-            iErrCode = t_pConn->ReadData (strEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
+            iErrCode = t_pConn->ReadData(strEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -3984,7 +3984,7 @@ int GameEngine::GetDoomsdayOrders (unsigned int iGameClass, int iGameNumber, uns
                     return OK;
                 }
 
-                iErrCode = t_pConn->ReadData (strGameMap, iPlanetKey, GameMap::HomeWorld, &vHW);
+                iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::HomeWorld, &vHW);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -4016,7 +4016,7 @@ int GameEngine::MoveShip (unsigned int iGameClass, int iGameNumber, unsigned int
     // You want either a planet, or a fleet, or both
     Assert (iPlanetKey != NO_KEY || iFleetKey != NO_KEY);
 
-    iErrCode = t_pConn->GetTableForReading (pszShips, &pShips);
+    iErrCode = t_pConn->GetTableForReading(pszShips, &pShips);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -4192,7 +4192,7 @@ int GameEngine::GetUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, uns
     }
     *piNumShips = 0;
 
-    iErrCode = t_pConn->GetTableForReading (pszShips, &pIReadShips);
+    iErrCode = t_pConn->GetTableForReading(pszShips, &pIReadShips);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -4282,7 +4282,7 @@ int GameEngine::HasUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, uns
 
     *pbFlag = false;
 
-    iErrCode = t_pConn->GetTableForReading (pszShips, &pIReadShips);
+    iErrCode = t_pConn->GetTableForReading(pszShips, &pIReadShips);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

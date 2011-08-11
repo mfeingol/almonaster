@@ -34,7 +34,7 @@ int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpi
 
     Variant vNumAvailableTechs;
     
-    int iErrCode = t_pConn->ReadData (
+    int iErrCode = t_pConn->ReadData(
         strGameEmpireData, 
         GameEmpireData::NumAvailableTechUndevs, 
         &vNumAvailableTechs
@@ -46,7 +46,7 @@ int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpi
 
     Variant vTechUndevs;
     
-    iErrCode = t_pConn->ReadData (strGameEmpireData, GameEmpireData::TechUndevs, &vTechUndevs);
+    iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::TechUndevs, &vTechUndevs);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -74,14 +74,14 @@ int GameEngine::GetDevelopedTechs (int iGameClass, int iGameNumber, int iEmpireK
     GAME_EMPIRE_DATA (strGameData, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vTemp;
-    int iErrCode = t_pConn->ReadData (strGameData, GameEmpireData::TechDevs, &vTemp);
+    int iErrCode = t_pConn->ReadData(strGameData, GameEmpireData::TechDevs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
     *piTechDevs = vTemp.GetInteger();
 
-    iErrCode = t_pConn->ReadData (strGameData, GameEmpireData::TechUndevs, &vTemp);
+    iErrCode = t_pConn->ReadData(strGameData, GameEmpireData::TechUndevs, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -108,14 +108,14 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     Variant vTech;
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
+    iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
     if (iErrCode != OK || vTech.GetInteger() == 0) {
         iErrCode = ERROR_NO_TECHNOLOGY_AVAILABLE;
         goto Cleanup;
     }
 
     // Make sure the tech dev can be selected
-    iErrCode = t_pConn->ReadData (strEmpireData, GameEmpireData::TechUndevs, &vTech);
+    iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TechUndevs, &vTech);
 
     if (iErrCode != OK || !(vTech.GetInteger() & TECH_BITS[iTechKey])) {
         iErrCode = ERROR_WRONG_TECHNOLOGY;
@@ -175,7 +175,7 @@ int GameEngine::GetDefaultEmpireShipName (int iEmpireKey, int iTechKey, Variant*
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return t_pConn->ReadData (
+    return t_pConn->ReadData(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[iTechKey], 

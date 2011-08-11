@@ -84,7 +84,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
             SafeRelease (pEmpires);
 
-            iErrCode = t_pConn->GetTableForReading (SYSTEM_EMPIRE_DATA, &pEmpires);
+            iErrCode = t_pConn->GetTableForReading(SYSTEM_EMPIRE_DATA, &pEmpires);
             if (iErrCode != OK) {
                 Assert (false);
                 continue;

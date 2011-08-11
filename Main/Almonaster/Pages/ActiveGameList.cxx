@@ -81,8 +81,9 @@ if (iNumGames > 0) {
 
     bool bUpdateOccurred, bReloadGameList = false;
     for (i = 0; i < iNumGames; i ++) {
-        Check (CheckGameForUpdates (piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred));
-        if (bUpdateOccurred) {
+        iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred);
+        if (iErrCode != OK || (iErrCode == OK && bUpdateOccurred))
+        {
             bReloadGameList = true;
         }
     }

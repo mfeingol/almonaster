@@ -26,7 +26,7 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
 
     GAME_MAP (strMap, iGameClass, iGameNumber);
 
-    int iErrCode = t_pConn->GetTableForReading (strMap, &pMap);
+    int iErrCode = t_pConn->GetTableForReading(strMap, &pMap);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -125,7 +125,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     
     if (pShipsInMap == NULL) {
 
-        iErrCode = t_pConn->GetTableForReading (pszShips, &pRead);
+        iErrCode = t_pConn->GetTableForReading(pszShips, &pRead);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -145,7 +145,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->GetTableForReading (pszFleets, &pRead);
+        iErrCode = t_pConn->GetTableForReading(pszFleets, &pRead);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -310,7 +310,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
         for (i = 0; i < iNumShips; i ++) {
             
-            iErrCode = t_pConn->ReadData (pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
+            iErrCode = t_pConn->ReadData(pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -579,7 +579,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             if (iNumShipsInFleet > 0) {
 
                 Assert (pRead == NULL);
-                iErrCode = t_pConn->GetTableForReading (pszShips, &pRead);
+                iErrCode = t_pConn->GetTableForReading(pszShips, &pRead);
                 if (iErrCode == OK) {
 
                     unsigned int iLoopGuard = ppiFleetShips[i][0];

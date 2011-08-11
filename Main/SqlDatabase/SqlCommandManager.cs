@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Text;
 
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
@@ -152,6 +153,82 @@ namespace Almonaster.Database.Sql
                 throw new SqlDatabaseException(e);
             }
         }
+
+        public void DeleteTable(string tableName)
+        {
+            string cmdText = String.Format("DROP TABLE [{0}]", tableName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+        public IEnumerable<BulkTableReadResult> BulkRead(IEnumerable<BulkTableReadRequest> requests)
+        {
+            int index = 0;
+            StringBuilder sb = new StringBuilder(512);
+
+            List<string> tableNames = new List<string>();
+
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                foreach (BulkTableReadRequest req in requests)
+                {
+                    if (String.IsNullOrEmpty(req.ColumnName))
+                    {
+                        sb.AppendLine(String.Format("SELECT * FROM [{0}];", req.TableName));
+                    }
+                    else
+                    {
+                        string param = "@p" + index++;
+                        sb.AppendLine(String.Format("SELECT * FROM [{0}] WHERE [{1}] = {2};", req.TableName, req.ColumnName, param));
+                        cmd.Parameters.Add(new SqlParameter(param, (long)(uint)req.ColumnValue));
+                    }
+
+                    tableNames.Add(req.TableName);
+                }
+
+                cmd.CommandText = sb.ToString();
+                cmd.Connection = this.conn;
+
+                List<BulkTableReadResult> results = new List<BulkTableReadResult>();
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    int tableIndex = 0;
+                    do
+                    {
+                        List<IDictionary<string, object>> rows = new List<IDictionary<string, object>>();
+                        while (reader.Read())
+                        {
+                            Dictionary<string, object> values = new Dictionary<string, object>();
+
+                            for (int i = 0; i < reader.VisibleFieldCount; i++)
+                            {
+                                string name = reader.GetName(i);
+                                object value = reader.GetValue(i);
+                                values.Add(name, value);
+                            }
+
+                            rows.Add(values);
+                        }
+
+                        BulkTableReadResult result = new BulkTableReadResult()
+                        {
+                            TableName = tableNames[tableIndex++],
+                            Rows = rows
+                        };
+
+                        results.Add(result);
+                    }
+                    while (reader.NextResult());
+                }
+
+                return results;
+            }
+        }
+
+        // ...
 
         public long Insert(string tableName, IEnumerable<ColumnValue> columns)
         {
@@ -431,12 +508,33 @@ namespace Almonaster.Database.Sql
             }
 
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = [{1}] {2} @p1 WHERE [{3}] = @p0", tableName, columnName, opString, idColumnName);
-
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", bitField));
+                cmd.ExecuteNonQuery();
+            }
+        }
 
+        public void WriteBitField(string tableName, string columnName, BooleanOperation op, int bitField)
+        {
+            string opString;
+            switch (op)
+            {
+                case BooleanOperation.And:
+                    opString = "&";
+                    break;
+                case BooleanOperation.Or:
+                    opString = "|";
+                    break;
+                default:
+                    throw new ArgumentException("Invalid op");
+            }
+
+            string cmdText = String.Format("UPDATE [{0}] SET [{1}] = [{1}] {2} @p0", tableName, columnName, opString);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.Parameters.Add(new SqlParameter("@p0", bitField));
                 cmd.ExecuteNonQuery();
             }
         }
@@ -473,6 +571,28 @@ namespace Almonaster.Database.Sql
             }
         }
 
+        public void Increment(string tableName, string idColumnName, long id, string columnName, object inc, out object oldValue)
+        {
+            string cmdText = String.Format("SELECT [{1}] FROM [{0}] WHERE [{2}] = @p0; UPDATE [{0}] SET [{1}] = [{1}] + @p1 WHERE [{2}] = @p0", tableName, columnName, idColumnName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.Parameters.Add(new SqlParameter("@p0", id));
+                cmd.Parameters.Add(new SqlParameter("@p1", inc));
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        oldValue = reader.GetValue(0);
+                    }
+                    else
+                    {
+                        throw new SqlDatabaseException("No value returned from command execution");
+                    }
+                }
+            }
+        }
+
         public object IncrementSingle(string tableName, string columnName, object inc)
         {
             string cmdText = String.Format("SELECT [{1}] FROM [{0}]; UPDATE [{0}] SET [{1}] = [{1}] + @p0", tableName, columnName);
@@ -485,21 +605,12 @@ namespace Almonaster.Database.Sql
 
         public IEnumerable<RowValues> ReadColumns(string tableName, IEnumerable<string> columnNames)
         {
-            int cols = 0;
-            string columnSet = String.Empty;
-            foreach (string columnName in columnNames)
-            {
-                if (!String.IsNullOrEmpty(columnSet))
-                {
-                    columnSet += ", ";
-                }
-                columnSet += "[" + columnName + "]";
-                cols ++;
-            }
+            int cols;
+            string columnSet = MakeColumnSet(columnNames, out cols);
 
             List<RowValues> rows = new List<RowValues>();
             
-            string cmdText = String.Format("SELECT {0} FROM {1}", columnSet, tableName);
+            string cmdText = String.Format("SELECT {0} FROM [{1}]", columnSet, tableName);
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
                 using (SqlDataReader reader = cmd.ExecuteReader())
@@ -545,6 +656,73 @@ namespace Almonaster.Database.Sql
                     }
                     return row;
                 }
+            }
+        }
+
+        public RowValues ReadRow(string tableName)
+        {
+            string cmdText = String.Format("SELECT * FROM [{0}]", tableName);
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    RowValues row = new RowValues();
+                    if (reader.Read())
+                    {
+                        int cols = reader.VisibleFieldCount;
+                        object[] values = new object[cols];
+                        reader.GetValues(values);
+                        row.Values = values;
+
+                        if (reader.Read())
+                        {
+                            throw new SqlDatabaseException("Table contains more rows than expected");
+                        }
+                    }
+                    return row;
+                }
+            }
+        }
+
+        public IEnumerable<RowValues> ReadColumnsWhere(string tableName, IEnumerable<string> columnNames, string equalColumnName, object value)
+        {
+            int cols;
+            string columnSet = MakeColumnSet(columnNames, out cols);
+
+            List<RowValues> rows = new List<RowValues>();
+
+            string cmdText = String.Format("SELECT {0} FROM [{1}] WHERE [{2}] = @p0", columnSet, tableName, equalColumnName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.Parameters.Add(new SqlParameter("@p0", value));
+
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        List<object> values = new List<object>(cols);
+                        foreach (string columnName in columnNames)
+                        {
+                            values.Add(reader[columnName]);
+                        }
+                        RowValues row;
+                        row.Values = values;
+                        rows.Add(row);
+                    }
+                }
+            }
+
+            return rows;
+        }
+
+        public void DeleteRow(string tableName, string columnName, object value)
+        {
+            string cmdText = String.Format("DELETE FROM [{0}] WHERE [{1}] = @p0", tableName, columnName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            {
+                cmd.Parameters.Add(new SqlParameter("@p0", value));
+                cmd.ExecuteNonQuery();
             }
         }
 
@@ -617,6 +795,23 @@ namespace Almonaster.Database.Sql
                 }
                 return result;
             }
+        }
+
+        string MakeColumnSet(IEnumerable<string> columnNames, out int cols)
+        {
+            cols = 0;
+            string columnSet = String.Empty;
+            foreach (string columnName in columnNames)
+            {
+                if (!String.IsNullOrEmpty(columnSet))
+                {
+                    columnSet += ", ";
+                }
+                columnSet += "[" + columnName + "]";
+                cols++;
+            }
+
+            return columnSet;
         }
     }
 }

@@ -428,7 +428,7 @@ public:
     virtual int GetSearchKeys (const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, 
         unsigned int* piNumHits, unsigned int* piStopKey) = 0;
 
-    virtual int GetTableForReading (const char* pszTableName, IReadTable** ppTable) = 0;
+    virtual int GetTableForReading(const char* pszTableName, IReadTable** ppTable) = 0;
     virtual int GetTableForWriting (const char* pszTableName, IWriteTable** ppTable) = 0;
 
     virtual int CreateTransaction (ITransaction** ppTransaction) = 0;

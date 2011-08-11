@@ -6,15 +6,23 @@ using namespace System::Collections::Generic;
 using namespace System::Data::SqlClient;
 
 SqlDatabaseConnection::SqlDatabaseConnection(SqlDatabase^ sqlDatabase)
-    : m_sqlDatabase(sqlDatabase)
+    :
+    m_iNumRefs(1),
+    m_sqlDatabase(sqlDatabase),
+    m_cmd(m_sqlDatabase->CreateCommandManager()),
+    m_viewCollection(m_cmd)
 {
-    m_cmd = m_sqlDatabase->CreateCommandManager();
-    m_iNumRefs = 1;
 }
 
 SqlDatabaseConnection::~SqlDatabaseConnection()
 {
     delete m_cmd;
+}
+
+// View operations
+ITableViewCollection* SqlDatabaseConnection::GetViews()
+{
+    return &m_viewCollection;
 }
 
 // Table operations
@@ -55,16 +63,19 @@ int SqlDatabaseConnection::CreateTable(const char* pszTableName, const TemplateD
 
 int SqlDatabaseConnection::DeleteTable(const char* pszTableName)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    System::String^ tableName = gcnew System::String(pszTableName);
+    Trace("DeleteTable {0}", tableName);
+
+    m_cmd->DeleteTable(tableName);
     return OK;
 }
 
 bool SqlDatabaseConnection::DoesTableExist(const char* pszTableName)
 {
-    Trace("DoesTableExist {0}", gcnew System::String(pszTableName));
+    System::String^ tableName = gcnew System::String(pszTableName);
+    Trace("DoesTableExist {0}", tableName);
 
-    return m_cmd->DoesTableExist(gcnew System::String(pszTableName));
+    return m_cmd->DoesTableExist(tableName);
 }
 
 // Standard operations
@@ -124,9 +135,8 @@ int SqlDatabaseConnection::WriteAnd(const char* pszTableName, unsigned int iKey,
 
 int SqlDatabaseConnection::WriteAnd(const char* pszTableName, const char* pszColumn, unsigned int iBitField)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    SqlDatabaseWriteTable write(m_cmd, gcnew System::String(pszTableName));
+    return write.WriteAnd(pszColumn, iBitField);
 }
 
 int SqlDatabaseConnection::WriteOr(const char* pszTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField)
@@ -137,9 +147,8 @@ int SqlDatabaseConnection::WriteOr(const char* pszTableName, unsigned int iKey, 
 
 int SqlDatabaseConnection::WriteOr(const char* pszTableName, const char* pszColumn, unsigned int iBitField)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    SqlDatabaseWriteTable write(m_cmd, gcnew System::String(pszTableName));
+    return write.WriteOr(pszColumn, iBitField);
 }
 
 int SqlDatabaseConnection::WriteXor(const char* pszTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField)
@@ -226,19 +235,11 @@ int SqlDatabaseConnection::ReadRow(const char* pszTableName, unsigned int iKey, 
     return read.ReadRow(iKey, ppvData);
 }
 
-int SqlDatabaseConnection::ReadRow(const char* pszTableName, Variant** ppvData)
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
-}
-
 // Column operations
 int SqlDatabaseConnection::ReadColumn(const char* pszTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
+    return read.ReadColumn(pszColumn, ppiKey, ppvData, piNumRows);
 }
 
 int SqlDatabaseConnection::ReadColumn(const char* pszTableName, const char* pszColumn, Variant** ppvData, unsigned int* piNumRows)

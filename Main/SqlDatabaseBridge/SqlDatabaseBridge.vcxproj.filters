@@ -29,6 +29,12 @@
     <ClInclude Include="SqlDatabaseWriteTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TableViewCollection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ReadTableView.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp">
@@ -50,6 +56,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SqlDatabaseWriteTable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TableViewCollection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ReadTableView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

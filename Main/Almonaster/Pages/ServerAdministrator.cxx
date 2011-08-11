@@ -1109,7 +1109,7 @@ case 0:
 
     Variant* pvServerData = NULL;
 
-    iErrCode = t_pConn->ReadRow (SYSTEM_DATA, &pvServerData);
+    iErrCode = t_pConn->GetViews()->ReadRow(SYSTEM_DATA, NO_KEY, &pvServerData);
     if (iErrCode != OK) {
         goto Cancel;
     }
@@ -1549,7 +1549,7 @@ case 2:
     IReadTable* pSystemData;
     void** ppData;
 
-    iErrCode = t_pConn->GetTableForReading (SYSTEM_DATA, &pSystemData);
+    iErrCode = t_pConn->GetTableForReading(SYSTEM_DATA, &pSystemData);
     if (iErrCode != OK) {
         goto Cleanup;
     }

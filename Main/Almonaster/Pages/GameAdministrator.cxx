@@ -2562,7 +2562,7 @@ case 6:
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData (SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
+    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;

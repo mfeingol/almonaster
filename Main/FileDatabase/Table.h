@@ -101,7 +101,7 @@ public:
     // Direct API
     //
 
-    int GetTableForReading (IReadTable** ppTable);
+    int GetTableForReading(IReadTable** ppTable);
     int GetTableForWriting (IWriteTable** ppTable);
 
     ///////////////

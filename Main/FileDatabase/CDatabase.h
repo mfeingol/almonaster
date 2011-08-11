@@ -310,7 +310,7 @@ public:
     // Direct API
     //
 
-    int GetTableForReading (const char* pszTableName, IReadTable** ppTable);
+    int GetTableForReading(const char* pszTableName, IReadTable** ppTable);
     int GetTableForWriting (const char* pszTableName, IWriteTable** ppTable);
 
     //

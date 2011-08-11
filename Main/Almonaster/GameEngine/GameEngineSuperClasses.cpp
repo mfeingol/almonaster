@@ -73,7 +73,7 @@ int GameEngine::DeleteSuperClass (int iSuperClassKey, bool* pbResult) {
 
     Variant vGameClasses;
 
-    int iErrCode = t_pConn->ReadData (
+    int iErrCode = t_pConn->ReadData(
         SYSTEM_SUPERCLASS_DATA, 
         iSuperClassKey, 
         SystemSuperClassData::NumGameClasses,
@@ -125,9 +125,9 @@ int GameEngine::GetSuperClassKeys (int** ppiKey, Variant** ppvName, int* piNumSu
 //
 // Return names and keys of superclasses
 
-int GameEngine::GetSuperClassKeys (int** ppiKey, int* piNumSuperClasses) {
+int GameEngine::GetSuperClassKeys(int** ppiKey, int* piNumSuperClasses) {
 
-    int iErrCode = t_pConn->GetAllKeys (
+    int iErrCode = t_pConn->GetViews()->GetAllKeys (
         SYSTEM_SUPERCLASS_DATA, 
         (unsigned int**) ppiKey, 
         (unsigned int*) piNumSuperClasses
@@ -151,7 +151,7 @@ int GameEngine::GetSuperClassKeys (int** ppiKey, int* piNumSuperClasses) {
 
 int GameEngine::GetSuperClassName (int iKey, Variant* pvName) {
 
-    return t_pConn->ReadData (SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
+    return t_pConn->GetViews()->ReadData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
 }
 
 int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {

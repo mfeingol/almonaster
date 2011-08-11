@@ -49,7 +49,7 @@ int SqlDatabaseReadTable::GetFirstKey(const char* pszColumn, float fData, unsign
 
 int SqlDatabaseReadTable::GetFirstKey(const char* pszColumn, const char* pszData, unsigned int* piKey)
 {
-    Trace("GetFirstKey {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+    Trace("GetFirstKey {0} :: {1} = {2}", m_tableName, gcnew System::String(pszColumn), gcnew System::String(pszData));
 
     int64 id = m_cmd->GetIdOfFirstMatch(m_tableName, gcnew System::String(IdColumnName), gcnew System::String(pszColumn), gcnew System::String(pszData));
     if (id == System::Int64::MinValue)
@@ -123,7 +123,11 @@ int SqlDatabaseReadTable::GetAllKeys(unsigned int** ppiKey, unsigned int* piNumK
 
 int SqlDatabaseReadTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 {
-    int64 id = m_cmd->GetNextId(m_tableName, gcnew System::String(IdColumnName), iKey);
+    int64 i64Key = -1;
+    if (iKey != NO_KEY)
+        i64Key = iKey;
+    
+    int64 id = m_cmd->GetNextId(m_tableName, gcnew System::String(IdColumnName), i64Key);
     if (id == System::Int64::MinValue)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -223,8 +227,15 @@ int SqlDatabaseReadTable::GetSearchKeys(const SearchDefinition& sdSearch, unsign
 
 int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, int* piData)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+
+    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
+    if (read == nullptr)
+    {
+        return ERROR_DATA_NOT_FOUND;
+    }
+
+    *piData = (int)read;
     return OK;
 }
 
@@ -265,37 +276,29 @@ int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, Var
 
 int SqlDatabaseReadTable::ReadData(const char* pszColumn, int* piData)
 {
-    Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+    Variant vData;
+    int iErrCode = ReadData(pszColumn, &vData);
 
-    System::Object^ read = m_cmd->ReadSingle(m_tableName, gcnew System::String(pszColumn));
-    if (read == nullptr)
-    {
-        return ERROR_DATA_NOT_FOUND;
-    }
-
-    *piData = (int)read;
-    return OK;
+    *piData = vData.GetInteger();
+    return iErrCode;
 }
 
 int SqlDatabaseReadTable::ReadData(const char* pszColumn, float* pfData)
 {
-    Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+    Variant vData;
+    int iErrCode = ReadData(pszColumn, &vData);
 
-    System::Object^ read = m_cmd->ReadSingle(m_tableName, gcnew System::String(pszColumn));
-    if (read == nullptr)
-    {
-        return ERROR_DATA_NOT_FOUND;
-    }
-
-    *pfData = (float)(double)read;
-    return OK;
+    *pfData = vData.GetFloat();
+    return iErrCode;
 }
 
 int SqlDatabaseReadTable::ReadData(const char* pszColumn, int64* pi64Data)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    Variant vData;
+    int iErrCode = ReadData(pszColumn, &vData);
+
+    *pi64Data = vData.GetInteger64();
+    return iErrCode;
 }
 
 int SqlDatabaseReadTable::ReadData(const char* pszColumn, Variant* pvData)
@@ -315,19 +318,58 @@ int SqlDatabaseReadTable::ReadData(const char* pszColumn, Variant* pvData)
 
 int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    Trace("ReadColumn {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+
+    if (ppiKey != NULL)
+        *ppiKey = NULL;
+    *ppiData = NULL;
+    *piNumRows = 0;
+
+    int iNumCols = ppiKey != NULL ? 2 : 1;
+    array<System::String^>^ cols = gcnew array<System::String^>(iNumCols);
+    cols[0] = gcnew System::String(pszColumn);
+    if (ppiKey != NULL)
+        cols[1] = gcnew System::String(IdColumnName);
+
+    IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
+    unsigned int iNumRows = Enumerable::Count(rows);
+    if (iNumRows == 0)
+        return ERROR_DATA_NOT_FOUND;
+
+    int* piData = new int[iNumRows];
+    Assert(piData);
+
+    if (ppiKey != NULL)
+    {
+        *ppiKey = new unsigned int[iNumRows];
+        Assert(*ppiKey);
+    }
+
+    unsigned int iRow = 0;
+    for each (RowValues row in rows)
+    {
+        unsigned int iCol = 0;
+        for each (System::Object^ value in row.Values)
+        {
+            if (ppiKey != NULL && iCol == 1)
+            {
+                (*ppiKey)[iRow] = (unsigned int)(int64)value;
+            }
+            else
+            {
+                piData[iRow] = (int)value;
+                iCol ++;
+            }
+        }
+        iRow ++;
+    }
+
+    *piNumRows = iNumRows;
+    *ppiData = piData;
     return OK;
 }
 
 int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, float** ppfData, unsigned int* piNumRows)
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
-}
-
-int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -345,20 +387,21 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKe
 {
     Trace("ReadColumn {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
+    if (ppiKey != NULL)
+        *ppiKey = NULL;
+    *ppvData = NULL;
+    *piNumRows = 0;
+
     int iNumCols = ppiKey != NULL ? 2 : 1;
     array<System::String^>^ cols = gcnew array<System::String^>(iNumCols);
     cols[0] = gcnew System::String(pszColumn);
     if (ppiKey != NULL)
-    {
         cols[1] = gcnew System::String(IdColumnName);
-    }
 
     IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
     unsigned int iNumRows = Enumerable::Count(rows);
     if (iNumRows == 0)
-    {
         return ERROR_DATA_NOT_FOUND;
-    }
 
     Variant* pvData = new Variant[iNumRows];
     Assert(pvData);
@@ -366,18 +409,18 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKe
     if (ppiKey != NULL)
     {
         *ppiKey = new unsigned int[iNumRows];
+        Assert(*ppiKey);
     }
 
     unsigned int iRow = 0;
     for each (RowValues row in rows)
     {
         unsigned int iCol = 0;
-        ppvData[iRow] = pvData + iRow;
         for each (System::Object^ value in row.Values)
         {
             if (ppiKey != NULL && iCol == 1)
             {
-                *ppiKey[iRow] = (unsigned int)(long)value;
+                (*ppiKey)[iRow] = (unsigned int)(int64)value;
             }
             else
             {
@@ -395,19 +438,10 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKe
 
 int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, int** ppiData, unsigned int* piNumRows)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    return ReadColumn(pszColumn, NULL, ppiData, piNumRows);
 }
 
 int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, float** ppfData, unsigned int* piNumRows)
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
-}
-
-int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, char*** ppszData, unsigned int* piNumRows)
 {
     // TODOTODO - Needs implementation
     Assert(false);
@@ -423,14 +457,17 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, int64** ppi64Data, u
 
 int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, Variant** ppvData, unsigned int* piNumRows)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return OK;
+    return ReadColumn(pszColumn, NULL, ppvData, piNumRows);
 }
 
 int SqlDatabaseReadTable::ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows)
 {
     Trace("ReadColumns {0}", m_tableName);
+
+    *pppvData = NULL;
+    *piNumRows = 0;
+    if (ppiKey != NULL)
+        *ppiKey = NULL;
 
     int iBonus = ppiKey != NULL ? 1:0;
     array<System::String^>^ cols = gcnew array<System::String^>(iNumColumns + iBonus);
@@ -440,23 +477,12 @@ int SqlDatabaseReadTable::ReadColumns(unsigned int iNumColumns, const char* cons
     }
 
     if (ppiKey != NULL)
-    {
         cols[iNumColumns] = gcnew System::String(IdColumnName);
-    }
 
     IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
     unsigned int iNumRows = Enumerable::Count(rows);
     if (iNumRows == 0)
-    {
-        if (ppiKey != NULL)
-        {
-            *ppiKey = NULL;
-        }
-        *pppvData = NULL;
-        *piNumRows = 0;
-
         return ERROR_DATA_NOT_FOUND;
-    }
 
     Variant** ppvData = new Variant*[iNumRows];
     Assert(ppvData);
@@ -467,6 +493,7 @@ int SqlDatabaseReadTable::ReadColumns(unsigned int iNumColumns, const char* cons
     if (ppiKey != NULL)
     {
         *ppiKey = new unsigned int[iNumRows];
+        Assert(*ppiKey);
     }
 
     unsigned int iRow = 0;
@@ -478,7 +505,7 @@ int SqlDatabaseReadTable::ReadColumns(unsigned int iNumColumns, const char* cons
         {
             if (ppiKey != NULL && iCol == iNumColumns)
             {
-                *ppiKey[iRow] = (unsigned int)(long)value;
+                (*ppiKey)[iRow] = (unsigned int)(int64)value;
             }
             else
             {
@@ -503,12 +530,19 @@ int SqlDatabaseReadTable::ReadRow(unsigned int iKey, void*** pppData)
 
 int SqlDatabaseReadTable::ReadRow(unsigned int iKey, Variant** ppvData)
 {
-    RowValues row = m_cmd->ReadRow(m_tableName, gcnew System::String(IdColumnName), iKey);
+    RowValues row;
+    if (iKey == NO_KEY)
+    {
+        row = m_cmd->ReadRow(m_tableName);
+    }
+    else
+    {
+        row = m_cmd->ReadRow(m_tableName, gcnew System::String(IdColumnName), iKey);
+    }
+
     IEnumerable<System::Object^>^ values = row.Values;
     if (values == nullptr)
-    {
         return ERROR_UNKNOWN_ROW_KEY;
-    }
 
     unsigned int iNumCols = Enumerable::Count(values);
     Variant* pvData = new Variant[iNumCols];
@@ -526,9 +560,61 @@ int SqlDatabaseReadTable::ReadRow(unsigned int iKey, Variant** ppvData)
 int SqlDatabaseReadTable::ReadColumnWhereEqual(const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
                                                unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys)
 {
-    // TODOTODO - Needs implementation
-    Assert(false);
+    System::String^ readColumnName = gcnew System::String(pszReadColumn);
+    System::String^ equalColumnName = gcnew System::String(pszEqualColumn);
+    System::Object^ data = Convert(vData);
+    Trace("ReadColumnWhereEqual {0} :: {1} :: {2} = {3}", m_tableName, readColumnName, equalColumnName, data);
+
+    *ppvData = NULL;
+    *piNumKeys = 0;
+    if (ppiKey != NULL)
+        *ppiKey = NULL;
+
+    int iNumCols = ppiKey != NULL ? 2 : 1;
+    array<System::String^>^ cols = gcnew array<System::String^>(iNumCols);
+    cols[0] = readColumnName;
+    if (ppiKey != NULL)
+        cols[1] = gcnew System::String(IdColumnName);
+
+    IEnumerable<RowValues>^ rows = m_cmd->ReadColumnsWhere(m_tableName, cols, equalColumnName, data);
+    unsigned int iNumRows = Enumerable::Count(rows);
+    if (iNumRows == 0)
+        return ERROR_DATA_NOT_FOUND;
+
+    Variant* pvData = new Variant[iNumRows];
+    Assert(pvData);
+
+    if (ppiKey != NULL)
+    {
+        *ppiKey = new unsigned int[iNumRows];
+        Assert(*ppiKey);
+    }
+
+    unsigned int iRow = 0;
+    for each (RowValues row in rows)
+    {
+        unsigned int iCol = 0;
+        for each (System::Object^ value in row.Values)
+        {
+            if (ppiKey != NULL && iCol == 1)
+            {
+                (*ppiKey)[iRow] = (unsigned int)(int64)value;
+            }
+            else
+            {
+                Convert(value, &pvData[iRow]);
+                iCol ++;
+            }
+        }
+        iRow ++;
+    }
+
+    *piNumKeys = iNumRows;
+    *ppvData = pvData;
     return OK;
+    
+
+
 }
 
 //

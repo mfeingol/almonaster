@@ -26,7 +26,7 @@ int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
     Assert (pgcConfig != NULL);
 
-    iErrCode = t_pConn->GetTableForReading (SYSTEM_DATA, &pSystem);
+    iErrCode = t_pConn->GetTableForReading(SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -202,7 +202,7 @@ int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig) {
 
     Assert (pmcConfig != NULL);
 
-    iErrCode = t_pConn->GetTableForReading (SYSTEM_DATA, &pSystem);
+    iErrCode = t_pConn->GetTableForReading(SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

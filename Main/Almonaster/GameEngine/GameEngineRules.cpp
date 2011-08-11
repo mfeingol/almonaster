@@ -448,7 +448,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     case TRUCE:
         
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxNumTruces, 
@@ -462,7 +462,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     case TRADE:
         
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxNumTrades, 
@@ -476,7 +476,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     case ALLIANCE:
         
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxNumAlliances, 
@@ -498,7 +498,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
         GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
-        iErrCode = t_pConn->ReadData (
+        iErrCode = t_pConn->ReadData(
             pszGameData, 
             GameData::MaxNumEmpires, 
             &vMax

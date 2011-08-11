@@ -120,7 +120,7 @@ int Table::GetTemplate (ITemplate** ppTemplate) {
 }
 
 
-int Table::GetTableForReading (IReadTable** ppTable) {
+int Table::GetTableForReading(IReadTable** ppTable) {
 
     *ppTable = m_wTable.GetReadTable();
     (*ppTable)->AddRef();

@@ -210,20 +210,24 @@ copy /y SqlDatabase.h "%DropSdk%"
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ReadTableView.h" />
     <ClInclude Include="SqlDatabase.h" />
     <ClInclude Include="SqlDatabaseConnection.h" />
     <ClInclude Include="SqlDatabaseBridge.h" />
     <ClInclude Include="SqlDatabaseReadTable.h" />
     <ClInclude Include="SqlDatabaseWriteTable.h" />
+    <ClInclude Include="TableViewCollection.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Interface.cpp" />
+    <ClCompile Include="ReadTableView.cpp" />
     <ClCompile Include="SqlDatabaseBridge.cpp" />
     <ClCompile Include="SqlDatabaseConnection.cpp" />
     <ClCompile Include="SqlDatabaseReadTable.cpp" />
     <ClCompile Include="SqlDatabaseWriteTable.cpp" />
+    <ClCompile Include="TableViewCollection.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

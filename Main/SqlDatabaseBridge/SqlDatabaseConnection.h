@@ -6,6 +6,8 @@
 #using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;
 
+#include "TableViewCollection.h"
+
 const gcroot<System::String^> TemplateTableName = gcnew System::String("_Templates");
 const gcroot<System::String^> TemplateColumnsTableName = gcnew System::String("_TemplateColumns");
 const gcroot<System::String^> TemplateIndexesTableName = gcnew System::String("_TemplateIndexes");
@@ -16,6 +18,8 @@ private:
     gcroot<SqlDatabase^> m_sqlDatabase;
     gcroot<SqlCommandManager^> m_cmd;
 
+    TableViewCollection m_viewCollection;
+
 public:
     SqlDatabaseConnection(SqlDatabase^ sqlDatabase);
     ~SqlDatabaseConnection();
@@ -23,6 +27,9 @@ public:
     // IDatabaseConnection
     IMPLEMENT_INTERFACE(IDatabaseConnection);
     
+    // View operations
+    ITableViewCollection* GetViews();
+
     // Table operations
     bool DoesTableExist(const char* pszTableName);
     int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate);
@@ -66,7 +73,6 @@ public:
     int DeleteAllRows(const char* pszTableName);
     
     int ReadRow(const char* pszTableName, unsigned int iKey, Variant** ppvData);
-    int ReadRow(const char* pszTableName, Variant** ppvData);
 
     // Column operations
     int ReadColumn(const char* pszTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);

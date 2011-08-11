@@ -28,19 +28,28 @@ int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, f
 
 int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, const char* pszData)
 {
-    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), gcnew System::String(pszData));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteData {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, gcnew System::String(pszData));
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, int64 i64Data)
 {
-    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), i64Data);
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteData {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, i64Data);
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData)
 {
-    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), Convert(vData));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteData {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, Convert(vData));
     return OK;
 }
 
@@ -64,41 +73,52 @@ int SqlDatabaseWriteTable::WriteData(const char* pszColumn, const char* pszData)
 
 int SqlDatabaseWriteTable::WriteData(const char* pszColumn, int64 i64Data)
 {
-    Assert(false);
-    return OK;
+    Variant vData = i64Data;
+    return WriteData(pszColumn, vData);
 }
 
 int SqlDatabaseWriteTable::WriteData(const char* pszColumn, const Variant& vData)
 {
-    m_cmd->WriteSingle(m_tableName, gcnew System::String(pszColumn), Convert(vData));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteData {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->WriteSingle(m_tableName, columnName, Convert(vData));
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int iBitField)
 {
-    Trace("WriteAnd {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteAnd {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->WriteBitField(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), BooleanOperation::And, iBitField);
+    m_cmd->WriteBitField(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, BooleanOperation::And, iBitField);
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteAnd(const char* pszColumn, unsigned int iBitField)
 {
-    Assert(false);
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteAnd {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->WriteBitField(m_tableName, columnName, BooleanOperation::And, iBitField);
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteOr(unsigned int iKey, const char* pszColumn, unsigned int iBitField)
 {
-    Trace("WriteOr {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteOr {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->WriteBitField(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), BooleanOperation::Or, iBitField);
+    m_cmd->WriteBitField(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, BooleanOperation::Or, iBitField);
     return OK;
 }
 
 int SqlDatabaseWriteTable::WriteOr(const char* pszColumn, unsigned int iBitField)
 {
-    Assert(false);
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("WriteOr {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->WriteBitField(m_tableName, columnName, BooleanOperation::Or, iBitField);
     return OK;
 }
 
@@ -198,31 +218,47 @@ int SqlDatabaseWriteTable::Increment(const char* pszColumn, const Variant& vIncr
 
 int SqlDatabaseWriteTable::Increment(const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
-    System::Object^ oldValue = m_cmd->IncrementSingle(m_tableName, gcnew System::String(pszColumn), Convert(vIncrement));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("Increment {0} :: {1}", m_tableName, columnName);
+
+    System::Object^ oldValue = m_cmd->IncrementSingle(m_tableName, columnName, Convert(vIncrement));
     Convert(oldValue, pvOldValue);
     return OK;
 }
 
 int SqlDatabaseWriteTable::Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement)
 {
-    m_cmd->Increment(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn), Convert(vIncrement));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("Increment {0} :: {1}", m_tableName, columnName);
+
+    m_cmd->Increment(m_tableName, gcnew System::String(IdColumnName), (int64)iKey, columnName, Convert(vIncrement));
     return OK;
 }
 
 int SqlDatabaseWriteTable::Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
-    Assert(false);
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("Increment {0} :: {1}", m_tableName, columnName);
+
+    System::Object^ oldValue;
+    m_cmd->Increment(m_tableName, gcnew System::String(IdColumnName), (int64)iKey, columnName, Convert(vIncrement), oldValue);
+    Convert(oldValue, pvOldValue);
+
     return OK;
 }
 
 int SqlDatabaseWriteTable::DeleteRow(unsigned int iKey)
 {
-    Assert(false);
+    Trace("DeleteRows {0}", m_tableName);
+
+    m_cmd->DeleteRow(m_tableName, gcnew System::String(IdColumnName), (int64)iKey);
     return OK;
 }
 
 int SqlDatabaseWriteTable::DeleteAllRows()
 {
+    Trace("DeleteAllRows {0}", m_tableName);
+
     m_cmd->DeleteAllRows(m_tableName);
     return OK;
 }
@@ -336,11 +372,6 @@ int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, unsigned int** ppiK
     return m_readTable.ReadColumn(pszColumn, ppiKey, ppfData, piNumRows);
 }
 
-int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, char*** ppszData, unsigned int* piNumRows)
-{
-    return m_readTable.ReadColumn(pszColumn, ppiKey, ppszData, piNumRows);
-}
-
 int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, int64** ppi64Data, unsigned int* piNumRows)
 {
     return m_readTable.ReadColumn(pszColumn, ppiKey, ppi64Data, piNumRows);
@@ -359,11 +390,6 @@ int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, int** ppiData, unsi
 int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, float** ppfData, unsigned int* piNumRows)
 {
     return m_readTable.ReadColumn(pszColumn, ppfData, piNumRows);
-}
-
-int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, char*** ppszData, unsigned int* piNumRows)
-{
-    return m_readTable.ReadColumn(pszColumn, ppszData, piNumRows);
 }
 
 int SqlDatabaseWriteTable::ReadColumn(const char* pszColumn, int64** ppi64Data, unsigned int* piNumRows)
