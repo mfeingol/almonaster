@@ -20,13 +20,27 @@
 
 int iErrCode;
 
-INITIALIZE_EMPIRE
+if (InitializeEmpireInGame(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
-INITIALIZE_GAME
+PageId pageRedirect;
+if (InitializeGame(&pageRedirect) != OK)
+{
+    return Redirect(pageRedirect);
+}
 
-GAME_REDIRECT_ON_SUBMIT
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmitGame (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-GAME_OPEN
+OpenGamePage();
 
 // Individual page starts here
 bool bGameStarted = (m_iGameState & STARTED) != 0;
@@ -37,6 +51,6 @@ if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
 
 WriteServerNews();
 
-GAME_CLOSE
+CloseGamePage();
 
 %>

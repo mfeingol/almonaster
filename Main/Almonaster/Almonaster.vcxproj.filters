@@ -359,6 +359,9 @@
     <ClCompile Include="StdAfx.cpp">
       <Filter>Almonaster</Filter>
     </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlPageFlow.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">

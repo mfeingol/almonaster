@@ -26,7 +26,10 @@ enum AutoLogonVars {
     MAYBE_AUTOLOGON = -2
 };
 
-INITIALIZE_EMPIRE
+if (InitializeEmpire(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
 IHttpForm* pHttpForm;
 
@@ -2097,7 +2100,7 @@ if (bRedirectTest && !m_bRedirection) {
 }
 iNewButtonKey = m_iButtonKey;
 
-SYSTEM_OPEN (iProfileEditorPage == 1 && iAlienSelect == 1)
+OpenSystemPage(iProfileEditorPage == 1 && iAlienSelect == 1);
 
 // Individual page stuff starts here
 switch (iProfileEditorPage) {
@@ -3601,6 +3604,6 @@ default:
     Assert (false);
 }
 
-SYSTEM_CLOSE
+CloseSystemPage();
 
 %>

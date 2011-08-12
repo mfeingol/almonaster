@@ -179,8 +179,18 @@ int HtmlRenderer::HtmlLoginEmpire() {
     return iErrCode;
 }
 
+int HtmlRenderer::InitializeEmpireInGame(bool bAutoLogon)
+{
+    int iErrCode = InitializeEmpire(bAutoLogon);
+    if (iErrCode == OK && m_iPrivilege == GUEST)
+    {
+        AddMessage ("Your empire does not have the privilege to access this game");
+        iErrCode = ERROR_FAILURE;
+    }
+    return iErrCode;
+}
 
-int HtmlRenderer::InitializeEmpire (bool bAutoLogon)
+int HtmlRenderer::InitializeEmpire(bool bAutoLogon)
 {
     int iErrCode;
     IHttpForm* pHttpForm;

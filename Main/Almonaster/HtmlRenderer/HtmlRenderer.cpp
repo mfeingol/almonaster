@@ -67,6 +67,8 @@ unsigned int HtmlRenderer::m_siNumGamingEmpires;
 
 HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 {
+    bRedirectTest = true;
+
     m_pHttpRequest = pHttpRequest;
     m_pHttpResponse = pHttpResponse;
     
@@ -157,26 +159,6 @@ int HtmlRenderer::Initialize() {
     }
 
     return iErrCode;
-}
-
-int HtmlRenderer::Render() {
-    
-    Assert (m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
-    return g_pfxnRenderPage[m_pgPageId] (this);
-}
-
-int HtmlRenderer::Redirect (PageId pageId) {
-    
-    Assert (pageId > MIN_PAGE_ID && pageId < MAX_PAGE_ID);
-    
-    m_bRedirection = true;
-    m_pgPageId = pageId;
-    
-    // Best effort
-    m_pHttpResponse->Clear();
-    
-    // Call the function
-    return g_pfxnRenderPage[pageId] (this);
 }
 
 void HtmlRenderer::ShutdownServer() {
@@ -850,7 +832,6 @@ void HtmlRenderer::WriteStringByDiplomacy (const char* pszString, int iDiplomacy
     }
 }
 
-
 bool HtmlRenderer::VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash) {
     
     int iErrCode;
@@ -865,95 +846,6 @@ bool HtmlRenderer::VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash) {
     iRealHash = Algorithm::GetStringHashValue (vName.GetCharPtr(), EMPIRE_NAME_HASH_LIMIT, true);
     
     return iRealHash == iHash;
-}
-
-void HtmlRenderer::WriteGameTitleString() {
-
-    const char* pszEmpireName = m_vEmpireName.GetCharPtr();
-    
-    m_pHttpResponse->WriteText (pszEmpireName);
-    if (pszEmpireName [strlen (pszEmpireName) - 1] == 's') {
-        OutputText ("' ");
-    } else {
-        OutputText ("'s ");
-    }
-
-    m_pHttpResponse->WriteText (PageName [m_pgPageId]);
-    OutputText (": ");
-    WriteVersionString();
-}
-
-int HtmlRenderer::WriteGameHeaderString() {
-    
-    // Open form
-    int iErrCode = OK;
-
-    OutputText ("<form method=\"post\"><input type=\"hidden\" name=\"PageId\" value=\"");
-    m_pHttpResponse->WriteText ((int) m_pgPageId);
-    OutputText ("\">");
-    
-    const char* pszEmpireName = m_vEmpireName.GetCharPtr();
-    
-    WriteProfileAlienString (
-        m_iAlienKey, 
-        m_iEmpireKey, 
-        m_vEmpireName.GetCharPtr(),
-        0,
-        "ProfileLink",
-        "View your profile",
-        false,
-        false
-        );
-    
-    OutputText (" <font size=\"+3\"><strong>");
-    m_pHttpResponse->WriteText (pszEmpireName);
-    
-    if (pszEmpireName [strlen (pszEmpireName) - 1] == 's') {
-        OutputText ("' ");
-    } else {
-        OutputText ("'s ");
-    }
-    
-    m_pHttpResponse->WriteText (PageName[m_pgPageId]);
-    OutputText (" : ");
-    m_pHttpResponse->WriteText (m_pszGameClassName);
-    OutputText (" ");
-    m_pHttpResponse->WriteText (m_iGameNumber);
-    OutputText ("</strong></font><p>");
-    
-    // Informational forms
-    iErrCode = PostGamePageInformation();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    
-    // Buttons
-    WriteGameButtons();
-    
-    // Write local time
-    if (m_bTimeDisplay) {
-        
-        char pszDateString [OS::MaxDateLength];
-        
-        int iErrCode = Time::GetDateString (pszDateString);
-        if (iErrCode == OK) {
-            
-            OutputText ("Server time is <strong>");
-            m_pHttpResponse->WriteText (pszDateString);
-            OutputText ("</strong>");
-        }
-    }
-    
-    // Next update
-    WriteGameNextUpdateString();
-    
-    // Messages
-    WriteGameMessages();
-    
-    // Last separator
-    WriteSeparatorString (m_iSeparatorKey);
-
-    return iErrCode;
 }
 
 bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
@@ -1873,162 +1765,6 @@ void HtmlRenderer::ReportEmpireCreation (IReport* pReport, const char* pszEmpire
     pReport->WriteReport (pszMessage);
 }
 
-void HtmlRenderer::WriteSystemTitleString() {
-
-    if (m_pgPageId != LOGIN && m_pgPageId != NEW_EMPIRE) {
-
-        const char* pszEmpireName = m_vEmpireName.GetCharPtr();
-        if (pszEmpireName != NULL) {
-
-            m_pHttpResponse->WriteText (pszEmpireName);
-            if (pszEmpireName [strlen (pszEmpireName) - 1] == 's') {
-                OutputText ("' ");
-            } else {
-                OutputText ("'s ");
-            }
-        }
-    }
-
-    m_pHttpResponse->WriteText (PageName [m_pgPageId]);
-    OutputText (": ");
-    WriteVersionString();
-}
-
-void HtmlRenderer::WriteSystemHeaders (bool bFileUpload) {
-    
-    if (bFileUpload) {
-        OutputText ("<form method=\"post\" enctype=\"multipart/form-data\">");
-    } else {
-        OutputText ("<form method=\"post\">");
-    }
-    
-    OutputText ("<input type=\"hidden\" name=\"PageId\" value=\"");
-    m_pHttpResponse->WriteText ((int) m_pgPageId);
-    OutputText ("\">");
-
-    
-    
-    
-    // TODOTODOTODO - HACKHACKHACK
-    OutputText("<p><strong><font size=\"3\">");
-    OutputText("Script time: ");
-    MilliSeconds msTime = GetTimerCount();
-    m_pHttpResponse->WriteText((int) msTime);
-    OutputText(" ms</font></strong>");
-
-
-    
-    const char* pszName = m_vEmpireName.GetCharPtr();
-    
-    WriteProfileAlienString (
-        m_iAlienKey, 
-        m_iEmpireKey, 
-        m_vEmpireName.GetCharPtr(),
-        0,
-        "ProfileLink",
-        "View your profile",
-        false,
-        false
-        );
-    
-    OutputText (" <font size=\"+3\"><strong>");
-    m_pHttpResponse->WriteText (pszName);
-    
-    if (pszName [strlen (pszName) - 1] == 's') {
-        OutputText ("' ");
-    } else {
-        OutputText ("'s ");
-    }
-    m_pHttpResponse->WriteText (PageName [m_pgPageId]);
-    
-    if (m_iSystemOptions & EMPIRE_MARKED_FOR_DELETION) {
-        OutputText (" (Empire marked for deletion)");
-    }
-    
-    OutputText ("</strong></font><p>");
-}
-
-void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
-    
-    unsigned int iNumber;
-
-    // ActiveGameList
-    WriteButton (BID_ACTIVEGAMELIST);
-    
-    // OpenGameList
-    WriteButton (BID_OPENGAMELIST);
-    
-    // SystemGameList
-    WriteButton (BID_SYSTEMGAMELIST);
-    
-    // ProfileViewer
-    OutputText ("<br>");
-    WriteButton (BID_PROFILEVIEWER);
-    
-    // ProfileEditor
-    WriteButton (BID_PROFILEEDITOR);
-    
-    // Top Lists
-    WriteButton (BID_TOPLISTS);
-    
-    // Chatroom
-    WriteButton (BID_CHATROOM);
-    
-    // Exit
-    WriteButton (BID_EXIT);
-    
-    OutputText ("<br>");
-
-    // Latest nukes
-    WriteButton (BID_SPECTATORGAMES);
-    WriteButton (BID_TOURNAMENTS);
-    WriteButton (BID_LATESTGAMES);
-    WriteButton (BID_LATESTNUKES);
-
-    OutputText ("<br>");
-    
-    // Personal Game Classes
-    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES ||
-        (GetEmpirePersonalGameClasses (m_iEmpireKey, NULL, NULL, (int*) &iNumber) == OK && iNumber > 0)
-        ) {
-
-        WriteButton (BID_PERSONALGAMECLASSES);
-    }
-
-    // Personal Tournaments
-    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_TOURNAMENTS ||
-        (GetOwnedTournaments (m_iEmpireKey, NULL, NULL, &iNumber) == OK && iNumber > 0)
-        ) {
-
-        WriteButton (BID_PERSONALTOURNAMENTS);
-    }
-
-    if (iPrivilege >= ADMINISTRATOR) {
-        
-        // Server Administrator
-        OutputText ("<p>");
-        WriteButton (BID_SERVERADMINISTRATOR);
-        
-        // Game Administrator
-        WriteButton (BID_GAMEADMINISTRATOR);
-        
-        // Empire Administrator
-        OutputText ("<br>");
-        WriteButton (BID_EMPIREADMINISTRATOR);
-        
-        // Theme Administrator
-        WriteButton (BID_THEMEADMINISTRATOR);
-
-        // Tournament Administrator
-        OutputText ("<br>");
-        WriteButton (BID_TOURNAMENTADMINISTRATOR);
-    }
-    
-    OutputText ("<p>");
-}
-
-
-
 void HtmlRenderer::WriteBackupMessage() {
    // TODOTODO - Remove this codepath 
 }
@@ -2434,26 +2170,6 @@ void HtmlRenderer::CloseSystemPage() {
     OutputText("</center></form></body></html>");
     OnPageRender(msTime);
 }
-
-int HtmlRenderer::PostSystemPageInformation() {
-    
-    int64 i64PasswordHash = 0;
-    int iErrCode = GetPasswordHashForSystemPage (m_tNewSalt, &i64PasswordHash);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    
-    OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
-    m_pHttpResponse->WriteText (m_iEmpireKey);
-    OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
-    m_pHttpResponse->WriteText (i64PasswordHash);
-    OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
-    m_pHttpResponse->WriteText (m_tNewSalt);
-    OutputText ("\">");
-
-    return OK;
-}
-
 
 void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTournamentKey, bool bPersonalGame) {
 

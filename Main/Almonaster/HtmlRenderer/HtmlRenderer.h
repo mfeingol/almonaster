@@ -344,6 +344,8 @@ class HtmlRenderer : public GameEngine
 {
 protected:
 
+    bool bRedirectTest;
+
     // Data
     PageId m_pgPageId;
 
@@ -580,6 +582,7 @@ public:
     void ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon);
     void ReportEmpireCreation (IReport* pReport, const char* pszEmpireName);
 
+    void OpenSystemPage(bool bFileUpload);
     void WriteSystemTitleString();
     void WriteSystemHeaders (bool bFileUpload);
 
@@ -589,12 +592,12 @@ public:
 
     void WriteBackupMessage();
 
-    int InitializeEmpire (bool bAutoLogon);
+    int InitializeEmpireInGame(bool bAutoLogon);
+    int InitializeEmpire(bool bAutoLogon);
     int InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCookie);
 
     void CloseSystemPage();
-
-    int PostSystemPageInformation();
+    void PostSystemPageInformation();
 
     void WriteActiveGameListHeader (const char* pszTableColor);
     void WriteOpenGameListHeader (const char* pszTableColor);
@@ -634,8 +637,9 @@ public:
 
     void WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons);
 
+    void OpenGamePage();
     void WriteGameTitleString();
-    int WriteGameHeaderString();
+    void WriteGameHeaderString();
     
     bool RedirectOnSubmitGame (PageId* ppageRedirect);
 
@@ -910,226 +914,6 @@ public:
     int Render_SystemTos();
 };
 
-// Function Pointers
-static inline int THREAD_CALL Fxn_ActiveGameList (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ActiveGameList();
-}
-
-static inline int THREAD_CALL Fxn_Login (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Login();
-}
-
-static inline int THREAD_CALL Fxn_NewEmpire (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_NewEmpire();
-}
-
-static inline int THREAD_CALL Fxn_OpenGameList (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_OpenGameList();
-}
-
-static inline int THREAD_CALL Fxn_SystemGameList (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemGameList();
-}
-
-static inline int THREAD_CALL Fxn_ProfileEditor (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ProfileEditor();
-}
-
-static inline int THREAD_CALL Fxn_TopLists (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_TopLists();
-}
-
-static inline int THREAD_CALL Fxn_ProfileViewer (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ProfileViewer();
-}
-
-static inline int THREAD_CALL Fxn_ServerAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ServerAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_EmpireAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_EmpireAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_GameAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_ThemeAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ThemeAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_PersonalGameClasses (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_PersonalGameClasses();
-}
-
-static inline int THREAD_CALL Fxn_Chatroom (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Chatroom();
-}
-
-static inline int THREAD_CALL Fxn_SystemServerRules (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemServerRules();
-}
-
-static inline int THREAD_CALL Fxn_SystemFAQ (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemFAQ();
-}
-
-static inline int THREAD_CALL Fxn_SystemNews (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemNews();
-}
-
-static inline int THREAD_CALL Fxn_Info (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Info();
-}
-
-static inline int THREAD_CALL Fxn_Tech (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Tech();
-}
-
-static inline int THREAD_CALL Fxn_Diplomacy (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Diplomacy();
-}
-
-static inline int THREAD_CALL Fxn_Map (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Map();
-}
-
-static inline int THREAD_CALL Fxn_Planets (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Planets();
-}
-
-static inline int THREAD_CALL Fxn_Options (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Options();
-}
-
-static inline int THREAD_CALL Fxn_Build (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Build();
-}
-
-static inline int THREAD_CALL Fxn_Ships (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Ships();
-}
-
-static inline int THREAD_CALL Fxn_GameServerRules (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameServerRules();
-}
-
-static inline int THREAD_CALL Fxn_GameFAQ (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameFAQ();
-}
-
-static inline int THREAD_CALL Fxn_GameNews (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameNews();
-}
-
-static inline int THREAD_CALL Fxn_GameProfileViewer (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameProfileViewer();
-}
-
-static inline int THREAD_CALL Fxn_Quit (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Quit();
-}
-
-static inline int THREAD_CALL Fxn_LatestNukes (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_LatestNukes();
-}
-
-static inline int THREAD_CALL Fxn_SpectatorGames (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SpectatorGames();
-}
-
-static inline int THREAD_CALL Fxn_GameContributions (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameContributions();
-}
-
-static inline int THREAD_CALL Fxn_GameCredits (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameCredits();
-}
-
-static inline int THREAD_CALL Fxn_SystemContributions (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemContributions();
-}
-
-static inline int THREAD_CALL Fxn_SystemCredits (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemCredits();
-}
-
-static inline int THREAD_CALL Fxn_LatestGames (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_LatestGames();
-}
-
-static inline int THREAD_CALL Fxn_TournamentAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_TournamentAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_PersonalTournaments (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_PersonalTournaments();
-}
-
-static inline int THREAD_CALL Fxn_Tournaments (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Tournaments();
-}
-
-static inline int THREAD_CALL Fxn_GameTos (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameTos();
-}
-
-static inline int THREAD_CALL Fxn_SystemTos (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemTos();
-}
-
-
-
-const ThreadFunction g_pfxnRenderPage[] = {
-    NULL,
-    Fxn_ActiveGameList,
-    Fxn_Login,
-    Fxn_NewEmpire,
-    Fxn_OpenGameList,
-    Fxn_SystemGameList,
-    Fxn_ProfileEditor,
-    Fxn_TopLists,
-    Fxn_ProfileViewer,
-    Fxn_ServerAdministrator,
-    Fxn_EmpireAdministrator,
-    Fxn_GameAdministrator,
-    Fxn_ThemeAdministrator,
-    Fxn_PersonalGameClasses,
-    Fxn_Chatroom,
-    Fxn_SystemServerRules,
-    Fxn_SystemFAQ,
-    Fxn_SystemNews,
-    Fxn_Info,
-    Fxn_Tech,
-    Fxn_Diplomacy,
-    Fxn_Map,
-    Fxn_Planets,
-    Fxn_Options,
-    Fxn_Build,
-    Fxn_Ships,
-    Fxn_GameServerRules,
-    Fxn_GameFAQ,
-    Fxn_GameNews,
-    Fxn_GameProfileViewer,
-    Fxn_GameContributions,
-    Fxn_GameCredits,
-    Fxn_GameTos,
-    Fxn_Quit,
-    Fxn_LatestNukes,
-    Fxn_SpectatorGames,
-    Fxn_SystemContributions,
-    Fxn_SystemCredits,
-    Fxn_LatestGames,
-    Fxn_TournamentAdministrator,
-    Fxn_PersonalTournaments,
-    Fxn_Tournaments,
-    Fxn_SystemTos,
-    Fxn_Tournaments,
-    NULL
-};
-
-
 #define DEFAULT_MESSAGE_FONT_SIZE           "-1"
 #define DEFAULT_MESSAGE_FONT                "sans-serif"
 #define DEFAULT_PLANET_NAME_FONT            "sans-serif"
@@ -1219,107 +1003,6 @@ const ThreadFunction g_pfxnRenderPage[] = {
         AddMessage ("That empire no longer exists");                                \
         return Redirect (LOGIN);                                                    \
     }
-
-// Common macros
-#define INITIALIZE_EMPIRE                                                           \
-                                                                                    \
-    bool bRedirectTest = true;                                                      \
-    if (InitializeEmpire (false) != OK) {                                           \
-        return Redirect (LOGIN);                                                    \
-    }
-
-#define SYSTEM_REDIRECT_ON_SUBMIT                                                   \
-                                                                                    \
-    goto Redirection;                                                               \
-Redirection:                                                                        \
-    if (bRedirectTest) {                                                            \
-        PageId pageRedirect;                                                        \
-        if (RedirectOnSubmit (&pageRedirect)) {                                     \
-            return Redirect (pageRedirect);                                         \
-        }                                                                           \
-    }
-
-#define SYSTEM_OPEN(bFlag)                                                          \
-                                                                                    \
-    Write ("<html><head><title>");                                                  \
-                                                                                    \
-    WriteSystemTitleString();                                                       \
-    Write ("</title></head>");                                                      \
-    WriteBodyString (-1);                                                           \
-                                                                                    \
-    Write ("<center>");                                                             \
-                                                                                    \
-    WriteSystemHeaders (bFlag);                                                     \
-                                                                                    \
-    Check (PostSystemPageInformation());                                            \
-                                                                                    \
-    WriteSystemButtons (m_iButtonKey, m_iPrivilege);                                \
-                                                                                    \
-    if (m_bTimeDisplay) {                                                           \
-                                                                                    \
-        char pszDateString [OS::MaxDateLength];                                     \
-                                                                                    \
-        int ec = Time::GetDateString (pszDateString);                               \
-        if (ec == OK) {                                                             \
-                                                                                    \
-            OutputText ("Server time is <strong>");                                 \
-            m_pHttpResponse->WriteText (pszDateString);                             \
-            OutputText ("</strong><p>");                                            \
-        }                                                                           \
-    }                                                                               \
-                                                                                    \
-    WriteSystemMessages();                                                          \
-                                                                                    \
-    WriteSeparatorString (m_iSeparatorKey);                                         \
-
-#define SYSTEM_CLOSE                                                                \
-                                                                                    \
-    CloseSystemPage();                              \
-    return OK;
-
-#define INITIALIZE_GAME                                                             \
-                                                                                    \
-    if (m_iPrivilege == GUEST) {                                                    \
-        AddMessage ("Your empire does not have the privilege to access this game"); \
-        return Redirect (ACTIVE_GAME_LIST);                                         \
-    }                                                                               \
-                                                                                    \
-    PageId pageRedirect;                                                            \
-    if (InitializeGame (&pageRedirect) != OK) {                                     \
-        return Redirect (pageRedirect);                                             \
-    }
-
-#define GAME_REDIRECT_ON_SUBMIT                                                     \
-                                                                                    \
-    goto Redirection;                                                               \
-Redirection:                                                                        \
-    if (bRedirectTest) {                                                            \
-        PageId pageRedirect;                                                        \
-        if (RedirectOnSubmitGame (&pageRedirect)) {                                 \
-            return Redirect (pageRedirect);                                         \
-        }                                                                           \
-    }
-
-
-#define GAME_OPEN                                                                   \
-                                                                                    \
-    Write ("<html><head><title>");                                                  \
-    WriteGameTitleString();                                 \
-    Write ("</title></head>");                                                      \
-                                                                                    \
-    if (m_iGameState & PAUSED) {                                                        \
-        WriteBodyString (-1);                               \
-    } else {                                                                        \
-        WriteBodyString (m_sSecondsUntil);                  \
-    }                                                                               \
-                                                                                    \
-    Write ("<center>");                                                             \
-    GameCheck (WriteGameHeaderString());
-
-#define GAME_CLOSE                                                                  \
-                                                                                    \
-    CloseGamePage();                                                                \
-    return OK;
 
 #define HANDLE_CREATE_GAME_OUTPUT(iErrCode)                                         \
                                                                                     \

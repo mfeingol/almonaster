@@ -18,17 +18,25 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-int iErrCode = OK;
+if (InitializeEmpire(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
-INITIALIZE_EMPIRE
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmit (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-SYSTEM_REDIRECT_ON_SUBMIT
-
-SYSTEM_OPEN (false)
+OpenSystemPage(false);
 
 // Individual page stuff starts here
 WriteFaq();
 
-SYSTEM_CLOSE
+CloseSystemPage();
 
 %>

@@ -462,4 +462,4 @@ if (bRepost &&
 
 CloseSystemPage();
 
-return OK; %>
+%>

@@ -70,7 +70,7 @@ if (m_pHttpRequest->GetMethod() == GET) {
                     m_iEmpireKey = iAutoLogonKey;
                     m_bAutoLogon = true;
 
-                    if (HtmlLoginEmpire() == OK && InitializeEmpire (true) == OK) {
+                    if (HtmlLoginEmpire() == OK && InitializeEmpire(true) == OK) {
                         return Redirect (ACTIVE_GAME_LIST);
                     }
 
@@ -188,7 +188,7 @@ else if (!m_bRedirection) {
                 m_vEmpireName = vEmpireName;
                 m_vPassword = pszPassword;
 
-                if (HtmlLoginEmpire() == OK && InitializeEmpire (false) == OK) {
+                if (HtmlLoginEmpire() == OK && InitializeEmpire(false) == OK) {
                     return Redirect (ACTIVE_GAME_LIST);
                 }
 
@@ -395,6 +395,4 @@ WriteContactLine();
 %></td><%
 %></tr></table><%
 
-%></center></form></body></html><%
-
-return OK; %>
+%></center></form></body></html>

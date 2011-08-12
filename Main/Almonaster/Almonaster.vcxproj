@@ -438,6 +438,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="GameEngine\GameEngineTournaments.cpp" />
     <ClCompile Include="GameEngine\GameEngineUpdate.cpp" />
     <ClCompile Include="GameEngine\GameEngineUpdateAlgorithm.cpp" />
+    <ClCompile Include="HtmlRenderer\HtmlPageFlow.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>

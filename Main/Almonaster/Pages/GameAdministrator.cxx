@@ -22,7 +22,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-INITIALIZE_EMPIRE
+if (InitializeEmpire(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
 IHttpForm* pHttpForm;
 
@@ -1540,9 +1543,17 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 } 
 
-SYSTEM_REDIRECT_ON_SUBMIT
+Redirection:
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmit (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-SYSTEM_OPEN (false)
+OpenSystemPage(false);
 
 switch (iGameAdminPage) {
 
@@ -2665,6 +2676,6 @@ default:
     break;
 }
 
-SYSTEM_CLOSE
+CloseSystemPage();
 
 %>

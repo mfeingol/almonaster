@@ -19,9 +19,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-INITIALIZE_EMPIRE
+if (InitializeEmpireInGame(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
-INITIALIZE_GAME
+PageId pageRedirect;
+if (InitializeGame(&pageRedirect) != OK)
+{
+    return Redirect(pageRedirect);
+}
 
 IHttpForm* pHttpForm;
 
@@ -50,9 +57,16 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 }
 
-GAME_REDIRECT_ON_SUBMIT
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmitGame (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-GAME_OPEN
+OpenGamePage();
 
 // Individual page stuff starts here
 if (!(m_iGameState & STARTED)) {
@@ -199,6 +213,6 @@ if (!(m_iGameState & STARTED)) {
     %></table><%
 }
 
-GAME_CLOSE
+CloseGamePage();
 
 %>

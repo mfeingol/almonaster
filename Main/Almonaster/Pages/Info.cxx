@@ -20,13 +20,27 @@
 
 int iErrCode;
 
-INITIALIZE_EMPIRE
+if (InitializeEmpireInGame(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
-INITIALIZE_GAME
+PageId pageRedirect;
+if (InitializeGame(&pageRedirect) != OK)
+{
+    return Redirect(pageRedirect);
+}
 
-GAME_REDIRECT_ON_SUBMIT
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmitGame (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-GAME_OPEN
+OpenGamePage();
 
 bool bGameStarted = (m_iGameState & STARTED) != 0, bIsOpen;
 
@@ -387,6 +401,6 @@ if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %>occurred reading from the database<%
 }
 
-GAME_CLOSE
+CloseGamePage();
 
 %>

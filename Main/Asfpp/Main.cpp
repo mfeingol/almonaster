@@ -269,8 +269,9 @@ void RunAsfpp (const char* pszAsfName) {
     }
 
     // Close cpp file
-    fprintf (fWrite, "\n}");
-    fclose (fWrite);
+    fprintf(fWrite, "\n\treturn OK;");
+    fprintf(fWrite, "\n}");
+    fclose(fWrite);
 
     printf ("%s\n", pszAsfName);
 

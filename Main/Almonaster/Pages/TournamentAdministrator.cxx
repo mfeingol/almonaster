@@ -19,7 +19,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-INITIALIZE_EMPIRE
+if (InitializeEmpire(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
 // Make sure that the unprivileged don't abuse this:
 if (m_iPrivilege < ADMINISTRATOR) {
@@ -1260,9 +1263,17 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 }
 
-SYSTEM_REDIRECT_ON_SUBMIT
+Redirection:
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmit (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-SYSTEM_OPEN ((iTAdminPage == 10 || iTAdminPage == 11) && iIconSelect == 1)
+OpenSystemPage((iTAdminPage == 10 || iTAdminPage == 11) && iIconSelect == 1);
 
 // Individual page stuff starts here
 switch (iTAdminPage) {
@@ -2029,6 +2040,6 @@ default:
     break;
 }
 
-SYSTEM_CLOSE
+CloseSystemPage();
 
 %>

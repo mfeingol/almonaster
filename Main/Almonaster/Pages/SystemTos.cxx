@@ -23,7 +23,10 @@ int iTosPage = 0;
 
 IHttpForm* pHttpForm;
 
-INITIALIZE_EMPIRE
+if (InitializeEmpire(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
 if (m_bOwnPost && !m_bRedirection) {
 
@@ -75,9 +78,17 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 }
 
-SYSTEM_REDIRECT_ON_SUBMIT
+Redirection:
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmit (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-SYSTEM_OPEN (false)
+OpenSystemPage(false);
 
 %><input type="hidden" name="TosPage" value="<% Write (iTosPage); %>"><%
 
@@ -95,6 +106,6 @@ case 1:
     break;
 }
 
-SYSTEM_CLOSE
+CloseSystemPage();
 
 %>

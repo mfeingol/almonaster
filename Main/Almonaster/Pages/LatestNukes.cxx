@@ -20,14 +20,21 @@
 
 int iErrCode = OK;
 
-INITIALIZE_EMPIRE
+if (InitializeEmpire(false) != OK)
+{
+    return Redirect(LOGIN);
+}
 
-//if (m_bOwnPost && !m_bRedirection) {
-//}
+if (bRedirectTest)
+{
+    PageId pageRedirect;
+    if (RedirectOnSubmit (&pageRedirect))
+    {
+        return Redirect (pageRedirect);
+    }
+}
 
-SYSTEM_REDIRECT_ON_SUBMIT
-
-SYSTEM_OPEN (false)
+OpenSystemPage(false);
 
 int iNumNukes;
 Variant** ppvNukeData;
@@ -168,6 +175,6 @@ else {
 }
 
 
-SYSTEM_CLOSE
+CloseSystemPage();
 
 %>
