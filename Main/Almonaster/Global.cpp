@@ -73,7 +73,7 @@ void Global::TlsOpenConnection()
     t_pConn = m_pDatabase->CreateConnection();
     Assert(t_pConn);
 
-    t_pCache = t_pCache;
+    t_pCache = t_pConn->GetCache();
     Assert(t_pCache);
 }
 
