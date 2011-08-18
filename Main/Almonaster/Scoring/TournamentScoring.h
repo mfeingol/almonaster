@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include "Interface.h"
 #include "GameEngine.h"
 
 enum TournamentEvent {
@@ -29,7 +28,6 @@ enum TournamentEvent {
     TOURNAMENT_RUIN,
     TOURNAMENT_NUM_EVENTS
 };
-
 
 class TournamentScoring : public IScoringSystem
 {

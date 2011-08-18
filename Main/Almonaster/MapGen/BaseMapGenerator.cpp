@@ -667,8 +667,8 @@ int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
     int iMaxNumEmpires = m_pvGameClassData[SystemGameClassData::iMaxNumEmpires].GetInteger();
     if (iMaxNumEmpires == UNLIMITED_EMPIRES) {
 
-        int iErrCode, iNumEmpiresInGame, iUpdatesBeforeClose;
-
+        int iErrCode, iUpdatesBeforeClose;
+        unsigned int iNumEmpiresInGame;
         iErrCode = m_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpiresInGame);
         if (iErrCode != OK) {
             Assert (false);

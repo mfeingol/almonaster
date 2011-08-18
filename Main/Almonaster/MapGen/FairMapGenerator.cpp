@@ -26,9 +26,8 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-FairMapGenerator::FairMapGenerator(GameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness) 
+FairMapGenerator::FairMapGenerator(IMapGenerator* pInner, GameFairnessOption gfoFairness) 
     :
-    m_pGameEngine(pGameEngine),
     m_pInner(pInner),
     m_gfoFairness(gfoFairness)
 {
@@ -170,15 +169,15 @@ int FairMapGenerator::EvaluateMap(int iGameClass, int iGameNumber,
     if (*pbAcceptable) {
 
         // Record results for posterity
-        iErrCode = m_pGameEngine->SetGameProperty(iGameClass, iGameNumber, 
-                                                  GameData::MapFairnessStandardDeviationPercentageOfMean,
-                                                  iPercentage);
+        iErrCode = m_gameEngine.SetGameProperty(iGameClass, iGameNumber, 
+                                                GameData::MapFairnessStandardDeviationPercentageOfMean,
+                                                iPercentage);
 
         for (unsigned int i = 0; i < iNumEmpires && iErrCode == OK; i ++) {
 
-            iErrCode = m_pGameEngine->SetEmpireGameProperty(iGameClass, iGameNumber, piEmpireKey[i],
-                                                            GameEmpireData::MapFairnessResourcesClaimed,
-                                                            mfeEval.GetResourceClaim(piEmpireKey[i]));
+            iErrCode = m_gameEngine.SetEmpireGameProperty(iGameClass, iGameNumber, piEmpireKey[i],
+                                                          GameEmpireData::MapFairnessResourcesClaimed,
+                                                          mfeEval.GetResourceClaim(piEmpireKey[i]));
         }
     }
 
@@ -198,7 +197,7 @@ int FairMapGenerator::CheckEnforceFairness(int iGameClass, int iGameNumber, bool
     if (m_gfoFairness != GAME_FAIRNESS_RANDOM) {
 
         int iNumUpdates;
-        int iErrCode = m_pGameEngine->GetNumUpdates(iGameClass, iGameNumber, &iNumUpdates);
+        int iErrCode = m_gameEngine.GetNumUpdates(iGameClass, iGameNumber, &iNumUpdates);
         if (iErrCode == OK)
             bEnforce = iNumUpdates < 2;
     }
@@ -261,7 +260,7 @@ int FairMapGenerator::GetAllEmpireKeys(int iGameClass, int iGameNumber,
     Variant* pvEmpireKey = NULL;
     unsigned int* piTotalEmpireKey = NULL, iNumTotalEmpires;
 
-    int iErrCode = m_pGameEngine->GetEmpiresInGame(iGameClass, iGameNumber, &pvEmpireKey, (int*)&iNumTotalEmpires);
+    int iErrCode = m_gameEngine.GetEmpiresInGame(iGameClass, iGameNumber, &pvEmpireKey, &iNumTotalEmpires);
     if (iErrCode != OK)
         return iErrCode;
 
@@ -272,7 +271,7 @@ int FairMapGenerator::GetAllEmpireKeys(int iGameClass, int iGameNumber,
         for (unsigned int i = 0; i < iNumTotalEmpires; i ++) {
             piTotalEmpireKey[i] = pvEmpireKey[i].GetInteger();
         }
-        m_pGameEngine->FreeData(pvEmpireKey);
+        m_gameEngine.FreeData(pvEmpireKey);
     }
 
     *piNumEmpires = iNumTotalEmpires;

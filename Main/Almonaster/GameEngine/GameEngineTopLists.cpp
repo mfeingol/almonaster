@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -38,13 +38,14 @@
 
 int GameEngine::GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsigned int* piNumEmpires)
 {
-    Assert (ssListType >= FIRST_SCORING_SYSTEM && ssListType < NUM_SCORING_SYSTEMS);
+    Assert(ssListType >= FIRST_SCORING_SYSTEM && ssListType < NUM_SCORING_SYSTEMS);
 
     const TemplateDescription* ptTemplate = TOPLIST_TEMPLATE[ssListType];
     const char* pszTableName = TOPLIST_TABLE_NAME[ssListType];
 
-    int iErrCode = t_pConn->ReadColumns(pszTableName, ptTemplate->NumColumns, ptTemplate->ColumnNames, pppvData, piNumEmpires);
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+    int iErrCode = t_pConn->GetCache()->ReadColumns(pszTableName, ptTemplate->NumColumns, ptTemplate->ColumnNames, NULL, pppvData, piNumEmpires);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
         iErrCode = OK;
     }
     return iErrCode;
@@ -145,9 +146,23 @@ IScoringSystem* GameEngine::CreateScoringSystem(ScoringSystem ssTopList)
     }
 }
 
-int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery)
+int GameEngine::CacheTopLists()
 {
-    Variant pvData [MAX_SCORING_SYSTEM_COLUMNS], pvOurData [MAX_SCORING_SYSTEM_COLUMNS];
+    const TableCacheEntry entries[] =
+    {
+        { SYSTEM_ALMONASTER_SCORE_TOPLIST, NO_KEY, 0, NULL },
+        { SYSTEM_CLASSIC_SCORE_TOPLIST, NO_KEY, 0, NULL },
+        { SYSTEM_BRIDIER_SCORE_TOPLIST, NO_KEY, 0, NULL },
+        { SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, NO_KEY, 0, NULL },
+    };
+
+    return t_pConn->GetCache()->Cache(entries, countof(entries));
+}
+
+int GameEngine::UpdateTopListOnIncrease(TopListQuery* pQuery)
+{
+    IScoringSystem* pScoringSystem = NULL;
+    Variant pvData[MAX_SCORING_SYSTEM_COLUMNS], pvOurData[MAX_SCORING_SYSTEM_COLUMNS];
 
     int iEmpireKey = pQuery->EmpireKey, iErrCode;
     unsigned int iKey;
@@ -155,11 +170,17 @@ int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery)
     ScoringSystem ssTopList = pQuery->TopList;
     const char* pszTableName = TOPLIST_TABLE_NAME[ssTopList];
 
-    IScoringSystem* pScoringSystem = CreateScoringSystem(ssTopList);
+    iErrCode = CacheTopLists();
+    if (iErrCode != OK)
+    {
+        goto Cleanup;
+    }
+
+    pScoringSystem = CreateScoringSystem(ssTopList);
     Assert (pScoringSystem != NULL);
 
     // Read empire's current score
-    iErrCode = pScoringSystem->GetEmpireScore (iEmpireKey, pvOurData);
+    iErrCode = pScoringSystem->GetEmpireScore(iEmpireKey, pvOurData);
     if (iErrCode != OK) {
         Assert (false); // Spurious - race with deletion
         goto Cleanup;
@@ -184,7 +205,7 @@ int GameEngine::UpdateTopListOnIncrease (TopListQuery* pQuery)
 
             unsigned int iNumRows;
             
-            iErrCode = t_pConn->GetNumRows (pszTableName, &iNumRows);
+            iErrCode = t_pConn->GetNumRows(pszTableName, &iNumRows);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -239,12 +260,20 @@ Cleanup:
 }
 
 
-int GameEngine::UpdateTopListOnDecrease (TopListQuery* pQuery) {
-
+int GameEngine::UpdateTopListOnDecrease(TopListQuery* pQuery)
+{
+    IScoringSystem* pScoringSystem = NULL;
     int iEmpireKey = pQuery->EmpireKey, iErrCode;
     ScoringSystem ssTopList = pQuery->TopList;
 
-    IScoringSystem* pScoringSystem = CreateScoringSystem (ssTopList);
+    iErrCode = CacheTopLists();
+    if (iErrCode != OK)
+    {
+        Assert (false);
+        goto Cleanup;
+    }
+
+    pScoringSystem = CreateScoringSystem(ssTopList);
     Assert (pScoringSystem != NULL);
 
     unsigned int iKey;
@@ -284,21 +313,28 @@ Cleanup:
 
 int GameEngine::UpdateTopListOnDeletion (TopListQuery* pQuery) {
 
+    Variant** ppvData = NULL;
+
+    int iErrCode = CacheTopLists();
+    if (iErrCode != OK)
+    {
+        Assert (false);
+        goto Cleanup;
+    }
+
     unsigned int iKey;
-
-    int iEmpireKey = pQuery->EmpireKey, iErrCode;
+    int iEmpireKey = pQuery->EmpireKey;
     const char* pszTableName = TOPLIST_TABLE_NAME [pQuery->TopList];
-
     ScoringSystem ssTopList = pQuery->TopList;
 
     // If empire is on the list, we need to shuffle everyone else up
     iErrCode = t_pConn->GetFirstKey (pszTableName, TopList::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode == OK) {
 
-        Variant** ppvData = NULL, ** ppvStackData;
+        Variant** ppvStackData;
         unsigned int iNumRows, i, iNumNewRows;
         
-        iErrCode = GetTopList (ssTopList, &ppvData, &iNumRows);
+        iErrCode = GetTopList(ssTopList, &ppvData, &iNumRows);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -342,12 +378,6 @@ int GameEngine::UpdateTopListOnDeletion (TopListQuery* pQuery) {
             Assert (false);
             goto Cleanup;
         }
-
-Cleanup:
-
-        if (ppvData != NULL) {
-            t_pConn->FreeData(ppvData);
-        }
     }
     
     else if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -356,13 +386,17 @@ Cleanup:
         iErrCode = OK;
     }
 
-    else Assert (false);
+Cleanup:
+
+    if (ppvData != NULL)
+    {
+        t_pConn->FreeData(ppvData);
+    }
 
     return iErrCode;
 }
 
-int GameEngine::MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
-                                       const Variant* pvOurData) {
+int GameEngine::MoveEmpireUpInTopList(ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, const Variant* pvOurData) {
 
     int iErrCode;
     
@@ -371,16 +405,16 @@ int GameEngine::MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, 
 
     Variant** ppvData = NULL, ** ppvStackData;
 
-    iErrCode = GetTopList (ssTopList, &ppvData, &iNumRows);
+    iErrCode = GetTopList(ssTopList, &ppvData, &iNumRows);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    ppvStackData = (Variant**) StackAlloc (max (iNumRows, TOPLIST_SIZE) * sizeof (Variant*));
-
-    if (iNumRows > 0) {
-        memcpy (ppvStackData, ppvData, iNumRows * sizeof (Variant*));
+    ppvStackData = (Variant**)StackAlloc(max(iNumRows, TOPLIST_SIZE) * sizeof (Variant*));
+    if (iNumRows > 0)
+    {
+        memcpy(ppvStackData, ppvData, iNumRows * sizeof (Variant*));
     }
 
     // Don't need extra padding because we never add empires in this code path
@@ -476,9 +510,8 @@ int GameEngine::PrivateMoveEmpireUpInTopList (ScoringSystem ssTopList, Variant**
 }
 
 
-int GameEngine::MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
-                                         const Variant* pvOurData) {
-
+int GameEngine::MoveEmpireDownInTopList(ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, const Variant* pvOurData)
+{
     int iErrCode;
     unsigned int iNumRows, iNewNumRows;
     bool bChanged;

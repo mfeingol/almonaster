@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -85,7 +85,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     *pfHypAgRatio = ratInfo.fNextAgRatio;
     *pfNextTechIncrease = ratInfo.fNextTechDev;
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }

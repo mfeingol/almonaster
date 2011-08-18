@@ -1135,7 +1135,7 @@ int GameEngine::GetGameClassTournament (int iGameClass, unsigned int* piTourname
     int iErrCode;
     Variant vValue;
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vValue);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vValue);
     if (iErrCode == OK) {
         *piTournamentKey = vValue.GetInteger();
     }

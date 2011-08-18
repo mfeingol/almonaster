@@ -25,15 +25,16 @@
 int GameEngine::GetAssociations (unsigned int iEmpireKey, unsigned int** ppiEmpires, unsigned int* piNumAssoc) {
 
     int iErrCode;
+    GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
 
     Variant vAssoc;
-    iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
+    iErrCode = t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    return GetAssociations ((char*) vAssoc.GetCharPtr(), ppiEmpires, piNumAssoc);
+    return GetAssociations((char*) vAssoc.GetCharPtr(), ppiEmpires, piNumAssoc);
 }
 
 int GameEngine::GetAssociations (char* pszAssoc, unsigned int** ppiEmpires, unsigned int* piNumAssoc) {
@@ -78,11 +79,12 @@ int GameEngine::GetAssociations (char* pszAssoc, unsigned int** ppiEmpires, unsi
 int GameEngine::CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch, bool* pbAuth) {
 
     int iErrCode;
+    GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
 
     *pbAuth = false;
 
     Variant vAssoc;
-    iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
+    iErrCode = t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
     if (iErrCode != OK) {
         return iErrCode;
     }

@@ -20,7 +20,7 @@ public:
     // IReadTable
     IMPLEMENT_INTERFACE(IReadTable);
 
-    unsigned int GetNumRows(unsigned int* piNumRows);
+    int GetNumRows(unsigned int* piNumRows);
 
     int DoesRowExist(unsigned int iKey, bool* pbExists);
 

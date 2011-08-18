@@ -200,44 +200,38 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon)
     {
         m_bOwnPost = true;
 
-        if (m_bAuthenticated) {
-
+        if (m_bAuthenticated)
+        {
             Assert (m_iEmpireKey != NO_KEY);
             iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
             if (iErrCode != OK || !bExists) {       
                 AddMessage ("That empire no longer exists");
                 return ERROR_FAILURE;
             }
-
-        } else {
-
-            //
-            // Get empire key
-            //
-
-            if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireKey")) != NULL) {
-
-                m_iEmpireKey = pHttpForm->GetIntValue();
-                
+        }
+        else
+        {
+            if (m_iEmpireKey != NO_KEY)
+            {
                 // Make sure empire key exists
                 iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, &m_vEmpireName);
                 if (iErrCode != OK || !bExists) {
                     AddMessage ("That empire no longer exists");
                     return ERROR_FAILURE;
                 }
-                
-            } else {
-                
+            }
+            else
+            {
                 // Look for empire name form
                 const char* pszName;
                 if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireName")) == NULL || 
-                    (pszName = pHttpForm->GetValue()) == NULL) {
-                    
+                    (pszName = pHttpForm->GetValue()) == NULL)
+                {
                     AddMessage ("Missing EmpireKey form");
                     return ERROR_FAILURE;
-                    
-                } else {
-                    
+                }
+                else
+                {
                     // Look up name
                     iErrCode = DoesEmpireExist (
                         pszName, 
@@ -247,8 +241,8 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon)
                         NULL
                         );
                     
-                    if (iErrCode != OK || !bExists) {
-                        
+                    if (iErrCode != OK || !bExists)
+                    {
                         AddMessage ("That empire doesn't exist");
                         return ERROR_FAILURE;
                     }

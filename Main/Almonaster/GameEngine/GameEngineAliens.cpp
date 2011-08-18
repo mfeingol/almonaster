@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -99,7 +99,7 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
 
     Variant vDefaultAlien;
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -722,12 +722,12 @@ int GameEngine::CalculatePrivilegeLevel (int iEmpireKey) {
     }
 
     // Read the data we need
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vAdeptLevel);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vAdeptLevel);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::ApprenticeScore, &vApprenticeLevel);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ApprenticeScore, &vApprenticeLevel);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1249,7 +1249,7 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
     };
 
     // Get nuke history limit
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, pszLimitCol, &vNumNukesListed);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, pszLimitCol, &vNumNukesListed);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1405,13 +1405,13 @@ int GameEngine::TriggerBridierTimeBombIfNecessary() {
     Time::GetTime (&tNow);
 
     // Check if necessary
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::LastBridierTimeBombScan, &vLastScan);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::LastBridierTimeBombScan, &vLastScan);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, &vFrequency);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, &vFrequency);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1546,7 +1546,7 @@ int GameEngine::GetBridierTimeBombScanFrequency (Seconds* piFrequency) {
     int iErrCode;
     Variant vValue;
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, &vValue);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, &vValue);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;

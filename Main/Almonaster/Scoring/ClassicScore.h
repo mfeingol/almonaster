@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include "Interface.h"
 #include "GameEngine.h"
 
 class ClassicScore : public IScoringSystem

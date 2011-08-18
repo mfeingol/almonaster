@@ -267,7 +267,7 @@ int SqlDatabaseWriteTable::DeleteAllRows()
 // Redirects
 //
 
-unsigned int SqlDatabaseWriteTable::GetNumRows(unsigned int* piNumRows)
+int SqlDatabaseWriteTable::GetNumRows(unsigned int* piNumRows)
 {
     return m_readTable.GetNumRows(piNumRows);
 }

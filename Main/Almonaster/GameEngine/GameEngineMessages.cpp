@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -339,9 +339,11 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
                                          unsigned int* piNumMessages) {
 
     int iErrCode;
-    SYSTEM_EMPIRE_MESSAGES (strMessages, iEmpireKey);
+    
+    SYSTEM_EMPIRE_MESSAGES(strMessages, iEmpireKey);
+    GET_SYSTEM_EMPIRE_DATA(strSystemEmpireData, iEmpireKey);
 
-    unsigned int i, * piMessageKey = NULL, * piKey = NULL, iNumMessages = 0, iTotalNumMessages, iMaxNumMessages;
+    unsigned int i, * piMessageKey = NULL, * piKey = NULL, iNumMessages = 0, iTotalNumMessages;
     Variant vTemp, ** ppvMessage = NULL;
 
     UTCTime* ptTime = NULL, * ptTimeStamp = NULL;
@@ -352,18 +354,13 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
     *ppiMessageKey = NULL;
     *piNumMessages = 0;
 
-    iErrCode = t_pConn->ReadData(
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::MaxNumSystemMessages, 
-        &vTemp
-        );
-
-    if (iErrCode != OK) {
+    iErrCode = t_pConn->GetCache()->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
+    if (iErrCode != OK)
+    {
         Assert (false);
         goto Cleanup;
     }
-    iMaxNumMessages = vTemp.GetInteger();
+    unsigned int iMaxNumMessages = vTemp.GetInteger();
 
     iErrCode = t_pConn->GetTableForWriting (strMessages, &pMessages);
     if (iErrCode != OK) {
@@ -581,7 +578,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     // Make sure private messages are allowed
     if (!(iFlags & (MESSAGE_BROADCAST | MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
-        iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return ERROR_EMPIRE_DOES_NOT_EXIST;

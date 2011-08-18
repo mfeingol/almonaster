@@ -20,7 +20,7 @@ SqlDatabaseConnection::~SqlDatabaseConnection()
 }
 
 // View operations
-ITableViewCollection* SqlDatabaseConnection::GetViews()
+ICachedTableCollection* SqlDatabaseConnection::GetCache()
 {
     return &m_viewCollection;
 }
@@ -187,7 +187,7 @@ int SqlDatabaseConnection::WriteColumn(const char* pszTableName, const char* psz
 }
 
 // Row operations
-unsigned int SqlDatabaseConnection::GetNumRows(const char* pszTableName, unsigned int* piNumRows)
+int SqlDatabaseConnection::GetNumRows(const char* pszTableName, unsigned int* piNumRows)
 {
     SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
     return read.GetNumRows(piNumRows);

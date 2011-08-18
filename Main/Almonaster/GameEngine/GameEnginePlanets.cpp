@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -252,7 +252,7 @@ int GameEngine::AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireK
 
     // Wrap map generator in a fair map generator
     pInner = pMapGen;
-    pMapGen = new FairMapGenerator(this, pInner, gfoFairness);
+    pMapGen = new FairMapGenerator(pInner, gfoFairness);
 
     // Get existing map
     iErrCode = t_pConn->ReadColumns (
@@ -1201,7 +1201,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     }
 
     // Get gameclass options
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2294,7 +2294,7 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     iPop = vTemp.GetInteger();
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -3218,7 +3218,7 @@ int GameEngine::GetSpectatorGameInfo (int iGameClass, int iGameNumber,
     }
 
     // Get gameclass options
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::iOptions, &vGameClassOptions);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::iOptions, &vGameClassOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

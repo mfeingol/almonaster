@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -594,25 +594,25 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
 
     SafeRelease (pTable);
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxTechDev, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     fMaxTechDev = vTemp.GetFloat();
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     fMaxAgRatio = vTemp.GetFloat();
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::PercentFirstTradeIncrease, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::PercentFirstTradeIncrease, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
     iPercentFirstTradeIncrease = vTemp.GetInteger();
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::PercentNextTradeIncrease, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::PercentNextTradeIncrease, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2239,7 +2239,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     }
 
     // Get ship behavior
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2247,7 +2247,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     iShipBehavior = vTemp.GetInteger();
 
     // Get gameclass options
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

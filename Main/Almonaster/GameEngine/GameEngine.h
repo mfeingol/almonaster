@@ -26,10 +26,8 @@
 #define ALMONASTER_BUILD
 
 #include "GameEngineSchema.h"
+#include "GameEngineConstants.h"
 #include "GameEngineUI.h"
-#include "GameEngineGameObject.h"
-#include "GameEngineLocks.h"
-#include "IGameEngine.h"
 #include "AsyncManager.h"
 
 #include "Osal/Thread.h"
@@ -40,8 +38,6 @@
 #include "Osal/HashTable.h"
 #include "Osal/Vector.h"
 
-#undef ALMONASTER_BUILD
-
 // Remove annoying warning
 #ifdef _WIN32
 #pragma warning (disable : 4245)
@@ -51,9 +47,336 @@
 // Types
 //
 
-struct EmpireIdentity {
+struct EmpireIdentity
+{
     int iEmpireKey;
     int64 i64SecretKey;
+};
+
+struct GameConfiguration
+{
+    int iShipBehavior;
+
+    int iColonySimpleBuildFactor;
+    float fColonyMultipliedBuildFactor;
+    float fColonyMultipliedDepositFactor;
+    float fColonyExponentialDepositFactor;
+
+    float fEngineerLinkCost;
+    float fStargateGateCost;
+    float fTerraformerPlowFactor;
+    float fTroopshipInvasionFactor;
+    float fTroopshipFailureFactor;
+    float fTroopshipSuccessFactor;
+    float fDoomsdayAnnihilationFactor;
+
+    float fCarrierCost;
+    float fBuilderMinBR;
+    float fBuilderBRDampener;
+    float fBuilderMultiplier;
+    float fMorpherCost;
+    float fJumpgateGateCost;
+    float fJumpgateRangeFactor;
+    float fStargateRangeFactor;
+
+    int iPercentFirstTradeIncrease;
+    int iPercentNextTradeIncrease;
+
+    int iPercentTechIncreaseForLatecomers;
+    int iPercentDamageUsedToDestroy;
+
+    int iNukesForQuarantine;
+    int iUpdatesInQuarantine;
+};
+
+struct MapConfiguration
+{
+    int iChanceNewLinkForms;
+    int iMapDeviation;
+    int iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap;
+    int iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap;
+    int iLargeMapThreshold;
+    float fResourceAllocationRandomizationFactor;
+};
+
+struct GameSecurityEntry
+{
+    int iEmpireKey;
+    int iOptions;
+    const char* pszEmpireName;
+    int64 iSecretKey;
+};
+
+struct PrearrangedTeam
+{
+    unsigned int iNumEmpires;
+    unsigned int* piEmpireKey;
+};
+
+struct GameOptions
+{
+    unsigned int iNumEmpires;
+    const unsigned int* piEmpireKey;
+    unsigned int iTournamentKey;
+
+    int iTeamOptions;
+    unsigned int iNumPrearrangedTeams;
+    PrearrangedTeam* paPrearrangedTeam;
+
+    const char* pszPassword;
+    const char* pszEnterGameMessage;
+    int iOptions;
+    int iNumUpdatesBeforeGameCloses;
+    Seconds sFirstUpdateDelay;
+    float fMinAlmonasterScore;
+    float fMaxAlmonasterScore;
+    float fMinClassicScore;
+    float fMaxClassicScore;
+    int iMinBridierRank;
+    int iMaxBridierRank;
+    int iMinBridierIndex;
+    int iMaxBridierIndex;
+    int iMinBridierRankGain;
+    int iMaxBridierRankGain;
+    int iMinBridierRankLoss;
+    int iMaxBridierRankLoss;
+    int iMinWins;
+    int iMaxWins;
+
+    GameFairnessOption gfoFairness;
+
+    unsigned int iNumSecurityEntries;
+    GameSecurityEntry* pSecurity;
+};
+
+struct TopListQuery
+{
+    ScoringSystem TopList;
+    int EmpireKey;
+};
+
+enum GameAction
+{
+    VIEW_GAME,
+    ENTER_GAME,
+};
+
+enum GameResult
+{
+    GAME_RESULT_NONE,
+    GAME_RESULT_RUIN,
+    GAME_RESULT_WIN,
+    GAME_RESULT_DRAW
+};
+
+struct GameUpdateInformation
+{
+    unsigned int iUpdate;
+    unsigned int iNumEmpires;
+    int* piEmpireKey;
+    bool* pbAlive;
+    String* pstrUpdateMessage;
+};
+
+struct RatioInformation
+{
+    float fAgRatio;
+    float fNextAgRatio;
+
+    float fMaintRatio;
+    float fNextMaintRatio;
+
+    float fFuelRatio;
+    float fNextFuelRatio;
+
+    float fTechLevel;
+    float fNextTechLevel;
+
+    float fTechDev;
+    float fNextTechDev;
+
+    int iBR;
+    int iNextBR;
+};
+
+struct BuildLocation
+{
+    unsigned int iPlanetKey;
+    unsigned int iFleetKey;
+};
+
+enum FleetOrderType
+{
+    FLEET_ORDER_NORMAL      = 0,
+    FLEET_ORDER_MERGE       = 1,
+    FLEET_ORDER_MOVE_PLANET = 2,
+    FLEET_ORDER_MOVE_FLEET  = 3,
+
+    FLEET_ORDER_TYPE_FIRST  = FLEET_ORDER_NORMAL,
+    FLEET_ORDER_TYPE_LAST   = FLEET_ORDER_MOVE_FLEET,
+};
+
+struct FleetOrder
+{
+    int iKey;
+    char* pszText;
+    FleetOrderType fotType;
+};
+
+enum ShipOrderType
+{
+    SHIP_ORDER_NORMAL       = 0,
+    SHIP_ORDER_MOVE_PLANET  = 2,
+    SHIP_ORDER_MOVE_FLEET   = 3,
+
+    SHIP_ORDER_TYPE_FIRST  = SHIP_ORDER_NORMAL,
+    SHIP_ORDER_TYPE_LAST   = SHIP_ORDER_MOVE_FLEET,
+};
+
+struct ShipOrder
+{
+    int iKey;
+    char* pszText;
+    ShipOrderType sotType;
+};
+
+struct ShipOrderPlanetInfo
+{
+    const char* pszName;
+    unsigned int iPlanetKey;
+    unsigned int iOwner;
+    int iX;
+    int iY;
+};
+
+struct ShipOrderShipInfo
+{
+    int iShipType;
+    int iSelectedAction;
+    int iState;
+    float fBR;
+    float fMaxBR;
+    bool bBuilding;
+};
+
+struct ShipOrderGameInfo
+{
+    int iGameClassOptions;
+    float fMaintRatio;
+    float fNextMaintRatio;
+};
+
+struct ScoringChanges
+{
+    ScoringChanges()
+    {
+        iFlags = 0;
+        pszNukedName = NULL;
+    }
+
+    int iFlags;
+    const char* pszNukedName;
+
+    float fAlmonasterNukerScore;
+    float fAlmonasterNukerChange;
+    float fAlmonasterNukedScore;
+    float fAlmonasterNukedChange;
+
+    int iBridierNukerRank;
+    int iBridierNukerRankChange;
+    int iBridierNukerIndex;
+    int iBridierNukerIndexChange;
+
+    int iBridierNukedRank;
+    int iBridierNukedRankChange;
+    int iBridierNukedIndex;
+    int iBridierNukedIndexChange;
+};
+
+#define ALMONASTER_NUKER_SCORE_CHANGE 0x00000001
+#define ALMONASTER_NUKED_SCORE_CHANGE 0x00000002
+#define BRIDIER_SCORE_CHANGE          0x00000004
+
+
+class IScoringSystem
+{
+public:
+
+    virtual bool HasTopList() = 0;
+
+    virtual int OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int iEmpireNuked, ScoringChanges* pscChanges) = 0;
+    virtual int OnSurrender (int iGameClass, int iGameNumber, int iWinner, int iLoser, ScoringChanges* pscChanges) = 0;
+
+    virtual int On30StyleSurrender (int iGameClass, int iGameNumber, int iLoser, ScoringChanges* pscChanges) = 0;
+    virtual int On30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey, int iPlanetKey, ScoringChanges* pscChanges) = 0;
+
+    virtual int OnGameEnd (int iGameClass, int iGameNumber) = 0;
+    virtual int OnWin (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
+    virtual int OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
+    virtual int OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) = 0;
+
+    virtual bool IsValidScore (const Variant* pvScore) = 0;
+    virtual int CompareScores (const Variant* pvLeft, const Variant* pvRight) = 0;
+
+    virtual int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) = 0;
+    virtual int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) = 0;
+};
+
+class IMapGenerator
+{
+public:
+
+    // Implementor must do the following:
+    //
+    // 1) If iNumExistingPlanets == 0, fill in the following columns in the pvGameData row:
+    //
+    // GameData::NumPlanetsPerEmpire,
+    // GameData::HWAg
+    // GameData::AvgAg
+    // GameData::HWMin
+    // GameData::AvgMin
+    // GameData::HWFuel
+    // GameData::AvgFuel
+    //
+    // 2) Allocate *piNumNewPlanets new rows into *pppvNewPlanetData, each with GameMap::NumColumns
+    // 3) Fill in the following columns for each new planet row:
+    //
+    // GameMap::Ag,
+    // GameMap::Minerals
+    // GameMap::Fuel
+    // GameMap::Coordinates
+    // GameMap::Link
+    // GameMap::HomeWorld
+    //
+    // GameMap::Owner -> Set to empire's chain, even if not fully-colonized map
+    //
+    // Everything else is taken care of by the caller
+    //
+    // Sanity rules apply:
+    // - Coordinates already in use on the map must not be used
+    // - Links must actually have a planet behind them
+    // - Exactly one homeworld per empire must be selected
+    // - etc.
+
+    virtual int CreatePlanets (
+        
+        int iGameClass,
+        int iGameNumber,
+
+        int* piNewEmpireKey,
+        unsigned int iNumNewEmpires,
+
+        Variant** ppvExistingPlanetData,
+        unsigned int iNumExistingPlanets,
+
+        Variant* pvGameClassData,
+        Variant* pvGameData,
+        
+        Variant*** pppvNewPlanetData,
+        unsigned int* piNumNewPlanets
+        ) = 0;
+
+    virtual void FreePlanetData(Variant** ppvNewPlanetData) = 0;
 };
 
 /////////////////////////////////////////////////////////////////////////////
@@ -61,7 +384,7 @@ struct EmpireIdentity {
 
 extern __declspec(thread) IDatabaseConnection* t_pConn;
 
-class GameEngine : public IGameEngine
+class GameEngine
 {
 private:
    
@@ -96,7 +419,7 @@ private:
     int DeleteShipFromDeadEmpire (const char* pszEmpireShips, const char* pszGameMap, 
         unsigned int iShipKey, unsigned int iPlanetKey);
 
-    int GetGames (bool bOpen, int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
+    int GetGames (bool bOpen, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
 
     int RuinEmpire (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage);
 
@@ -207,9 +530,11 @@ private:
     static int THREAD_CALL UpdateTopListOnDecreaseMsg (AsyncTask* pMessage);
     static int THREAD_CALL UpdateTopListOnDeletionMsg (AsyncTask* pMessage);
 
-    int UpdateTopListOnIncrease (TopListQuery* pQuery);
-    int UpdateTopListOnDecrease (TopListQuery* pQuery);
-    int UpdateTopListOnDeletion (TopListQuery* pQuery);
+    int CacheTopLists();
+
+    int UpdateTopListOnIncrease(TopListQuery* pQuery);
+    int UpdateTopListOnDecrease(TopListQuery* pQuery);
+    int UpdateTopListOnDeletion(TopListQuery* pQuery);
 
     bool HasTopList (ScoringSystem ssTopList);
     int VerifyTopList (ScoringSystem ssTopList);
@@ -642,15 +967,15 @@ public:
     int CheckGameForEndConditions (int iGameClass, int iGameNumber, const char* pszAdminMessage, bool* pbEndGame);
     int DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage, int iReason);
     
-    int GetNumActiveGames (int* piNumGames);
-    int GetNumOpenGames (int* piNumGames);
-    int GetNumClosedGames (int* piNumGames);
+    int GetNumActiveGames(unsigned int* piNumGames);
+    int GetNumOpenGames(unsigned int* piNumGames);
+    int GetNumClosedGames(unsigned int* piNumGames);
 
     int AreAllEmpiresIdle (int iGameClass, int iGameNumber, bool* pbIdle);
 
-    int GetActiveGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
-    int GetOpenGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
-    int GetClosedGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
+    int GetActiveGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
+    int GetOpenGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
+    int GetClosedGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
 
     int IsGameOpen (int iGameClass, int iGameNumber, bool* pbOpen);
     int HasGameStarted (int iGameClass, int iGameNumber, bool* pbStarted);
@@ -674,12 +999,14 @@ public:
     int GetGameOptions (int iGameClass, int iGameNumber, int* piOptions);
     int GetFirstUpdateDelay (int iGameClass, int iGameNumber, Seconds* psDelay);
     
-    int GetNumEmpiresInGame (int iGameClass, int iGameNumber, int* piEmpires);
+    int GetNumEmpiresInGame (int iGameClass, int iGameNumber, unsigned int* piEmpires);
     int GetNumDeadEmpiresInGame (int iGameClass, int iGameNumber, unsigned int* piDeadEmpires);
     int GetNumEmpiresNeededForGame (int iGameClass, int* piNumEmpiresNeeded);
     int IsEmpireInGame (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbInGame);
     int GetNumUpdatedEmpires (int iGameClass, int iGameNumber, int* piUpdatedEmpires);
-    int GetEmpiresInGame (int iGameClass, int iGameNumber, Variant** ppiEmpireKey, int* piNumEmpires);
+    
+    int GetEmpiresInGame (int iGameClass, int iGameNumber, Variant** ppiEmpireKey, unsigned int* piNumEmpires);
+    int GetEmpiresInGame (int iGameClass, int iGameNumber, Variant*** pppvEmpiresInGame, unsigned int* piNumEmpires);
 
     int IsGamePaused (int iGameClass, int iGameNumber, bool* pbPaused);
     int IsGameAdminPaused (int iGameClass, int iGameNumber, bool* pbAdminPaused);
@@ -702,7 +1029,7 @@ public:
     int RuinGame (int iGameClass, int iGameNumber, const char* pszWinnerName);
     int ResignGame (int iGameClass, int iGameNumber);
 
-    int GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int** ppiEmpireKey, int* piNumResigned);
+    int GetResignedEmpiresInGame (int iGameClass, int iGameNumber, unsigned int** ppiEmpireKey, unsigned int* piNumResigned);
     int UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey, int iAdminKey);
 
     int GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* piOptions, 

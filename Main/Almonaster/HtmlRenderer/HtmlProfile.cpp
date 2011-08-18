@@ -22,8 +22,8 @@
 
 
 void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, 
-                                 bool bEmpireAdmin, bool bSendMessage, bool bShowButtons) {
-
+                                 bool bEmpireAdmin, bool bSendMessage, bool bShowButtons)
+{
     bool bCanBroadcast;
 
     Seconds sBridierSecondsLeft = -1;
@@ -40,6 +40,16 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     OutputText ("<input type=\"hidden\" name=\"TargetEmpireKey\" value=\"");
     m_pHttpResponse->WriteText (iTargetEmpireKey);
     OutputText ("\">");
+
+    if (iTargetEmpireKey != m_iEmpireKey)
+    {
+        const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL };
+        iErrCode = t_pConn->GetCache()->Cache(&entry, 1);
+        if (iErrCode != OK)
+        {
+           goto OnError;
+        }
+    }
     
     iErrCode = GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
     if (iErrCode != OK) {

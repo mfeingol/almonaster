@@ -93,7 +93,7 @@
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
@@ -122,7 +122,7 @@ copy /y SqlDatabase.h "%DropSdk%"
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_CRT_SECURE_NO_WARNINGS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -149,7 +149,7 @@ copy /y SqlDatabase.h "%DropSdk%"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
@@ -177,7 +177,7 @@ copy /y SqlDatabase.h "%DropSdk%"
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
-      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;SQL_DATABASE_BUILD;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
@@ -210,25 +210,28 @@ copy /y SqlDatabase.h "%DropSdk%"
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ReadTableView.h" />
+    <ClInclude Include="CachedReadTable.h" />
     <ClInclude Include="SqlDatabase.h" />
     <ClInclude Include="SqlDatabaseConnection.h" />
     <ClInclude Include="SqlDatabaseBridge.h" />
     <ClInclude Include="SqlDatabaseReadTable.h" />
     <ClInclude Include="SqlDatabaseWriteTable.h" />
-    <ClInclude Include="TableViewCollection.h" />
+    <ClInclude Include="TableCacheCollection.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Interface.cpp" />
-    <ClCompile Include="ReadTableView.cpp" />
+    <ClCompile Include="CachedReadTable.cpp" />
     <ClCompile Include="SqlDatabaseBridge.cpp" />
     <ClCompile Include="SqlDatabaseConnection.cpp" />
     <ClCompile Include="SqlDatabaseReadTable.cpp" />
     <ClCompile Include="SqlDatabaseWriteTable.cpp" />
-    <ClCompile Include="TableViewCollection.cpp" />
+    <ClCompile Include="TableCacheCollection.cpp" />
     <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="app.config" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

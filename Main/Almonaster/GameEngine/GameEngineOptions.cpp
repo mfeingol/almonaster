@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -490,7 +490,7 @@ int GameEngine::CheckForDelayedPause (int iGameClass, int iGameNumber, const UTC
 
     *pbNewlyPaused = false;
 
-    int iNumEmpires;
+    unsigned int iNumEmpires;
     iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
@@ -504,7 +504,7 @@ int GameEngine::CheckForDelayedPause (int iGameClass, int iGameNumber, const UTC
         goto Cleanup;
     }
 
-    if (iNumPaused == (unsigned int) iNumEmpires) {
+    if (iNumPaused == iNumEmpires) {
 
         int iGameState;
         iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);

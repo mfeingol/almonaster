@@ -89,5 +89,5 @@ unsigned int* ConvertIdsToKeys(IEnumerable<int64>^ ids, unsigned int* piCount)
 
 void Trace(System::String^ fmt, ... array<System::Object^>^ params)
 {
-    //System::Diagnostics::Trace::WriteLine(System::String::Format(fmt, params));
+    System::Diagnostics::Trace::WriteLine(System::String::Format(fmt, params));
 }

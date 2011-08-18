@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -28,6 +28,7 @@
 #include "GameEngineConstants.h"
 
 extern __declspec(thread) IDatabaseConnection* t_pConn;
+
 
 class Global
 {

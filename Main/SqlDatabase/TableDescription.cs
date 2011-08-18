@@ -49,11 +49,16 @@ namespace Almonaster.Database.Sql
 
     // ...
 
+    public struct BulkTableReadRequestColumn
+    {
+        public string ColumnName;
+        public object ColumnValue;
+    }
+
     public struct BulkTableReadRequest
     {
         public string TableName;
-        public string ColumnName;
-        public object ColumnValue;
+        public IEnumerable<BulkTableReadRequestColumn> Columns;
     }
 
     public class BulkTableReadResult

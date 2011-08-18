@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#ifndef _GameEngineUI_H_
-#define _GameEngineUI_H_
+#pragma once
 
 // Null Theme colors
 #define DEFAULT_TABLE_COLOR "202050"
@@ -38,5 +37,3 @@
 #define END_STRONG "</strong>"
 
 #define NEW_PARAGRAPH "<p>"
-
-#endif

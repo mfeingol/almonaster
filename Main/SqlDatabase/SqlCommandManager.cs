@@ -174,15 +174,28 @@ namespace Almonaster.Database.Sql
             {
                 foreach (BulkTableReadRequest req in requests)
                 {
-                    if (String.IsNullOrEmpty(req.ColumnName))
+                    if (req.Columns == null || req.Columns.Count() == 0)
                     {
                         sb.AppendLine(String.Format("SELECT * FROM [{0}];", req.TableName));
                     }
                     else
                     {
-                        string param = "@p" + index++;
-                        sb.AppendLine(String.Format("SELECT * FROM [{0}] WHERE [{1}] = {2};", req.TableName, req.ColumnName, param));
-                        cmd.Parameters.Add(new SqlParameter(param, (long)(uint)req.ColumnValue));
+                        bool first = true;
+                        sb.AppendLine(String.Format("SELECT * FROM [{0}] ", req.TableName));
+                        foreach (BulkTableReadRequestColumn col in req.Columns)
+                        {
+                            string param = "@p" + index++;
+                            if (first)
+                            {
+                                sb.AppendLine(String.Format("WHERE [{0}] = {1};", col.ColumnName, param));
+                                first = false;
+                            }
+                            else
+                            {
+                                sb.AppendLine(String.Format("AND [{0}] = {1};", col.ColumnName, param));
+                            }
+                            cmd.Parameters.Add(new SqlParameter(param, col.ColumnValue));
+                        }
                     }
 
                     tableNames.Add(req.TableName);
@@ -277,10 +290,17 @@ namespace Almonaster.Database.Sql
 
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                try
                 {
-                    reader.Read();
-                    return (long)reader[0];
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        reader.Read();
+                        return (long)reader[0];
+                    }
+                }
+                catch (SqlException e)
+                {
+                    throw new SqlDatabaseException(e);
                 }
             }
         }
@@ -613,19 +633,26 @@ namespace Almonaster.Database.Sql
             string cmdText = String.Format("SELECT {0} FROM [{1}]", columnSet, tableName);
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
             {
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                try
                 {
-                    while (reader.Read())
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        List<object> values = new List<object>(cols);
-                        foreach (string columnName in columnNames)
+                        while (reader.Read())
                         {
-                            values.Add(reader[columnName]);
+                            List<object> values = new List<object>(cols);
+                            foreach (string columnName in columnNames)
+                            {
+                                values.Add(reader[columnName]);
+                            }
+                            RowValues row;
+                            row.Values = values;
+                            rows.Add(row);
                         }
-                        RowValues row;
-                        row.Values = values;
-                        rows.Add(row);
                     }
+                }
+                catch (SqlException e)
+                {
+                    throw new SqlDatabaseException(e);
                 }
             }
 

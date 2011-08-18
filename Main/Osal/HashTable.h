@@ -157,6 +157,11 @@ public:
         return false;
     }
 
+    bool Contains(CKey key)
+    {
+        return FindFirst(key, (CData*)NULL);
+    }
+
     bool FindFirst (CKey key, CData* pcData) {
 
         unsigned int iBucket = HashValue::GetHashValue (key, m_iNumBuckets, m_pHashHint);
@@ -217,7 +222,6 @@ public:
 
         return false;
     }
-
 
     bool GetNextIterator (HashTableIterator<CKey, CData>* phtIterator) {
         

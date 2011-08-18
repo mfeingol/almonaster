@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -171,16 +171,13 @@ Cleanup:
 
 int GameEngine::GetDefaultEmpireShipName (int iEmpireKey, int iTechKey, Variant* pvDefaultShipName) {
 
-    if (iTechKey < 0 || iTechKey >= NUM_SHIP_TYPES) {
+    if (iTechKey < 0 || iTechKey >= NUM_SHIP_TYPES)
+    {
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return t_pConn->ReadData(
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[iTechKey], 
-        pvDefaultShipName
-        );
+    GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
+    return t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[iTechKey], pvDefaultShipName);
 }
 
 

@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -94,7 +94,7 @@ int GameEngine::GetNumThemes (int* piNumThemes) {
 
 int GameEngine::GetThemeKeys (int** ppiThemeKey, int* piNumKeys) {
 
-    int iErrCode = t_pConn->GetViews()->GetAllKeys (
+    int iErrCode = t_pConn->GetCache()->GetAllKeys (
         SYSTEM_THEMES, 
         (unsigned int**) ppiThemeKey, 
         (unsigned int*) piNumKeys
@@ -156,7 +156,7 @@ int GameEngine::GetThemeData (int iThemeKey, Variant** ppvThemeData) {
 
 int GameEngine::GetThemeName (int iThemeKey, Variant* pvThemeName) {
 
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pvThemeName);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pvThemeName);
 }
 
 
@@ -170,7 +170,7 @@ int GameEngine::GetThemeName (int iThemeKey, Variant* pvThemeName) {
 
 int GameEngine::GetThemeTableColor (int iThemeKey, Variant* pvTableColor) {
 
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::TableColor, pvTableColor);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::TableColor, pvTableColor);
 }
 
 
@@ -183,23 +183,23 @@ int GameEngine::GetThemeTableColor (int iThemeKey, Variant* pvTableColor) {
 // Return the respective color of the theme
 
 int GameEngine::GetThemeTextColor (int iThemeKey, Variant* pvColor) {
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::TextColor, pvColor);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::TextColor, pvColor);
 }
 
 int GameEngine::GetThemeGoodColor (int iThemeKey, Variant* pvColor) {
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::GoodColor, pvColor);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::GoodColor, pvColor);
 }
 
 int GameEngine::GetThemeBadColor (int iThemeKey, Variant* pvColor) {
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::BadColor, pvColor);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::BadColor, pvColor);
 }
 
 int GameEngine::GetThemePrivateMessageColor (int iThemeKey, Variant* pvColor) {
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::PrivateMessageColor, pvColor);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::PrivateMessageColor, pvColor);
 }
 
 int GameEngine::GetThemeBroadcastMessageColor (int iThemeKey, Variant* pvColor) {
-    return t_pConn->GetViews()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::BroadcastMessageColor, pvColor);
+    return t_pConn->GetCache()->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::BroadcastMessageColor, pvColor);
 }
 
 

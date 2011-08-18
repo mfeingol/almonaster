@@ -16,25 +16,20 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_GAMEENGINEGAMEOBJECT_H__E21FE393_D69B_11D3_A2F0_0050047FE2E2__INCLUDED_)
-#define AFX_GAMEENGINEGAMEOBJECT_H__E21FE393_D69B_11D3_A2F0_0050047FE2E2__INCLUDED_
+#pragma once
 
-#include "Osal/IObject.h"
-#include "Osal/ReadWriteLock.h"
-
-class GameObject : public ReadWriteLock, public IObject {
-
-    char* m_pszName;
-
+class IAlmonasterEventSink
+{
 public:
 
-    GameObject();
-    ~GameObject();
+    virtual int OnCreateEmpire(int iEmpireKey) = 0;
+    virtual int OnDeleteEmpire(int iEmpireKey) = 0;
 
-    int SetName (const char* pszName);
-    const char* GetName();
+    virtual int OnLoginEmpire(int iEmpireKey) = 0;
+    
+    virtual int OnCreateGame(int iGameClass, int iGameNumber) = 0;
+    virtual int OnCleanupGame(int iGameClass, int iGameNumber) = 0;
 
-    IMPLEMENT_IOBJECT;
+    virtual int OnDeleteTournament(unsigned int iTournamentKey) = 0;
+    virtual int OnDeleteTournamentTeam(unsigned int iTournamentKey, unsigned int iTeamKey) = 0;
 };
-
-#endif // !defined(AFX_GAMEENGINEGAMEOBJECT_H__E21FE393_D69B_11D3_A2F0_0050047FE2E2__INCLUDED_)

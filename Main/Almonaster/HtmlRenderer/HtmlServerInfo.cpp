@@ -21,7 +21,7 @@
 
 void HtmlRenderer::WriteServerRules() {
     
-    int iErrCode, iNumActiveGames, iNumOpenGames, iNumClosedGames, iSystemOptions;
+    int iErrCode, iNumActiveGames, iSystemOptions;
 
     Variant vDefaultNumUpdatesForClose, vValue, vNumUpdatesDown, vSecondsForLongtermStatus, vNumNukesListed,
         vAfterWeekendDelay, vUnlimitedEmpirePrivilege;
@@ -37,7 +37,7 @@ void HtmlRenderer::WriteServerRules() {
     
     char pszDateString [OS::MaxDateLength];
     
-    unsigned int iNumProcessors, iMHz, iNumFiles, iNumPages, iTimeSpent, iDBOptions;
+    unsigned int iNumProcessors, iMHz, iNumFiles, iNumPages, iTimeSpent, iDBOptions, iNumOpenGames, iNumClosedGames;
     
     GameConfiguration gcConfig;
     MapConfiguration mcConfig;
@@ -382,8 +382,7 @@ void HtmlRenderer::WriteServerRules() {
     }
     OutputText (" ended</li></ul></li>");
     
-    if (GetNumOpenGames (&iNumOpenGames) == OK &&
-        GetNumClosedGames (&iNumClosedGames) == OK) {
+    if (GetNumOpenGames(&iNumOpenGames) == OK && GetNumClosedGames(&iNumClosedGames) == OK) {
         
         iNumActiveGames = iNumOpenGames + iNumClosedGames;
         

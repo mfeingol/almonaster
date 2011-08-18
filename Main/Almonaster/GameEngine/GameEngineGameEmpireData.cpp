@@ -428,13 +428,13 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
             }
 
             // Get ship behavior
-            iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
+            iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
             Assert (iErrCode == OK);
             
-            iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedDepositFactor, &vColonyMultipliedDepositFactor);
+            iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedDepositFactor, &vColonyMultipliedDepositFactor);
             Assert (iErrCode == OK);
             
-            iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::ColonyExponentialDepositFactor, &vColonyExponentialDepositFactor);
+            iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ColonyExponentialDepositFactor, &vColonyExponentialDepositFactor);
             Assert (iErrCode == OK);
 
             GAME_INDEPENDENT_SHIPS (strIndependentShips, iGameClass, iGameNumber);
@@ -816,24 +816,35 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     Assert (iErrCode == OK);
 
     // Delete game from personal list
-    SYSTEM_EMPIRE_ACTIVE_GAMES (strActiveGames, iEmpireKey);
-
     unsigned int iGames = 1;
     IWriteTable* pWrite = NULL;
-
-    iErrCode = t_pConn->GetTableForWriting (strActiveGames, &pWrite);
-    Assert (iErrCode == OK);
-
-    if (iErrCode == OK) {
-
+    iErrCode = t_pConn->GetTableForWriting(SYSTEM_EMPIRE_ACTIVE_GAMES, &pWrite);
+    if (iErrCode == OK)
+    {
         char pszData [MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
-        GetGameClassGameNumber (iGameClass, iGameNumber, pszData);
+        GetGameClassGameNumber(iGameClass, iGameNumber, pszData);
 
-        iErrCode = pWrite->GetFirstKey (SystemEmpireActiveGames::GameClassGameNumber, pszData, &iKey);
-        Assert (iErrCode == OK);
+        SearchColumn sdColumns[2];
+        sdColumns[0].pszColumn = SystemEmpireActiveGames::EmpireKey;
+        sdColumns[0].iFlags = 0;
+        sdColumns[0].vData = iEmpireKey;
+        sdColumns[1].pszColumn = SystemEmpireActiveGames::GameClassGameNumber;
+        sdColumns[1].iFlags = 0;
+        sdColumns[1].vData = pszData;
 
+        SearchDefinition sdSearch;
+        sdSearch.iStartKey = NO_KEY;
+        sdSearch.iSkipHits = 0;
+        sdSearch.iMaxNumHits = 0;
+        sdSearch.iNumColumns = 2;
+        sdSearch.pscColumns = sdColumns;
+
+        unsigned int* piKey = NULL, iNumKeys;
+        iErrCode = pWrite->GetSearchKeys(sdSearch, &piKey, &iNumKeys, NULL);
         if (iErrCode == OK) {
-            iErrCode = pWrite->DeleteRow (iKey);
+            Assert(iNumKeys == 1);
+            iErrCode = pWrite->DeleteRow(piKey[0]);
+            t_pConn->FreeKeys(piKey);
             Assert (iErrCode == OK);
         }
 
@@ -1415,10 +1426,10 @@ Cleanup:
 
         if (DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag) {
 
-            int iNumEmpires;
+            unsigned int iNumEmpires;
             iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumEmpires);
-            if (iErrCode == OK && vOldResigned.GetInteger() + 1 == iNumEmpires) {
-
+            if (iErrCode == OK && vOldResigned.GetInteger() + 1 == (int)iNumEmpires)
+            {
                 iErrCode = ResignGame (iGameClass, iGameNumber);
                 Assert (iErrCode == OK);
             }
@@ -2437,7 +2448,7 @@ void GameEngine::CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     int iTotalMaxPop = 0;
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

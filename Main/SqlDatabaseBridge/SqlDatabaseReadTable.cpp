@@ -17,11 +17,18 @@ SqlDatabaseReadTable::~SqlDatabaseReadTable()
 {
 }
 
-unsigned int SqlDatabaseReadTable::GetNumRows(unsigned int* piNumRows)
+int SqlDatabaseReadTable::GetNumRows(unsigned int* piNumRows)
 {
     Trace("GetNumRows {0}", m_tableName);
+    try
+    {
+        *piNumRows = (unsigned int)m_cmd->GetRowCount(m_tableName);
+    }
+    catch (SqlDatabaseException^)
+    {
+        return ERROR_UNKNOWN_TABLE_NAME;
+    }
 
-    *piNumRows = (unsigned int)m_cmd->GetRowCount(m_tableName);
     return OK;
 }
 
@@ -398,7 +405,16 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKe
     if (ppiKey != NULL)
         cols[1] = gcnew System::String(IdColumnName);
 
-    IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
+    IEnumerable<RowValues>^ rows;
+    try
+    {
+        rows = m_cmd->ReadColumns(m_tableName, cols);
+    }
+    catch (SqlDatabaseException^)
+    {
+        return ERROR_UNKNOWN_TABLE_NAME;
+    }
+
     unsigned int iNumRows = Enumerable::Count(rows);
     if (iNumRows == 0)
         return ERROR_DATA_NOT_FOUND;

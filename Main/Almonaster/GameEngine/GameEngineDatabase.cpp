@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -200,16 +200,17 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
                 }
             }
 
-            GET_SYSTEM_EMPIRE_ACTIVE_GAMES (pszText, iEmpireKey);
+            int iNumGames, * piGameClass, * piGameNumber;
+            iErrCode = GetEmpireActiveGames(iEmpireKey, &piGameClass, &piGameNumber, &iNumGames);
+            if (iErrCode == OK)
+            {
+                delete [] piGameClass;
+                delete [] piGameNumber;
+            }
 
-            if (t_pConn->DoesTableExist (pszText)) {
-
-                // Never purge an empire in a game
-                unsigned int iNumGames;
-                iErrCode = t_pConn->GetNumRows (pszText, &iNumGames);
-                if (iErrCode != OK || iNumGames > 0) {
-                    continue;
-                }
+            if (iErrCode != OK || iNumGames > 0)
+            {
+                continue;
             }
             
             // Best effort delete the empire

@@ -143,17 +143,18 @@ void HtmlRenderer::WriteGameListHeader (const char** ppszHeaders, size_t stNumHe
 
 int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo) {
     
-    int iErrCode, iButtonKey = m_iButtonKey, iEmpireKey =  m_iEmpireKey, i, iNumUpdates, iNumActiveEmpires,
+    int iErrCode, iButtonKey = m_iButtonKey, iEmpireKey =  m_iEmpireKey, i, iNumUpdates,
         iSecondsSince, iSecondsUntil, iState, iGameOptions,
         iNumUpdatesBeforeGameCloses, iEmpireGameOptions, iNumUpdatedEmpires = 0;
 
     GameFairnessOption gfoFairness;
-    unsigned int iNumUnreadMessages;
+    unsigned int iNumUnreadMessages, iNumActiveEmpires;
 
     Seconds sFirstUpdateDelay = 0;
     bool bReadyForUpdate, bOpen;
 
-    Variant* pvEmpireKey = NULL, pvMin [NUM_ENTRY_SCORE_RESTRICTIONS], pvMax [NUM_ENTRY_SCORE_RESTRICTIONS], vTemp;
+    Variant pvMin [NUM_ENTRY_SCORE_RESTRICTIONS], pvMax [NUM_ENTRY_SCORE_RESTRICTIONS], vTemp;
+    Variant** ppvEmpiresInGame = NULL;
 
     UTCTime tCreationTime;
 
@@ -231,14 +232,14 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
 
     if (iGameOptions & GAME_NAMES_LISTED) {
 
-        iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires);
+        iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &ppvEmpiresInGame, &iNumActiveEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
         
     } else {
         
-        iErrCode = GetNumEmpiresInGame (iGameClass, iGameNumber, &iNumActiveEmpires);
+        iErrCode = GetNumEmpiresInGame(iGameClass, iGameNumber, &iNumActiveEmpires);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -448,11 +449,9 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         int iLoopGuard = iNumActiveEmpires - 1;
         for (i = 0; i <= iLoopGuard; i ++) {
             
-            unsigned int iEmpireKey = pvEmpireKey[i].GetInteger();
-
-            if (GetEmpireName (iEmpireKey, &vName) == OK &&
-                GetEmpireGameProperty (iGameClass, iGameNumber, iEmpireKey, GameEmpireData::Options, &vOptions) == OK) {
-
+            unsigned int iEmpireKey = ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger();
+            if (GetEmpireGameProperty(iGameClass, iGameNumber, iEmpireKey, GameEmpireData::Options, &vOptions) == OK)
+            {
                 bool bUpdated = (vOptions.GetInteger() & UPDATED) != 0;
                 if (bUpdated) {
                     strList += "<font color=\"#";
@@ -464,7 +463,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
                     strList += "\">";
                 }
 
-                strList += vName.GetCharPtr();
+                strList += ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr();
                 if (i < iLoopGuard) {
                     strList += ", ";
                 }
@@ -580,8 +579,9 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     
 Cleanup:
 
-    if (pvEmpireKey != NULL) {
-        FreeData (pvEmpireKey);
+    if (ppvEmpiresInGame != NULL)
+    {
+        FreeData (ppvEmpiresInGame);
     }   
 
     return iErrCode;
@@ -605,7 +605,8 @@ int HtmlRenderer::WriteGameAdministratorListData (int iGameClass, int iGameNumbe
 int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
                                            bool bAdmin, bool bSpectators) {
 
-    int iErrCode, iNumEmpiresInGame, iGameOptions;
+    int iErrCode, iGameOptions;
+    unsigned int iNumEmpiresInGame;
 
     String strList;
 
@@ -620,28 +621,22 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
     if (bAdmin || bSpectators || (iGameOptions & GAME_NAMES_LISTED)) {
 
         // Make empire list
-        Variant* pvEmpireKey, vTemp;
-        iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumEmpiresInGame);
+        Variant** ppvEmpiresInGame;
+        iErrCode = GetEmpiresInGame(iGameClass, iGameNumber, &ppvEmpiresInGame, &iNumEmpiresInGame);
         if (iErrCode != OK) {
             goto Cleanup;
         }
-        
         Assert (iNumEmpiresInGame > 0);
 
-        int i, iLoopGuard = iNumEmpiresInGame - 1;
-        for (i = 0; i < iLoopGuard; i ++) {
-            iErrCode = GetEmpireName (pvEmpireKey[i], &vTemp);
-            if (iErrCode == OK) {
-                strList += vTemp.GetCharPtr();
-                strList += ", ";
-            }
+        unsigned int i;
+        for (i = 0; i < iNumEmpiresInGame - 1; i ++)
+        {
+            strList += ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr();
+            strList += ", ";
         }
-        iErrCode = GetEmpireName (pvEmpireKey[i], &vTemp);
-        if (iErrCode == OK) {
-            strList += vTemp.GetCharPtr();
-        }
+        strList += ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr();
         
-        FreeData (pvEmpireKey);
+        FreeData (ppvEmpiresInGame);
         
     } else {
         

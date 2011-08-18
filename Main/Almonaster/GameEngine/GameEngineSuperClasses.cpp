@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -127,7 +127,7 @@ int GameEngine::GetSuperClassKeys (int** ppiKey, Variant** ppvName, int* piNumSu
 
 int GameEngine::GetSuperClassKeys(int** ppiKey, int* piNumSuperClasses) {
 
-    int iErrCode = t_pConn->GetViews()->GetAllKeys (
+    int iErrCode = t_pConn->GetCache()->GetAllKeys (
         SYSTEM_SUPERCLASS_DATA, 
         (unsigned int**) ppiKey, 
         (unsigned int*) piNumSuperClasses
@@ -151,7 +151,7 @@ int GameEngine::GetSuperClassKeys(int** ppiKey, int* piNumSuperClasses) {
 
 int GameEngine::GetSuperClassName (int iKey, Variant* pvName) {
 
-    return t_pConn->GetViews()->ReadData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
+    return t_pConn->GetCache()->ReadData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
 }
 
 int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {

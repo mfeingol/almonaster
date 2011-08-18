@@ -17,8 +17,8 @@
 ////////////
 
 SQL_DATABASE_EXPORT extern const Uuid CLSID_SqlDatabase;
-SQL_DATABASE_EXPORT extern const Uuid IID_IReadTableView;
-SQL_DATABASE_EXPORT extern const Uuid IID_ITableViewCollection;
+SQL_DATABASE_EXPORT extern const Uuid IID_ICachedTableCollection;
+SQL_DATABASE_EXPORT extern const Uuid IID_ICachedReadTable;
 SQL_DATABASE_EXPORT extern const Uuid IID_IReadTable;
 SQL_DATABASE_EXPORT extern const Uuid IID_IWriteTable;
 SQL_DATABASE_EXPORT extern const Uuid IID_IDatabase;
@@ -73,6 +73,20 @@ struct SearchDefinition {
     unsigned int iMaxNumHits;
     unsigned int iNumColumns;
     SearchColumn* pscColumns;
+};
+
+struct TableCacheEntryColumn
+{
+    const char* pszColumn;
+    Variant vData;
+};
+
+struct TableCacheEntry
+{
+    const char* pszTableName;
+    unsigned int iKey;
+    unsigned int iNumColumns;
+    const TableCacheEntryColumn* pcColumns;
 };
 
 //
@@ -185,7 +199,7 @@ public:
 class IReadTable : virtual public IObject {
 public:
 
-    virtual unsigned int GetNumRows(unsigned int* piNumRows) = 0;
+    virtual int GetNumRows(unsigned int* piNumRows) = 0;
 
     virtual int DoesRowExist(unsigned int iKey, bool* pbExists) = 0;
 
@@ -221,8 +235,7 @@ public:
     virtual int ReadColumn(const char* pszColumn, int64** ppi64Data, unsigned int* piNumRows) = 0;
     virtual int ReadColumn(const char* pszColumn, Variant** ppvData, unsigned int* piNumRows) = 0;
 
-    virtual int ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, 
-        Variant*** pppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
 
     virtual int ReadRow(unsigned int iKey, void*** ppData) = 0;
     virtual int ReadRow(unsigned int iKey, Variant** ppvData) = 0;
@@ -281,13 +294,23 @@ public:
     virtual int DeleteAllRows() = 0;
 };
 
-class IReadTableView : virtual public IObject
+class ICachedReadTable : virtual public IObject
 {
 public:
-    virtual int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetNumCachedRows(unsigned int* piNumRows) = 0;
 
-    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows) = 0;
+    virtual int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    //virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+
+    virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
+    
+    virtual int ReadColumnWhereEqual(const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
+                                     unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
+
     virtual int ReadRow(unsigned int iKey, Variant** ppvData) = 0;
+
+    virtual int ReadData(const char* pszColumn, Variant* pvData) = 0;
 
     virtual int ReadData(unsigned int iKey, const char* pszColumn, int* piData) = 0;
     /*virtual int ReadData(unsigned int iKey, const char* pszColumn, float* pfData) = 0;*/
@@ -295,27 +318,34 @@ public:
     virtual int ReadData(unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;
 };
 
-class ITableViewCollection : virtual public IObject
+class ICachedTableCollection : virtual public IObject
 {
 public:
 
-    virtual int CreateViews(const char** ppszTableName, const char** ppszViewName, const unsigned int* ppiKey, unsigned int iNumTables) = 0;
+    virtual int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries) = 0;
+    virtual int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, unsigned int* piKey) = 0;
 
-    virtual int GetTableForReading(const char* pszViewName, IReadTableView** ppTable) = 0;
+    virtual int GetTableForReading(const char* pszCacheTableName, ICachedReadTable** ppTable) = 0;
 
-    virtual int GetAllKeys(const char* pszViewName, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetNumCachedRows(const char* pszCacheTableName, unsigned int* piNumRows) = 0;
 
-    virtual int ReadRow(const char* pszViewName, unsigned int iKey, Variant** ppvData) = 0;
+    virtual int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
 
-    virtual int ReadData(const char* pszViewName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  
-    virtual int ReadData(const char* pszViewName, const char* pszColumn, Variant* pvData) = 0;
+    virtual int ReadColumn(const char* pszCacheTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
+
+    virtual int ReadColumns(const char* pszCacheTableName, unsigned int iNumColumns, const char* const* ppszColumn,
+                            unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
+    virtual int ReadRow(const char* pszCacheTableName, unsigned int iKey, Variant** ppvData) = 0;
+
+    virtual int ReadData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  
+    virtual int ReadData(const char* pszCacheTableName, const char* pszColumn, Variant* pvData) = 0;
 };
 
 class IDatabaseConnection : virtual public IObject
 {
 public:
 
-    virtual ITableViewCollection* GetViews() = 0;
+    virtual ICachedTableCollection* GetCache() = 0;
 
     virtual bool DoesTableExist(const char* pszTableName) = 0;
 
@@ -348,7 +378,7 @@ public:
 
     virtual int WriteColumn(const char* pszTableName, const char* pszColumn, const Variant& vData) = 0;
 
-    virtual unsigned int GetNumRows(const char* pszTableName, unsigned int* piNumRows) = 0;
+    virtual int GetNumRows(const char* pszTableName, unsigned int* piNumRows) = 0;
     virtual int DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists) = 0;
 
     virtual int InsertRow(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey) = 0;

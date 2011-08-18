@@ -6,7 +6,7 @@
 #using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;
 
-#include "TableViewCollection.h"
+#include "TableCacheCollection.h"
 
 const gcroot<System::String^> TemplateTableName = gcnew System::String("_Templates");
 const gcroot<System::String^> TemplateColumnsTableName = gcnew System::String("_TemplateColumns");
@@ -18,7 +18,7 @@ private:
     gcroot<SqlDatabase^> m_sqlDatabase;
     gcroot<SqlCommandManager^> m_cmd;
 
-    TableViewCollection m_viewCollection;
+    TableCacheCollection m_viewCollection;
 
 public:
     SqlDatabaseConnection(SqlDatabase^ sqlDatabase);
@@ -28,7 +28,7 @@ public:
     IMPLEMENT_INTERFACE(IDatabaseConnection);
     
     // View operations
-    ITableViewCollection* GetViews();
+    ICachedTableCollection* GetCache();
 
     // Table operations
     bool DoesTableExist(const char* pszTableName);
@@ -62,7 +62,7 @@ public:
     int WriteColumn(const char* pszTableName, const char* pszColumn, const Variant& vData);
 
     // Row operations
-    unsigned int GetNumRows(const char* pszTableName, unsigned int* piNumRows);
+    int GetNumRows(const char* pszTableName, unsigned int* piNumRows);
     int DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists);
 
     int InsertRow(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey);

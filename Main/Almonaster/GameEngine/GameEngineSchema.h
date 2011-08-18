@@ -588,7 +588,7 @@ namespace SystemData {
 
 #define SYSTEM_EMPIRE_DATA "SystemEmpireData"
 
-#define SYSTEM_EMPIRE_DATA_EMPIRE(pszBuffer, i)       \
+#define GET_SYSTEM_EMPIRE_DATA(pszBuffer, i)       \
     char pszBuffer [sizeof("SystemEmpireData") + 32]; \
     sprintf (pszBuffer, "SystemEmpireData%i", i);
 
@@ -1895,42 +1895,48 @@ namespace SystemLatestGames {
     };
 };
 
-////////////////////////////////
-// SystemEmpireActiveGames(I) //
-////////////////////////////////
+/////////////////////////////
+// SystemEmpireActiveGames //
+/////////////////////////////
 
-#define SYSTEM_EMPIRE_ACTIVE_GAMES(pszBuffer, i)                \
-                                                                \
-    char pszBuffer [sizeof ("SystemEmpireActiveGames") + 32];   \
-    sprintf (pszBuffer, "SystemEmpireActiveGames%i", i);
+#define SYSTEM_EMPIRE_ACTIVE_GAMES "SystemEmpireActiveGames"
 
-#define GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszBuffer, i)            \
-                                                                \
-    sprintf (pszBuffer, "SystemEmpireActiveGames%i", i);
+#define GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszBuffer, i)       \
+    char pszBuffer [sizeof("SystemEmpireActiveGames_EmpireKey_") + 32]; \
+    sprintf (pszBuffer, "SystemEmpireActiveGames_EmpireKey_%i", i);
 
-namespace SystemEmpireActiveGames {
-
+namespace SystemEmpireActiveGames
+{
+    static const char* const EmpireKey = "EmpireKey";
     static const char* const GameClassGameNumber = "GameClassGameNumber";
 
-    /*enum Columns {
-        GameClassGameNumber
-    };*/
+    enum Columns
+    {
+        iEmpireKey,
+        iGameClassGameNumber
+    };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
+        EmpireKey,
         GameClassGameNumber
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
+        V_INT,
         V_STRING
     };
 
     static const unsigned int Sizes[] = {
+        0,
         VARIABLE_LENGTH_STRING
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemEmpireActiveGames",
         NumColumns,
         (char**)ColumnNames,
@@ -2665,21 +2671,26 @@ namespace GameSecurity {
 namespace GameEmpires {
 
     static const char* const EmpireKey = "EmpireKey";
+    static const char* const EmpireName = "EmpireName";
 
-    /*enum Columns {
-        EmpireKey
-    };*/
+    enum Columns {
+        iEmpireKey,
+        iEmpireName,
+    };
 
     static const char* const ColumnNames[] = {
-        EmpireKey
+        EmpireKey,
+        EmpireName,
     };
     
     static const VariantType Types[] = {
-        V_INT
+        V_INT,
+        V_STRING,
     };
 
     static const unsigned int Sizes[] = {
-        0
+        0,
+        MAX_EMPIRE_NAME_LENGTH,
     };
     
     static const char* IndexColumns[] = {

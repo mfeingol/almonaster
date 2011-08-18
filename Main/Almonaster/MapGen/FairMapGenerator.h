@@ -23,10 +23,9 @@
 class FairMapGenerator : public IMapGenerator {
 private:
 
-    IGameEngine* m_pGameEngine;
-
     IMapGenerator* m_pInner;
     GameFairnessOption m_gfoFairness;
+    GameEngine m_gameEngine;
 
     int m_iStdDevPercentageOfMean;
 
@@ -45,7 +44,7 @@ private:
 
 public:
 
-    FairMapGenerator(GameEngine* pGameEngine, IMapGenerator* pInner, GameFairnessOption gfoFairness);
+    FairMapGenerator(IMapGenerator* pInner, GameFairnessOption gfoFairness);
 
     virtual int CreatePlanets (
         

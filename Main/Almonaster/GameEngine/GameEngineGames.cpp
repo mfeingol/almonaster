@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -419,7 +419,7 @@ int GameEngine::CleanupGame (int iGameClass, int iGameNumber, GameResult grResul
     // GameIndependentShips(I.I)
     Variant vGameOptions, vGameClassOptions;
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
     if (iErrCode == OK) {
         
         if (vGameClassOptions.GetInteger() & INDEPENDENCE) {
@@ -431,7 +431,7 @@ int GameEngine::CleanupGame (int iGameClass, int iGameNumber, GameResult grResul
         }
     }
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vTournamentKey);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vTournamentKey);
     if (iErrCode != OK) {
         Assert (false);
         vTournamentKey = NO_KEY;
@@ -577,9 +577,9 @@ int GameEngine::GetGameState (int iGameClass, int iGameNumber, int* piGameState)
 //
 // Return the current number of active (open + closed) games on the server
 
-int GameEngine::GetNumActiveGames (int* piNumGames) {
-
-    return t_pConn->GetNumRows (SYSTEM_ACTIVE_GAMES, (unsigned int*) piNumGames);
+int GameEngine::GetNumActiveGames(unsigned int* piNumGames)
+{
+    return t_pConn->GetCache()->GetNumCachedRows(SYSTEM_ACTIVE_GAMES, piNumGames);
 }
 
 
@@ -588,20 +588,12 @@ int GameEngine::GetNumActiveGames (int* piNumGames) {
 //
 // Return the current number of open games on the server
 
-int GameEngine::GetNumOpenGames (int* piNumGames) {
-
-    int iErrCode = t_pConn->GetEqualKeys (
-        SYSTEM_ACTIVE_GAMES, 
-        SystemActiveGames::State, 
-        STILL_OPEN, 
-        NULL,
-        (unsigned int*) piNumGames
-        );
-
+int GameEngine::GetNumOpenGames(unsigned int* piNumGames)
+{
+    int iErrCode = t_pConn->GetEqualKeys(SYSTEM_ACTIVE_GAMES, SystemActiveGames::State, STILL_OPEN, NULL, piNumGames);
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
-
     return iErrCode;
 }
 
@@ -611,7 +603,7 @@ int GameEngine::GetNumOpenGames (int* piNumGames) {
 //
 // Return the current number of closed games on the server
 
-int GameEngine::GetNumClosedGames (int* piNumGames) {
+int GameEngine::GetNumClosedGames(unsigned int* piNumGames) {
 
     int iErrCode = t_pConn->GetEqualKeys (
         SYSTEM_ACTIVE_GAMES, 
@@ -636,7 +628,7 @@ int GameEngine::GetNumClosedGames (int* piNumGames) {
 //
 // Return the keys of the server's active games
 
-int GameEngine::GetActiveGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames) {
+int GameEngine::GetActiveGames (int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames) {
 
     unsigned int i, iNumGames;
     Variant* pvGames;
@@ -662,12 +654,12 @@ int GameEngine::GetActiveGames (int** ppiGameClass, int** ppiGameNumber, int* pi
         return iErrCode;
     }
 
-    *piNumGames = (int) iNumGames;
+    *piNumGames = iNumGames;
 
     if (iNumGames > 0) {
 
-        *ppiGameClass = new int [*piNumGames];
-        *ppiGameNumber = new int [*piNumGames];
+        *ppiGameClass = new int[*piNumGames];
+        *ppiGameNumber = new int[*piNumGames];
 
         for (i = 0; i < iNumGames; i ++) {
 
@@ -691,78 +683,61 @@ int GameEngine::GetActiveGames (int** ppiGameClass, int** ppiGameNumber, int* pi
 //
 // Return the keys of the server's open games
 
-int GameEngine::GetOpenGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames) {
+int GameEngine::GetOpenGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames) {
 
-    return GetGames (true, ppiGameClass, ppiGameNumber, piNumGames);
+    return GetGames(true, ppiGameClass, ppiGameNumber, piNumGames);
 }
 
-int GameEngine::GetClosedGames (int** ppiGameClass, int** ppiGameNumber, int* piNumGames) {
+int GameEngine::GetClosedGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames) {
 
-    return GetGames (false, ppiGameClass, ppiGameNumber, piNumGames);
+    return GetGames(false, ppiGameClass, ppiGameNumber, piNumGames);
 }
 
-int GameEngine::GetGames (bool bOpen, int** ppiGameClass, int** ppiGameNumber, int* piNumGames) {
+int GameEngine::GetGames(bool bOpen, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames) {
 
-    unsigned int* piKey, iNumKeys, i;
     int iErrCode;
-    IReadTable* pGames;
 
     *piNumGames = 0;
     *ppiGameClass = NULL;
     *ppiGameNumber = NULL;
 
-    iErrCode = t_pConn->GetTableForReading(SYSTEM_ACTIVE_GAMES, &pGames);
-    if (iErrCode != OK) {
-        Assert (false);
+    ICachedReadTable* pGames;
+    iErrCode = t_pConn->GetCache()->GetTableForReading(SYSTEM_ACTIVE_GAMES, &pGames);
+    if (iErrCode != OK)
+    {
         return iErrCode;
     }
 
-    iErrCode = pGames->GetEqualKeys (
-        SystemActiveGames::State,
-        bOpen ? STILL_OPEN : 0,
-        &piKey,
-        &iNumKeys
-        );
+    Variant* pvData = NULL;
+    unsigned int iNumGames;
 
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+    iErrCode = pGames->ReadColumnWhereEqual(SystemActiveGames::State, bOpen ? STILL_OPEN : 0, SystemActiveGames::GameClassGameNumber, NULL, &pvData, &iNumGames);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
         iErrCode = OK;
     }
+    else if (iErrCode == OK)
+    {
+        *ppiGameClass = new int[iNumGames];
+        Assert(*ppiGameClass);
 
-    else if (iErrCode == OK) {
-
-        *ppiGameClass = new int [iNumKeys];
-        if (*ppiGameClass == NULL) {
-            iErrCode = ERROR_OUT_OF_MEMORY;
-            goto Cleanup;
-        }
-
-        *ppiGameNumber = new int [iNumKeys];
-        if (*ppiGameNumber == NULL) {
-            delete [] (*ppiGameClass);
-            *ppiGameClass = NULL;
-            iErrCode = ERROR_OUT_OF_MEMORY;
-            goto Cleanup;
-        }
+        *ppiGameNumber = new int[iNumGames];
+        Assert(*ppiGameNumber);
         
-        for (i = 0; i < iNumKeys; i ++)
+        *piNumGames = iNumGames;
+
+        for (unsigned int i = 0; i < iNumGames; i ++)
         {
-            Variant vGame;
-            iErrCode = pGames->ReadData (piKey[i], SystemActiveGames::GameClassGameNumber, &vGame);
-            if (iErrCode == OK)
-            {
-                GetGameClassGameNumber(vGame.GetCharPtr(), (*ppiGameClass) + *piNumGames, (*ppiGameNumber) + *piNumGames);
-                (*piNumGames) ++;
-            }
+            GetGameClassGameNumber(pvData[i].GetCharPtr(), (*ppiGameClass) + i, (*ppiGameNumber) + i);
         }
     }
 
-Cleanup:
-
-    SafeRelease (pGames);
-
-    if (piKey != NULL) {
-        t_pConn->FreeKeys(piKey);
+    if (pvData != NULL)
+    {
+        t_pConn->FreeData(pvData);
     }
+
+    SafeRelease(pGames);
 
     return iErrCode;
 }
@@ -915,7 +890,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     Assert (iEmpireCreator != TOURNAMENT || (piEmpireKey != NULL && iNumEmpires > 0));
 
     // Make sure new game creation is enabled
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1671,8 +1646,6 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     GAME_DATA (strGameData, iGameClass, iGameNumber);
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
 
-    SYSTEM_EMPIRE_ACTIVE_GAMES (strEmpireActiveGames, iEmpireKey);
-
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GAME_DEAD_EMPIRES (strGameDeadEmpires, iGameClass, iGameNumber);
     GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
@@ -2044,18 +2017,18 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     }
     
     // We're adding an empire!
-    iErrCode = t_pConn->WriteOr (strGameData, GameData::State, GAME_ADDING_EMPIRE);
+    iErrCode = t_pConn->WriteOr(strGameData, GameData::State, GAME_ADDING_EMPIRE);
     if (iErrCode != OK) {
-        Assert (false);
         goto OnError;
     }
 
     // Insert row into GameEmpires(I.I) table
-    vTemp = iEmpireKey;
-    iErrCode = t_pConn->InsertRow (strGameEmpires, GameEmpires::Template, &vTemp, NULL);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto OnError;
+    {
+        Variant pvGameEmpire[GameEmpires::NumColumns] = { iEmpireKey, vEmpireName };
+        iErrCode = t_pConn->InsertRow(strGameEmpires, GameEmpires::Template, pvGameEmpire, NULL);
+        if (iErrCode != OK) {
+            goto OnError;
+        }
     }
 
     iCurrentNumEmpires ++;
@@ -2134,29 +2107,18 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         }
     }
 
-    // Insert row into "SystemEmpireActiveGames(I)" table   
-    char pszData [MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
-    GetGameClassGameNumber (iGameClass, iGameNumber, pszData);
-    vTemp = pszData;
+    // Insert row into SystemEmpireActiveGames table
+    {
+        char pszData [MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
+        GetGameClassGameNumber (iGameClass, iGameNumber, pszData);
 
-    if (vTemp.GetCharPtr() == NULL) {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto OnError;
-    }
-
-    if (!t_pConn->DoesTableExist (strEmpireActiveGames)) {
-
-        iErrCode = t_pConn->CreateTable (strEmpireActiveGames, SystemEmpireActiveGames::Template);
+        Variant pvEmpireActiveGames[SystemEmpireActiveGames::NumColumns] = { iEmpireKey, pszData };
+        Assert(pvEmpireActiveGames[SystemEmpireActiveGames::iGameClassGameNumber].GetCharPtr());
+        iErrCode = t_pConn->InsertRow(SYSTEM_EMPIRE_ACTIVE_GAMES, SystemEmpireActiveGames::Template, pvEmpireActiveGames, NULL);
         if (iErrCode != OK) {
             Assert (false);
             goto OnError;
         }
-    }
-
-    iErrCode = t_pConn->InsertRow (strEmpireActiveGames, SystemEmpireActiveGames::Template, &vTemp, NULL);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto OnError;
     }
 
     ////////////////////////////
@@ -3056,11 +3018,10 @@ int GameEngine::GetFirstUpdateDelay (int iGameClass, int iGameNumber, Seconds* p
 //
 // Return the number of empires still remaining a given game
 
-int GameEngine::GetNumEmpiresInGame (int iGameClass, int iGameNumber, int* piNumEmpires) {
-    
+int GameEngine::GetNumEmpiresInGame (int iGameClass, int iGameNumber, unsigned int* piNumEmpires)
+{
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
-
-    return t_pConn->GetNumRows (strGameEmpires, (unsigned int*) piNumEmpires);
+    return t_pConn->GetNumRows (strGameEmpires, piNumEmpires);
 }
 
 
@@ -3139,17 +3100,11 @@ int GameEngine::GetNumUpdatedEmpires (int iGameClass, int iGameNumber, int* piUp
 //
 // Return the names of the active empires who are in the given game                             
 
-int GameEngine::GetEmpiresInGame (int iGameClass, int iGameNumber, Variant** ppvEmpireKey, int* piNumEmpires) {
-
+int GameEngine::GetEmpiresInGame(int iGameClass, int iGameNumber, Variant** ppvEmpireKey, unsigned int* piNumEmpires)
+{
     GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
-
-    int iErrCode = t_pConn->ReadColumn (
-        pszEmpires, 
-        GameEmpires::EmpireKey, 
-        ppvEmpireKey, 
-        (unsigned int*) piNumEmpires
-        );
-
+    
+    int iErrCode = t_pConn->ReadColumn(pszEmpires, GameEmpires::EmpireKey, ppvEmpireKey, piNumEmpires);
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
@@ -3157,6 +3112,23 @@ int GameEngine::GetEmpiresInGame (int iGameClass, int iGameNumber, Variant** ppv
     return iErrCode;
 }
 
+int GameEngine::GetEmpiresInGame(int iGameClass, int iGameNumber, Variant*** pppvEmpiresInGame, unsigned int* piNumEmpires)
+{
+    GAME_EMPIRES(pszEmpires, iGameClass, iGameNumber);
+
+    const char* ppszColumns[] =
+    {
+        GameEmpires::EmpireKey, 
+        GameEmpires::EmpireName
+    };
+
+    int iErrCode = t_pConn->ReadColumns(pszEmpires, countof(ppszColumns), ppszColumns, pppvEmpiresInGame, piNumEmpires);
+    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+        iErrCode = OK;
+    }
+
+    return iErrCode;
+}
 
 // Input:
 // iGameClass -> GameClass
@@ -3600,7 +3572,7 @@ int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTim
     }
 
     // Get update period
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -3683,7 +3655,7 @@ int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTim
     Seconds sAfterWeekendDelay = 0;
     if (!bWeekends) {
 
-        iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
+        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -3768,7 +3740,7 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
 
     // Get update period
     Seconds sUpdatePeriod = 0;
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -4155,13 +4127,12 @@ Cleanup:
     return iErrCode;
 }
 
-int GameEngine::GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int** ppiEmpireKey, 
-                                          int* piNumResigned) {
+int GameEngine::GetResignedEmpiresInGame (int iGameClass, int iGameNumber, unsigned int** ppiEmpireKey, unsigned int* piNumResigned) {
 
-    int iErrCode, * piEmpireKey = NULL, iNumResigned = 0;
+    int iErrCode;
     bool bResigned;
 
-    unsigned int i, iNumEmpires;
+    unsigned int i, iNumEmpires, * piEmpireKey = NULL, iNumResigned = 0;
     Variant* pvEmpireKey = NULL;
 
     *ppiEmpireKey = NULL;
@@ -4197,7 +4168,7 @@ int GameEngine::GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int**
     }
 
     // Output
-    piEmpireKey = new int [iNumEmpires];
+    piEmpireKey = new unsigned int [iNumEmpires];
     if (piEmpireKey == NULL) {
         iErrCode = ERROR_OUT_OF_MEMORY;
         goto Cleanup;
@@ -4215,7 +4186,7 @@ int GameEngine::GetResignedEmpiresInGame (int iGameClass, int iGameNumber, int**
         }
     }
 
-    Assert (iNumResigned == vResigned.GetInteger());
+    Assert ((int)iNumResigned == vResigned.GetInteger());
 
     *ppiEmpireKey = piEmpireKey;
     *piNumResigned = iNumResigned;
@@ -4419,7 +4390,7 @@ int GameEngine::AddToLatestGames(const char* pszTable, const TemplateDescription
     Variant vGames;
 
     // Read limit
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::NumGamesInLatestGameList, &vGames);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::NumGamesInLatestGameList, &vGames);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
