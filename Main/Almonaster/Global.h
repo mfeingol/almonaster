@@ -27,9 +27,6 @@
 #include "AsyncManager.h"
 #include "GameEngineConstants.h"
 
-extern __declspec(thread) IDatabaseConnection* t_pConn;
-
-
 class Global
 {
 private:

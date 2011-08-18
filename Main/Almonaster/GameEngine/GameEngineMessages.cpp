@@ -354,7 +354,7 @@ int GameEngine::GetUnreadSystemMessages (int iEmpireKey, Variant*** pppvMessage,
     *ppiMessageKey = NULL;
     *piNumMessages = 0;
 
-    iErrCode = t_pConn->GetCache()->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
+    iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
     if (iErrCode != OK)
     {
         Assert (false);
@@ -578,7 +578,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     // Make sure private messages are allowed
     if (!(iFlags & (MESSAGE_BROADCAST | MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR))) {
 
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return ERROR_EMPIRE_DOES_NOT_EXIST;

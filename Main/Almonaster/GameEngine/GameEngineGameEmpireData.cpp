@@ -428,13 +428,13 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
             }
 
             // Get ship behavior
-            iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
+            iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
             Assert (iErrCode == OK);
             
-            iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedDepositFactor, &vColonyMultipliedDepositFactor);
+            iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedDepositFactor, &vColonyMultipliedDepositFactor);
             Assert (iErrCode == OK);
             
-            iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ColonyExponentialDepositFactor, &vColonyExponentialDepositFactor);
+            iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ColonyExponentialDepositFactor, &vColonyExponentialDepositFactor);
             Assert (iErrCode == OK);
 
             GAME_INDEPENDENT_SHIPS (strIndependentShips, iGameClass, iGameNumber);
@@ -2448,7 +2448,7 @@ void GameEngine::CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     int iTotalMaxPop = 0;
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -278,14 +277,14 @@ EndPartialMaps:
             sscanf (pszStart, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2) {
 
             iMapSubPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
         
         // View minimaps
         if (bMapGenerated && WasButtonPressed (BID_VIEWMINIMAP)) {
             iMapSubPage = 2;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }           
 
@@ -389,7 +388,7 @@ EndPartialMaps:
 
                 //iClickedPlanetKey = iUpdatePlanetKey;
                 //iMapSubPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -397,7 +396,7 @@ EndPartialMaps:
 
                 //iClickedPlanetKey = iUpdatePlanetKey;
                 //iMapSubPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -407,7 +406,7 @@ EndPartialMaps:
                 sscanf (pszStart, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2) {
 
                 //iMapSubPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
         }
@@ -421,7 +420,7 @@ EndPartialMaps:
         if (WasButtonPressed (BID_VIEWMAP)) {
             iMapSubPage = 0;
             bForceFullMap = true;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
     
@@ -431,7 +430,7 @@ EndPartialMaps:
             sscanf (pszStart, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2) {
 
             iMapSubPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
         break;
@@ -442,7 +441,7 @@ EndPartialMaps:
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))
@@ -634,7 +633,7 @@ case 1:
             goto RenderWholeMap;
         }
 
-        iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
         if (iErrCode != OK) {
             AddMessage ("Database error "); AppendMessage (iErrCode);
             goto RenderWholeMap;

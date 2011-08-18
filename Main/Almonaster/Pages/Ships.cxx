@@ -1,7 +1,5 @@
-<% #include "Osal/Algorithm.h"
-#include "Almonaster.h"
-#include "GameEngine.h"
-#include "SqlDatabase.h"
+<%
+#include "Osal/Algorithm.h"
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -50,11 +48,11 @@ if (m_bOwnPost && !m_bRedirection) {
     // Handle cancel all builds
     if (WasButtonPressed (BID_CANCELALLBUILDS)) {
         GameCheck (CancelAllBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey));
-        bRedirectTest = false;
+        m_bRedirectTest = false;
     }
 }
 
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))

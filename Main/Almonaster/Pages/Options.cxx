@@ -1,8 +1,5 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
-
 #include "Osal/Algorithm.h"
 
 // Almonaster
@@ -36,8 +33,8 @@ if (InitializeGame(&pageRedirect) != OK)
 IHttpForm* pHttpForm;
 
 // Handle a submission
-int iErrCode, iOptionPage = 0, iGameClassOptions, iNumEmpires, iDiplomacy;
-unsigned int i;
+int iErrCode, iOptionPage = 0, iGameClassOptions, iDiplomacy;
+unsigned int i, iNumEmpires;
 
 Variant vTemp;
 
@@ -61,7 +58,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         // Make sure cancel wasn't pressed
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         } else {
 
             bool bFlag, bUpdate;
@@ -776,14 +773,14 @@ if (m_bOwnPost && !m_bRedirection) {
             // Check for ViewMessages button press
             if (WasButtonPressed (BID_VIEWMESSAGES)) {
                 iOptionPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
             // Check for search for empires with duplicate IP's
             if (WasButtonPressed (BID_SEARCHIPADDRESSES)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 SearchForDuplicateIPAddresses (m_iGameClass, m_iGameNumber);
                 break;
             }
@@ -791,7 +788,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Check for search for empires with duplicate session ids
             if (WasButtonPressed (BID_SEARCHSESSIONIDS)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 SearchForDuplicateSessionIds (m_iGameClass, m_iGameNumber);
                 break;
             }
@@ -842,7 +839,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (WasButtonPressed (BID_ALL)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 for (i = 0; i < iNumTestMessages; i ++) {
 
@@ -864,7 +861,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 // Check for delete selection
                 if (WasButtonPressed (BID_SELECTION)) {
 
-                    bRedirectTest = false;
+                    m_bRedirectTest = false;
 
                     for (i = 0; i < iNumTestMessages; i ++) {
 
@@ -892,7 +889,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     if (WasButtonPressed (BID_SYSTEM)) {
 
                         Variant vFlags;
-                        bRedirectTest = false;
+                        m_bRedirectTest = false;
 
                         for (i = 0; i < iNumTestMessages; i ++) {
 
@@ -931,7 +928,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         if (WasButtonPressed (BID_EMPIRE)) {
 
                             Variant vSource;
-                            bRedirectTest = false;
+                            m_bRedirectTest = false;
 
                             // Get target empire
                             if ((pHttpForm = m_pHttpRequest->GetForm ("SelectedEmpire")) == NULL) {
@@ -1001,7 +998,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))

@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -37,7 +36,7 @@ if (m_bOwnPost && !m_bRedirection) {
     const char* pszStart;
 
     if (WasButtonPressed (BID_CANCEL)) {
-        bRedirectTest = false;
+        m_bRedirectTest = false;
         goto Redirection;
     }
 
@@ -55,7 +54,7 @@ if (m_bOwnPost && !m_bRedirection) {
             (pszStart = pHttpForm->GetName()) != NULL &&
             sscanf (pszStart, "ViewTourneyInfo%d", &iTournamentKey) == 1) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTournamentPage = 1;
             goto Redirection;
         }
@@ -97,7 +96,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iTournamentPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         if (WasButtonPressed (BID_QUIT)) {
@@ -132,7 +131,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iTournamentPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         break;
@@ -143,7 +142,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

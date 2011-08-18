@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -69,7 +67,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iErrCode = GetButtonName (pszForm, m_iButtonKey, &strButtonName);
             if (iErrCode == OK && m_pHttpRequest->GetForm (strButtonName) != NULL) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if (DeleteTheme (iThemeKey) == OK) {
                     AddMessage ("The theme was deleted");
@@ -563,7 +561,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -25,7 +23,7 @@ if (InitializeEmpire(false) != OK)
     return Redirect(LOGIN);
 }
 
-bRedirectTest = false;  // No warning
+m_bRedirectTest = false;  // No warning
 Render_TournamentManager(m_iEmpireKey);
 
 %>

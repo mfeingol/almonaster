@@ -177,7 +177,7 @@ int GameEngine::GetDefaultEmpireShipName (int iEmpireKey, int iTechKey, Variant*
     }
 
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
-    return t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[iTechKey], pvDefaultShipName);
+    return t_pCache->ReadData(strEmpires, iEmpireKey, SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN[iTechKey], pvDefaultShipName);
 }
 
 

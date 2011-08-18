@@ -85,7 +85,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     *pfHypAgRatio = ratInfo.fNextAgRatio;
     *pfNextTechIncrease = ratInfo.fNextTechDev;
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }

@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -36,7 +34,7 @@ char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 if (m_bOwnPost && !m_bRedirection) {
 
     if (WasButtonPressed (BID_CANCEL)) {
-        bRedirectTest = false;
+        m_bRedirectTest = false;
     } else {
 
         int iPersonalGameClassesPageSubmit;
@@ -59,7 +57,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 (pHttpForm = m_pHttpRequest->GetForm ("DelGC")) != NULL) {
 
                 iGameClassKey = pHttpForm->GetIntValue();
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if (m_iSystemOptions & CONFIRM_IMPORTANT_CHOICES) {
                     iPersonalGameClassesPage = 3;
@@ -136,7 +134,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 goto Redirection;
             }
 
@@ -168,7 +166,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 goto Redirection;
             }
 
@@ -212,7 +210,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 goto Redirection;
             }
 
@@ -221,7 +219,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 (pszStart = pHttpForm->GetName()) != NULL &&
                 sscanf (pszStart, "Start%d", &iGameClassKey) == 1) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 // Check for advanced
                 char pszAdvanced [64];
@@ -257,7 +255,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Handle new gameclass creation
             if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES && WasButtonPressed (BID_CREATENEWGAMECLASS)) {
                 iPersonalGameClassesPage = 2;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 goto Redirection;
             }
 
@@ -267,7 +265,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES &&
                 WasButtonPressed (BID_CREATENEWGAMECLASS)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 if (ProcessCreateGameClassForms (m_iEmpireKey, NO_KEY) != OK) {
                     iPersonalGameClassesPage = 2;
                 }
@@ -317,7 +315,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Check for choose
             if (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassKey")) == NULL) {
                     iPersonalGameClassesPage = 0;
@@ -356,7 +354,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

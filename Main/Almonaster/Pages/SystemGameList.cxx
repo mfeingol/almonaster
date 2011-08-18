@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -52,7 +50,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMES && WasButtonPressed (BID_STARTCUSTOMGAME)) {
             iSystemGameListPage = 2;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             break;
         }
 
@@ -60,7 +58,7 @@ if (m_bOwnPost && !m_bRedirection) {
             (pszStart = pHttpForm->GetName()) != NULL &&
             sscanf (pszStart, "Start%d", &iGameClassKey) == 1) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             // Check for advanced option
             char pszAdvanced [128];
@@ -87,7 +85,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Check for choose
         if (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassKey")) == NULL) {
                 iSystemGameListPage = 0;
@@ -165,7 +163,7 @@ if (m_bOwnPost && !m_bRedirection) {
 } 
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

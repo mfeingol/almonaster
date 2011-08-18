@@ -1,7 +1,5 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
-
 #include "Osal/Algorithm.h"
 
 // Almonaster
@@ -50,7 +48,7 @@ if (m_bOwnPost && !m_bRedirection) {
     if (WasButtonPressed (BID_CANCEL)) {
 
         if (iProfileEditorPageSubmit == 7) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iProfileEditorPage = 3;
         }
 
@@ -1278,7 +1276,7 @@ Quote:
 
             // Handle alien selection request
             if (WasButtonPressed (BID_CHOOSEICON)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("IconSelect")) == NULL) {
                     goto Redirection;
@@ -1291,7 +1289,7 @@ Quote:
 
             // Handle alien selection request
             if (WasButtonPressed (BID_VIEWMESSAGES)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileEditorPage = 2;
                 break;
             }
@@ -1299,7 +1297,7 @@ Quote:
             // Handle theme selection
             if (WasButtonPressed (BID_CHOOSETHEME)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 if ((pHttpForm = m_pHttpRequest->GetForm ("GraphicalTheme")) == NULL) {
                     goto Redirection;
                 }
@@ -1368,7 +1366,7 @@ Quote:
                 }
 
                 else {
-                    bRedirectTest = false;
+                    m_bRedirectTest = false;
                     iProfileEditorPage = 5;
                     break;
                 }
@@ -1416,7 +1414,7 @@ Quote:
                 if (m_iEmpireKey == global.GetGuestKey()) {
                     AddMessage (GUEST_NAME "'s statistics cannot be blanked");
                 } else {
-                    bRedirectTest = false;
+                    m_bRedirectTest = false;
                     iProfileEditorPage = 6;
                 }
                 break;
@@ -1425,7 +1423,7 @@ Quote:
             // Handle view tournaments option
             if (WasButtonPressed (BID_VIEWTOURNAMENTINFORMATION)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileEditorPage = 9;
                 break;
             }
@@ -1433,7 +1431,7 @@ Quote:
             // Handle association creation
             if (WasButtonPressed (BID_ADD_ASSOCIATION)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileEditorPage = 10;
                 break;
             }
@@ -1461,7 +1459,7 @@ Quote:
                     break;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1518,7 +1516,7 @@ Quote:
 
             if (WasButtonPressed (BID_ALL)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 for (i = 0; i < iNumTestMessages; i ++) {
 
@@ -1540,7 +1538,7 @@ Quote:
                 // Check for delete selection
                 if (WasButtonPressed (BID_SELECTION)) {
 
-                    bRedirectTest = false;
+                    m_bRedirectTest = false;
 
                     for (i = 0; i < iNumTestMessages; i ++) {
 
@@ -1569,7 +1567,7 @@ Quote:
                     if (WasButtonPressed (BID_SYSTEM)) {
 
                         Variant vFlags;
-                        bRedirectTest = false;
+                        m_bRedirectTest = false;
 
                         for (i = 0; i < iNumTestMessages; i ++) {
 
@@ -1604,7 +1602,7 @@ Quote:
                         if (WasButtonPressed (BID_DELETEEMPIRE)) {
 
                             Variant vSource;
-                            bRedirectTest = false;
+                            m_bRedirectTest = false;
 
                             // Get target empire
                             if ((pHttpForm = m_pHttpRequest->GetForm ("SelectedEmpire")) == NULL) {
@@ -1878,7 +1876,7 @@ Quote:
                 sscanf (pszStart, "ThemeInfo%d", &iInfoThemeKey) == 1) {
 
                 iProfileEditorPage = 7;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -2091,7 +2089,7 @@ Quote:
 } 
 
 Redirection:
-if (bRedirectTest && !m_bRedirection) {
+if (m_bRedirectTest && !m_bRedirection) {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect)) {
         m_iButtonKey = iNewButtonKey;

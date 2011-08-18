@@ -32,6 +32,8 @@
 
 // Yes, not Linux-friendly. Sorry.
 __declspec(thread) IDatabaseConnection* t_pConn = NULL;
+__declspec(thread) ICachedTableCollection* t_pCache = NULL;
+
 Global global;
 
 Global::Global() 
@@ -69,11 +71,15 @@ void Global::Close()
 void Global::TlsOpenConnection()
 {
     t_pConn = m_pDatabase->CreateConnection();
-    Assert(t_pConn != NULL);
+    Assert(t_pConn);
+
+    t_pCache = t_pCache;
+    Assert(t_pCache);
 }
 
 void Global::TlsCloseConnection()
 {
+    t_pCache = NULL; // No reference held
     SafeRelease(t_pConn);
 }
 

@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -135,7 +134,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
         if (iErrCode != OK || !(iOptions & USE_SC30_SURRENDERS)) {
 
             // See if two empires are left - otherwise, we've been lied to
-            int iNumEmpires;
+            unsigned int iNumEmpires;
             iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
             if (iErrCode != OK || iNumEmpires != 2)
             {
@@ -187,7 +186,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
     }
 }
 
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))

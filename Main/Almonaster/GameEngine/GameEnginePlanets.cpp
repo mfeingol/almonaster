@@ -1201,7 +1201,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     }
 
     // Get gameclass options
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2294,7 +2294,7 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     }
     iPop = vTemp.GetInteger();
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -3218,7 +3218,7 @@ int GameEngine::GetSpectatorGameInfo (int iGameClass, int iGameNumber,
     }
 
     // Get gameclass options
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::iOptions, &vGameClassOptions);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::iOptions, &vGameClassOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

@@ -44,7 +44,7 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     if (iTargetEmpireKey != m_iEmpireKey)
     {
         const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL };
-        iErrCode = t_pConn->GetCache()->Cache(&entry, 1);
+        iErrCode = t_pCache->Cache(&entry, 1);
         if (iErrCode != OK)
         {
            goto OnError;

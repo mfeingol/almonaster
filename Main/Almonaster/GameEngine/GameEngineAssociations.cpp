@@ -28,7 +28,7 @@ int GameEngine::GetAssociations (unsigned int iEmpireKey, unsigned int** ppiEmpi
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
 
     Variant vAssoc;
-    iErrCode = t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
+    iErrCode = t_pCache->ReadData(strEmpires, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -84,7 +84,7 @@ int GameEngine::CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch,
     *pbAuth = false;
 
     Variant vAssoc;
-    iErrCode = t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
+    iErrCode = t_pCache->ReadData(strEmpires, iEmpireKey, SystemEmpireData::Associations, &vAssoc);
     if (iErrCode != OK) {
         return iErrCode;
     }

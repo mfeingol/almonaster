@@ -148,19 +148,19 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Get ship behavior
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedBuildFactor, &vColonyMultipliedBuildFactor);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedBuildFactor, &vColonyMultipliedBuildFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::ColonySimpleBuildFactor, &vColonySimpleBuildFactor);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ColonySimpleBuildFactor, &vColonySimpleBuildFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

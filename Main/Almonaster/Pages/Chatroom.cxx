@@ -1,8 +1,5 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include "CChatroom.h"
-#include "Global.h"
- 
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -46,7 +43,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     // Check for refresh
     if (WasButtonPressed (BID_REFRESHMESSAGES)) {
-        bRedirectTest = false;
+        m_bRedirectTest = false;
     } else {
 
         if (m_iPrivilege >= ADMINISTRATOR) {
@@ -78,7 +75,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             if (WasButtonPressed (BID_SPEAK)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             } else {
                 if (pszMessage == NULL) {
                     goto Redirection;
@@ -108,7 +105,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

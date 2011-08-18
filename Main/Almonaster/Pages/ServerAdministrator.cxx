@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -38,7 +37,7 @@ int i, iErrCode, iServerAdminPage = 0, iInfoThemeKey = NO_KEY;
 if (m_bOwnPost && !m_bRedirection) {
 
     if (WasButtonPressed (BID_CANCEL)) {
-        bRedirectTest = false;
+        m_bRedirectTest = false;
     } else {
 
         if ((pHttpForm = m_pHttpRequest->GetForm ("ServerAdminPage")) == NULL) {
@@ -646,14 +645,14 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Create empire?
             if (WasButtonPressed (BID_CREATEEMPIRE)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iServerAdminPage = 7;
                 break;
             }
 
             // Purge DB?
             if (WasButtonPressed (BID_PURGE)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iServerAdminPage = 5;
                 break;
             }
@@ -673,7 +672,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Shutdown Server?
             if (WasButtonPressed (BID_SHUTDOWNSERVER)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 ShutdownServer();
                 break;
             }
@@ -681,7 +680,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Restart Server?
             if (WasButtonPressed (BID_RESTARTSERVER)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 RestartServer();
                 break;
             }
@@ -689,21 +688,21 @@ if (m_bOwnPost && !m_bRedirection) {
             // Restart PageSource?
             if (WasButtonPressed (BID_RESTARTALMONASTER)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 RestartAlmonaster();
                 break;
             }
 
             // Redirect to default alien choice?
             if (m_pHttpRequest->GetFormBeginsWith ("DefaultAlien") != NULL) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iServerAdminPage = 1;
                 break;
             }
 
             // Redirect to default alien choice?
             if (m_pHttpRequest->GetFormBeginsWith ("SysMsgAlien") != NULL) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iServerAdminPage = 6;
                 break;
             }
@@ -714,7 +713,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 m_pHttpRequest->GetForm ("Planet1.0.x") != NULL ||
                 m_pHttpRequest->GetForm ("Planet2.0.x") != NULL) {
                 iServerAdminPage = 2;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -747,7 +746,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 } else {
                     AddMessage ("The default alien icon was not updated");
                 }
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -857,7 +856,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 sscanf (pszStart, "ThemeInfo%d", &iInfoThemeKey) == 1) {
 
                 iServerAdminPage = 3;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -909,7 +908,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iCriteria == 0) {
                     AddMessage ("You submitted no purging criteria");
                     iServerAdminPage = 5;
-                    bRedirectTest = false;
+                    m_bRedirectTest = false;
                 } else {
 
                     if (m_pHttpRequest->GetForm ("TestPurge") != NULL) {
@@ -962,7 +961,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 } else {
                     AddMessage ("The alien icon for system messages was not updated");
                 }
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -973,7 +972,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (WasButtonPressed (BID_CREATEEMPIRE)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 int iPrivilege;
                 unsigned int iNewEmpireKey;
@@ -1092,7 +1091,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))
@@ -1120,7 +1119,7 @@ case 0:
 
     Variant* pvServerData = NULL;
 
-    iErrCode = t_pConn->GetViews()->ReadRow(SYSTEM_DATA, NO_KEY, &pvServerData);
+    iErrCode = t_pCache->ReadRow(SYSTEM_DATA, NO_KEY, &pvServerData);
     if (iErrCode != OK) {
         goto Cancel;
     }

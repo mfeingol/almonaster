@@ -27,7 +27,9 @@ using namespace System::IO;
 using namespace System::Runtime::InteropServices;
 
 SqlDatabaseBridge::SqlDatabaseBridge()
-    : m_iOptions(0)
+    :
+    m_iOptions(0),
+    m_iNumRefs(1)
 {
 }
 

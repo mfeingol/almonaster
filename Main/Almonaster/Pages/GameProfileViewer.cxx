@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -64,7 +62,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_VIEWEMPIRESNUKEHISTORY)) {
 
             iProfilePage = 2;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             break;
         }
 
@@ -72,7 +70,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_VIEWEMPIRESGAMECLASSES)) {
 
             iProfilePage = 3;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             break;
         }
 
@@ -80,14 +78,14 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_VIEWEMPIRESTOURNAMENTS)) {
 
             iProfilePage = 5;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             break;
         }
 
         // Lookup
         if (WasButtonPressed (BID_LOOKUP)) {
             iProfilePage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             break;
         }
 
@@ -176,7 +174,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("Your message was blank");
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iProfilePage = 1;
 
             break;
@@ -206,7 +204,7 @@ if (m_bOwnPost && !m_bRedirection) {
             (pszStart = pHttpForm->GetName()) != NULL &&
             sscanf (pszStart, "Start%d", &iGameClassKey) == 1) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             int iGameNumber;
             GameOptions goOptions;
@@ -268,7 +266,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iProfilePage = 3;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         else if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("UndeleteGameClass")) != NULL && 
@@ -314,7 +312,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iProfilePage = 3;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         else if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("HaltGameClass")) != NULL && 
@@ -346,7 +344,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iProfilePage = 3;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         else if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("UnhaltGameClass")) != NULL && 
@@ -393,7 +391,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iProfilePage = 3;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         }
@@ -404,7 +402,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Check for choose
         if (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             int iGameNumber;
 
@@ -475,7 +473,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))

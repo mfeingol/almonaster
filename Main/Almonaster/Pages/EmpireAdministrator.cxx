@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -81,7 +79,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("Your message was blank");
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
             } else {
 
@@ -165,7 +163,7 @@ SearchResults:
                     iEmpireAdminPage = 3;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             if (WasButtonPressed (BID_SEARCH)) {
@@ -453,12 +451,12 @@ SearchResults:
                 }
 
                 iEmpireAdminPage = 3;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             // Lookup or Update
             if (WasButtonPressed (BID_LOOKUP) || WasButtonPressed (BID_UPDATE)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iEmpireAdminPage = 3;
                 break;
             }
@@ -466,7 +464,7 @@ SearchResults:
             // Change password
             if (WasButtonPressed (BID_CHANGEEMPIRESPASSWORD) && iTargetEmpireKey != m_iEmpireKey) {
                 iEmpireAdminPage = 2;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -490,7 +488,7 @@ SearchResults:
                     iEmpireAdminPage = 4;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -543,7 +541,7 @@ SearchResults:
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -556,12 +554,12 @@ SearchResults:
         }
 
     } else {
-        bRedirectTest = false;
+        m_bRedirectTest = false;
     }
 } 
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

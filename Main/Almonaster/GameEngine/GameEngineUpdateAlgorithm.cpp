@@ -98,7 +98,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     unsigned int* piNukedPlanetKey, ** ppiShipNukeKey = NULL, ** ppiEmpireNukeKey, * piNumNukingShips, 
         iNumNukedPlanets = 0, i, j, * piPlanetKey = NULL, iNumPlanets;
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -1019,7 +1019,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         iNumIdleUpdatesForRuin = vTemp.GetInteger();
 
         // Get ruin behavior
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::RuinFlags, &vTemp);
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::RuinFlags, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;

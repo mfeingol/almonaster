@@ -21,7 +21,7 @@
 
 int GameEngine::GetSystemProperty(const char* pszColumn, Variant* pvProperty) {
 
-    return t_pConn->GetCache()->ReadData(SYSTEM_DATA, pszColumn, pvProperty);
+    return t_pCache->ReadData(SYSTEM_DATA, pszColumn, pvProperty);
 }
 
 int GameEngine::SetSystemProperty(const char*  pszColumn, const Variant& vProperty) {
@@ -121,14 +121,14 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
 
         vLowerScore = fScore;
         pszWriteColumn = SystemData::ApprenticeScore;
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vHigherScore);
+        iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vHigherScore);
         break;
 
     case ADEPT:
 
         vHigherScore = fScore;
         pszWriteColumn = SystemData::AdeptScore;
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vLowerScore);
+        iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vLowerScore);
         break;
 
     default:
@@ -182,7 +182,7 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, pszReadColumn, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, pszReadColumn, &vTemp);
     if (iErrCode == OK) {
         *pfScore = vTemp.GetFloat();
     }
@@ -220,7 +220,7 @@ int GameEngine::GetSystemOptions (int* piOptions) {
 
     Variant vTemp;
 
-    int iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
+    int iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
     if (iErrCode == OK) {
         *piOptions = vTemp.GetInteger();
     }
@@ -344,7 +344,7 @@ int GameEngine::GetDefaultShipName (int iTech, Variant* pvShipName) {
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return t_pConn->GetCache()->ReadData(SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iTech], pvShipName);
+    return t_pCache->ReadData(SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iTech], pvShipName);
 }
 
 

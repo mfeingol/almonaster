@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -21,12 +21,60 @@
 #include "Alajar.h"
 
 #include "Almonaster.h"
-
 #include "GameEngine.h"
 #include "CChatroom.h"
 
+#include "Osal/LinkedList.h"
 #include "Osal/String.h"
 #include "Osal/Time.h"
+
+enum PageId
+{
+    MIN_PAGE_ID = 0,
+    ACTIVE_GAME_LIST = 1,
+    LOGIN = 2,
+    NEW_EMPIRE = 3,
+    OPEN_GAME_LIST = 4,
+    SYSTEM_GAME_LIST = 5,
+    PROFILE_EDITOR = 6,
+    TOP_LISTS = 7,
+    PROFILE_VIEWER = 8,
+    SERVER_ADMINISTRATOR = 9,
+    EMPIRE_ADMINISTRATOR = 10,
+    GAME_ADMINISTRATOR = 11,
+    THEME_ADMINISTRATOR = 12,
+    PERSONAL_GAME_CLASSES = 13,
+    CHATROOM = 14,
+    SYSTEM_SERVER_INFORMATION = 15,
+    SYSTEM_DOCUMENTATION = 16,
+    SYSTEM_NEWS = 17,
+    INFO = 18,
+    TECH = 19,
+    DIPLOMACY = 20,
+    MAP = 21,
+    PLANETS = 22,
+    OPTIONS = 23,
+    BUILD = 24,
+    SHIPS = 25,
+    GAME_SERVER_INFORMATION = 26,
+    GAME_DOCUMENTATION = 27,
+    GAME_NEWS = 28,
+    GAME_PROFILE_VIEWER = 29,
+    GAME_CONTRIBUTIONS = 30,
+    GAME_CREDITS = 31,
+    GAME_TERMS_OF_SERVICE = 32,
+    QUIT = 33,
+    LATEST_NUKES = 34,
+    SPECTATOR_GAMES = 35,
+    SYSTEM_CONTRIBUTIONS = 36,
+    SYSTEM_CREDITS = 37,
+    LATEST_GAMES = 38,
+    TOURNAMENT_ADMINISTRATOR = 39,
+    PERSONAL_TOURNAMENTS = 40,
+    TOURNAMENTS = 41,
+    SYSTEM_TERMS_OF_SERVICE = 42,
+    MAX_PAGE_ID = 43,
+};
 
 #define OutputText(string) m_pHttpResponse->WriteText (string, sizeof(string) - 1);
 
@@ -74,54 +122,6 @@ struct MiniMapEntry {
     unsigned int iPlanetProxyKey;
     int iX;
     int iY;
-};
-
-// Page id's
-enum PageId {
-    MIN_PAGE_ID = 0,
-    ACTIVE_GAME_LIST = 1,
-    LOGIN = 2,
-    NEW_EMPIRE = 3,
-    OPEN_GAME_LIST = 4,
-    SYSTEM_GAME_LIST = 5,
-    PROFILE_EDITOR = 6,
-    TOP_LISTS = 7,
-    PROFILE_VIEWER = 8,
-    SERVER_ADMINISTRATOR = 9,
-    EMPIRE_ADMINISTRATOR = 10,
-    GAME_ADMINISTRATOR = 11,
-    THEME_ADMINISTRATOR = 12,
-    PERSONAL_GAME_CLASSES = 13,
-    CHATROOM = 14,
-    SYSTEM_SERVER_INFORMATION = 15,
-    SYSTEM_DOCUMENTATION = 16,
-    SYSTEM_NEWS = 17,
-    INFO = 18,
-    TECH = 19,
-    DIPLOMACY = 20,
-    MAP = 21,
-    PLANETS = 22,
-    OPTIONS = 23,
-    BUILD = 24,
-    SHIPS = 25,
-    GAME_SERVER_INFORMATION = 26,
-    GAME_DOCUMENTATION = 27,
-    GAME_NEWS = 28,
-    GAME_PROFILE_VIEWER = 29,
-    GAME_CONTRIBUTIONS = 30,
-    GAME_CREDITS = 31,
-    GAME_TERMS_OF_SERVICE = 32,
-    QUIT = 33,
-    LATEST_NUKES = 34,
-    SPECTATOR_GAMES = 35,
-    SYSTEM_CONTRIBUTIONS = 36,
-    SYSTEM_CREDITS = 37,
-    LATEST_GAMES = 38,
-    TOURNAMENT_ADMINISTRATOR = 39,
-    PERSONAL_TOURNAMENTS = 40,
-    TOURNAMENTS = 41,
-    SYSTEM_TERMS_OF_SERVICE = 42,
-    MAX_PAGE_ID = 43,
 };
 
 #define FIRST_GAME_PAGE                     INFO
@@ -337,14 +337,16 @@ extern const SearchField g_AdvancedSearchFields[];
 #define MAX_NUM_SEARCH_COLUMNS 31
 
 //
-// Globals
+// HtmlRenderer
 //
+
+class IPage;
 
 class HtmlRenderer : public GameEngine
 {
 protected:
 
-    bool bRedirectTest;
+    bool m_bRedirectTest;
 
     // Data
     PageId m_pgPageId;
@@ -412,9 +414,7 @@ protected:
     int m_iNumNewUpdates;
 
     // Methods
-
     void WriteGameListHeader (const char** ppszHeaders, size_t stNumHeaders, const char* pszTableColor);
-
     void AddEmpiresInGame (int iGameState, int iNumActiveEmpires, const char* pszEmpires, int iMinEmpires, int iMaxEmpires);
 
     int AddGameClassDescription (int iWhichList, const Variant* pvGameClassInfo, 
@@ -456,6 +456,9 @@ protected:
     static bool ms_bLocksInitialized;
     static ReadWriteLock ms_mTextFileLock;
 
+    // Caching
+    TableCacheEntryColumn m_activeGameCol;
+
 public:
 
     // Statics
@@ -467,20 +470,27 @@ public:
     static Mutex m_slockEmpiresInGames;
     static unsigned int m_siNumGamingEmpires;
 
-    // Constructor
-    HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
-    ~HtmlRenderer();
+    static int StaticInitialize();
 
-    static int Initialize();
+    // Constructor
+    HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+
+    // Wiring
+    void ReadStandardForms();
+
+    void GatherCacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache);
+    void GatherCacheTablesForSystemPage(Vector<TableCacheEntry>& cache);
+    void GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache);
 
     int Render();
-    int Redirect (PageId pageId);
+    int Redirect(PageId pageId);
+    int CacheTables(Vector<TableCacheEntry>& cache);
 
     void ShutdownServer();
     void RestartServer();
     void RestartAlmonaster();
 
-    bool IsGamePage (PageId pageId);
+    bool IsGamePage(PageId pageId);
 
     static int OnCreateEmpire (int iEmpireKey);
     static int OnDeleteEmpire (int iEmpireKey);
@@ -716,7 +726,7 @@ public:
 
     void WriteGameAdministratorGameData (const char* pszGameClassName, 
         int iGameNumber, Seconds iSeconds, Seconds iSecondsUntil, int iNumUpdates, bool bOpen, bool bPaused, 
-        bool bAdminPaused, bool bStarted, const char* pszGamePassword, Variant* pvEmpireName, 
+        bool bAdminPaused, bool bStarted, const char* pszGamePassword, Variant** ppvEmpiresInGame, 
         int iNumActiveEmpires, const UTCTime& tCreationTime, bool bAdmin);
 
     int PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iShipPlanet,
@@ -912,6 +922,50 @@ public:
     int Render_Tournaments();
     int Render_GameTos();
     int Render_SystemTos();
+
+    // Cache contribution functions
+    void RegisterCache_ActiveGameList(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Login(Vector<TableCacheEntry>& cache);
+    void RegisterCache_NewEmpire(Vector<TableCacheEntry>& cache);
+    void RegisterCache_OpenGameList(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemGameList(Vector<TableCacheEntry>& cache);
+    void RegisterCache_ProfileEditor(Vector<TableCacheEntry>& cache);
+    void RegisterCache_TopLists(Vector<TableCacheEntry>& cache);
+    void RegisterCache_ProfileViewer(Vector<TableCacheEntry>& cache);
+    void RegisterCache_ServerAdministrator(Vector<TableCacheEntry>& cache);
+    void RegisterCache_EmpireAdministrator(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameAdministrator(Vector<TableCacheEntry>& cache);
+    void RegisterCache_ThemeAdministrator(Vector<TableCacheEntry>& cache);
+    void RegisterCache_PersonalGameClasses(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Chatroom(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemServerRules(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemFAQ(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemNews(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Info(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Tech(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Diplomacy(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Map(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Planets(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Options(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Build(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Ships(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameServerRules(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameFAQ(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameNews(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameProfileViewer(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Quit(Vector<TableCacheEntry>& cache);
+    void RegisterCache_LatestNukes(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SpectatorGames(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameContributions(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameCredits(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemContributions(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemCredits(Vector<TableCacheEntry>& cache);
+    void RegisterCache_LatestGames(Vector<TableCacheEntry>& cache);
+    void RegisterCache_TournamentAdministrator(Vector<TableCacheEntry>& cache);
+    void RegisterCache_PersonalTournaments(Vector<TableCacheEntry>& cache);
+    void RegisterCache_Tournaments(Vector<TableCacheEntry>& cache);
+    void RegisterCache_GameTos(Vector<TableCacheEntry>& cache);
+    void RegisterCache_SystemTos(Vector<TableCacheEntry>& cache);
 };
 
 #define DEFAULT_MESSAGE_FONT_SIZE           "-1"

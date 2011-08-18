@@ -418,7 +418,6 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="GameEngine\GameEngineFleets.cpp" />
     <ClCompile Include="GameEngine\GameEngineGameClasses.cpp" />
     <ClCompile Include="GameEngine\GameEngineGameEmpireData.cpp" />
-    <ClCompile Include="GameEngine\GameEngineGameObject.cpp" />
     <ClCompile Include="GameEngine\GameEngineGames.cpp" />
     <ClCompile Include="GameEngine\GameEngineInfo.cpp" />
     <ClCompile Include="GameEngine\GameEngineMessages.cpp" />
@@ -439,6 +438,8 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="GameEngine\GameEngineUpdate.cpp" />
     <ClCompile Include="GameEngine\GameEngineUpdateAlgorithm.cpp" />
     <ClCompile Include="HtmlRenderer\HtmlPageFlow.cpp" />
+    <ClCompile Include="HtmlRenderer\HtmlPageWiring.cpp" />
+    <ClCompile Include="HtmlRenderer\HtmlTableCache.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
@@ -1445,15 +1446,12 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClInclude Include="AsyncManager.h" />
     <ClInclude Include="GameEngine\GameEngine.h" />
     <ClInclude Include="GameEngine\GameEngineConstants.h" />
-    <ClInclude Include="GameEngine\GameEngineGameObject.h" />
-    <ClInclude Include="GameEngine\GameEngineLocks.h" />
     <ClInclude Include="GameEngine\GameEngineSchema.h" />
     <ClInclude Include="GameEngine\GameEngineStrings.h" />
     <ClInclude Include="GameEngine\GameEngineUI.h" />
-    <ClInclude Include="GameEngine\IGameEngine.h" />
     <ClInclude Include="Almonaster.h" />
     <ClInclude Include="Global.h" />
-    <ClInclude Include="Interface.h" />
+    <ClInclude Include="IAlmonasterEventSink.h" />
     <ClInclude Include="Scoring\AlmonasterScore.h" />
     <ClInclude Include="Scoring\BridierScore.h" />
     <ClInclude Include="Scoring\ClassicScore.h" />

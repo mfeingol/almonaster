@@ -419,7 +419,7 @@ int GameEngine::CleanupGame (int iGameClass, int iGameNumber, GameResult grResul
     // GameIndependentShips(I.I)
     Variant vGameOptions, vGameClassOptions;
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
     if (iErrCode == OK) {
         
         if (vGameClassOptions.GetInteger() & INDEPENDENCE) {
@@ -431,7 +431,7 @@ int GameEngine::CleanupGame (int iGameClass, int iGameNumber, GameResult grResul
         }
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vTournamentKey);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vTournamentKey);
     if (iErrCode != OK) {
         Assert (false);
         vTournamentKey = NO_KEY;
@@ -579,7 +579,7 @@ int GameEngine::GetGameState (int iGameClass, int iGameNumber, int* piGameState)
 
 int GameEngine::GetNumActiveGames(unsigned int* piNumGames)
 {
-    return t_pConn->GetCache()->GetNumCachedRows(SYSTEM_ACTIVE_GAMES, piNumGames);
+    return t_pCache->GetNumCachedRows(SYSTEM_ACTIVE_GAMES, piNumGames);
 }
 
 
@@ -702,7 +702,7 @@ int GameEngine::GetGames(bool bOpen, int** ppiGameClass, int** ppiGameNumber, un
     *ppiGameNumber = NULL;
 
     ICachedReadTable* pGames;
-    iErrCode = t_pConn->GetCache()->GetTableForReading(SYSTEM_ACTIVE_GAMES, &pGames);
+    iErrCode = t_pCache->GetTableForReading(SYSTEM_ACTIVE_GAMES, &pGames);
     if (iErrCode != OK)
     {
         return iErrCode;
@@ -890,7 +890,7 @@ int GameEngine::CreateGame (int iGameClass, int iEmpireCreator, const GameOption
     Assert (iEmpireCreator != TOURNAMENT || (piEmpireKey != NULL && iNumEmpires > 0));
 
     // Make sure new game creation is enabled
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -3572,7 +3572,7 @@ int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTim
     }
 
     // Get update period
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -3655,7 +3655,7 @@ int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTim
     Seconds sAfterWeekendDelay = 0;
     if (!bWeekends) {
 
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
+        iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -3740,7 +3740,7 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
 
     // Get update period
     Seconds sUpdatePeriod = 0;
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -4390,7 +4390,7 @@ int GameEngine::AddToLatestGames(const char* pszTable, const TemplateDescription
     Variant vGames;
 
     // Read limit
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::NumGamesInLatestGameList, &vGames);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::NumGamesInLatestGameList, &vGames);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

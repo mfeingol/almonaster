@@ -1,8 +1,5 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include "Osal/Algorithm.h"
-
 #include <stdio.h>
 
 // Almonaster
@@ -51,7 +48,7 @@ if (m_iReserved != NO_KEY) {
 if (m_bOwnPost && !m_bRedirection) {
 
     if (WasButtonPressed (BID_CANCEL)) {
-        bRedirectTest = false;
+        m_bRedirectTest = false;
     } else {
 
         if ((pHttpForm = m_pHttpRequest->GetForm ("ProfileViewerPage")) == NULL) {
@@ -142,7 +139,7 @@ SearchResults:
                     iProfileViewerPage = 2;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             if (WasButtonPressed (BID_SEARCH)) {
@@ -205,35 +202,35 @@ SearchResults:
                     AddMessage ("Your message was blank");
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileViewerPage = 2;
                 break;
             }
 
             // View PGC
             if (WasButtonPressed (BID_VIEWEMPIRESGAMECLASSES)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileViewerPage = 4;
                 break;
             }
 
             // View nuke history
             if (WasButtonPressed (BID_VIEWEMPIRESNUKEHISTORY)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileViewerPage = 5;
                 break;
             }
 
             // View PT
             if (WasButtonPressed (BID_VIEWEMPIRESTOURNAMENTS)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileViewerPage = 7;
                 break;
             }
 
             // Lookup
             if (WasButtonPressed (BID_LOOKUP)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iProfileViewerPage = 2;
                 break;
             }
@@ -291,7 +288,7 @@ SearchResults:
 
                 GameOptions goOptions;
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 // Check for advanced
                 char pszAdvanced [128];
@@ -322,7 +319,7 @@ SearchResults:
                 (pszStart = pHttpForm->GetName()) != NULL &&
                 sscanf (pszStart, "DeleteGameClass%d", &iGameClassKey) == 1) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
@@ -391,7 +388,7 @@ SearchResults:
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             else if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("HaltGameClass")) != NULL && 
@@ -421,7 +418,7 @@ SearchResults:
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             else if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("UnhaltGameClass")) != NULL && 
@@ -463,7 +460,7 @@ SearchResults:
                     }
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             }
@@ -486,7 +483,7 @@ SearchResults:
                 GameOptions goOptions;
                 InitGameOptions (&goOptions);
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassKey")) == NULL) {
                     iProfileViewerPage = 0;
@@ -533,7 +530,7 @@ SearchResults:
 } 
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

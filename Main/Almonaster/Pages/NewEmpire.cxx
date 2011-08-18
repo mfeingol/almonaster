@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -177,25 +176,19 @@ if (!m_bRedirection &&
                         return Redirect (LOGIN);
                     }
 
-                    if (VerifyPassword (pHttpForm->GetValue()) == OK) {
-
+                    if (VerifyPassword (pHttpForm->GetValue()) == OK)
+                    {
                         Variant vParentName;
-                        iErrCode = DoesEmpireExist (
-                            pszStandardParentName, 
-                            &bFlag, 
-                            &iParentEmpireKey, 
-                            &vParentName,
-                            NULL
-                            );
-
-                        if (!bFlag) {
+                        iErrCode = DoesEmpireExist(pszStandardParentName, &bFlag, &iParentEmpireKey, &vParentName, NULL);
+                        if (!bFlag)
+                        {
                             AddMessage ("The parent empire ");
                             AppendMessage (pszStandardParentName);
                             AppendMessage (" does not exist");
-                        } else {
-
+                        }
+                        else
+                        {
                             iErrCode = IsPasswordCorrect (iParentEmpireKey, pHttpForm->GetValue());
-
                             if (iErrCode != OK) {
                                 AddMessage ("That was the wrong password for the parent empire");
                             }
@@ -225,18 +218,19 @@ if (!m_bRedirection &&
                 }
                 pszPassword = pHttpForm->GetValue();
 
-                iErrCode = CreateEmpire (
-                    pszEmpireName, 
-                    pszPassword, 
-                    NOVICE, 
-                    iParentEmpireKey,
-                    false,
-                    &iEmpireKey
-                    );
-
-                switch (iErrCode) {
-
+                iErrCode = CreateEmpire(pszEmpireName, pszPassword, NOVICE, iParentEmpireKey, false, &iEmpireKey);
+                switch (iErrCode)
+                {
                 case OK:
+                    {
+                        const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL };
+                        iErrCode = t_pCache->Cache(&entry, 1);
+                        if (iErrCode != OK)
+                        {
+                            AddMessage("Cache failed");
+                            return Redirect(ACTIVE_GAME_LIST);
+                        }
+                    }
 
                     ReportEmpireCreation (global.GetReport(), pszEmpireName);
                     SendWelcomeMessage (pszEmpireName);
@@ -245,8 +239,9 @@ if (!m_bRedirection &&
                     m_iReserved = 0;
 
                     iErrCode = HtmlLoginEmpire();
-                    if (iErrCode == OK) {
-                        return Redirect (ACTIVE_GAME_LIST);
+                    if (iErrCode == OK)
+                    {
+                        return Redirect(ACTIVE_GAME_LIST);
                     }
 
                     AddMessage ("Login failed");
@@ -349,19 +344,6 @@ m_iSeparatorKey = pHttpForm->GetUIntValue();
 WriteBodyString (-1);
 
 %><center><h1>Create a New Empire</h1><%
-
-// Get a cookie for last empire used's graphics
-ICookie* pCookie = m_pHttpRequest->GetCookie ("LastEmpireUsed");
-
-if (pCookie != NULL && pCookie->GetValue() != NULL) {
-
-    iEmpireKey = pCookie->GetUIntValue();
-    iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, NULL);
-    if (!bFlag || iErrCode != OK) {
-        iEmpireKey = NO_KEY;
-    }
-}
-
 %><p><%
 
 WriteSeparatorString (m_iSeparatorKey);

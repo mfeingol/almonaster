@@ -1,5 +1,5 @@
 //
-// GameEngine.dll:  a component of Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -19,8 +19,8 @@
 #include "GameEngine.h"
 #include "Global.h"
 
-int GameEngine::Setup() {
-
+int GameEngine::Setup()
+{
     bool bNewDatabase, bGoodDatabase;
     const char* pszBadTable;
 
@@ -452,7 +452,7 @@ void GameEngine::VerifyGameTables(int iGameClass, int iGameNumber, bool* pbGoodD
     int iGameOptions, iGameClassOptions;
 
     // Gameclass options
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         bGoodDatabase = false;
@@ -811,14 +811,14 @@ int GameEngine::VerifyActiveGames() {
     }
 
     // Read some system data
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         goto Cleanup;
     }
     sSecondsForLongtermStatus = vTemp.GetInteger();
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         goto Cleanup;
@@ -1498,6 +1498,13 @@ int GameEngine::CreateDefaultSystemTables() {
     iErrCode = t_pConn->CreateTable(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template);
     if (iErrCode != OK) {
         Assert(false);
+        return iErrCode;
+    }
+
+    // Create SystemEmpireActiveGames table
+    iErrCode = t_pConn->CreateTable(SYSTEM_EMPIRE_ACTIVE_GAMES, SystemEmpireActiveGames::Template);
+    if (iErrCode != OK)
+    {
         return iErrCode;
     }
 

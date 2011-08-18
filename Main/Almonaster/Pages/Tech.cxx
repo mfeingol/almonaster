@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -44,7 +43,7 @@ if (m_bOwnPost && !m_bRedirection) {
         (pszStart = pHttpForm->GetName()) != NULL &&
         sscanf (pszStart, "Tech%d", &iTechKey) == 1) {
 
-        bRedirectTest = false;
+        m_bRedirectTest = false;
 
         iErrCode = RegisterNewTechDevelopment (m_iGameClass, m_iGameNumber, m_iEmpireKey, iTechKey);
         if (iErrCode == OK) {
@@ -57,7 +56,7 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 }
 
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))

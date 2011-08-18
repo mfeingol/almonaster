@@ -25,16 +25,16 @@
 
 #include "HttpServer.h"
 
-int AlajarCreateInstance (const Uuid& clsidClassId, const Uuid& iidInterface, void** ppObject) {
-
-    if (clsidClassId == CLSID_HttpServer && iidInterface == IID_IHttpServer) {
-
+int AlajarCreateInstance (const Uuid& clsidClassId, const Uuid& iidInterface, void** ppObject)
+{
+    if (clsidClassId == CLSID_HttpServer && iidInterface == IID_IHttpServer)
+    {
         *ppObject = HttpServer::CreateInstance();
         return *ppObject != NULL ? OK : ERROR_FAILURE;
     }
 
-    if (clsidClassId == CLSID_ConfigFile && iidInterface == IID_IConfigFile) {
-
+    if (clsidClassId == CLSID_ConfigFile && iidInterface == IID_IConfigFile)
+    {
         *ppObject = Config::CreateInstance();
         return *ppObject != NULL ? OK : ERROR_FAILURE;
     }

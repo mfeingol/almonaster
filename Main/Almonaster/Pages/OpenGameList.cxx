@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -75,7 +74,7 @@ if (m_bOwnPost && !m_bRedirection) {
     }
 }
 
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))
@@ -133,19 +132,20 @@ if (bConfirmPage) {
 } else {
 
     // Get open games
-    int iNumOpenGames = 0, * piGameClass, * piGameNumber;
+    unsigned int iNumOpenGames = 0;
+    int* piGameClass, * piGameNumber;
 
-    iErrCode = GetOpenGames (&piGameClass, &piGameNumber, &iNumOpenGames);
-    if (iErrCode != OK) {
+    iErrCode = GetOpenGames(&piGameClass, &piGameNumber, &iNumOpenGames);
+    if (iErrCode != OK)
+    {
         %><h3>The open game list could not be read. The error was <% Write (iErrCode); %></h3><% 
     }
-
-    else if (iNumOpenGames == 0) {
+    else if (iNumOpenGames == 0)
+    {
         %><h3>There are no open games on this server</h3><% 
     }
-
-    else {
-
+    else
+    {
         // Update the open games
         int j, iGameClass, iGameNumber;
 
@@ -153,17 +153,20 @@ if (bConfirmPage) {
         bool bDraw = false;
         Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
-        if (iNumSuperClasses == 0) {
+        if (iNumSuperClasses == 0)
+        {
             %><h3>There are no open games on this server</h3><% 
-        } else {
-
+        }
+        else
+        {
             // Create the game table
             int** ppiTable = (int**) StackAlloc ((iNumSuperClasses + 1) * 3 * sizeof (int*));
             int** ppiGameClass = ppiTable + iNumSuperClasses + 1;
             int** ppiGameNumber = ppiGameClass + iNumSuperClasses + 1;
 
             // Create the game
-            for (i = 0; i < iNumSuperClasses + 1; i ++) {
+            for (i = 0; i < iNumSuperClasses + 1; i ++)
+            {
                 ppiTable[i] = (int*) StackAlloc ((iNumOpenGames + 1) * 3 * sizeof (int));
                 ppiTable[i][iNumOpenGames] = 0;
 
@@ -175,8 +178,8 @@ if (bConfirmPage) {
             int iSuperClassKey;
             bool bFlag, bIdle = false;
 
-            for (i = 0; i < iNumOpenGames; i ++) {
-
+            for (i = 0; i < (int)iNumOpenGames; i ++)
+            {
                 iGameClass = piGameClass[i];
                 iGameNumber = piGameNumber[i];
 
@@ -319,11 +322,11 @@ if (bConfirmPage) {
                 }
 
                 Variant vName;
-                for (i = 0; i < iNumSuperClasses; i ++) {
-
+                for (i = 0; i < iNumSuperClasses; i ++)
+                {
                     if (ppiTable [i][iNumOpenGames] > 0 && 
-                        GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
-
+                        GetSuperClassName (piSuperClassKey[i], &vName) == OK)
+                    {
                         %><p><h3><% Write (vName.GetCharPtr()); %>:</h3><%
                         WriteOpenGameListHeader (m_vTableColor.GetCharPtr());
 

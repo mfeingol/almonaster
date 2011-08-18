@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -30,13 +29,13 @@ if (m_iPrivilege < ADMINISTRATOR) {
     return Redirect (LOGIN);
 }
 
-bRedirectTest = false;  // No warning
+m_bRedirectTest = false;  // No warning
 return Render_TournamentManager (SYSTEM);
 }
 
 int HtmlRenderer::Render_TournamentManager (unsigned int iOwnerKey) {
 
-bool bRedirectTest = true;
+bool m_bRedirectTest = true;
 IHttpForm* pHttpForm;
 
 int iErrCode, iTAdminPage = 0, iIconSelect = 0;
@@ -106,7 +105,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_CREATENEWTOURNAMENT)) {
             iTAdminPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -142,7 +141,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -177,7 +176,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 1;    // Repaint form
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
         break;
@@ -266,7 +265,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle icon selection request
         if (WasButtonPressed (BID_CHOOSE)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("IconSelect")) == NULL) {
                 goto Redirection;
@@ -279,7 +278,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_CREATENEWGAMECLASS)) {
             iTAdminPage = 3;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -296,7 +295,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 4;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -308,13 +307,13 @@ if (m_bOwnPost && !m_bRedirection) {
             iDeleteEmpire = pHttpForm->GetUIntValue();
 
             iTAdminPage = 5;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_CREATETEAM)) {
             iTAdminPage = 8;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -333,14 +332,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iTAdminPage = 2;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
         // GameClass stuff
         if (WasButtonPressed (BID_DELETEGAMECLASS)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("DeleteGC")) == NULL) {
                 goto Redirection;
@@ -377,7 +376,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_UNDELETEGAMECLASS)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("UndeleteGC")) == NULL) {
                 goto Redirection;
@@ -427,7 +426,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle game class halt
         if (WasButtonPressed (BID_HALTGAMECLASS)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("HaltGC")) == NULL) {
                 goto Redirection;
@@ -461,7 +460,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle game class unhalting
         if (WasButtonPressed (BID_UNHALTGAMECLASS)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("UnhaltGC")) == NULL) {
                 goto Redirection;
@@ -510,7 +509,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_START)) {
             iTAdminPage = 6;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -523,14 +522,14 @@ if (m_bOwnPost && !m_bRedirection) {
             iTeamKey = pHttpForm->GetIntValue();
 
             iTAdminPage = 9;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_VIEWGAMEINFORMATION)) {
 
             iTAdminPage = 12;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -552,7 +551,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle new gameclass creation
         if (WasButtonPressed (BID_CREATENEWGAMECLASS)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             if (ProcessCreateGameClassForms (iOwnerKey, iTournamentKey) != OK) {
                 iTAdminPage = 3;
             } else {
@@ -563,7 +562,7 @@ if (m_bOwnPost && !m_bRedirection) {
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 2;
             goto Redirection;
         }
@@ -579,7 +578,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_INVITEEMPIRE)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("InviteEmpireKey")) == NULL) {
                 goto Redirection;
@@ -603,7 +602,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         // Lookup
         if (WasButtonPressed (BID_LOOKUP)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 4;
             break;
         }
@@ -622,7 +621,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_DELETEEMPIRE)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("DeleteEmpireKey")) == NULL) {
                 goto Redirection;
@@ -650,7 +649,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             iDeleteEmpire = pHttpForm->GetUIntValue();
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 5;
             break;
         }
@@ -669,7 +668,7 @@ if (m_bOwnPost && !m_bRedirection) {
             (pszStart = pHttpForm->GetName()) != NULL &&
             sscanf (pszStart, "Start%d", &iGameClassKey) == 1) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             // Check for advanced option
             char pszAdvanced [128];
@@ -718,7 +717,7 @@ if (m_bOwnPost && !m_bRedirection) {
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 2;
             goto Redirection;
         }
@@ -735,7 +734,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle new team creation
         if (WasButtonPressed (BID_CREATETEAM)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             if (ProcessCreateTournamentTeam (iTournamentKey) != OK) {
                 iTAdminPage = 8;
             } else {
@@ -746,7 +745,7 @@ if (m_bOwnPost && !m_bRedirection) {
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 2;
             goto Redirection;
         }
@@ -805,7 +804,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle icon selection request
         if (WasButtonPressed (BID_CHOOSE)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("IconSelect")) == NULL) {
                 goto Redirection;
@@ -830,7 +829,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AppendMessage (iErrCode);
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 9;
             goto Redirection;
         }
@@ -849,19 +848,19 @@ if (m_bOwnPost && !m_bRedirection) {
                 AppendMessage (iErrCode);
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 9;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_UPDATE)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 9;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 2;
             goto Redirection;
         }
@@ -901,7 +900,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("That was the same icon");
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         iTAdminPage = 2;
@@ -943,7 +942,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("That was the same icon");
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
 
         iTAdminPage = 9;
@@ -963,13 +962,13 @@ if (m_bOwnPost && !m_bRedirection) {
             (pszGame = pHttpForm->GetName()) != NULL &&
             sscanf (pszGame, "AdministerGame%d.%d", &iGameClass, &iGameNumber) == 2) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 13;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 2;
             goto Redirection;
         }
@@ -990,7 +989,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         // View map
         if (WasButtonPressed (BID_VIEWMAP)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 14;
             goto Redirection;
         }
@@ -1010,7 +1009,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 12;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -1052,7 +1051,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 12;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -1083,7 +1082,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 12;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -1091,7 +1090,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_VIEWEMPIREINFORMATION)) {
 
             iTAdminPage = 15;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -1116,7 +1115,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 12;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
@@ -1132,14 +1131,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 iTAdminPage = 12;
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
         // Broadcast message
         if (WasButtonPressed (BID_SENDMESSAGE)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
             if ((pHttpForm = m_pHttpRequest->GetForm ("Message")) == NULL) {
                 goto Redirection;
@@ -1164,13 +1163,13 @@ if (m_bOwnPost && !m_bRedirection) {
 
         // Kill game
         if (WasButtonPressed (BID_KILLGAME)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 17;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 12;
             goto Redirection;
         }
@@ -1194,12 +1193,12 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // We clicked on a planet
             iTAdminPage = 16;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 13;
             goto Redirection;
         }
@@ -1210,7 +1209,7 @@ if (m_bOwnPost && !m_bRedirection) {
     case 15:
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 13;
             goto Redirection;
         }
@@ -1222,7 +1221,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // View map
         if (WasButtonPressed (BID_VIEWMAP)) {
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 14;
             goto Redirection;
         }
@@ -1243,13 +1242,13 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("The game no longer exists");
             }
 
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 12;
             goto Redirection;
         }
 
         if (WasButtonPressed (BID_CANCEL)) {
-            bRedirectTest = false;
+            m_bRedirectTest = false;
             iTAdminPage = 13;
             goto Redirection;
         }
@@ -1264,7 +1263,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))
@@ -1960,7 +1959,7 @@ case 16:
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;

@@ -1,8 +1,5 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include "Osal/Algorithm.h"
-
 #include <stdio.h>
 
 // Almonaster
@@ -52,7 +49,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     if (WasButtonPressed (BID_CANCEL)) {
 
-        bRedirectTest = false;
+        m_bRedirectTest = false;
 
         if ((iGameAdminPageSubmit == 5 || iGameAdminPageSubmit == 7) &&
             (pHttpForm = m_pHttpRequest->GetForm ("GameClass")) != NULL &&
@@ -1190,7 +1187,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // View map
             if (WasButtonPressed (BID_VIEWMAP)) {
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iGameAdminPage = 4;
                 break;
             }
@@ -1198,7 +1195,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Change password
             if (WasButtonPressed (BID_CHANGEPASSWORD)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 pHttpForm = m_pHttpRequest->GetForm ("NewPassword");
                 if (pHttpForm == NULL) {
@@ -1243,7 +1240,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iGameAdminPage = 1;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1265,7 +1262,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iGameAdminPage = 1;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1307,7 +1304,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iGameAdminPage = 1;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1339,7 +1336,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iGameAdminPage = 1;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1347,7 +1344,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_SEARCHIPADDRESSES)) {
 
                 iGameAdminPage = 3;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 SearchForDuplicateIPAddresses (iGameClass, iGameNumber);
                 break;
             }
@@ -1356,7 +1353,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_SEARCHSESSIONIDS)) {
 
                 iGameAdminPage = 3;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 SearchForDuplicateSessionIds (iGameClass, iGameNumber);
                 break;
             }
@@ -1365,7 +1362,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_VIEWEMPIREINFORMATION)) {
 
                 iGameAdminPage = 7;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1395,7 +1392,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iGameAdminPage = 1;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
@@ -1411,14 +1408,14 @@ if (m_bOwnPost && !m_bRedirection) {
                     iGameAdminPage = 1;
                 }
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 break;
             }
 
             // Broadcast message
             if (WasButtonPressed (BID_SENDMESSAGE)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("Message")) == NULL) {
                     goto Redirection;
@@ -1444,7 +1441,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Kill game
             if (WasButtonPressed (BID_KILLGAME)) {
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iGameAdminPage = 8;
                 break;
             }
@@ -1473,7 +1470,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 // We clicked on a planet
                 iGameAdminPage = 6;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             }
@@ -1494,7 +1491,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iGameClass  = pHttpForm->GetIntValue();
                 iGameNumber = pHttpForm2->GetIntValue();
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
                 iGameAdminPage = 4;
                 break;
             }
@@ -1519,7 +1516,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iGameClass  = pHttpForm->GetIntValue();
                 iGameNumber = pHttpForm2->GetIntValue();
 
-                bRedirectTest = false;
+                m_bRedirectTest = false;
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("DoomMessage")) == NULL) {
                     break;
@@ -1544,7 +1541,7 @@ if (m_bOwnPost && !m_bRedirection) {
 } 
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))
@@ -1575,7 +1572,7 @@ case 0:
     GameConfiguration gcConfig;
     MapConfiguration mcConfig;
 
-    int iNumActiveGames, iNumOpenGames, iNumClosedGames;
+    unsigned int iNumActiveGames, iNumOpenGames, iNumClosedGames;
     Variant vMaxNumUpdatesBeforeClose, vDefaultNumUpdatesBeforeClose, vMaxNumPersonalGameClasses, vDelay,
         vMaxNumT, vMaxNumPersonalGameClassesT;
 
@@ -2460,10 +2457,11 @@ AllGames:
 case 1:
     {
 
-    int* piGameClass, * piGameNumber, iNumActiveGames, iNumOpenGames, iNumClosedGames;
-    Check (GetActiveGames (&piGameClass, &piGameNumber, &iNumActiveGames));
-    Check (GetNumOpenGames (&iNumOpenGames));
-    Check (GetNumClosedGames (&iNumClosedGames));
+    int* piGameClass, * piGameNumber;
+    unsigned int iNumActiveGames, iNumOpenGames, iNumClosedGames;
+    Check(GetActiveGames(&piGameClass, &piGameNumber, &iNumActiveGames));
+    Check(GetNumOpenGames(&iNumOpenGames));
+    Check(GetNumClosedGames(&iNumClosedGames));
 
     %><input type="hidden" name="GameAdminPage" value="1"><%
 
@@ -2573,7 +2571,7 @@ case 6:
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;

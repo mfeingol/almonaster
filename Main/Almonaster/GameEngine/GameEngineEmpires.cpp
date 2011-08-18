@@ -33,7 +33,7 @@ int GameEngine::GetEmpireOption (int iEmpireKey, unsigned int iFlag, bool* pbOpt
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     Variant vOptions;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options, &vOptions);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options, &vOptions);
 
     if (iErrCode == OK) {
         *pbOption = (vOptions.GetInteger() & iFlag) != 0;
@@ -56,7 +56,7 @@ int GameEngine::GetEmpireOption2 (int iEmpireKey, unsigned int iFlag, bool* pbOp
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     Variant vOptions;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options2, &vOptions);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options2, &vOptions);
 
     if (iErrCode == OK) {
         *pbOption = (vOptions.GetInteger() & iFlag) != 0;
@@ -107,7 +107,7 @@ int GameEngine::CreateEmpire (const char* pszEmpireName, const char* pszPassword
     // Make sure empire creation is enabled
     if (!bBypassDisabled) {
 
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
+        iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -488,7 +488,7 @@ int GameEngine::GetEmpireName (int iEmpireKey, Variant* pvName)
 {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Name, pvName);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Name, pvName);
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
     {
         return ERROR_EMPIRE_DOES_NOT_EXIST;
@@ -505,7 +505,7 @@ int GameEngine::GetEmpireName (int iEmpireKey, char pszName [MAX_EMPIRE_NAME_LEN
 
     Variant vTemp;
 
-    iErrCode = t_pConn->GetCache()->GetTableForReading(strTableName, &pTable);
+    iErrCode = t_pCache->GetTableForReading(strTableName, &pTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -671,7 +671,7 @@ int GameEngine::GetEmpireLivePlanetKey (int iEmpireKey, int* piLivePlanetKey) {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     Variant vTemp;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::UILivePlanet, &vTemp);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::UILivePlanet, &vTemp);
     
     if (iErrCode == OK) {
         *piLivePlanetKey = vTemp.GetInteger();
@@ -694,7 +694,7 @@ int GameEngine::GetEmpireDeadPlanetKey (int iEmpireKey, int* piDeadPlanetKey)
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     Variant vTemp;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::UIDeadPlanet, &vTemp);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::UIDeadPlanet, &vTemp);
     
     if (iErrCode == OK) {
         *piDeadPlanetKey = vTemp.GetInteger();
@@ -920,7 +920,7 @@ int GameEngine::SendVictorySneer (int iWinnerKey, const char* pszWinnerName, int
     int iErrCode;
     Variant vSneer;
 
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_EMPIRE_DATA, iWinnerKey, SystemEmpireData::VictorySneer, &vSneer);
+    iErrCode = t_pCache->ReadData(SYSTEM_EMPIRE_DATA, iWinnerKey, SystemEmpireData::VictorySneer, &vSneer);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -980,7 +980,7 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
     if (pi64SecretKey != NULL) {
 
         GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
-        iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::SecretKey, &vTemp);
+        iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::SecretKey, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -994,7 +994,7 @@ int GameEngine::DeleteEmpire (int iEmpireKey, int64* pi64SecretKey, bool bMarkOn
 
     // Read active games total
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszGames, iEmpireKey);
-    iErrCode = t_pConn->GetCache()->GetNumCachedRows(pszGames, &iNumGames);
+    iErrCode = t_pCache->GetNumCachedRows(pszGames, &iNumGames);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1074,7 +1074,7 @@ int GameEngine::GetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int* piMaxNu
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     Variant vTemp;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
     
     if (iErrCode == OK) {
         *piMaxNumSavedMessages = vTemp.GetInteger();
@@ -1132,7 +1132,7 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
 
     unsigned int iNumGames; 
     Variant* pvGame;
-    iErrCode = t_pConn->GetCache()->ReadColumn(pszGames, SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
+    iErrCode = t_pCache->ReadColumn(pszGames, SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
     if (iErrCode != ERROR_DATA_NOT_FOUND) {
 
         if (iErrCode != OK) {
@@ -1408,7 +1408,7 @@ int GameEngine::DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Varian
 
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    iErrCode = t_pConn->GetCache()->GetTableForReading(strTableName, &pEmps);
+    iErrCode = t_pCache->GetTableForReading(strTableName, &pEmps);
     if (iErrCode == OK)
     {
         if (pvEmpireName != NULL)
@@ -1524,7 +1524,7 @@ int GameEngine::IsPasswordCorrect (int iEmpireKey, const char* pszPassword) {
     int iErrCode;
     Variant vPassword;
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Password, &vPassword);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Password, &vPassword);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1549,7 +1549,7 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     // Make sure logins are allowed
-    int iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::Options, &vLogins);
+    int iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::Options, &vLogins);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1558,7 +1558,7 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
     UTCTime tTime;
     Time::GetTime (&tTime);
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1667,7 +1667,7 @@ int GameEngine::UndeleteEmpire (int iEmpireKey) {
     int iErrCode;
     Variant vTemp;
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options, &vTemp);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == OK && vTemp.GetInteger() & EMPIRE_MARKED_FOR_DELETION) {
 
         iErrCode = t_pConn->WriteAnd (
@@ -1702,13 +1702,13 @@ int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
     }
 
     // Get old scores
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::ClassicScore, &vOldClassicScore);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::ClassicScore, &vOldClassicScore);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldAlmonasterScore);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldAlmonasterScore);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1718,7 +1718,7 @@ int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
     // Blank Bridier Score
     //
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::BridierIndex, &vOldBridierIndex);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::BridierIndex, &vOldBridierIndex);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1801,7 +1801,7 @@ int GameEngine::BlankEmpireStatistics(unsigned int iEmpireKey) {
         goto Cleanup;
     }
     
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Privilege, &vPriv);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1950,7 +1950,7 @@ int GameEngine::GetEmpireData(int iEmpireKey, Variant** ppvEmpData, int* piNumAc
     *piNumActiveGames = 0;
 
     // Get num active games
-    int iErrCode = t_pConn->GetCache()->GetNumCachedRows(pszActiveGames, (unsigned int*)piNumActiveGames);
+    int iErrCode = t_pCache->GetNumCachedRows(pszActiveGames, (unsigned int*)piNumActiveGames);
     if (iErrCode != OK && iErrCode != ERROR_UNKNOWN_TABLE_NAME)
     {
         return iErrCode;
@@ -1958,7 +1958,7 @@ int GameEngine::GetEmpireData(int iEmpireKey, Variant** ppvEmpData, int* piNumAc
 
     // Get data
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
-    return t_pConn->GetCache()->ReadRow(strEmpires, iEmpireKey, ppvEmpData);
+    return t_pCache->ReadRow(strEmpires, iEmpireKey, ppvEmpData);
 }
 
 
@@ -1983,7 +1983,7 @@ int GameEngine::GetEmpireActiveGames (int iEmpireKey, int** ppiGameClass, int** 
     *piNumGames = 0;
 
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszGames, iEmpireKey);
-    iErrCode = t_pConn->GetCache()->GetTableForReading(pszGames, &pGames);
+    iErrCode = t_pCache->GetTableForReading(pszGames, &pGames);
     if (iErrCode == OK)
     {
         iErrCode = pGames->ReadColumn(SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGames, (unsigned int*)piNumGames);
@@ -2073,7 +2073,7 @@ int GameEngine::GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege) {
     Variant vPrivilege;
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
     
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
     if (iErrCode == OK) {
         *piPrivilege = vPrivilege.GetInteger();
     }
@@ -2141,7 +2141,7 @@ int GameEngine::GetEmpireAlmonasterScore(unsigned int iEmpireKey, float* pfAlmon
     Variant vAlmonasterScore;
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
     
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::AlmonasterScore, &vAlmonasterScore);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::AlmonasterScore, &vAlmonasterScore);
     
     if (iErrCode == OK) {
         *pfAlmonasterScore = vAlmonasterScore.GetFloat();
@@ -2176,7 +2176,7 @@ int GameEngine::SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonas
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
     
     Variant vOldScore;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldScore);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::AlmonasterScore, &vOldScore);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -2216,7 +2216,7 @@ int GameEngine::SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonas
 int GameEngine::GetEmpirePassword (unsigned int iEmpireKey, Variant* pvPassword)
 {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
-    return t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Password, pvPassword);
+    return t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Password, pvPassword);
 }
 
 
@@ -2232,7 +2232,7 @@ int GameEngine::GetEmpirePassword (unsigned int iEmpireKey, Variant* pvPassword)
 int GameEngine::GetEmpireDataColumn(int iEmpireKey, const char* pszColumn, Variant* pvData)
 {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
-    return t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, pszColumn, pvData);
+    return t_pCache->ReadData(strTableName, iEmpireKey, pszColumn, pvData);
 }
 
 
@@ -2249,7 +2249,7 @@ int GameEngine::GetNumLogins (int iEmpireKey, int* piNumLogins)
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
     Variant vTemp;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::NumLogins, &vTemp);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::NumLogins, &vTemp);
     if (iErrCode == OK) {
         *piNumLogins = vTemp.GetInteger();
     }
@@ -2269,7 +2269,7 @@ int GameEngine::GetNumLogins (int iEmpireKey, int* piNumLogins)
 int GameEngine::GetEmpireIPAddress (int iEmpireKey, Variant* pvIPAddress)
 {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
-    return t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::IPAddress, pvIPAddress);
+    return t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::IPAddress, pvIPAddress);
 }
 
 
@@ -2296,7 +2296,7 @@ int GameEngine::GetEmpireSessionId (int iEmpireKey, int64* pi64SessionId) {
 
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    iErrCode = t_pConn->GetCache()->GetTableForReading(strTableName, &pSystemEmpireData);
+    iErrCode = t_pCache->GetTableForReading(strTableName, &pSystemEmpireData);
     if (iErrCode == OK)
     {
         iErrCode = pSystemEmpireData->ReadData(iEmpireKey, SystemEmpireData::SessionId, pi64SessionId);
@@ -2322,7 +2322,7 @@ int GameEngine::GetEmpireDefaultBuilderPlanet (int iEmpireKey, int* piDefaultBui
 {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
     Variant vValue;
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::DefaultBuilderPlanet, &vValue);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::DefaultBuilderPlanet, &vValue);
     if (iErrCode == OK)
     {
         *piDefaultBuildPlanet = vValue.GetInteger();
@@ -2353,7 +2353,7 @@ int GameEngine::GetEmpireDefaultMessageTarget (int iEmpireKey, int* piMessageTar
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
     Variant vData;
     
-    int iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::DefaultMessageTarget, &vData);
+    int iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::DefaultMessageTarget, &vData);
     if (iErrCode == OK) {
         *piMessageTarget = vData.GetInteger();
     }
@@ -2410,7 +2410,7 @@ int GameEngine::GetEmpireOptions (int iEmpireKey, int* piOptions) {
     Variant vTemp;
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options, &vTemp);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == OK) {
         *piOptions = vTemp.GetInteger();
     }
@@ -2432,7 +2432,7 @@ int GameEngine::GetEmpireOptions2 (int iEmpireKey, int* piOptions) {
     Variant vTemp;
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options2, &vTemp);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::Options2, &vTemp);
     if (iErrCode == OK) {
         *piOptions = vTemp.GetInteger();
     }
@@ -2447,7 +2447,7 @@ int GameEngine::GetEmpireLastBridierActivity (int iEmpireKey, UTCTime* ptTime) {
     Variant vTemp;
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    iErrCode = t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, SystemEmpireData::LastBridierActivity, &vTemp);
+    iErrCode = t_pCache->ReadData(strTableName, iEmpireKey, SystemEmpireData::LastBridierActivity, &vTemp);
     if (iErrCode == OK) {
         *ptTime = vTemp.GetInteger64();
     }
@@ -2458,7 +2458,7 @@ int GameEngine::GetEmpireLastBridierActivity (int iEmpireKey, UTCTime* ptTime) {
 int GameEngine::GetEmpireProperty (int iEmpireKey, const char* pszColumn, Variant* pvProperty)
 {
     GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
-    return t_pConn->GetCache()->ReadData(strTableName, iEmpireKey, pszColumn, pvProperty);
+    return t_pCache->ReadData(strTableName, iEmpireKey, pszColumn, pvProperty);
 }
 
 int GameEngine::SetEmpireProperty (int iEmpireKey, const char* pszColumn, const Variant& vProperty) {
@@ -2477,7 +2477,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
     *pfIdle = false;
 
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszGames, iEmpireKey);
-    iErrCode = t_pConn->GetCache()->ReadColumn(pszGames, SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
+    iErrCode = t_pCache->ReadColumn(pszGames, SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
     if (iErrCode != OK) {
         if (iErrCode == ERROR_DATA_NOT_FOUND || iErrCode == ERROR_UNKNOWN_TABLE_NAME) {
             iErrCode = OK;

@@ -383,6 +383,7 @@ public:
 // GameEngine
 
 extern __declspec(thread) IDatabaseConnection* t_pConn;
+extern __declspec(thread) ICachedTableCollection* t_pCache;
 
 class GameEngine
 {

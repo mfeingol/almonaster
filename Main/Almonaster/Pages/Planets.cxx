@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -161,7 +159,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pHttpForm != NULL) {
 
                     bBuildTest = false;
-                    bRedirectTest = false;
+                    m_bRedirectTest = false;
 
                     // Do build
                     HandleMiniBuild (iUpdatePlanetKey);
@@ -172,7 +170,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))
@@ -224,7 +222,7 @@ if (bMapGenerated) {
         float fMaintRatio = 0.0, fNextMaintRatio = 0.0;
 
         // Visible builds?
-        iErrCode = t_pConn->GetViews()->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;

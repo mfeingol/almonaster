@@ -1,5 +1,5 @@
 //
-// Almonaster.dll:a component of Almonaster
+// Almonaster.dll: a component of Almonaster
 // Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
 //
 // This program is free software;you can redistribute it and/or
@@ -17,243 +17,6 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA02111-1307, USA.
 
 #include "HtmlRenderer.h"
-
-// Function Pointers
-static inline int THREAD_CALL Fxn_ActiveGameList (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ActiveGameList();
-}
-
-static inline int THREAD_CALL Fxn_Login (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Login();
-}
-
-static inline int THREAD_CALL Fxn_NewEmpire (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_NewEmpire();
-}
-
-static inline int THREAD_CALL Fxn_OpenGameList (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_OpenGameList();
-}
-
-static inline int THREAD_CALL Fxn_SystemGameList (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemGameList();
-}
-
-static inline int THREAD_CALL Fxn_ProfileEditor (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ProfileEditor();
-}
-
-static inline int THREAD_CALL Fxn_TopLists (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_TopLists();
-}
-
-static inline int THREAD_CALL Fxn_ProfileViewer (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ProfileViewer();
-}
-
-static inline int THREAD_CALL Fxn_ServerAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ServerAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_EmpireAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_EmpireAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_GameAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_ThemeAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_ThemeAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_PersonalGameClasses (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_PersonalGameClasses();
-}
-
-static inline int THREAD_CALL Fxn_Chatroom (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Chatroom();
-}
-
-static inline int THREAD_CALL Fxn_SystemServerRules (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemServerRules();
-}
-
-static inline int THREAD_CALL Fxn_SystemFAQ (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemFAQ();
-}
-
-static inline int THREAD_CALL Fxn_SystemNews (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemNews();
-}
-
-static inline int THREAD_CALL Fxn_Info (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Info();
-}
-
-static inline int THREAD_CALL Fxn_Tech (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Tech();
-}
-
-static inline int THREAD_CALL Fxn_Diplomacy (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Diplomacy();
-}
-
-static inline int THREAD_CALL Fxn_Map (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Map();
-}
-
-static inline int THREAD_CALL Fxn_Planets (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Planets();
-}
-
-static inline int THREAD_CALL Fxn_Options (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Options();
-}
-
-static inline int THREAD_CALL Fxn_Build (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Build();
-}
-
-static inline int THREAD_CALL Fxn_Ships (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Ships();
-}
-
-static inline int THREAD_CALL Fxn_GameServerRules (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameServerRules();
-}
-
-static inline int THREAD_CALL Fxn_GameFAQ (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameFAQ();
-}
-
-static inline int THREAD_CALL Fxn_GameNews (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameNews();
-}
-
-static inline int THREAD_CALL Fxn_GameProfileViewer (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameProfileViewer();
-}
-
-static inline int THREAD_CALL Fxn_Quit (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Quit();
-}
-
-static inline int THREAD_CALL Fxn_LatestNukes (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_LatestNukes();
-}
-
-static inline int THREAD_CALL Fxn_SpectatorGames (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SpectatorGames();
-}
-
-static inline int THREAD_CALL Fxn_GameContributions (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameContributions();
-}
-
-static inline int THREAD_CALL Fxn_GameCredits (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameCredits();
-}
-
-static inline int THREAD_CALL Fxn_SystemContributions (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemContributions();
-}
-
-static inline int THREAD_CALL Fxn_SystemCredits (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemCredits();
-}
-
-static inline int THREAD_CALL Fxn_LatestGames (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_LatestGames();
-}
-
-static inline int THREAD_CALL Fxn_TournamentAdministrator (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_TournamentAdministrator();
-}
-
-static inline int THREAD_CALL Fxn_PersonalTournaments (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_PersonalTournaments();
-}
-
-static inline int THREAD_CALL Fxn_Tournaments (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_Tournaments();
-}
-
-static inline int THREAD_CALL Fxn_GameTos (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_GameTos();
-}
-
-static inline int THREAD_CALL Fxn_SystemTos (void* pThis) {
-    return ((HtmlRenderer*) pThis)->Render_SystemTos();
-}
-
-const ThreadFunction g_pfxnRenderPage[] = {
-    NULL,
-    Fxn_ActiveGameList,
-    Fxn_Login,
-    Fxn_NewEmpire,
-    Fxn_OpenGameList,
-    Fxn_SystemGameList,
-    Fxn_ProfileEditor,
-    Fxn_TopLists,
-    Fxn_ProfileViewer,
-    Fxn_ServerAdministrator,
-    Fxn_EmpireAdministrator,
-    Fxn_GameAdministrator,
-    Fxn_ThemeAdministrator,
-    Fxn_PersonalGameClasses,
-    Fxn_Chatroom,
-    Fxn_SystemServerRules,
-    Fxn_SystemFAQ,
-    Fxn_SystemNews,
-    Fxn_Info,
-    Fxn_Tech,
-    Fxn_Diplomacy,
-    Fxn_Map,
-    Fxn_Planets,
-    Fxn_Options,
-    Fxn_Build,
-    Fxn_Ships,
-    Fxn_GameServerRules,
-    Fxn_GameFAQ,
-    Fxn_GameNews,
-    Fxn_GameProfileViewer,
-    Fxn_GameContributions,
-    Fxn_GameCredits,
-    Fxn_GameTos,
-    Fxn_Quit,
-    Fxn_LatestNukes,
-    Fxn_SpectatorGames,
-    Fxn_SystemContributions,
-    Fxn_SystemCredits,
-    Fxn_LatestGames,
-    Fxn_TournamentAdministrator,
-    Fxn_PersonalTournaments,
-    Fxn_Tournaments,
-    Fxn_SystemTos,
-    Fxn_Tournaments,
-    NULL
-};
-
-int HtmlRenderer::Render()
-{
-    Assert (m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
-    return g_pfxnRenderPage[m_pgPageId] (this);
-}
-
-int HtmlRenderer::Redirect (PageId pageId)
-{
-    Assert (pageId > MIN_PAGE_ID && pageId < MAX_PAGE_ID);
-    
-    m_bRedirection = true;
-    m_pgPageId = pageId;
-    
-    // Best effort
-    m_pHttpResponse->Clear();
-    
-    // Call the function
-    return g_pfxnRenderPage[pageId] (this);
-}
 
 void HtmlRenderer::OpenSystemPage(bool bFileUpload)
 {
@@ -568,4 +331,268 @@ void HtmlRenderer::WriteGameHeaderString()
 
     // Last separator
     WriteSeparatorString(m_iSeparatorKey);
+}
+
+void HtmlRenderer::WriteGameButtons() {
+    
+    OutputText ("<table border=\"0\" width=\"90%\"><tr><td width=\"2%\" align=\"left\">");
+    
+    // Info
+    WriteButton (BID_INFO);
+    
+    OutputText ("</td><td align=\"center\">");
+    
+    // Map
+    WriteButton (BID_MAP);
+    
+    // Planets
+    WriteButton (BID_PLANETS);
+    
+    // Diplomacy
+    WriteButton (BID_DIPLOMACY);
+    
+    OutputText ("</td><td width=\"2%\" align=\"right\">");
+    
+    // Exit
+    WriteButton (BID_EXIT);
+    
+    OutputText ("</td></tr><tr><td width=\"2%\" align=\"left\">");
+    
+    // Options
+    WriteButton (BID_OPTIONS);
+    
+    OutputText ("</td><td align=\"center\">");
+    
+    // Ships
+    WriteButton (BID_SHIPS);
+    
+    // Build
+    WriteButton (BID_BUILD);
+    
+    // Tech
+    WriteButton (BID_TECH);
+    
+    if (m_iGameState & STARTED) {
+
+        if (m_iGameOptions & DISPLACE_ENDTURN_BUTTON) {
+            OutputText ("</td><td width=\"2%\" align=\"right\">");
+        }
+        
+        if (m_iGameOptions & UPDATED) {
+            // Unend Turn
+            WriteButton (BID_UNENDTURN);
+        } else {
+            // End Turn
+            WriteButton (BID_ENDTURN);
+        }
+        
+    } else {
+        
+        OutputText ("</td><td width=\"2%\" align=\"right\">");
+        WriteButton (BID_QUIT);
+    }
+    
+    OutputText ("</td></tr></table><p>");
+}
+
+
+void HtmlRenderer::WriteGameNextUpdateString()
+{
+    int iErrCode;
+
+    OutputText ("<p>");
+    
+    if (m_iNumNewUpdates > 0) {
+        
+        OutputText ("<strong>");
+        m_pHttpResponse->WriteText (m_iNumNewUpdates);
+        OutputText ("</strong> update");
+        if (m_iNumNewUpdates != 1) {
+            OutputText ("s");
+        }
+
+        OutputText (", next ");
+
+    } else {
+
+        OutputText ("First update ");
+    }
+
+    unsigned int iNumEmpires;
+    iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
+    if (iErrCode != OK) {
+        Assert (false);
+        return;
+    }
+    
+    if (!(m_iGameOptions & COUNTDOWN) || (m_iGameState & PAUSED) || !(m_iGameState & STARTED)) {
+        
+        if (!(m_iGameState & STARTED)) {
+            
+            int iNumNeeded, iTotal, 
+            
+            iErrCode = GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
+            if (iErrCode != OK) {
+                Assert (false);
+                return;
+            }
+            
+            iTotal = iNumNeeded - iNumEmpires;
+            
+            OutputText ("when <strong>");
+            m_pHttpResponse->WriteText (iTotal);
+            OutputText ("</strong>");
+            if (iTotal == 1) {
+                OutputText (" more empire joins");
+            } else {
+                OutputText (" more empires join");
+            }
+
+        } else {
+            
+            OutputText ("in ");
+            WriteTime (m_sSecondsUntil);
+            
+            if (m_iGameState & PAUSED) {
+                if (m_iGameState & ADMIN_PAUSED) {
+                    OutputText (" (<strong>paused by an administrator</strong>)");
+                } else {
+                    OutputText (" (<strong>paused</strong>)");
+                }
+            }
+        }
+        
+    } else {
+        
+        OutputText (
+            
+            "in <input name=\"jtimer\" size=\"22\"><script><!--\n"\
+            "var t = (new Date()).getTime()/1000+");
+        
+        m_pHttpResponse->WriteText (m_sSecondsUntil - 1);
+        OutputText (
+            
+            ";\n"\
+            "function count() {\n"\
+            "var next = '';\n"\
+            "var pre = '';\n"\
+            "var now = new Date();\n"\
+            "var sec = Math.floor(t-now.getTime()/1000);\n"\
+            "if (sec < 1) {\n"\
+            "if (sec == 0) {\n"\
+            "document.forms[0].jtimer.value='The update is occurring...';\n"\
+            "setTimeout('count()',2000); return;\n"\
+            "}\n"\
+            "document.forms[0].jtimer.value='The update occurred';\n");
+        
+        if (m_iGameOptions & AUTO_REFRESH) {
+            OutputText ("setTimeout('document.forms[0].submit()', 1000);\n");
+        }
+        
+        OutputText (
+            
+            "return;\n"\
+            "}\n"\
+            "var hrs = Math.floor(sec/3600);\n"\
+            "sec -= hrs*3600;\n"\
+            "var min = Math.floor(sec/60);\n"\
+            "sec -= min*60;\n"\
+            "if (hrs) { next += hrs+' hr'; if (hrs != 1) next += 's'; }\n"\
+            "if (min) { if (hrs) next += ', '; next += min+' min'; }\n"\
+            "if (sec) { if (hrs || min) next += ', '; next += sec+' sec'; }\n"\
+            "document.forms[0].jtimer.value=pre+next;\n"\
+            "setTimeout('count()',500);\n"\
+            "}\n"\
+            "count(); // --></script>");
+    }
+
+    if (m_iGameState & STARTED) {
+
+        int iUpdated;
+        iErrCode = GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
+        if (iErrCode != OK) {
+            Assert (false);
+            return;
+        }
+
+        if (m_iGameOptions & COUNTDOWN) {
+            OutputText (" ");
+        } else {
+            OutputText (", ");
+        }
+
+        OutputText ("<strong>");
+        m_pHttpResponse->WriteText (iUpdated);
+        OutputText ("</strong> of <strong>");
+        m_pHttpResponse->WriteText (iNumEmpires);
+        OutputText ("</strong> ready");
+    }
+
+    if (m_iGameState & PAUSED && 
+        m_iGameState & STILL_OPEN && 
+        !(m_iGameState & ADMIN_PAUSED)) {
+        OutputText("<p>(The game is still open, and will unpause if another empire joins)");
+    }
+    
+    OutputText ("<p>");
+}
+
+
+int HtmlRenderer::PostGamePageInformation()
+{
+    int64 i64PasswordHash = 0;
+    int iErrCode = GetPasswordHashForGamePage (m_tNewSalt, &i64PasswordHash);
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
+    m_pHttpResponse->WriteText (m_iEmpireKey);
+    OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
+    m_pHttpResponse->WriteText (i64PasswordHash);
+    OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
+    m_pHttpResponse->WriteText (m_tNewSalt);
+    OutputText ("\"><input type=\"hidden\" name=\"GameClass\" value=\"");
+    m_pHttpResponse->WriteText (m_iGameClass);
+    OutputText ("\"><input type=\"hidden\" name=\"GameNumber\" value=\"");
+    m_pHttpResponse->WriteText (m_iGameNumber);
+    OutputText ("\"><input type=\"hidden\" name=\"Updates\" value=\"");
+    m_pHttpResponse->WriteText (m_iNumNewUpdates);
+    OutputText ("\"><input type=\"hidden\" name=\"Auto\" value=\"0\">");
+
+    return OK;
+}
+
+void HtmlRenderer::CloseGamePage()
+{
+    OutputText ("<p>");
+    WriteSeparatorString (m_iSeparatorKey);
+    OutputText ("<p><strong><font size=\"3\">");
+    
+    if (m_bRepeatedButtons) {
+        WriteGameButtons();
+        OutputText ("<p>");
+    }
+    
+    WriteContactLine();
+    
+    WriteButton (BID_SERVERNEWS);
+    WriteButton (BID_SERVERINFORMATION);
+    WriteButton (BID_DOCUMENTATION);
+
+    OutputText ("<br>");
+
+    WriteButton (BID_CONTRIBUTIONS);
+    WriteButton (BID_CREDITS);
+    WriteButton (BID_TOS);
+
+    MilliSeconds msTime = GetTimerCount();
+    
+    OnPageRender (msTime);
+    
+    OutputText ("<p>");
+    WriteVersionString();
+    OutputText ("<br>Script time: ");
+    m_pHttpResponse->WriteText ((int) msTime);
+    OutputText (" ms</font></strong></center></form></body></html>");
 }

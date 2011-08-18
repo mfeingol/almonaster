@@ -54,7 +54,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_DECLINE)) {
             iTosPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
         }
         break;
 
@@ -76,7 +76,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))

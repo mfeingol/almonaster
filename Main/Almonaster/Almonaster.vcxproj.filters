@@ -65,9 +65,6 @@
     <ClCompile Include="GameEngine\GameEngineGameEmpireData.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
-    <ClCompile Include="GameEngine\GameEngineGameObject.cpp">
-      <Filter>GameEngine Source</Filter>
-    </ClCompile>
     <ClCompile Include="GameEngine\GameEngineGames.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
@@ -362,18 +359,18 @@
     <ClCompile Include="HtmlRenderer\HtmlPageFlow.cpp">
       <Filter>HtmlRenderer</Filter>
     </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlPageWiring.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
+    <ClCompile Include="HtmlRenderer\HtmlTableCache.cpp">
+      <Filter>HtmlRenderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">
       <Filter>GameEngine Headers</Filter>
     </ClInclude>
     <ClInclude Include="GameEngine\GameEngineConstants.h">
-      <Filter>GameEngine Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="GameEngine\GameEngineGameObject.h">
-      <Filter>GameEngine Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="GameEngine\GameEngineLocks.h">
       <Filter>GameEngine Headers</Filter>
     </ClInclude>
     <ClInclude Include="GameEngine\GameEngineSchema.h">
@@ -383,9 +380,6 @@
       <Filter>GameEngine Headers</Filter>
     </ClInclude>
     <ClInclude Include="GameEngine\GameEngineUI.h">
-      <Filter>GameEngine Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="GameEngine\IGameEngine.h">
       <Filter>GameEngine Headers</Filter>
     </ClInclude>
     <ClInclude Include="Almonaster.h">
@@ -436,13 +430,13 @@
     <ClInclude Include="AlmonasterEventSink.h">
       <Filter>Almonaster</Filter>
     </ClInclude>
-    <ClInclude Include="Interface.h">
-      <Filter>Almonaster</Filter>
-    </ClInclude>
     <ClInclude Include="AsyncManager.h">
       <Filter>Almonaster</Filter>
     </ClInclude>
     <ClInclude Include="StdAfx.h">
+      <Filter>Almonaster</Filter>
+    </ClInclude>
+    <ClInclude Include="IAlmonasterEventSink.h">
       <Filter>Almonaster</Filter>
     </ClInclude>
   </ItemGroup>

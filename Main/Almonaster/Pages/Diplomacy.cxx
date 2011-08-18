@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -73,7 +71,7 @@ if (m_bOwnPost && !m_bRedirection) {
     // Make sure the sendmessage button was pressed
     if (WasButtonPressed (BID_SENDMESSAGE)) {
 
-        bRedirectTest = false;
+        m_bRedirectTest = false;
 
         const char* pszSentMessage;
         if (
@@ -91,7 +89,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 // Parse target list
                 bool bBroadcast = false, bWar = false, bTruce = false, bTrade = false, bAlliance = false;
-                int iNumTargets = pHttpForm->GetNumForms(), iNumEmpires;
+                int iNumTargets = pHttpForm->GetNumForms();
+                unsigned int iNumEmpires;
 
                 Assert (iNumTargets > 0);
 
@@ -470,7 +469,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmitGame (&pageRedirect))
@@ -503,8 +502,9 @@ unsigned int* piProxyEmpireKey = NULL;
 bool bSubjective = false;
 
 int piDipKey [NUM_DIP_LEVELS], iSelected = 0, iNumOptions = 0, iSelectedIndex, iWeOffer, 
-    iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey, iActiveEmpires,
+    iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey,
     iRuins, iSec, iMin, iHour, iDay, iMonth, iYear, * piStatus = NULL, * piIndex = NULL, iIndex;
+unsigned int iActiveEmpires;
 
 DayOfWeek day;
 UTCTime tCreated;
@@ -1390,7 +1390,7 @@ if (iErrCode != OK) {
     goto Cleanup;
 }
 
-iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires);
+iErrCode = GetNumEmpiresInGame(m_iGameClass, m_iGameNumber, &iActiveEmpires);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;

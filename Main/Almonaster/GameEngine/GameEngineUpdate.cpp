@@ -255,7 +255,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Get update period
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -326,7 +326,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     tRealLastUpdateTime = vTemp.GetInteger64();
 
     // Get options
-    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -336,7 +336,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     if (!bWeekends) {
 
         // Get after weekend delay
-        iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
+        iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;

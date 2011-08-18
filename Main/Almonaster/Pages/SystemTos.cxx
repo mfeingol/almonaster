@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 
 // Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
@@ -54,7 +53,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_DECLINE)) {
             iTosPage = 1;
-            bRedirectTest = false;
+            m_bRedirectTest = false;
 
 	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
 	        sprintf (pszText, "%s declined the Terms of Service", m_vEmpireName.GetCharPtr());
@@ -79,7 +78,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))

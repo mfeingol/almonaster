@@ -1,5 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -58,7 +57,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 sscanf (pszSpectator, "Spectate%d.%d", &iGameClassKey, &iGameNumber) == 2) {
 
                 iSpectatorGamesPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             }
@@ -74,14 +73,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 ) {
 
                 iSpectatorGamesPage = 2;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             // View Empire Information
             if (WasButtonPressed (BID_VIEWEMPIREINFORMATION) &&
                 iGameClassKey != NO_KEY && iGameNumber != -1) {
                 iSpectatorGamesPage = 3;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             break;
@@ -92,14 +91,14 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_VIEWMAP) &&
                 iGameClassKey != NO_KEY && iGameNumber != -1) {
                 iSpectatorGamesPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             // View Empire Information
             if (WasButtonPressed (BID_VIEWEMPIREINFORMATION) &&
                 iGameClassKey != NO_KEY && iGameNumber != -1) {
                 iSpectatorGamesPage = 3;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             break;
@@ -110,7 +109,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_VIEWMAP) &&
                 iGameClassKey != NO_KEY && iGameNumber != -1) {
                 iSpectatorGamesPage = 1;
-                bRedirectTest = false;
+                m_bRedirectTest = false;
             }
 
             break;
@@ -122,7 +121,7 @@ if (m_bOwnPost && !m_bRedirection) {
 }
 
 Redirection:
-if (bRedirectTest)
+if (m_bRedirectTest)
 {
     PageId pageRedirect;
     if (RedirectOnSubmit (&pageRedirect))
@@ -163,9 +162,9 @@ case 0:
     %><input type="hidden" name="SpectSubPage" value="0"><%
 
     // Get open games
-    int iNumClosedGames = 0, * piGameClass, * piGameNumber;
-
-    iErrCode = GetClosedGames (&piGameClass, &piGameNumber, &iNumClosedGames);
+    int * piGameClass, * piGameNumber;
+    unsigned int iNumClosedGames = 0;
+    iErrCode = GetClosedGames(&piGameClass, &piGameNumber, &iNumClosedGames);
     if (iErrCode != OK) {
         %><h3>The list of spectator games could not be read. The error was <% Write (iErrCode); %></h3><% 
     }
@@ -205,7 +204,7 @@ case 0:
             int iSuperClassKey;
             bool bFlag;
 
-            for (i = 0; i < iNumClosedGames; i ++) {
+            for (i = 0; i < (int)iNumClosedGames; i ++) {
 
                 iGameClass = piGameClass[i];
                 iGameNumber = piGameNumber[i];

@@ -65,15 +65,14 @@ unsigned int HtmlRenderer::m_siNumGamingEmpires;
 //////////////////////////////////////////////////////////////////////
 
 
-HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 {
-    bRedirectTest = true;
-
+    m_pgPageId = pgPageId;
     m_pHttpRequest = pHttpRequest;
     m_pHttpResponse = pHttpResponse;
-    
-    m_pgPageId = pageId;
-    
+
+    m_bRedirectTest = true;
+   
     m_vEmpireName = (const char*) NULL;
     m_vPassword = (const char*) NULL;
     m_vPreviousIPAddress = (const char*) NULL;
@@ -124,12 +123,8 @@ HtmlRenderer::HtmlRenderer (PageId pageId, IHttpRequest* pHttpRequest, IHttpResp
     m_iNumOldUpdates = 0;
 }
 
-HtmlRenderer::~HtmlRenderer()
+int HtmlRenderer::StaticInitialize()
 {
-}
-
-int HtmlRenderer::Initialize() {
-
     int iErrCode = OK;
 
     if (!ms_bLocksInitialized) {
@@ -848,8 +843,8 @@ bool HtmlRenderer::VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash) {
     return iRealHash == iHash;
 }
 
-bool HtmlRenderer::RedirectOnSubmitGame (PageId* ppageRedirect) {
-    
+bool HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect)
+{
     int iErrCode;
     bool bFlag;
     
@@ -1255,270 +1250,6 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     }
     
     return OK;
-}
-
-void HtmlRenderer::WriteGameButtons() {
-    
-    OutputText ("<table border=\"0\" width=\"90%\"><tr><td width=\"2%\" align=\"left\">");
-    
-    // Info
-    WriteButton (BID_INFO);
-    
-    OutputText ("</td><td align=\"center\">");
-    
-    // Map
-    WriteButton (BID_MAP);
-    
-    // Planets
-    WriteButton (BID_PLANETS);
-    
-    // Diplomacy
-    WriteButton (BID_DIPLOMACY);
-    
-    OutputText ("</td><td width=\"2%\" align=\"right\">");
-    
-    // Exit
-    WriteButton (BID_EXIT);
-    
-    OutputText ("</td></tr><tr><td width=\"2%\" align=\"left\">");
-    
-    // Options
-    WriteButton (BID_OPTIONS);
-    
-    OutputText ("</td><td align=\"center\">");
-    
-    // Ships
-    WriteButton (BID_SHIPS);
-    
-    // Build
-    WriteButton (BID_BUILD);
-    
-    // Tech
-    WriteButton (BID_TECH);
-    
-    if (m_iGameState & STARTED) {
-
-        if (m_iGameOptions & DISPLACE_ENDTURN_BUTTON) {
-            OutputText ("</td><td width=\"2%\" align=\"right\">");
-        }
-        
-        if (m_iGameOptions & UPDATED) {
-            // Unend Turn
-            WriteButton (BID_UNENDTURN);
-        } else {
-            // End Turn
-            WriteButton (BID_ENDTURN);
-        }
-        
-    } else {
-        
-        OutputText ("</td><td width=\"2%\" align=\"right\">");
-        WriteButton (BID_QUIT);
-    }
-    
-    OutputText ("</td></tr></table><p>");
-}
-
-
-void HtmlRenderer::WriteGameNextUpdateString() {
-
-    int iErrCode;
-
-    OutputText ("<p>");
-    
-    if (m_iNumNewUpdates > 0) {
-        
-        OutputText ("<strong>");
-        m_pHttpResponse->WriteText (m_iNumNewUpdates);
-        OutputText ("</strong> update");
-        if (m_iNumNewUpdates != 1) {
-            OutputText ("s");
-        }
-
-        OutputText (", next ");
-
-    } else {
-
-        OutputText ("First update ");
-    }
-
-    int iNumEmpires;
-    iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
-    if (iErrCode != OK) {
-        Assert (false);
-        return;
-    }
-    
-    if (!(m_iGameOptions & COUNTDOWN) || (m_iGameState & PAUSED) || !(m_iGameState & STARTED)) {
-        
-        if (!(m_iGameState & STARTED)) {
-            
-            int iNumNeeded, iTotal, 
-            
-            iErrCode = GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
-            if (iErrCode != OK) {
-                Assert (false);
-                return;
-            }
-            
-            iTotal = iNumNeeded - iNumEmpires;
-            
-            OutputText ("when <strong>");
-            m_pHttpResponse->WriteText (iTotal);
-            OutputText ("</strong>");
-            if (iTotal == 1) {
-                OutputText (" more empire joins");
-            } else {
-                OutputText (" more empires join");
-            }
-
-        } else {
-            
-            OutputText ("in ");
-            WriteTime (m_sSecondsUntil);
-            
-            if (m_iGameState & PAUSED) {
-                if (m_iGameState & ADMIN_PAUSED) {
-                    OutputText (" (<strong>paused by an administrator</strong>)");
-                } else {
-                    OutputText (" (<strong>paused</strong>)");
-                }
-            }
-        }
-        
-    } else {
-        
-        OutputText (
-            
-            "in <input name=\"jtimer\" size=\"22\"><script><!--\n"\
-            "var t = (new Date()).getTime()/1000+");
-        
-        m_pHttpResponse->WriteText (m_sSecondsUntil - 1);
-        OutputText (
-            
-            ";\n"\
-            "function count() {\n"\
-            "var next = '';\n"\
-            "var pre = '';\n"\
-            "var now = new Date();\n"\
-            "var sec = Math.floor(t-now.getTime()/1000);\n"\
-            "if (sec < 1) {\n"\
-            "if (sec == 0) {\n"\
-            "document.forms[0].jtimer.value='The update is occurring...';\n"\
-            "setTimeout('count()',2000); return;\n"\
-            "}\n"\
-            "document.forms[0].jtimer.value='The update occurred';\n");
-        
-        if (m_iGameOptions & AUTO_REFRESH) {
-            OutputText ("setTimeout('document.forms[0].submit()', 1000);\n");
-        }
-        
-        OutputText (
-            
-            "return;\n"\
-            "}\n"\
-            "var hrs = Math.floor(sec/3600);\n"\
-            "sec -= hrs*3600;\n"\
-            "var min = Math.floor(sec/60);\n"\
-            "sec -= min*60;\n"\
-            "if (hrs) { next += hrs+' hr'; if (hrs != 1) next += 's'; }\n"\
-            "if (min) { if (hrs) next += ', '; next += min+' min'; }\n"\
-            "if (sec) { if (hrs || min) next += ', '; next += sec+' sec'; }\n"\
-            "document.forms[0].jtimer.value=pre+next;\n"\
-            "setTimeout('count()',500);\n"\
-            "}\n"\
-            "count(); // --></script>");
-    }
-
-    if (m_iGameState & STARTED) {
-
-        int iUpdated;
-        iErrCode = GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
-        if (iErrCode != OK) {
-            Assert (false);
-            return;
-        }
-
-        if (m_iGameOptions & COUNTDOWN) {
-            OutputText (" ");
-        } else {
-            OutputText (", ");
-        }
-
-        OutputText ("<strong>");
-        m_pHttpResponse->WriteText (iUpdated);
-        OutputText ("</strong> of <strong>");
-        m_pHttpResponse->WriteText (iNumEmpires);
-        OutputText ("</strong> ready");
-    }
-
-    if (m_iGameState & PAUSED && 
-        m_iGameState & STILL_OPEN && 
-        !(m_iGameState & ADMIN_PAUSED)) {
-        OutputText("<p>(The game is still open, and will unpause if another empire joins)");
-    }
-    
-    OutputText ("<p>");
-}
-
-
-int HtmlRenderer::PostGamePageInformation() {
-    
-    int64 i64PasswordHash = 0;
-    int iErrCode = GetPasswordHashForGamePage (m_tNewSalt, &i64PasswordHash);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
-    OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
-    m_pHttpResponse->WriteText (m_iEmpireKey);
-    OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
-    m_pHttpResponse->WriteText (i64PasswordHash);
-    OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
-    m_pHttpResponse->WriteText (m_tNewSalt);
-    OutputText ("\"><input type=\"hidden\" name=\"GameClass\" value=\"");
-    m_pHttpResponse->WriteText (m_iGameClass);
-    OutputText ("\"><input type=\"hidden\" name=\"GameNumber\" value=\"");
-    m_pHttpResponse->WriteText (m_iGameNumber);
-    OutputText ("\"><input type=\"hidden\" name=\"Updates\" value=\"");
-    m_pHttpResponse->WriteText (m_iNumNewUpdates);
-    OutputText ("\"><input type=\"hidden\" name=\"Auto\" value=\"0\">");
-
-    return OK;
-}
-
-void HtmlRenderer::CloseGamePage() {
-    
-    OutputText ("<p>");
-    WriteSeparatorString (m_iSeparatorKey);
-    OutputText ("<p><strong><font size=\"3\">");
-    
-    if (m_bRepeatedButtons) {
-        WriteGameButtons();
-        OutputText ("<p>");
-    }
-    
-    WriteContactLine();
-    
-    WriteButton (BID_SERVERNEWS);
-    WriteButton (BID_SERVERINFORMATION);
-    WriteButton (BID_DOCUMENTATION);
-
-    OutputText ("<br>");
-
-    WriteButton (BID_CONTRIBUTIONS);
-    WriteButton (BID_CREDITS);
-    WriteButton (BID_TOS);
-
-    MilliSeconds msTime = GetTimerCount();
-    
-    OnPageRender (msTime);
-    
-    OutputText ("<p>");
-    WriteVersionString();
-    OutputText ("<br>Script time: ");
-    m_pHttpResponse->WriteText ((int) msTime);
-    OutputText (" ms</font></strong></center></form></body></html>");
 }
 
 bool HtmlRenderer::ShipOrFleetNameFilter (const char* pszName) {
@@ -5694,7 +5425,7 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
                                                    int iGameNumber, Seconds iSeconds, Seconds iSecondsUntil, 
                                                    int iNumUpdates, bool bOpen, bool bPaused, bool bAdminPaused, 
                                                    bool bStarted, const char* pszGamePassword, 
-                                                   Variant* pvEmpireName, int iNumActiveEmpires, 
+                                                   Variant** ppvEmpiresInGame, int iNumActiveEmpires, 
                                                    const UTCTime& tCreationTime, bool bAdmin) {
     
     int i;
@@ -5786,10 +5517,10 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
     Assert (iNumActiveEmpires > 0);
     
     for (i = 0; i < iNumActiveEmpires - 1; i ++) {
-        m_pHttpResponse->WriteText (pvEmpireName[i].GetCharPtr());
+        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
         OutputText (", ");
     }
-    m_pHttpResponse->WriteText (pvEmpireName[i].GetCharPtr());
+    m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
     
     OutputText (")</td>");
 }
@@ -6460,14 +6191,14 @@ static const bool g_bDeadEmpireHeadersColspan[] = {
     true,
 };
 
-void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, bool bAdmin) {
+void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool bAdmin) {
 
-    int i, iErrCode, iNumEmpires, iValue, iFoeKey, iWar, iTruce, iTrade, iAlliance, iUnmet, iNumTopHeaders,
-        * piNumUpdatesIdle, * piOptions, iIdleEmpires, iResignedEmpires;
-    unsigned int iKey, iNumRows;
+    int iErrCode, iValue, iFoeKey, iWar, iTruce, iTrade, iAlliance, iUnmet, * piNumUpdatesIdle, * piOptions;
+    unsigned int i, iKey, iNumRows, iNumEmpires, iIdleEmpires, iResignedEmpires, iNumTopHeaders;
     float fValue;
 
-    Variant* pvEmpireKey = NULL, vValue, vTemp;
+    Variant** ppvEmpiresInGame = NULL;
+    Variant vValue, vTemp;
     UTCTime tCurrentTime, tValue;
 
     String strWar, strTruce, strTrade, strAlliance;
@@ -6479,21 +6210,22 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
     Time::GetTime (&tCurrentTime);
 
-    iErrCode = GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumEmpires);
-    if (iErrCode != OK) {
+    iErrCode = GetEmpiresInGame(iGameClass, iGameNumber, &ppvEmpiresInGame, &iNumEmpires);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
-    piNumUpdatesIdle = (int*) StackAlloc (2 * iNumEmpires * sizeof (int));
+    piNumUpdatesIdle = (int*)StackAlloc(2 * iNumEmpires * sizeof(int));
     piOptions = piNumUpdatesIdle + iNumEmpires;
 
     iIdleEmpires = iResignedEmpires = 0;
     for (i = 0; i < iNumEmpires; i ++) {
 
 #ifdef _DEBUG
-        CheckTargetPop (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        CheckTargetPop (iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
 #endif
-        GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
 
         iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::Options, &vValue);
         if (iErrCode != OK) {
@@ -6581,8 +6313,9 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
     for (i = 0; i < iNumEmpires; i ++) {
 
         int iOptions;
+        unsigned int iCurrentEmpireKey = ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger();
 
-        GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+        GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iCurrentEmpireKey);
 
         OutputText ("<tr>");
 
@@ -6590,10 +6323,6 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         iOptions = piOptions[i];
 
         // Name
-        iErrCode = GetEmpireName (pvEmpireKey[i].GetInteger(), &vValue);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
 
         OutputText ("<td align=\"center\">");
 
@@ -6601,7 +6330,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             OutputText ("<strike>");
         }
 
-        m_pHttpResponse->WriteText (vValue.GetCharPtr());
+        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
 
         if (iOptions & RESIGNED) {
             OutputText ("</strike>");
@@ -6610,7 +6339,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         OutputText ("</td>");
 
         // Alien
-        iErrCode = GetEmpireProperty (pvEmpireKey[i].GetInteger(), SystemEmpireData::AlienKey, &vTemp);
+        iErrCode = GetEmpireProperty(iCurrentEmpireKey, SystemEmpireData::AlienKey, &vTemp);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -6622,7 +6351,7 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
         WriteProfileAlienString (
             iValue,
-            pvEmpireKey[i].GetInteger(),
+            iCurrentEmpireKey,
             vValue.GetCharPtr(),
             0,
             "ProfileLink",
@@ -6652,11 +6381,11 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         fValue = vValue.GetFloat();
 
         OutputText ("<td align=\"center\">");
-        m_pHttpResponse->WriteText (GetMilitaryValue (fValue));
+        m_pHttpResponse->WriteText(GetMilitaryValue (fValue));
         OutputText ("</td>");
 
-        if (bAdmin) {
-
+        if (bAdmin)
+        {
             // Tech
             iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::TechLevel, &vValue);
             if (iErrCode != OK) {
@@ -6680,26 +6409,26 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
         m_pHttpResponse->WriteText (iValue);
         OutputText ("</td>");
 
-        if (bAdmin) {
-
+        if (bAdmin)
+        {
             // Ships
-            GET_GAME_EMPIRE_SHIPS (pszGameEmpireShips, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            GET_GAME_EMPIRE_DIPLOMACY (pszGameEmpireDip, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+            GET_GAME_EMPIRE_SHIPS(pszGameEmpireShips, iGameClass, iGameNumber, iCurrentEmpireKey);
+            GET_GAME_EMPIRE_DIPLOMACY(pszGameEmpireDip, iGameClass, iGameNumber, iCurrentEmpireKey);
 
-            iErrCode = t_pConn->GetNumRows (pszGameEmpireShips, (unsigned int*) &iValue);
+            iErrCode = t_pConn->GetNumRows(pszGameEmpireShips, (unsigned int*) &iValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
 
             OutputText ("<td align=\"center\">");
-            m_pHttpResponse->WriteText (iValue);
+            m_pHttpResponse->WriteText(iValue);
             OutputText ("</td>");
 
             Variant vProp;
             iErrCode = GetEmpireGameProperty(
                 iGameClass, 
                 iGameNumber, 
-                pvEmpireKey[i].GetInteger(),
+                iCurrentEmpireKey,
                 GameEmpireData::MapFairnessResourcesClaimed,
                 &vProp
                 );
@@ -6724,8 +6453,8 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
             strTrade.Clear();
             strAlliance.Clear();
 
-            while (true) {
-
+            while (true)
+            {
                 String* pStr = &strWar;
                 Variant vName;
 
@@ -7006,8 +6735,9 @@ void HtmlRenderer::RenderEmpireInformation (int iGameClass, int iGameNumber, boo
 
 Cleanup:
 
-    if (pvEmpireKey != NULL) {
-        FreeData (pvEmpireKey);
+    if (ppvEmpiresInGame != NULL)
+    {
+        FreeData(ppvEmpiresInGame);
     }
 }
 
@@ -7473,9 +7203,8 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
                                                   unsigned int iNumActiveGames, 
                                                   unsigned int iNumOpenGames,
                                                   unsigned int iNumClosedGames,
-                                                  bool bAdmin) {
-
-    int iErrCode;
+                                                  bool bAdmin)
+{
     unsigned int i;
 
     if (iNumActiveGames == 0) {
@@ -7542,8 +7271,9 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
     m_pHttpResponse->WriteText (pszTableColor, stLen);
     OutputText ("\"><strong>Administer Game</strong></th></tr>");
 
-    Variant* pvEmpireKey = NULL, vGamePassword, vName;
-    int iNumActiveEmpires, j, iNumUpdates;
+    Variant** ppvEmpiresInGame = NULL, vGamePassword, vName;
+    unsigned int iNumActiveEmpires;
+    int iNumUpdates;
     bool bPaused, bOpen, bStarted;
 
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
@@ -7580,7 +7310,6 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
     int iGameState;
     UTCTime tCreationTime;
 
-    Variant* pvEmpireName;
     char pszAdmin [192];
 
     for (i = 0; i < iNumActiveGames; i ++) {
@@ -7592,10 +7321,8 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             GetGameClassUpdatePeriod (piGameClass[i], &iSeconds) != OK ||
             GetGameProperty(piGameClass[i], piGameNumber[i], GameData::Password, &vGamePassword) != OK ||
             GetGameCreationTime (piGameClass[i], piGameNumber[i], &tCreationTime) != OK ||
-            GetEmpiresInGame (piGameClass[i], piGameNumber[i], &pvEmpireKey, 
-                &iNumActiveEmpires) != OK ||
-            GetGameUpdateData (piGameClass[i], piGameNumber[i], &iSecondsSince, 
-                &iSecondsUntil, &iNumUpdates, &iGameState) != OK
+            GetEmpiresInGame(piGameClass[i], piGameNumber[i], &ppvEmpiresInGame, &iNumActiveEmpires) != OK ||
+            GetGameUpdateData (piGameClass[i], piGameNumber[i], &iSecondsSince, &iSecondsUntil, &iNumUpdates, &iGameState) != OK
             ) {
             continue;
         }
@@ -7612,23 +7339,9 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             OutputText ("</td></tr>");
         }
 
-        pvEmpireName = new Variant [iNumActiveEmpires];
-        if (pvEmpireName != NULL) {
-
-            for (j = 0; j < iNumActiveEmpires; j ++) {
-
-                iErrCode = GetEmpireName (pvEmpireKey[j], pvEmpireName + j);
-                if (iErrCode != OK) {
-                    pvEmpireName[j] = "";
-                }
-            }
-
-            WriteGameAdministratorGameData (pszGameClassName, piGameNumber[i], iSeconds, iSecondsUntil, 
-                iNumUpdates, bOpen, bPaused, bAdminPaused, bStarted, 
-                vGamePassword.GetCharPtr(), pvEmpireName, iNumActiveEmpires, tCreationTime, bAdmin);
-
-            delete [] pvEmpireName;
-        }
+        WriteGameAdministratorGameData (pszGameClassName, piGameNumber[i], iSeconds, iSecondsUntil, 
+            iNumUpdates, bOpen, bPaused, bAdminPaused, bStarted, 
+            vGamePassword.GetCharPtr(), ppvEmpiresInGame, iNumActiveEmpires, tCreationTime, bAdmin);
 
         OutputText ("<td align=\"center\">"); 
 
@@ -7641,7 +7354,7 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             pszAdmin
             );
 
-        FreeData (pvEmpireKey);
+        FreeData(ppvEmpiresInGame);
 
         OutputText ("</td></tr>");
     }
@@ -7653,8 +7366,9 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
 void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bAdmin) {
 
     bool bStarted, bExists, bPaused, bOpen, bAdminPaused;
-    Variant vGamePassword, * pvEmpireKey = NULL;
-    int i, iErrCode, iNumUpdates, iNumActiveEmpires, iGameState;
+    Variant vGamePassword, ** ppvEmpiresInGame = NULL;
+    int iErrCode, iNumUpdates, iGameState;
+    unsigned int i, iNumActiveEmpires;
     Seconds iSeconds, iSecondsUntil, iSecondsSince;
     UTCTime tCreationTime;
 
@@ -7666,7 +7380,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         GetGameClassName (iGameClass, pszGameClassName) != OK ||
         GetGameClassUpdatePeriod (iGameClass, &iSeconds) != OK ||
         GetGameProperty(iGameClass, iGameNumber, GameData::Password, &vGamePassword) != OK ||
-        GetEmpiresInGame (iGameClass, iGameNumber, &pvEmpireKey, &iNumActiveEmpires) != OK ||
+        GetEmpiresInGame (iGameClass, iGameNumber, &ppvEmpiresInGame, &iNumActiveEmpires) != OK ||
         GetGameCreationTime (iGameClass, iGameNumber, &tCreationTime) != OK ||
         GetGameUpdateData (iGameClass, iGameNumber, &iSecondsSince, &iSecondsUntil, 
             &iNumUpdates, &iGameState) != OK
@@ -7681,20 +7395,6 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
     bAdminPaused = (iGameState & ADMIN_PAUSED) != 0;
     bOpen = (iGameState & STILL_OPEN) != 0;
     bStarted = (iGameState & STARTED) != 0;
-
-    Variant* pvEmpireName = new Variant [iNumActiveEmpires];
-    if (pvEmpireName == NULL) {
-        OutputText ("<p>The server is out of memory");
-        return;
-    }
-
-    for (i = 0; i < iNumActiveEmpires; i ++) {
-
-        iErrCode = GetEmpireName (pvEmpireKey[i], pvEmpireName + i);
-        if (iErrCode != OK) {
-            pvEmpireName[i] = "";
-        }
-    }
 
     OutputText ("<input type=\"hidden\" name=\"GameClass\" value=\"");
     m_pHttpResponse->WriteText (iGameClass);
@@ -7815,7 +7515,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         OutputText ("</td></tr>");
     }
 
-    int iNumResigned, * piResignedKey;
+    unsigned int iNumResigned, * piResignedKey;
     iErrCode = GetResignedEmpiresInGame (iGameClass, iGameNumber, &piResignedKey, &iNumResigned);
 
     if (iErrCode == OK && iNumResigned > 0) {
@@ -7848,9 +7548,9 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
 
     for (i = 0; i < iNumActiveEmpires; i ++) {
         OutputText ("<option value=\"");
-        m_pHttpResponse->WriteText (pvEmpireKey[i].GetInteger());
+        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
         OutputText ("\">");
-        m_pHttpResponse->WriteText (pvEmpireName[i].GetCharPtr());
+        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
         OutputText ("</option>");
     }
     OutputText (" ");
@@ -7879,9 +7579,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         "</table>"
         );
 
-    FreeData (pvEmpireKey);
-
-    delete [] pvEmpireName;
+    FreeData (ppvEmpiresInGame);
 }
 
 

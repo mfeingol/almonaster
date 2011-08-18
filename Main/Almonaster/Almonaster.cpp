@@ -19,8 +19,7 @@
 #include "Almonaster.h"
 #include "Global.h"
 
-#include "GameEngine/GameEngine.h"
-#include "HtmlRenderer/HtmlRenderer.h"
+#include "HtmlRenderer.h"
 #include "Chatroom/CChatroom.h"
 #include "SqlDatabase.h"
 
@@ -108,7 +107,7 @@ int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPage
     m_bNoBuffering = atoi (pszTemp) == 0;
 
     // Initialize HtmlRenderer statics
-    iErrCode = HtmlRenderer::Initialize();
+    iErrCode = HtmlRenderer::StaticInitialize();
     if (iErrCode != OK)
     {
         pReport->WriteReport ("Error: HtmlRenderer::Initialize failed");
@@ -154,74 +153,31 @@ int Almonaster::OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 
 // Here we know that someone has POSTED information to our page source,
 // so we need to reply with some page or other
-int Almonaster::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
-
+int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+{
     int iErrCode;
-
-    // Find the right function to dispatch to
     PageId pageId = LOGIN;
-    IHttpForm* pHttpForm = pHttpRequest->GetForm ("PageId");
 
-    if (pHttpForm != NULL) {
-
+    // Determine the submission page
+    IHttpForm* pHttpForm = pHttpRequest->GetForm("PageId");
+    if (pHttpForm != NULL)
+    {
         int iValue = pHttpForm->GetIntValue();
-        if (iValue > MIN_PAGE_ID && iValue < MAX_PAGE_ID) {
-            pageId = (PageId) iValue;
+        if (iValue > MIN_PAGE_ID && iValue < MAX_PAGE_ID)
+        {
+            pageId = (PageId)iValue;
         }
     }
 
-    // Enable chunked encoding, if wanted or if the page requested is a doc page
-    if (m_bNoBuffering || pageId == SYSTEM_DOCUMENTATION || pageId == GAME_DOCUMENTATION) {
+    // Enable chunked encoding if so configured if the page requested is a doc page
+    if (m_bNoBuffering || pageId == SYSTEM_DOCUMENTATION || pageId == GAME_DOCUMENTATION)
+    {
         pHttpResponse->SetNoBuffering();
     }
 
-    global.TlsOpenConnection();
-
-
-
-
-    // TODOTODOTODO - HACKHACKHACK
-    const char* ppszTableName[] = 
-    {
-        SYSTEM_DATA,
-        SYSTEM_EMPIRE_DATA,
-        SYSTEM_THEMES,
-        SYSTEM_GAMECLASS_DATA,
-        SYSTEM_SYSTEM_GAMECLASS_DATA,
-        SYSTEM_SUPERCLASS_DATA,
-    };
-
-    const char* ppszViewName[] = 
-    {
-        SYSTEM_DATA,
-        "SystemEmpireData1",
-        SYSTEM_THEMES,
-        SYSTEM_GAMECLASS_DATA,
-        SYSTEM_SYSTEM_GAMECLASS_DATA,
-        SYSTEM_SUPERCLASS_DATA,
-    }; 
-
-    const unsigned int piKeys[] = 
-    {
-        NO_KEY,
-        1,
-        NO_KEY,
-        NO_KEY,
-        NO_KEY,
-        NO_KEY,
-    };
-
-    iErrCode = t_pConn->GetViews()->CreateViews(ppszTableName, ppszViewName, piKeys, countof(ppszTableName));
-    Assert(iErrCode == OK);
-
-
-
-
-    // Call the function
-    HtmlRenderer htmlRenderer (pageId, pHttpRequest, pHttpResponse);
-    iErrCode = htmlRenderer.Render();
-
-    global.TlsCloseConnection();
+    // Render the page
+    HtmlRenderer renderer(pageId, pHttpRequest, pHttpResponse);
+    iErrCode = renderer.Render();
 
     return iErrCode;
 }

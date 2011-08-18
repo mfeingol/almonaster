@@ -1,6 +1,4 @@
-<% #include "Almonaster.h"
-#include "GameEngine.h"
-
+<%
 #include <stdio.h>
 
 // Almonaster
@@ -26,13 +24,12 @@ IHttpForm* pHttpForm;
 const char* pszPrintEmpireName = NULL;
 char pszStandardizedName [MAX_EMPIRE_NAME_LENGTH + 1];
 
-// Check for submission
-bool bFlag;
 int iErrCode;
 
 m_iEmpireKey = NO_KEY;
 m_vEmpireName = m_vPassword = (const char*) NULL;
 
+// Check for submission
 if (m_pHttpRequest->GetMethod() == GET) {
 
     // Look for cookies
@@ -55,27 +52,25 @@ if (m_pHttpRequest->GetMethod() == GET) {
 
         Variant vValue;
 
-        if (DoesEmpireExist (iAutoLogonKey, &bFlag, NULL) == OK && 
-            bFlag &&
+        const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iAutoLogonKey, 0, NULL };
+        iErrCode = t_pCache->Cache(&entry, 1);
+        if (iErrCode == OK &&
             GetEmpirePassword (iAutoLogonKey, &m_vPassword) == OK &&
-            GetEmpireProperty (iAutoLogonKey, SystemEmpireData::SecretKey, &vValue) == OK) {
-
+            GetEmpireProperty (iAutoLogonKey, SystemEmpireData::SecretKey, &vValue) == OK)
+        {
             // Authenticate
             m_i64SecretKey = vValue.GetInteger64();
 
-            if (GetPasswordHashForAutologon (&i64RealPasswordHash) == OK) {
+            if (GetPasswordHashForAutologon (&i64RealPasswordHash) == OK && i64RealPasswordHash == i64SubmittedPasswordHash) {
 
-                if (i64RealPasswordHash == i64SubmittedPasswordHash) {
+                m_iEmpireKey = iAutoLogonKey;
+                m_bAutoLogon = true;
 
-                    m_iEmpireKey = iAutoLogonKey;
-                    m_bAutoLogon = true;
-
-                    if (HtmlLoginEmpire() == OK && InitializeEmpire(true) == OK) {
-                        return Redirect (ACTIVE_GAME_LIST);
-                    }
-
-                    AddMessage ("Login failed");
+                if (HtmlLoginEmpire() == OK && InitializeEmpire(true) == OK) {
+                    return Redirect (ACTIVE_GAME_LIST);
                 }
+
+                AddMessage ("Login failed");
             }
         }
 
@@ -96,13 +91,12 @@ if (m_pHttpRequest->GetMethod() == GET) {
     }
 }
 
-else if (!m_bRedirection) {
-
-    Variant vEmpireName;
+else if (!m_bRedirection)
+{
     const char* pszEmpireName, * pszPassword;
 
     // Get empire name
-    pHttpForm = m_pHttpRequest->GetForm ("EmpireName");
+    pHttpForm = m_pHttpRequest->GetForm("EmpireName");
     if (pHttpForm == NULL) {
         goto Text;
     }
@@ -118,80 +112,90 @@ else if (!m_bRedirection) {
     pszPrintEmpireName = pszStandardizedName;
 
     // Get password
-    pHttpForm = m_pHttpRequest->GetForm ("Password");
+    pHttpForm = m_pHttpRequest->GetForm("Password");
     if (pHttpForm == NULL) {
         goto Text;
     }
 
     // Make sure password is valid
     pszPassword = pHttpForm->GetValue();
-    iErrCode = VerifyPassword (pszPassword);
+    iErrCode = VerifyPassword(pszPassword);
     if (iErrCode != OK) {
         goto Text;
     }
 
-    // Test empire existence
-    iErrCode = DoesEmpireExist (
-        pszStandardizedName,
-        &bFlag, 
-        &m_iEmpireKey,
-        &vEmpireName,
-        NULL
-        );
-
-    if (iErrCode != OK) {
-        AddMessage ("GameEngine::DoesEmpireExist returned ");
+    const TableCacheEntryColumn col = { SystemEmpireData::Name, pszStandardizedName };
+    const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &col };
+    iErrCode = t_pCache->Cache(&entry, 1, &m_iEmpireKey);
+    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND)
+    {
+        AddMessage("Cache failed: ");
         AppendMessage (iErrCode);
         goto Text;
     }
 
-    if (m_pHttpRequest->GetFormBeginsWith ("CreateEmpire")) {
-
-        if (bFlag) {
+    if (m_pHttpRequest->GetFormBeginsWith("CreateEmpire"))
+    {
+        if (m_iEmpireKey != NO_KEY)
+        {
             AddMessage ("The ");
             AppendMessage (pszPrintEmpireName);
             AppendMessage (" empire already exists");
             goto Text;
         }
 
-        // We're a new empire, so redirect to NewEmpire
+        // A new empire, so redirect to NewEmpire
         m_vEmpireName = pszStandardizedName;
         m_vPassword = pszPassword;
-
-        return Redirect (NEW_EMPIRE);
+        return Redirect(NEW_EMPIRE);
     }
+    else if (m_pHttpRequest->GetFormBeginsWith("BLogin") || m_pHttpRequest->GetFormBeginsWith("TransDot"))
+    {
+        if (m_iEmpireKey == NO_KEY)
+        {
+            // A new empire, so redirect to NewEmpire
+            m_vEmpireName = pszStandardizedName;
+            m_vPassword = pszPassword;
+            return Redirect(NEW_EMPIRE);
+        }
 
-    else if (m_pHttpRequest->GetFormBeginsWith ("BLogin") ||
-             m_pHttpRequest->GetFormBeginsWith ("TransDot")) {
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::Name, &m_vEmpireName);
+        if (iErrCode != OK)
+        {
+            AddMessage("GetEmpireProperty failed");
+            AppendMessage (iErrCode);
+            goto Text;
+        }
 
-        if (bFlag) {
-
+        if (m_iEmpireKey != NO_KEY)
+        {
             // Check password
-            iErrCode = IsPasswordCorrect (m_iEmpireKey, pszPassword);
-            if (iErrCode != OK) {
-
+            iErrCode = IsPasswordCorrect(m_iEmpireKey, pszPassword);
+            if (iErrCode != OK)
+            {
                 char pszBuffer [128 + MAX_EMPIRE_NAME_LENGTH];
                 sprintf (
                     pszBuffer,
                     "That was not the right password for the %s empire",
-                    vEmpireName.GetCharPtr()
+                    m_vEmpireName.GetCharPtr()
                     );
 
                 // Message
-                AddMessage (pszBuffer);
+                AddMessage(pszBuffer);
 
                 // Add to report
-                ReportLoginFailure (global.GetReport(), vEmpireName.GetCharPtr());
-
-            } else {
-
-                m_vEmpireName = vEmpireName;
+                ReportLoginFailure(global.GetReport(), m_vEmpireName.GetCharPtr());
+            }
+            else
+            {
                 m_vPassword = pszPassword;
 
-                if (HtmlLoginEmpire() == OK && InitializeEmpire(false) == OK) {
-                    return Redirect (ACTIVE_GAME_LIST);
+                if (HtmlLoginEmpire() == OK && InitializeEmpire(false) == OK)
+                {
+                    return Redirect(ACTIVE_GAME_LIST);
                 }
 
+                // Security?
                 m_vEmpireName = (const char*) NULL;
                 m_vPassword = (const char*) NULL;
             }
@@ -217,7 +221,7 @@ else if (!m_bRedirection) {
                 m_vEmpireName = pszStandardizedName;
                 m_vPassword = pszPassword;
 
-                return Redirect (NEW_EMPIRE);
+                return Redirect(NEW_EMPIRE);
             }
         }
     }
@@ -231,12 +235,16 @@ ICookie* pCookie = m_pHttpRequest->GetCookie (LAST_EMPIRE_USED_COOKIE);
 if (pCookie != NULL && pCookie->GetValue() != NULL) {
 
     m_iEmpireKey = pCookie->GetIntValue();
-    iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, &m_vEmpireName);
-    if (!bFlag || iErrCode != OK) {
+
+    const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL };
+    iErrCode = t_pCache->Cache(&entry, 1);
+    if (iErrCode != OK)
+    {
         m_iEmpireKey = NO_KEY;
     }
-
-    if (pszPrintEmpireName == NULL) {
+    
+    if (pszPrintEmpireName == NULL)
+    {
         pszPrintEmpireName = m_vEmpireName.GetCharPtr();
     }
 }

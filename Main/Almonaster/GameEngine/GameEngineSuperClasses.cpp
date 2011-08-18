@@ -127,7 +127,7 @@ int GameEngine::GetSuperClassKeys (int** ppiKey, Variant** ppvName, int* piNumSu
 
 int GameEngine::GetSuperClassKeys(int** ppiKey, int* piNumSuperClasses) {
 
-    int iErrCode = t_pConn->GetCache()->GetAllKeys (
+    int iErrCode = t_pCache->GetAllKeys (
         SYSTEM_SUPERCLASS_DATA, 
         (unsigned int**) ppiKey, 
         (unsigned int*) piNumSuperClasses
@@ -151,7 +151,7 @@ int GameEngine::GetSuperClassKeys(int** ppiKey, int* piNumSuperClasses) {
 
 int GameEngine::GetSuperClassName (int iKey, Variant* pvName) {
 
-    return t_pConn->GetCache()->ReadData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
+    return t_pCache->ReadData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
 }
 
 int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {

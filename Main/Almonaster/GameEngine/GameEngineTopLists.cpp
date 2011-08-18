@@ -43,7 +43,7 @@ int GameEngine::GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsig
     const TemplateDescription* ptTemplate = TOPLIST_TEMPLATE[ssListType];
     const char* pszTableName = TOPLIST_TABLE_NAME[ssListType];
 
-    int iErrCode = t_pConn->GetCache()->ReadColumns(pszTableName, ptTemplate->NumColumns, ptTemplate->ColumnNames, NULL, pppvData, piNumEmpires);
+    int iErrCode = t_pCache->ReadColumns(pszTableName, ptTemplate->NumColumns, ptTemplate->ColumnNames, NULL, pppvData, piNumEmpires);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         iErrCode = OK;
@@ -156,7 +156,7 @@ int GameEngine::CacheTopLists()
         { SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, NO_KEY, 0, NULL },
     };
 
-    return t_pConn->GetCache()->Cache(entries, countof(entries));
+    return t_pCache->Cache(entries, countof(entries));
 }
 
 int GameEngine::UpdateTopListOnIncrease(TopListQuery* pQuery)
