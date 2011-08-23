@@ -73,7 +73,7 @@ int GameEngine::DeleteSuperClass (int iSuperClassKey, bool* pbResult) {
 
     Variant vGameClasses;
 
-    int iErrCode = t_pConn->GetCache()->ReadData(
+    int iErrCode = t_pCache->ReadData(
         SYSTEM_SUPERCLASS_DATA, 
         iSuperClassKey, 
         SystemSuperClassData::NumGameClasses,

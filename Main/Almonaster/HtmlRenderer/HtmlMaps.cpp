@@ -390,7 +390,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     memcpy (pszHorz + stTemp + strHorz.GetLength(), "</td>", sizeof ("</td>"));
     memcpy (pszVert + stTemp + strVert.GetLength(), "</td>", sizeof ("</td>"));
     
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -428,28 +428,28 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 continue;
             }
             
-            iErrCode = t_pConn->GetCache()->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
+            iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumUncloakedShips = vTemp.GetInteger();
             
-            iErrCode = t_pConn->GetCache()->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
+            iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumCloakedShips = vTemp.GetInteger();
             
-            iErrCode = t_pConn->GetCache()->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
+            iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             iNumUncloakedBuildShips = vTemp.GetInteger();
             
-            iErrCode = t_pConn->GetCache()->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
+            iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;

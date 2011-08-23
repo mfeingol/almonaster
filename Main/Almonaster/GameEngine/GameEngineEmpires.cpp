@@ -722,7 +722,7 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int
     
     SYSTEM_EMPIRE_MESSAGES (strSystemEmpireMessages, iEmpireKey);
 
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::MaxNumSystemMessages,
@@ -1269,7 +1269,7 @@ int GameEngine::RemoveEmpire (int iEmpireKey) {
                 break;
             }
 
-            iErrCode = t_pConn->GetCache()->ReadData(pszTable, iKey, SystemEmpireTournaments::TournamentKey, &vKey);
+            iErrCode = t_pCache->ReadData(pszTable, iKey, SystemEmpireTournaments::TournamentKey, &vKey);
             if (iErrCode == OK) {
                 iErrCode = DeleteEmpireFromTournament (vKey.GetInteger(), iEmpireKey);
                 Assert (iErrCode == OK);
@@ -2492,7 +2492,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         GET_GAME_EMPIRE_DATA (pszGameData, iGameClass, iGameNumber, iEmpireKey);
 
         Variant vOptions;
-        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameEmpireData::Options, &vOptions);
+        iErrCode = t_pCache->ReadData(pszGameData, GameEmpireData::Options, &vOptions);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -2505,7 +2505,7 @@ int GameEngine::IsEmpireIdleInSomeGame (int iEmpireKey, bool* pfIdle) {
         if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE)) {
 
             Variant vNumUpdatesIdle;
-            iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
+            iErrCode = t_pCache->ReadData(pszGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
             if (iErrCode != OK) {
                 goto Cleanup;
             }

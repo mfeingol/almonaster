@@ -182,5 +182,5 @@ int GameEngine::GetAlienAuthorName (int iAlienKey, Variant* pvAuthorName) {
         return iErrCode;
     }
 
-    return t_pConn->GetCache()->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
+    return t_pCache->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
 }

@@ -339,7 +339,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
     GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
 
     // See if game has 3.0 surrenders flag set
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_GAMECLASS_DATA,
         iGameClass,
         SystemGameClassData::Options,
@@ -502,7 +502,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
     unsigned int iKey = NO_KEY;
     GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
 
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::AlmonasterScore, 
@@ -514,7 +514,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
         return iErrCode;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::AlmonasterScoreSignificance, 
@@ -539,13 +539,13 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
             return iErrCode;
         }
 
-        iErrCode = t_pConn->GetCache()->ReadData(pszEmpires, iKey, GameEmpires::EmpireKey, &vKey);
+        iErrCode = t_pCache->ReadData(pszEmpires, iKey, GameEmpires::EmpireKey, &vKey);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
         }
 
-        iErrCode = t_pConn->GetCache()->ReadData(
+        iErrCode = t_pCache->ReadData(
             SYSTEM_EMPIRE_DATA,
             vKey.GetInteger(),
             SystemEmpireData::AlmonasterScore, 
@@ -556,7 +556,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
             return iErrCode;
         }
 
-        iErrCode = t_pConn->GetCache()->ReadData(
+        iErrCode = t_pCache->ReadData(
             SYSTEM_EMPIRE_DATA,
             vKey.GetInteger(),
             SystemEmpireData::AlmonasterScoreSignificance, 
@@ -701,7 +701,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
     GAME_EMPIRE_DIPLOMACY (strDip, iGameClass, iGameNumber, iEmpireKey);
 
     // Get winner's score, significance and allies
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::AlmonasterScore, 
@@ -715,7 +715,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
 
     *pfAlmonasterScore = vTemp.GetFloat();
 
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::AlmonasterScoreSignificance, 
@@ -1048,7 +1048,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         scChanges.fAlmonasterNukerChange = pfIncrease[0];
 
         Variant vNukerName;
-        iErrCode = t_pConn->GetCache()->ReadData(
+        iErrCode = t_pCache->ReadData(
             SYSTEM_EMPIRE_DATA, 
             iNukerEmpireKey, 
             SystemEmpireData::Name, 
@@ -1082,7 +1082,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         GET_SYSTEM_EMPIRE_DATA(strNukerEmpire, iNukerEmpireKey);
 
         // Get nuker alien key
-        iErrCode = t_pConn->GetCache()->ReadData(strNukerEmpire, iNukerEmpireKey, SystemEmpireData::AlienKey, &vTemp);
+        iErrCode = t_pCache->ReadData(strNukerEmpire, iNukerEmpireKey, SystemEmpireData::AlienKey, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1098,7 +1098,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
 
             GET_SYSTEM_EMPIRE_DATA(strLoserEmpire, iLoserKey);
 
-            iErrCode = t_pConn->GetCache()->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);            
+            iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);            
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1224,7 +1224,7 @@ int AlmonasterScore::CompareScores (const Variant* pvLeft, const Variant* pvRigh
 int AlmonasterScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 {
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
-    return t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SystemEmpireData::AlmonasterScore, pvScore);
+    return t_pCache->ReadData(strEmpires, iEmpireKey, SystemEmpireData::AlmonasterScore, pvScore);
 }
 
 int AlmonasterScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {

@@ -65,7 +65,7 @@ int GameEngine::UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* ps
     int iNukedAlienKey, iNukerAlienKey;
     Variant vValue, vSneer;
 
-    if (t_pConn->GetCache()->ReadData(strNukedEmpire, iNukedKey, SystemEmpireData::AlienKey, &vValue) == OK)
+    if (t_pCache->ReadData(strNukedEmpire, iNukedKey, SystemEmpireData::AlienKey, &vValue) == OK)
     {
         iNukedAlienKey = vValue.GetInteger();
     }
@@ -91,7 +91,7 @@ int GameEngine::UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* ps
         return iErrCode;
     }
 
-    if (t_pConn->GetCache()->ReadData(strNukerEmpire, iNukerKey, SystemEmpireData::AlienKey, &vValue) == OK)
+    if (t_pCache->ReadData(strNukerEmpire, iNukerKey, SystemEmpireData::AlienKey, &vValue) == OK)
     {
         iNukerAlienKey = vValue.GetInteger();
     }
@@ -226,7 +226,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     bool bValid;
 
-    iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Name, &vPlanetName);
+    iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Name, &vPlanetName);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -253,7 +253,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         strGameMap, 
         iPlanetKey, 
         GameMap::SurrenderEmpireSecretKey, 
@@ -265,7 +265,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(
+    iErrCode = t_pCache->ReadData(
         strGameMap, 
         iPlanetKey, 
         GameMap::HomeWorld, 
@@ -301,7 +301,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     int iNukerAlienKey, iNukedAlienKey;
 
     // Get nuker alien key
-    iErrCode = t_pConn->GetCache()->ReadData(strWinnerEmpire, iWinnerKey, SystemEmpireData::AlienKey, &vTemp);
+    iErrCode = t_pCache->ReadData(strWinnerEmpire, iWinnerKey, SystemEmpireData::AlienKey, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -315,7 +315,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     } else {
 
-        iErrCode = t_pConn->GetCache()->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);
+        iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -705,7 +705,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
     Variant vAdeptLevel, vApprenticeLevel, vScore, vPrivilege;
 
     // Admins stay the same
-    iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
+    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -745,7 +745,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         return iErrCode;
     }
 
-    iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::AlmonasterScore, &vScore);
+    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::AlmonasterScore, &vScore);
     if (iErrCode != OK) {
         return iErrCode;
     }

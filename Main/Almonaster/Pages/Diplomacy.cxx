@@ -1024,7 +1024,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
         SafeRelease (pGameEmpireTable);
 
-        iErrCode = t_pConn->GetCache()->ReadData(
+        iErrCode = t_pCache->ReadData(
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
             GameEmpireDiplomacy::SubjectiveEcon,
@@ -1037,7 +1037,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         }
         iEcon = vTemp.GetInteger();
 
-        iErrCode = t_pConn->GetCache()->ReadData(
+        iErrCode = t_pCache->ReadData(
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
             GameEmpireDiplomacy::SubjectiveMil,
