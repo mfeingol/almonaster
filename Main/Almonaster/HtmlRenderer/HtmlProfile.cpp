@@ -34,8 +34,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     const char* pszIPAddress = NULL;
     
     Variant* pvEmpireData = NULL;
-    int iErrCode, iNumActiveGames, iNumPersonalGameClasses = 0, iOptions, iOptions2;
-    unsigned int iNumActiveTournaments, iNumPersonalTournaments = 0, iNumUnreadMessages;
+    int iErrCode, iNumPersonalGameClasses = 0, iOptions, iOptions2;
+    unsigned int iNumActiveTournaments, iNumPersonalTournaments = 0, iNumUnreadMessages, iNumActiveGames;
 
     OutputText ("<input type=\"hidden\" name=\"TargetEmpireKey\" value=\"");
     m_pHttpResponse->WriteText (iTargetEmpireKey);
@@ -43,8 +43,14 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
 
     if (iTargetEmpireKey != m_iEmpireKey)
     {
-        const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL };
-        iErrCode = t_pCache->Cache(&entry, 1);
+        const TableCacheEntryColumn col = { SystemEmpireActiveGames::EmpireKey, iTargetEmpireKey };
+        const TableCacheEntry entries[] = 
+        {
+            { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL },
+            { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &col },
+        };
+
+        iErrCode = t_pCache->Cache(entries, countof(entries));
         if (iErrCode != OK)
         {
            goto OnError;

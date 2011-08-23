@@ -547,10 +547,26 @@ const CacheFunction g_pfxnRegisterCachePage[] = {
 
 void HtmlRenderer::ReadStandardForms()
 {
-    IHttpForm* pHttpForm = m_pHttpRequest->GetForm("EmpireKey");
-    if (pHttpForm != NULL)
+    IHttpForm* pHttpForm;
+   
+    if ((pHttpForm = m_pHttpRequest->GetForm("EmpireKey")) != NULL)
     {
         m_iEmpireKey = pHttpForm->GetIntValue();
+    }
+
+    if (IsGamePage(m_pgPageId))
+    {
+        // Get game class
+        if ((pHttpForm = m_pHttpRequest->GetForm ("GameClass")) != NULL)
+        {
+            m_iGameClass = pHttpForm->GetIntValue();
+        }
+
+        // Get game number
+        if ((pHttpForm = m_pHttpRequest->GetForm ("GameNumber")) != NULL)
+        {
+            m_iGameNumber = pHttpForm->GetIntValue();
+        }
     }
 }
 

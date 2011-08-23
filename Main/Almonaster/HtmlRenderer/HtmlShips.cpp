@@ -310,7 +310,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
         for (i = 0; i < iNumShips; i ++) {
             
-            iErrCode = t_pConn->ReadData(pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
+            iErrCode = t_pConn->GetCache()->ReadData(pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;

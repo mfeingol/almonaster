@@ -82,7 +82,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Make sure game has started
-    iErrCode = t_pConn->ReadData(strGameData, GameData::State, &vGameState);
+    iErrCode = t_pConn->GetCache()->ReadData(strGameData, GameData::State, &vGameState);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -94,7 +94,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Make sure planet belongs to empire
-    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -106,7 +106,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Get max num ships built at once
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_EMPIRE_DATA,
         iEmpireKey,
         SystemEmpireData::MaxNumShipsBuiltAtOnce,
@@ -124,13 +124,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Make sure planet has enough pop to build
-    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
+    iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::BuilderPopLevel, 
@@ -170,7 +170,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     unsigned int iPopLostToColoniesPerShip = 0;
     if (iTechKey == COLONY) {
 
-        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::PopLostToColonies, &vPopLostToColonies);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::PopLostToColonies, &vPopLostToColonies);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -212,7 +212,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData(strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentPlanet, &vTemp);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentPlanet, &vTemp);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -225,7 +225,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Check for ship limits
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::MaxNumShips, 
@@ -265,7 +265,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     *piNumShipsBuilt = iNumShips;
 
     // Make sure empire has the tech requested
-    iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TechDevs, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::TechDevs, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -276,7 +276,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TechLevel, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::TechLevel, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -481,25 +481,25 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         const int iNewPopLostToColonies = vPopLostToColonies.GetInteger() + iPopLostToTheseShips;
 
         // Calculate pop change difference
-        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::MaxPop, &vMaxPop);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::MaxPop, &vMaxPop);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TotalAg, &vTotalAg);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::TotalAg, &vTotalAg);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::TotalPop, &vTotalPop);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::TotalPop, &vTotalPop);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData(
+        iErrCode = t_pConn->GetCache()->ReadData(
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::MaxAgRatio, 
@@ -545,13 +545,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         }
 
         // Get planet data
-        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -603,7 +603,7 @@ int GameEngine::GetNumBuilds (int iGameClass, int iGameNumber, int iEmpireKey, i
     Variant vTemp;
     GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireKey)
 
-    int iErrCode = t_pConn->ReadData(pszEmpireData, GameEmpireData::NumBuilds, &vTemp);
+    int iErrCode = t_pConn->GetCache()->ReadData(pszEmpireData, GameEmpireData::NumBuilds, &vTemp);
     if (iErrCode == OK) {
         *piNumBuilds = vTemp.GetInteger();
     }
@@ -683,7 +683,7 @@ int GameEngine::GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, 
     *piNumBuilders = 0;
 
     // Get builder level
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::BuilderPopLevel, 
@@ -874,7 +874,7 @@ int GameEngine::IsPlanetBuilder (unsigned int iGameClass, int iGameNumber, unsig
     *pbBuilder = false;
 
     // Make sure planet belongs to empire
-    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -885,13 +885,13 @@ int GameEngine::IsPlanetBuilder (unsigned int iGameClass, int iGameNumber, unsig
     }
 
     // Make sure planet has enough pop to build
-    iErrCode = t_pConn->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
+    iErrCode = t_pConn->GetCache()->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::BuilderPopLevel, 

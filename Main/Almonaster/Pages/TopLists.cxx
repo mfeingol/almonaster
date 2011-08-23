@@ -249,23 +249,32 @@ case 1:
     %></tr><%
 
     Variant* pvEmpData;
-    int iNumActiveGames;
     String strName, strEmail;
 
-    TableCacheEntry* pEntries = (TableCacheEntry*)StackAlloc(iNumEmpires * sizeof(TableCacheEntry));
+    TableCacheEntry* pEntries = (TableCacheEntry*)StackAlloc(iNumEmpires * 2 * sizeof(TableCacheEntry));
     for (i = 0; i < iNumEmpires; i ++)
     {
         pEntries[i].pszTableName = SYSTEM_EMPIRE_DATA;
         pEntries[i].iKey = ppvData[i][TopList::iEmpireKey].GetInteger();
         pEntries[i].iNumColumns = 0;
         pEntries[i].pcColumns = NULL;
+
+        TableCacheEntryColumn* pCol = (TableCacheEntryColumn*)StackAlloc(sizeof(TableCacheEntryColumn));
+        pCol->pszColumn = SystemEmpireActiveGames::EmpireKey;
+        pCol->vData = ppvData[i][TopList::iEmpireKey].GetInteger();
+
+        pEntries[iNumEmpires + i].pszTableName = SYSTEM_EMPIRE_ACTIVE_GAMES;
+        pEntries[iNumEmpires + i].iKey = NO_KEY;
+        pEntries[iNumEmpires + i].iNumColumns = 1;
+        pEntries[iNumEmpires + i].pcColumns = pCol;
     }
 
-    iErrCode = t_pCache->Cache(pEntries, iNumEmpires);
+    iErrCode = t_pCache->Cache(pEntries, iNumEmpires * 2);
     if (iErrCode == OK)
     {
         for (i = 0; i < iNumEmpires; i ++)
         {
+            unsigned int iNumActiveGames;
             if (GetEmpireData(ppvData[i][TopList::iEmpireKey].GetInteger(), &pvEmpData, &iNumActiveGames) == OK)
             {
                 %><tr><td align="center"><strong><% Write (i + 1); %></strong></td><%

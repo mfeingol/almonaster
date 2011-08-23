@@ -48,7 +48,7 @@ int TournamentScoring::IsTournamentGame (int iGameClass, int iGameNumber, unsign
 
     *piTournamentKey = NO_KEY;
 
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_GAMECLASS_DATA,
         iGameClass,
         SystemGameClassData::TournamentKey,
@@ -82,7 +82,7 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
     }
 
     // Get team
-    iErrCode = t_pConn->ReadData(pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
+    iErrCode = t_pConn->GetCache()->ReadData(pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
     if (iErrCode != OK) {
         return iErrCode;
     }

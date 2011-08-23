@@ -469,7 +469,7 @@ void GameEngine::VerifyGameTables(int iGameClass, int iGameNumber, bool* pbGoodD
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadData(strBadTable, GameData::Options, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strBadTable, GameData::Options, &vTemp);
     if (iErrCode != OK) {
         Assert(false);
         bGoodDatabase = false;
@@ -731,7 +731,7 @@ int GameEngine::VerifyMarkedGameClasses() {
 
         Variant vOptions;
         
-        iErrCode = t_pConn->ReadData(
+        iErrCode = t_pConn->GetCache()->ReadData(
             SYSTEM_GAMECLASS_DATA,
             piGameClassKey[i],
             SystemGameClassData::Options,
@@ -858,7 +858,7 @@ int GameEngine::VerifyActiveGames() {
         }
         
         // Get game update period
-        iErrCode = t_pConn->ReadData(
+        iErrCode = t_pConn->GetCache()->ReadData(
             SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
         if (iErrCode != OK) {
             Assert(false);
@@ -867,7 +867,7 @@ int GameEngine::VerifyActiveGames() {
         sPeriod = vTemp.GetInteger();
         
         // Get game state
-        iErrCode = t_pConn->ReadData(strGameData, GameData::State, &vTemp);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameData, GameData::State, &vTemp);
         if (iErrCode != OK) {
             Assert(false);
             goto Cleanup;
@@ -878,7 +878,7 @@ int GameEngine::VerifyActiveGames() {
         bStarted =(iState & STARTED) != 0;
 
         // Get game last update check time
-        iErrCode = t_pConn->ReadData(strGameData, GameData::LastUpdateCheck, &vTemp);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameData, GameData::LastUpdateCheck, &vTemp);
         if (iErrCode != OK) {
             Assert(false);
             goto Cleanup;
@@ -907,7 +907,7 @@ int GameEngine::VerifyActiveGames() {
         }
 
         // Get last update time
-        iErrCode = t_pConn->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
         if (iErrCode != OK) {
             Assert(false);
             goto Cleanup;
@@ -958,7 +958,7 @@ int GameEngine::VerifyActiveGames() {
 
             GAME_EMPIRE_DATA(strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-            iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::LastLogin, &vTemp);
+            iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::LastLogin, &vTemp);
             if (iErrCode != OK) {
                 Assert(false);
                 goto Cleanup;
@@ -980,7 +980,7 @@ int GameEngine::VerifyActiveGames() {
                 goto Cleanup;
             }
             
-            iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::Options, &vTemp);
+            iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::Options, &vTemp);
             if (iErrCode != OK) {
                 Assert(false);
                 t_pConn->FreeData(pvEmpireKey);

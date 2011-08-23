@@ -596,3 +596,212 @@ void HtmlRenderer::CloseGamePage()
     m_pHttpResponse->WriteText ((int) msTime);
     OutputText (" ms</font></strong></center></form></body></html>");
 }
+
+int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
+    
+    int iErrCode;
+    bool bFlag;
+    
+    PageId pgSrcPageId;
+
+    if (m_iPrivilege <= GUEST) {
+        return ERROR_ACCESS_DENIED;
+    }
+
+    IHttpForm* pHttpForm = m_pHttpRequest->GetForm("PageId");
+    pgSrcPageId = (pHttpForm != NULL) ? (PageId) pHttpForm->GetIntValue() : LOGIN;
+
+    // If an auto-submission, get game class and number from forms
+    if (pgSrcPageId == m_pgPageId) {
+        
+        // Get game class
+        if (m_iGameClass == NO_KEY)
+        {
+            AddMessage ("Missing GameClass form");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            return ERROR_FAILURE;
+        }
+        
+        // Get game number
+        if (m_iGameNumber == -1)
+        {
+            AddMessage ("Missing GameNumber form");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            return ERROR_FAILURE;
+        }
+        
+        // Get old update count
+        if ((pHttpForm = m_pHttpRequest->GetForm ("Updates")) == NULL) {
+            AddMessage ("Missing Updates form");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            return ERROR_FAILURE;
+        }
+        m_iNumOldUpdates = pHttpForm->GetIntValue();    
+    }
+
+    // Verify empire's presence in game
+    iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    if (iErrCode != OK || !bFlag) {
+
+        if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
+            AddMessage ("That game no longer exists");
+        } else {
+            AddMessage ("You are no longer in that game");
+        }
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        return ERROR_FAILURE;
+    }
+    
+    // Set some variables if we're coming from a non-game page
+    if (pgSrcPageId == m_pgPageId || (pgSrcPageId != m_pgPageId && !IsGamePage (pgSrcPageId))) {
+
+        Variant vTemp;
+
+        // Get game options
+        iErrCode = GetEmpireOptions (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameOptions);
+        if (iErrCode != OK) {
+            AddMessage ("That empire no longer exists");
+            *ppageRedirect = LOGIN;
+            return ERROR_FAILURE;
+        }
+
+        // Get gameclass name
+        iErrCode = GetGameClassName (m_iGameClass, m_pszGameClassName);
+        if (iErrCode != OK) {
+            AddMessage ("That game no longer exists");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            return ERROR_FAILURE;
+        }
+
+        // Set some flags
+        m_bRepeatedButtons = (m_iGameOptions & GAME_REPEATED_BUTTONS) != 0;
+        m_bTimeDisplay = (m_iGameOptions & GAME_DISPLAY_TIME) != 0;
+
+        // Get game ratios
+        iErrCode = GetEmpireGameProperty (
+            m_iGameClass,
+            m_iGameNumber,
+            m_iEmpireKey,
+            GameEmpireData::GameRatios,
+            &vTemp
+            );
+
+        if (iErrCode != OK) {
+            AddMessage ("That game no longer exists");
+            *ppageRedirect = LOGIN;
+            return ERROR_FAILURE;
+        }
+
+        m_iGameRatios = vTemp.GetInteger();
+    }
+    
+    ///////////////////////
+    // Check for updates //
+    ///////////////////////
+    
+    bool bUpdate;
+    if (CheckGameForUpdates (m_iGameClass, m_iGameNumber, false, &bUpdate) != OK)
+    {
+        // Remove update message after update
+        if (bUpdate && m_strMessage.Equals ("You are now ready for an update")) {
+            m_strMessage.Clear();
+        }
+        
+        AddMessage ("The game ended");
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        return ERROR_FAILURE;
+    }
+    
+    // Re-verify empire's presence in game
+    iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    if (iErrCode != OK || !bFlag) {
+
+        AddMessage ("You are no longer in that game");
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        return ERROR_FAILURE;
+    }
+    
+    // Verify not resigned
+    iErrCode = HasEmpireResignedFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    if (iErrCode != OK || bFlag) {
+        
+        AddMessage ("Your empire has resigned from that game");
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        return ERROR_FAILURE;
+    }
+    
+    // Log empire into game if not an auto submission
+    IHttpForm* pHttpAuto = m_pHttpRequest->GetForm ("Auto");
+    if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIntoGame) {
+        
+        int iNumUpdatesIdle;
+        iErrCode = LogEmpireIntoGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumUpdatesIdle);       
+        if (iErrCode != OK) {
+            AddMessage ("Your empire could not be logged into the game");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            return ERROR_FAILURE;
+        }
+
+        m_bLoggedIntoGame = true;
+
+        if (iNumUpdatesIdle > 0 && !WasButtonPressed (BID_EXIT)) {
+
+            // Check for all empires idle case
+            bool bIdle;
+            iErrCode = AreAllEmpiresIdle (m_iGameClass, m_iGameNumber, &bIdle);
+            if (iErrCode != OK) {
+                AddMessage ("That game no longer exists");
+                *ppageRedirect = ACTIVE_GAME_LIST;
+                return ERROR_FAILURE;
+            }
+
+            if (bIdle) {
+
+                AddMessage ("All empires in the game are idle this update, including yours");
+                AddMessage ("Pausing, drawing and ending turn will not take effect until the next update");
+
+                if (m_iGameOptions & REQUEST_DRAW) {
+
+                    IHttpForm* pHttpForm;
+                    if (m_pgPageId != OPTIONS ||
+                        (pHttpForm = m_pHttpRequest->GetForm ("Draw")) == NULL ||
+                        pHttpForm->GetIntValue() != 0
+                        ) {
+
+                        AddMessage ("Your empire is requesting draw, so the game may end in a draw next update");
+                    }
+                }
+            }
+        }
+    }
+    
+    // Remove update message after update
+    if (bUpdate && m_strMessage.Equals ("You are now ready for an update")) {
+        m_strMessage.Clear();
+    }
+    
+    // Get game update information
+    if (GetGameUpdateData (
+        m_iGameClass, 
+        m_iGameNumber, 
+        &m_sSecondsSince, 
+        &m_sSecondsUntil, 
+        &m_iNumNewUpdates, 
+        &m_iGameState
+        ) != OK
+        ) {
+        
+        Assert (false);
+
+        AddMessage ("The game no longer exists");
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        return ERROR_FAILURE;
+    }
+
+    // Hack for when games update
+    if (bUpdate) {
+        m_iGameOptions &= ~UPDATED;
+    }
+    
+    return OK;
+}

@@ -2315,6 +2315,8 @@ namespace SystemEmpireTournaments {
 // GameData(I.I) //
 ///////////////////
 
+#define _GAME_DATA "GameData"
+
 #define GAME_DATA(pszBuffer, i, j)              \
                                                 \
     char pszBuffer [sizeof ("GameData") + 64];  \
@@ -2974,6 +2976,8 @@ namespace GameMap {
 ///////////////////////////
 // GameEmpireData(I.I.I) //
 ///////////////////////////
+
+#define _GAME_EMPIRE_DATA "GameEmpireData"
 
 #define GAME_EMPIRE_DATA(pszBuffer, i, j, k)                    \
                                                                 \

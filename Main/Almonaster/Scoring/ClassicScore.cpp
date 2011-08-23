@@ -223,9 +223,10 @@ int ClassicScore::CompareScores (const Variant* pvLeft, const Variant* pvRight) 
     return 1;
 }
 
-int ClassicScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) {
-
-    return t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, pvScore);
+int ClassicScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
+{
+    GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
+    return t_pConn->GetCache()->ReadData(strEmpires, iEmpireKey, SystemEmpireData::ClassicScore, pvScore);
 }
 
 int ClassicScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {

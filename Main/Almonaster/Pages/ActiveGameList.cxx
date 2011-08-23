@@ -83,13 +83,39 @@ OpenSystemPage(false);
 
 // Begin individual page
 int iNumGames, * piGameClassKey, * piGameNumber;
-Check (GetEmpireActiveGames (m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
+Check(GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
 
 // Check for updates in active games
-if (iNumGames > 0) {
+if (iNumGames > 0)
+{
+    // Cache GameData for each
+    TableCacheEntry* peGameData = (TableCacheEntry*)StackAlloc(iNumGames * 2 * sizeof(TableCacheEntry));
+    for (i = 0; i < iNumGames; i ++)
+    {
+        char* pszTable;
+        
+        pszTable = (char*)StackAlloc(countof(_GAME_DATA) + 64);
+        GET_GAME_DATA(pszTable, piGameClassKey[i], piGameNumber[i]);
+
+        peGameData[i].pszTableName = pszTable;
+        peGameData[i].iKey = NO_KEY;
+        peGameData[i].iNumColumns = 0;
+        peGameData[i].pcColumns = NULL;
+
+        pszTable = (char*)StackAlloc(countof(_GAME_EMPIRE_DATA) + 96);
+        GET_GAME_EMPIRE_DATA(pszTable, piGameClassKey[i], piGameNumber[i], m_iEmpireKey);
+
+        peGameData[iNumGames + i].pszTableName = pszTable;
+        peGameData[iNumGames + i].iKey = NO_KEY;
+        peGameData[iNumGames + i].iNumColumns = 0;
+        peGameData[iNumGames + i].pcColumns = NULL;
+    }
+
+    Check(t_pCache->Cache(peGameData, iNumGames * 2));
 
     bool bUpdateOccurred, bReloadGameList = false;
-    for (i = 0; i < iNumGames; i ++) {
+    for (i = 0; i < iNumGames; i ++)
+    {
         iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred);
         if (iErrCode != OK || (iErrCode == OK && bUpdateOccurred))
         {
@@ -97,12 +123,12 @@ if (iNumGames > 0) {
         }
     }
 
-    if (bReloadGameList) {
-
+    if (bReloadGameList)
+    {
         delete [] piGameClassKey;
         delete [] piGameNumber;
 
-        Check (GetEmpireActiveGames (m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
+        Check(GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
     }
 }
 

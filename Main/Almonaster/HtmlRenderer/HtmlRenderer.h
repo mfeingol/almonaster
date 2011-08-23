@@ -457,6 +457,7 @@ protected:
     static ReadWriteLock ms_mTextFileLock;
 
     // Caching
+    String m_strGameData;
     TableCacheEntryColumn m_activeGameCol;
 
 public:

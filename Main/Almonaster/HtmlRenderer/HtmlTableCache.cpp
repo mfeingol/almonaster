@@ -52,21 +52,30 @@ void HtmlRenderer::GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache)
     Cache(cache, systemThemes);
     Cache(cache, systemGameClassData);
 
-    Assert(m_iEmpireKey != NO_KEY);
-    
-    TableCacheEntry systemEmpireDataN = { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL };
-    Cache(cache, systemEmpireDataN);
+    if (m_iEmpireKey != NO_KEY)
+    {
+        TableCacheEntry systemEmpireDataN = { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL };
+        Cache(cache, systemEmpireDataN);
+    }
+
+    if (m_iGameClass != NO_KEY && m_iGameNumber != -1)
+    {
+        GAME_DATA(pszGameData, m_iGameClass, m_iGameNumber);
+        m_strGameData = pszGameData;
+        TableCacheEntry gameData = { m_strGameData.GetCharPtr(), NO_KEY, 0, NULL };
+        Cache(cache, gameData);
+    }
 }
 
 void HtmlRenderer::RegisterCache_ActiveGameList(Vector<TableCacheEntry>& cache)
 {
-    Assert(m_iEmpireKey != NO_KEY);
-    m_activeGameCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
-    m_activeGameCol.vData = m_iEmpireKey;
-    TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_activeGameCol };
-    Cache(cache, systemEmpireActiveGamesN);
-
-    //Cache(cache, systemActiveGames);
+    if (m_iEmpireKey != NO_KEY)
+    {
+        m_activeGameCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
+        m_activeGameCol.vData = m_iEmpireKey;
+        TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_activeGameCol };
+        Cache(cache, systemEmpireActiveGamesN);
+    }
 }
 
 void HtmlRenderer::RegisterCache_Login(Vector<TableCacheEntry>& cache)

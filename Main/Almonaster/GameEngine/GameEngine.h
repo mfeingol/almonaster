@@ -531,7 +531,7 @@ private:
     static int THREAD_CALL UpdateTopListOnDecreaseMsg (AsyncTask* pMessage);
     static int THREAD_CALL UpdateTopListOnDeletionMsg (AsyncTask* pMessage);
 
-    int CacheTopLists();
+    int CacheTopLists(int iEmpireKey);
 
     int UpdateTopListOnIncrease(TopListQuery* pQuery);
     int UpdateTopListOnDecrease(TopListQuery* pQuery);
@@ -1110,7 +1110,7 @@ public:
 
     int GetEmpirePersonalGameClasses (int iEmpireKey, int** ppiGameClassKey, Variant** ppvName, int* piNumKeys);
 
-    int GetEmpireData (int iEmpireKey, Variant** ppvEmpData, int* piNumActiveGames);
+    int GetEmpireData (int iEmpireKey, Variant** ppvEmpData, unsigned int* piNumActiveGames);
     int GetEmpireActiveGames (int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
 
     int GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege);

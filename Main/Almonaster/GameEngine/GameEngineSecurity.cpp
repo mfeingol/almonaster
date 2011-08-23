@@ -32,7 +32,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
     // Read game options
-    iErrCode = t_pConn->ReadData(pszGameData, GameData::Options, &vOptions);
+    iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::Options, &vOptions);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -42,7 +42,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Almonaster
     if (iOptions & GAME_RESTRICT_MIN_ALMONASTER_SCORE) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinAlmonasterScore, pvRestrictionMin + RESTRICT_ALMONASTER_SCORE);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinAlmonasterScore, pvRestrictionMin + RESTRICT_ALMONASTER_SCORE);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -50,7 +50,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_ALMONASTER_SCORE) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxAlmonasterScore, pvRestrictionMax + RESTRICT_ALMONASTER_SCORE);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxAlmonasterScore, pvRestrictionMax + RESTRICT_ALMONASTER_SCORE);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -59,7 +59,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Classic
     if (iOptions & GAME_RESTRICT_MIN_CLASSIC_SCORE) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinClassicScore, pvRestrictionMin + RESTRICT_CLASSIC_SCORE);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinClassicScore, pvRestrictionMin + RESTRICT_CLASSIC_SCORE);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -67,7 +67,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_CLASSIC_SCORE) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxClassicScore, pvRestrictionMax + RESTRICT_CLASSIC_SCORE);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxClassicScore, pvRestrictionMax + RESTRICT_CLASSIC_SCORE);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -76,7 +76,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Bridier Rank
     if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierRank, pvRestrictionMin + RESTRICT_BRIDIER_RANK);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierRank, pvRestrictionMin + RESTRICT_BRIDIER_RANK);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -84,7 +84,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierRank, pvRestrictionMax + RESTRICT_BRIDIER_RANK);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierRank, pvRestrictionMax + RESTRICT_BRIDIER_RANK);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -93,7 +93,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Bridier Rank
     if (iOptions & GAME_RESTRICT_MIN_BRIDIER_INDEX) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierIndex, pvRestrictionMin + RESTRICT_BRIDIER_INDEX);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierIndex, pvRestrictionMin + RESTRICT_BRIDIER_INDEX);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -101,7 +101,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_BRIDIER_INDEX) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierIndex, pvRestrictionMax + RESTRICT_BRIDIER_INDEX);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierIndex, pvRestrictionMax + RESTRICT_BRIDIER_INDEX);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -110,7 +110,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Bridier Rank Gain
     if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierRankGain, pvRestrictionMin + RESTRICT_BRIDIER_RANK_GAIN);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierRankGain, pvRestrictionMin + RESTRICT_BRIDIER_RANK_GAIN);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -118,7 +118,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierRankGain, pvRestrictionMax + RESTRICT_BRIDIER_RANK_GAIN);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierRankGain, pvRestrictionMax + RESTRICT_BRIDIER_RANK_GAIN);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -127,7 +127,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Bridier Rank Loss
     if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierRankLoss, pvRestrictionMin + RESTRICT_BRIDIER_RANK_LOSS);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierRankLoss, pvRestrictionMin + RESTRICT_BRIDIER_RANK_LOSS);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -135,7 +135,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierRankLoss, pvRestrictionMax + RESTRICT_BRIDIER_RANK_LOSS);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierRankLoss, pvRestrictionMax + RESTRICT_BRIDIER_RANK_LOSS);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -144,7 +144,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     // Wins
     if (iOptions & GAME_RESTRICT_MIN_WINS) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MinWins, pvRestrictionMin + RESTRICT_WINS);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinWins, pvRestrictionMin + RESTRICT_WINS);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -152,7 +152,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     if (iOptions & GAME_RESTRICT_MAX_WINS) {
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxWins, pvRestrictionMax + RESTRICT_WINS);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxWins, pvRestrictionMax + RESTRICT_WINS);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -176,6 +176,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
     GAME_SECURITY (pszGameSec, iGameClass, iGameNumber);
     GAME_DEAD_EMPIRES (pszDeadEmpires, iGameClass, iGameNumber);
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
 
     bool bFlag;
 
@@ -222,7 +223,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
         // The gameclass already exists, so we can allow owners through quickly
         Variant vGameClassOwner;
 
-        iErrCode = t_pConn->ReadData(
+        iErrCode = t_pConn->GetCache()->ReadData(
             SYSTEM_GAMECLASS_DATA, 
             iGameClass, 
             SystemGameClassData::Owner, 
@@ -240,7 +241,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
         GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
-        iErrCode = t_pConn->ReadData(pszGameData, GameData::Options, &vGame);
+        iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::Options, &vGame);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -255,7 +256,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Almonaster
     if (iOptions & (GAME_RESTRICT_MIN_ALMONASTER_SCORE | GAME_RESTRICT_MAX_ALMONASTER_SCORE)) {
 
-        iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlmonasterScore, &vEmpire);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::AlmonasterScore, &vEmpire);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -264,7 +265,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MinAlmonasterScore, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinAlmonasterScore, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -284,7 +285,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxAlmonasterScore, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxAlmonasterScore, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -304,7 +305,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Classic
     if (iOptions & (GAME_RESTRICT_MIN_CLASSIC_SCORE | GAME_RESTRICT_MAX_CLASSIC_SCORE)) {
 
-        iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::ClassicScore, &vEmpire);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::ClassicScore, &vEmpire);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -313,7 +314,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MinClassicScore, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinClassicScore, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -333,7 +334,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxClassicScore, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxClassicScore, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -353,7 +354,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Bridier Rank
     if (iOptions & (GAME_RESTRICT_MIN_BRIDIER_RANK | GAME_RESTRICT_MAX_BRIDIER_RANK)) {
 
-        iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierRank, &vEmpire);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::BridierRank, &vEmpire);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -362,7 +363,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierRank, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierRank, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -382,7 +383,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierRank, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierRank, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -402,7 +403,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Bridier Index
     if (iOptions & (GAME_RESTRICT_MIN_BRIDIER_INDEX | GAME_RESTRICT_MAX_BRIDIER_INDEX)) {
 
-        iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::BridierIndex, &vEmpire);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::BridierIndex, &vEmpire);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -411,7 +412,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierIndex, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierIndex, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -431,7 +432,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierIndex, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierIndex, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -475,20 +476,20 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 goto Cleanup;
             }
             
-            iErrCode = t_pConn->ReadData(pszGameEmpires, 0, GameEmpires::EmpireKey, &vOwnerKey);
+            iErrCode = t_pConn->GetCache()->ReadData(pszGameEmpires, 0, GameEmpires::EmpireKey, &vOwnerKey);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
             
             GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, vOwnerKey.GetInteger());
             
-            iErrCode = t_pConn->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, &vGameRank);
+            iErrCode = t_pConn->GetCache()->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, &vGameRank);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             
-            iErrCode = t_pConn->ReadData(pszEmpireData, GameEmpireData::InitialBridierIndex, &vGameIndex);
+            iErrCode = t_pConn->GetCache()->ReadData(pszEmpireData, GameEmpireData::InitialBridierIndex, &vGameIndex);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -510,7 +511,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 
                 if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_GAIN) {
                     
-                    iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierRankGain, &vGame);
+                    iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierRankGain, &vGame);
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
@@ -523,7 +524,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 
                 if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN) {
                     
-                    iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierRankGain, &vGame);
+                    iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierRankGain, &vGame);
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
@@ -551,7 +552,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
                 if (iOptions & GAME_RESTRICT_MIN_BRIDIER_RANK_LOSS) {
                     
-                    iErrCode = t_pConn->ReadData(pszGameData, GameData::MinBridierRankLoss, &vGame);
+                    iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinBridierRankLoss, &vGame);
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
@@ -564,7 +565,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 
                 if (iOptions & GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS) {
                     
-                    iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxBridierRankLoss, &vGame);
+                    iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxBridierRankLoss, &vGame);
                     if (iErrCode != OK) {
                         goto Cleanup;
                     }
@@ -581,7 +582,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
     // Wins
     if (iOptions & (GAME_RESTRICT_MIN_WINS | GAME_RESTRICT_MAX_WINS)) {
 
-        iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, &vEmpire);
+        iErrCode = t_pConn->GetCache()->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Wins, &vEmpire);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -590,7 +591,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MinWins, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MinWins, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -610,7 +611,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
             if (pgoGameOptions == NULL) {
 
-                iErrCode = t_pConn->ReadData(pszGameData, GameData::MaxWins, &vGame);
+                iErrCode = t_pConn->GetCache()->ReadData(pszGameData, GameData::MaxWins, &vGame);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }

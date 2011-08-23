@@ -145,7 +145,7 @@ int GameEngine::GetEmpireAgRatio (int iGameClass, int iGameNumber, int iEmpireKe
 
     SafeRelease (pGameEmpireData);
 
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::MaxAgRatio, 

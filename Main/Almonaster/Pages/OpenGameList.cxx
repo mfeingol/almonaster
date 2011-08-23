@@ -178,6 +178,22 @@ if (bConfirmPage) {
             int iSuperClassKey;
             bool bFlag, bIdle = false;
 
+            // Cache GameData for each
+	        TableCacheEntry* peGameData = (TableCacheEntry*)StackAlloc(iNumOpenGames * sizeof(TableCacheEntry));
+	        for (i = 0; i < (int)iNumOpenGames; i ++)
+	        {
+	            char* pszTable;
+	        
+	            pszTable = (char*)StackAlloc(countof(_GAME_DATA) + 64);
+	            GET_GAME_DATA(pszTable, piGameClass[i], piGameNumber[i]);
+
+	            peGameData[i].pszTableName = pszTable;
+	            peGameData[i].iKey = NO_KEY;
+	            peGameData[i].iNumColumns = 0;
+	            peGameData[i].pcColumns = NULL;
+	        }
+            Check(t_pCache->Cache(peGameData, iNumOpenGames * 2));
+
             for (i = 0; i < (int)iNumOpenGames; i ++)
             {
                 iGameClass = piGameClass[i];

@@ -310,7 +310,7 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
     }
 
     // Make sure correct owner
-    iErrCode = t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vTemp);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -358,7 +358,7 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
     }
 
     // Read name
-    iErrCode = t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Name, &vTournamentName);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Name, &vTournamentName);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -419,7 +419,7 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
             break;
         }
 
-        iErrCode = t_pConn->ReadData(pszTable, iKey, SystemTournamentEmpires::EmpireKey, &vKey);
+        iErrCode = t_pConn->GetCache()->ReadData(pszTable, iKey, SystemTournamentEmpires::EmpireKey, &vKey);
         if (iErrCode != OK) {
             Assert (false);
             break;
@@ -494,7 +494,7 @@ int GameEngine::GetTournamentName (unsigned int iTournamentKey, Variant* pvTourn
         return ERROR_TOURNAMENT_DOES_NOT_EXIST;
     }
 
-    return t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Name, pvTournamentName);
+    return t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Name, pvTournamentName);
 }
 
 int GameEngine::GetTournamentOwner (unsigned int iTournamentKey, unsigned int* piOwnerKey) {
@@ -527,7 +527,7 @@ Cleanup:
 
 int GameEngine::GetTournamentDescription (unsigned int iTournamentKey, Variant* pvTournamentDesc) {
 
-    return t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Description, pvTournamentDesc);
+    return t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Description, pvTournamentDesc);
 }
 
 int GameEngine::SetTournamentDescription (unsigned int iTournamentKey, const char* pszTournamentDesc) {
@@ -537,7 +537,7 @@ int GameEngine::SetTournamentDescription (unsigned int iTournamentKey, const cha
 
 int GameEngine::GetTournamentUrl (unsigned int iTournamentKey, Variant* pvTournamentUrl) {
 
-    return t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::WebPage, pvTournamentUrl);
+    return t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::WebPage, pvTournamentUrl);
 }
 
 int GameEngine::SetTournamentUrl (unsigned int iTournamentKey, const char* pszTournamentUrl) {
@@ -547,7 +547,7 @@ int GameEngine::SetTournamentUrl (unsigned int iTournamentKey, const char* pszTo
 
 int GameEngine::GetTournamentNews (unsigned int iTournamentKey, Variant* pvTournamentNews) {
 
-    return t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::News, pvTournamentNews);
+    return t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::News, pvTournamentNews);
 }
 
 int GameEngine::SetTournamentNews (unsigned int iTournamentKey, const char* pszTournamentNews) {
@@ -588,7 +588,7 @@ int GameEngine::InviteEmpireIntoTournament (unsigned int iTournamentKey, int iOw
     Variant pvData[SystemEmpireMessages::NumColumns], vOwnerKey;
 
     // Verify access
-    iErrCode = t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -667,7 +667,7 @@ int GameEngine::InviteSelfIntoTournament (unsigned int iTournamentKey, int iEmpi
     }
 
     // Find owner
-    iErrCode = t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1626,7 +1626,7 @@ int GameEngine::GetTournamentTeamDescription (unsigned int iTournamentKey, unsig
 
     SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
-    return t_pConn->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Description, pvTournamentTeamDesc);
+    return t_pConn->GetCache()->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Description, pvTournamentTeamDesc);
 }
 
 int GameEngine::SetTournamentTeamDescription (unsigned int iTournamentKey, unsigned int iTeamKey, 
@@ -1642,7 +1642,7 @@ int GameEngine::GetTournamentTeamUrl (unsigned int iTournamentKey, unsigned int 
 
     SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
-    return t_pConn->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::WebPage, pvTournamentTeamUrl);
+    return t_pConn->GetCache()->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::WebPage, pvTournamentTeamUrl);
 }
 
 int GameEngine::SetTournamentTeamUrl (unsigned int iTournamentKey, unsigned int iTeamKey, 
@@ -1658,7 +1658,7 @@ int GameEngine::GetTournamentIcon (unsigned int iTournamentKey, unsigned int* pi
     int iErrCode;
     Variant vVal;
 
-    iErrCode = t_pConn->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, &vVal);
+    iErrCode = t_pConn->GetCache()->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, &vVal);
     if (iErrCode == OK) {
         *piIcon = vVal.GetInteger();
     }
@@ -1678,7 +1678,7 @@ int GameEngine::GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int
 
     SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
-    iErrCode = t_pConn->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, &vVal);
+    iErrCode = t_pConn->GetCache()->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, &vVal);
     if (iErrCode == OK) {
         *piIcon = vVal.GetInteger();
     }

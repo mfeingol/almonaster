@@ -62,7 +62,7 @@ int GameEngine::SendSystemMessage (int iEmpireKey, const char* pszMessage, int i
         pvData[SystemEmpireMessages::iSource] = (const char*) NULL;
     } else {
         
-        if (t_pConn->ReadData(
+        if (t_pConn->GetCache()->ReadData(
             SYSTEM_EMPIRE_DATA, 
             iSource, 
             SystemEmpireData::Name, 
@@ -110,7 +110,7 @@ int GameEngine::DeliverSystemMessage (int iEmpireKey, const Variant* pvData) {
         }
     }
 
-    iErrCode = t_pConn->ReadData(
+    iErrCode = t_pConn->GetCache()->ReadData(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::MaxNumSystemMessages, 
@@ -621,7 +621,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->ReadData(strEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -644,7 +644,7 @@ int GameEngine::SendGameMessage (int iGameClass, int iGameNumber, int iEmpireKey
     
     } else {
 
-        if (t_pConn->ReadData(
+        if (t_pConn->GetCache()->ReadData(
             SYSTEM_EMPIRE_DATA, 
             iSourceKey, 
             SystemEmpireData::Name, 
@@ -859,7 +859,7 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     *pppvMessage = NULL;
     *piNumMessages = 0;
 
-    iErrCode = t_pConn->ReadData(strGameEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
+    iErrCode = t_pConn->GetCache()->ReadData(strGameEmpireData, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1049,7 +1049,7 @@ int GameEngine::BroadcastGameMessage (int iGameClass, int iGameNumber, const cha
             break;
         }
 
-        iErrCode = t_pConn->ReadData(strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
+        iErrCode = t_pConn->GetCache()->ReadData(strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
         if (iErrCode == OK) {
 
             iErrCode = SendGameMessage (

@@ -2107,7 +2107,7 @@ case 0:
     {
 
     Variant* pvEmpireData, vMaxNumSystemMessages;
-    int iNumActiveGames, iOptions, * piThemeKey, iNumThemes, iValue, j, iMaxNumSystemMessages;
+    int iOptions, * piThemeKey, iNumThemes, iValue, j, iMaxNumSystemMessages;
     bool bIP, bID, bFlag;
     size_t stLen;
 
@@ -2115,7 +2115,7 @@ case 0:
 
     String strFilter;
 
-    EmpireCheck (GetEmpireData (m_iEmpireKey, &pvEmpireData, &iNumActiveGames));
+    EmpireCheck (GetEmpireData (m_iEmpireKey, &pvEmpireData, NULL));
     EmpireCheck (GetJoinedTournaments (m_iEmpireKey, NULL, NULL, &iNumTournamentsJoined));
 
     %><input type="hidden" name="ProfileEditorPage" value="0"><p><%
