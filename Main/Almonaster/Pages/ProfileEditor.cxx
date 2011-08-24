@@ -2107,7 +2107,8 @@ case 0:
     {
 
     Variant* pvEmpireData, vMaxNumSystemMessages;
-    int iOptions, * piThemeKey, iNumThemes, iValue, j, iMaxNumSystemMessages;
+    int iOptions, iValue, j, iMaxNumSystemMessages;
+    unsigned int* piThemeKey, iNumThemes;
     bool bIP, bID, bFlag;
     size_t stLen;
 
@@ -2407,17 +2408,17 @@ case 0:
     if (iNumThemes > 0) {
 
         Variant vThemeName;
-        for (i = 0; i < iNumThemes; i ++) {
+        for (i = 0; i < (int)iNumThemes; i ++) {
             if (GetThemeName (piThemeKey[i], &vThemeName) == OK) {
                 %><option <%
-                if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == piThemeKey[i]) {
+                if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == (int)piThemeKey[i]) {
                     %> selected<%
                 }
                 %> value="<% Write (piThemeKey[i]); %>"><% Write (vThemeName.GetCharPtr()); %></option><%
             }
         }
 
-        FreeKeys (piThemeKey);
+        t_pCache->FreeKeys (piThemeKey);
     }
     %></select> <%
 
@@ -3068,7 +3069,7 @@ Cleanup:
 
     %><p><% WriteButton (BID_CANCEL);
 
-    FreeData (pvEmpireData);
+    t_pCache->FreeData (pvEmpireData);
     }
 
     break;
@@ -3215,8 +3216,8 @@ case 2:
             }
         }
 
-        FreeData (ppvMessage);
-        FreeKeys (piMessageKey);
+        t_pCache->FreeData (ppvMessage);
+        t_pCache->FreeKeys (piMessageKey);
     }
 
     }
@@ -3374,7 +3375,7 @@ case 4:
     WriteButton (BID_CANCEL);
     WriteButton (BID_CHOOSE);
 
-    int* piThemeKey, iNumThemes;
+    unsigned int* piThemeKey, iNumThemes;
     Check (GetThemeKeys (&piThemeKey, &iNumThemes));
 
     if (iNumThemes == 0) {
@@ -3388,7 +3389,7 @@ case 4:
 
         int iOptions;
 
-        for (i = 0; i < iNumThemes; i ++) {
+        for (i = 0; i < (int)iNumThemes; i ++) {
 
             if (GetThemeData (piThemeKey[i], &pvThemeData) != OK) {
                 continue;
@@ -3451,12 +3452,12 @@ case 4:
 
             %>)</li><%
 
-            FreeData (pvThemeData);
+            t_pCache->FreeData (pvThemeData);
         }
 
         %></ul></td></tr></table><%
 
-        FreeKeys (piThemeKey);
+        t_pCache->FreeKeys (piThemeKey);
 
         %><p>A complete theme has a Background, a Live Planet, a Dead Planet, a Separator, Buttons, <%
         %>a Horizontal Bar and a Vertical Bar</strong><p><%
@@ -3528,10 +3529,11 @@ case 9:
     // View tournaments
     %><input type="hidden" name="ProfileEditorPage" value="9"><%
 
-    unsigned int* piTournamentKey = NULL, iTournaments;
+    unsigned int iTournaments;
+    Variant* pvTournamentKey = NULL;
 
     // List all joined tournaments
-    iErrCode = GetJoinedTournaments (m_iEmpireKey, &piTournamentKey, NULL, &iTournaments);
+    iErrCode = GetJoinedTournaments (m_iEmpireKey, &pvTournamentKey, NULL, &iTournaments);
     if (iErrCode != OK) {
         %><p>Error <% Write (iErrCode); %> occurred<%
     }
@@ -3548,11 +3550,11 @@ case 9:
         }
         %>:</h3><%
 
-        RenderTournaments (piTournamentKey, iTournaments, false);
+        RenderTournaments(pvTournamentKey, iTournaments, false);
     }
 
-    if (piTournamentKey != NULL) {
-        FreeData (piTournamentKey);   // Not a bug
+    if (pvTournamentKey != NULL) {
+        t_pCache->FreeData(pvTournamentKey);
     }
 
     }

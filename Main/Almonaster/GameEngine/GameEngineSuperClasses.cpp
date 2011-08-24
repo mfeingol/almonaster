@@ -28,7 +28,7 @@
 int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
     
     unsigned int iKey = NO_KEY;
-    int iErrCode = t_pConn->GetFirstKey (
+    int iErrCode = t_pCache->GetFirstKey(
         SYSTEM_SUPERCLASS_DATA, 
         SystemSuperClassData::Name, 
         pszName, 
@@ -51,7 +51,7 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->InsertRow (SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template, pvSuperClass, (unsigned int*) piKey);
+        iErrCode = t_pCache->InsertRow (SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template, pvSuperClass, (unsigned int*) piKey);
         Assert (iErrCode == OK);
     }
 
@@ -84,7 +84,7 @@ int GameEngine::DeleteSuperClass (int iSuperClassKey, bool* pbResult) {
     }
 
     if (vGameClasses.GetInteger() == 0) {
-        iErrCode = t_pConn->DeleteRow (SYSTEM_SUPERCLASS_DATA, iSuperClassKey);
+        iErrCode = t_pCache->DeleteRow(SYSTEM_SUPERCLASS_DATA, iSuperClassKey);
         *pbResult = (iErrCode == OK);
     } else {
         *pbResult = false;
@@ -101,17 +101,11 @@ int GameEngine::DeleteSuperClass (int iSuperClassKey, bool* pbResult) {
 //
 // Return names and keys of superclasses
 
-int GameEngine::GetSuperClassKeys (int** ppiKey, Variant** ppvName, int* piNumSuperClasses) {
-
-    int iErrCode = t_pConn->ReadColumn (
-        SYSTEM_SUPERCLASS_DATA, 
-        SystemSuperClassData::Name, 
-        (unsigned int**) ppiKey, 
-        ppvName, 
-        (unsigned int*) piNumSuperClasses
-        );
-
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+int GameEngine::GetSuperClassKeys(unsigned int** ppiKey, Variant** ppvName, unsigned int* piNumSuperClasses)
+{
+    int iErrCode = t_pCache->ReadColumn(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Name, ppiKey, ppvName, piNumSuperClasses);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
         iErrCode = OK;
     }
 
@@ -125,15 +119,11 @@ int GameEngine::GetSuperClassKeys (int** ppiKey, Variant** ppvName, int* piNumSu
 //
 // Return names and keys of superclasses
 
-int GameEngine::GetSuperClassKeys(int** ppiKey, int* piNumSuperClasses) {
-
-    int iErrCode = t_pCache->GetAllKeys (
-        SYSTEM_SUPERCLASS_DATA, 
-        (unsigned int**) ppiKey, 
-        (unsigned int*) piNumSuperClasses
-        );
-
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+int GameEngine::GetSuperClassKeys(unsigned int** ppiKey, unsigned int* piNumSuperClasses)
+{
+    int iErrCode = t_pCache->GetAllKeys (SYSTEM_SUPERCLASS_DATA, ppiKey, piNumSuperClasses);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
         iErrCode = OK;
     }
 
@@ -165,7 +155,7 @@ int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = t_pConn->DoesRowExist (SYSTEM_SUPERCLASS_DATA, iKey, &bExists);
+    iErrCode = t_pCache->DoesRowExist(SYSTEM_SUPERCLASS_DATA, iKey, &bExists);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -175,7 +165,7 @@ int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->WriteData (SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
+    iErrCode = t_pCache->WriteData (SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
     Assert (iErrCode == OK);
 
 Cleanup:

@@ -191,7 +191,7 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
 
     // Personal Game Classes
     if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES ||
-        (GetEmpirePersonalGameClasses(m_iEmpireKey, NULL, NULL, (int*) &iNumber) == OK && iNumber > 0))
+        (GetEmpirePersonalGameClasses(m_iEmpireKey, NULL, NULL, &iNumber) == OK && iNumber > 0))
     {
         WriteButton (BID_PERSONALGAMECLASSES);
     }

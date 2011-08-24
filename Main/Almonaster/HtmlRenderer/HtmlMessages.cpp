@@ -185,7 +185,7 @@ void HtmlRenderer::WriteGameMessages() {
             WriteFormattedMessage (pszMessage);
             OutputText ("</font></td></tr>");
             
-            FreeData (ppvMessage[i]);
+            t_pCache->FreeData (ppvMessage[i]);
             
         }   // End empire loop
 
@@ -246,7 +246,7 @@ void HtmlRenderer::WriteSystemMessages() {
                 iNumMessagesFromPeople ++;
             }
 
-            FreeData (ppvMessage[i]);    
+            t_pCache->FreeData (ppvMessage[i]);    
         }
 
         OutputText ("</table><p>");
@@ -256,7 +256,7 @@ void HtmlRenderer::WriteSystemMessages() {
         }
         
         delete [] ppvMessage;
-        FreeKeys (piMessageKey);
+        t_pCache->FreeKeys (piMessageKey);
     }
 }
 

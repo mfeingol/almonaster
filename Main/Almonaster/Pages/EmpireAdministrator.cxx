@@ -106,7 +106,7 @@ SearchResults:
 
                             if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
                                 iTargetEmpireKey = piSearchEmpireKey[0];
-                                FreeKeys (piSearchEmpireKey);
+                                t_pCache->FreeKeys (piSearchEmpireKey);
                                 piSearchEmpireKey = NULL;
                                 iEmpireAdminPage = 3;
                             } else {
@@ -605,7 +605,7 @@ case 1:
         iLastKey
         );
 
-    FreeKeys (piSearchEmpireKey);
+    t_pCache->FreeKeys (piSearchEmpireKey);
 
     }
 

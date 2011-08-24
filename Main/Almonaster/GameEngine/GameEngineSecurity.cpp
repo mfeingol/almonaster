@@ -180,7 +180,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
     bool bFlag;
 
-    IReadTable* pGameSec = NULL;
+    ICachedTable* pGameSec = NULL;
 
     *pbAccess = false;
     *prAccessDeniedReason = ACCESS_DENIED_NO_REASON;
@@ -191,7 +191,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetFirstKey (pszDeadEmpires, GameDeadEmpires::SecretKey, vEmpireSecretKey, &iKey);
+    iErrCode = t_pCache->GetFirstKey(pszDeadEmpires, GameDeadEmpires::SecretKey, vEmpireSecretKey, &iKey);
     if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != ERROR_UNKNOWN_TABLE_NAME) {
         *prAccessDeniedReason = ACCESS_DENIED_IN_DEAD_EMPIRES_TABLE;
         goto Cleanup;
@@ -462,7 +462,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
         unsigned int iNumRows;
 
-        iErrCode = t_pConn->GetNumRows (pszGameEmpires, &iNumRows);
+        iErrCode = t_pCache->GetNumRows (pszGameEmpires, &iNumRows);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -650,7 +650,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
                 bool bValidKey = false;
 
-                iErrCode = t_pConn->GetTableForReading(pszGameSec, &pGameSec);
+                iErrCode = t_pCache->GetTable(pszGameSec, &pGameSec);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -706,7 +706,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     } else {
 
                         // Nuke the key in the row
-                        iErrCode = t_pConn->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, NO_KEY);
+                        iErrCode = t_pCache->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, NO_KEY);
                         if (iErrCode != OK) {
                             goto Cleanup;
                         }
@@ -779,7 +779,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             }
 
             if (pvSec != NULL) {
-                t_pConn->FreeData(pvSec);
+                t_pCache->FreeData(pvSec);
                 pvSec = NULL;
             }
 
@@ -811,7 +811,7 @@ Cleanup:
     SafeRelease (pGameSec);
 
     if (pvSec != NULL) {
-        t_pConn->FreeData(pvSec);
+        t_pCache->FreeData(pvSec);
     }
 
     return iErrCode;

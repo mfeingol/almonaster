@@ -7,6 +7,7 @@
 using namespace Almonaster::Database::Sql;
 
 #include "TableCacheCollection.h"
+#include "Utils.h"
 
 const gcroot<System::String^> TemplateTableName = gcnew System::String("_Templates");
 const gcroot<System::String^> TemplateColumnsTableName = gcnew System::String("_TemplateColumns");

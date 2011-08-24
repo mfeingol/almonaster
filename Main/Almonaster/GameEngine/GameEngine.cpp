@@ -22,11 +22,11 @@
 int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
     int iErrCode;
-    IReadTable* pSystem = NULL;
+    ICachedTable* pSystem = NULL;
 
     Assert (pgcConfig != NULL);
 
-    iErrCode = t_pConn->GetTableForReading(SYSTEM_DATA, &pSystem);
+    iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -198,11 +198,11 @@ Cleanup:
 int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig) {
 
     int iErrCode;
-    IReadTable* pSystem = NULL;
+    ICachedTable* pSystem = NULL;
 
     Assert (pmcConfig != NULL);
 
-    iErrCode = t_pConn->GetTableForReading(SYSTEM_DATA, &pSystem);
+    iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -254,7 +254,7 @@ Cleanup:
 int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
 
     int iErrCode;
-    IWriteTable* pSystem = NULL;
+    ICachedTable* pSystem = NULL;
 
     int iShipBehavior = gcConfig.iShipBehavior;
 
@@ -293,7 +293,7 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = t_pConn->GetTableForWriting (SYSTEM_DATA, &pSystem);
+    iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -465,7 +465,7 @@ Cleanup:
 int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
 
     int iErrCode;
-    IWriteTable* pSystem = NULL;
+    ICachedTable* pSystem = NULL;
 
     // Sanity checks
     if (
@@ -483,7 +483,7 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = t_pConn->GetTableForWriting (SYSTEM_DATA, &pSystem);
+    iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -542,51 +542,11 @@ int GameEngine::GetNewSessionId (int64* pi64SessionId)
 {
     Variant vSessionId;
 
-    int iErrCode = t_pConn->Increment (SYSTEM_DATA, SystemData::SessionId, (int64) 1, &vSessionId);
+    int iErrCode = t_pCache->Increment(SYSTEM_DATA, SystemData::SessionId, (int64) 1, &vSessionId);
     if (iErrCode == OK) {
         *pi64SessionId = vSessionId.GetInteger64();
         return OK;
     }
 
     return iErrCode;
-}
-
-void GameEngine::FreeData (void** ppData) {
-    t_pConn->FreeData (ppData);
-}
-
-void GameEngine::FreeData (Variant* pvData) {
-    t_pConn->FreeData (pvData);
-}
-
-void GameEngine::FreeData (Variant** ppvData) {
-    t_pConn->FreeData (ppvData);
-}
-
-void GameEngine::FreeData (int* piData) {
-    t_pConn->FreeData (piData);
-}
-
-void GameEngine::FreeData (unsigned int* piData) {
-    t_pConn->FreeData (piData);
-}
-
-void GameEngine::FreeData (float* ppfData) {
-    t_pConn->FreeData (ppfData);
-}
-
-void GameEngine::FreeData (char** ppszData) {
-    t_pConn->FreeData (ppszData);
-}
-
-void GameEngine::FreeData (int64* pi64Data) {
-    t_pConn->FreeData (pi64Data);
-}
-
-void GameEngine::FreeKeys (unsigned int* piKeys) {
-    t_pConn->FreeKeys (piKeys);
-}
-
-void GameEngine::FreeKeys (int* piKeys) {
-    t_pConn->FreeKeys ((unsigned int*) piKeys);
 }

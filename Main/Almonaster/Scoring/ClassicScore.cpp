@@ -27,7 +27,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
     if (iEmpireNuker != NO_KEY) {
 
         // Reward nuker
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             iEmpireNuker,
             SystemEmpireData::ClassicScore, 
@@ -54,7 +54,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
     if (iEmpireNuked != NO_KEY) {
 
         // Punish nuked
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             iEmpireNuked,
             SystemEmpireData::ClassicScore, 
@@ -112,7 +112,7 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // Reward winner
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
@@ -143,7 +143,7 @@ int ClassicScore::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // Reward for draw
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
@@ -175,7 +175,7 @@ int ClassicScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // 'Reward' for ruin
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
@@ -232,7 +232,7 @@ int ClassicScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 int ClassicScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
 
     if (pvScore == NULL) {
-        return t_pConn->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
+        return t_pCache->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
     }
 
     SearchColumn sc;    
@@ -248,7 +248,7 @@ int ClassicScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppi
     sd.iNumColumns = 1;
     sd.pscColumns = &sc;
 
-    return t_pConn->GetSearchKeys (
+    return t_pCache->GetSearchKeys (
         SYSTEM_EMPIRE_DATA,
         sd,
         ppiKey, 

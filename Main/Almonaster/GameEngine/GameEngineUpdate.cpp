@@ -159,7 +159,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             unsigned int iNumUpdated = vTemp.GetInteger();
             
             unsigned int iNumNeeded;
-            iErrCode = t_pConn->GetNumRows (pszGameEmpires, &iNumNeeded);
+            iErrCode = t_pCache->GetNumRows (pszGameEmpires, &iNumNeeded);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -200,7 +200,7 @@ Cleanup:
     if (fUpdateCheckTime && !bGameOver && iErrCode == OK) {
         
         // Update last checked
-        iErrCode = t_pConn->WriteData (strGameData, GameData::LastUpdateCheck, tNow);
+        iErrCode = t_pCache->WriteData (strGameData, GameData::LastUpdateCheck, tNow);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -438,9 +438,10 @@ int GameEngine::ResetAllGamesUpdateTime() {
     int iGameClass, iGameNumber;
     Variant* pvGame;
 
-    int iErrCode = t_pConn->ReadColumn (
+    int iErrCode = t_pCache->ReadColumn (
         SYSTEM_ACTIVE_GAMES,
         SystemActiveGames::GameClassGameNumber,
+        NULL,
         &pvGame,
         &iNumKeys
         );
@@ -455,7 +456,7 @@ int GameEngine::ResetAllGamesUpdateTime() {
             ResetGameUpdateTime (iGameClass, iGameNumber);
         }
         
-        t_pConn->FreeData(pvGame);
+        t_pCache->FreeData(pvGame);
     
     } else {
         
@@ -477,7 +478,7 @@ int GameEngine::ResetAllGamesUpdateTime() {
 int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
 
     int iErrCode;
-    IWriteTable* pGameData = NULL;
+    ICachedTable* pGameData = NULL;
 
     GAME_DATA (strGameData, iGameClass, iGameNumber);
 
@@ -494,7 +495,7 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetTableForWriting (strGameData, &pGameData);
+    iErrCode = t_pCache->GetTable(strGameData, &pGameData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -558,14 +559,14 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
 
         GAME_DATA (strGameData, iGameClass, iGameNumber);
         
-        iErrCode = t_pConn->WriteOr (strGameEmpireData, GameEmpireData::Options, UPDATED);
+        iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, UPDATED);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
         // Increment empire updated count
-        iErrCode = t_pConn->Increment (strGameData, GameData::NumEmpiresUpdated, 1);
+        iErrCode = t_pCache->Increment(strGameData, GameData::NumEmpiresUpdated, 1);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -610,13 +611,13 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
     *pbSet = (vOptions.GetInteger() & UPDATED) != 0;
     if (*pbSet) {
         
-        iErrCode = t_pConn->WriteAnd (strEmpireData, GameEmpireData::Options, ~UPDATED);
+        iErrCode = t_pCache->WriteAnd (strEmpireData, GameEmpireData::Options, ~UPDATED);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->Increment (strGameData, GameData::NumEmpiresUpdated, -1);
+        iErrCode = t_pCache->Increment(strGameData, GameData::NumEmpiresUpdated, -1);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -675,9 +676,10 @@ int GameEngine::CheckAllGamesForUpdates (bool fUpdateCheckTime) {
     
     Variant* pvGame;
 
-    int iErrCode = t_pConn->ReadColumn (
+    int iErrCode = t_pCache->ReadColumn (
         SYSTEM_ACTIVE_GAMES, 
         SystemActiveGames::GameClassGameNumber,
+        NULL,
         &pvGame, 
         &iNumGames
         );
@@ -692,7 +694,7 @@ int GameEngine::CheckAllGamesForUpdates (bool fUpdateCheckTime) {
         }
         
         // Clean up
-        t_pConn->FreeData(pvGame);
+        t_pCache->FreeData(pvGame);
     }
 
     return OK;
@@ -771,7 +773,7 @@ int GameEngine::VerifyUpdatedEmpireCount (int iGameClass, int iGameNumber) {
     iKey = NO_KEY;
     while (true) {
 
-        iErrCode = t_pConn->GetNextKey (pszGameEmpires, iKey, &iKey);
+        iErrCode = t_pCache->GetNextKey (pszGameEmpires, iKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = OK;
             break;

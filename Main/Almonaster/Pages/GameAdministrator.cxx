@@ -1557,7 +1557,7 @@ switch (iGameAdminPage) {
 case 0:
     {
 
-    int* piSuperClassKey, iNumSuperClasses;
+    unsigned int* piSuperClassKey, iNumSuperClasses;
     Variant* pvSuperClassName;
     Check (GetSuperClassKeys (&piSuperClassKey, &pvSuperClassName, &iNumSuperClasses));
 
@@ -1681,7 +1681,7 @@ case 0:
     if (iNumSuperClasses > 0) { 
 
         %><tr><td>Delete a SuperClass:</td><td><select name="DelSuperClass"><%
-        for (i = 0; i < iNumSuperClasses; i ++) { 
+        for (i = 0; i < (int)iNumSuperClasses; i ++) { 
             %><option value="<% Write (piSuperClassKey [i]); %>"><% 
             Write (pvSuperClassName[i].GetCharPtr()); %></option><%
         }
@@ -1699,7 +1699,7 @@ case 0:
     if (iNumSuperClasses > 0) {
 
         %><tr><td>Rename a SuperClass:</td><td><select name="RenSuperClass"><%
-        for (i = 0; i < iNumSuperClasses; i ++) { 
+        for (i = 0; i < (int)iNumSuperClasses; i ++) { 
             %><option value="<% Write (piSuperClassKey [i]); %>"><% 
             Write (pvSuperClassName[i].GetCharPtr()); %></option><%
         }
@@ -2445,8 +2445,8 @@ case 0:
     WriteButton (BID_CANCEL);
 
     if (iNumSuperClasses > 0) {
-        FreeKeys (piSuperClassKey);
-        FreeData (pvSuperClassName);
+        t_pCache->FreeKeys (piSuperClassKey);
+        t_pCache->FreeData (pvSuperClassName);
     }
 
     }
@@ -2577,7 +2577,7 @@ case 6:
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+    iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;
@@ -2601,7 +2601,7 @@ case 6:
 Cleanup:
 
     if (pvPlanetData != NULL) {
-        t_pConn->FreeData (pvPlanetData);
+        t_pCache->FreeData (pvPlanetData);
     }
 
     if (iErrCode != OK) {

@@ -45,9 +45,9 @@ int GameEngine::SetEmpireOption (int iGameClass, int iGameNumber, int iEmpireKey
     GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
     if (bOption) {
-        return t_pConn->WriteOr (strEmpireOptions, GameEmpireData::Options, iFlag);
+        return t_pCache->WriteOr (strEmpireOptions, GameEmpireData::Options, iFlag);
     } else {
-        return t_pConn->WriteAnd (strEmpireOptions, GameEmpireData::Options, ~iFlag);
+        return t_pCache->WriteAnd (strEmpireOptions, GameEmpireData::Options, ~iFlag);
     }
 }
 
@@ -106,14 +106,13 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
     int iErrCode;
 
     unsigned int* piKey = NULL, iNumMessages, iMaxNum;
-    UTCTime* ptTimeStamp = NULL;
    
-    Variant vTemp;
+    Variant vTemp, * pvTimeStamp = NULL;
 
     GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_DATA (strOptions, iGameClass, iGameNumber, iEmpireKey);
 
-    IWriteTable* pMessages = NULL;
+    ICachedTable* pMessages = NULL;
 
     iErrCode = t_pCache->ReadData(strOptions, GameEmpireData::MaxNumGameMessages, &vTemp);
     if (iErrCode != OK) {
@@ -122,7 +121,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
     iMaxNum = vTemp.GetInteger();
 
     // Set the max number of messages
-    iErrCode = t_pConn->WriteData (strOptions, GameEmpireData::MaxNumGameMessages, iMaxNumSavedMessages);
+    iErrCode = t_pCache->WriteData (strOptions, GameEmpireData::MaxNumGameMessages, iMaxNumSavedMessages);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -133,7 +132,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
     }
 
     // Lock message table
-    iErrCode = t_pConn->GetTableForWriting (strGameEmpireMessages, &pMessages);
+    iErrCode = t_pCache->GetTable(strGameEmpireMessages, &pMessages);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -151,7 +150,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
         unsigned int iReadNumMessages, i, iCurrentNumMessages;
 
         // Get the oldest messages' keys
-        iErrCode = pMessages->ReadColumn (GameEmpireMessages::TimeStamp, &piKey, &ptTimeStamp, &iReadNumMessages);
+        iErrCode = pMessages->ReadColumn (GameEmpireMessages::TimeStamp, &piKey, &pvTimeStamp, &iReadNumMessages);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -159,7 +158,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
         Assert (iReadNumMessages == iNumMessages);
 
         // Sort the messages by age
-        Algorithm::QSortTwoAscending<UTCTime, unsigned int> (ptTimeStamp, piKey, iReadNumMessages);
+        Algorithm::QSortTwoAscending<Variant, unsigned int>(pvTimeStamp, piKey, iReadNumMessages);
 
         // Delete read messages until we're below the limit
         iCurrentNumMessages = iReadNumMessages;
@@ -177,7 +176,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
                 continue;
             }
 
-            iErrCode = pMessages->DeleteRow (piKey[i]);
+            iErrCode = pMessages->DeleteRow(piKey[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -193,11 +192,11 @@ Cleanup:
     SafeRelease (pMessages);
 
     if (piKey != NULL) {
-        t_pConn->FreeKeys(piKey);
+        t_pCache->FreeKeys(piKey);
     }
 
-    if (ptTimeStamp != NULL) {
-        t_pConn->FreeData(ptTimeStamp);
+    if (pvTimeStamp != NULL) {
+        t_pCache->FreeData(pvTimeStamp);
     }
     
     return iErrCode;
@@ -227,7 +226,7 @@ int GameEngine::GetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iE
     unsigned int iKey;
     GAME_EMPIRE_DIPLOMACY (pszDip, iGameClass, iGameNumber, iEmpireKey);
 
-    int iErrCode = t_pConn->GetFirstKey (
+    int iErrCode = t_pCache->GetFirstKey(
         pszDip, 
         GameEmpireDiplomacy::EmpireKey, 
         iIgnoredEmpire,
@@ -273,7 +272,7 @@ int GameEngine::SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iE
     unsigned int iKey;
     GAME_EMPIRE_DIPLOMACY (pszDip, iGameClass, iGameNumber, iEmpireKey);
 
-    int iErrCode = t_pConn->GetFirstKey (
+    int iErrCode = t_pCache->GetFirstKey(
         pszDip, 
         GameEmpireDiplomacy::EmpireKey, 
         iIgnoredEmpire,
@@ -289,23 +288,13 @@ int GameEngine::SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iE
         return iErrCode;
     }
 
-    if (bIgnore) {
-
-        iErrCode = t_pConn->WriteOr (
-            pszDip, 
-            iKey,
-            GameEmpireDiplomacy::State, 
-            IGNORE_EMPIRE
-            );
-
-    } else {
-
-        iErrCode = t_pConn->WriteAnd (
-            pszDip, 
-            iKey,
-            GameEmpireDiplomacy::State, 
-            ~IGNORE_EMPIRE
-            );
+    if (bIgnore)
+    {
+        iErrCode = t_pCache->WriteOr(pszDip, iKey, GameEmpireDiplomacy::State, IGNORE_EMPIRE);
+    }
+    else
+    {
+        iErrCode = t_pCache->WriteAnd(pszDip, iKey, GameEmpireDiplomacy::State, ~IGNORE_EMPIRE);
     }
 
     return iErrCode;
@@ -355,7 +344,7 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    return t_pConn->WriteData (strGameEmpireData, GameEmpireData::DefaultMessageTarget, iMessageTarget);
+    return t_pCache->WriteData (strGameEmpireData, GameEmpireData::DefaultMessageTarget, iMessageTarget);
 }
 
 int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int iEmpireKey) {
@@ -375,13 +364,13 @@ int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int i
     Assert (!(vTemp.GetInteger() & REQUEST_PAUSE));
 #endif
 
-    iErrCode = t_pConn->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
+    iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (strGameData, GameData::NumRequestingPause, 1);
+    iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingPause, 1);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -424,7 +413,7 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetNumRows (strEmpires, &iNumEmpires);
+    iErrCode = t_pCache->GetNumRows (strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -441,13 +430,13 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
+    iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (strGameData, GameData::NumRequestingPause, 1, &vOldNum);
+    iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingPause, 1, &vOldNum);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -580,13 +569,13 @@ int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey,
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_PAUSE);
+    iErrCode = t_pCache->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (strGameData, GameData::NumRequestingPause, -1);
+    iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingPause, -1);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -701,19 +690,19 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_DRAW);
+    iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_DRAW);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (strGameData, GameData::NumRequestingDraw, 1, &vOldNum);
+    iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingDraw, 1, &vOldNum);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetNumRows (strEmpires, &iNumEmpires);
+    iErrCode = t_pCache->GetNumRows (strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -766,13 +755,13 @@ int GameEngine::RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) 
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_DRAW);
+    iErrCode = t_pCache->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_DRAW);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (strGameData, GameData::NumRequestingDraw, -1);
+    iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingDraw, -1);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

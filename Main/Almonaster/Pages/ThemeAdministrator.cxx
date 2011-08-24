@@ -26,7 +26,8 @@ if (InitializeEmpire(false) != OK)
 IHttpForm* pHttpForm;
 Variant* pvThemeData;
 
-int i, iErrCode;
+int iErrCode;
+unsigned int i;
 
 // Make sure that the unprivileged don't abuse this:
 if (m_iPrivilege < ADMINISTRATOR) {
@@ -39,7 +40,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     if (!WasButtonPressed (BID_CANCEL)) {
 
-        int iNumThemes;
+        unsigned int iNumThemes;
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumThemes")) == NULL) {
             goto Redirection;
         }
@@ -86,7 +87,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Name
             sprintf (pszForm, "Name%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                FreeData (pvThemeData);  goto Redirection;
+                t_pCache->FreeData (pvThemeData);  goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -101,7 +102,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Version
             sprintf (pszForm, "Version%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                FreeData (pvThemeData);
+                t_pCache->FreeData (pvThemeData);
                 goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
@@ -117,7 +118,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // FileName
             sprintf (pszForm, "File%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                FreeData (pvThemeData);
+                t_pCache->FreeData (pvThemeData);
                 goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
@@ -133,7 +134,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Author's Name
             sprintf (pszForm, "AName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                FreeData (pvThemeData);  goto Redirection;
+                t_pCache->FreeData (pvThemeData);  goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -148,7 +149,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Author's Email
             sprintf (pszForm, "AEmail%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                FreeData (pvThemeData);  goto Redirection;
+                t_pCache->FreeData (pvThemeData);  goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -349,7 +350,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
             }
 
-            FreeData (pvThemeData);
+            t_pCache->FreeData (pvThemeData);
         }
 
         ///////////////
@@ -573,7 +574,7 @@ if (m_bRedirectTest)
 OpenSystemPage(false);
 
 // Individual page stuff starts here
-int* piThemeKey, iNumThemes;
+unsigned int* piThemeKey, iNumThemes;
 Check (GetThemeKeys (&piThemeKey, &iNumThemes));
 
 %><input type="hidden" name="NumThemes" value="<% Write (iNumThemes); %>"><p>There <% 
@@ -752,11 +753,11 @@ if (iNumThemes > 0) {
         // Space between themes
         %></tr><tr><td>&nbsp;</td></tr><%
 
-        FreeData (pvThemeData);
+        t_pCache->FreeData (pvThemeData);
     }
     %></table><%
 
-    FreeKeys (piThemeKey);
+    t_pCache->FreeKeys (piThemeKey);
 }
 
 %><p><h3>Create a new theme:</h3><%

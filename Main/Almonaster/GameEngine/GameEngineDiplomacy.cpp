@@ -35,11 +35,12 @@ int GameEngine::GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpire
 
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
-    int iErrCode = t_pConn->ReadColumn (
-        strGameEmpireDiplomacy, 
-        GameEmpireDiplomacy::EmpireKey, 
+    int iErrCode = t_pCache->ReadColumn(
+        strGameEmpireDiplomacy,
+        GameEmpireDiplomacy::EmpireKey,
+        NULL,
         ppvEmpireKey, 
-        (unsigned int*) piNumEmpires
+        (unsigned int*)piNumEmpires
         );
 
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -67,7 +68,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
                                      int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet) {
 
     int iErrCode = OK;
-    IReadTable* pTable = NULL;
+    ICachedTable* pTable = NULL;
     unsigned int iKey;
 
     if (piWeOffer != NULL) {
@@ -90,14 +91,14 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
 
         GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
-        iErrCode = t_pConn->GetTableForReading(strEmpireDiplomacy, &pTable);
+        iErrCode = t_pCache->GetTable(strEmpireDiplomacy, &pTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
         // Get proxy key
-        iErrCode = pTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
+        iErrCode = pTable->GetFirstKey(GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
 
@@ -150,13 +151,13 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
 
         GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iFoeKey);
         
-        iErrCode = t_pConn->GetTableForReading(strEmpireDiplomacy, &pTable);
+        iErrCode = t_pCache->GetTable(strEmpireDiplomacy, &pTable);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         
-        iErrCode = pTable->GetFirstKey (GameEmpireDiplomacy::EmpireKey, iEmpireKey, &iKey);
+        iErrCode = pTable->GetFirstKey(GameEmpireDiplomacy::EmpireKey, iEmpireKey, &iKey);
         if (iErrCode != OK) {
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 
@@ -219,7 +220,7 @@ int GameEngine::GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpi
     unsigned int iKey;
     Variant vWeOffer, vStatus, vLevel, vPrevDipKey, vOptions;
 
-    iErrCode = t_pConn->GetFirstKey (strDip, GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
+    iErrCode = t_pCache->GetFirstKey(strDip, GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -234,7 +235,7 @@ int GameEngine::GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpi
     *piSelected = vWeOffer.GetInteger();
 
     // Read current status
-    iErrCode = t_pConn->GetFirstKey (strDip, GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
+    iErrCode = t_pCache->GetFirstKey(strDip, GameEmpireDiplomacy::EmpireKey, iFoeKey, &iKey);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -430,7 +431,7 @@ int GameEngine::GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpi
         unsigned int iNumEmps;
         GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
         
-        iErrCode = t_pConn->GetNumRows (strGameEmpires, &iNumEmps);
+        iErrCode = t_pCache->GetNumRows (strGameEmpires, &iNumEmps);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -455,7 +456,7 @@ int GameEngine::GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpi
                 } else {
                     
                     unsigned int iNumSurrendering;
-                    iErrCode = t_pConn->GetEqualKeys (
+                    iErrCode = t_pCache->GetEqualKeys (
                         strDip,
                         GameEmpireDiplomacy::DipOffer,
                         SURRENDER,
@@ -584,7 +585,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
     
     // Make sure empires are still in game and have met
     unsigned int iKey;
-    iErrCode = t_pConn->GetFirstKey (
+    iErrCode = t_pCache->GetFirstKey(
         strGameEmpireDiplomacy, 
         GameEmpireDiplomacy::EmpireKey, 
         iFoeKey, 
@@ -703,7 +704,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
             unsigned int iNumEmps;
             GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
             
-            iErrCode = t_pConn->GetNumRows (strGameEmpires, &iNumEmps);
+            iErrCode = t_pCache->GetNumRows (strGameEmpires, &iNumEmps);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
@@ -731,7 +732,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                     if (iDipOffer == SURRENDER) {
                         
                         unsigned int iNumSurrendering;
-                        iErrCode = t_pConn->GetEqualKeys (
+                        iErrCode = t_pCache->GetEqualKeys (
                             strGameEmpireDiplomacy,
                             GameEmpireDiplomacy::DipOffer,
                             SURRENDER,
@@ -945,7 +946,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
     if (bUpdate) {
 
         // Write the new offer
-        iErrCode = t_pConn->WriteData (
+        iErrCode = t_pCache->WriteData (
             strGameEmpireDiplomacy, 
             iKey, 
             GameEmpireDiplomacy::DipOffer, 
@@ -976,18 +977,18 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                 
                 case TRUCE:
 
-                    iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTruces, 1);
+                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, 1);
                     Assert (iErrCode == OK);
                     
                     break;
                 
                 case TRADE:
                     
-                    iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTrades, 1);
+                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, 1);
                     Assert (iErrCode == OK);
 
                     if (iErrCode == OK && !GameAllowsDiplomacy (iDipLevel, TRUCE)) {
-                        iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTruces, 1);
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, 1);
                         Assert (iErrCode == OK);
                     }
 
@@ -1021,16 +1022,16 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                     }
 
                     if (bIncrement) {
-                        iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumAlliances, 1);
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, 1);
                         Assert (iErrCode == OK);
                     }
 
                     if (iErrCode == OK && !GameAllowsDiplomacy (iDipLevel, TRADE)) {
-                        iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTrades, 1);
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, 1);
                         Assert (iErrCode == OK);
                         
                         if (iErrCode == OK && !GameAllowsDiplomacy (iDipLevel, TRUCE)) {
-                            iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTruces, 1);
+                            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, 1);
                             Assert (iErrCode == OK);
                         }
                     }
@@ -1053,17 +1054,17 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                 
                 case TRUCE:
                     
-                    iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTruces, -1);
+                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
                     Assert (iErrCode == OK);
                     break;
 
                 case TRADE:
                     
-                    iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTrades, -1);
+                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, -1);
                     Assert (iErrCode == OK);
 
                     if (iErrCode == OK && !GameAllowsDiplomacy (iDipLevel, TRUCE)) {
-                        iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTruces, -1);
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
                         Assert (iErrCode == OK);
                     }
 
@@ -1098,16 +1099,16 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                     }
                 
                     if (bIncrement) {
-                        iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumAlliances, -1);
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
                         Assert (iErrCode == OK);
                     }
 
                     if (iErrCode == OK && !GameAllowsDiplomacy (iDipLevel, TRADE)) {
-                        iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTrades, -1);
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, -1);
                         Assert (iErrCode == OK);
                         
                         if (iErrCode == OK && !GameAllowsDiplomacy (iDipLevel, TRUCE)) {
-                            iErrCode = t_pConn->Increment (strGameEmpireData, GameEmpireData::NumTruces, -1);
+                            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
                             Assert (iErrCode == OK);
                         }
                     }
@@ -1127,7 +1128,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
 
         // Try to reset previous value
         int iErrCode2 = 
-            t_pConn->WriteData (
+            t_pCache->WriteData (
             strGameEmpireDiplomacy, 
             iKey, 
             GameEmpireDiplomacy::DipOffer, 
@@ -1167,9 +1168,10 @@ int GameEngine::SearchForDuplicates (int iGameClass, int iGameNumber, const char
     char strGameEmpireData [256];
 
     // Get empires
-    int iErrCode = t_pConn->ReadColumn (
+    int iErrCode = t_pCache->ReadColumn (
         strGameEmpires,
         GameEmpires::EmpireKey,
+        NULL,
         &pvEmpireKey,
         &iNumEmpires
         );
@@ -1303,7 +1305,7 @@ Cleanup:
     }
 
     if (pvEmpireKey != NULL) {
-        FreeData (pvEmpireKey);
+        t_pCache->FreeData (pvEmpireKey);
     }
 
     return iErrCode;
@@ -1334,9 +1336,10 @@ int GameEngine::DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int i
     GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
 
     // Get empires
-    int iErrCode = t_pConn->ReadColumn (
+    int iErrCode = t_pCache->ReadColumn (
         pszGameEmpires,
         GameEmpires::EmpireKey,
+        NULL,
         &pvEmpireKey,
         &iNumEmpires
         );
@@ -1396,7 +1399,7 @@ int GameEngine::DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int i
 Cleanup:
 
     if (pvEmpireKey != NULL) {
-        FreeData (pvEmpireKey);
+        t_pCache->FreeData (pvEmpireKey);
     }
 
     return iErrCode;
@@ -1481,7 +1484,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
 
     // Truces
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strGameEmpireDip,
         GameEmpireDiplomacy::CurrentStatus,
         TRUCE,
@@ -1495,7 +1498,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
 
     // Trades
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strGameEmpireDip,
         GameEmpireDiplomacy::CurrentStatus,
         TRADE,
@@ -1509,7 +1512,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
     
     // Alliances
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strGameEmpireDip,
         GameEmpireDiplomacy::CurrentStatus,
         ALLIANCE,
@@ -1527,7 +1530,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     iNumTrades += iNumAlliances;
     
     // Offering truce from below
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strGameEmpireDip,
         GameEmpireDiplomacy::DipOffer,
         TRUCE,
@@ -1550,7 +1553,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
             );
         if (iErrCode != OK) {
             Assert (false);
-            t_pConn->FreeKeys(piOfferingKey);
+            t_pCache->FreeKeys(piOfferingKey);
             return iErrCode;
         }
         
@@ -1560,11 +1563,11 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
     
     if (iNumOffering > 0) {
-        t_pConn->FreeKeys(piOfferingKey);
+        t_pCache->FreeKeys(piOfferingKey);
     }
     
     // Offering trade from below
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strGameEmpireDip,
         GameEmpireDiplomacy::DipOffer,
         TRADE,
@@ -1587,7 +1590,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
             );
         if (iErrCode != OK) {
             Assert (false);
-            t_pConn->FreeKeys(piOfferingKey);
+            t_pCache->FreeKeys(piOfferingKey);
             return iErrCode;
         }
         
@@ -1601,11 +1604,11 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
 
     if (iNumOffering > 0) {
-        t_pConn->FreeKeys(piOfferingKey);
+        t_pCache->FreeKeys(piOfferingKey);
     }
     
     // Offering alliance from below
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strGameEmpireDip,
         GameEmpireDiplomacy::DipOffer,
         ALLIANCE,
@@ -1629,7 +1632,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
         
         if (iErrCode != OK) {
             Assert (false);
-            t_pConn->FreeKeys(piOfferingKey);
+            t_pCache->FreeKeys(piOfferingKey);
             return iErrCode;
         }
         
@@ -1642,7 +1645,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
         
         if (iErrCode != OK) {
             Assert (false);
-            t_pConn->FreeKeys(piOfferingKey);
+            t_pCache->FreeKeys(piOfferingKey);
             return iErrCode;
         }
         
@@ -1665,7 +1668,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
     
     if (iNumOffering > 0) {
-        t_pConn->FreeKeys(piOfferingKey);
+        t_pCache->FreeKeys(piOfferingKey);
     }
 
     // Set retvals
@@ -1685,12 +1688,12 @@ int GameEngine::CheckTruceTradeAllianceCounts (int iGameClass, int iGameNumber, 
     int iNumTruces, iNumTrades, iNumAlliances, iNumRealTruces, iNumRealTrades, iNumRealAlliances,
             iNumAlliancesLeaked, iErrCode;
 
-    IReadTable* pGameEmpireData = NULL;
+    ICachedTable* pGameEmpireData = NULL;
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     // Look for dip count bugs;
-    iErrCode = t_pConn->GetTableForReading(strGameEmpireData, &pGameEmpireData);
+    iErrCode = t_pCache->GetTable(strGameEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1776,10 +1779,11 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatusNextUpdate (int iGameClass, int i
 
     Variant** ppvData = NULL;
 
-    iErrCode = t_pConn->ReadColumns (
+    iErrCode = t_pCache->ReadColumns (
         strGameEmpireDiplomacy, 
         countof(ppszColumns),
-        ppszColumns, 
+        ppszColumns,
+        NULL,
         &ppvData, 
         &iNumEmpires
         );
@@ -1850,7 +1854,7 @@ Cleanup:
     }
 
     if (ppvData != NULL) {
-        t_pConn->FreeData(ppvData);
+        t_pCache->FreeData(ppvData);
     }
 
     return iErrCode;
@@ -1863,24 +1867,19 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber
 
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
-    IReadTable* pGameEmpireDiplomacy = NULL;
+    ICachedTable* pGameEmpireDiplomacy = NULL;
 
-    int* piData = NULL, iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0;
+    Variant* pvData = NULL;
+    int iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0;
     unsigned int iNumRows, i;
 
-    iErrCode = t_pConn->GetTableForReading(strGameEmpireDiplomacy, &pGameEmpireDiplomacy);
+    iErrCode = t_pCache->GetTable(strGameEmpireDiplomacy, &pGameEmpireDiplomacy);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    iErrCode = pGameEmpireDiplomacy->ReadColumn (
-        GameEmpireDiplomacy::CurrentStatus,
-        NULL,
-        &piData,
-        &iNumRows
-        );
-
+    iErrCode = pGameEmpireDiplomacy->ReadColumn(GameEmpireDiplomacy::CurrentStatus, NULL, &pvData, &iNumRows);
     SafeRelease (pGameEmpireDiplomacy);
 
     if (iErrCode != OK) {
@@ -1894,7 +1893,7 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber
 
     for (i = 0; i < iNumRows; i ++) {
 
-        switch (piData[i]) {
+        switch (pvData[i].GetInteger()) {
 
         case WAR:
             iWar ++;
@@ -1938,8 +1937,8 @@ Cleanup:
 
     SafeRelease (pGameEmpireDiplomacy);
 
-    if (piData != NULL) {
-        t_pConn->FreeData(piData);
+    if (pvData != NULL) {
+        t_pCache->FreeData(pvData);
     }
 
     return iErrCode;
@@ -1956,24 +1955,19 @@ int GameEngine::GetEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, i
 
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
-    IReadTable* pGameEmpireDiplomacy = NULL;
+    ICachedTable* pGameEmpireDiplomacy = NULL;
 
-    iErrCode = t_pConn->GetTableForReading(strGameEmpireDiplomacy, &pGameEmpireDiplomacy);
+    iErrCode = t_pCache->GetTable(strGameEmpireDiplomacy, &pGameEmpireDiplomacy);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    int* piData = NULL, iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0, iKey;
+    Variant* pvData = NULL;
+    int iWar = 0, iTruce = 0, iTrade = 0, iAlliance = 0, iKey;
     unsigned int iNumRows, i, * piKey = NULL;
 
-    iErrCode = pGameEmpireDiplomacy->ReadColumn (
-        GameEmpireDiplomacy::CurrentStatus,
-        &piKey,
-        &piData,
-        &iNumRows
-        );
-
+    iErrCode = pGameEmpireDiplomacy->ReadColumn(GameEmpireDiplomacy::CurrentStatus, &piKey, &pvData, &iNumRows);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1992,7 +1986,7 @@ int GameEngine::GetEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, i
             goto Cleanup;
         }
 
-        switch (piData[i]) {
+        switch (pvData[i].GetInteger()) {
 
         case WAR:
             piWar [iWar ++] = iKey;
@@ -2025,12 +2019,12 @@ Cleanup:
 
     SafeRelease (pGameEmpireDiplomacy);
 
-    if (piData != NULL) {
-        t_pConn->FreeData(piData);
+    if (pvData != NULL) {
+        t_pCache->FreeData(pvData);
     }
 
     if (piKey != NULL) {
-        t_pConn->FreeKeys(piKey);
+        t_pCache->FreeKeys(piKey);
     }
 
     return iErrCode;
@@ -2038,7 +2032,7 @@ Cleanup:
 
 
 int GameEngine::GetLastUsedMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int* piLastUsedMask,
-                                          int** ppiLastUsedProxyKeyArray, int* piNumLastUsed) {
+                                          unsigned int** ppiLastUsedProxyKeyArray, unsigned int* piNumLastUsed) {
 
     int iErrCode, iLastUsedMask;
     Variant vTemp;
@@ -2064,12 +2058,12 @@ int GameEngine::GetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
     }
 
     // Read last used array
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDiplomacy,
         GameEmpireDiplomacy::LastMessageTargetFlag,
         1,
-        (unsigned int**) ppiLastUsedProxyKeyArray,
-        (unsigned int*) piNumLastUsed
+        ppiLastUsedProxyKeyArray,
+        piNumLastUsed
         );
 
     if (iErrCode != OK) {
@@ -2094,7 +2088,7 @@ int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
     // Mask
-    iErrCode = t_pConn->WriteData (
+    iErrCode = t_pCache->WriteData (
         strGameEmpireData,
         GameEmpireData::LastMessageTargetMask,
         iLastUsedMask
@@ -2112,7 +2106,7 @@ int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
     }
 
     // Array - first set all values to 0
-    iErrCode = t_pConn->WriteColumn (
+    iErrCode = t_pCache->WriteColumn (
         strGameEmpireDiplomacy,
         GameEmpireDiplomacy::LastMessageTargetFlag,
         0
@@ -2133,7 +2127,7 @@ int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
 
     for (i = 0; i < iNumLastUsed; i ++) {
 
-        iErrCode = t_pConn->GetFirstKey (
+        iErrCode = t_pCache->GetFirstKey(
             strGameEmpireDiplomacy,
             GameEmpireDiplomacy::EmpireKey,
             piLastUsedKeyArray[i],
@@ -2144,7 +2138,7 @@ int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
 
             Assert (iKey != NO_KEY);
 
-            iErrCode = t_pConn->WriteData (
+            iErrCode = t_pCache->WriteData (
                 strGameEmpireDiplomacy,
                 iKey,
                 GameEmpireDiplomacy::LastMessageTargetFlag,

@@ -459,8 +459,7 @@ private:
 #ifdef _DEBUG
 
     int VerifyMap (int iGameClass, int iGameNumber);
-    int DfsTraversePlanets (IReadTable* pGameMap, unsigned int iPlanetKey, int* piLink, bool* pbVisited, 
-        unsigned int iNumPlanets);
+    int DfsTraversePlanets (ICachedTable* pGameMap, unsigned int iPlanetKey, Variant* pvLink, bool* pbVisited, unsigned int iNumPlanets);
 
     int VerifyUpdatedEmpireCount (int iGameClass, int iGameNumber);
 
@@ -729,12 +728,12 @@ private:
     int SendFatalUpdateMessage (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszGameClassName,
         const String& strUpdateMessage);
 
-    int GetNumUnreadSystemMessagesPrivate (IReadTable* pMessages, unsigned int* piNumber);
-    int GetNumUnreadGameMessagesPrivate (IReadTable* pMessages, unsigned int* piNumber);
+    int GetNumUnreadSystemMessagesPrivate (ICachedTable* pMessages, unsigned int* piNumber);
+    int GetNumUnreadGameMessagesPrivate (ICachedTable* pMessages, unsigned int* piNumber);
 
     int GetMessageProperty (const char* strMessages, unsigned int iMessageKey, const char* pszColumn, Variant* pvProperty);
 
-    int DeleteOverflowMessages (IWriteTable* pMessages, const char* pszTimeStampColumn, const char* pszUnreadColumn, 
+    int DeleteOverflowMessages (ICachedTable* pMessages, const char* pszTimeStampColumn, const char* pszUnreadColumn, 
         unsigned int iNumMessages, unsigned int iNumUnreadMessages, unsigned int iMaxNumMessages, bool bCheckUnread);
 
     // Empires
@@ -752,24 +751,13 @@ private:
 
     // Associations
     int GetAssociations (char* pszAssoc, unsigned int** ppiEmpires, unsigned int* piNumAssoc);
-    int DeleteAssociation (IWriteTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
-    int RemoveDeadEmpireAssociations (IWriteTable* pEmpires, unsigned int iEmpireKey);
+    int DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
+    int RemoveDeadEmpireAssociations (ICachedTable* pEmpires, unsigned int iEmpireKey);
 
 public:
 
     // Setup
     int Setup();
-
-    void FreeData (void** ppData);
-    void FreeData (Variant* pvData);
-    void FreeData (Variant** ppvData);
-    void FreeData (int* piData);
-    void FreeData (unsigned int* piData);
-    void FreeData (float* ppfData);
-    void FreeData (char** ppszData);
-    void FreeData (int64* pi64Data);
-    void FreeKeys (unsigned int* piKeys);
-    void FreeKeys (int* piKeys);
 
     int FlushDatabase (int iEmpireKey);
     int BackupDatabase (int iEmpireKey);
@@ -849,8 +837,8 @@ public:
     int DoesThemeExist (int iThemeKey, bool* pbExist);
     int CreateTheme (Variant* pvData, unsigned int* piKey);
     int GetNumThemes (int* piNumThemes);
-    int GetThemeKeys (int** ppiThemeKey, int* piNumKeys);
-    int GetFullThemeKeys (int** ppiThemeKey, int* piNumKeys);
+    int GetThemeKeys(unsigned int** ppiThemeKey, unsigned int* piNumKeys);
+    int GetFullThemeKeys (unsigned int** ppiThemeKey, unsigned int* piNumKeys);
     int GetThemeData (int iThemeKey, Variant** ppvThemeData);
     int GetThemeName (int iThemeKey, Variant* pvThemeName);
 
@@ -888,8 +876,8 @@ public:
     // SuperClasses
     int CreateSuperClass (const char* pszName, int* piKey);
     int DeleteSuperClass (int iSuperClassKey, bool* pbResult);
-    int GetSuperClassKeys (int** ppiKey, int* piNumSuperClasses);
-    int GetSuperClassKeys (int** ppiKey, Variant** ppvName, int* piNumSuperClasses);
+    int GetSuperClassKeys(unsigned int** ppiKey, unsigned int* piNumSuperClasses);
+    int GetSuperClassKeys(unsigned int** ppiKey, Variant** ppvName, unsigned int* piNumSuperClasses);
     int GetSuperClassName (int iKey, Variant* pvName);
     int RenameSuperClass (int iKey, const char* pszNewName);
 
@@ -915,10 +903,10 @@ public:
 
     int CreateGameClass (int iCreator, Variant* pvGameClassData, int* piGameClass);
     int GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** ppbDeleted, int* piNumKeys);
-    int GetStartableSystemGameClassKeys (int** ppiKey, int* piNumKeys);
+    int GetStartableSystemGameClassKeys(unsigned int** ppiKey, unsigned int* piNumKeys);
 
-    int GetGameClassSuperClassKey (int iGameClass, int* piSuperClassKey);
-    int SetGameClassSuperClassKey (int iGameClass, int iSuperClassKey);
+    int GetGameClassSuperClassKey(int iGameClass, unsigned int* piSuperClassKey);
+    int SetGameClassSuperClassKey(int iGameClass, unsigned int iSuperClassKey);
 
     int GetGameClassData (int iGameClass, Variant** ppvData);
     int GetGameClassOwner (int iGameClass, unsigned int* piOwner);
@@ -1108,7 +1096,7 @@ public:
     int UndeleteEmpire (int iEmpireKey);
     int BlankEmpireStatistics(unsigned int iEmpireKey);
 
-    int GetEmpirePersonalGameClasses (int iEmpireKey, int** ppiGameClassKey, Variant** ppvName, int* piNumKeys);
+    int GetEmpirePersonalGameClasses (int iEmpireKey, unsigned int** ppiGameClassKey, Variant** ppvName, unsigned int* piNumKeys);
 
     int GetEmpireData (int iEmpireKey, Variant** ppvEmpData, unsigned int* piNumActiveGames);
     int GetEmpireActiveGames (int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
@@ -1282,7 +1270,7 @@ public:
 
     // Aliens
     int GetNumAliens (unsigned int* piNumAliens);
-    int GetAlienKeys (Variant*** pppvData, int* piNumAliens);
+    int GetAlienKeys(Variant*** pppvData, unsigned int* piNumAliens);
     int CreateAlienIcon (int iAlienKey, const char* pszAuthorName);
     int DeleteAlienIcon (int iAlienKey);
 
@@ -1370,7 +1358,7 @@ public:
         int piAlliance[], int* piNumAlliance);
 
     int GetLastUsedMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int* piLastUsedMask,
-        int** ppiLastUsedProxyKeyArray, int* piNumLastUsed);
+        unsigned int** ppiLastUsedProxyKeyArray, unsigned int* piNumLastUsed);
 
     int SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int iLastUsedMask,
         int* piLastUsedKeyArray, int iNumLastUsed);
@@ -1495,7 +1483,7 @@ public:
 
     // Tournaments
     int GetOwnedTournaments (int iEmpireKey, unsigned int** ppiTournamentKey, Variant** ppvName, unsigned int* piNumTournaments);
-    int GetJoinedTournaments (int iEmpireKey, unsigned int** ppiTournamentKey, Variant** ppvName, unsigned int* piNumTournaments);
+    int GetJoinedTournaments (int iEmpireKey, Variant** ppvTournamentKey, Variant** ppvName, unsigned int* piNumTournaments);
 
     int CreateTournament (Variant* pvTournamentData, unsigned int* piTournamentKey);
     int DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, bool bOwnerDeleted);
@@ -1524,11 +1512,8 @@ public:
     int GetTournamentGameClasses (unsigned int iTournamentKey, unsigned int** ppiGameClassKey, 
         Variant** ppvName, unsigned int* piNumKeys);
 
-    int GetTournamentEmpires (unsigned int iTournamentKey, unsigned int** ppiEmpireKey, unsigned int** ppiTeamKey,
-        Variant** ppvName, unsigned int* piNumKeys);
-
-    int GetAvailableTournamentEmpires (unsigned int iTournamentKey, unsigned int** ppiEmpireKey, 
-        unsigned int** ppiTeamKey, Variant** ppvName, unsigned int* piNumKeys);
+    int GetTournamentEmpires(unsigned int iTournamentKey, Variant** ppvEmpireKey, Variant** ppvTeamKey, Variant** ppvName, unsigned int* piNumKeys);
+    int GetAvailableTournamentEmpires (unsigned int iTournamentKey, Variant** ppvEmpireKey, Variant** ppvTeamKey, Variant** ppvName, unsigned int* piNumKeys);
 
     int GetTournamentTeamEmpires (unsigned int iTournamentKey, unsigned int iTeamKey, 
         int** ppiEmpireKey, Variant** ppvName, unsigned int* piNumKeys);

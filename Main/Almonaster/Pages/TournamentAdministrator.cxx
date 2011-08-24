@@ -1480,7 +1480,7 @@ case 6:
 
             // Best effort
             iErrCode = WriteSystemGameListData (piGameClassKey[i], pvGameClassInfo);
-            FreeData (pvGameClassInfo);
+            t_pCache->FreeData (pvGameClassInfo);
         }
     }
     %></table><%
@@ -1494,7 +1494,8 @@ case 7:
     Variant vName, * pvEmpireName = NULL, * pvTeamName = NULL;
 
     int iGameNumber, iMaxNumEmpires, iGameClassOptions, iDipLevel;
-    unsigned int* piTeamEmpireKey = NULL, * piTeamKey = NULL, iNumEmpires, iNumTeams, * piEmpireKey = NULL;
+    unsigned int iNumEmpires, iNumTeams, * piTeamKey = NULL;
+    Variant* pvTeamEmpireKey = NULL, * pvEmpireKey = NULL;
 
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
@@ -1508,7 +1509,7 @@ case 7:
     }
 
     if (GetTournamentName (iTournamentKey, &vName) != OK ||
-        GetAvailableTournamentEmpires (iTournamentKey, &piEmpireKey, &piTeamEmpireKey, &pvEmpireName, &iNumEmpires) != OK ||
+        GetAvailableTournamentEmpires (iTournamentKey, &pvEmpireKey, &pvTeamEmpireKey, &pvEmpireName, &iNumEmpires) != OK ||
         GetTournamentTeams (iTournamentKey, &piTeamKey, &pvTeamName, &iNumTeams) != OK) {
         %><p><strong>That tournament does not exist</strong><%
         goto Start;
@@ -1550,7 +1551,7 @@ case 7:
             unsigned int iNumTeamEmps = 0;
             for (j = 0; j < iNumEmpires; j ++) {
 
-                if (piTeamEmpireKey[j] == piTeamKey[i]) {
+                if ((unsigned int)pvTeamEmpireKey[j].GetInteger() == piTeamKey[i]) {
                     iNumTeamEmps ++;
                     if (iNumTeamEmps > iMaxNumTeamEmps) {
                         iMaxNumTeamEmps = iNumTeamEmps;
@@ -1598,15 +1599,15 @@ case 7:
 
             %><tr><%
             %><td><%
-            %><input type="checkbox" name="EmpireSel<% Write (piEmpireKey[i]); %>"><%
+            %><input type="checkbox" name="EmpireSel<% Write (pvEmpireKey[i].GetInteger()); %>"><%
             %> <% Write (pvEmpireName[i].GetCharPtr());
 
-            if (piTeamEmpireKey[i] == NO_KEY) {
+            if (pvTeamEmpireKey[i].GetInteger() == NO_KEY) {
                 %> (<em>Unaffiliated</em>)<%
             } else {
 
                 for (j = 0; j < iNumTeams; j ++) {
-                    if (piTeamEmpireKey[i] == piTeamKey[j]) {
+                    if ((unsigned int)pvTeamEmpireKey[i].GetInteger() == piTeamKey[j]) {
                         %> (<strong><% Write (pvTeamName[j].GetCharPtr()); %></strong>)<%
                         break;
                     }
@@ -1676,12 +1677,12 @@ case 7:
     WriteButton (BID_START);
 
     // Cleanup
-    if (piEmpireKey != NULL) {
-        FreeData (piEmpireKey);
+    if (pvEmpireKey != NULL) {
+        t_pCache->FreeData(pvEmpireKey);
     }
 
-    if (piTeamEmpireKey != NULL) {
-        FreeData (piTeamEmpireKey);
+    if (pvTeamEmpireKey != NULL) {
+        t_pCache->FreeData(pvTeamEmpireKey);
     }
 
     if (pvEmpireName != NULL) {
@@ -1689,11 +1690,11 @@ case 7:
     }
 
     if (piTeamKey != NULL) {
-        FreeKeys (piTeamKey);
+        t_pCache->FreeKeys (piTeamKey);
     }
 
     if (pvTeamName != NULL) {
-        FreeData (pvTeamName);
+        t_pCache->FreeData (pvTeamName);
     }
 
     }
@@ -1965,7 +1966,7 @@ case 16:
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+    iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
     if (iErrCode != OK) {
         AddMessage ("That game no longer exists");
         goto Cleanup;
@@ -1990,7 +1991,7 @@ case 16:
 Cleanup:
 
     if (pvPlanetData != NULL) {
-        t_pConn->FreeData (pvPlanetData);
+        t_pCache->FreeData (pvPlanetData);
     }
 
     if (iErrCode != OK) {

@@ -33,8 +33,8 @@ bool AlmonasterScore::HasTopList() {
     return true;
 }
 
-int AlmonasterScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int iEmpireNuked, ScoringChanges* pscChanges) {
-
+int AlmonasterScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int iEmpireNuked, ScoringChanges* pscChanges)
+{
     float fNukerScore, fNukedScore, fIncrease, fDecrease;
     
     int iErrCode, iNukerSignificance, iNukedSignificance, iNukerAllies, iNukedAllies;
@@ -83,50 +83,26 @@ int AlmonasterScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, 
         &fDecrease
         );
 
-    iErrCode = t_pConn->Increment (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireNuked, 
-        SystemEmpireData::AlmonasterScore, 
-        - fDecrease
-        );
-
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireNuked, SystemEmpireData::AlmonasterScore, -fDecrease);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    iErrCode = t_pConn->Increment (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireNuker, 
-        SystemEmpireData::AlmonasterScore, 
-        fIncrease
-        );
-
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireNuker, SystemEmpireData::AlmonasterScore, fIncrease);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
     // Increment significance
-    iErrCode = t_pConn->Increment (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireNuker, 
-        SystemEmpireData::AlmonasterScoreSignificance, 
-        1
-        );
-
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireNuker, SystemEmpireData::AlmonasterScoreSignificance, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    iErrCode = t_pConn->Increment (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireNuked, 
-        SystemEmpireData::AlmonasterScoreSignificance, 
-        1
-        );
-
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireNuked, SystemEmpireData::AlmonasterScoreSignificance, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -237,7 +213,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         );
 
     // Increment winner's score and significance
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         SYSTEM_EMPIRE_DATA, 
         iWinnerKey, 
         SystemEmpireData::AlmonasterScore, 
@@ -249,7 +225,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         SYSTEM_EMPIRE_DATA, 
         iWinnerKey, 
         SystemEmpireData::AlmonasterScoreSignificance, 
@@ -282,7 +258,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
 
     if (bValid) {
 
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             iLoserKey, 
             SystemEmpireData::AlmonasterScore, 
@@ -294,7 +270,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             iLoserKey, 
             SystemEmpireData::AlmonasterScoreSignificance, 
@@ -356,7 +332,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
     }
 
     // Need to scan map for uncolonized homeworlds
-    iErrCode = t_pConn->ReadColumn (
+    iErrCode = t_pCache->ReadColumn (
         strGameMap,
         GameMap::HomeWorld,
         &piPlanetKey,
@@ -383,7 +359,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
             // Fault in survivors and their stats
             if (pvEmpireKey == NULL) {              
 
-                iErrCode = t_pConn->ReadColumn (
+                iErrCode = t_pCache->ReadColumn (
                     strGameEmpires,
                     GameEmpires::EmpireKey,
                     NULL,
@@ -463,15 +439,15 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
 Cleanup:
 
     if (piPlanetKey != NULL) {
-        t_pConn->FreeKeys (piPlanetKey);
+        t_pCache->FreeKeys (piPlanetKey);
     }
 
     if (pvHomeWorld != NULL) {
-        t_pConn->FreeData (pvHomeWorld);
+        t_pCache->FreeData (pvHomeWorld);
     }
 
     if (pvEmpireKey != NULL) {
-        t_pConn->FreeData (pvEmpireKey);
+        t_pCache->FreeData (pvEmpireKey);
     }
 
     return iErrCode;
@@ -528,7 +504,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
 
     while (true) {
 
-        iErrCode = t_pConn->GetNextKey (pszEmpires, iKey, &iKey);
+        iErrCode = t_pCache->GetNextKey (pszEmpires, iKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = OK;
             break;
@@ -588,7 +564,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
 
     if (fMaxNukedDecrease > 0) {
 
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA,
             iEmpireKey,
             SystemEmpireData::AlmonasterScore, 
@@ -731,7 +707,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
 
     *piNumAllies = 0;
 
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strDip,
         GameEmpireDiplomacy::CurrentStatus,
         ALLIANCE,
@@ -752,7 +728,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         strDip,
         GameEmpireDiplomacy::CurrentStatus,
         TRADE,
@@ -785,10 +761,10 @@ int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, in
 
     int iErrCode;
 
-    IReadTable* pGameMap = NULL;
+    ICachedTable* pGameMap = NULL;
 
     // Get loser's score, significance and allies
-    iErrCode = t_pConn->GetTableForReading(pszGameMap, &pGameMap);
+    iErrCode = t_pCache->GetTable(pszGameMap, &pGameMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -904,7 +880,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
     for (i = 0; i < iNumEmpires; i ++) {
 
         // Increment winner's score and significance
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             pvEmpireKey[i].GetInteger(), 
             SystemEmpireData::AlmonasterScore, 
@@ -917,7 +893,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             pvEmpireKey[i].GetInteger(), 
             SystemEmpireData::AlmonasterScoreSignificance, 
@@ -946,7 +922,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         // Give loser proportional loss also
         fDecrease /= fNumEmpires;
         
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             iLoserKey, 
             SystemEmpireData::AlmonasterScore, 
@@ -965,7 +941,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         scChanges.fAlmonasterNukedChange = - fDecrease;
         
         // Increment significance
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             SYSTEM_EMPIRE_DATA, 
             iLoserKey, 
             SystemEmpireData::AlmonasterScoreSignificance, 
@@ -1060,7 +1036,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iNukerEmpireKey, SystemEmpireData::Nukes, 1);
+        iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iNukerEmpireKey, SystemEmpireData::Nukes, 1);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1230,7 +1206,7 @@ int AlmonasterScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 int AlmonasterScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
 
     if (pvScore == NULL) {
-        return t_pConn->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
+        return t_pCache->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
     }
 
     SearchColumn sc;
@@ -1246,7 +1222,7 @@ int AlmonasterScore::GetReplacementKeys (const Variant* pvScore, unsigned int** 
     sd.iNumColumns = 1;
     sd.pscColumns = &sc;
 
-    return t_pConn->GetSearchKeys (
+    return t_pCache->GetSearchKeys (
         SYSTEM_EMPIRE_DATA,
         sd,
         ppiKey, 

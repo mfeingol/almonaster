@@ -31,7 +31,7 @@
 int GameEngine::PerformMultipleSearch (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
                                        unsigned int* piNumHits, unsigned int* piStopKey) {
 
-    int iErrCode = t_pConn->GetSearchKeys (
+    int iErrCode = t_pCache->GetSearchKeys (
         SYSTEM_EMPIRE_DATA, 
         sdSearch,
         ppiKey, 

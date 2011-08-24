@@ -210,7 +210,7 @@ copy /y SqlDatabase.h "%DropSdk%"
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="CachedReadTable.h" />
+    <ClInclude Include="CachedTable.h" />
     <ClInclude Include="SqlDatabase.h" />
     <ClInclude Include="SqlDatabaseConnection.h" />
     <ClInclude Include="SqlDatabaseBridge.h" />
@@ -222,7 +222,7 @@ copy /y SqlDatabase.h "%DropSdk%"
   <ItemGroup>
     <ClCompile Include="AssemblyInfo.cpp" />
     <ClCompile Include="Interface.cpp" />
-    <ClCompile Include="CachedReadTable.cpp" />
+    <ClCompile Include="CachedTable.cpp" />
     <ClCompile Include="SqlDatabaseBridge.cpp" />
     <ClCompile Include="SqlDatabaseConnection.cpp" />
     <ClCompile Include="SqlDatabaseReadTable.cpp" />

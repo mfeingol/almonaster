@@ -202,13 +202,13 @@ int Global::InitializeState()
 {
     int iErrCode;
 
-    iErrCode = t_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, ROOT_NAME, &m_iRootKey);
+    iErrCode = t_pCache->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, ROOT_NAME, &m_iRootKey);
     if (iErrCode != OK)
     {
         return iErrCode;
     }
 
-    iErrCode = t_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, GUEST_NAME, &m_iGuestKey);
+    iErrCode = t_pCache->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, GUEST_NAME, &m_iGuestKey);
     if (iErrCode != OK)
     {
         return iErrCode;

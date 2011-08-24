@@ -523,11 +523,11 @@ const char* pszBad = m_vBadColor.GetCharPtr();
 
 char pszProfile [MAX_EMPIRE_NAME_LENGTH + 128];
 
-IReadTable* pGameEmpireTable = NULL, * pSystemEmpireDataTable = NULL;
+ICachedTable* pGameEmpireTable = NULL, * pSystemEmpireDataTable = NULL;
 
 GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
-iErrCode = t_pConn->GetTableForReading(
+iErrCode = t_pCache->GetTable(
     pszEmpireData, 
     &pGameEmpireTable
     );
@@ -586,7 +586,7 @@ if (iErrCode != OK) {
 
 SafeRelease (pGameEmpireTable);
 
-iErrCode = t_pConn->GetTableForReading(
+iErrCode = t_pCache->GetTable(
     SYSTEM_EMPIRE_DATA, 
     &pSystemEmpireDataTable
     );
@@ -924,7 +924,7 @@ if (iGameOptions & UPDATED) {
 } %></td></tr><%
 
 // Other empires
-iErrCode = t_pConn->ReadColumns (
+iErrCode = t_pCache->ReadColumns (
     strGameEmpireDiplomacy,
     countof (pszColumns),
     pszColumns,
@@ -996,7 +996,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
 
     // Get empire data
-    iErrCode = t_pConn->GetTableForReading(pszEmpireData, &pGameEmpireTable);
+    iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1069,7 +1069,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     }
 
     // Do this every time to improve concurrency with logins, etc.
-    iErrCode = t_pConn->GetTableForReading(SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
+    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1469,8 +1469,8 @@ if (iActiveEmpires > 1) {
             {
 
             // Handle last used
-            int iLastUsedMask, iNumLastUsed;
-            int* piLastUsedProxyKeyArray = NULL;
+            int iLastUsedMask;
+            unsigned int* piLastUsedProxyKeyArray = NULL, iNumLastUsed;
 
             iErrCode = GetLastUsedMessageTarget (
                 m_iGameClass,
@@ -1518,7 +1518,7 @@ if (iActiveEmpires > 1) {
                 }
 
                 // Process array
-                for (i = 0; i < iNumLastUsed; i ++) {
+                for (i = 0; i < (int)iNumLastUsed; i ++) {
 
                     // Find order of empire
                     for (j = 0; j < iNumKnownEmpires; j ++) {
@@ -1533,7 +1533,7 @@ if (iActiveEmpires > 1) {
                     }
                 }
 
-                FreeKeys (piLastUsedProxyKeyArray);
+                t_pCache->FreeKeys (piLastUsedProxyKeyArray);
             }
 
             }
@@ -1659,11 +1659,11 @@ if (iActiveEmpires > 1) {
 Cleanup:
 
 if (piProxyEmpireKey != NULL) {
-    FreeKeys (piProxyEmpireKey);
+    t_pCache->FreeKeys (piProxyEmpireKey);
 }
 
 if (ppvEmpireData != NULL) {
-    FreeData (ppvEmpireData);
+    t_pCache->FreeData (ppvEmpireData);
 }
 
 if (pGameEmpireTable != NULL) {

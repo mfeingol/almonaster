@@ -70,7 +70,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
         const Seconds sThirtyDays = 30 * 24 * 60 * 60;
         unsigned int iEmpireKey = NO_KEY;
 
-        IReadTable* pEmpires = NULL;
+        ICachedTable* pEmpires = NULL;
 
         int iValue;
         float fValue;
@@ -84,7 +84,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
             SafeRelease (pEmpires);
 
-            iErrCode = t_pConn->GetTableForReading(SYSTEM_EMPIRE_DATA, &pEmpires);
+            iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
             if (iErrCode != OK) {
                 Assert (false);
                 continue;
@@ -178,7 +178,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
                         const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
 
                         unsigned int iKey;
-                        iErrCode = t_pConn->GetFirstKey (
+                        iErrCode = t_pCache->GetFirstKey(
                             pszTableName,
                             TopList::EmpireKey,
                             iEmpireKey,

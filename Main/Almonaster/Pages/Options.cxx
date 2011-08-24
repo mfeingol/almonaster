@@ -1335,7 +1335,7 @@ case 0:
             }
         }
 
-        FreeKeys (piBuilderKey);
+        t_pCache->FreeKeys (piBuilderKey);
         piBuilderKey = NULL;
     }
 
@@ -1745,8 +1745,8 @@ case 1:
                 %></select><%
             }
 
-            FreeData (ppvMessage);
-            FreeKeys (piMessageKey);
+            t_pCache->FreeData (ppvMessage);
+            t_pCache->FreeKeys (piMessageKey);
         }
     }
 

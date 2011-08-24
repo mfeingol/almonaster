@@ -206,7 +206,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
         bool bExists;
 
-        iErrCode = t_pConn->DoesRowExist (strEmpireFleets, iFleetKey, &bExists);
+        iErrCode = t_pCache->DoesRowExist(strEmpireFleets, iFleetKey, &bExists);
         if (iErrCode != OK || !bExists) {
             iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
             goto Cleanup;
@@ -240,7 +240,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     if (vTemp.GetInteger() != INFINITE_SHIPS) {
 
         unsigned int iNumAvailableShips;
-        iErrCode = t_pConn->GetNumRows(strEmpireShips, &iNumAvailableShips);
+        iErrCode = t_pCache->GetNumRows(strEmpireShips, &iNumAvailableShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -320,16 +320,16 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Insert ships into table
-    iErrCode = t_pConn->InsertDuplicateRows (strEmpireShips, GameEmpireShips::Template, pvColVal, iNumShips);
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = t_pCache->InsertDuplicateRows(strEmpireShips, GameEmpireShips::Template, pvColVal, iNumShips);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
     }   // Scope
 
     // Increment number of build ships on given system
-    iErrCode = t_pConn->Increment (strEmpireData, GameEmpireData::NumBuilds, iNumShips);
+    iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NumBuilds, iNumShips);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -337,7 +337,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
     // Make sure that planet is on our map
     // We know this already, but we need the proxy key
-    iErrCode = t_pConn->GetFirstKey (strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, &iProxyPlanetKey);
+    iErrCode = t_pCache->GetFirstKey(strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, &iProxyPlanetKey);
     if (iErrCode != OK) {
         Assert (false);
         iErrCode = ERROR_WRONG_OWNER;
@@ -347,13 +347,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     // If ships are cloaked, increment counts of ships on planet
     if (iTechKey == CLOAKER && (vShipBehavior.GetInteger() & CLOAKER_CLOAK_ON_BUILD)) {
 
-        iErrCode = t_pConn->Increment (strEmpireMap, iProxyPlanetKey, GameEmpireMap::NumCloakedBuildShips, iNumShips);
+        iErrCode = t_pCache->Increment(strEmpireMap, iProxyPlanetKey, GameEmpireMap::NumCloakedBuildShips, iNumShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->Increment (strGameMap, iPlanetKey, GameMap::NumCloakedBuildShips, iNumShips);
+        iErrCode = t_pCache->Increment(strGameMap, iPlanetKey, GameMap::NumCloakedBuildShips, iNumShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -361,13 +361,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
     } else {
 
-        iErrCode = t_pConn->Increment (strEmpireMap, iProxyPlanetKey, GameEmpireMap::NumUncloakedBuildShips, iNumShips);
+        iErrCode = t_pCache->Increment(strEmpireMap, iProxyPlanetKey, GameEmpireMap::NumUncloakedBuildShips, iNumShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->Increment (strGameMap, iPlanetKey, GameMap::NumUncloakedBuildShips, iNumShips);
+        iErrCode = t_pCache->Increment(strGameMap, iPlanetKey, GameMap::NumUncloakedBuildShips, iNumShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -380,34 +380,34 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         // Increase power of fleet
         float fMil = (float) iNumShips * fBR * fBR;
         
-        iErrCode = t_pConn->Increment (strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentStrength, fMil);
+        iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::CurrentStrength, fMil);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->Increment (strEmpireFleets, iFleetKey, GameEmpireFleets::MaxStrength, fMil);
+        iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::MaxStrength, fMil);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
         // Increment number of buildships
-        iErrCode = t_pConn->Increment (strEmpireFleets, iFleetKey, GameEmpireFleets::BuildShips, iNumShips);
+        iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::BuildShips, iNumShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
         // Increment number of ships
-        iErrCode = t_pConn->Increment (strEmpireFleets, iFleetKey, GameEmpireFleets::NumShips, iNumShips);
+        iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::NumShips, iNumShips);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
         // Set the fleet to stand by
-        iErrCode = t_pConn->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
+        iErrCode = t_pCache->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -415,7 +415,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Increase build total
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         strEmpireData, 
         GameEmpireData::TotalBuild, 
         GetBuildCost (iTechKey, fBR) * iNumShips
@@ -427,7 +427,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Increase next maintenance and fuel totals
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         strEmpireData, 
         GameEmpireData::NextMaintenance, 
         iNumShips * GetMaintenanceCost (iTechKey, fBR)
@@ -438,7 +438,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->Increment (
+    iErrCode = t_pCache->Increment(
         strEmpireData, 
         GameEmpireData::NextFuelUse, 
         iNumShips * GetFuelCost (iTechKey, fBR)
@@ -450,7 +450,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Set last builder
-    iErrCode = t_pConn->WriteData (
+    iErrCode = t_pCache->WriteData (
         strEmpireData,
         GameEmpireData::LastBuilderPlanet,
         iPlanetKey
@@ -468,7 +468,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         const int iPopLostToTheseShips = iPopLostToColoniesPerShip * iNumShips;
 
         // Increment pop lost to colony build counter
-        iErrCode = t_pConn->Increment (
+        iErrCode = t_pCache->Increment(
             strGameMap, 
             iPlanetKey, 
             GameMap::PopLostToColonies, 
@@ -538,7 +538,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
         // Change next pop
         Variant vOldNextPop;
-        iErrCode = t_pConn->Increment (strEmpireData, GameEmpireData::NextTotalPop, iNextPopDiff, &vOldNextPop);
+        iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NextTotalPop, iNextPopDiff, &vOldNextPop);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -563,7 +563,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
                 min (vOldNextPop.GetInteger(), vMin.GetInteger());
         
         if (iDiff != 0) {
-            iErrCode = t_pConn->Increment (strEmpireData, GameEmpireData::NextMin, iDiff);
+            iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NextMin, iDiff);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -574,7 +574,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
             min (vOldNextPop.GetInteger(), vFuel.GetInteger());
         
         if (iDiff != 0) {
-            iErrCode = t_pConn->Increment (strEmpireData, GameEmpireData::NextFuel, iDiff);
+            iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NextFuel, iDiff);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -625,7 +625,7 @@ int GameEngine::CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey
 
     unsigned int i, iNumShips, * piShipKey = NULL;
 
-    int iErrCode = t_pConn->GetEqualKeys (
+    int iErrCode = t_pCache->GetEqualKeys (
         strShips, 
         GameEmpireShips::BuiltThisUpdate, 
         1, 
@@ -654,7 +654,7 @@ int GameEngine::CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey
 Cleanup:
 
     if (piShipKey != NULL) {
-        t_pConn->FreeKeys(piShipKey);
+        t_pCache->FreeKeys(piShipKey);
     }
 
     return iErrCode;
@@ -716,7 +716,7 @@ int GameEngine::GetBuilderPlanetKeys (unsigned int iGameClass, int iGameNumber, 
     sd.iNumColumns = countof (sc);
     sd.pscColumns = sc;
 
-    iErrCode = t_pConn->GetSearchKeys (
+    iErrCode = t_pCache->GetSearchKeys (
         strGameMap,
         sd,
         ppiBuilderKey,
@@ -774,7 +774,7 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
     // (For the single-planet case, we could query for the exact number
     // as done below, but it's less code this way. Besides, no one uses that many fleets...)
     unsigned int iNumFleets;
-    iErrCode = t_pConn->GetNumRows(pszFleets, &iNumFleets);
+    iErrCode = t_pCache->GetNumRows(pszFleets, &iNumFleets);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -811,7 +811,7 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
         if (iRemainingFleets > 0) {
 
             // This is accelerated by an index, thankfully
-            iErrCode = t_pConn->GetEqualKeys (
+            iErrCode = t_pCache->GetEqualKeys (
                 pszFleets,
                 GameEmpireFleets::CurrentPlanet,
                 piBuilderKey[i],
@@ -833,7 +833,7 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
                     iNumLocations ++;
                 }
 
-                t_pConn->FreeKeys(piFleetKey);
+                t_pCache->FreeKeys(piFleetKey);
             }
 
             else if (iErrCode != ERROR_DATA_NOT_FOUND) {
@@ -857,7 +857,7 @@ Cleanup:
     }
 
     if (piBuilderKey != NULL && piBuilderKey != &iPlanetKey) {
-        t_pConn->FreeKeys(piBuilderKey);
+        t_pCache->FreeKeys(piBuilderKey);
     }
 
     return iErrCode;

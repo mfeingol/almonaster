@@ -170,7 +170,7 @@ else {
 
     %></table><%
 
-    FreeData (ppvNukeData);
+    t_pCache->FreeData (ppvNukeData);
 }
 
 

@@ -25,8 +25,8 @@ if (InitializeEmpire(false) != OK)
 
 IHttpForm* pHttpForm;
 
-int i, iErrCode, iSpectatorGamesPage = 0, iGameNumber = -1;
-unsigned int iGameClassKey = NO_KEY, iClickedPlanetKey = NO_KEY, iClickedProxyPlanetKey = NO_KEY;
+int iErrCode, iSpectatorGamesPage = 0, iGameNumber = -1;
+unsigned int i, iGameClassKey = NO_KEY, iClickedPlanetKey = NO_KEY, iClickedProxyPlanetKey = NO_KEY;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -176,10 +176,9 @@ case 0:
     else {
 
         // Update the open games
-        int j, iGameClass, iGameNumber;
-
-        int* piSuperClassKey, iNumSuperClasses;
         bool bDraw = false;
+        int iGameClass, iGameNumber;
+        unsigned int* piSuperClassKey, j, iNumSuperClasses;
         Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         if (iNumSuperClasses == 0) {
@@ -201,7 +200,7 @@ case 0:
             }
 
             // Fill in the table
-            int iSuperClassKey;
+            unsigned int iSuperClassKey;
             bool bFlag;
 
             for (i = 0; i < (int)iNumClosedGames; i ++) {
@@ -250,7 +249,8 @@ case 0:
 
                 %><p><h3>View a spectator game:</h3><%
                 Variant* pvGameClassInfo = NULL;
-                int iBegin, iCurrentGameClass, iNumGamesInSuperClass, iNumToSort;
+                int iBegin, iCurrentGameClass;
+                unsigned int iNumGamesInSuperClass, iNumToSort;
 
                 if (ppiTable [iNumSuperClasses][iNumClosedGames] > 0) {
 
@@ -301,7 +301,7 @@ case 0:
                             );
                     }
 
-                    for (j = 0; j < ppiTable[iNumSuperClasses][iNumClosedGames]; j ++) {
+                    for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumClosedGames]; j ++) {
 
                         iGameClass = ppiGameClass[iNumSuperClasses][j];
                         iGameNumber = ppiGameNumber[iNumSuperClasses][j];
@@ -313,7 +313,7 @@ case 0:
                         }
 
                         if (pvGameClassInfo != NULL) {
-                            FreeData (pvGameClassInfo);
+                            t_pCache->FreeData (pvGameClassInfo);
                             pvGameClassInfo = NULL;
                         }
                     }
@@ -389,7 +389,7 @@ case 0:
                             }
 
                             if (pvGameClassInfo != NULL) {
-                                FreeData (pvGameClassInfo);
+                                t_pCache->FreeData (pvGameClassInfo);
                                 pvGameClassInfo = NULL;
                             }
                         }
@@ -399,7 +399,7 @@ case 0:
                 }
             }
 
-            FreeKeys (piSuperClassKey);
+            t_pCache->FreeKeys (piSuperClassKey);
         }
 
         delete [] piGameClass;
@@ -500,7 +500,7 @@ case 2:
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+    iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -540,7 +540,7 @@ case 2:
 Cleanup:
 
     if (pvPlanetData != NULL) {
-        t_pConn->FreeData (pvPlanetData);
+        t_pCache->FreeData (pvPlanetData);
     }
 
     if (iErrCode != OK) {

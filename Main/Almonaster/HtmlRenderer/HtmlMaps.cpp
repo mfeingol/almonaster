@@ -161,7 +161,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
+        iErrCode = t_pCache->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -413,7 +413,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iPlanetKey = pvPlanetKey[i].GetInteger();
             iProxyKey = piProxyKey[i];
             
-            iErrCode = t_pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
+            iErrCode = t_pCache->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -423,7 +423,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
             // Partial map filtering
             if (pPartialMapInfo != NULL && (iX > iMaxX || iX < iMinX || iY > iMaxY || iY < iMinY)) {
-                t_pConn->FreeData (pvPlanetData);
+                t_pCache->FreeData (pvPlanetData);
                 pvPlanetData = NULL;
                 continue;
             }
@@ -463,7 +463,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iPlanetKey = piPlanetKey[i];
             iProxyKey = 0;
             
-            iErrCode = t_pConn->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
+            iErrCode = t_pCache->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -834,7 +834,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             }
         }
         
-        t_pConn->FreeData (pvPlanetData);
+        t_pCache->FreeData (pvPlanetData);
         pvPlanetData = NULL;
     }
     
@@ -870,26 +870,26 @@ Cleanup:
     if (!bAdmin && !bSpectators) {
         
         if (pvPlanetKey != pvEasyWayOut) {
-            t_pConn->FreeData (pvPlanetKey);
+            t_pCache->FreeData (pvPlanetKey);
         }
 
         if (piProxyKey != piEasyProxyKeys) {
-            t_pConn->FreeKeys (piProxyKey);
+            t_pCache->FreeKeys (piProxyKey);
         }
         
     } else {
             
         if (piPlanetKey != NULL) {
-            t_pConn->FreeKeys (piPlanetKey);
+            t_pCache->FreeKeys (piPlanetKey);
         }
     }
     
     if (pvEmpireKey != NULL) {
-        t_pConn->FreeData (pvEmpireKey);
+        t_pCache->FreeData (pvEmpireKey);
     }
     
     if (pvPlanetData != NULL) {
-        t_pConn->FreeData (pvPlanetData);
+        t_pCache->FreeData (pvPlanetData);
     }
     
     if (pstrGrid != NULL) {

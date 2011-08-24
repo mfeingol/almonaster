@@ -91,3 +91,19 @@ void Trace(System::String^ fmt, ... array<System::Object^>^ params)
 {
     System::Diagnostics::Trace::WriteLine(System::String::Format(fmt, params));
 }
+
+System::Object^ Increment(System::Object^ original, const Variant& inc)
+{
+    switch(inc.GetType())
+    {
+    case V_INT:
+        return (int)original + inc.GetInteger();
+    case V_FLOAT:
+        return (double)original + inc.GetFloat();
+    case V_INT64:
+        return (int64)original + inc.GetInteger64();
+    default:
+        Assert(false);
+        return nullptr;
+    }
+}

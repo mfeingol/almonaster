@@ -34,8 +34,8 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     const char* pszIPAddress = NULL;
     
     Variant* pvEmpireData = NULL;
-    int iErrCode, iNumPersonalGameClasses = 0, iOptions, iOptions2;
-    unsigned int iNumActiveTournaments, iNumPersonalTournaments = 0, iNumUnreadMessages, iNumActiveGames;
+    int iErrCode, iOptions, iOptions2;
+    unsigned int iNumActiveTournaments, iNumPersonalTournaments = 0, iNumUnreadMessages, iNumActiveGames, iNumPersonalGameClasses = 0;
 
     OutputText ("<input type=\"hidden\" name=\"TargetEmpireKey\" value=\"");
     m_pHttpResponse->WriteText (iTargetEmpireKey);
@@ -648,14 +648,14 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
         WriteButton (BID_SENDMESSAGE);
     }
     
-    FreeData (pvEmpireData);
+    t_pCache->FreeData (pvEmpireData);
     
     return;
 
 OnError:
 
     if (pvEmpireData != NULL) {
-        FreeData (pvEmpireData);
+        t_pCache->FreeData (pvEmpireData);
     }
     
     OutputText ("<p><strong>Error ");

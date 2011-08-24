@@ -229,11 +229,11 @@ Cleanup:
     }
 
     if (pvPlanetKey != NULL) {
-        FreeData (pvPlanetKey);
+        t_pCache->FreeData (pvPlanetKey);
     }
 
     if (piProxyKey != NULL) {
-        FreeKeys (piProxyKey);
+        t_pCache->FreeKeys (piProxyKey);
     }
     
     if (iErrCode != OK) {

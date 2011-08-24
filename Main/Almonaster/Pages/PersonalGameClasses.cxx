@@ -25,8 +25,8 @@ if (InitializeEmpire(false) != OK)
 
 IHttpForm* pHttpForm;
 
-int i, iErrCode, iPersonalGameClassesPage = 0;
-unsigned int iGameClassKey = NO_KEY;
+int iErrCode, iPersonalGameClassesPage = 0;
+unsigned int i, iGameClassKey = NO_KEY;
 
 char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
@@ -371,7 +371,8 @@ case 0:
 
     {
 
-    int iNumGameClasses, * piGameClassKey = NULL, * piOptions;
+    unsigned int iNumGameClasses, * piGameClassKey = NULL;
+    int* piOptions;
     Variant* pvName = NULL, vMaxNumPGC;
 
     unsigned int iNumHalted = 0, iNumUnhalted = 0, iNumMarkedForDeletion = 0;
@@ -421,7 +422,7 @@ case 0:
             %>es<%
         }
 
-        if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES && iNumGameClasses >= vMaxNumPGC.GetInteger()) {
+        if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES && iNumGameClasses >= (unsigned int)vMaxNumPGC.GetInteger()) {
             %> and can create no more<%
         }
 
@@ -540,7 +541,7 @@ case 0:
             %></tr><%
         }
 
-        if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES && iNumGameClasses < vMaxNumPGC.GetInteger()) {
+        if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES && iNumGameClasses < (unsigned int)vMaxNumPGC.GetInteger()) {
             %><tr><%
             %><td>Create a new GameClass</td><%
             %><td></td><%
@@ -572,15 +573,15 @@ case 0:
             }
 
             if (pvGameClassInfo != NULL) {
-                FreeData (pvGameClassInfo);
+                t_pCache->FreeData (pvGameClassInfo);
                 pvGameClassInfo = NULL;
             }
         }
 
         %></table><%
 
-        FreeKeys (piGameClassKey);
-        FreeData (pvName);
+        t_pCache->FreeKeys (piGameClassKey);
+        t_pCache->FreeData (pvName);
     }
 
     }

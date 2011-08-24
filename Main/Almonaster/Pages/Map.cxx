@@ -639,7 +639,7 @@ case 1:
             goto RenderWholeMap;
         }
 
-        iErrCode = t_pConn->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
+        iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
         if (iErrCode != OK) {
             AddMessage ("Database error "); AppendMessage (iErrCode);
             goto RenderWholeMap;
@@ -657,7 +657,7 @@ case 1:
             &bOurPlanet
             );
 
-        t_pConn->FreeData (pvPlanetData);
+        t_pCache->FreeData (pvPlanetData);
 
         if (iErrCode != OK) {
             %>Error rendering up-close planet view. The error was <% Write (iErrCode);

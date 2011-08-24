@@ -26,7 +26,7 @@
 
 int GameEngine::GetNumAliens(unsigned int* piNumAliens)
 {
-    return t_pConn->GetNumRows(SYSTEM_ALIEN_ICONS, piNumAliens);
+    return t_pCache->GetNumRows(SYSTEM_ALIEN_ICONS, piNumAliens);
 }
 
 // Output:
@@ -37,20 +37,15 @@ int GameEngine::GetNumAliens(unsigned int* piNumAliens)
 //
 // Return the system's current alien keys and author names
 
-int GameEngine::GetAlienKeys (Variant*** pppvData, int* piNumAliens) {
-
-    const char* pszColumns[] = {
+int GameEngine::GetAlienKeys(Variant*** pppvData, unsigned int* piNumAliens)
+{
+    const char* pszColumns[] =
+    {
         SystemAlienIcons::AlienKey, 
         SystemAlienIcons::AuthorName
     };
 
-    return t_pConn->ReadColumns (
-        SYSTEM_ALIEN_ICONS, 
-        countof (pszColumns),
-        pszColumns, 
-        pppvData, 
-        (unsigned int*) piNumAliens
-        );
+    return t_pCache->ReadColumns(SYSTEM_ALIEN_ICONS, countof(pszColumns), pszColumns, NULL, pppvData, piNumAliens);
 }
 
 
@@ -63,7 +58,7 @@ int GameEngine::GetAlienKeys (Variant*** pppvData, int* piNumAliens) {
 int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
 
     unsigned int iKey;
-    int iErrCode = t_pConn->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
+    int iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
 
         Variant pvArray [SystemAlienIcons::NumColumns] = {
@@ -71,7 +66,7 @@ int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
             pszAuthorName,
         };
 
-        iErrCode = t_pConn->InsertRow (SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
+        iErrCode = t_pCache->InsertRow (SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
         Assert (iErrCode == OK);
 
     } else {
@@ -110,7 +105,7 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
+    iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
         iErrCode = ERROR_ALIEN_ICON_DOES_NOT_EXIST;
         goto Cleanup;
@@ -122,7 +117,7 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
     }
 
     // Delete the icon!
-    iErrCode = t_pConn->DeleteRow (SYSTEM_ALIEN_ICONS, iKey);
+    iErrCode = t_pCache->DeleteRow(SYSTEM_ALIEN_ICONS, iKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -145,12 +140,12 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
     if (iAlienKey == UPLOADED_ICON) {
 
-        iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
+        iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
     
     } else {
 
         unsigned int iKey;
-        iErrCode = t_pConn->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
+        iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
         if (iKey == NO_KEY) {
 
             Assert (iErrCode == ERROR_DATA_NOT_FOUND);
@@ -158,7 +153,7 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
         } else {
         
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
         }
 
     }
@@ -177,7 +172,7 @@ int GameEngine::GetAlienAuthorName (int iAlienKey, Variant* pvAuthorName) {
     int iErrCode;
     unsigned int iKey;
 
-    iErrCode = t_pConn->GetFirstKey (SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
+    iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
     if (iErrCode != OK) {
         return iErrCode;
     }

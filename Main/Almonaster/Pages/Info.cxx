@@ -395,7 +395,7 @@ if (iMaxNumShips == INFINITE_SHIPS) {
 
 Cleanup:
 
-FreeData (pvEmpireData);
+t_pCache->FreeData(pvEmpireData);
 
 if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %>occurred reading from the database<%

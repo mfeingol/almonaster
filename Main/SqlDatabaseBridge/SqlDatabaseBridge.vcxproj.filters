@@ -29,10 +29,10 @@
     <ClInclude Include="SqlDatabaseWriteTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="CachedReadTable.h">
+    <ClInclude Include="TableCacheCollection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TableCacheCollection.h">
+    <ClInclude Include="CachedTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -58,10 +58,10 @@
     <ClCompile Include="SqlDatabaseWriteTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CachedReadTable.cpp">
+    <ClCompile Include="TableCacheCollection.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TableCacheCollection.cpp">
+    <ClCompile Include="CachedTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

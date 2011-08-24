@@ -581,7 +581,7 @@ Cleanup:
 
     if (ppvEmpiresInGame != NULL)
     {
-        FreeData (ppvEmpiresInGame);
+        t_pCache->FreeData (ppvEmpiresInGame);
     }   
 
     return iErrCode;
@@ -636,7 +636,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
         }
         strList += ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr();
         
-        FreeData (ppvEmpiresInGame);
+        t_pCache->FreeData (ppvEmpiresInGame);
         
     } else {
         

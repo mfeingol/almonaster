@@ -39,7 +39,8 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
 
     unsigned int i, * piGameClassKey = NULL, iNumGameClasses, iNumEmpires, * piTeamKey = NULL, iNumTeams;
     unsigned int iNumHalted = 0, iNumNotHalted = 0, iNumMarked = 0, iNumUnmarked = 0, iNumStartable = 0;
-    unsigned int iGames, * piEmpireKey = NULL;
+    unsigned int iGames;
+    Variant* pvEmpireKey = NULL;
 
     iErrCode = GetTournamentData (iTournamentKey, &pvData);
     if (iErrCode != OK) {
@@ -53,7 +54,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
         goto Cleanup;
     }
 
-    iErrCode = GetTournamentEmpires (iTournamentKey, &piEmpireKey, NULL, &pvEmpireName, &iNumEmpires);
+    iErrCode = GetTournamentEmpires (iTournamentKey, &pvEmpireKey, NULL, &pvEmpireName, &iNumEmpires);
     if (iErrCode != OK) {
         OutputText ("<p><strong>The tournament does not exist</strong>");
         goto Cleanup;
@@ -363,7 +364,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
         for (i = 0; i < iNumEmpires; i ++) {
             
             OutputText ("<option value=\"");
-            m_pHttpResponse->WriteText (piEmpireKey[i]);
+            m_pHttpResponse->WriteText (pvEmpireKey[i].GetInteger());
             OutputText ("\">");
             m_pHttpResponse->WriteText (pvEmpireName[i].GetCharPtr());
             OutputText ("</option>");
@@ -462,15 +463,15 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
 Cleanup:
 
     if (pvData != NULL) {
-        FreeData (pvData);
+        t_pCache->FreeData (pvData);
     }
 
     if (piGameClassKey != NULL) {
-        FreeKeys (piGameClassKey);
+        t_pCache->FreeKeys (piGameClassKey);
     }
 
-    if (piEmpireKey != NULL) {
-        FreeData (piEmpireKey);  // Not a bug
+    if (pvEmpireKey != NULL) {
+        t_pCache->FreeData(pvEmpireKey);
     }
 
     if (pvEmpireName != NULL) {
@@ -482,11 +483,11 @@ Cleanup:
     }
 
     if (piTeamKey != NULL) {
-        FreeKeys (piTeamKey);
+        t_pCache->FreeKeys (piTeamKey);
     }
 
     if (pvTeamName != NULL) {
-        FreeData (pvTeamName);
+        t_pCache->FreeData (pvTeamName);
     }
 
     if (piGameClass != NULL) {
@@ -502,8 +503,8 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
 
     int iErrCode;
 
-    Variant* pvData = NULL, * pvEmpireName = NULL;
-    unsigned int* piEmpireKey = NULL, i, iNumEmpires, * piTeamKey = NULL;
+    Variant* pvData = NULL, * pvEmpireName = NULL, * pvEmpireKey = NULL, * pvTeamKey = NULL;
+    unsigned int i, iNumEmpires;
 
     String strDesc, strUrl;
 
@@ -513,7 +514,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
         goto Cleanup;
     }
 
-    iErrCode = GetTournamentEmpires (iTournamentKey, &piEmpireKey, &piTeamKey, &pvEmpireName, &iNumEmpires);
+    iErrCode = GetTournamentEmpires (iTournamentKey, &pvEmpireKey, &pvTeamKey, &pvEmpireName, &iNumEmpires);
     if (iErrCode != OK) {
         OutputText ("The tournament does not exist");
         goto Cleanup;
@@ -596,7 +597,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
 
     for (i = 0; i < iNumEmpires; i ++) {
         
-        if (piTeamKey[i] != iTeamKey) {
+        if ((unsigned int)pvTeamKey[i].GetInteger() != iTeamKey) {
             
             OutputText (
                 "<tr>"\
@@ -606,10 +607,10 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
             
             for (; i < iNumEmpires; i ++) {
                 
-                if (piTeamKey[i] != iTeamKey) {
+                if ((unsigned int)pvTeamKey[i].GetInteger() != iTeamKey) {
 
                     OutputText ("<option value=\"");
-                    m_pHttpResponse->WriteText (piEmpireKey[i]);
+                    m_pHttpResponse->WriteText (pvEmpireKey[i].GetInteger());
                     OutputText ("\">");
                     m_pHttpResponse->WriteText (pvEmpireName[i].GetCharPtr());
                     OutputText ("</option>");
@@ -631,7 +632,7 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
 
     for (i = 0; i < iNumEmpires; i ++) {
         
-        if (piTeamKey[i] == iTeamKey) {
+        if ((unsigned int)pvTeamKey[i].GetInteger() == iTeamKey) {
             
             OutputText (
                 "<tr>"\
@@ -641,10 +642,10 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
             
             for (; i < iNumEmpires; i ++) {
 
-                if (piTeamKey[i] == iTeamKey) {
+                if ((unsigned int)pvTeamKey[i].GetInteger() == iTeamKey) {
                 
                     OutputText ("<option value=\"");
-                    m_pHttpResponse->WriteText (piEmpireKey[i]);
+                    m_pHttpResponse->WriteText (pvEmpireKey[i].GetInteger());
                     OutputText ("\">");
                     m_pHttpResponse->WriteText (pvEmpireName[i].GetCharPtr());
                     OutputText ("</option>");
@@ -672,15 +673,15 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
 Cleanup:
 
     if (pvData != NULL) {
-        FreeData (pvData);
+        t_pCache->FreeData (pvData);
     }
 
-    if (piEmpireKey != NULL) {
-        FreeData (piEmpireKey);  // Not a bug
+    if (pvEmpireKey != NULL) {
+        t_pCache->FreeData (pvEmpireKey);
     }
 
-    if (piTeamKey != NULL) {
-        FreeData (piTeamKey); // Not a bug
+    if (pvTeamKey != NULL) {
+        t_pCache->FreeData (pvTeamKey);
     }
 
     if (pvEmpireName != NULL) {
@@ -844,10 +845,10 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
 int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOptions, bool bAdvanced) {
 
     int iErrCode, iGameNumber;
-    unsigned int* piEmpireKey = NULL, * piJoinedKey = NULL;
+    Variant* pvEmpireKey = NULL, * pvTeamEmpireKey = NULL;
 
-    unsigned int i, j, iGameClass, * piTeamEmpireKey = NULL, iCheckKey, iTotalEmpires = 0, iMaxNumEmpires, 
-        * piTeamKey = NULL, iNumTeams, iNumEmpires, * piJoinedTeamKey;
+    unsigned int i, j, iGameClass, iCheckKey, iTotalEmpires = 0, iMaxNumEmpires, 
+        * piTeamKey = NULL, iNumTeams, iNumEmpires, * piJoinedTeamKey, * piJoinedKey = NULL;
 
     IHttpForm* pHttpForm;
 
@@ -871,8 +872,8 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     // Get empires
     iErrCode = GetAvailableTournamentEmpires (
         iTournamentKey,
-        &piEmpireKey,
-        &piTeamEmpireKey,
+        &pvEmpireKey,
+        &pvTeamEmpireKey,
         NULL,
         &iNumEmpires
         );
@@ -918,7 +919,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
 
             for (j = 0; j < iNumEmpires; j ++) {
 
-                if (piTeamEmpireKey[j] == piTeamKey[i]) {
+                if ((unsigned int)pvTeamEmpireKey[j].GetInteger() == piTeamKey[i]) {
 
                     if (iTotalEmpires >= iMaxNumEmpires) {
                         AddMessage ("You selected too many empires");
@@ -928,8 +929,8 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
 
                     Assert (iTotalEmpires < iMaxNumEmpires);
 
-                    piJoinedKey [iTotalEmpires] = piEmpireKey[j];
-                    piJoinedTeamKey [iTotalEmpires] = piTeamEmpireKey[j];
+                    piJoinedKey [iTotalEmpires] = pvEmpireKey[j].GetInteger();
+                    piJoinedTeamKey [iTotalEmpires] = pvTeamEmpireKey[j].GetInteger();
 
                     iTotalEmpires ++;
                 }
@@ -941,13 +942,14 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     for (i = 0; i < iNumEmpires; i ++) {
 
         char pszEmpire[64];
-        sprintf (pszEmpire, "EmpireSel%i", piEmpireKey[i]);
+        sprintf (pszEmpire, "EmpireSel%i", pvEmpireKey[i].GetInteger());
 
         if (m_pHttpRequest->GetForm (pszEmpire)) {
 
             for (j = 0; j < iTotalEmpires; j ++) {
 
-                if (piJoinedKey[j] == piEmpireKey[i]) {
+                if (piJoinedKey[j] == (unsigned int)pvEmpireKey[i].GetInteger())
+                {
                     break;
                 }
             }
@@ -962,8 +964,8 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
 
                 Assert (iTotalEmpires < iMaxNumEmpires);
 
-                piJoinedKey [iTotalEmpires] = piEmpireKey[i];
-                piJoinedTeamKey [iTotalEmpires] = piTeamEmpireKey[j];
+                piJoinedKey[iTotalEmpires] = pvEmpireKey[i].GetInteger();
+                piJoinedTeamKey[iTotalEmpires] = pvTeamEmpireKey[j].GetInteger();
 
                 iTotalEmpires ++;
             }
@@ -1141,24 +1143,33 @@ Cleanup:
 
     ClearGameOptions (&goOptions);
 
-    if (piEmpireKey != NULL) {
-        FreeData (piEmpireKey);
+    if (pvEmpireKey != NULL) {
+        t_pCache->FreeData (pvEmpireKey);
     }
 
-    if (piTeamEmpireKey != NULL) {
-        FreeData (piTeamEmpireKey);
+    if (pvTeamEmpireKey != NULL) {
+        t_pCache->FreeData (pvTeamEmpireKey);
     }
 
     if (piTeamKey != NULL) {
-        FreeKeys (piTeamKey);
+        t_pCache->FreeKeys (piTeamKey);
     }
 
     return iErrCode;
 }
 
+void HtmlRenderer::RenderTournaments (const Variant* pvTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
+{
+    unsigned int* piTournamentKey = (unsigned int*)StackAlloc(iNumTournaments * sizeof(unsigned int));
+    for (unsigned int i = 0; i < iNumTournaments; i ++)
+    {
+        piTournamentKey[i] = pvTournamentKey[i].GetInteger();
+    }
+    RenderTournaments(piTournamentKey, iNumTournaments, bSingleOwner);
+}
 
-void HtmlRenderer::RenderTournaments (const unsigned int* piTournamentKey, unsigned int iNumTournaments, bool bSingleOwner) {
-
+void HtmlRenderer::RenderTournaments (const unsigned int* piTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
+{
     unsigned int i;
 
     OutputText ("<p><table width=\"75%\" bordercolor=\"#");
@@ -1216,9 +1227,9 @@ void HtmlRenderer::RenderTournaments (const unsigned int* piTournamentKey, unsig
         "</tr>"
         );
 
-    for (i = 0; i < iNumTournaments; i ++) {
-
-        RenderTournamentSimple (piTournamentKey[i], bSingleOwner);
+    for (i = 0; i < iNumTournaments; i ++)
+    {
+        RenderTournamentSimple(piTournamentKey[i], bSingleOwner);
     }
 
     OutputText ("</table>");
@@ -1332,7 +1343,7 @@ void HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSi
 Cleanup:
 
     if (pvData != NULL) {
-        FreeData (pvData);
+        t_pCache->FreeData (pvData);
     }
 }
 
@@ -1342,9 +1353,8 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
     int iErrCode;
     unsigned int* piEmpireKey = NULL;
 
-    Variant* pvData = NULL, * pvTeamName = NULL, * pvTeamData = NULL;
-    unsigned int i, j, iNumTeams, * piTeamKey = NULL, iNumEmpires, * piEmpTeamKey = NULL, 
-        iEmpiresRendered = 0;
+    Variant* pvData = NULL, * pvTeamName = NULL, * pvTeamData = NULL, * pvEmpireKey = NULL, * pvEmpTeamKey = NULL;
+    unsigned int i, j, iNumTeams, * piTeamKey = NULL, iNumEmpires, iEmpiresRendered = 0;
 
     const char* pszString = NULL;
 
@@ -1358,7 +1368,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
         goto Cleanup;
     }
 
-    iErrCode = GetTournamentEmpires (iTournamentKey, &piEmpireKey, &piEmpTeamKey, NULL, &iNumEmpires);
+    iErrCode = GetTournamentEmpires (iTournamentKey, &pvEmpireKey, &pvEmpTeamKey, NULL, &iNumEmpires);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1580,7 +1590,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
             // Empires
             for (j = 0; j < iNumEmpires; j ++) {
 
-                if (piEmpTeamKey[j] == piTeamKey[i]) {
+                if ((unsigned int)pvEmpTeamKey[j].GetInteger() == piTeamKey[i]) {
                     RenderEmpire (iTournamentKey, piEmpireKey[j]);
                     iEmpiresRendered ++;
                 }
@@ -1589,7 +1599,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
             OutputText ("</table>");
 
             if (pvTeamData != NULL) {
-                FreeData (pvTeamData);
+                t_pCache->FreeData (pvTeamData);
                 pvTeamData = NULL;
             }
         }
@@ -1653,7 +1663,7 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
 
         for (j = 0; j < iNumEmpires; j ++) {
 
-            if (piEmpTeamKey[j] == NO_KEY) {
+            if (pvEmpTeamKey[j].GetInteger() == NO_KEY) {
                 RenderEmpire (iTournamentKey, piEmpireKey[j]);
             }
         }
@@ -1725,26 +1735,26 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
 Cleanup:
 
     if (pvData != NULL) {
-        FreeData (pvData);
+        t_pCache->FreeData (pvData);
     }
 
     if (pvTeamName != NULL) {
-        FreeData (pvTeamName);
+        t_pCache->FreeData (pvTeamName);
     }
 
     if (piTeamKey != NULL) {
-        FreeKeys (piTeamKey);
+        t_pCache->FreeKeys (piTeamKey);
     }
 
     if (pvTeamData != NULL) {
-        FreeData (pvTeamData);
+        t_pCache->FreeData (pvTeamData);
     }
 
-    if (piEmpireKey != NULL) {
-        FreeKeys (piEmpireKey);
+    if (pvEmpireKey != NULL) {
+        t_pCache->FreeData(pvEmpireKey);
     }
 
-    if (piEmpTeamKey != NULL) {
-        FreeKeys (piEmpTeamKey);
+    if (pvEmpTeamKey != NULL) {
+        t_pCache->FreeData(pvEmpTeamKey);
     }
 }

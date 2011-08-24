@@ -338,7 +338,7 @@ case 1:
                 %></td><td align="center"><% Write (iNumActiveGames); %></td><%
                 %></tr><%
 
-                FreeData (pvEmpData);
+                t_pCache->FreeData (pvEmpData);
             }
         }
     }
@@ -346,7 +346,7 @@ case 1:
 
     NotifyProfileLink();
 
-    FreeData (ppvData);
+    t_pCache->FreeData (ppvData);
 
     }
     break;

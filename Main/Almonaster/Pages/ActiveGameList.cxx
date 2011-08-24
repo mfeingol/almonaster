@@ -136,7 +136,7 @@ if (iNumGames == 0) {
     %><p><h3>You are not in any games</h3><% 
 } else {
 
-    int* piSuperClassKey, iSuperClassKey, iNumSuperClasses, iNumRenderGames = 0;
+    unsigned int* piSuperClassKey, iSuperClassKey, iNumSuperClasses, iNumRenderGames = 0;
 
     Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
@@ -194,7 +194,7 @@ if (iNumGames == 0) {
                 iSuperClassIndex = ACTIVE_PERSONAL_GAMES;
             }
 
-            else for (int j = 0; j < iNumSuperClasses; j ++) {
+            else for (unsigned int j = 0; j < iNumSuperClasses; j ++) {
 
                 if (piSuperClassKey[j] == iSuperClassKey) {
                     iSuperClassIndex = j;
@@ -312,7 +312,7 @@ if (iNumGames == 0) {
                     }
 
                     if (pvGameClassInfo != NULL) {
-                        FreeData (pvGameClassInfo);
+                        t_pCache->FreeData (pvGameClassInfo);
                         pvGameClassInfo = NULL;
                     }
                 }
@@ -320,7 +320,7 @@ if (iNumGames == 0) {
             }
         }
 
-        FreeKeys (piSuperClassKey);
+        t_pCache->FreeKeys (piSuperClassKey);
     }
 
     delete [] piGameClassKey;

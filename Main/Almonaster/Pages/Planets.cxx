@@ -275,7 +275,7 @@ if (bMapGenerated) {
 
         for (i = 0; i < iNumPlanets; i ++) {
 
-            iErrCode = t_pConn->ReadRow (strGameMap, pvPlanetKey[i].GetInteger(), &pvPlanetData);
+            iErrCode = t_pCache->ReadRow (strGameMap, pvPlanetKey[i].GetInteger(), &pvPlanetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -321,7 +321,7 @@ if (bMapGenerated) {
 
             %></table><%
 
-            t_pConn->FreeData (pvPlanetData);
+            t_pCache->FreeData (pvPlanetData);
             pvPlanetData = NULL;
 
             if (bOurPlanet) {
@@ -336,15 +336,15 @@ if (bMapGenerated) {
 Cleanup:
 
         if (pvPlanetData != NULL) {
-            t_pConn->FreeData (pvPlanetData);
+            t_pCache->FreeData (pvPlanetData);
         }
 
         if (pvPlanetKey != NULL) {
-            FreeData (pvPlanetKey);
+            t_pCache->FreeData (pvPlanetKey);
         }
 
         if (piProxyKey != NULL) {
-            FreeKeys ((unsigned int*) piProxyKey);
+            t_pCache->FreeKeys ((unsigned int*) piProxyKey);
         }
 
         if (iErrCode != OK) {

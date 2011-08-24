@@ -49,13 +49,13 @@ int GameEngine::UpdateScoresOnNuke (int iNukerKey, int iNukedKey, const char* ps
     global.GetReport()->WriteReport (pszMessage);
 
     // Increment nukes and nuked
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iNukerKey, SystemEmpireData::Nukes, 1);
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iNukerKey, SystemEmpireData::Nukes, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
     }
 
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iNukedKey, SystemEmpireData::Nuked, 1);
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iNukedKey, SystemEmpireData::Nuked, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -195,7 +195,7 @@ int GameEngine::UpdateScoresOn30StyleSurrender (int iLoserKey, const char* pszLo
     global.GetReport()->WriteReport(pszMessage);
 
     // Increment nuked for loser
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iLoserKey, SystemEmpireData::Nuked, 1);
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iLoserKey, SystemEmpireData::Nuked, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -247,7 +247,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     global.GetReport()->WriteReport (pszMessage);
 
     // Give empire credit for nuke
-    iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iWinnerKey, SystemEmpireData::Nukes, 1);
+    iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iWinnerKey, SystemEmpireData::Nukes, 1);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -475,7 +475,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iGameClass, int 
 int GameEngine::UpdateScoresOnWin (int iGameClass, int iGameNumber, int iEmpireKey)
 {
     // Add win to empires' statistics
-    int iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, 1);
+    int iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Wins, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -495,7 +495,7 @@ int GameEngine::UpdateScoresOnWin (int iGameClass, int iGameNumber, int iEmpireK
 int GameEngine::UpdateScoresOnDraw (int iGameClass, int iGameNumber, int iEmpireKey)
 {
     // Add draw to empires' statistics
-    int iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Draws, 1);
+    int iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Draws, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -516,7 +516,7 @@ int GameEngine::UpdateScoresOnDraw (int iGameClass, int iGameNumber, int iEmpire
 int GameEngine::UpdateScoresOnRuin (int iGameClass, int iGameNumber, int iEmpireKey)
 {
     // Add ruin to empires' statistics
-    int iErrCode = t_pConn->Increment (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Ruins, 1);
+    int iErrCode = t_pCache->Increment(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Ruins, 1);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -548,10 +548,10 @@ int GameEngine::GetNumEmpiresInNukeHistory (int iEmpireKey, int* piNumNukes, int
 
     SYSTEM_EMPIRE_NUKER_LIST (strTable, iEmpireKey);
 
-    if (!t_pConn->DoesTableExist (strTable)) {
+    if (!t_pCache->DoesTableExist (strTable)) {
         *piNumNukes = 0;
     } else {
-        iErrCode = t_pConn->GetNumRows (strTable, (unsigned int*) piNumNukes);
+        iErrCode = t_pCache->GetNumRows (strTable, (unsigned int*) piNumNukes);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -559,11 +559,11 @@ int GameEngine::GetNumEmpiresInNukeHistory (int iEmpireKey, int* piNumNukes, int
 
     GET_SYSTEM_EMPIRE_NUKED_LIST (strTable, iEmpireKey);
 
-    if (!t_pConn->DoesTableExist (strTable)) {
+    if (!t_pCache->DoesTableExist (strTable)) {
         *piNumNuked = 0;
     } else {
 
-        iErrCode = t_pConn->GetNumRows (strTable, (unsigned int*) piNumNuked);
+        iErrCode = t_pCache->GetNumRows (strTable, (unsigned int*) piNumNuked);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -601,10 +601,11 @@ int GameEngine::GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppv
     *pppvNukedData = *pppvNukerData = NULL;
 
     // Get Nuked data
-    iErrCode = t_pConn->ReadColumns (
+    iErrCode = t_pCache->ReadColumns (
         strNuked, 
         countof(pszNukeColumns),
         pszNukeColumns,
+        NULL,
         pppvNukedData,
         (unsigned int*) piNumNuked
         );
@@ -614,10 +615,11 @@ int GameEngine::GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppv
     }
 
     // Get Nuker data
-    iErrCode = t_pConn->ReadColumns (
+    iErrCode = t_pCache->ReadColumns (
         strNuker, 
         countof(pszNukeColumns),
         pszNukeColumns,
+        NULL,
         pppvNukerData,
         (unsigned int*) piNumNukers
         );
@@ -625,7 +627,7 @@ int GameEngine::GetNukeHistory (int iEmpireKey, int* piNumNuked, Variant*** pppv
     if (iErrCode != OK && iErrCode != ERROR_UNKNOWN_TABLE_NAME && iErrCode != ERROR_DATA_NOT_FOUND) {
 
         if (*pppvNukedData != NULL) {
-            t_pConn->FreeData(*pppvNukedData);
+            t_pCache->FreeData(*pppvNukedData);
             *pppvNukedData = NULL;
         }
         return iErrCode;
@@ -652,10 +654,11 @@ int GameEngine::GetSystemNukeHistory (int* piNumNukes, Variant*** pppvNukedData)
         SystemNukeList::TimeStamp
     };
 
-    int iErrCode = t_pConn->ReadColumns (
+    int iErrCode = t_pCache->ReadColumns (
         SYSTEM_NUKE_LIST, 
         countof(pszNukeColumns),
         pszNukeColumns,
+        NULL,
         pppvNukedData,
         (unsigned int*) piNumNukes
         );
@@ -681,10 +684,11 @@ int GameEngine::GetSystemLatestGames (int* piNumGames, Variant*** pppvGameData) 
         SystemLatestGames::Losers,
     };
 
-    int iErrCode = t_pConn->ReadColumns (
+    int iErrCode = t_pCache->ReadColumns (
         SYSTEM_LATEST_GAMES,
         countof(pszColumns),
         pszColumns,
+        NULL,
         pppvGameData,
         (unsigned int*) piNumGames
         );
@@ -756,7 +760,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         if (vScore < vAdeptLevel && vScore >= vApprenticeLevel) {
             
             // Advance to apprentice
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, APPRENTICE);
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, APPRENTICE);
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -772,7 +776,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         else if (vScore >= vAdeptLevel) {
             
             // Advance to adept
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, ADEPT);         
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, ADEPT);         
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -793,7 +797,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         if (vScore < vApprenticeLevel) {
             
             // Demote to novice
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -810,7 +814,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         else if (vScore >= vAdeptLevel) {
             
             // Advance to adept
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, ADEPT);         
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, ADEPT);         
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -830,7 +834,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         if (vScore < vApprenticeLevel) {
             
             // Demote to novice
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -846,7 +850,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
         } else {
             
             // Demote to apprentice
-            iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, APPRENTICE);
+            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Privilege, APPRENTICE);
             if (iErrCode != OK) {
                 return iErrCode;
             }
@@ -1213,10 +1217,9 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
 
     int iErrCode;
 
-    IWriteTable* pWriteTable = NULL;
+    ICachedTable* pWriteTable = NULL;
 
-    UTCTime* ptTime = NULL;
-    Variant vNumNukesListed;
+    Variant* pvTime = NULL, vNumNukesListed;
 
     unsigned int iNumRows, * piKey = NULL, i, iNumKeys, iNumNukesListed;
     char pszTable [256];
@@ -1271,9 +1274,9 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
     iNumNukesListed = vNumNukesListed.GetInteger();
 
     // Fault in table
-    if (!t_pConn->DoesTableExist (pszTable)) {
+    if (!t_pCache->DoesTableExist (pszTable)) {
 
-        iErrCode = t_pConn->CreateTable (pszTable, *pttTemplate);
+        iErrCode = t_pCache->CreateTable (pszTable, *pttTemplate);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1281,7 +1284,7 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
     }
 
     // Get the table
-    iErrCode = t_pConn->GetTableForWriting (pszTable, &pWriteTable);
+    iErrCode = t_pCache->GetTable(pszTable, &pWriteTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1302,7 +1305,7 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
         iErrCode = pWriteTable->ReadColumn (
             pszTimeStampCol, 
             &piKey, 
-            &ptTime, 
+            &pvTime, 
             &iNumKeys
             );
         
@@ -1311,12 +1314,12 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
             goto Cleanup;
         }
         
-        Algorithm::QSortTwoAscending<UTCTime, unsigned int> (ptTime, piKey, iNumKeys);
+        Algorithm::QSortTwoAscending<Variant, unsigned int>(pvTime, piKey, iNumKeys);
         
         i = 0;
         while (i < iNumKeys && iNumRows >= iNumNukesListed) {
             
-            iErrCode = pWriteTable->DeleteRow (piKey[i]);
+            iErrCode = pWriteTable->DeleteRow(piKey[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1367,12 +1370,12 @@ Cleanup:
 
     SafeRelease (pWriteTable);
 
-    if (ptTime != NULL) {
-        t_pConn->FreeData(ptTime);
+    if (pvTime != NULL) {
+        t_pCache->FreeData(pvTime);
     }
 
     if (piKey != NULL) {
-        t_pConn->FreeKeys(piKey);
+        t_pCache->FreeKeys(piKey);
     }
 
     return iErrCode;
@@ -1382,9 +1385,9 @@ int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {
 
     int iErrCode;
 
-    IReadTable* pEmpires = NULL;
+    ICachedTable* pEmpires = NULL;
 
-    iErrCode = t_pConn->GetTableForReading(SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1456,7 +1459,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
 
     while (true) {
         
-        iErrCode = t_pConn->GetNextKey (SYSTEM_EMPIRE_DATA, iKey, &iKey);
+        iErrCode = t_pCache->GetNextKey (SYSTEM_EMPIRE_DATA, iKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             return OK;
         }
@@ -1467,7 +1470,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
         }
         
         // Check first outside the lock
-        iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);
+        iErrCode = t_pCache->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);
         if (iErrCode != OK) {
             continue;
         }
@@ -1478,12 +1481,12 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
             Seconds sDiff;
             
             // Refresh
-            iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);
+            iErrCode = t_pCache->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::LastBridierActivity, &vLastAct);
             if (iErrCode != OK) {
                 continue;
             }
             
-            iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::BridierIndex, &vIndex);
+            iErrCode = t_pCache->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::BridierIndex, &vIndex);
             if (iErrCode != OK) {
                 continue;
             }
@@ -1521,7 +1524,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
             
             if (iFinalIndex != vIndex.GetInteger()) {
 
-                iErrCode = t_pConn->WriteData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::BridierIndex, iFinalIndex);
+                iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::BridierIndex, iFinalIndex);
                 if (iErrCode == OK) {
 
                     // Best effort
@@ -1532,7 +1535,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback() {
                     Assert (iErrCode == OK);
                     
                     Variant vName;
-                    iErrCode = t_pConn->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::Name, &vName);
+                    iErrCode = t_pCache->ReadData(SYSTEM_EMPIRE_DATA, iKey, SystemEmpireData::Name, &vName);
                     if (iErrCode == OK) {
                             
                         char pszMessage [MAX_EMPIRE_NAME_LENGTH + 128];
@@ -1577,5 +1580,5 @@ int GameEngine::SetBridierTimeBombScanFrequency (Seconds iFrequency) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    return t_pConn->WriteData (SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, (int) iFrequency);
+    return t_pCache->WriteData (SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, (int) iFrequency);
 }

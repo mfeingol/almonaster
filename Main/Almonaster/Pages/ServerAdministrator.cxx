@@ -1501,7 +1501,7 @@ Cancel:
     WriteButton(BID_CANCEL);
 
     if (pvServerData != NULL) {
-        t_pConn->FreeData (pvServerData);
+        t_pCache->FreeData (pvServerData);
     }
 
     SafeRelease(pBackupEnumerator);
@@ -1514,12 +1514,12 @@ Cancel:
 case 1:
     {
 
-    int iNumAliens;
     Variant vAlien;
 
     Check (GetSystemProperty (SystemData::DefaultAlien, &vAlien));
     int iAlien = vAlien.GetInteger();
 
+    unsigned int iNumAliens;
     Variant** ppvAlienData;
     Check (GetAlienKeys (&ppvAlienData, &iNumAliens));
     %><input type="hidden" name="ServerAdminPage" value="1"><%
@@ -1530,7 +1530,7 @@ case 1:
 
     %><p>Choose a new default alien icon:<p><table width="75%"><tr><td><%
 
-    for (i = 0; i < iNumAliens; i ++) {
+    for (i = 0; i < (int)iNumAliens; i ++) {
 
         WriteAlienButtonString (
             ppvAlienData[i][SystemAlienIcons::iAlienKey],
@@ -1542,7 +1542,7 @@ case 1:
     }
 
     if (iNumAliens > 0) {
-        FreeData (ppvAlienData);
+        t_pCache->FreeData (ppvAlienData);
     }
 
     %></td></tr></table><%
@@ -1556,32 +1556,31 @@ case 2:
 
     int iB, iL, iD, iS, iT, iH, iV, iC;
 
-    IReadTable* pSystemData;
-    void** ppData;
+    ICachedTable* pSystemData;
+    Variant* pvData;
 
-    iErrCode = t_pConn->GetTableForReading(SYSTEM_DATA, &pSystemData);
+    iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystemData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pSystemData->ReadRow (0, &ppData);
+    iErrCode = pSystemData->ReadRow(&pvData);
     if (iErrCode != OK) {
-        pSystemData->Release();
+        SafeRelease(pSystemData);
         goto Cleanup;
     }
 
-    iB = *((int*) ppData[SystemData::iDefaultUIBackground]);
-    iL = *((int*) ppData[SystemData::iDefaultUILivePlanet]);
-    iD = *((int*) ppData[SystemData::iDefaultUIDeadPlanet]);
-    iS = *((int*) ppData[SystemData::iDefaultUISeparator]);
-    iT = *((int*) ppData[SystemData::iDefaultUIButtons]);
-    iH = *((int*) ppData[SystemData::iDefaultUIHorz]);
-    iV = *((int*) ppData[SystemData::iDefaultUIVert]);
-    iC = *((int*) ppData[SystemData::iDefaultUIColor]);
+    iB = pvData[SystemData::iDefaultUIBackground].GetInteger();
+    iL = pvData[SystemData::iDefaultUILivePlanet].GetInteger();
+    iD = pvData[SystemData::iDefaultUIDeadPlanet].GetInteger();
+    iS = pvData[SystemData::iDefaultUISeparator].GetInteger();
+    iT = pvData[SystemData::iDefaultUIButtons].GetInteger();
+    iH = pvData[SystemData::iDefaultUIHorz].GetInteger();
+    iV = pvData[SystemData::iDefaultUIVert].GetInteger();
+    iC = pvData[SystemData::iDefaultUIColor].GetInteger();
 
-    t_pConn->FreeData (ppData);
-
-    SafeRelease (pSystemData);
+    t_pCache->FreeData(pvData);
+    SafeRelease(pSystemData);
 
     %><input type="hidden" name="ServerAdminPage" value="2"><p>Choose the server's default UI elements:<p><%
 
@@ -1689,12 +1688,11 @@ case 5:
 case 6:
     {
 
-    int iNumAliens;
     Variant vAlien;
-
     Check (GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien));
     int iAlien = vAlien.GetInteger();
 
+    unsigned int iNumAliens;
     Variant** ppvAlienData;
     Check (GetAlienKeys (&ppvAlienData, &iNumAliens));
     %><input type="hidden" name="ServerAdminPage" value="6"><%
@@ -1705,7 +1703,7 @@ case 6:
 
     %><p>Choose a new alien icon for system messages:<p><table width="75%"><tr><td><%
 
-    for (i = 0; i < iNumAliens; i ++) {
+    for (i = 0; i < (int)iNumAliens; i ++) {
 
         WriteAlienButtonString (
             ppvAlienData[i][SystemAlienIcons::iAlienKey],
@@ -1717,7 +1715,7 @@ case 6:
     }
 
     if (iNumAliens > 0) {
-        FreeData (ppvAlienData);
+        t_pCache->FreeData (ppvAlienData);
     }
 
     %></td></tr></table><%

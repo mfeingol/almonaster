@@ -56,7 +56,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     // Read the GameEmpireData
     Variant* pvEmpData = NULL, vTemp;
 
-    iErrCode = t_pConn->ReadRow (strEmpireData, NO_KEY, &pvEmpData);
+    iErrCode = t_pCache->ReadRow (strEmpireData, NO_KEY, &pvEmpData);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -68,7 +68,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
         goto Cleanup;
     }
 
-    iErrCode = t_pConn->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
+    iErrCode = t_pCache->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -97,7 +97,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
 Cleanup:
 
     if (pvEmpData != NULL) {
-        t_pConn->FreeData(pvEmpData);
+        t_pCache->FreeData(pvEmpData);
     }
 
     return iErrCode;
@@ -119,11 +119,11 @@ int GameEngine::GetEmpireAgRatio (int iGameClass, int iGameNumber, int iEmpireKe
     int iTotalAg, iBonusAg, iTotalPop, iErrCode;
     Variant vMaxAgRatio;
 
-    IReadTable* pGameEmpireData = NULL;
+    ICachedTable* pGameEmpireData = NULL;
     
     GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->GetTableForReading(pszEmpireData, &pGameEmpireData);
+    iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
         return iErrCode;
     }

@@ -830,9 +830,10 @@ public:
     void WriteAdministerGame (int iGameClass, int iGameNumber, bool bAdmin);
 
     // Tournaments
-    void RenderTournaments (const unsigned int* piTournamentKey, unsigned int iTournaments, bool bSingleOwner);
-    void RenderTournamentSimple (unsigned int iTournamentKey, bool bSingleOwner);
-    void RenderTournamentDetailed (unsigned int iTournamentKey);
+    void RenderTournaments(const Variant* pvTournamentKey, unsigned int iTournaments, bool bSingleOwner);
+    void RenderTournaments(const unsigned int* piTournamentKey, unsigned int iTournaments, bool bSingleOwner);
+    void RenderTournamentSimple(unsigned int iTournamentKey, bool bSingleOwner);
+    void RenderTournamentDetailed(unsigned int iTournamentKey);
 
     void RenderEmpire (unsigned int iTournamentKey, int iEmpireKey);
 

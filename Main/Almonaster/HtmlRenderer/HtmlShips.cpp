@@ -21,12 +21,12 @@
 int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iShipPlanet,
                                       ShipOrderPlanetInfo& planetInfo, String& strPlanetName) {
 
-    IReadTable* pMap = NULL;
+    ICachedTable* pMap = NULL;
     Variant vTemp;
 
     GAME_MAP (strMap, iGameClass, iGameNumber);
 
-    int iErrCode = t_pConn->GetTableForReading(strMap, &pMap);
+    int iErrCode = t_pCache->GetTable(strMap, &pMap);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -69,13 +69,14 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    IReadTable* pRead = NULL;
+    ICachedTable* pRead = NULL;
 
     // Read ship location column
     FleetOrder* pfoOrders = NULL;
 
+    int iErrCode;
     unsigned int* piShipKey = NULL, * piFleetKey = NULL, iNumShips = 0, iNumFleets = 0, iNumFleetShips = 0;
-    int* piShipLoc = NULL, * piFleetLoc = NULL, iErrCode;
+    Variant* pvShipLoc = NULL, * pvFleetLoc = NULL;
     
     unsigned int** ppiFleetShips = NULL, * piNumShipsInFleet = NULL, i, j, iNumOrders = 0;
 
@@ -125,7 +126,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     
     if (pShipsInMap == NULL) {
 
-        iErrCode = t_pConn->GetTableForReading(pszShips, &pRead);
+        iErrCode = t_pCache->GetTable(pszShips, &pRead);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -134,7 +135,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
         iErrCode = pRead->ReadColumn (
             GameEmpireShips::CurrentPlanet, 
             &piShipKey,
-            &piShipLoc, 
+            &pvShipLoc, 
             &iNumShips
             );
 
@@ -145,7 +146,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->GetTableForReading(pszFleets, &pRead);
+        iErrCode = t_pCache->GetTable(pszFleets, &pRead);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -154,7 +155,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
         iErrCode = pRead->ReadColumn (
             GameEmpireFleets::CurrentPlanet, 
             &piFleetKey, 
-            &piFleetLoc, 
+            &pvFleetLoc, 
             &iNumFleets
             );
 
@@ -176,7 +177,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     } else {
         
         // Single planet render
-        iErrCode = t_pConn->GetEqualKeys (
+        iErrCode = t_pCache->GetEqualKeys (
             pszShips,
             GameEmpireShips::CurrentPlanet,
             pShipsInMap->iPlanetKey,
@@ -189,7 +190,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
         
-        iErrCode = t_pConn->GetEqualKeys (
+        iErrCode = t_pCache->GetEqualKeys (
             pszFleets,
             GameEmpireFleets::CurrentPlanet,
             pShipsInMap->iPlanetKey,
@@ -227,7 +228,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             OutputText ("</strong> ships in service:");
 
             // Sort ships by location
-            Algorithm::QSortTwoAscending<int, unsigned int> (piShipLoc, piShipKey, iNumShips);
+            Algorithm::QSortTwoAscending<Variant, unsigned int>(pvShipLoc, piShipKey, iNumShips);
         }
 
         if (bOpenTableRow) {
@@ -244,7 +245,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
         if (iNumFleets > 0) {
             
             if (pShipsInMap == NULL) {
-                Algorithm::QSortTwoAscending<int, unsigned int> (piFleetLoc, piFleetKey, iNumFleets);
+                Algorithm::QSortTwoAscending<Variant, unsigned int>(pvFleetLoc, piFleetKey, iNumFleets);
             }
 
             ppiFleetShips = (unsigned int**) StackAlloc (iNumFleets * sizeof (unsigned int*));
@@ -343,7 +344,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 
             } else {
 
-                iErrCode = t_pConn->ReadRow (pszShips, piShipKey[i], &pvShipData);
+                iErrCode = t_pCache->ReadRow (pszShips, piShipKey[i], &pvShipData);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -404,7 +405,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                     iNumLocations
                     );
 
-                t_pConn->FreeData (pvShipData);
+                t_pCache->FreeData (pvShipData);
                 pvShipData = NULL;
                 
                 if (iErrCode != OK) {
@@ -461,7 +462,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             unsigned int piShipsByType [NUM_SHIP_TYPES];
             memset (piShipsByType, 0, sizeof (piShipsByType));
             
-            iErrCode = t_pConn->ReadRow (pszFleets, piFleetKey[i], &pvFleetData);
+            iErrCode = t_pCache->ReadRow (pszFleets, piFleetKey[i], &pvFleetData);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -579,7 +580,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             if (iNumShipsInFleet > 0) {
 
                 Assert (pRead == NULL);
-                iErrCode = t_pConn->GetTableForReading(pszShips, &pRead);
+                iErrCode = t_pCache->GetTable(pszShips, &pRead);
                 if (iErrCode == OK) {
 
                     unsigned int iLoopGuard = ppiFleetShips[i][0];
@@ -701,7 +702,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             m_pHttpResponse->WriteText (pfoOrders[iSelectedOrder].iKey);
             OutputText ("\"><td align=\"center\">");
             
-            unsigned int iLocation = pShipsInMap == NULL ? piFleetLoc[i] : pShipsInMap->iPlanetKey;
+            unsigned int iLocation = pShipsInMap == NULL ? pvFleetLoc[i].GetInteger() : pShipsInMap->iPlanetKey;
             if (iLocation != planetInfo.iPlanetKey) {
 
                 iErrCode = PopulatePlanetInfo (
@@ -823,7 +824,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                         iIndex = ppiFleetShips[i][j];
 
-                        iErrCode = t_pConn->ReadRow (pszShips, piShipKey[iIndex], &pvShipData);
+                        iErrCode = t_pCache->ReadRow (pszShips, piShipKey[iIndex], &pvShipData);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -884,7 +885,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                             iNumLocations
                             );
 
-                        t_pConn->FreeData (pvShipData);
+                        t_pCache->FreeData (pvShipData);
                         pvShipData = NULL;
                         
                         if (iErrCode != OK) {
@@ -903,7 +904,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 pShipsInMap->iCurrentFleet ++;
             }
             
-            t_pConn->FreeData (pvFleetData);
+            t_pCache->FreeData (pvFleetData);
             pvFleetData = NULL;
 
             FreeFleetOrders (pfoOrders, iNumOrders);
@@ -920,11 +921,11 @@ Cleanup:
     }
     
     if (pvFleetData != NULL) {
-        t_pConn->FreeData (pvFleetData);
+        t_pCache->FreeData (pvFleetData);
     }
 
     if (pvShipData != NULL) {
-        t_pConn->FreeData (pvShipData);
+        t_pCache->FreeData (pvShipData);
     }
 
     if (pfoOrders != NULL) {
@@ -934,20 +935,20 @@ Cleanup:
     if (iNumShips > 0) {
         
         if (pShipsInMap == NULL) {
-            t_pConn->FreeData (piShipLoc);
+            t_pCache->FreeData (pvShipLoc);
         }
         if (piShipKey != NULL) {
-            t_pConn->FreeKeys (piShipKey);
+            t_pCache->FreeKeys (piShipKey);
         }
     }
     
     if (iNumFleets > 0) {
 
         if (pShipsInMap == NULL) {
-            t_pConn->FreeData (piFleetLoc);
+            t_pCache->FreeData (pvFleetLoc);
         }
         if (piFleetKey != NULL) {
-            t_pConn->FreeKeys (piFleetKey);
+            t_pCache->FreeKeys (piFleetKey);
         }
     }
 

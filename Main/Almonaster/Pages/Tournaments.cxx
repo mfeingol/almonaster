@@ -206,7 +206,7 @@ default:
 // Cleanup
 
 if (piTournamentKey != NULL) {
-    FreeKeys (piTournamentKey);
+    t_pCache->FreeKeys (piTournamentKey);
 }
 
 CloseSystemPage();

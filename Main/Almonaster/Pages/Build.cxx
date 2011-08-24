@@ -325,7 +325,8 @@ GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));
 // Individual page stuff starts here
 //
 
-int iBR, * piFleetKey = NULL, iNumFleets = 0;
+int iBR;
+unsigned int* piFleetKey = NULL, iNumFleets = 0;
 
 BuildLocation* pblBuildLocation = NULL;
 unsigned int iNumLocations = 0, iNumTechs = 0;
@@ -510,7 +511,7 @@ if (GetDevelopedTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iTechDevs, &i
     ) {
 
     if (iNumFleets > 0) {
-        FreeKeys (piFleetKey);
+        t_pCache->FreeKeys (piFleetKey);
     }
     %><p>An error occurred rendering the Build page<%
     goto Close;
@@ -527,7 +528,7 @@ if (iNumTechs > 0) {
 
     if (GetGameClassVisibleBuilds (m_iGameClass, &bVisible) != OK) {
         if (iNumFleets > 0) {
-            FreeKeys (piFleetKey);
+            t_pCache->FreeKeys (piFleetKey);
         }
         %><p>An error occurred rendering the Build page<%
         goto Close;
@@ -712,7 +713,7 @@ if (iNumTechs > 0) {
 }
 
 if (piFleetKey != NULL) {
-    FreeKeys (piFleetKey);
+    t_pCache->FreeKeys (piFleetKey);
     piFleetKey = NULL;
 }
 

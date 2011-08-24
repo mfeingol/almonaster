@@ -25,10 +25,11 @@ if (InitializeEmpire(false) != OK)
 
 IHttpForm* pHttpForm;
 
-int i, iErrCode;
+int iErrCode;
 bool bConfirmPage = false;
 int iGameClassKey = NO_KEY, iGameNumber = NO_KEY;
 const char* pszPassword = NULL;
+unsigned int i;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -147,9 +148,9 @@ if (bConfirmPage) {
     else
     {
         // Update the open games
-        int j, iGameClass, iGameNumber;
+        int iGameClass, iGameNumber;
 
-        int* piSuperClassKey, iNumSuperClasses;
+        unsigned int* piSuperClassKey, iNumSuperClasses, j;
         bool bDraw = false;
         Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
@@ -175,7 +176,7 @@ if (bConfirmPage) {
             }
 
             // Fill in the table
-            int iSuperClassKey;
+            unsigned int iSuperClassKey;
             bool bFlag, bIdle = false;
 
             // Cache GameData for each
@@ -262,7 +263,8 @@ if (bConfirmPage) {
 
                 %><p><h3>Join an open game:</h3><%
                 Variant* pvGameClassInfo = NULL;
-                int iBegin, iCurrentGameClass, iNumGamesInSuperClass, iNumToSort;
+                int iBegin, iCurrentGameClass, iNumToSort;
+                unsigned int iNumGamesInSuperClass;
 
                 if (ppiTable [iNumSuperClasses][iNumOpenGames] > 0) {
 
@@ -313,7 +315,7 @@ if (bConfirmPage) {
                             );
                     }
 
-                    for (j = 0; j < ppiTable[iNumSuperClasses][iNumOpenGames]; j ++) {
+                    for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumOpenGames]; j ++) {
 
                         iGameClass = ppiGameClass[iNumSuperClasses][j];
                         iGameNumber = ppiGameNumber[iNumSuperClasses][j];
@@ -329,7 +331,7 @@ if (bConfirmPage) {
                         }
 
                         if (pvGameClassInfo != NULL) {
-                            FreeData (pvGameClassInfo);
+                            t_pCache->FreeData (pvGameClassInfo);
                             pvGameClassInfo = NULL;
                         }
                     }
@@ -405,7 +407,7 @@ if (bConfirmPage) {
                             }
 
                             if (pvGameClassInfo != NULL) {
-                                FreeData (pvGameClassInfo);
+                                t_pCache->FreeData (pvGameClassInfo);
                                 pvGameClassInfo = NULL;
                             }
                         }
@@ -415,7 +417,7 @@ if (bConfirmPage) {
                 }
             }
 
-            FreeKeys (piSuperClassKey);
+            t_pCache->FreeKeys (piSuperClassKey);
         }
 
         delete [] piGameClass;

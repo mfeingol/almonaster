@@ -2,6 +2,7 @@
 
 #include <vcclr.h>
 #include "SqlDatabase.h"
+#include "Utils.h"
 
 #using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;

@@ -161,7 +161,7 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
     Time::GetTime (&tNow);
     
     // Update activity time
-    iErrCode = t_pConn->WriteData (
+    iErrCode = t_pCache->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SystemEmpireData::LastBridierActivity, 
@@ -202,7 +202,7 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
 
         if (iNewRank != iOldRank) {
 
-            iErrCode = t_pConn->WriteData (
+            iErrCode = t_pCache->WriteData (
                 SYSTEM_EMPIRE_DATA, 
                 iEmpireKey, 
                 SystemEmpireData::BridierRank, 
@@ -217,7 +217,7 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
 
         if (iNewIndex != iOldIndex) {
 
-            iErrCode = t_pConn->WriteData (
+            iErrCode = t_pCache->WriteData (
                 SYSTEM_EMPIRE_DATA, 
                 iEmpireKey, 
                 SystemEmpireData::BridierIndex, 
@@ -356,7 +356,7 @@ int BridierObject::GetReplacementKeys (bool bEstablished, const Variant* pvScore
 
     Assert (countof (sc) == NUM_BRIDIER_COLUMNS);
 
-    return t_pConn->GetSearchKeys (
+    return t_pCache->GetSearchKeys (
         SYSTEM_EMPIRE_DATA,
         sd,
         ppiKey,
@@ -410,7 +410,7 @@ int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLose
 
     GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
 
-    iErrCode = t_pConn->ReadColumn (pszEmpires, GameEmpires::EmpireKey, &pvEmpireKey, &iNumEmpires);
+    iErrCode = t_pCache->ReadColumn (pszEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -426,7 +426,7 @@ int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLose
         pscChanges
         );
 
-    t_pConn->FreeData (pvEmpireKey);
+    t_pCache->FreeData (pvEmpireKey);
 
     return iErrCode;
 }

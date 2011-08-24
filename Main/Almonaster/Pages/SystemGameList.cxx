@@ -29,7 +29,8 @@ int iSystemGameListPage = 0, iGameClassKey = NO_KEY;
 const char* pszPassword = NULL;
 
 // Handle a submission
-int i, j, iErrCode;
+unsigned int i, j;
+int iErrCode;
 
 if (m_bOwnPost && !m_bRedirection) {
 
@@ -182,18 +183,17 @@ case 0:
 
     %><input type="hidden" name="SystemGameListPage" value="0"><%
 
-    int iNumGameClasses, iNumSuperClasses = 0;
-    int* piGameClassKey;
+    unsigned int iNumGameClasses, * piGameClassKey = NULL;
     Check (GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
 
-    Algorithm::AutoDelete<int> autoDelete (piGameClassKey);
+    Algorithm::AutoDelete<unsigned int> autoDelete (piGameClassKey);
 
     if (iNumGameClasses == 0) {
         %><h3>There are no system game classes on this server</h3><%
     } else {
 
         // Get superclass list
-        int* piSuperClassKey, iSuperClassKey;
+        unsigned int* piSuperClassKey, iNumSuperClasses = 0;
         Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         bool bDraw = false;
@@ -227,8 +227,9 @@ case 0:
                 ppiTable [i][iNumGameClasses] = 0;
             }
 
-            for (i = 0; i < iNumGameClasses; i ++) {
-
+            for (i = 0; i < iNumGameClasses; i ++)
+            {
+                unsigned int iSuperClassKey;
                 iErrCode = GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
                 if (iErrCode == OK) {
 
@@ -272,7 +273,7 @@ case 0:
 
                     WriteSystemGameListHeader (m_vTableColor.GetCharPtr());
 
-                    for (j = 0; j < ppiTable[i][iNumGameClasses]; j ++) {
+                    for (j = 0; j < (unsigned int)ppiTable[i][iNumGameClasses]; j ++) {
 
                         iGameClass = ppiTable[i][j];
 
@@ -286,7 +287,7 @@ case 0:
                                 );
                         }
                         if (pvGameClassInfo != NULL) {
-                            FreeData (pvGameClassInfo);
+                            t_pCache->FreeData (pvGameClassInfo);
                             pvGameClassInfo = NULL;
                         }
                     }
@@ -297,7 +298,7 @@ case 0:
 
         // Clean up
         if (iNumSuperClasses > 0) {
-            FreeKeys (piSuperClassKey);
+            t_pCache->FreeKeys (piSuperClassKey);
         }
     }
 

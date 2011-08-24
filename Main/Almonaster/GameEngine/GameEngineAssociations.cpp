@@ -105,12 +105,13 @@ int GameEngine::CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch,
 
 int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecondEmpire, const char* pszPassword) {
 
+    // TODOTODO - This will need to be rewritten
     int iErrCode;
     Variant vTemp;
 
-    IWriteTable* pEmpires = NULL;
+    ICachedTable* pEmpires = NULL;
 
-    iErrCode = t_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -118,7 +119,7 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
 
     // Check for the first empire
     bool bExists;
-    iErrCode = pEmpires->DoesRowExist (iEmpireKey, &bExists);
+    iErrCode = pEmpires->DoesRowExist(iEmpireKey, &bExists);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -131,7 +132,7 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
 
     // Find the second empire
     unsigned int iSecondKey;
-    iErrCode = pEmpires->GetFirstKey (SystemEmpireData::Name, pszSecondEmpire, &iSecondKey);
+    iErrCode = pEmpires->GetFirstKey(SystemEmpireData::Name, pszSecondEmpire, &iSecondKey);
     if (iErrCode != OK) {
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
@@ -262,7 +263,7 @@ Cleanup:
 //
 // Typical format:  1111;2222;3333
 //
-int GameEngine::DeleteAssociation (IWriteTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
+int GameEngine::DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
 
     int iErrCode;
     Variant vTemp;
@@ -340,9 +341,9 @@ int GameEngine::DeleteAssociation (IWriteTable* pEmpires, unsigned int iEmpireKe
 int GameEngine::DeleteAssociation (unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
 
     int iErrCode;
-    IWriteTable* pEmpires = NULL;
+    ICachedTable* pEmpires = NULL;
 
-    iErrCode = t_pConn->GetTableForWriting (SYSTEM_EMPIRE_DATA, &pEmpires);
+    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -366,7 +367,7 @@ Cleanup:
     return iErrCode;
 }
 
-int GameEngine::RemoveDeadEmpireAssociations (IWriteTable* pEmpires, unsigned int iEmpireKey) {
+int GameEngine::RemoveDeadEmpireAssociations (ICachedTable* pEmpires, unsigned int iEmpireKey) {
 
     int iErrCode;
 

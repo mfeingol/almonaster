@@ -84,7 +84,7 @@ SearchResults:
 
                         if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
                             iTargetEmpireKey = piSearchEmpireKey[0];
-                            FreeKeys (piSearchEmpireKey);
+                            t_pCache->FreeKeys (piSearchEmpireKey);
                             iProfileViewerPage = 2;
                         } else {
                             iProfileViewerPage = 1;
@@ -561,7 +561,7 @@ case 1:
         iLastKey
         );
 
-    FreeKeys (piSearchEmpireKey);
+    t_pCache->FreeKeys (piSearchEmpireKey);
 
     }
 

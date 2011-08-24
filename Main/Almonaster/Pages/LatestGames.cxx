@@ -194,7 +194,7 @@ else {
 
     %></table><%
 
-    FreeData (ppvGameData);
+    t_pCache->FreeData (ppvGameData);
 }
 
 

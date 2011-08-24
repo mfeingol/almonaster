@@ -35,7 +35,7 @@ int GameEngine::GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpire
 
     GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    int iErrCode = t_pConn->GetAllKeys (
+    int iErrCode = t_pCache->GetAllKeys (
         strGameEmpireFleets,
         (unsigned int**) ppiFleetKeys, 
         (unsigned int*) piNumFleets
@@ -66,17 +66,17 @@ int GameEngine::GetFleetProperty(int iGameClass, int iGameNumber, int iEmpireKey
     int iErrCode;
     bool bFlag;
 
-    IReadTable* pFleets = NULL;
+    ICachedTable* pFleets = NULL;
 
     GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->GetTableForReading(strGameEmpireFleets, &pFleets);
+    iErrCode = t_pCache->GetTable(strGameEmpireFleets, &pFleets);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pFleets->DoesRowExist (iFleetKey, &bFlag);
+    iErrCode = pFleets->DoesRowExist(iFleetKey, &bFlag);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -123,17 +123,17 @@ int GameEngine::SetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, i
     int iErrCode;
     bool bExists;
 
-    IWriteTable* pFleets = NULL;
+    ICachedTable* pFleets = NULL;
 
     GAME_EMPIRE_FLEETS (strGameEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->GetTableForWriting (strGameEmpireFleets, &pFleets);
+    iErrCode = t_pCache->GetTable(strGameEmpireFleets, &pFleets);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pFleets->DoesRowExist (iFleetKey, &bExists);
+    iErrCode = pFleets->DoesRowExist(iFleetKey, &bExists);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -183,23 +183,17 @@ int GameEngine::GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpi
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
     // Get the keys of all visited planets
-    IReadTable* pEmpireMap = NULL;
+    ICachedTable* pEmpireMap = NULL;
 
     unsigned int* piProxyKey = NULL, i, iNumPlanets;
-    int* piPlanetKey = NULL;
+    Variant* pvPlanetKey = NULL;
 
-    iErrCode = t_pConn->GetTableForReading(strEmpireMap, &pEmpireMap);
+    iErrCode = t_pCache->GetTable(strEmpireMap, &pEmpireMap);
     if (iErrCode != OK) {
         return iErrCode;
     }
 
-    iErrCode = pEmpireMap->ReadColumn (
-        GameEmpireMap::PlanetKey, 
-        &piProxyKey, 
-        &piPlanetKey, 
-        &iNumPlanets
-        );
-
+    iErrCode = pEmpireMap->ReadColumn(GameEmpireMap::PlanetKey, &piProxyKey, &pvPlanetKey, &iNumPlanets);
     SafeRelease (pEmpireMap);
 
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -236,7 +230,7 @@ int GameEngine::GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpi
             } else {
         
                 // Belongs to the empire and has builder pop?
-                iErrCode = t_pCache->ReadData(strGameMap, piPlanetKey[i], GameMap::Owner, &vTemp);
+                iErrCode = t_pCache->ReadData(strGameMap, pvPlanetKey[i].GetInteger(), GameMap::Owner, &vTemp);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -256,7 +250,7 @@ int GameEngine::GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpi
                         goto Cleanup;
                     }
 
-                    iErrCode = t_pCache->ReadData(strGameMap, piPlanetKey[i], GameMap::Pop, &vTemp);
+                    iErrCode = t_pCache->ReadData(strGameMap, pvPlanetKey[i].GetInteger(), GameMap::Pop, &vTemp);
                     if (vTemp.GetInteger() >= vBuilderPopLevel.GetInteger()) {
                         bAdd = true;
                     }
@@ -275,7 +269,7 @@ int GameEngine::GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpi
             }
 
             // Get planet key
-            (*ppiLocationKey) [*piNumLocations] = piPlanetKey[i];
+            (*ppiLocationKey) [*piNumLocations] = pvPlanetKey[i].GetInteger();
 
             // Increment counter
             (*piNumLocations) ++;
@@ -284,12 +278,12 @@ int GameEngine::GetNewFleetLocations (int iGameClass, int iGameNumber, int iEmpi
 
 Cleanup:
 
-    if (piPlanetKey != NULL) {
-        t_pConn->FreeData(piPlanetKey);
+    if (pvPlanetKey != NULL) {
+        t_pCache->FreeData(pvPlanetKey);
     }
 
     if (piProxyKey != NULL) {
-        t_pConn->FreeKeys(piProxyKey);
+        t_pCache->FreeKeys(piProxyKey);
     }
 
     return iErrCode;
@@ -329,7 +323,7 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
 
     // Make sure the name isn't in use
     unsigned int iKey;
-    iErrCode = t_pConn->GetFirstKey (strEmpireFleets, GameEmpireFleets::Name, pszFleetName, &iKey);
+    iErrCode = t_pCache->GetFirstKey(strEmpireFleets, GameEmpireFleets::Name, pszFleetName, &iKey);
 
     if (iErrCode != ERROR_DATA_NOT_FOUND) {
 
@@ -353,7 +347,7 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
 
         Variant vNumUncloakedShips, vNumCloakedShips;
 
-        iErrCode = t_pConn->GetFirstKey (strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, &iKey);
+        iErrCode = t_pCache->GetFirstKey(strEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             bAccept = false;
         } else {
@@ -426,7 +420,7 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
         }
         
         // Insert row into fleets table
-        iErrCode = t_pConn->InsertRow(strEmpireFleets, GameEmpireFleets::Template, pvColVal, piFleetKey);
+        iErrCode = t_pCache->InsertRow(strEmpireFleets, GameEmpireFleets::Template, pvColVal, piFleetKey);
         if (iErrCode != OK) {
             goto Cleanup;
         }
@@ -461,7 +455,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     unsigned int i, iPlanetKey, iNumShips, iNumBuildShips, * piFleetKey = NULL, iNumOrders;
     unsigned int iMaxNumOrders = NUM_CARDINAL_POINTS + NUM_SHIP_TYPES + FLEET_STANDBY_NUM_ACTIONS + 15;
 
-    IReadTable* pFleets = NULL;
+    ICachedTable* pFleets = NULL;
     Variant vTemp;
     String strPlanetName;
     char pszOrder [128 + MAX_PLANET_NAME_LENGTH + MAX_FLEET_NAME_LENGTH];
@@ -553,7 +547,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
 
         // Get planet proxy key from empire map
         unsigned int iPlanetProxyKey;
-        iErrCode = t_pConn->GetFirstKey (
+        iErrCode = t_pCache->GetFirstKey(
             strEmpireMap, 
             GameEmpireMap::PlanetKey, 
             iPlanetKey, 
@@ -769,7 +763,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         ///////////
 
         // Find fleets on same planet
-        iErrCode = t_pConn->GetTableForReading(strEmpireFleets, &pFleets);
+        iErrCode = t_pCache->GetTable(strEmpireFleets, &pFleets);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1017,7 +1011,7 @@ Cleanup:
     SafeRelease (pFleets);
 
     if (piFleetKey != NULL) {
-        t_pConn->FreeKeys(piFleetKey);
+        t_pCache->FreeKeys(piFleetKey);
     }
 
     if (pfoOrders != NULL) {
@@ -1068,7 +1062,7 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
     sd.iNumColumns = countof (sc);
     sd.pscColumns = sc;
 
-    iErrCode = t_pConn->GetSearchKeys (
+    iErrCode = t_pCache->GetSearchKeys (
         pszShips,
         sd,
         &piShipKey,
@@ -1274,7 +1268,7 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
 
             unsigned int iKey;
 
-            iErrCode = t_pConn->GetFirstKey (
+            iErrCode = t_pCache->GetFirstKey(
                 strEmpireDip, 
                 GameEmpireDiplomacy::EmpireKey, 
                 iOwner, 
@@ -1304,7 +1298,7 @@ int GameEngine::GetFleetSpecialActionMask (unsigned int iGameClass, int iGameNum
 Cleanup:
 
     if (piShipKey != NULL) {
-        t_pConn->FreeKeys(piShipKey);
+        t_pCache->FreeKeys(piShipKey);
     }
 
     return iErrCode;
@@ -1332,12 +1326,12 @@ int GameEngine::UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey
 
     // Make sure fleet exists
     bool bFleetExists;
-    if (t_pConn->DoesRowExist (strEmpireFleets, iFleetKey, &bFleetExists) != OK || !bFleetExists) {
+    if (t_pCache->DoesRowExist(strEmpireFleets, iFleetKey, &bFleetExists) != OK || !bFleetExists) {
         return ERROR_FLEET_DOES_NOT_EXIST;
     }
 
     // Write new name
-    return t_pConn->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Name, pszNewName);
+    return t_pCache->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Name, pszNewName);
 }
 
 
@@ -1377,7 +1371,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
     Assert (foOrder.pszText == NULL);
 
     // Does the fleet exist?
-    iErrCode = t_pConn->DoesRowExist (strEmpireFleets, iFleetKey, &bFleetExists);
+    iErrCode = t_pCache->DoesRowExist(strEmpireFleets, iFleetKey, &bFleetExists);
     if (iErrCode != OK || !bFleetExists) {
         iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
         goto Cleanup;
@@ -1421,7 +1415,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
     // Check for standby
     if (iOrderKey == STAND_BY) {
         
-        iErrCode = t_pConn->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
+        iErrCode = t_pCache->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1477,7 +1471,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
         // Mark all member ships fleetkeys as NO_KEY
         GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
 
-        iErrCode = t_pConn->GetEqualKeys (
+        iErrCode = t_pCache->GetEqualKeys (
             strEmpireShips, 
             GameEmpireShips::FleetKey, 
             iFleetKey, 
@@ -1505,7 +1499,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
             for (i = 0; i < iNumShips; i ++) {
 
                 // Set no fleetkey
-                iErrCode = t_pConn->WriteData (
+                iErrCode = t_pCache->WriteData (
                     strEmpireShips, 
                     piShipKey[i], 
                     GameEmpireShips::FleetKey, 
@@ -1590,7 +1584,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
                     if (vBuiltThisUpdate.GetInteger() != 0) {
                         
                         // Build at
-                        iErrCode = t_pConn->WriteData (
+                        iErrCode = t_pCache->WriteData (
                             strEmpireShips, 
                             piShipKey[i], 
                             GameEmpireShips::Action, 
@@ -1652,7 +1646,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
         }
 
         // Destroy the fleet and we're done
-        iErrCode = t_pConn->DeleteRow (strEmpireFleets, iFleetKey);
+        iErrCode = t_pCache->DeleteRow(strEmpireFleets, iFleetKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1692,7 +1686,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
             
             // Make sure the diplomatic status is war           
             unsigned int iKey;
-            iErrCode = t_pConn->GetFirstKey(strDiplomacy, GameEmpireDiplomacy::EmpireKey, iOwner, &iKey);
+            iErrCode = t_pCache->GetFirstKey(strDiplomacy, GameEmpireDiplomacy::EmpireKey, iOwner, &iKey);
             if (iErrCode != OK) {
                 iErrCode = ERROR_CANNOT_NUKE;
                 goto Cleanup;
@@ -1711,7 +1705,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
             }
         }
         
-        iErrCode = t_pConn->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, NUKE);
+        iErrCode = t_pCache->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, NUKE);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1747,7 +1741,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
             goto Cleanup;
         }
 
-        iErrCode = t_pConn->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, iOrderKey);
+        iErrCode = t_pCache->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, iOrderKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1761,7 +1755,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
     //
 
     // Get proxy key for empire map
-    iErrCode = t_pConn->GetFirstKey (
+    iErrCode = t_pCache->GetFirstKey(
         strEmpireMap, 
         GameEmpireMap::PlanetKey, 
         vFleetPlanet, 
@@ -1828,7 +1822,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
                     );
                 Assert (iErrCode == OK && vNewPlanetKey != NO_KEY);
                 
-                iErrCode = t_pConn->GetFirstKey (
+                iErrCode = t_pCache->GetFirstKey(
                     strEmpireMap, 
                     GameEmpireMap::PlanetKey, 
                     vNewPlanetKey, 
@@ -1839,7 +1833,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
 #endif
                 
                 // Accept the order
-                iErrCode = t_pConn->WriteData (
+                iErrCode = t_pCache->WriteData (
                     strEmpireFleets, 
                     iFleetKey, 
                     GameEmpireFleets::Action, 
@@ -1857,7 +1851,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
 Cleanup:
 
     if (piShipKey != NULL) {
-        t_pConn->FreeKeys(piShipKey);
+        t_pCache->FreeKeys(piShipKey);
     }
 
     return iErrCode;
@@ -1882,11 +1876,11 @@ int GameEngine::GetNumShipsInFleet (int iGameClass, int iGameNumber, int iEmpire
 
     int iErrCode;
     Variant vTemp;
-    IReadTable* pFleets = NULL;
+    ICachedTable* pFleets = NULL;
 
     GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pConn->GetTableForReading(pszFleets, &pFleets);
+    iErrCode = t_pCache->GetTable(pszFleets, &pFleets);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -1914,7 +1908,7 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
     Variant vTemp, vSrcName;
     int iSrcFlags = 0;
 
-    IReadTable* pFleets = NULL;
+    ICachedTable* pFleets = NULL;
 
     GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
     GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
@@ -1923,14 +1917,14 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
         return ERROR_SAME_FLEET_ORDER;
     }
 
-    iErrCode = t_pConn->GetTableForReading(pszFleets, &pFleets);
+    iErrCode = t_pCache->GetTable(pszFleets, &pFleets);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
     // See if the fleets exist and where they live
-    iErrCode = pFleets->DoesRowExist (iSrcKey, &bFlag);
+    iErrCode = pFleets->DoesRowExist(iSrcKey, &bFlag);
     if (iErrCode != OK || !bFlag) {
         iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
         goto Cleanup;
@@ -1945,7 +1939,7 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
 
     if (iDestKey != NO_KEY) {
 
-        iErrCode = pFleets->DoesRowExist (iDestKey, &bFlag);
+        iErrCode = pFleets->DoesRowExist(iDestKey, &bFlag);
         if (iErrCode != OK || !bFlag) {
             iErrCode = ERROR_FLEET_DOES_NOT_EXIST;
             goto Cleanup;
@@ -2045,7 +2039,7 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
     }
 
     // Okay, the fleets are compatible.  Merge them
-    iErrCode = t_pConn->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys (
         pszShips,
         GameEmpireShips::FleetKey,
         iSrcKey,
@@ -2084,7 +2078,7 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
     }
 
     // Delete the source fleet
-    iErrCode = t_pConn->DeleteRow (pszFleets, iSrcKey);
+    iErrCode = t_pCache->DeleteRow(pszFleets, iSrcKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2093,9 +2087,9 @@ int GameEngine::MergeFleets (unsigned int iGameClass, int iGameNumber, unsigned 
     // Reset the dest fleet if necessary
     if (vSrcName.GetType() == V_STRING) {
 
-        IWriteTable* pWriteNewFleet = NULL;
+        ICachedTable* pWriteNewFleet = NULL;
 
-        iErrCode = t_pConn->GetTableForWriting (pszFleets, &pWriteNewFleet);
+        iErrCode = t_pCache->GetTable(pszFleets, &pWriteNewFleet);
         if (iErrCode == OK) {
 
             iErrCode = pWriteNewFleet->WriteData (iDestKey, GameEmpireFleets::Name, vSrcName);
@@ -2113,7 +2107,7 @@ Cleanup:
     SafeRelease (pFleets);
 
     if (piShipKey != NULL) {
-        t_pConn->FreeKeys(piShipKey);
+        t_pCache->FreeKeys(piShipKey);
     }
 
     return iErrCode;

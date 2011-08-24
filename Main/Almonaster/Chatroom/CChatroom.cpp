@@ -120,7 +120,7 @@ int Chatroom::GetMessages(ChatroomMessage** ppcmMessage, unsigned int* piNumMess
     ChatroomMessage* pcmMessage = NULL;
 
     Variant** ppvData;
-    int iErrCode = t_pConn->ReadColumns(SYSTEM_CHATROOM_DATA, SystemChatroomData::NumColumns, SystemChatroomData::ColumnNames, &ppvData, &iNumMessages);
+    int iErrCode = t_pCache->ReadColumns(SYSTEM_CHATROOM_DATA, SystemChatroomData::NumColumns, SystemChatroomData::ColumnNames, NULL, &ppvData, &iNumMessages);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         iErrCode = OK;
@@ -142,7 +142,7 @@ int Chatroom::GetMessages(ChatroomMessage** ppcmMessage, unsigned int* piNumMess
             pcmMessage[i].iFlags = ppvData[i][SystemChatroomData::iFlags].GetInteger();
         }
 
-        t_pConn->FreeData(ppvData);
+        t_pCache->FreeData(ppvData);
     }
 
 Cleanup:
@@ -178,7 +178,7 @@ int Chatroom::PostMessage (const char* pszSpeakerName, const char* pszMessage, i
 
 int Chatroom::ClearMessages()
 {
-    return t_pConn->DeleteAllRows(SYSTEM_CHATROOM_DATA);
+    return t_pCache->DeleteAllRows(SYSTEM_CHATROOM_DATA);
 }
 
 int Chatroom::PostMessageWithTime(const char* pszSpeakerName, const char* pszMessage, const UTCTime& tTime, int iFlags, unsigned int iKey)
@@ -209,7 +209,7 @@ int Chatroom::PostMessageWithTime(const char* pszSpeakerName, const char* pszMes
     }
 
     // Insert into the table
-    int iErrCode = t_pConn->InsertRow(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template, pvColVal, NULL);
+    int iErrCode = t_pCache->InsertRow(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template, pvColVal, NULL);
     if (iErrCode != OK)
     {
         return iErrCode;

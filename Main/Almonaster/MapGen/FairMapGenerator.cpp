@@ -271,7 +271,7 @@ int FairMapGenerator::GetAllEmpireKeys(int iGameClass, int iGameNumber,
         for (unsigned int i = 0; i < iNumTotalEmpires; i ++) {
             piTotalEmpireKey[i] = pvEmpireKey[i].GetInteger();
         }
-        m_gameEngine.FreeData(pvEmpireKey);
+        t_pCache->FreeData(pvEmpireKey);
     }
 
     *piNumEmpires = iNumTotalEmpires;

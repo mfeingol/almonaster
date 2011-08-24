@@ -1694,7 +1694,8 @@ void HtmlRenderer::CloseSystemPage() {
 
 void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTournamentKey, bool bPersonalGame) {
 
-    int* piSuperClassKey, iNumSuperClasses, i, iErrCode, iMaxNumShips;
+    int iErrCode;
+    unsigned int* piSuperClassKey, iNumSuperClasses, i, iMaxNumShips;
     Variant* pvSuperClassName;
 
     IHttpForm* pHttpForm;
@@ -1758,9 +1759,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
         
     OutputText ("</textarea></td></tr>");
 
-    Variant vMaxResourcesPerPlanet, vMaxInitialTechLevel, vMaxTechDev,
-        vUnlimitedEmpirePrivilege = ADMINISTRATOR;
-    
+    Variant vMaxResourcesPerPlanet, vMaxInitialTechLevel, vMaxTechDev, vUnlimitedEmpirePrivilege = ADMINISTRATOR;
     int iMinNumSecsPerUpdate, iMaxNumSecsPerUpdate, iMaxNumEmpires, iMaxNumPlanets, iActualMaxNumEmpires;
     
     if (iEmpireKey == SYSTEM) {
@@ -1777,7 +1776,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
             for (i = 0; i < iNumSuperClasses; i ++) {       
                 OutputText ("<option");
 
-                if (iSelSuperClass == piSuperClassKey[i]) {
+                if ((unsigned int)iSelSuperClass == piSuperClassKey[i]) {
                     OutputText (" selected");
                 }
 
@@ -1788,8 +1787,8 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
                 OutputText ("</option>");
             }
             
-            FreeKeys ((unsigned int*) piSuperClassKey);
-            FreeData (pvSuperClassName);
+            t_pCache->FreeKeys ((unsigned int*) piSuperClassKey);
+            t_pCache->FreeData (pvSuperClassName);
         }
         
         OutputText ("</select></td></tr>");
@@ -5037,7 +5036,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     OutputText ("</td></tr>");
                 }
                 
-                FreeData (ppvNukedData);
+                t_pCache->FreeData (ppvNukedData);
                 
                 OutputText ("</table>");
             }
@@ -5105,7 +5104,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     OutputText ("</td></tr>");
                 }
                 
-                FreeData (ppvNukerData);
+                t_pCache->FreeData (ppvNukerData);
                 
                 OutputText ("</table>");
             }
@@ -5115,7 +5114,8 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
 
 void HtmlRenderer::WritePersonalGameClasses (int iTargetEmpireKey) {
     
-    int i, iErrCode, iNumGameClasses, * piGameClassKey;
+    int iErrCode;
+    unsigned int i, iNumGameClasses, * piGameClassKey;
     
     iErrCode = GetEmpirePersonalGameClasses (iTargetEmpireKey, &piGameClassKey, NULL, &iNumGameClasses);
     if (iErrCode != OK || iNumGameClasses == 0) {
@@ -5151,14 +5151,14 @@ void HtmlRenderer::WritePersonalGameClasses (int iTargetEmpireKey) {
             }
             
             if (pvGameClassInfo != NULL) {
-                FreeData (pvGameClassInfo);
+                t_pCache->FreeData (pvGameClassInfo);
                 pvGameClassInfo = NULL;
             }
         }
 
         OutputText ("</table>");
 
-        FreeKeys (piGameClassKey);
+        t_pCache->FreeKeys (piGameClassKey);
     }
 }
 
@@ -5189,7 +5189,7 @@ void HtmlRenderer::WritePersonalTournaments (int iTargetEmpireKey) {
         RenderTournaments (piTournamentKey, iTournaments, false);
 
         if (piTournamentKey != NULL) {
-            FreeData (piTournamentKey);   // Not a bug
+            t_pCache->FreeData ((int*)piTournamentKey);   // Not a bug
         }
     }
 }
@@ -5206,7 +5206,7 @@ void HtmlRenderer::WritePersonalTournaments() {
         RenderTournaments (piTournamentKey, iTournaments, true);
 
         if (piTournamentKey != NULL) {
-            FreeData (piTournamentKey);   // Not a bug
+            t_pCache->FreeData ((int*)piTournamentKey);   // Not a bug
         }
     }
 }
@@ -5319,54 +5319,58 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
 int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int iDeadPlanetKey, int iSeparatorKey,
                                    int iButtonKey, int iHorzKey, int iVertKey, int iColorKey) {
     
-    const int piUIKey[] = {
+    const unsigned int piUIKey[] =
+    {
         iBackgroundKey,
-            iColorKey,
-            iLivePlanetKey, 
-            iDeadPlanetKey,
-            iButtonKey,
-            iSeparatorKey, 
-            iHorzKey, 
-            iVertKey,
+        iColorKey,
+        iLivePlanetKey, 
+        iDeadPlanetKey,
+        iButtonKey,
+        iSeparatorKey, 
+        iHorzKey, 
+        iVertKey,
     };
     
-    const char* ppszName[] = {
+    const char* ppszName[] =
+    {
         "Name",
-            "Background",
-            "Text Colors",
-            "Live Planet",
-            "Dead Planet",
-            "Buttons",
-            "Separator",
-            "Horizontal Link",
-            "Vertical Link"
-    };
-    
-    const char* ppszFormName[] = {
         "Background",
-            "Color",
-            "LivePlanet",
-            "DeadPlanet",
-            "Button",
-            "Separator",
-            "Horz",
-            "Vert"
+        "Text Colors",
+        "Live Planet",
+        "Dead Planet",
+        "Buttons",
+        "Separator",
+        "Horizontal Link",
+        "Vertical Link"
     };
     
-    const int piThemeBitField[] = {
+    const char* ppszFormName[] = 
+    {
+        "Background",
+        "Color",
+        "LivePlanet",
+        "DeadPlanet",
+        "Button",
+        "Separator",
+        "Horz",
+        "Vert"
+    };
+    
+    const int piThemeBitField[] =
+    {
         THEME_BACKGROUND,
-            ALL_THEME_OPTIONS,
-            THEME_LIVE_PLANET,
-            THEME_DEAD_PLANET,
-            THEME_BUTTONS,
-            THEME_SEPARATOR,
-            THEME_HORZ,
-            THEME_VERT
+        ALL_THEME_OPTIONS,
+        THEME_LIVE_PLANET,
+        THEME_DEAD_PLANET,
+        THEME_BUTTONS,
+        THEME_SEPARATOR,
+        THEME_HORZ,
+        THEME_VERT
     };
     
     const char* pszTableColor = m_vTableColor.GetCharPtr();
     
-    int* piThemeKey, iNumThemes, i, j;
+    unsigned int* piThemeKey, iNumThemes, i, j;
     int iErrCode = GetThemeKeys (&piThemeKey, &iNumThemes);
     if (iErrCode != OK || iNumThemes == 0) {
         return iErrCode;
@@ -5634,10 +5638,10 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         OutputText ("</tr>");
         
-        FreeData (pvThemeData);
+        t_pCache->FreeData (pvThemeData);
     }
     
-    FreeKeys (piThemeKey);
+    t_pCache->FreeKeys (piThemeKey);
     
     return OK;
 }
@@ -5675,7 +5679,7 @@ int HtmlRenderer::DisplayThemeData (int iThemeKey) {
     
     WriteButton (BID_CANCEL);
     
-    FreeData (pvThemeData);
+    t_pCache->FreeData (pvThemeData);
     
     return iErrCode;
 }
@@ -5801,7 +5805,7 @@ End:
 int HtmlRenderer::OnCreateEmpire (int iEmpireKey) {
     
     // Stats
-    Algorithm::AtomicIncrement (&m_sStats.EmpiresCreated);
+    Algorithm::AtomicIncrement(&m_sStats.EmpiresCreated);
     
     return OK;
 }
@@ -5825,7 +5829,7 @@ int HtmlRenderer::OnDeleteEmpire(int iEmpireKey) {
     bool bFileDeleted = File::DeleteFile (pszDestFileName) == OK;
 
     // Stats
-    Algorithm::AtomicIncrement (&m_sStats.EmpiresDeleted);
+    Algorithm::AtomicIncrement(&m_sStats.EmpiresDeleted);
 
     // Report
     char pszEmpireName [MAX_EMPIRE_NAME_LENGTH + 1];
@@ -5851,21 +5855,21 @@ int HtmlRenderer::OnDeleteEmpire(int iEmpireKey) {
 
 int HtmlRenderer::OnLoginEmpire (int iEmpireKey) {
     
-    Algorithm::AtomicIncrement (&m_sStats.Logins);
+    Algorithm::AtomicIncrement(&m_sStats.Logins);
     
     return OK;
 }
 
 int HtmlRenderer::OnCreateGame (int iGameClass, int iGameNumber) {
     
-    Algorithm::AtomicIncrement (&m_sStats.GamesStarted);
+    Algorithm::AtomicIncrement(&m_sStats.GamesStarted);
     
     return OK;
 }
 
 int HtmlRenderer::OnCleanupGame (int iGameClass, int iGameNumber) {
     
-    Algorithm::AtomicIncrement (&m_sStats.GamesEnded);
+    Algorithm::AtomicIncrement(&m_sStats.GamesEnded);
     
     return OK;
 }
@@ -5913,8 +5917,8 @@ int HtmlRenderer::OnDeleteTournamentTeam (unsigned int iTournamentKey, unsigned 
 
 int HtmlRenderer::OnPageRender (MilliSeconds msTime) {
     
-    Algorithm::AtomicIncrement (&m_sStats.NumPageScriptRenders);
-    Algorithm::AtomicIncrement (&m_sStats.TotalScriptTime, msTime);
+    Algorithm::AtomicIncrement(&m_sStats.NumPageScriptRenders);
+    Algorithm::AtomicIncrement(&m_sStats.TotalScriptTime, msTime);
     
     return OK;
 }
@@ -6205,7 +6209,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
             GET_GAME_EMPIRE_SHIPS(pszGameEmpireShips, iGameClass, iGameNumber, iCurrentEmpireKey);
             GET_GAME_EMPIRE_DIPLOMACY(pszGameEmpireDip, iGameClass, iGameNumber, iCurrentEmpireKey);
 
-            iErrCode = t_pConn->GetNumRows(pszGameEmpireShips, (unsigned int*) &iValue);
+            iErrCode = t_pCache->GetNumRows(pszGameEmpireShips, (unsigned int*) &iValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -6248,7 +6252,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
                 String* pStr = &strWar;
                 Variant vName;
 
-                iErrCode = t_pConn->GetNextKey (pszGameEmpireDip, iKey, &iKey);
+                iErrCode = t_pCache->GetNextKey (pszGameEmpireDip, iKey, &iKey);
                 if (iErrCode != OK) {
                     if (iErrCode == ERROR_DATA_NOT_FOUND) {
                         break;
@@ -6419,7 +6423,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
 
     GET_GAME_DEAD_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
 
-    if (t_pConn->GetNumRows (strGameEmpireData, &iNumRows) == OK && iNumRows > 0) {
+    if (t_pCache->GetNumRows (strGameEmpireData, &iNumRows) == OK && iNumRows > 0) {
 
         const int iNumHeaders = sizeof (g_pszDeadEmpireHeaders) / sizeof (char*);
 
@@ -6454,7 +6458,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
             const char* pszName;
             int iIcon, iDeadEmpireKey;
             
-            iErrCode = t_pConn->GetNextKey (strGameEmpireData, iKey, &iKey);
+            iErrCode = t_pCache->GetNextKey (strGameEmpireData, iKey, &iKey);
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 iErrCode = OK;
                 break;
@@ -6527,7 +6531,7 @@ Cleanup:
 
     if (ppvEmpiresInGame != NULL)
     {
-        FreeData(ppvEmpiresInGame);
+        t_pCache->FreeData(ppvEmpiresInGame);
     }
 }
 
@@ -6846,8 +6850,8 @@ void HtmlRenderer::WriteTournamentAdministrator (int iEmpireKey) {
             "</tr>"
             );
 
-        FreeKeys (piTournamentKey);
-        FreeData (pvTournamentName);
+        t_pCache->FreeKeys (piTournamentKey);
+        t_pCache->FreeData (pvTournamentName);
     }
 
     OutputText ("</table>");
@@ -6857,7 +6861,8 @@ void HtmlRenderer::WriteTournamentAdministrator (int iEmpireKey) {
 
 void HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* pszCategory) {
 
-    int iNumAliens, i, iErrCode;
+    int iErrCode;
+    unsigned int iNumAliens, i;
     Variant** ppvAlienData = NULL;
 
     OutputText ("<p><h3>Choose an icon for your ");
@@ -6894,7 +6899,7 @@ void HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* p
         WriteButton (BID_CANCEL);
 
         if (ppvAlienData != NULL) {
-            FreeData (ppvAlienData);
+            t_pCache->FreeData (ppvAlienData);
         }
 
         break;
@@ -7144,7 +7149,7 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
             pszAdmin
             );
 
-        FreeData(ppvEmpiresInGame);
+        t_pCache->FreeData(ppvEmpiresInGame);
 
         OutputText ("</td></tr>");
     }
@@ -7215,7 +7220,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
     }
 
     if (pvGameClassInfo != NULL) {
-        FreeData (pvGameClassInfo);
+        t_pCache->FreeData (pvGameClassInfo);
         pvGameClassInfo = NULL;
     }
 
@@ -7369,7 +7374,7 @@ void HtmlRenderer::WriteAdministerGame (int iGameClass, int iGameNumber, bool bA
         "</table>"
         );
 
-    FreeData (ppvEmpiresInGame);
+    t_pCache->FreeData (ppvEmpiresInGame);
 }
 
 
@@ -7493,6 +7498,6 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
 Cleanup:
 
     if (pvTournamentEmpireData != NULL) {
-        FreeData (pvTournamentEmpireData);
+        t_pCache->FreeData (pvTournamentEmpireData);
     }
 }

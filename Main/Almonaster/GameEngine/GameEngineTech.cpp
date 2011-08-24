@@ -123,32 +123,32 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     }
 
     // Add tech to developed field
-    iErrCode = t_pConn->WriteOr (strEmpireData, GameEmpireData::TechDevs, TECH_BITS[iTechKey]);
+    iErrCode = t_pCache->WriteOr (strEmpireData, GameEmpireData::TechDevs, TECH_BITS[iTechKey]);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
     // Delete tech from undeveloped field
-    iErrCode = t_pConn->WriteAnd (strEmpireData, GameEmpireData::TechUndevs, ~TECH_BITS[iTechKey]);
+    iErrCode = t_pCache->WriteAnd (strEmpireData, GameEmpireData::TechUndevs, ~TECH_BITS[iTechKey]);
     if (iErrCode != OK) {
         Assert (false);
 
-        iErrCode2 = t_pConn->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
+        iErrCode2 = t_pCache->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
         Assert (iErrCode2 == OK);
 
         goto Cleanup;
     }
 
     // Subtract one from number of available techs to develop
-    iErrCode = t_pConn->Increment (strEmpireData, GameEmpireData::NumAvailableTechUndevs, -1);
+    iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NumAvailableTechUndevs, -1);
     if (iErrCode != OK) {
         Assert (false);
 
-        iErrCode2 = t_pConn->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
+        iErrCode2 = t_pCache->WriteAnd (strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
         Assert (iErrCode2 == OK);
 
-        iErrCode2 = t_pConn->WriteOr (strEmpireData, GameEmpireData::TechUndevs, TECH_BITS[iTechKey]);
+        iErrCode2 = t_pCache->WriteOr (strEmpireData, GameEmpireData::TechUndevs, TECH_BITS[iTechKey]);
         Assert (iErrCode2 == OK);
 
         goto Cleanup;
@@ -195,7 +195,7 @@ int GameEngine::SetDefaultEmpireShipName (int iEmpireKey, int iTechKey, const ch
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return t_pConn->WriteData (
+    return t_pCache->WriteData (
         SYSTEM_EMPIRE_DATA, 
         iEmpireKey, 
         SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN [iTechKey], 
