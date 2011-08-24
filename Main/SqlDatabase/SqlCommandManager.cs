@@ -243,40 +243,59 @@ namespace Almonaster.Database.Sql
 
         // ...
 
-        public long Insert(string tableName, IEnumerable<ColumnValue> columns)
+        public long Insert(string tableName, IEnumerable<string> columnNames, IEnumerable<IEnumerable<InsertValue>> rows)
         {
             //INSERT INTO @TableName (Col0, Col1, Col2, Col3)
-            //VALUES (@p0, @p1, @p2, @p3);
+            //VALUES (@p0, @p1, @p2, @p3), (@p4, @p5, @p6, @p7)
 
             using (SqlCommand cmd = new SqlCommand())
             {
-                string insert = String.Format("INSERT INTO [{0}] ([{1}]", tableName, columns.First().Name);
-                string values = "VALUES (@p0";
+                StringBuilder insert = new StringBuilder();
+                insert.AppendFormat("INSERT INTO [{0}] (", tableName);
+
+                bool first = true;
+                foreach (string columnName in columnNames)
+                {
+                    if (first)
+                    {
+                        insert.AppendFormat("[{0}]", columnName);
+                        first = false;
+                    }
+                    else
+                    {
+                        insert.AppendFormat(", [{0}]", columnName);
+                    }
+                }
+                insert.Append(")");
 
                 int index = 0;
-                foreach (ColumnValue col in columns)
+                StringBuilder values = new StringBuilder("VALUES");
+                foreach (IEnumerable<InsertValue> row in rows)
                 {
-                    string param = "@p" + index;
+                    values.Append(" (");
 
-                    if (index > 0)
+                    first = true;
+                    foreach (InsertValue value in row)
                     {
-                        insert += ", [" + col.Name + "]";
-                        values += ", " + param;
+                        string param = "@p" + index ++;
+                        if (first)
+                        {
+                            values.AppendFormat(", {0}", param);
+                        }
+                        else
+                        {
+                            values.Append(param);
+                        }
+
+                        cmd.Parameters.Add(new SqlParameter(param, value.Type)
+                        {
+                            Value = value.Value
+                        });
                     }
-
-                    SqlParameter value = new SqlParameter(param, col.Type)
-                    {
-                        Value = col.Value
-                    };
-                    cmd.Parameters.Add(value);
-
-                    index++;
                 }
+                values.Append(")");
 
-                insert += ")";
-                values += ");";
-
-                cmd.CommandText = insert + " " + values + " SELECT SCOPE_IDENTITY();";
+                cmd.CommandText = insert + " " + values + "; SELECT SCOPE_IDENTITY();";
                 cmd.Connection = this.conn;
 
                 object id = cmd.ExecuteScalar();

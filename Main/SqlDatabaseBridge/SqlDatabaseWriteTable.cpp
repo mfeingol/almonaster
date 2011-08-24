@@ -178,7 +178,8 @@ int SqlDatabaseWriteTable::WriteColumn(const char* pszColumn, const Variant& vDa
 
 int SqlDatabaseWriteTable::InsertRow(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey)
 {
-    Trace("InsertRow {0}", m_tableName);
+    // TODOTODO
+    /*Trace("InsertRow {0}", m_tableName);
 
     array<ColumnValue>^ values = gcnew array<ColumnValue>(ttTemplate.NumColumns);
 
@@ -193,7 +194,7 @@ int SqlDatabaseWriteTable::InsertRow(const TemplateDescription& ttTemplate, cons
     if (piKey != NULL)
     {
         *piKey = (unsigned int)id;
-    }
+    }*/
 
     return OK;
 }

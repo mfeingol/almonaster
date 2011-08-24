@@ -28,9 +28,8 @@ namespace Almonaster.Database.Sql
         public string ReferencedColumnName;
     }
 
-    public struct ColumnValue
+    public struct InsertValue
     {
-        public string Name;
         public SqlDbType Type;
         public object Value;
     }
@@ -64,6 +63,6 @@ namespace Almonaster.Database.Sql
     public class BulkTableReadResult
     {
         public string TableName;
-        public IEnumerable<IDictionary<string, object>> Rows;
+        public List<IDictionary<string, object>> Rows;
     }
 }
