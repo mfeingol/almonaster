@@ -26,10 +26,12 @@ class TableCacheCollection : public ICachedTableCollection
 private:
     gcroot<SqlCommandManager^> m_cmd;
 
-    HashTable<char*, ICachedTable*, TableCacheHashValue, TableCacheEquals> m_htTableViews;
+    HashTable<char*, CachedTable*, TableCacheHashValue, TableCacheEquals> m_htTableViews;
 
     CachedTable* CreateEmptyTable(const char* pszCacheTableName);
-    void InsertTable(const char* pszCacheTableName, ICachedTable* pTable);
+    void InsertTable(const char* pszCacheTableName, CachedTable* pTable);
+
+    int GetTable(const char* pszCacheTableName, CachedTable** ppTable);
 
 public:
 
@@ -50,10 +52,14 @@ public:
 
     int GetFirstKey(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey);
     int GetNextKey(const char* pszCacheTableName, unsigned int iKey, unsigned int* piNextKey);
-    int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumKeys);
+    int GetEqualKeys(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumRows);
+    int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumRows);
 
     int ReadColumn(const char* pszCacheTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);
 
+    int ReadColumnWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
+                             unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys);
+    
     int ReadColumns(const char* pszCacheTableName, unsigned int iNumColumns, const char* const* ppszColumn,
                     unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows);
 
@@ -64,6 +70,8 @@ public:
 
     int InsertRow(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey);
     int InsertDuplicateRows(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows);
+    int DeleteRow(const char* pszCacheTableName, unsigned int iKey);
+    int DeleteAllRows(const char* pszCacheTableName);
 
     int Increment(const char* pszCacheTableName, const char* pszColumn, const Variant& vIncrement);
     int Increment(const char* pszCacheTableName, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue);

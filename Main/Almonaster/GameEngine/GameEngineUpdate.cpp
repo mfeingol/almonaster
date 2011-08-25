@@ -146,7 +146,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
         // Check for all empires hitting end turn when game has already closed
         Variant vNumUpdated, vIdle = 0, vTemp;
 
-        GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
+        GAME_EMPIRES(pszGameEmpires, iGameClass, iGameNumber);
 
         // Loop until no more updates
         while (!bGameOver) {
@@ -159,7 +159,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             unsigned int iNumUpdated = vTemp.GetInteger();
             
             unsigned int iNumNeeded;
-            iErrCode = t_pCache->GetNumRows (pszGameEmpires, &iNumNeeded);
+            iErrCode = t_pCache->GetNumCachedRows(pszGameEmpires, &iNumNeeded);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -501,7 +501,7 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
     }
 
     int iState;
-    iErrCode = pGameData->ReadData (GameData::State, &iState);
+    iErrCode = pGameData->ReadData(GameData::State, &iState);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -559,7 +559,7 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
 
         GAME_DATA (strGameData, iGameClass, iGameNumber);
         
-        iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, UPDATED);
+        iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, UPDATED);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -611,7 +611,7 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
     *pbSet = (vOptions.GetInteger() & UPDATED) != 0;
     if (*pbSet) {
         
-        iErrCode = t_pCache->WriteAnd (strEmpireData, GameEmpireData::Options, ~UPDATED);
+        iErrCode = t_pCache->WriteAnd(strEmpireData, GameEmpireData::Options, ~UPDATED);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;

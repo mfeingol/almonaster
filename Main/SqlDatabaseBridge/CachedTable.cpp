@@ -1,6 +1,8 @@
 #include "CachedTable.h"
 #include "Utils.h"
 
+#include "Osal/Vector.h"
+
 using namespace System::Linq;
 
 CachedTable::CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result)
@@ -31,10 +33,9 @@ int CachedTable::GetFirstKey(const char* pszColumn, const Variant& vData, unsign
     for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
     {
         System::Object^ value = row[columnName];
-        
         Variant vValue;
         Convert(value, &vValue);
-        if (vValue.GetType() == vData.GetType() && vValue == vData)
+        if (vValue == vData)
         {
             System::Object^ id = row[idCol];
             *piKey = (unsigned int)(int64)id;
@@ -47,6 +48,75 @@ int CachedTable::GetFirstKey(const char* pszColumn, const Variant& vData, unsign
 
 int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 {
+    Trace("CachedTable :: GetNextKey :: {0}", m_result->TableName);
+
+    *piNextKey = NO_KEY;
+
+    if (m_result->Rows->Count == 0)
+    {
+        return ERROR_UNKNOWN_ROW_KEY;
+    }
+
+    if (iKey == NO_KEY)
+    {
+        *piNextKey = (unsigned int)Enumerable::First(m_keyToRows->Keys);
+        return OK;
+    }
+
+    // TODO - can we do better than this with a better data structure?
+    bool bNext = false;
+    for each (long id in m_keyToRows->Keys)
+    {
+        unsigned int iId = (unsigned int)id;
+        if (iKey == iId)
+        {
+            bNext = true;
+        }
+
+        if (bNext)
+        {
+            *piNextKey = iId;
+            return OK;
+        }
+    }
+
+    return bNext ? ERROR_DATA_NOT_FOUND : ERROR_UNKNOWN_ROW_KEY;
+}
+
+int CachedTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys)
+{
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("CachedTable :: GetEqualKeys :: {0} :: {1}", m_result->TableName, columnName);
+
+    *ppiKey = NULL;
+    *piNumKeys = 0;
+
+    Vector<unsigned int> vectKeys;
+
+    System::String^ idCol = gcnew System::String(IdColumnName);
+    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
+    {
+        System::Object^ value = row[columnName];
+        Variant vValue;
+        Convert(value, &vValue);
+        if (vValue == vData)
+        {
+            System::Object^ id = row[idCol];
+            vectKeys.Add((unsigned int)(int64)id);
+        }
+    }
+
+    *piNumKeys = vectKeys.GetNumElements();
+    if (*piNumKeys == 0)
+    {
+        return ERROR_DATA_NOT_FOUND;
+    }
+
+    *ppiKey = new unsigned int[*piNumKeys];
+    Assert(*ppiKey);
+
+    memcpy(*ppiKey, vectKeys.GetData(), *piNumKeys * sizeof(unsigned int));
+    return OK;
 }
 
 int CachedTable::GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys)
@@ -271,6 +341,38 @@ int CachedTable::ReadColumnWhereEqual(const char* pszEqualColumn, const Variant&
     return OK;
 }
 
+IDictionary<System::String^, System::Object^>^ CachedTable::GetRow(unsigned int iKey, int* piErrCode)
+{
+    *piErrCode = OK;
+    IDictionary<System::String^, System::Object^>^ row = nullptr;
+
+    if (m_result->Rows->Count == 0)
+    {
+        *piErrCode = ERROR_UNKNOWN_ROW_KEY;
+    }
+    else
+    {
+        if (iKey == NO_KEY)
+        {
+            int count = m_result->Rows->Count;
+            if (count > 1)
+            {
+                *piErrCode = ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
+            }
+            else
+            {
+                row = m_result->Rows[0];
+            }
+        }
+        else if (!m_keyToRows->TryGetValue(iKey, row))
+        {
+            *piErrCode = ERROR_UNKNOWN_ROW_KEY;
+        }
+    }
+
+    return row;
+}
+
 int CachedTable::ReadRow(Variant** ppvData)
 {
     return ReadRow(NO_KEY, ppvData);
@@ -282,22 +384,11 @@ int CachedTable::ReadRow(unsigned int iKey, Variant** ppvData)
 
     *ppvData = NULL;
 
-    if (m_result->Rows->Count == 0)
-    {
-        return ERROR_UNKNOWN_ROW_KEY;
-    }
-    IDictionary<System::String^, System::Object^>^ row;
-    if (iKey == NO_KEY)
-    {
-        if (m_result->Rows->Count > 1)
-        {
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
-        }
-        row = m_result->Rows[0];
-    }
-    else if (!m_keyToRows->TryGetValue(iKey, row))
-    {
-        return ERROR_UNKNOWN_ROW_KEY;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
     int cols = Enumerable::Count(row->Values) - 1;
@@ -396,22 +487,11 @@ int CachedTable::ReadData(unsigned int iKey, const char* pszColumn, Variant* pvD
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("CachedTable :: ReadData {0} :: {1}", m_result->TableName, columnName);
 
-    if (m_result->Rows->Count == 0)
-    {
-        return ERROR_UNKNOWN_ROW_KEY;
-    }
-    IDictionary<System::String^, System::Object^>^ row;
-    if (iKey == NO_KEY)
-    {
-        if (m_result->Rows->Count > 1)
-        {
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
-        }
-        row = m_result->Rows[0];
-    }
-    else if (!m_keyToRows->TryGetValue(iKey, row))
-    {
-        return ERROR_UNKNOWN_ROW_KEY;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
     Convert(row[columnName], pvData);
@@ -432,6 +512,9 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
 
 int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows, unsigned int* piKey)
 {
+    if (piKey)
+        *piKey = NO_KEY;
+
     // Insert rows into the database
     array<System::String^>^ columnNames = gcnew array<System::String^>(ttTemplate.NumColumns);
     array<InsertValue>^ values = gcnew array<InsertValue>(ttTemplate.NumColumns);
@@ -450,10 +533,10 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
         insert->Add(values);
     }
 
-    int64 id;
+    IEnumerable<int64>^ ids;
     try
     {
-        id = m_cmd->Insert(m_result->TableName, columnNames, insert);
+        ids = m_cmd->Insert(m_result->TableName, columnNames, insert);
     }
     catch (SqlDatabaseException^)
     {
@@ -461,15 +544,9 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
         return ERROR_DUPLICATE_DATA;
     }
 
-    if (piKey)
+    if (iNumRows == 1 && piKey)
     {
-        *piKey = (unsigned int)id;
-    }
-
-    // Fault in the list of inserted rows
-    if (!m_insertedRows)
-    {
-        m_insertedRows = gcnew List<IDictionary<System::String^, System::Object^>^>();
+        *piKey = (unsigned int)Enumerable::First(ids);
     }
 
     // Make a new template row for insertion
@@ -479,18 +556,72 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
         templateRow[columnNames[i]] = values[i].Value;
     }
 
-    // Insert the template row
-    m_result->Rows->Add(templateRow);
-    m_insertedRows->Add(templateRow);
-    m_keyToRows->Add(id, templateRow);
-
-    // If we were asked to insert multiple rows, do it now
-    for (unsigned int i = 1; i < iNumRows; i ++)
+    // Insert all the rows
+    bool first = true;
+    for each (int64 id in ids)
     {
-        Dictionary<System::String^, System::Object^>^ copyRow = gcnew Dictionary<System::String^, System::Object^>(templateRow);
-        m_result->Rows->Add(copyRow);
-        m_insertedRows->Add(copyRow);
+        if (first)
+        {
+            m_result->Rows->Add(templateRow);
+            m_keyToRows->Add(id, templateRow);
+            first = false;
+        }
+        else
+        {
+            Dictionary<System::String^, System::Object^>^ copyRow = gcnew Dictionary<System::String^, System::Object^>(templateRow);
+            m_result->Rows->Add(copyRow);
+        }
     }
+
+    return OK;
+}
+
+int CachedTable::DeleteRow(unsigned int iKey)
+{
+    Trace("CachedTable :: DeleteRows {0}", m_result->TableName);
+
+    // First delete the actual row
+    try
+    {
+        m_cmd->DeleteRow(m_result->TableName, gcnew System::String(IdColumnName), (int64)iKey);
+    }
+    catch (SqlDatabaseException^)
+    {
+        // TODO - other errors?
+        return ERROR_UNKNOWN_ROW_KEY;
+    }
+
+    // Second, remove the row from cache
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (iErrCode == OK)
+    {
+        m_keyToRows->Remove(iKey);
+        m_result->Rows->Remove(row);
+    }
+
+    return OK;
+}
+
+int CachedTable::DeleteAllRows()
+{
+    Trace("CachedTable :: DeleteAllRows {0}", m_result->TableName);
+
+    // TODOTODO - if we're just a view, do the right thing
+    // First delete the actual rows
+    try
+    {
+        m_cmd->DeleteAllRows(m_result->TableName);
+    }
+    catch (SqlDatabaseException^)
+    {
+        // TODO - other errors?
+        return ERROR_UNKNOWN_TABLE_NAME;
+    }
+
+    // Second, flush the cache
+    m_keyToRows->Clear();
+    m_result->Rows->Clear();
 
     return OK;
 }
@@ -512,30 +643,24 @@ int CachedTable::Increment(unsigned int iKey, const char* pszColumn, const Varia
 
 int CachedTable::Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
-    Trace("CachedTable :: Increment {0} :: {1}", m_result->TableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("CachedTable :: Increment {0} :: {1}", m_result->TableName, columnName);
 
-    if (iKey == NO_KEY)
-    {
-        if (Enumerable::Count(m_result->Rows) > 1)
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
-    System::String^ idCol = gcnew System::String(IdColumnName);
-    System::String^ col = gcnew System::String(pszColumn);
-    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
-    {
-        if (iKey == NO_KEY || (unsigned int)(int64)row[idCol] == iKey)
-        {
-            System::Object^ value = row[col];
-            System::Object^ newValue = ::Increment(value, vIncrement);
+    System::Object^ value = row[columnName];
+    System::Object^ newValue = ::Increment(value, vIncrement);
 
-            row[col] = newValue;
-            if (pvOldValue)
-                Convert(value, pvOldValue);
+    row[columnName] = newValue;
+    if (pvOldValue)
+        Convert(value, pvOldValue);
 
-            // TODOTODO - persist
-        }
-    }
+    // TODOTODO - persist
 
     return OK;
 }
@@ -552,48 +677,36 @@ int CachedTable::WriteData(const char* pszColumn, const Variant& vData)
 
 int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const char* pszData)
 {
-    Trace("CachedTable :: WriteData {0} :: {1}", m_result->TableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("CachedTable :: WriteData {0} :: {1}", m_result->TableName, columnName);
 
-    if (iKey == NO_KEY)
-    {
-        if (Enumerable::Count(m_result->Rows) > 1)
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
-    System::String^ idCol = gcnew System::String(IdColumnName);
-    System::String^ col = gcnew System::String(pszColumn);
-    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
-    {
-        if (iKey == NO_KEY || (unsigned int)(int64)row[idCol] == iKey)
-        {
-            row[col] = gcnew System::String(pszData);
-            // TODOTODO - persist
-        }
-    }
+    row[columnName] = gcnew System::String(pszData);
+    // TODOTODO - persist
 
     return OK;
 }
 
 int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData)
 {
-    Trace("CachedTable :: WriteData {0} :: {1}", m_result->TableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("CachedTable :: WriteData {0} :: {1}", m_result->TableName, columnName);
 
-    if (iKey == NO_KEY)
-    {
-        if (Enumerable::Count(m_result->Rows) > 1)
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
-    System::String^ idCol = gcnew System::String(IdColumnName);
-    System::String^ col = gcnew System::String(pszColumn);
-    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
-    {
-        if (iKey == NO_KEY || (unsigned int)(int64)row[idCol] == iKey)
-        {
-            row[col] = Convert(vData);
-            // TODOTODO - persist
-        }
-    }
+    row[columnName] = Convert(vData);
+    // TODOTODO - persist
 
     return OK;
 }
@@ -605,25 +718,19 @@ int CachedTable::WriteAnd(const char* pszColumn, unsigned int iBitField)
 
 int CachedTable::WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int iBitField)
 {
-    Trace("CachedTable :: WriteAnd {0} :: {1}", m_result->TableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("CachedTable :: WriteAnd {0} :: {1}", m_result->TableName, columnName);
 
-    if (iKey == NO_KEY)
-    {
-        if (Enumerable::Count(m_result->Rows) > 1)
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
-    System::String^ idCol = gcnew System::String(IdColumnName);
-    System::String^ col = gcnew System::String(pszColumn);
-    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
-    {
-        if (iKey == NO_KEY || (unsigned int)(int64)row[idCol] == iKey)
-        {
-            int iValue = (int)row[col];
-            row[col] = iValue & iBitField;
-            // TODOTODO - persist
-        }
-    }
+    int iValue = (int)row[columnName];
+    row[columnName] = iValue & iBitField;
+    // TODOTODO - persist
 
     return OK;
 }
@@ -635,25 +742,19 @@ int CachedTable::WriteOr(const char* pszColumn, unsigned int iBitField)
 
 int CachedTable::WriteOr(unsigned int iKey, const char* pszColumn, unsigned int iBitField)
 {
-    Trace("CachedTable :: WriteOr {0} :: {1}", m_result->TableName, gcnew System::String(pszColumn));
+    System::String^ columnName = gcnew System::String(pszColumn);
+    Trace("CachedTable :: WriteOr {0} :: {1}", m_result->TableName, columnName);
 
-    if (iKey == NO_KEY)
-    {
-        if (Enumerable::Count(m_result->Rows) > 1)
-            return ERROR_TABLE_HAS_MORE_THAN_ONE_ROW;
+    int iErrCode;
+    IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
+    if (row == nullptr)
+    {    
+        return iErrCode;
     }
 
-    System::String^ idCol = gcnew System::String(IdColumnName);
-    System::String^ col = gcnew System::String(pszColumn);
-    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
-    {
-        if (iKey == NO_KEY || (unsigned int)(int64)row[idCol] == iKey)
-        {
-            int iValue = (int)row[col];
-            row[col] = iValue | iBitField;
-            // TODOTODO - persist
-        }
-    }
+    int iValue = (int)row[columnName];
+    row[columnName] = iValue | iBitField;
+    // TODOTODO - persist
 
     return OK;
 }

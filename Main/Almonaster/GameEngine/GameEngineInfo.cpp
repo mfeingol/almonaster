@@ -68,7 +68,7 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->GetNumRows (strGameEmpireShips, (unsigned int*) piNumShips);
+    iErrCode = t_pCache->GetNumCachedRows(strGameEmpireShips, (unsigned int*) piNumShips);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -128,17 +128,17 @@ int GameEngine::GetEmpireAgRatio (int iGameClass, int iGameNumber, int iEmpireKe
         return iErrCode;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::TotalAg, &iTotalAg);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::TotalAg, &iTotalAg);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::BonusAg, &iBonusAg);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::BonusAg, &iBonusAg);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::TotalPop, &iTotalPop);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::TotalPop, &iTotalPop);
     if (iErrCode != OK) {
         goto Cleanup;
     }

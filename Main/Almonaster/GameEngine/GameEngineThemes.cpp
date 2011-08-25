@@ -26,8 +26,15 @@
 //
 // Determine if a given theme exists
 
-int GameEngine::DoesThemeExist (int iThemeKey, bool* pbExist) {
-    return t_pCache->DoesRowExist(SYSTEM_THEMES, iThemeKey, pbExist);
+int GameEngine::DoesThemeExist(int iThemeKey, bool* pbExist)
+{
+    Variant vTemp;
+    int iErrCode = t_pCache->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, &vTemp);
+    *pbExist = iErrCode == OK;
+
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        iErrCode = OK;
+    return iErrCode;
 }
 
 // Input:
@@ -73,18 +80,6 @@ Cleanup:
 
     return iErrCode;
 }
-
-
-// Output:
-// *piNumThemes -> Number of themes
-//
-// Return the number of registered system themes
-
-int GameEngine::GetNumThemes (int* piNumThemes) {
-
-    return t_pCache->GetNumRows (SYSTEM_THEMES, (unsigned int*) piNumThemes);
-}
-
 
 // Output:
 // **ppiNumThemeKey -> Array of keys
@@ -265,10 +260,10 @@ int GameEngine::SetThemeAuthorEmail (int iThemeKey, const char* pszAuthorEmail) 
 int GameEngine::SetThemeBackground (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BACKGROUND);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BACKGROUND);
     }
     
-    return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BACKGROUND);
+    return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BACKGROUND);
 }
 
 
@@ -281,10 +276,10 @@ int GameEngine::SetThemeBackground (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_LIVE_PLANET);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_LIVE_PLANET);
     }
     
-    return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_LIVE_PLANET);
+    return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_LIVE_PLANET);
 }
 
 
@@ -297,9 +292,9 @@ int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_DEAD_PLANET);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_DEAD_PLANET);
     } else {
-        return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_DEAD_PLANET);
+        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_DEAD_PLANET);
     }
 }
 
@@ -313,9 +308,9 @@ int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_SEPARATOR);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_SEPARATOR);
     } else {
-        return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_SEPARATOR);
+        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_SEPARATOR);
     }
 }
 
@@ -329,9 +324,9 @@ int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeButtons (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BUTTONS);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BUTTONS);
     } else {
-        return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BUTTONS);
+        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BUTTONS);
     }
 }
 
@@ -356,9 +351,9 @@ int GameEngine::SetThemeDescription (int iThemeKey, const char* pszDescription) 
 int GameEngine::SetThemeHorz (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_HORZ);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_HORZ);
     } else {
-        return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_HORZ);
+        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_HORZ);
     }
 }
 
@@ -372,9 +367,9 @@ int GameEngine::SetThemeHorz (int iThemeKey, bool bExists) {
 int GameEngine::SetThemeVert (int iThemeKey, bool bExists) {
 
     if (bExists) {
-        return t_pCache->WriteOr (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_VERT);
+        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_VERT);
     } else {
-        return t_pCache->WriteAnd (SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_VERT);
+        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_VERT);
     }
 }
 

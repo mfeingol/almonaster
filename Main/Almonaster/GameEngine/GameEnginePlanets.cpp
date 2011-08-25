@@ -517,7 +517,7 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
     }
 
     // MinX
-    iErrCode = pWrite->ReadData (GameData::MinX, &iGameMinX);
+    iErrCode = pWrite->ReadData(GameData::MinX, &iGameMinX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -533,7 +533,7 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
     }
 
     // MaxX
-    iErrCode = pWrite->ReadData (GameData::MaxX, &iGameMaxX);
+    iErrCode = pWrite->ReadData(GameData::MaxX, &iGameMaxX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -549,7 +549,7 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
     }
 
     // MinY
-    iErrCode = pWrite->ReadData (GameData::MinY, &iGameMinY);
+    iErrCode = pWrite->ReadData(GameData::MinY, &iGameMinY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -565,7 +565,7 @@ int GameEngine::CreateMapFromMapGeneratorData(int iGameClass,
     }
 
     // MaxY
-    iErrCode = pWrite->ReadData (GameData::MaxY, &iGameMaxY);
+    iErrCode = pWrite->ReadData(GameData::MaxY, &iGameMaxY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -876,7 +876,7 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
 
         if (pbLink[i]) {
 
-            iErrCode = t_pCache->WriteOr (
+            iErrCode = t_pCache->WriteOr(
                 strGameMap,
                 piNeighbourKey[i],
                 GameMap::Link,
@@ -1063,7 +1063,7 @@ int GameEngine::InsertPlanetIntoGameEmpireData(int iGameClass, int iGameNumber, 
 
                     Assert (iProxyKey != NO_KEY);
                     
-                    iErrCode = t_pCache->WriteOr (
+                    iErrCode = t_pCache->WriteOr(
                         pszGameEmpireMap,
                         iProxyKey,
                         GameEmpireMap::Explored,
@@ -1101,25 +1101,25 @@ int GameEngine::InsertPlanetIntoGameEmpireData(int iGameClass, int iGameNumber, 
         goto Cleanup;
     }
     
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MinX, &iMinX);
+    iErrCode = pEmpireData->ReadData(GameEmpireData::MinX, &iMinX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MaxX, &iMaxX);
+    iErrCode = pEmpireData->ReadData(GameEmpireData::MaxX, &iMaxX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MinY, &iMinY);
+    iErrCode = pEmpireData->ReadData(GameEmpireData::MinY, &iMinY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pEmpireData->ReadData (GameEmpireData::MaxY, &iMaxY);
+    iErrCode = pEmpireData->ReadData(GameEmpireData::MaxY, &iMaxY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1185,7 +1185,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     char pszNewCoord [MAX_COORDINATE_LENGTH + 1];
     Variant vCoord, * pvCoord = NULL, * pvLink = NULL;
 
-    bool* pbVisited, bExists;
+    bool* pbVisited;
 
     GAME_MAP (strGameMap, iGameClass, iGameNumber);
     GAME_DATA (strGameData, iGameClass, iGameNumber);
@@ -1196,7 +1196,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     Variant vTemp;
 
     // Get num empires
-    iErrCode = t_pCache->GetNumRows (strGameEmpires, &iNumEmpires);
+    iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1266,7 +1266,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     for (i = 0; i < iNumPlanets; i ++) {
 
         // Make sure coordinates are unique
-        iErrCode = pGameMap->GetEqualKeys (
+        iErrCode = pGameMap->GetEqualKeys(
             GameMap::Coordinates,
             pvCoord[i].GetCharPtr(),
             NULL,
@@ -1294,7 +1294,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
         iNumMatches = 0;
         
-        iErrCode = pGameMap->ReadData (piPlanetKey[i], GameMap::HomeWorld, &iHomeWorld);
+        iErrCode = pGameMap->ReadData(piPlanetKey[i], GameMap::HomeWorld, &iHomeWorld);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1302,7 +1302,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
         ENUMERATE_CARDINAL_POINTS(cpDir) {
 
-            iErrCode = pGameMap->ReadData (piPlanetKey[i], GameMap::NorthPlanetKey + cpDir, &iPlanet);
+            iErrCode = pGameMap->ReadData(piPlanetKey[i], GameMap::NorthPlanetKey + cpDir, &iPlanet);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1341,23 +1341,10 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
                 iNumMatches ++;
 
-                // Make sure there's a planet
-                iErrCode = pGameMap->DoesRowExist(iPlanet, &bExists);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-
-                if (!bExists) {
-                    Assert (!"Unknown planet listed among a planet's neighbours");
-                    iErrCode = ERROR_FAILURE;
-                    goto Cleanup;
-                }
-
                 // Make sure that planet has the right coordinates
-                iErrCode = pGameMap->ReadData (iPlanet, GameMap::Coordinates, &vCoord);
+                iErrCode = pGameMap->ReadData(iPlanet, GameMap::Coordinates, &vCoord);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(iErrCode != ERROR_UNKNOWN_ROW_KEY);
                     goto Cleanup;
                 }
 
@@ -1369,7 +1356,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
                 if (iHomeWorld == HOMEWORLD && iNumPlanetsPerEmpire > 1) {
 
-                    iErrCode = pGameMap->ReadData (iPlanet, GameMap::HomeWorld, &iNeighbourHW);
+                    iErrCode = pGameMap->ReadData(iPlanet, GameMap::HomeWorld, &iNeighbourHW);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -1419,7 +1406,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     }
 
     // Verify each empire has exactly one homeworld
-    iErrCode = pGameMap->GetEqualKeys (
+    iErrCode = pGameMap->GetEqualKeys(
         GameMap::HomeWorld,
         HOMEWORLD,
         &piKey,
@@ -1512,7 +1499,7 @@ int GameEngine::DfsTraversePlanets (ICachedTable* pGameMap, unsigned int iPlanet
         if (pvLink[iPlanetKey].GetInteger() & LINK_X[cpDir]) {
 
             // Find key
-            iErrCode = pGameMap->ReadData (
+            iErrCode = pGameMap->ReadData(
                 iPlanetKey,
                 GameMap::NorthPlanetKey + cpDir,
                 &iNextPlanetKey
@@ -1621,16 +1608,17 @@ int GameEngine::GetPlanetName (int iGameClass, int iGameNumber, int iPlanetKey, 
 //
 // Does a planet exist
 
-int GameEngine::DoesPlanetExist (int iGameClass, int iGameNumber, int iPlanetKey, bool* pbExists) {
+int GameEngine::DoesPlanetExist(int iGameClass, int iGameNumber, int iPlanetKey, bool* pbExists)
+{
+    GAME_MAP(strGameMap, iGameClass, iGameNumber);
+    Variant vTemp;
+    int iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Ag, &vTemp);
+    *pbExists = iErrCode == OK;
 
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        iErrCode = OK;
 
-    int iErrCode = t_pCache->DoesRowExist(strGameMap, iPlanetKey, pbExists);
-    if (iErrCode != OK) {
-        *pbExists = false;
-    }
-
-    return false;
+    return iErrCode;
 }
 
 // Input:
@@ -1686,25 +1674,25 @@ int GameEngine::GetMapLimits (int iGameClass, int iGameNumber, int iEmpireKey, i
         return iErrCode;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::MinX, piMinX);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::MinX, piMinX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::MaxX, piMaxX);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::MaxX, piMaxX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::MinY, piMinY);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::MinY, piMinY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::MaxY, piMaxY);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::MaxY, piMaxY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1742,25 +1730,25 @@ int GameEngine::GetMapLimits (int iGameClass, int iGameNumber, int* piMinX, int*
         return iErrCode;
     }
 
-    iErrCode = pGameData->ReadData (GameData::MinX, piMinX);
+    iErrCode = pGameData->ReadData(GameData::MinX, piMinX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameData->ReadData (GameData::MaxX, piMaxX);
+    iErrCode = pGameData->ReadData(GameData::MaxX, piMaxX);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameData->ReadData (GameData::MinY, piMinY);
+    iErrCode = pGameData->ReadData(GameData::MinY, piMinY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameData->ReadData (GameData::MaxY, piMaxY);
+    iErrCode = pGameData->ReadData(GameData::MaxY, piMaxY);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1817,32 +1805,19 @@ int GameEngine::GetVisitedPlanetKeys (int iGameClass, int iGameNumber, int iEmpi
 //
 // Return the number of planets visited by the empire
 
-int GameEngine::GetNumVisitedPlanets (int iGameClass, int iGameNumber, int iEmpireKey, 
-                                      unsigned int* piNumVisitedPlanets) {
-
-    GAME_EMPIRE_MAP (pszEmpireMap, iGameClass, iGameNumber, iEmpireKey);
-
-    return t_pCache->GetNumRows (
-        pszEmpireMap, 
-        piNumVisitedPlanets
-        );
+int GameEngine::GetNumVisitedPlanets (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumVisitedPlanets)
+{
+    GAME_EMPIRE_MAP(pszEmpireMap, iGameClass, iGameNumber, iEmpireKey);
+    return t_pCache->GetNumCachedRows(pszEmpireMap, piNumVisitedPlanets);
 }
 
-
-int GameEngine::HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-                                        bool* pbVisited) {
-
+int GameEngine::HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, bool* pbVisited)
+{
     unsigned int iKey;
 
     GAME_EMPIRE_MAP (pszEmpireMap, iGameClass, iGameNumber, iEmpireKey);
 
-    int iErrCode = t_pCache->GetFirstKey(
-        pszEmpireMap,
-        GameEmpireMap::PlanetKey,
-        iPlanetKey,
-        &iKey
-        );
-
+    int iErrCode = t_pCache->GetFirstKey(pszEmpireMap, GameEmpireMap::PlanetKey, iPlanetKey, &iKey);
     switch (iErrCode) {
         
     case ERROR_DATA_NOT_FOUND:
@@ -1960,7 +1935,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
 
             } else {
 
-                iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumUncloakedShips, &iTemp);
+                iErrCode = pMap->ReadData(iKey, GameEmpireMap::NumUncloakedShips, &iTemp);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -1969,14 +1944,14 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
 
                 if (iEmpireKey == pvKey[i].GetInteger() || iEmpireKey == SYSTEM) {
 
-                    iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumCloakedShips, &iTemp);
+                    iErrCode = pMap->ReadData(iKey, GameEmpireMap::NumCloakedShips, &iTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
                     }
                     iTotalShips += iTemp;
 
-                    iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumCloakedBuildShips, &iTemp);
+                    iErrCode = pMap->ReadData(iKey, GameEmpireMap::NumCloakedBuildShips, &iTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -1986,7 +1961,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
 
                 if (bVisibleBuilds || iEmpireKey == pvKey[i]) {
 
-                    iErrCode = pMap->ReadData (iKey, GameEmpireMap::NumUncloakedBuildShips, &iTemp);
+                    iErrCode = pMap->ReadData(iKey, GameEmpireMap::NumUncloakedBuildShips, &iTemp);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -2004,9 +1979,8 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
 
         } else if (bIndependence) {
 
-            GET_GAME_INDEPENDENT_SHIPS (strTheirShips, iGameClass, iGameNumber);
-
-            iErrCode = t_pCache->GetNumRows (strTheirShips, &iTotalShips);
+            GET_GAME_INDEPENDENT_SHIPS(strTheirShips, iGameClass, iGameNumber);
+            iErrCode = t_pCache->GetNumCachedRows(strTheirShips, &iTotalShips);
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
                 iErrCode = OK;
             } else if (iErrCode != OK) {
@@ -2049,7 +2023,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                     bool bDisplay = true;
 
                     // Read ship type
-                    iErrCode = pShips->ReadData (piShipKey[j], pszTypeCol, &iType);
+                    iErrCode = pShips->ReadData(piShipKey[j], pszTypeCol, &iType);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -2058,7 +2032,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                     // Invisible builds?
                     if (i != iNumEmpires && !bVisibleBuilds && pvKey[i].GetInteger() != iEmpireKey) {
                         
-                        iErrCode = pShips->ReadData (piShipKey[j], GameEmpireShips::BuiltThisUpdate, &iTemp);
+                        iErrCode = pShips->ReadData(piShipKey[j], GameEmpireShips::BuiltThisUpdate, &iTemp);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -2071,7 +2045,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                     // If ship is cloaked and doesn't belong to empire, don't show it
                     if (i != iNumEmpires && bDisplay && pvKey[i].GetInteger() != iEmpireKey) {
 
-                        iErrCode = pShips->ReadData (piShipKey[j], GameEmpireShips::State, &iTemp);
+                        iErrCode = pShips->ReadData(piShipKey[j], GameEmpireShips::State, &iTemp);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto Cleanup;
@@ -2481,25 +2455,25 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     }
 
     // Get planets around center
-    iErrCode = pRead->ReadData (iCenterKey, GameMap::NorthPlanetKey, piPlanetKey + NORTH);
+    iErrCode = pRead->ReadData(iCenterKey, GameMap::NorthPlanetKey, piPlanetKey + NORTH);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pRead->ReadData (iCenterKey, GameMap::EastPlanetKey, piPlanetKey + EAST);
+    iErrCode = pRead->ReadData(iCenterKey, GameMap::EastPlanetKey, piPlanetKey + EAST);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pRead->ReadData (iCenterKey, GameMap::SouthPlanetKey, piPlanetKey + SOUTH);
+    iErrCode = pRead->ReadData(iCenterKey, GameMap::SouthPlanetKey, piPlanetKey + SOUTH);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pRead->ReadData (iCenterKey, GameMap::WestPlanetKey, piPlanetKey + WEST);
+    iErrCode = pRead->ReadData(iCenterKey, GameMap::WestPlanetKey, piPlanetKey + WEST);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -2549,7 +2523,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
 
     if (piPlanetKey[NORTH] != NO_KEY) {
         
-        iErrCode = pRead->ReadData (piPlanetKey[NORTH], GameMap::EastPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[NORTH], GameMap::EastPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2557,7 +2531,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     }
     else if (piPlanetKey[EAST] != NO_KEY) {
         
-        iErrCode = pRead->ReadData (piPlanetKey[EAST], GameMap::NorthPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[EAST], GameMap::NorthPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2567,7 +2541,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
             
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
+            iErrCode = pRead->ReadData(iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2609,7 +2583,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
 
     if (piPlanetKey[SOUTH] != NO_KEY) {
         
-        iErrCode = pRead->ReadData (piPlanetKey[SOUTH], GameMap::EastPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[SOUTH], GameMap::EastPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2617,7 +2591,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     }
     else if (piPlanetKey[EAST] != NO_KEY) {
         
-        iErrCode = pRead->ReadData (piPlanetKey[EAST], GameMap::SouthPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[EAST], GameMap::SouthPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2627,7 +2601,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
             
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
+            iErrCode = pRead->ReadData(iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2664,7 +2638,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
 
     if (piPlanetKey[SOUTH] != NO_KEY) {
 
-        iErrCode = pRead->ReadData (piPlanetKey[SOUTH], GameMap::WestPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[SOUTH], GameMap::WestPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2672,7 +2646,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     }
     else if (piPlanetKey[WEST] != NO_KEY) {
 
-        iErrCode = pRead->ReadData (piPlanetKey[WEST], GameMap::SouthPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[WEST], GameMap::SouthPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2682,7 +2656,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
 
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
+            iErrCode = pRead->ReadData(iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2723,7 +2697,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
 
     if (piPlanetKey[NORTH] != NO_KEY) {
         
-        iErrCode = pRead->ReadData (piPlanetKey[NORTH], GameMap::WestPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[NORTH], GameMap::WestPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2731,7 +2705,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     }
     else if (piPlanetKey[WEST] != NO_KEY) {
         
-        iErrCode = pRead->ReadData (piPlanetKey[WEST], GameMap::NorthPlanetKey, &iGameMapKey);
+        iErrCode = pRead->ReadData(piPlanetKey[WEST], GameMap::NorthPlanetKey, &iGameMapKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2741,7 +2715,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
         
         if (iX == MIN_COORDINATE) {
             
-            iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
+            iErrCode = pRead->ReadData(iCenterKey, GameMap::Coordinates, &vCoordinates);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -2780,7 +2754,7 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
             goto Cleanup;
         }
         
-        iErrCode = pRead->ReadData (iCenterKey, GameMap::Coordinates, &vCoordinates);
+        iErrCode = pRead->ReadData(iCenterKey, GameMap::Coordinates, &vCoordinates);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -3144,13 +3118,13 @@ int GameEngine::GetPlanetPopulationWithColonyBuilds (unsigned int iGameClass, un
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (iPlanetKey, GameMap::Pop, &iPop);
+    iErrCode = pTable->ReadData(iPlanetKey, GameMap::Pop, &iPop);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (iPlanetKey, GameMap::PopLostToColonies, &iCost);
+    iErrCode = pTable->ReadData(iPlanetKey, GameMap::PopLostToColonies, &iCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3233,25 +3207,25 @@ int GameEngine::GetSpectatorGameInfo (int iGameClass, int iGameNumber,
             goto Cleanup;
         }
         
-        iErrCode = pReadTable->ReadData (GameData::MinX, piMapMinX);
+        iErrCode = pReadTable->ReadData(GameData::MinX, piMapMinX);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pReadTable->ReadData (GameData::MaxX, piMapMaxX);
+        iErrCode = pReadTable->ReadData(GameData::MaxX, piMapMaxX);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pReadTable->ReadData (GameData::MinY, piMapMinY);
+        iErrCode = pReadTable->ReadData(GameData::MinY, piMapMinY);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pReadTable->ReadData (GameData::MaxY, piMapMaxY);
+        iErrCode = pReadTable->ReadData(GameData::MaxY, piMapMaxY);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -3289,7 +3263,7 @@ int GameEngine::GetSpectatorGameInfo (int iGameClass, int iGameNumber,
             
             GET_GAME_EMPIRE_MAP (pszEmpireMap, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
             
-            iErrCode = t_pCache->GetNumRows (pszEmpireMap, &iNumPlanets);
+            iErrCode = t_pCache->GetNumRows(pszEmpireMap, &iNumPlanets);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -3388,7 +3362,7 @@ int GameEngine::GetSpectatorGameInfo (int iGameClass, int iGameNumber,
 
             (*ppiPlanetKey)[i] = pvPlanetKey[i].GetInteger();
 
-            iErrCode = pReadTable->ReadData (pvPlanetKey[i].GetInteger(), GameMap::Coordinates, &pszCoord);
+            iErrCode = pReadTable->ReadData(pvPlanetKey[i].GetInteger(), GameMap::Coordinates, &pszCoord);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;

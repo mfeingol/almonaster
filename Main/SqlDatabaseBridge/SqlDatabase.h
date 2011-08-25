@@ -161,9 +161,8 @@ public:
 
     virtual int GetFirstKey(const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
     virtual int GetNextKey(unsigned int iKey, unsigned int* piNextKey) = 0;
-
+    virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
     virtual int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-    //virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
 
     virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
     virtual int ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
@@ -186,6 +185,8 @@ public:
     
     virtual int InsertRow(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey) = 0;
     virtual int InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
+    virtual int DeleteRow(unsigned int iKey) = 0;
+    virtual int DeleteAllRows() = 0;
 
     virtual int Increment(const char* pszColumn, const Variant& vIncrement) = 0;
     virtual int Increment(const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
@@ -218,13 +219,17 @@ public:
 
     virtual int GetFirstKey(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
     virtual int GetNextKey(const char* pszCacheTableName, unsigned int iKey, unsigned int* piNextKey) = 0;
-    virtual int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetEqualKeys(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumRows) = 0;
 
     virtual int ReadColumn(const char* pszCacheTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
 
     virtual int ReadColumns(const char* pszCacheTableName, unsigned int iNumColumns, const char* const* ppszColumn,
                             unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
     
+    virtual int ReadColumnWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
+                                     unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
+
     virtual int ReadRow(const char* pszCacheTableName, unsigned int iKey, Variant** ppvData) = 0;
 
     virtual int ReadData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  
@@ -232,6 +237,8 @@ public:
 
     virtual int InsertRow(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey) = 0;
     virtual int InsertDuplicateRows(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
+    virtual int DeleteRow(const char* pszCacheTableName, unsigned int iKey) = 0;
+    virtual int DeleteAllRows(const char* pszCacheTableName) = 0;
 
     virtual int Increment(const char* pszCacheTableName, const char* pszColumn, const Variant& vIncrement) = 0;
     virtual int Increment(const char* pszCacheTableName, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
@@ -410,6 +417,12 @@ public:
     virtual int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate) = 0;
     virtual int DeleteTable(const char* pszTableName) = 0;
 
+    virtual int DoesPhysicalRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists) = 0;
+    virtual int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows) = 0;
+
+    virtual int GetFirstKey(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
+    virtual int GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+
     //virtual int ReadData(const char* pszTableName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  
     //virtual int ReadData(const char* pszTableName, const char* pszColumn, Variant* pvData) = 0;
     //
@@ -436,9 +449,6 @@ public:
 
     //virtual int WriteColumn(const char* pszTableName, const char* pszColumn, const Variant& vData) = 0;
 
-    //virtual int GetNumRows(const char* pszTableName, unsigned int* piNumRows) = 0;
-    //virtual int DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists) = 0;
-
     //virtual int InsertRow(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey) = 0;
     //virtual int InsertRows(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
     //virtual int InsertDuplicateRows(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows) = 0;
@@ -460,9 +470,7 @@ public:
     //virtual int GetAllKeys(const char* pszTableName, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
     //virtual int GetNextKey(const char* pszTableName, unsigned int iKey, unsigned int* piNextKey) = 0;
 
-    //virtual int GetFirstKey(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
     //virtual int GetEqualKeys(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-    //virtual int GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
 
     //virtual int GetTableForReading(const char* pszTableName, IReadTable** ppTable) = 0;
     //virtual int GetTableForWriting(const char* pszTableName, IWriteTable** ppTable) = 0;

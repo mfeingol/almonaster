@@ -707,7 +707,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
 
     *piNumAllies = 0;
 
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strDip,
         GameEmpireDiplomacy::CurrentStatus,
         ALLIANCE,
@@ -728,7 +728,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strDip,
         GameEmpireDiplomacy::CurrentStatus,
         TRADE,
@@ -770,31 +770,31 @@ int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, in
         goto Cleanup;
     }
 
-    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::SurrenderAlmonasterScore, pfScore);
+    iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderAlmonasterScore, pfScore);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::SurrenderAlmonasterSignificance, piSignificance);
+    iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderAlmonasterSignificance, piSignificance);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::SurrenderNumAllies, piNumAllies);
+    iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderNumAllies, piNumAllies);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::HomeWorld, piLoserKey);
+    iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::HomeWorld, piLoserKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::SurrenderEmpireSecretKey, pi64EmpireSecretKey);
+    iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderEmpireSecretKey, pi64EmpireSecretKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -802,7 +802,7 @@ int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, in
     
     if (pvPlanetName != NULL) {
         
-        iErrCode = pGameMap->ReadData (iPlanetKey, GameMap::Name, pvPlanetName);
+        iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::Name, pvPlanetName);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1205,7 +1205,8 @@ int AlmonasterScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 
 int AlmonasterScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
 
-    if (pvScore == NULL) {
+    if (pvScore == NULL)
+    {
         return t_pCache->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
     }
 
@@ -1222,11 +1223,5 @@ int AlmonasterScore::GetReplacementKeys (const Variant* pvScore, unsigned int** 
     sd.iNumColumns = 1;
     sd.pscColumns = &sc;
 
-    return t_pCache->GetSearchKeys (
-        SYSTEM_EMPIRE_DATA,
-        sd,
-        ppiKey, 
-        piNumEmpires, 
-        NULL
-        );
+    return t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, sd, ppiKey, piNumEmpires, NULL);
 }

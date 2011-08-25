@@ -32,157 +32,157 @@ int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ShipBehavior, &pgcConfig->iShipBehavior);
+    iErrCode = pSystem->ReadData(SystemData::ShipBehavior, &pgcConfig->iShipBehavior);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ColonySimpleBuildFactor, &pgcConfig->iColonySimpleBuildFactor);
+    iErrCode = pSystem->ReadData(SystemData::ColonySimpleBuildFactor, &pgcConfig->iColonySimpleBuildFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ColonyMultipliedBuildFactor, &pgcConfig->fColonyMultipliedBuildFactor);
+    iErrCode = pSystem->ReadData(SystemData::ColonyMultipliedBuildFactor, &pgcConfig->fColonyMultipliedBuildFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ColonyMultipliedDepositFactor, &pgcConfig->fColonyMultipliedDepositFactor);
+    iErrCode = pSystem->ReadData(SystemData::ColonyMultipliedDepositFactor, &pgcConfig->fColonyMultipliedDepositFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ColonyExponentialDepositFactor, &pgcConfig->fColonyExponentialDepositFactor);
+    iErrCode = pSystem->ReadData(SystemData::ColonyExponentialDepositFactor, &pgcConfig->fColonyExponentialDepositFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::EngineerLinkCost, &pgcConfig->fEngineerLinkCost);
+    iErrCode = pSystem->ReadData(SystemData::EngineerLinkCost, &pgcConfig->fEngineerLinkCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::StargateGateCost, &pgcConfig->fStargateGateCost);
+    iErrCode = pSystem->ReadData(SystemData::StargateGateCost, &pgcConfig->fStargateGateCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::TerraformerPlowFactor, &pgcConfig->fTerraformerPlowFactor);
+    iErrCode = pSystem->ReadData(SystemData::TerraformerPlowFactor, &pgcConfig->fTerraformerPlowFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::TroopshipInvasionFactor, &pgcConfig->fTroopshipInvasionFactor);
+    iErrCode = pSystem->ReadData(SystemData::TroopshipInvasionFactor, &pgcConfig->fTroopshipInvasionFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::TroopshipFailureFactor, &pgcConfig->fTroopshipFailureFactor);
+    iErrCode = pSystem->ReadData(SystemData::TroopshipFailureFactor, &pgcConfig->fTroopshipFailureFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::TroopshipSuccessFactor, &pgcConfig->fTroopshipSuccessFactor);
+    iErrCode = pSystem->ReadData(SystemData::TroopshipSuccessFactor, &pgcConfig->fTroopshipSuccessFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::DoomsdayAnnihilationFactor, &pgcConfig->fDoomsdayAnnihilationFactor);
+    iErrCode = pSystem->ReadData(SystemData::DoomsdayAnnihilationFactor, &pgcConfig->fDoomsdayAnnihilationFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::CarrierCost, &pgcConfig->fCarrierCost);
+    iErrCode = pSystem->ReadData(SystemData::CarrierCost, &pgcConfig->fCarrierCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::BuilderMinBR, &pgcConfig->fBuilderMinBR);
+    iErrCode = pSystem->ReadData(SystemData::BuilderMinBR, &pgcConfig->fBuilderMinBR);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::BuilderBRDampener, &pgcConfig->fBuilderBRDampener);
+    iErrCode = pSystem->ReadData(SystemData::BuilderBRDampener, &pgcConfig->fBuilderBRDampener);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::BuilderMultiplier, &pgcConfig->fBuilderMultiplier);
+    iErrCode = pSystem->ReadData(SystemData::BuilderMultiplier, &pgcConfig->fBuilderMultiplier);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::MorpherCost, &pgcConfig->fMorpherCost);
+    iErrCode = pSystem->ReadData(SystemData::MorpherCost, &pgcConfig->fMorpherCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::JumpgateGateCost, &pgcConfig->fJumpgateGateCost);
+    iErrCode = pSystem->ReadData(SystemData::JumpgateGateCost, &pgcConfig->fJumpgateGateCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::JumpgateRangeFactor, &pgcConfig->fJumpgateRangeFactor);
+    iErrCode = pSystem->ReadData(SystemData::JumpgateRangeFactor, &pgcConfig->fJumpgateRangeFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::StargateRangeFactor, &pgcConfig->fStargateRangeFactor);
+    iErrCode = pSystem->ReadData(SystemData::StargateRangeFactor, &pgcConfig->fStargateRangeFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::PercentFirstTradeIncrease, &pgcConfig->iPercentFirstTradeIncrease);
+    iErrCode = pSystem->ReadData(SystemData::PercentFirstTradeIncrease, &pgcConfig->iPercentFirstTradeIncrease);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::PercentNextTradeIncrease, &pgcConfig->iPercentNextTradeIncrease);
+    iErrCode = pSystem->ReadData(SystemData::PercentNextTradeIncrease, &pgcConfig->iPercentNextTradeIncrease);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::NukesForQuarantine, &pgcConfig->iNukesForQuarantine);
+    iErrCode = pSystem->ReadData(SystemData::NukesForQuarantine, &pgcConfig->iNukesForQuarantine);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::UpdatesInQuarantine, &pgcConfig->iUpdatesInQuarantine);
+    iErrCode = pSystem->ReadData(SystemData::UpdatesInQuarantine, &pgcConfig->iUpdatesInQuarantine);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::PercentTechIncreaseForLatecomers, &pgcConfig->iPercentTechIncreaseForLatecomers);
+    iErrCode = pSystem->ReadData(SystemData::PercentTechIncreaseForLatecomers, &pgcConfig->iPercentTechIncreaseForLatecomers);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::PercentDamageUsedToDestroy, &pgcConfig->iPercentDamageUsedToDestroy);
+    iErrCode = pSystem->ReadData(SystemData::PercentDamageUsedToDestroy, &pgcConfig->iPercentDamageUsedToDestroy);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -208,37 +208,37 @@ int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig) {
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ChanceNewLinkForms, &pmcConfig->iChanceNewLinkForms);
+    iErrCode = pSystem->ReadData(SystemData::ChanceNewLinkForms, &pmcConfig->iChanceNewLinkForms);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::MapDeviation, &pmcConfig->iMapDeviation);
+    iErrCode = pSystem->ReadData(SystemData::MapDeviation, &pmcConfig->iMapDeviation);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap, &pmcConfig->iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap);
+    iErrCode = pSystem->ReadData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap, &pmcConfig->iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap, &pmcConfig->iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap);
+    iErrCode = pSystem->ReadData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap, &pmcConfig->iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::LargeMapThreshold, &pmcConfig->iLargeMapThreshold);
+    iErrCode = pSystem->ReadData(SystemData::LargeMapThreshold, &pmcConfig->iLargeMapThreshold);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->ReadData (SystemData::ResourceAllocationRandomizationFactor, &pmcConfig->fResourceAllocationRandomizationFactor);
+    iErrCode = pSystem->ReadData(SystemData::ResourceAllocationRandomizationFactor, &pmcConfig->fResourceAllocationRandomizationFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

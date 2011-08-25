@@ -40,7 +40,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
         goto Cleanup;
     }
 
-    iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::Name, &vGameClassName);
+    iErrCode = pGameClasses->ReadData(iGameClass, SystemGameClassData::Name, &vGameClassName);
     if (iErrCode != OK) {
         if (iErrCode == ERROR_UNKNOWN_ROW_KEY) {
             iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
@@ -48,7 +48,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
         goto Cleanup;
     }
 
-    iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::Owner, &iOwner);
+    iErrCode = pGameClasses->ReadData(iGameClass, SystemGameClassData::Owner, &iOwner);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -64,7 +64,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
 
         int iTournamentKey;
 
-        iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::TournamentKey, &iTournamentKey);
+        iErrCode = pGameClasses->ReadData(iGameClass, SystemGameClassData::TournamentKey, &iTournamentKey);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -76,13 +76,13 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
             goto Cleanup;
         }
         
-        iErrCode = pTournaments->ReadData (iTournamentKey, SystemTournaments::Name, &vTournamentName);
+        iErrCode = pTournaments->ReadData(iTournamentKey, SystemTournaments::Name, &vTournamentName);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
         
-        iErrCode = pTournaments->ReadData (iTournamentKey, SystemTournaments::Owner, &iOwner);
+        iErrCode = pTournaments->ReadData(iTournamentKey, SystemTournaments::Owner, &iOwner);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -94,7 +94,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
 
         } else {
 
-            iErrCode = pTournaments->ReadData (iTournamentKey, SystemTournaments::OwnerName, &vOwnerName);
+            iErrCode = pTournaments->ReadData(iTournamentKey, SystemTournaments::OwnerName, &vOwnerName);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -109,7 +109,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
     case DELETED_EMPIRE_KEY:
     default:
 
-        iErrCode = pGameClasses->ReadData (iGameClass, SystemGameClassData::OwnerName, &vOwnerName);
+        iErrCode = pGameClasses->ReadData(iGameClass, SystemGameClassData::OwnerName, &vOwnerName);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -207,115 +207,73 @@ int GameEngine::GetNextGameNumber (int iGameClass, int* piGameNumber) {
 //
 // Halt the given gameclass and delete it if no active games are left
 
-int GameEngine::DeleteGameClass (int iGameClass, bool* pbDeleted) {
+int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted) {
 
-    // Check for gameclass
-    bool bExists;
-    int iErrCode = t_pCache->DoesRowExist(SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
-    if (iErrCode != OK || !bExists) {
-        iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
+    *pbDeleted = false;
+
+    // Make sure gameclass has no active games
+    Variant vNumActiveGames;
+    int iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, &vNumActiveGames);
+    if (iErrCode != OK)
+    {
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
-    // Check for active games
-    *pbDeleted = !DoesGameClassHaveActiveGames (iGameClass);
-
-    if (*pbDeleted) {
-
+    if (vNumActiveGames.GetInteger() != 0)
+    {
+        // Mark the gameclass for deletion
+        iErrCode = t_pCache->WriteOr(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, GAMECLASS_MARKED_FOR_DELETION);
+        if (iErrCode != OK) 
+            goto Cleanup;
+    }
+    else
+    {
         // Get owner
         Variant vOwner;
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::Owner, 
-            &vOwner
-            );
-
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Owner, &vOwner);
         if (iErrCode != OK) {
-            Assert (false);
             goto Cleanup;
         }
 
-        if (vOwner.GetInteger() == SYSTEM) {
-
+        if (vOwner.GetInteger() == SYSTEM)
+        {
             unsigned int iKey;
             
             // Decrement super class counter
             Variant vSuperClassKey;
-            iErrCode = t_pCache->ReadData(
-                SYSTEM_GAMECLASS_DATA, 
-                iGameClass, 
-                SystemGameClassData::SuperClassKey, 
-                &vSuperClassKey
-                );
+            iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, &vSuperClassKey);
             if (iErrCode != OK) {
-                Assert (false);
                 goto Cleanup;
             }
 
-            iErrCode = t_pCache->GetFirstKey(
-                SYSTEM_SYSTEM_GAMECLASS_DATA, 
-                SystemSystemGameClassData::GameClass, 
-                iGameClass, 
-                &iKey
-                );
-
+            iErrCode = t_pCache->GetFirstKey(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::GameClass, iGameClass, &iKey);
             if (iErrCode != OK) {
-                Assert (false);
                 goto Cleanup;
             }
 
-            Assert (
-                vSuperClassKey.GetInteger() != NO_KEY && 
-                vSuperClassKey.GetInteger() != TOURNAMENT &&
-                vSuperClassKey.GetInteger() != PERSONAL_GAME);
+            Assert(vSuperClassKey.GetInteger() != NO_KEY && vSuperClassKey.GetInteger() != TOURNAMENT && vSuperClassKey.GetInteger() != PERSONAL_GAME);
 
-            iErrCode = t_pCache->Increment(
-                SYSTEM_SUPERCLASS_DATA, 
-                vSuperClassKey.GetInteger(), 
-                SystemSuperClassData::NumGameClasses, 
-                -1
-                );
-
+            iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, vSuperClassKey.GetInteger(), SystemSuperClassData::NumGameClasses, -1);
             if (iErrCode != OK) {
-                Assert (false);
                 goto Cleanup;
             }
             
             // Delete row
             iErrCode = t_pCache->DeleteRow(SYSTEM_SYSTEM_GAMECLASS_DATA, iKey);
             if (iErrCode != OK) {
-
-                Assert (false);
-
-                // Best effort compensate
-                int iErrCode2 = t_pCache->Increment(
-                    SYSTEM_SUPERCLASS_DATA, 
-                    vSuperClassKey.GetInteger(), 
-                    SystemSuperClassData::NumGameClasses, 
-                    1
-                    );
-                Assert (iErrCode2 == OK);
-
-                goto Cleanup;
+                 goto Cleanup;
             }
 
+            *pbDeleted = true;
         }
 
         // Delete row from SystemGameClassData
         iErrCode = t_pCache->DeleteRow(SYSTEM_GAMECLASS_DATA, iGameClass);
-        Assert (iErrCode == OK);
+        if (iErrCode != OK) 
+            goto Cleanup;
 
-    } else {
-        
-        // Mark the gameclass for deletion
-        iErrCode = t_pCache->WriteOr (
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::Options, 
-            GAMECLASS_MARKED_FOR_DELETION
-            );
-        Assert (iErrCode == OK);
     }
 
 Cleanup:
@@ -347,29 +305,11 @@ bool GameEngine::DoesGameClassHaveActiveGames (int iGameClass) {
 //
 // Halt the given gameclass
 
-int GameEngine::HaltGameClass (int iGameClass) {
-
-    int iErrCode;
-
-    // Check for gameclass
-    bool bExists;
-    iErrCode = t_pCache->DoesRowExist(SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
-    if (iErrCode != OK || !bExists) {
+int GameEngine::HaltGameClass(int iGameClass)
+{
+    int iErrCode = t_pCache->WriteOr(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, GAMECLASS_HALTED);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
         iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
-
-    // Mark the gameclass as halted
-    iErrCode = t_pCache->WriteOr (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::Options, 
-        GAMECLASS_HALTED
-        );
-    Assert (iErrCode == OK);
-
-Cleanup:
-
     return iErrCode;
 }
 
@@ -379,44 +319,28 @@ Cleanup:
 //
 // Unhalt the given gameclass
 
-int GameEngine::UnhaltGameClass (int iGameClass) {
-
+int GameEngine::UnhaltGameClass (int iGameClass)
+{
     int iErrCode;
-    Variant vHalted;
-
-    // Check for gameclass
-    bool bExists;
-    iErrCode = t_pCache->DoesRowExist(SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
-    if (iErrCode != OK || !bExists) {
-        iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
 
     // Is gameclass halted?
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::Options, 
-        &vHalted
-        );
-    if (iErrCode != OK) {
-        Assert (false);
+    Variant vHalted;
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vHalted);
+    if (iErrCode != OK)
+    {
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
-    if (!(vHalted.GetInteger() & GAMECLASS_HALTED)) {
+    if (!(vHalted.GetInteger() & GAMECLASS_HALTED))
+    {
         iErrCode = ERROR_GAMECLASS_NOT_HALTED;
         goto Cleanup;
     }
 
     // Mark the gameclass as no longer halted
-    iErrCode = t_pCache->WriteAnd (
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::Options, 
-        ~GAMECLASS_HALTED
-        );
-    Assert (iErrCode == OK);
+    iErrCode = t_pCache->WriteAnd(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, ~GAMECLASS_HALTED);
 
 Cleanup:
 
@@ -441,7 +365,7 @@ Cleanup:
 
 int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* piGameClass) {
 
-    bool bFlag, bDynamic = (pvGameClassData[SystemGameClassData::iOptions].GetInteger() & DYNAMIC_GAMECLASS) != 0;
+    bool bDynamic = (pvGameClassData[SystemGameClassData::iOptions].GetInteger() & DYNAMIC_GAMECLASS) != 0;
     int iErrCode, iSuperClass;
 
     unsigned int iGameClass, iTournamentKey = NO_KEY;
@@ -480,7 +404,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
                 goto Cleanup;
             }
 
-            iErrCode = t_pCache->GetEqualKeys (
+            iErrCode = t_pCache->GetEqualKeys(
                 SYSTEM_GAMECLASS_DATA,
                 SystemGameClassData::TournamentKey,
                 pvGameClassData[SystemGameClassData::iTournamentKey],
@@ -529,7 +453,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
                     goto Cleanup;
                 }
                 
-                iErrCode = t_pCache->GetEqualKeys (
+                iErrCode = t_pCache->GetEqualKeys(
                     SYSTEM_GAMECLASS_DATA,
                     SystemGameClassData::Owner,
                     iCreator,
@@ -558,75 +482,54 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
 
     // Make sure tournament exists
     iTournamentKey = pvGameClassData[SystemGameClassData::iTournamentKey].GetInteger();
-    if (iTournamentKey != NO_KEY) {
-
-        iErrCode = t_pCache->DoesRowExist(SYSTEM_TOURNAMENTS, iTournamentKey, &bFlag);
-        if (iErrCode != OK || !bFlag) {
-            iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    if (iTournamentKey != NO_KEY)
+    {
+        Variant vTemp;
+        iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, &vTemp);
+        if (iErrCode != OK)
+        {
+            if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+                iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
             goto Cleanup;
         }
     }
 
     // Make sure name isn't a duplicate
-    iErrCode = t_pCache->GetFirstKey(
-        SYSTEM_GAMECLASS_DATA, 
-        SystemGameClassData::Name, 
-        pvGameClassData[SystemGameClassData::iName].GetCharPtr(), 
-        &iGameClass
-        );
-
-    if (iGameClass != NO_KEY) {
-        iErrCode = ERROR_GAMECLASS_ALREADY_EXISTS;
+    iErrCode = t_pCache->GetFirstKey(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Name, pvGameClassData[SystemGameClassData::iName].GetCharPtr(), &iGameClass);
+    if (iErrCode != ERROR_DATA_NOT_FOUND)
+    {
+        if (iErrCode == OK)
+            iErrCode = ERROR_GAMECLASS_ALREADY_EXISTS;
         goto Cleanup;
     }
 
     // Check super class
-    if (IS_KEY (iSuperClass)) {
-
-        iErrCode = t_pCache->DoesRowExist(SYSTEM_SUPERCLASS_DATA, iSuperClass, &bFlag);
-        if (iErrCode != OK || !bFlag) {
-            iErrCode = ERROR_GAMECLASS_HAS_NO_SUPERCLASS;
-            goto Cleanup;
-        }
-
+    if (IS_KEY(iSuperClass))
+    {
         // Increment NumGameClasses in superclass, if applicable
-        iErrCode = t_pCache->Increment(
-            SYSTEM_SUPERCLASS_DATA, 
-            iSuperClass,
-            SystemSuperClassData::NumGameClasses,
-            1
-            );
-
-        if (iErrCode != OK) {
+        iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, iSuperClass, SystemSuperClassData::NumGameClasses, 1);
+        if (iErrCode != OK)
+        {
+            if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+                iErrCode = ERROR_GAMECLASS_HAS_NO_SUPERCLASS;
             goto Cleanup;
         }
     }
 
     // Insert new row into SystemGameClassData and obtain key to that row
     iErrCode = t_pCache->InsertRow (SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template, pvGameClassData, &iGameClass);
-    if (iErrCode != OK) {
-        
-        if (iSuperClass != NO_KEY) {
-            
-            // Best effort compensate
-            int iErrCode2 = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, iSuperClass, SystemSuperClassData::NumGameClasses, -1);
-            Assert (iErrCode2 == OK);
-        }
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
-    if (pvGameClassData[SystemGameClassData::iOwner].GetInteger() == SYSTEM) {
-
-        Variant vKey = iGameClass;
-
+    if (pvGameClassData[SystemGameClassData::iOwner].GetInteger() == SYSTEM)
+    {
         // Add row to SystemSystemGameClassData
+        Variant vKey = iGameClass;
         iErrCode = t_pCache->InsertRow(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::Template, &vKey, NULL);
-        if (iErrCode != OK) {
-
-            // Best effort compensate
-            int iErrCode2 = DeleteGameClass (iGameClass, &bFlag);
-            Assert (iErrCode2 == OK);
-
+        if (iErrCode != OK)
+        {
             goto Cleanup;
         }
     }
@@ -651,24 +554,12 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
     int iErrCode;
     Variant vOptions;
 
-    // Test if gameclass exists
-    bool bExist;
-    iErrCode = t_pCache->DoesRowExist(SYSTEM_GAMECLASS_DATA, iGameClass, &bExist);
-    if (iErrCode != OK || !bExist) {
-        iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
-
     // Is gameclass really marked for deletion?
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::Options, 
-        &vOptions
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
+    if (iErrCode != OK)
+    {
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
         goto Cleanup;
     }
 
@@ -678,7 +569,7 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
     }
 
     // Mark the gameclass as not halted
-    iErrCode = t_pCache->WriteAnd (
+    iErrCode = t_pCache->WriteAnd(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::Options, 
@@ -759,7 +650,7 @@ int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** p
         Variant vOptions;
         for (int i = 0; i < *piNumKeys; i ++) {
 
-            iErrCode = pSystemGameClassData->ReadData (
+            iErrCode = pSystemGameClassData->ReadData(
                 pvData[i].GetInteger(), 
                 SystemGameClassData::Options, 
                 &vOptions
@@ -1015,21 +906,18 @@ int GameEngine::GetGameClassData (int iGameClass, Variant** ppvData) {
 //
 // Return the key of the owner of the given gameclass
 
-int GameEngine::GetGameClassOwner (int iGameClass, unsigned int* piOwner) {
-    
+int GameEngine::GetGameClassOwner(int iGameClass, unsigned int* piOwner)
+{
     int iErrCode;
-    bool bExists;
-
-    iErrCode = t_pCache->DoesRowExist(SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
-    if (iErrCode != OK || !bExists) {
-        return ERROR_GAMECLASS_DOES_NOT_EXIST;
-    }
-
     Variant vOwner;
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Owner, &vOwner);
-    
-    if (iErrCode == OK) {
+    if (iErrCode == OK)
+    {
         *piOwner = vOwner.GetInteger();
+    }
+    else if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+    {
+        iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
     }
 
     return iErrCode;

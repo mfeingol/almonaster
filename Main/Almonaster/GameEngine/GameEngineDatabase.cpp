@@ -99,7 +99,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             }
 
             // Never purge administrators
-            iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Privilege, &iValue);
+            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Privilege, &iValue);
             if (iErrCode != OK || iValue >= ADMINISTRATOR) {
                 continue;
             }
@@ -108,7 +108,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             if (iCriteria & NEVER_PLAYED_A_GAME) {
                 
                 // If max econ = 0, then this empire never played a game
-                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::MaxEcon, &iValue);
+                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::MaxEcon, &iValue);
                 if (iErrCode != OK || iValue > 0) {
                     continue;
                 }
@@ -117,7 +117,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             // Never won a game
             if (iCriteria & NEVER_WON_A_GAME) {
 
-                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Wins, &iValue);
+                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Wins, &iValue);
                 if (iErrCode != OK || iValue > 0) {
                     continue;
                 }
@@ -126,7 +126,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             // Only logged in once
             if (iCriteria & ONLY_ONE_LOGIN) {
 
-                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::NumLogins, &iValue);
+                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::NumLogins, &iValue);
                 if (iErrCode != OK || iValue > 1) {
                     continue;
                 }
@@ -135,7 +135,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             // Bad score
             if (iCriteria & CLASSIC_SCORE_IS_ZERO_OR_LESS) {
                 
-                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::ClassicScore, &fValue);
+                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::ClassicScore, &fValue);
                 if (iErrCode != OK || fValue <= 0) {
                     continue;
                 }
@@ -144,21 +144,21 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
             // Last logged in a while ago
             if (iCriteria & LAST_LOGGED_IN_1_MONTH_AGO) {
 
-                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
+                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
                 if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < sThirtyDays) {
                     continue;
                 }
             }
             if (iCriteria & LAST_LOGGED_IN_3_MONTHS_AGO) {
 
-                iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
+                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
                 if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < 3 * sThirtyDays) {
                     continue;
                 }
             }
 
             // Read secret key
-            iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::SecretKey, &i64SecretKey);
+            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::SecretKey, &i64SecretKey);
             if (iErrCode != OK) {
                 continue;
             }
@@ -200,14 +200,8 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
                 }
             }
 
-            int iNumGames, * piGameClass, * piGameNumber;
-            iErrCode = GetEmpireActiveGames(iEmpireKey, &piGameClass, &piGameNumber, &iNumGames);
-            if (iErrCode == OK)
-            {
-                delete [] piGameClass;
-                delete [] piGameNumber;
-            }
-
+            unsigned int iNumGames;
+            iErrCode = GetEmpireActiveGames(iEmpireKey, NULL, NULL, &iNumGames);
             if (iErrCode != OK || iNumGames > 0)
             {
                 continue;

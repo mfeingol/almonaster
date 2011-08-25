@@ -25,7 +25,7 @@ if (InitializeEmpire(false) != OK)
 
 IHttpForm* pHttpForm;
 
-int i, iErrCode = OK;
+int iErrCode = OK;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -82,7 +82,8 @@ if (m_bRedirectTest)
 OpenSystemPage(false);
 
 // Begin individual page
-int iNumGames, * piGameClassKey, * piGameNumber;
+unsigned int i, iNumGames;
+int* piGameClassKey, * piGameNumber;
 Check(GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
 
 // Check for updates in active games
@@ -142,11 +143,11 @@ if (iNumGames == 0) {
 
     if (iNumSuperClasses > 0) {
 
-        const int iNumAllocationSuperClasses = iNumSuperClasses + 2;
-        const int iNumAllocationGames = iNumGames + 1;
+        const unsigned int iNumAllocationSuperClasses = iNumSuperClasses + 2;
+        const unsigned int iNumAllocationGames = iNumGames + 1;
 
-        const int ACTIVE_PERSONAL_GAMES = iNumSuperClasses;
-        const int ACTIVE_TOURNAMENT_GAMES = iNumSuperClasses + 1;
+        const unsigned int ACTIVE_PERSONAL_GAMES = iNumSuperClasses;
+        const unsigned int ACTIVE_TOURNAMENT_GAMES = iNumSuperClasses + 1;
 
         // Create the game table
         int** ppiTable = (int**) StackAlloc (iNumAllocationSuperClasses * 3 * sizeof (int*));

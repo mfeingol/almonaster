@@ -408,7 +408,6 @@ private:
     int RebuildTopList (ScoringSystem ssTopList);
 
     void VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable);
-    void VerifyGameTables (int iGameClass, int iGameNumber, bool* pbGoodDatabase);
 
     // Games
     int CleanupGame (int iGameClass, int iGameNumber, GameResult grResult, const char* pszWinnerName = NULL);
@@ -750,9 +749,9 @@ private:
     int AddEmpireToTournament (unsigned int iTournamentKey, int iInviteKey);
 
     // Associations
-    int GetAssociations (char* pszAssoc, unsigned int** ppiEmpires, unsigned int* piNumAssoc);
-    int DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
-    int RemoveDeadEmpireAssociations (ICachedTable* pEmpires, unsigned int iEmpireKey);
+    int GetAssociations(char* pszAssoc, unsigned int** ppiEmpires, unsigned int* piNumAssoc);
+    int DeleteSpecificAssociation(unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
+    int RemoveDeadEmpireAssociations(unsigned int iEmpireKey);
 
 public:
 
@@ -836,7 +835,6 @@ public:
     // Themes
     int DoesThemeExist (int iThemeKey, bool* pbExist);
     int CreateTheme (Variant* pvData, unsigned int* piKey);
-    int GetNumThemes (int* piNumThemes);
     int GetThemeKeys(unsigned int** ppiThemeKey, unsigned int* piNumKeys);
     int GetFullThemeKeys (unsigned int** ppiThemeKey, unsigned int* piNumKeys);
     int GetThemeData (int iThemeKey, Variant** ppvThemeData);
@@ -1090,7 +1088,7 @@ public:
 
     int LoginEmpire (int iEmpireKey, const char* pszBrowser, const char* pszIPAddress);
     
-    int GetNumEmpiresOnServer (int* piNumEmpires);
+    int GetNumEmpiresOnServer(unsigned int* piNumEmpires);
     int GetDefaultEmpireShipNames (int iEmpireKey, const char*** pppszShipName);
 
     int UndeleteEmpire (int iEmpireKey);
@@ -1099,7 +1097,7 @@ public:
     int GetEmpirePersonalGameClasses (int iEmpireKey, unsigned int** ppiGameClassKey, Variant** ppvName, unsigned int* piNumKeys);
 
     int GetEmpireData (int iEmpireKey, Variant** ppvEmpData, unsigned int* piNumActiveGames);
-    int GetEmpireActiveGames (int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, int* piNumGames);
+    int GetEmpireActiveGames(int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
 
     int GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege);
     int SetEmpirePrivilege(unsigned int iEmpireKey, int iPrivilege);
@@ -1439,9 +1437,6 @@ public:
 
     int GetUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, unsigned int iGameNumber,
         unsigned int iEmpireKey, unsigned int iPlanetKey, unsigned int** ppiShipKey, unsigned int* piNumShips);
-
-    int HasUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, unsigned int iGameNumber, 
-        unsigned int iEmpireKey, unsigned int iPlanetKey, bool* pbFlag);
 
     void FreeShipOrders (ShipOrder* psoOrders, unsigned int iNumOrders);
 

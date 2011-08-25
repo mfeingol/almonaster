@@ -106,7 +106,7 @@ Page0:
     {
     %><input type="hidden" name="TopListPage" value="0"><%
 
-    int iNumEmpires;
+    unsigned int iNumEmpires;
     Check (GetNumEmpiresOnServer (&iNumEmpires));
 
     %><p>There <%

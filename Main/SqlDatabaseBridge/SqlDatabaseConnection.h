@@ -63,8 +63,8 @@ public:
     int WriteColumn(const char* pszTableName, const char* pszColumn, const Variant& vData);
 
     // Row operations
-    int GetNumRows(const char* pszTableName, unsigned int* piNumRows);
-    int DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists);
+    int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows);
+    int DoesPhysicalRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists);
 
     int InsertRow(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey);
     int InsertRows(const char* pszTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows);

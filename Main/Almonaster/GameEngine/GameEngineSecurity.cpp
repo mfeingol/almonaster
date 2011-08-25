@@ -458,11 +458,9 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
         Variant vGameRank, vGameIndex, vOwnerKey;
         int iNukerRankChange, iNukerIndexChange, iNukedRankChange, iNukedIndexChange, iEmpireRank, iEmpireIndex;
 
-        GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
-
+        GAME_EMPIRES(pszGameEmpires, iGameClass, iGameNumber);
         unsigned int iNumRows;
-
-        iErrCode = t_pCache->GetNumRows (pszGameEmpires, &iNumRows);
+        iErrCode = t_pCache->GetNumCachedRows(pszGameEmpires, &iNumRows);
         if (iErrCode != OK) {
             goto Cleanup;
         }

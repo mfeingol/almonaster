@@ -26,19 +26,11 @@
 // *piNumHits -> Number of hits found
 // *piStopKey -> Key at which the search stopped
 //
-// Perform case insensitive searches on multiple categories of empire data
+// Perform searches on multiple categories of empire data
 
-int GameEngine::PerformMultipleSearch (const SearchDefinition& sdSearch, unsigned int** ppiKey, 
-                                       unsigned int* piNumHits, unsigned int* piStopKey) {
+int GameEngine::PerformMultipleSearch(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) {
 
-    int iErrCode = t_pCache->GetSearchKeys (
-        SYSTEM_EMPIRE_DATA, 
-        sdSearch,
-        ppiKey, 
-        piNumHits, 
-        piStopKey
-        );
-
+    int iErrCode = t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, sdSearch, ppiKey, piNumHits, piStopKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }

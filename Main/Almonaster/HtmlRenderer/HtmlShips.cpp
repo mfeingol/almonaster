@@ -177,7 +177,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     } else {
         
         // Single planet render
-        iErrCode = t_pCache->GetEqualKeys (
+        iErrCode = t_pCache->GetEqualKeys(
             pszShips,
             GameEmpireShips::CurrentPlanet,
             pShipsInMap->iPlanetKey,
@@ -190,7 +190,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
         
-        iErrCode = t_pCache->GetEqualKeys (
+        iErrCode = t_pCache->GetEqualKeys(
             pszFleets,
             GameEmpireFleets::CurrentPlanet,
             pShipsInMap->iPlanetKey,

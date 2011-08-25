@@ -112,7 +112,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
 
         if (piWeOffer != NULL) {
 
-            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::DipOffer, piWeOffer);
+            iErrCode = pTable->ReadData(iKey, GameEmpireDiplomacy::DipOffer, piWeOffer);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -122,7 +122,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         if (piCurrent != NULL) {
 
             // Current status
-            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::CurrentStatus, piCurrent);
+            iErrCode = pTable->ReadData(iKey, GameEmpireDiplomacy::CurrentStatus, piCurrent);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -171,9 +171,9 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         }
 
         if (!(vOptions.GetInteger() & VISIBLE_DIPLOMACY)) {
-            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::VirtualStatus, piTheyOffer);   
+            iErrCode = pTable->ReadData(iKey, GameEmpireDiplomacy::VirtualStatus, piTheyOffer);   
         } else {
-            iErrCode = pTable->ReadData (iKey, GameEmpireDiplomacy::DipOffer, piTheyOffer);    
+            iErrCode = pTable->ReadData(iKey, GameEmpireDiplomacy::DipOffer, piTheyOffer);    
         }
 
         SafeRelease (pTable);
@@ -431,7 +431,7 @@ int GameEngine::GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpi
         unsigned int iNumEmps;
         GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
         
-        iErrCode = t_pCache->GetNumRows (strGameEmpires, &iNumEmps);
+        iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmps);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;
@@ -456,7 +456,7 @@ int GameEngine::GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpi
                 } else {
                     
                     unsigned int iNumSurrendering;
-                    iErrCode = t_pCache->GetEqualKeys (
+                    iErrCode = t_pCache->GetEqualKeys(
                         strDip,
                         GameEmpireDiplomacy::DipOffer,
                         SURRENDER,
@@ -704,7 +704,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
             unsigned int iNumEmps;
             GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
             
-            iErrCode = t_pCache->GetNumRows (strGameEmpires, &iNumEmps);
+            iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmps);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
@@ -732,7 +732,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
                     if (iDipOffer == SURRENDER) {
                         
                         unsigned int iNumSurrendering;
-                        iErrCode = t_pCache->GetEqualKeys (
+                        iErrCode = t_pCache->GetEqualKeys(
                             strGameEmpireDiplomacy,
                             GameEmpireDiplomacy::DipOffer,
                             SURRENDER,
@@ -1484,7 +1484,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
 
     // Truces
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDip,
         GameEmpireDiplomacy::CurrentStatus,
         TRUCE,
@@ -1498,7 +1498,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
 
     // Trades
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDip,
         GameEmpireDiplomacy::CurrentStatus,
         TRADE,
@@ -1512,7 +1512,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
     
     // Alliances
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDip,
         GameEmpireDiplomacy::CurrentStatus,
         ALLIANCE,
@@ -1530,7 +1530,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     iNumTrades += iNumAlliances;
     
     // Offering truce from below
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDip,
         GameEmpireDiplomacy::DipOffer,
         TRUCE,
@@ -1567,7 +1567,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
     
     // Offering trade from below
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDip,
         GameEmpireDiplomacy::DipOffer,
         TRADE,
@@ -1608,7 +1608,7 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     }
     
     // Offering alliance from below
-    iErrCode = t_pCache->GetEqualKeys (
+    iErrCode = t_pCache->GetEqualKeys(
         strGameEmpireDip,
         GameEmpireDiplomacy::DipOffer,
         ALLIANCE,
@@ -1699,25 +1699,25 @@ int GameEngine::CheckTruceTradeAllianceCounts (int iGameClass, int iGameNumber, 
         goto Cleanup;
     }
     
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::NumTruces, &iNumTruces);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumTruces, &iNumTruces);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::NumTrades, &iNumTrades);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumTrades, &iNumTrades);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::NumAlliances, &iNumAlliances);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumAlliances, &iNumAlliances);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
     
-    iErrCode = pGameEmpireData->ReadData (GameEmpireData::NumAlliancesLeaked, &iNumAlliancesLeaked);
+    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumAlliancesLeaked, &iNumAlliancesLeaked);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1975,7 +1975,7 @@ int GameEngine::GetEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, i
 
     for (i = 0; i < iNumRows; i ++) {
 
-        iErrCode = pGameEmpireDiplomacy->ReadData (
+        iErrCode = pGameEmpireDiplomacy->ReadData(
             piKey[i],
             GameEmpireDiplomacy::EmpireKey,
             &iKey
@@ -2079,8 +2079,8 @@ int GameEngine::GetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
 }
 
 
-int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int iLastUsedMask,
-                                          int* piLastUsedKeyArray, int iNumLastUsed) {
+int GameEngine::SetLastUsedMessageTarget(int iGameClass, int iGameNumber, int iEmpireKey, int iLastUsedMask,
+                                         int* piLastUsedKeyArray, int iNumLastUsed) {
 
     int iErrCode, i;
 
@@ -2088,76 +2088,55 @@ int GameEngine::SetLastUsedMessageTarget (int iGameClass, int iGameNumber, int i
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
 
     // Mask
-    iErrCode = t_pCache->WriteData (
-        strGameEmpireData,
-        GameEmpireData::LastMessageTargetMask,
-        iLastUsedMask
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = t_pCache->WriteData(strGameEmpireData, GameEmpireData::LastMessageTargetMask, iLastUsedMask);
+    if (iErrCode != OK)
         return iErrCode;
-    }
 
     // Leave early if we didn't cc anyone
-    if (!(iLastUsedMask & MESSAGE_TARGET_INDIVIDUALS)) {
-        Assert (piLastUsedKeyArray == NULL && iNumLastUsed == 0);
+    if (!(iLastUsedMask & MESSAGE_TARGET_INDIVIDUALS))
+    {
+        Assert(piLastUsedKeyArray == NULL && iNumLastUsed == 0);
         return OK;
     }
 
-    // Array - first set all values to 0
-    iErrCode = t_pCache->WriteColumn (
-        strGameEmpireDiplomacy,
-        GameEmpireDiplomacy::LastMessageTargetFlag,
-        0
-        );
-
-    if (iErrCode != OK) {
-
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        } else {
-            Assert (false);
+    // First set all values to 0
+    unsigned int iKey = NO_KEY;
+    while (true)
+    {
+        unsigned int iNextKey;
+        iErrCode = t_pCache->GetNextKey(strGameEmpireDiplomacy, iKey, &iNextKey);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            break;
+        if (iErrCode != OK)
             return iErrCode;
-        }
+
+        iErrCode = t_pCache->WriteData(strGameEmpireDiplomacy, iNextKey, GameEmpireDiplomacy::LastMessageTargetFlag, 0);
+        if (iErrCode != OK)
+            return iErrCode;
+
+        iKey = iNextKey;
     }
 
     // Now, set the provided keys
-    unsigned int iKey;
-
-    for (i = 0; i < iNumLastUsed; i ++) {
-
-        iErrCode = t_pCache->GetFirstKey(
-            strGameEmpireDiplomacy,
-            GameEmpireDiplomacy::EmpireKey,
-            piLastUsedKeyArray[i],
-            &iKey
-            );
-
-        if (iErrCode == OK) {
-
+    for (i = 0; i < iNumLastUsed; i ++)
+    {
+        iErrCode = t_pCache->GetFirstKey(strGameEmpireDiplomacy, GameEmpireDiplomacy::EmpireKey, piLastUsedKeyArray[i], &iKey);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
+        else if (iErrCode == OK)
+        {
             Assert (iKey != NO_KEY);
 
-            iErrCode = t_pCache->WriteData (
-                strGameEmpireDiplomacy,
-                iKey,
-                GameEmpireDiplomacy::LastMessageTargetFlag,
-                1
-                );
-
+            iErrCode = t_pCache->WriteData (strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::LastMessageTargetFlag, 1);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;
             }
         }
-        
-        else if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        }
-        
-        else {
-            
-            Assert (false);
+        else
+        {
             break;
         }
     }

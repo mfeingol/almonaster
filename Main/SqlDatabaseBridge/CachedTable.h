@@ -11,13 +11,19 @@ using namespace Almonaster::Database::Sql;
 class CachedTable : public ICachedTable
 {
 private:
-    gcroot<BulkTableReadResult^> m_result;
     gcroot<SqlCommandManager^> m_cmd;
+    gcroot<BulkTableReadResult^> m_result;
 
-    gcroot<List<IDictionary<System::String^, System::Object^>^>^> m_insertedRows;
     gcroot<SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_keyToRows;
 
     int InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows, unsigned int* piKey);
+    IDictionary<System::String^, System::Object^>^ GetRow(unsigned int iKey, int* piErrCode);
+
+    struct ChangeLogEntry
+    {
+        gcroot<System::String^> ColumnName;
+        gcroot<IDictionary<System::String^, System::Object^>^> Row;
+    };
 
 public:
     CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result);
@@ -29,8 +35,8 @@ public:
 
     int GetFirstKey(const char* pszColumn, const Variant& vData, unsigned int* piKey);
     int GetNextKey(unsigned int iKey, unsigned int* piNextKey);
+    int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys);
     int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys);
-    //int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys);
 
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows);
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);
@@ -54,6 +60,8 @@ public:
 
     int InsertRow(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey);
     int InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows);
+    int DeleteRow(unsigned int iKey);
+    int DeleteAllRows();
 
     int Increment(const char* pszColumn, const Variant& vIncrement);
     int Increment(const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue);

@@ -19,13 +19,13 @@
 #include "GameEngine.h"
 
 
-int GameEngine::GetSystemProperty(const char* pszColumn, Variant* pvProperty) {
-
+int GameEngine::GetSystemProperty(const char* pszColumn, Variant* pvProperty)
+{
     return t_pCache->ReadData(SYSTEM_DATA, pszColumn, pvProperty);
 }
 
-int GameEngine::SetSystemProperty(const char*  pszColumn, const Variant& vProperty) {
-
+int GameEngine::SetSystemProperty(const char*  pszColumn, const Variant& vProperty)
+{
     return t_pCache->WriteData (SYSTEM_DATA, pszColumn, vProperty);
 }
 
@@ -55,42 +55,42 @@ int GameEngine::GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLi
         return iErrCode;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIBackground, (int*) piBackground);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIBackground, (int*) piBackground);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUILivePlanet, (int*) piLivePlanet);
+    iErrCode = pTable->ReadData(SystemData::DefaultUILivePlanet, (int*) piLivePlanet);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIDeadPlanet, (int*) piDeadPlanet);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIDeadPlanet, (int*) piDeadPlanet);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIButtons, (int*) piButtons);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIButtons, (int*) piButtons);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUISeparator, (int*) piSeparator);
+    iErrCode = pTable->ReadData(SystemData::DefaultUISeparator, (int*) piSeparator);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIHorz, (int*) piHorz);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIHorz, (int*) piHorz);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIVert, (int*) piVert);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIVert, (int*) piVert);
     if (iErrCode != OK) {
         goto Cleanup;
     }
 
-    iErrCode = pTable->ReadData (SystemData::DefaultUIColor, (int*) piColor);
+    iErrCode = pTable->ReadData(SystemData::DefaultUIColor, (int*) piColor);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -228,25 +228,15 @@ int GameEngine::GetSystemOptions (int* piOptions) {
     return iErrCode;
 }
 
-int GameEngine::GetDefaultGameOptions (int iGameClass, GameOptions* pgoOptions) {
-
-    int iErrCode, iOptions, iMaxNumEmpires;
-    Variant vValue;
+int GameEngine::GetDefaultGameOptions(int iGameClass, GameOptions* pgoOptions)
+{
+    int iErrCode;
 
     Assert (iGameClass != NO_KEY);
 
-    bool bExists;
-    iErrCode = t_pCache->DoesRowExist(SYSTEM_GAMECLASS_DATA, iGameClass, &bExists);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
-    if (!bExists) {
-        return ERROR_GAMECLASS_DOES_NOT_EXIST;
-    }
-
     // iNumUpdatesBeforeGameCloses
-    iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vValue);
+    Variant vValue;
+    iErrCode = GetSystemProperty(SystemData::DefaultNumUpdatesBeforeClose, &vValue);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -256,7 +246,8 @@ int GameEngine::GetDefaultGameOptions (int iGameClass, GameOptions* pgoOptions) 
     // iOptions
     pgoOptions->iOptions = 0;
 
-    iErrCode = GetSystemOptions (&iOptions);
+    int iOptions;
+    iErrCode = GetSystemOptions(&iOptions);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -287,26 +278,29 @@ int GameEngine::GetDefaultGameOptions (int iGameClass, GameOptions* pgoOptions) 
 
     if (iOptions & DEFAULT_ALLOW_SPECTATORS) {
 
-        int iGameClassOptions;
-
-        iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
-        if (iErrCode != OK) {
+        Variant vGameClassOptions;
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
+        if (iErrCode != OK)
             return iErrCode;
-        }
 
-        if ((iGameClassOptions & EXPOSED_SPECTATORS) == EXPOSED_SPECTATORS) {
+        if ((vGameClassOptions.GetInteger() & EXPOSED_SPECTATORS) == EXPOSED_SPECTATORS) {
             pgoOptions->iOptions |= GAME_ALLOW_SPECTATORS;
         }
     }
 
-    if (iOptions & DEFAULT_BRIDIER_GAMES) {
-
-        iErrCode = GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
-        if (iErrCode != OK) {
+    if (iOptions & DEFAULT_BRIDIER_GAMES)
+    {
+        Variant vMaxNumEmpires;
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumEmpires, &vMaxNumEmpires);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
+        if (iErrCode != OK)
             return iErrCode;
-        }
 
-        if (iMaxNumEmpires == 2) {
+        if (vMaxNumEmpires.GetInteger() == 2)
+        {
             pgoOptions->iOptions |= GAME_COUNT_FOR_BRIDIER;
         }
     }
@@ -366,8 +360,8 @@ int GameEngine::SetDefaultShipName (int iShipKey, const char* pszShipName) {
 int GameEngine::SetSystemOption (int iOption, bool bFlag) {
     
     if (bFlag) {
-        return t_pCache->WriteOr (SYSTEM_DATA, SystemData::Options, iOption);
+        return t_pCache->WriteOr(SYSTEM_DATA, SystemData::Options, iOption);
     } else {
-        return t_pCache->WriteAnd (SYSTEM_DATA, SystemData::Options, ~iOption);
+        return t_pCache->WriteAnd(SYSTEM_DATA, SystemData::Options, ~iOption);
     }
 }

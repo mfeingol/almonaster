@@ -133,9 +133,9 @@ int GameEngine::ReloadDatabase() {
     return OK;
 }
 
-void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable) {
-
-    const char* pszBadTable = NULL;
+void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable)
+{
+    const char* pszTable = NULL;
     bool bNewDatabase = false, bGoodDatabase = true;
 
     unsigned int iNumRows;
@@ -145,15 +145,18 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemData::Sizes) == SystemData::NumColumns);
     Assert(countof(SystemData::ColumnNames) == SystemData::NumColumns);
 
-    if (!t_pCache->DoesTableExist(SYSTEM_DATA)) {
-        bNewDatabase = true;
-        goto Cleanup;
+    pszTable = SYSTEM_DATA;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows != 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
-    
-    pszBadTable = SYSTEM_DATA;
-    if (t_pCache->GetNumRows(SYSTEM_DATA, &iNumRows) != OK || iNumRows != 1) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    else
+    {
+        bNewDatabase = true;
     }
     
     // SystemEmpireData
@@ -161,16 +164,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireData::Sizes) == SystemEmpireData::NumColumns);
     Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns);
 
-    pszBadTable = SYSTEM_EMPIRE_DATA;
-    if (!t_pCache->DoesTableExist(SYSTEM_EMPIRE_DATA)) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    pszTable = SYSTEM_EMPIRE_DATA;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
-    
-    if (!t_pCache->DoesTableExist(SYSTEM_EMPIRE_DATA) ||
-        t_pCache->GetNumRows(SYSTEM_EMPIRE_DATA, &iNumRows) != OK || iNumRows < 1) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    else
+    {
+        if (!bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemGameClassData
@@ -178,35 +187,68 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemGameClassData::Sizes) == SystemGameClassData::NumColumns);
     Assert(countof(SystemGameClassData::ColumnNames) == SystemGameClassData::NumColumns);
 
-    pszBadTable = SYSTEM_GAMECLASS_DATA;
-    if (!t_pCache->DoesTableExist(pszBadTable) ||
-        t_pCache->GetNumRows(pszBadTable, &iNumRows) != OK || iNumRows < 1) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    pszTable = SYSTEM_GAMECLASS_DATA;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
-    
+    else
+    {
+        if (!bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
     // SystemAlienIcons
     Assert(countof(SystemAlienIcons::Types) == SystemAlienIcons::NumColumns);
     Assert(countof(SystemAlienIcons::Sizes) == SystemAlienIcons::NumColumns);
     Assert(countof(SystemAlienIcons::ColumnNames) == SystemAlienIcons::NumColumns);
 
-    pszBadTable = SYSTEM_ALIEN_ICONS;
-    if (!t_pCache->DoesTableExist(pszBadTable) ||
-        t_pCache->GetNumRows(pszBadTable, &iNumRows) != OK || iNumRows < 1) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    pszTable = SYSTEM_ALIEN_ICONS;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
-    
+    else
+    {
+        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
     // SystemSystemGameClassData
     Assert(countof(SystemSystemGameClassData::Types) == SystemSystemGameClassData::NumColumns);
     Assert(countof(SystemSystemGameClassData::Sizes) == SystemSystemGameClassData::NumColumns);
     Assert(countof(SystemSystemGameClassData::ColumnNames) == SystemSystemGameClassData::NumColumns);
 
-    pszBadTable = SYSTEM_SYSTEM_GAMECLASS_DATA;
-    if (!t_pCache->DoesTableExist(pszBadTable) ||
-        t_pCache->GetNumRows(pszBadTable, &iNumRows) != OK || iNumRows < 1) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    pszTable = SYSTEM_SYSTEM_GAMECLASS_DATA;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
     
     // SystemSuperClassData
@@ -214,11 +256,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemSuperClassData::Sizes) == SystemSuperClassData::NumColumns);
     Assert(countof(SystemSuperClassData::ColumnNames) == SystemSuperClassData::NumColumns);
 
-    pszBadTable = SYSTEM_SUPERCLASS_DATA;
-    if (!t_pCache->DoesTableExist(pszBadTable) ||
-        t_pCache->GetNumRows(pszBadTable, &iNumRows) != OK || iNumRows < 1) {
-        bGoodDatabase = false;
-        goto Cleanup;
+    pszTable = SYSTEM_SUPERCLASS_DATA;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
     
     // SystemThemes
@@ -226,12 +279,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemThemes::Sizes) == SystemThemes::NumColumns);
     Assert(countof(SystemThemes::ColumnNames) == SystemThemes::NumColumns);
 
-    pszBadTable = SYSTEM_THEMES;
-    if (!t_pCache->DoesTableExist(pszBadTable) ||
-        t_pCache->GetNumRows(pszBadTable, &iNumRows) != OK || iNumRows < 1)
+    pszTable = SYSTEM_THEMES;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
     
     // SystemActiveGames
@@ -239,11 +302,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemActiveGames::Sizes) == SystemActiveGames::NumColumns);
     Assert(countof(SystemActiveGames::ColumnNames) == SystemActiveGames::NumColumns);
 
-    pszBadTable = SYSTEM_ACTIVE_GAMES;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_ACTIVE_GAMES;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
     
     // SystemAlmonasterScoreTopList
@@ -251,11 +325,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemAlmonasterScoreTopList::Sizes) == SystemAlmonasterScoreTopList::NumColumns);
     Assert(countof(SystemAlmonasterScoreTopList::ColumnNames) == SystemAlmonasterScoreTopList::NumColumns);
 
-    pszBadTable = SYSTEM_ALMONASTER_SCORE_TOPLIST;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_ALMONASTER_SCORE_TOPLIST;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
     
     // SystemClassicScoreTopList
@@ -263,11 +348,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemClassicScoreTopList::Sizes) == SystemClassicScoreTopList::NumColumns);
     Assert(countof(SystemClassicScoreTopList::ColumnNames) == SystemClassicScoreTopList::NumColumns);
 
-    pszBadTable = SYSTEM_CLASSIC_SCORE_TOPLIST;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_CLASSIC_SCORE_TOPLIST;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemBridierScoreTopList
@@ -275,11 +371,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemBridierScoreTopList::Sizes) == SystemBridierScoreTopList::NumColumns);
     Assert(countof(SystemBridierScoreTopList::ColumnNames) == SystemBridierScoreTopList::NumColumns);
 
-    pszBadTable = SYSTEM_BRIDIER_SCORE_TOPLIST;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_BRIDIER_SCORE_TOPLIST;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemBridierScoreEstablishedTopList
@@ -287,11 +394,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemBridierScoreEstablishedTopList::Sizes) == SystemBridierScoreEstablishedTopList::NumColumns);
     Assert(countof(SystemBridierScoreEstablishedTopList::ColumnNames) == SystemBridierScoreEstablishedTopList::NumColumns);
 
-    pszBadTable = SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemChatroomData
@@ -299,11 +417,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemChatroomData::Sizes) == SystemChatroomData::NumColumns);
     Assert(countof(SystemChatroomData::ColumnNames) == SystemChatroomData::NumColumns);
 
-    pszBadTable = SYSTEM_CHATROOM_DATA;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_CHATROOM_DATA;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemTournaments
@@ -311,11 +440,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournaments::Sizes) == SystemTournaments::NumColumns);
     Assert(countof(SystemTournaments::ColumnNames) == SystemTournaments::NumColumns);
 
-    pszBadTable = SYSTEM_TOURNAMENTS;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SYSTEM_TOURNAMENTS;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemNukeList
@@ -323,11 +463,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemNukeList::Sizes) == SystemNukeList::NumColumns);
     Assert(countof(SystemNukeList::ColumnNames) == SystemNukeList::NumColumns);
 
-    pszBadTable = SystemNukeList::Template.Name;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SystemNukeList::Template.Name;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
 
     // SystemLatestGames
@@ -335,11 +486,22 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemLatestGames::Sizes) == SystemLatestGames::NumColumns);
     Assert(countof(SystemLatestGames::ColumnNames) == SystemLatestGames::NumColumns);
 
-    pszBadTable = SystemLatestGames::Template.Name;
-    if (!t_pCache->DoesTableExist(pszBadTable))
+    pszTable = SystemLatestGames::Template.Name;
+    if (t_pConn->DoesTableExist(pszTable))
     {
-        bGoodDatabase = false;
-        goto Cleanup;
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
     }
     
     // SystemEmpireMessages
@@ -356,6 +518,24 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireActiveGames::Types) == SystemEmpireActiveGames::NumColumns);
     Assert(countof(SystemEmpireActiveGames::Sizes) == SystemEmpireActiveGames::NumColumns);
     Assert(countof(SystemEmpireActiveGames::ColumnNames) == SystemEmpireActiveGames::NumColumns);
+
+    pszTable = SYSTEM_EMPIRE_ACTIVE_GAMES;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
 
     // SystemTournamentTeams
     Assert(countof(SystemTournamentTeams::Types) == SystemTournamentTeams::NumColumns);
@@ -436,174 +616,7 @@ Cleanup:
 
     *pbNewDatabase = bNewDatabase;
     *pbGoodDatabase = bGoodDatabase;
-    *ppszBadTable = pszBadTable;
-}
-
-void GameEngine::VerifyGameTables(int iGameClass, int iGameNumber, bool* pbGoodDatabase) {
-
-    int iErrCode;
-    bool bGoodDatabase = true;
-
-    char strBadTable [512];
-
-    Variant vTemp, * pvEmpireKey = NULL;
-    unsigned int iNumEmpires, i;
-
-    int iGameOptions, iGameClassOptions;
-
-    // Gameclass options
-    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
-    if (iErrCode != OK) {
-        Assert(false);
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-    iGameClassOptions = vTemp.GetInteger();
-
-    // GameData
-    GET_GAME_DATA(strBadTable, iGameClass, iGameNumber);
-    
-    if (!t_pCache->DoesTableExist(strBadTable)) {
-        Assert(false);
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-
-    iErrCode = t_pCache->ReadData(strBadTable, GameData::Options, &vTemp);
-    if (iErrCode != OK) {
-        Assert(false);
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-    iGameOptions = vTemp.GetInteger();
-
-    if (iGameClassOptions & INDEPENDENCE) {
-
-        GET_GAME_INDEPENDENT_SHIPS(strBadTable, iGameClass, iGameNumber);
-
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-
-    if (iGameOptions & GAME_ENFORCE_SECURITY) {
-
-        GET_GAME_SECURITY(strBadTable, iGameClass, iGameNumber);
-
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-
-    // GameDeadEmpires
-    GET_GAME_DEAD_EMPIRES(strBadTable, iGameClass, iGameNumber);
-    
-    if (!t_pCache->DoesTableExist(strBadTable)) {
-        Assert(false);
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-
-    // GameMap
-    GET_GAME_MAP(strBadTable, iGameClass, iGameNumber);
-    
-    if (!t_pCache->DoesTableExist(strBadTable)) {
-        Assert(false);
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-
-    // GameEmpires
-    GET_GAME_EMPIRES(strBadTable, iGameClass, iGameNumber);
-    
-    if (!t_pCache->DoesTableExist(strBadTable)) {
-        Assert(false);
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-
-    // Check empire tables  
-    if (t_pCache->ReadColumn(strBadTable, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires) != OK) {
-        bGoodDatabase = false;
-        goto Cleanup;
-    }
-
-    for(i = 0; i < iNumEmpires; i ++) {
-        
-        // GameEmpireData(I.I.I)
-        GET_GAME_EMPIRE_DATA(strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-        
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-
-        // GameEmpireMessages(I.I.I)
-        GET_GAME_EMPIRE_MESSAGES(strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-        
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-
-        // GameEmpireMap(I.I.I)
-        GET_GAME_EMPIRE_MAP(strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-        
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-
-        // GameEmpireDiplomacy(I.I.I)
-        GET_GAME_EMPIRE_DIPLOMACY(strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-        
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-
-        // GameEmpireShips(I.I.I)
-        GET_GAME_EMPIRE_SHIPS(strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-        
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-
-        // GameEmpireFleets(I.I.I)
-        GET_GAME_EMPIRE_FLEETS(strBadTable, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-        
-        if (!t_pCache->DoesTableExist(strBadTable)) {
-            Assert(false);
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-
-Cleanup:
-
-    *pbGoodDatabase = bGoodDatabase;
-
-    if (pvEmpireKey != NULL) {
-        t_pCache->FreeData(pvEmpireKey);
-    }
-
-    if (!bGoodDatabase) {
-
-        char* pszMessage =(char*) StackAlloc(strlen(strBadTable) + 256);
-        sprintf(pszMessage, "GameEngine setup found an inconsistency in the %s table", strBadTable);
-
-        global.GetReport()->WriteReport(pszMessage);
-    }
+    *ppszBadTable = pszTable;
 }
 
 int GameEngine::VerifySystem() {
@@ -781,8 +794,8 @@ Cleanup:
 }
 
 
-int GameEngine::VerifyActiveGames() {
-
+int GameEngine::VerifyActiveGames()
+{
     int iErrCode, iNumUpdatesDownBeforeGameIsKilled;
     unsigned int i, iNumGames;
     Seconds sSecondsForLongtermStatus;
@@ -833,7 +846,7 @@ int GameEngine::VerifyActiveGames() {
         Seconds sPeriod, sConsumedTime, sElapsedTime;
         UTCTime tLastUpdateTime, tLastCheckTime;
 
-        bool bPasswordProtected, bPaused, bStarted, bGoodDatabase;
+        bool bPasswordProtected, bPaused, bStarted;
         unsigned int j, iNumEmpires, iNumPaused;
 
         int iGameClass, iGameNumber, iState;
@@ -842,16 +855,8 @@ int GameEngine::VerifyActiveGames() {
         GAME_DATA(strGameData, iGameClass, iGameNumber);
         GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
 
-        // Verify the game's tables
-        VerifyGameTables(iGameClass, iGameNumber, &bGoodDatabase);
-        if (!bGoodDatabase) {
-            iErrCode = ERROR_DATA_CORRUPTION;
-            goto Cleanup;
-        }
-
         // Increment number of games in gameclass
-        iErrCode = t_pCache->Increment(
-            SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
+        iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
         if (iErrCode != OK) {
             Assert(false);
             goto Cleanup;
@@ -893,7 +898,7 @@ int GameEngine::VerifyActiveGames() {
         }
         
         // Get num empires
-        iErrCode = t_pCache->GetNumRows(strGameEmpires, &iNumEmpires);
+        iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
         if (iErrCode != OK) {
             Assert(false);
             goto Cleanup;

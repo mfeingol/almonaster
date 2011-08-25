@@ -27,7 +27,7 @@ TableCacheCollection::TableCacheCollection(SqlCommandManager^ cmd)
 
 TableCacheCollection::~TableCacheCollection()
 {
-    HashTableIterator<char*, ICachedTable*> htiView;
+    HashTableIterator<char*, CachedTable*> htiView;
     while (m_htTableViews.GetNextIterator(&htiView))
     {
         char* pszKey = htiView.GetKey();
@@ -49,7 +49,7 @@ CachedTable* TableCacheCollection::CreateEmptyTable(const char* pszCacheTableNam
     return pTable;
 }
 
-void TableCacheCollection::InsertTable(const char* pszCacheTableName, ICachedTable* pTable)
+void TableCacheCollection::InsertTable(const char* pszCacheTableName, CachedTable* pTable)
 {
     char* pszKey = String::StrDup(pszCacheTableName);
     Assert(pszKey);
@@ -235,6 +235,19 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
 
 int TableCacheCollection::GetTable(const char* pszCacheTableName, ICachedTable** ppTable)
 {
+    *ppTable = NULL;
+
+    CachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        *ppTable = pTable;
+    }
+    return iErrCode;
+}
+
+int TableCacheCollection::GetTable(const char* pszCacheTableName, CachedTable** ppTable)
+{
     if (m_htTableViews.FindFirst((char* const)pszCacheTableName, ppTable))
     {
         (*ppTable)->AddRef();
@@ -277,6 +290,25 @@ int TableCacheCollection::ReadColumn(const char* pszCacheTableName, const char* 
     if (iErrCode == OK)
     {
         iErrCode = pTable->ReadColumn(pszColumn, ppiKey, ppvData, piNumRows);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::ReadColumnWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
+                                               unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows)
+{
+    if (ppiKey)
+        *ppiKey = NULL;
+
+    *ppvData = NULL;
+    *piNumRows = 0;
+
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->ReadColumnWhereEqual(pszEqualColumn, vData, pszReadColumn, ppiKey, ppvData, piNumRows);
     }
     SafeRelease(pTable);
     return iErrCode;
@@ -343,12 +375,27 @@ int TableCacheCollection::GetNextKey(const char* pszCacheTableName, unsigned int
     return iErrCode;
 }
 
+int TableCacheCollection::GetEqualKeys(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys)
+{
+    *ppiKey = NULL;
+    *piNumKeys = 0;
+
+    CachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->GetEqualKeys(pszColumn, vData, ppiKey, piNumKeys);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
 int TableCacheCollection::GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
     *ppiKey = NULL;
     *piNumKeys = 0;
 
-    ICachedTable* pTable;
+    CachedTable* pTable;
     int iErrCode = GetTable(pszCacheTableName, &pTable);
     if (iErrCode == OK)
     {
@@ -360,7 +407,7 @@ int TableCacheCollection::GetAllKeys(const char* pszCacheTableName, unsigned int
 
 int TableCacheCollection::ReadData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, Variant* pvData)
 {
-    ICachedTable* pTable;
+    CachedTable* pTable;
     int iErrCode = GetTable(pszCacheTableName, &pTable);
     if (iErrCode == OK)
     {
@@ -377,8 +424,7 @@ int TableCacheCollection::ReadData(const char* pszCacheTableName, const char* ps
 
 int TableCacheCollection::InsertRow(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey)
 {
-    // TODOTODO - revisit what we do when table is uncached
-    ICachedTable* pTable;
+    CachedTable* pTable;
     bool bFound = m_htTableViews.FindFirst((char* const)pszCacheTableName, &pTable);
     if (!bFound)
     {
@@ -398,7 +444,7 @@ int TableCacheCollection::InsertRow(const char* pszCacheTableName, const Templat
 
 int TableCacheCollection::InsertDuplicateRows(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows)
 {
-    ICachedTable* pTable;
+    CachedTable* pTable;
     bool bFound = m_htTableViews.FindFirst((char* const)pszCacheTableName, &pTable);
     if (!bFound)
     {
@@ -413,6 +459,30 @@ int TableCacheCollection::InsertDuplicateRows(const char* pszCacheTableName, con
         SafeRelease(pTable);
     }
 
+    return iErrCode;
+}
+
+int TableCacheCollection::DeleteRow(const char* pszCacheTableName, unsigned int iKey)
+{
+    CachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->DeleteRow(iKey);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::DeleteAllRows(const char* pszCacheTableName)
+{
+    CachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->DeleteAllRows();
+    }
+    SafeRelease(pTable);
     return iErrCode;
 }
 

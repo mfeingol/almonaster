@@ -45,9 +45,9 @@ int GameEngine::SetEmpireOption (int iGameClass, int iGameNumber, int iEmpireKey
     GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
     if (bOption) {
-        return t_pCache->WriteOr (strEmpireOptions, GameEmpireData::Options, iFlag);
+        return t_pCache->WriteOr(strEmpireOptions, GameEmpireData::Options, iFlag);
     } else {
-        return t_pCache->WriteAnd (strEmpireOptions, GameEmpireData::Options, ~iFlag);
+        return t_pCache->WriteAnd(strEmpireOptions, GameEmpireData::Options, ~iFlag);
     }
 }
 
@@ -138,7 +138,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
     }
 
     // Get current and max number of messages
-    iErrCode = pMessages->GetNumRows (&iNumMessages);
+    iErrCode = pMessages->GetNumCachedRows(&iNumMessages);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -166,7 +166,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
         for (i = 0; i < iReadNumMessages && iCurrentNumMessages > iMaxNumSavedMessages; i ++) {
 
             // Has message been read?
-            iErrCode = pMessages->ReadData (piKey[i], GameEmpireMessages::Unread, &iUnread);
+            iErrCode = pMessages->ReadData(piKey[i], GameEmpireMessages::Unread, &iUnread);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -364,7 +364,7 @@ int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int i
     Assert (!(vTemp.GetInteger() & REQUEST_PAUSE));
 #endif
 
-    iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
+    iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -413,7 +413,7 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->GetNumRows (strEmpires, &iNumEmpires);
+    iErrCode = t_pCache->GetNumCachedRows(strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -430,7 +430,7 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
+    iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -569,7 +569,7 @@ int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey,
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_PAUSE);
+    iErrCode = t_pCache->WriteAnd(strGameEmpireData, GameEmpireData::Options, ~REQUEST_PAUSE);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -690,7 +690,7 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->WriteOr (strGameEmpireData, GameEmpireData::Options, REQUEST_DRAW);
+    iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, REQUEST_DRAW);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -702,7 +702,7 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->GetNumRows (strEmpires, &iNumEmpires);
+    iErrCode = t_pCache->GetNumCachedRows(strEmpires, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -755,7 +755,7 @@ int GameEngine::RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) 
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->WriteAnd (strGameEmpireData, GameEmpireData::Options, ~REQUEST_DRAW);
+    iErrCode = t_pCache->WriteAnd(strGameEmpireData, GameEmpireData::Options, ~REQUEST_DRAW);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

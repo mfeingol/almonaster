@@ -144,31 +144,14 @@ int GameEngine::GetSuperClassName (int iKey, Variant* pvName) {
     return t_pCache->ReadData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pvName);
 }
 
-int GameEngine::RenameSuperClass (int iKey, const char* pszNewName) {
-
-    int iErrCode;
-    bool bExists;
-
+int GameEngine::RenameSuperClass(int iKey, const char* pszNewName)
+{
     size_t stLen = String::StrLen (pszNewName);
-
-    if (stLen < 1 || stLen > MAX_SUPER_CLASS_NAME_LENGTH) {
+    if (stLen < 1 || stLen > MAX_SUPER_CLASS_NAME_LENGTH)
         return ERROR_INVALID_ARGUMENT;
-    }
 
-    iErrCode = t_pCache->DoesRowExist(SYSTEM_SUPERCLASS_DATA, iKey, &bExists);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    if (!bExists) {
+    int iErrCode = t_pCache->WriteData (SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
         iErrCode = ERROR_SUPERCLASS_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
-
-    iErrCode = t_pCache->WriteData (SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
-    Assert (iErrCode == OK);
-
-Cleanup:
-
     return iErrCode;
 }

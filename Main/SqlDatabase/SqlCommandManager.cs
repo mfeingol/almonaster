@@ -243,48 +243,33 @@ namespace Almonaster.Database.Sql
 
         // ...
 
-        public long Insert(string tableName, IEnumerable<string> columnNames, IEnumerable<IEnumerable<InsertValue>> rows)
+        public IEnumerable<long> Insert(string tableName, IEnumerable<string> columnNames, IEnumerable<IEnumerable<InsertValue>> rows)
         {
-            //INSERT INTO @TableName (Col0, Col1, Col2, Col3)
+            //INSERT INTO @TableName
             //VALUES (@p0, @p1, @p2, @p3), (@p4, @p5, @p6, @p7)
 
             using (SqlCommand cmd = new SqlCommand())
             {
                 StringBuilder insert = new StringBuilder();
-                insert.AppendFormat("INSERT INTO [{0}] (", tableName);
 
-                bool first = true;
-                foreach (string columnName in columnNames)
-                {
-                    if (first)
-                    {
-                        insert.AppendFormat("[{0}]", columnName);
-                        first = false;
-                    }
-                    else
-                    {
-                        insert.AppendFormat(", [{0}]", columnName);
-                    }
-                }
-                insert.Append(")");
-
+                uint cRows = 0;
                 int index = 0;
-                StringBuilder values = new StringBuilder("VALUES");
                 foreach (IEnumerable<InsertValue> row in rows)
                 {
-                    values.Append(" (");
+                    insert.AppendFormat("INSERT INTO [{0}] VALUES (", tableName);
 
-                    first = true;
+                    bool first = true;
                     foreach (InsertValue value in row)
                     {
                         string param = "@p" + index ++;
                         if (first)
                         {
-                            values.AppendFormat(", {0}", param);
+                            insert.Append(param);
+                            first = false;
                         }
                         else
                         {
-                            values.Append(param);
+                            insert.AppendFormat(", {0}", param);
                         }
 
                         cmd.Parameters.Add(new SqlParameter(param, value.Type)
@@ -292,14 +277,24 @@ namespace Almonaster.Database.Sql
                             Value = value.Value
                         });
                     }
-                }
-                values.Append(")");
 
-                cmd.CommandText = insert + " " + values + "; SELECT SCOPE_IDENTITY();";
+                    insert.Append("); SELECT SCOPE_IDENTITY();");
+                    cRows++;
+                }
+
+                cmd.CommandText = insert.ToString();
                 cmd.Connection = this.conn;
 
-                object id = cmd.ExecuteScalar();
-                return (long)(decimal)id;
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    long[] ids = new long[cRows];
+                    index = 0;
+                    while (reader.Read())
+                    {
+                        ids[index++] = (long)(decimal)reader[0];
+                    }
+                    return ids;
+                }
             }
         }
 

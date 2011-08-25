@@ -6209,13 +6209,14 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
             GET_GAME_EMPIRE_SHIPS(pszGameEmpireShips, iGameClass, iGameNumber, iCurrentEmpireKey);
             GET_GAME_EMPIRE_DIPLOMACY(pszGameEmpireDip, iGameClass, iGameNumber, iCurrentEmpireKey);
 
-            iErrCode = t_pCache->GetNumRows(pszGameEmpireShips, (unsigned int*) &iValue);
+            unsigned int iShips;
+            iErrCode = t_pCache->GetNumCachedRows(pszGameEmpireShips, &iShips);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
 
             OutputText ("<td align=\"center\">");
-            m_pHttpResponse->WriteText(iValue);
+            m_pHttpResponse->WriteText(iShips);
             OutputText ("</td>");
 
             Variant vProp;
@@ -6422,9 +6423,8 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
     //
 
     GET_GAME_DEAD_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
-
-    if (t_pCache->GetNumRows (strGameEmpireData, &iNumRows) == OK && iNumRows > 0) {
-
+    if (t_pCache->GetNumCachedRows(strGameEmpireData, &iNumRows) == OK && iNumRows > 0)
+    {
         const int iNumHeaders = sizeof (g_pszDeadEmpireHeaders) / sizeof (char*);
 
         OutputText (

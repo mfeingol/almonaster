@@ -187,13 +187,13 @@ int SqlDatabaseConnection::WriteColumn(const char* pszTableName, const char* psz
 }
 
 // Row operations
-int SqlDatabaseConnection::GetNumRows(const char* pszTableName, unsigned int* piNumRows)
+int SqlDatabaseConnection::GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows)
 {
     SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
     return read.GetNumRows(piNumRows);
 }
 
-int SqlDatabaseConnection::DoesRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists)
+int SqlDatabaseConnection::DoesPhysicalRowExist(const char* pszTableName, unsigned int iKey, bool* pbExists)
 {
     SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
     return read.DoesRowExist(iKey, pbExists);

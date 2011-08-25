@@ -536,49 +536,49 @@ if (iErrCode != OK) {
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::LastLogin, &tLastLogin);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::LastLogin, &tLastLogin);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::Options, &iGameOptions);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Options, &iGameOptions);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::Econ, &iEcon);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Econ, &iEcon);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::Mil, &fMil);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::NumTruces, &iNumTruces);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTruces, &iNumTruces);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::NumTrades, &iNumTrades);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTrades, &iNumTrades);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pGameEmpireTable->ReadData (GameEmpireData::NumAlliances, &iNumAlliances);
+iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumAlliances, &iNumAlliances);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
@@ -595,55 +595,55 @@ if (iErrCode != OK) {
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::Wins, &iWins);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Wins, &iWins);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::Nukes, &iNukes);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Nukes, &iNukes);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::Nuked, &iNuked);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Nuked, &iNuked);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::Draws, &iDraws);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Draws, &iDraws);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::Ruins, &iRuins);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Ruins, &iRuins);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::CreationTime, &tCreated);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::CreationTime, &tCreated);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
 }
 
-iErrCode = pSystemEmpireDataTable->ReadData (m_iEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
+iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
 if (iErrCode != OK) {
     Assert (false);
     goto Cleanup;
@@ -1002,19 +1002,19 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireTable->ReadData (GameEmpireData::LastLogin, &tLastLogin);
+    iErrCode = pGameEmpireTable->ReadData(GameEmpireData::LastLogin, &tLastLogin);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireTable->ReadData (GameEmpireData::Options, &iGameOptions);
+    iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Options, &iGameOptions);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameEmpireTable->ReadData (GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
+    iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1051,13 +1051,13 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     } else {
 
-        iErrCode = pGameEmpireTable->ReadData (GameEmpireData::Econ, &iEcon);
+        iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Econ, &iEcon);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
         }
 
-        iErrCode = pGameEmpireTable->ReadData (GameEmpireData::Mil, &fMil);
+        iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -1075,67 +1075,67 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::Name, &vKnownEmpireName);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Name, &vKnownEmpireName);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::AlienKey, &iAlienKey);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::AlienKey, &iAlienKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::Wins, &iWins);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Wins, &iWins);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::Nukes, &iNukes);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Nukes, &iNukes);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::Nuked, &iNuked);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Nuked, &iNuked);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::Draws, &iDraws);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Draws, &iDraws);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::Ruins, &iRuins);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Ruins, &iRuins);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::CreationTime, &tCreated);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::CreationTime, &tCreated);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystemEmpireDataTable->ReadData (iKnownEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

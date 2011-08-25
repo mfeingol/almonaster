@@ -103,57 +103,57 @@ int GameEngine::CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch,
     return OK;
 }
 
-int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecondEmpire, const char* pszPassword) {
-
+int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecondEmpire, const char* pszPassword)
+{
     // TODOTODO - This will need to be rewritten
     int iErrCode;
     Variant vTemp;
 
     ICachedTable* pEmpires = NULL;
 
-    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    // Check for the first empire
-    bool bExists;
-    iErrCode = pEmpires->DoesRowExist(iEmpireKey, &bExists);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-    if (!bExists) {
-        iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
+    GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
+    iErrCode = t_pCache->GetTable(strEmpires, &pEmpires);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
     // Find the second empire
     unsigned int iSecondKey;
-    iErrCode = pEmpires->GetFirstKey(SystemEmpireData::Name, pszSecondEmpire, &iSecondKey);
-    if (iErrCode != OK) {
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+    {
+        TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszSecondEmpire };
+        TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
+        
+        iErrCode = t_pCache->Cache(&entry, 1, &iSecondKey);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        if (iSecondKey == NO_KEY)
+        {
             iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
+            goto Cleanup;
         }
-        else Assert (false);
-        goto Cleanup;
     }
 
     // Make sure they're not the same empire
-    if (iSecondKey == iEmpireKey) {
+    if (iSecondKey == iEmpireKey)
+    {
         iErrCode = ERROR_DUPLICATE_EMPIRE;
         goto Cleanup;
     }
 
+    Assert(iSecondKey != NO_KEY);
+    GET_SYSTEM_EMPIRE_DATA(strSecondEmpire, iSecondKey);
+
     // Check the second empire's password
-    iErrCode = pEmpires->ReadData (iSecondKey, SystemEmpireData::Password, &vTemp);
-    if (iErrCode != OK) {
+    iErrCode = t_pCache->ReadData(strSecondEmpire, iSecondKey, SystemEmpireData::Password, &vTemp);
+    if (iErrCode != OK)
+    {
         Assert (false);
         goto Cleanup;
     }
-    if (strcmp (pszPassword, vTemp.GetCharPtr()) != 0) {
+    if (strcmp (pszPassword, vTemp.GetCharPtr()) != 0)
+    {
         iErrCode = ERROR_PASSWORD;
         goto Cleanup;
     }
@@ -161,27 +161,30 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
     // Read the two empire's associations, making local copies
     char* pszFirstAssoc, * pszSecondAssoc, * pszToken;
 
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &vTemp);
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Associations, &vTemp);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
     pszFirstAssoc = (char*)StackAlloc(String::StrLen(vTemp.GetCharPtr()) + 33);
-    if (String::IsBlank(vTemp.GetCharPtr())) {
+    if (String::IsBlank(vTemp.GetCharPtr()))
+    {
         pszFirstAssoc[0] = '\0';
-    } else {
-
-        strcpy (pszFirstAssoc, vTemp.GetCharPtr());
+    }
+    else
+    {
+        strcpy(pszFirstAssoc, vTemp.GetCharPtr());
 
         // Make sure the association doesn't exist already
-        pszToken = strtok (pszFirstAssoc, ";");
-        Assert (pszToken != NULL);
+        pszToken = strtok(pszFirstAssoc, ";");
+        Assert(pszToken);
 
-        while (true) {
-
+        while (true)
+        {
             unsigned int iAssoc = String::AtoUI (pszToken);
-            if (iAssoc == iSecondKey) {
+            if (iAssoc == iSecondKey)
+            {
                 iErrCode = ERROR_ASSOCIATION_ALREADY_EXISTS;
                 goto Cleanup;
             }
@@ -194,37 +197,41 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
         }
 
         // Add a new separator
-        strcat (pszFirstAssoc, ";");
+        strcat(pszFirstAssoc, ";");
     }
 
-    iErrCode = pEmpires->ReadData(iSecondKey, SystemEmpireData::Associations, &vTemp);
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = t_pCache->ReadData(strSecondEmpire, iSecondKey, SystemEmpireData::Associations, &vTemp);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
     pszSecondAssoc = (char*)StackAlloc(String::StrLen (vTemp.GetCharPtr()) + 33);
-    if (String::IsBlank(vTemp.GetCharPtr())) {
+    if (String::IsBlank(vTemp.GetCharPtr()))
+    {
         pszSecondAssoc[0] = '\0';
-    } else {
-
+    }
+    else
+    {
         strcpy(pszSecondAssoc, vTemp.GetCharPtr());
 
 #ifdef _DEBUG
         // Do it for the other empire too
-        pszToken = strtok (pszSecondAssoc, ";");
-        Assert (pszToken != NULL);
+        pszToken = strtok(pszSecondAssoc, ";");
+        Assert (pszToken);
 
-        while (true) {
-
+        while (true)
+        {
             unsigned int iAssoc = String::AtoUI (pszToken);
-            if (iAssoc == iSecondKey) {
+            if (iAssoc == iSecondKey)
+            {
                 iErrCode = ERROR_ASSOCIATION_ALREADY_EXISTS;
                 goto Cleanup;
             }
 
             pszToken = strtok (NULL, ";");
-            if (pszToken == NULL) break;
+            if (pszToken == NULL)
+                break;
 
             // Restore the last semicolon
             *(pszToken - 1) = ';';
@@ -232,24 +239,24 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
 #endif
 
         // Add a new separator
-        strcat (pszSecondAssoc, ";");
+        strcat(pszSecondAssoc, ";");
     }
 
     // Create the new association
-    char pszInt [32];
+    char pszInt[32];
 
-    strcat (pszFirstAssoc, String::UItoA (iSecondKey, pszInt, 10));
-    strcat (pszSecondAssoc, String::UItoA (iEmpireKey, pszInt, 10));
+    strcat(pszFirstAssoc, String::UItoA (iSecondKey, pszInt, 10));
+    strcat(pszSecondAssoc, String::UItoA (iEmpireKey, pszInt, 10));
 
-    iErrCode = pEmpires->WriteData (iEmpireKey, SystemEmpireData::Associations, pszFirstAssoc);
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = pEmpires->WriteData(iEmpireKey, SystemEmpireData::Associations, pszFirstAssoc);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
-    iErrCode = pEmpires->WriteData (iSecondKey, SystemEmpireData::Associations, pszSecondAssoc);
-    if (iErrCode != OK) {
-        Assert (false);
+    iErrCode = t_pCache->WriteData(strSecondEmpire, iSecondKey, SystemEmpireData::Associations, pszSecondAssoc);
+    if (iErrCode != OK)
+    {
         goto Cleanup;
     }
 
@@ -263,12 +270,14 @@ Cleanup:
 //
 // Typical format:  1111;2222;3333
 //
-int GameEngine::DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
+int GameEngine::DeleteSpecificAssociation(unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
 
     int iErrCode;
-    Variant vTemp;
 
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &vTemp);
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
+
+    Variant vTemp;
+    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Associations, &vTemp);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -277,7 +286,7 @@ int GameEngine::DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireK
         return ERROR_ASSOCIATION_NOT_FOUND;
     }
 
-    size_t stAssocLen = strlen (vTemp.GetCharPtr());
+    size_t stAssocLen = strlen(vTemp.GetCharPtr());
     char* pszAssociation = (char*) StackAlloc (stAssocLen + 1);
     strcpy (pszAssociation, vTemp.GetCharPtr());
 
@@ -285,10 +294,10 @@ int GameEngine::DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireK
     char* pszToken = strtok (pszAssociation, ";");
     Assert (pszToken != NULL);
 
-    while (true) {
-
-        if (String::AtoUI (pszToken) == iSecondEmpireKey) {
-
+    while (true)
+    {
+        if (String::AtoUI (pszToken) == iSecondEmpireKey)
+        {
             size_t stTokenLen = strlen (pszToken);
             if (pszToken == pszAssociation) {
 
@@ -335,69 +344,52 @@ int GameEngine::DeleteAssociation (ICachedTable* pEmpires, unsigned int iEmpireK
         return ERROR_ASSOCIATION_NOT_FOUND;
     }
 
-    return pEmpires->WriteData (iEmpireKey, SystemEmpireData::Associations, pszAssociation);
+    return t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Associations, pszAssociation);
 }
 
-int GameEngine::DeleteAssociation (unsigned int iEmpireKey, unsigned int iSecondEmpireKey) {
-
-    int iErrCode;
-    ICachedTable* pEmpires = NULL;
-
-    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
+int GameEngine::DeleteAssociation (unsigned int iEmpireKey, unsigned int iSecondEmpireKey)
+{
+    int iErrCode = DeleteSpecificAssociation(iEmpireKey, iSecondEmpireKey);
+    if (iErrCode == OK)
+    {
+        iErrCode = DeleteSpecificAssociation(iSecondEmpireKey, iEmpireKey);
     }
-
-    iErrCode = DeleteAssociation (pEmpires, iEmpireKey, iSecondEmpireKey);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    iErrCode = DeleteAssociation (pEmpires, iSecondEmpireKey, iEmpireKey);
-    if (iErrCode != OK) {
-        Assert (iErrCode != ERROR_ASSOCIATION_NOT_FOUND);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pEmpires);
-
+    Assert (iErrCode != ERROR_ASSOCIATION_NOT_FOUND);
     return iErrCode;
 }
 
-int GameEngine::RemoveDeadEmpireAssociations (ICachedTable* pEmpires, unsigned int iEmpireKey) {
-
+int GameEngine::RemoveDeadEmpireAssociations(unsigned int iEmpireKey)
+{
     int iErrCode;
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
 
     Variant vTemp;
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::Associations, &vTemp);
-    if (iErrCode != OK) {
+    iErrCode = t_pCache->ReadData(strEmpire, SystemEmpireData::Associations, &vTemp);
+    if (iErrCode != OK)
         return iErrCode;
-    }
 
-    if (String::IsBlank(vTemp.GetCharPtr())) {
+    if (String::IsBlank(vTemp.GetCharPtr()))
         return OK;
-    }
 
     char* pszAssoc = (char*)StackAlloc (strlen (vTemp.GetCharPtr()) + 1);
     strcpy (pszAssoc, vTemp.GetCharPtr());
 
     unsigned int* piAssoc, i, iAssoc;
-    iErrCode = GetAssociations (pszAssoc, &piAssoc, &iAssoc);
-    if (iErrCode != OK) {
+    iErrCode = GetAssociations(pszAssoc, &piAssoc, &iAssoc);
+    if (iErrCode != OK)
         return iErrCode;
-    }
 
-    if (iAssoc > 0) {
+    // TODOTODO - cache association empires
 
-        for (i = 0; i < iAssoc; i ++) {
-
-            iErrCode = DeleteAssociation (pEmpires, piAssoc[i], iEmpireKey);
-            if (iErrCode != OK) {
-                Assert (iErrCode != ERROR_ASSOCIATION_NOT_FOUND);
-                OS::HeapFree (piAssoc);
+    if (iAssoc > 0)
+    {
+        for (i = 0; i < iAssoc; i ++)
+        {
+            iErrCode = DeleteAssociation(piAssoc[i], iEmpireKey);
+            if (iErrCode != OK)
+            {
+                Assert(iErrCode != ERROR_ASSOCIATION_NOT_FOUND);
+                OS::HeapFree(piAssoc);
                 return iErrCode;
             }
         }

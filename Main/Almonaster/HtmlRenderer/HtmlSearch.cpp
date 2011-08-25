@@ -60,9 +60,11 @@ void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
     Assert(MAX_NUM_SEARCH_COLUMNS == countof (g_AdvancedSearchFields));
     Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns); 
     
-    int iNumEmpires, iErrCode = GetNumEmpiresOnServer (&iNumEmpires);
-    if (iErrCode != OK) {
-        OutputText ("<p>Error reading empire list");
+    unsigned int iNumEmpires;
+    int iErrCode = GetNumEmpiresOnServer(&iNumEmpires);
+    if (iErrCode != OK)
+    {
+        OutputText ("<p>Error reading empire count");
         return;
     }
     

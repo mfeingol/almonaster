@@ -1626,7 +1626,7 @@ case 5:
 
     {
 
-    int iNumEmpires;
+    unsigned int iNumEmpires;
     Check (GetNumEmpiresOnServer (&iNumEmpires));
     %><input type="hidden" name="ServerAdminPage" value="5"><%
 

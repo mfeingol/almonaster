@@ -321,9 +321,8 @@ Cleanup:
     return iErrCode;
 }
 
-int BridierObject::GetReplacementKeys (bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, 
-                                       unsigned int* piNumEmpires) {
-
+int BridierObject::GetReplacementKeys(bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires)
+{
 #ifdef _DEBUG
     const int iMaxIndex = bEstablished ? BRIDIER_ESTABLISHED_TOPLIST_INDEX : BRIDIER_TOPLIST_INDEX;
     Assert (pvScore == NULL || pvScore [BRIDIER_INDEX].GetInteger() <= iMaxIndex);
@@ -355,14 +354,7 @@ int BridierObject::GetReplacementKeys (bool bEstablished, const Variant* pvScore
     sd.pscColumns = sc;
 
     Assert (countof (sc) == NUM_BRIDIER_COLUMNS);
-
-    return t_pCache->GetSearchKeys (
-        SYSTEM_EMPIRE_DATA,
-        sd,
-        ppiKey,
-        piNumEmpires,
-        NULL
-        );
+    return t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, sd, ppiKey, piNumEmpires, NULL);
 }
 
 //

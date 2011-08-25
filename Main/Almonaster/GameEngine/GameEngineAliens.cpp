@@ -26,7 +26,7 @@
 
 int GameEngine::GetNumAliens(unsigned int* piNumAliens)
 {
-    return t_pCache->GetNumRows(SYSTEM_ALIEN_ICONS, piNumAliens);
+    return t_pCache->GetNumCachedRows(SYSTEM_ALIEN_ICONS, piNumAliens);
 }
 
 // Output:

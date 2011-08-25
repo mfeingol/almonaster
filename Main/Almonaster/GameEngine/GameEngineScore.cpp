@@ -542,33 +542,17 @@ int GameEngine::UpdateScoresOnRuin (int iGameClass, int iGameNumber, int iEmpire
 //
 // Return the size of the empire's nuke history
 
-int GameEngine::GetNumEmpiresInNukeHistory (int iEmpireKey, int* piNumNukes, int* piNumNuked) {
-
-    int iErrCode = OK;
+int GameEngine::GetNumEmpiresInNukeHistory(int iEmpireKey, int* piNumNukes, int* piNumNuked)
+{
+    *piNumNukes = *piNumNuked = 0;
 
     SYSTEM_EMPIRE_NUKER_LIST (strTable, iEmpireKey);
-
-    if (!t_pCache->DoesTableExist (strTable)) {
-        *piNumNukes = 0;
-    } else {
-        iErrCode = t_pCache->GetNumRows (strTable, (unsigned int*) piNumNukes);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+    int iErrCode = t_pCache->GetNumCachedRows(strTable, (unsigned int*) piNumNukes);
+    if (iErrCode == OK)
+    {
+        GET_SYSTEM_EMPIRE_NUKED_LIST (strTable, iEmpireKey);
+        iErrCode = t_pCache->GetNumCachedRows(strTable, (unsigned int*) piNumNuked);
     }
-
-    GET_SYSTEM_EMPIRE_NUKED_LIST (strTable, iEmpireKey);
-
-    if (!t_pCache->DoesTableExist (strTable)) {
-        *piNumNuked = 0;
-    } else {
-
-        iErrCode = t_pCache->GetNumRows (strTable, (unsigned int*) piNumNuked);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-    }
-
     return iErrCode;
 }
 
@@ -1211,9 +1195,9 @@ Cleanup:
 //
 // Assumption: schemas for all nuke lists are the same
 //
-int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
-                                  int iEmpireKey, const char* pszEmpireName, int iAlienKey,
-                                  int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey) {
+int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
+                                 int iEmpireKey, const char* pszEmpireName, int iAlienKey,
+                                 int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey) {
 
     int iErrCode;
 
@@ -1255,7 +1239,7 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
         pttTemplate = &SystemNukeList::Template;
         pszLimitCol = SystemData::NumNukesListedInSystemNukeList;
         pszTimeStampCol = SystemNukeList::TimeStamp;
-        StrNCpy (pszTable, SYSTEM_NUKE_LIST);
+        StrNCpy(pszTable, SYSTEM_NUKE_LIST);
         break;
     
     default:
@@ -1273,16 +1257,6 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
 
     iNumNukesListed = vNumNukesListed.GetInteger();
 
-    // Fault in table
-    if (!t_pCache->DoesTableExist (pszTable)) {
-
-        iErrCode = t_pCache->CreateTable (pszTable, *pttTemplate);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
-
     // Get the table
     iErrCode = t_pCache->GetTable(pszTable, &pWriteTable);
     if (iErrCode != OK) {
@@ -1293,7 +1267,7 @@ int GameEngine::AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassN
     //
     // Delete the oldest nuke if the limit has been reached
     //
-    iErrCode = pWriteTable->GetNumRows (&iNumRows);
+    iErrCode = pWriteTable->GetNumCachedRows(&iNumRows);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1393,13 +1367,13 @@ int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {
         goto Cleanup;
     }
 
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::BridierRank, piRank);
+    iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::BridierRank, piRank);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pEmpires->ReadData (iEmpireKey, SystemEmpireData::BridierIndex, piIndex);
+    iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::BridierIndex, piIndex);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
