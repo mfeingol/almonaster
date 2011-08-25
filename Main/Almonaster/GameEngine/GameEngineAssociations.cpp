@@ -124,13 +124,17 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
         TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszSecondEmpire };
         TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
         
-        iErrCode = t_pCache->Cache(&entry, 1, &iSecondKey);
+        ICachedTable* pSecondEmpire;
+        iErrCode = t_pCache->Cache(entry, &pSecondEmpire);
         if (iErrCode != OK)
             goto Cleanup;
 
-        if (iSecondKey == NO_KEY)
+        iErrCode = pSecondEmpire->GetNextKey(NO_KEY, &iSecondKey);
+        SafeRelease(pSecondEmpire);
+        if (iErrCode != OK)
         {
-            iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
+            if (iErrCode == ERROR_DATA_NOT_FOUND)
+                iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
             goto Cleanup;
         }
     }

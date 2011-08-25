@@ -592,9 +592,9 @@ namespace SystemData {
     char pszBuffer [sizeof("SystemEmpireData") + 32]; \
     sprintf (pszBuffer, "SystemEmpireData%i", i);
 
-#define GET_SYSTEM_EMPIRE_DATA_NAME(pszBuffer, name)       \
-    char pszBuffer [sizeof("SystemEmpireData") + sizeof("Name") + sizeof(name) + 16]; \
-    sprintf (pszBuffer, "SystemEmpireData_Name_%s", name);
+//#define GET_SYSTEM_EMPIRE_DATA_NAME(pszBuffer, name)       \
+//    char pszBuffer [sizeof("SystemEmpireData") + sizeof("Name") + sizeof(name) + 16]; \
+//    sprintf (pszBuffer, "SystemEmpireData_Name_%s", name);
 
 namespace SystemEmpireData {
 

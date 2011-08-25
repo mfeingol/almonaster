@@ -42,12 +42,17 @@ int GameEngine::GetEmpireOption (int iEmpireKey, unsigned int iFlag, bool* pbOpt
     return iErrCode;
 }
 
-int GameEngine::SetEmpireOption (int iEmpireKey, unsigned int iFlag, bool bOption) {
+int GameEngine::SetEmpireOption (int iEmpireKey, unsigned int iFlag, bool bOption)
+{
+    GET_SYSTEM_EMPIRE_DATA(strTableName, iEmpireKey);
 
-    if (bOption) {
-        return t_pCache->WriteOr(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, iFlag);
-    } else {
-        return t_pCache->WriteAnd(SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::Options, ~iFlag);
+    if (bOption)
+    {
+        return t_pCache->WriteOr(strTableName, iEmpireKey, SystemEmpireData::Options, iFlag);
+    }
+    else
+    {
+        return t_pCache->WriteAnd(strTableName, iEmpireKey, SystemEmpireData::Options, ~iFlag);
     }
 }
 
@@ -101,6 +106,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     Variant vTemp, pvColVal[SystemEmpireData::NumColumns];
 
     ICachedTable* pSystemData = NULL;
+    ICachedTable* pNewEmpire = NULL;
 
     *piEmpireKey = NO_KEY;
 
@@ -121,17 +127,6 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
         if (String::StriCmp(pszEmpireName, RESERVED_EMPIRE_NAMES[i]) == 0)
             return ERROR_RESERVED_EMPIRE_NAME;
     }
-
-    // Make sure that an empire of the same name doesn't exist
-    TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszEmpireName };
-    TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
-    unsigned int iTestKey;
-    iErrCode = t_pCache->Cache(&entry, 1, &iTestKey);
-    if (iErrCode != OK)
-        return iErrCode;
-
-    if (iTestKey != NO_KEY)
-        return ERROR_EMPIRE_ALREADY_EXISTS;
 
     // Get current time
     UTCTime tTime;
@@ -367,12 +362,36 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
         goto Cleanup;
     }
 
-    // Insert row into SystemEmpireData
-    GET_SYSTEM_EMPIRE_DATA_NAME(strNewEmpire, pszEmpireName);
-    iErrCode = t_pCache->InsertRow(strNewEmpire, SystemEmpireData::Template, pvColVal, &iKey);
-    if (iErrCode != OK)
+    // Make sure that an empire with the same name doesn't exist
     {
-        goto Cleanup;
+        TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszEmpireName };
+        TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
+
+        iErrCode = t_pCache->Cache(entry, &pNewEmpire);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        unsigned int iNumTest;
+        iErrCode = pNewEmpire->GetNumCachedRows(&iNumTest);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        if (iNumTest > 0)
+            return ERROR_EMPIRE_ALREADY_EXISTS;
+
+        // Insert row into SystemEmpireData
+        iErrCode = pNewEmpire->InsertRow(SystemEmpireData::Template, pvColVal, &iKey);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        SafeRelease(pNewEmpire);
+
+        // TODO - make this better
+        // Populate the cache with the row we just inserted
+        TableCacheEntry newEntry = { SYSTEM_EMPIRE_DATA, iKey, 0, NULL };
+        iErrCode = t_pCache->Cache(&newEntry, 1);
+        if (iErrCode != OK)
+            goto Cleanup;
     }
 
     // Delete parent empire
@@ -402,6 +421,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
 
 Cleanup:
 
+    SafeRelease(pNewEmpire);
     SafeRelease(pSystemData);
 
     return iErrCode;

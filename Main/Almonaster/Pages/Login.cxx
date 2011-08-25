@@ -124,15 +124,18 @@ else if (!m_bRedirection)
         goto Text;
     }
 
-    const TableCacheEntryColumn col = { SystemEmpireData::Name, pszStandardizedName };
-    const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &col };
-    iErrCode = t_pCache->Cache(&entry, 1, &m_iEmpireKey);
-    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND)
-    {
-        AddMessage("Cache failed: ");
-        AppendMessage (iErrCode);
+    TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszStandardizedName };
+    TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
+        
+    ICachedTable* pEmpire;
+    iErrCode = t_pCache->Cache(entry, &pEmpire);
+    if (iErrCode != OK)
         goto Text;
-    }
+
+    iErrCode = pEmpire->GetNextKey(NO_KEY, &m_iEmpireKey);
+    SafeRelease(pEmpire);
+    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND)
+        goto Text;
 
     if (m_pHttpRequest->GetFormBeginsWith("CreateEmpire"))
     {

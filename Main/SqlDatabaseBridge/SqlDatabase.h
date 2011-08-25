@@ -211,7 +211,7 @@ public:
     virtual int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate) = 0;
 
     virtual int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries) = 0;
-    virtual int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, unsigned int* piKey) = 0;
+    virtual int Cache(const TableCacheEntry& cCacheEntry, ICachedTable** ppTable) = 0;
 
     virtual int GetTable(const char* pszCacheTableName, ICachedTable** ppTable) = 0;
 

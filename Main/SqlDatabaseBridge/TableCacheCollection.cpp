@@ -113,12 +113,17 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     return Cache(pcCacheEntry, iNumEntries, NULL);
 }
 
-int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, unsigned int* piKey)
+int TableCacheCollection::Cache(const TableCacheEntry& cCacheEntry, ICachedTable** ppTable)
+{
+    return Cache(&cCacheEntry, 1, ppTable);
+}
+
+int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, ICachedTable** ppTable)
 {
     System::String^ strIdColumnName = gcnew System::String(IdColumnName);
 
-    if (piKey)
-        *piKey = NO_KEY;
+    if (ppTable)
+        *ppTable = NULL;
 
     List<BulkTableReadRequest>^ requests = gcnew List<BulkTableReadRequest>(iNumEntries);
     char** ppszCacheEntryName = (char**)StackAlloc(iNumEntries * sizeof(char*));
@@ -141,6 +146,7 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
             }
             else
             {
+                // TODOTODO - really?
                 s = pszTableName;
                 for (unsigned int j = 0; j < pcCacheEntry[i].iNumColumns; j ++)
                 {
@@ -201,9 +207,10 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
 
     unsigned int iKey = NO_KEY;
     int index = 0;
+    CachedTable* pTable = NULL;
     for each (BulkTableReadResult^ result in results)
     {
-        CachedTable* pTable = new CachedTable(m_cmd, result);
+        pTable = new CachedTable(m_cmd, result);
         Assert(pTable);
 
         bool ret = m_htTableViews.Insert(ppszCacheEntryName[index++], pTable);
@@ -224,10 +231,10 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     }
 
     // If there happens to be one result, and you wanted it, here it is...
-    if (piKey && Enumerable::Count(results) == 1)
+    if (ppTable && Enumerable::Count(results) == 1)
     {
-        if (piKey)
-            *piKey = iKey;
+        pTable->AddRef();
+        *ppTable = pTable;
     }
 
     return OK;
@@ -425,40 +432,24 @@ int TableCacheCollection::ReadData(const char* pszCacheTableName, const char* ps
 int TableCacheCollection::InsertRow(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey)
 {
     CachedTable* pTable;
-    bool bFound = m_htTableViews.FindFirst((char* const)pszCacheTableName, &pTable);
-    if (!bFound)
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
     {
-        pTable = CreateEmptyTable(pszCacheTableName);
-        Assert(pTable);
+        iErrCode = pTable->InsertRow(ttTemplate, pvColVal, piKey);
     }
-
-    int iErrCode = pTable->InsertRow(ttTemplate, pvColVal, piKey);
-    if (iErrCode == OK && !bFound)
-    {
-        InsertTable(pszCacheTableName, pTable);
-        SafeRelease(pTable);
-    }
-
+    SafeRelease(pTable);
     return iErrCode;
 }
 
 int TableCacheCollection::InsertDuplicateRows(const char* pszCacheTableName, const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows)
 {
     CachedTable* pTable;
-    bool bFound = m_htTableViews.FindFirst((char* const)pszCacheTableName, &pTable);
-    if (!bFound)
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
     {
-        pTable = CreateEmptyTable(pszCacheTableName);
-        Assert(pTable);
+        iErrCode = pTable->InsertDuplicateRows(ttTemplate, pvColVal, iNumRows);
     }
-
-    int iErrCode = pTable->InsertDuplicateRows(ttTemplate, pvColVal, iNumRows);
-    if (iErrCode == OK && !bFound)
-    {
-        InsertTable(pszCacheTableName, pTable);
-        SafeRelease(pTable);
-    }
-
+    SafeRelease(pTable);
     return iErrCode;
 }
 

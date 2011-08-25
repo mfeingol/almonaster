@@ -32,6 +32,7 @@ private:
     void InsertTable(const char* pszCacheTableName, CachedTable* pTable);
 
     int GetTable(const char* pszCacheTableName, CachedTable** ppTable);
+    int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, ICachedTable** ppTable);
 
 public:
 
@@ -44,7 +45,7 @@ public:
     int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate);
 
     int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries);
-    int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, unsigned int* ppiKey);
+    int Cache(const TableCacheEntry& cCacheEntry, ICachedTable** ppTable);
 
     int GetTable(const char* pszCacheTableName, ICachedTable** ppTable);
 

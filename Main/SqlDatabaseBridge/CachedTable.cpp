@@ -12,6 +12,12 @@ CachedTable::CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result)
     m_result(result),
     m_keyToRows(gcnew SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>())
 {
+    System::String^ idCol = gcnew System::String(IdColumnName);
+    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
+    {
+        int64 id = (int64)row[idCol];
+        m_keyToRows->Add(id, row);
+    }
 }
 
 int CachedTable::GetNumCachedRows(unsigned int* piNumRows)
@@ -560,17 +566,19 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
     bool first = true;
     for each (int64 id in ids)
     {
+        Dictionary<System::String^, System::Object^>^ insertRow;
         if (first)
         {
-            m_result->Rows->Add(templateRow);
-            m_keyToRows->Add(id, templateRow);
+            insertRow = templateRow;
             first = false;
         }
         else
         {
-            Dictionary<System::String^, System::Object^>^ copyRow = gcnew Dictionary<System::String^, System::Object^>(templateRow);
-            m_result->Rows->Add(copyRow);
+            insertRow = gcnew Dictionary<System::String^, System::Object^>(templateRow);
         }
+
+        m_result->Rows->Add(insertRow);
+        m_keyToRows->Add(id, insertRow);
     }
 
     return OK;
