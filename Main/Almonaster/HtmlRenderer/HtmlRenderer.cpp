@@ -64,7 +64,6 @@ unsigned int HtmlRenderer::m_siNumGamingEmpires;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-
 HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 {
     m_pgPageId = pgPageId;
@@ -1371,7 +1370,7 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
 }
 
 
-bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
+bool HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect) {
 
     if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
 
@@ -1539,16 +1538,25 @@ bool HtmlRenderer::RedirectOnSubmit (PageId* ppageRedirect) {
             int iViewProfileEmpireKey;
             unsigned int iHash;
 
-            if (sscanf (pszProfile, "ProfileLink.%d.%d.x", &iViewProfileEmpireKey, &iHash) == 2 &&
-                VerifyEmpireNameHash (iViewProfileEmpireKey, iHash)) {
-                
+            if (sscanf(pszProfile, "ProfileLink.%d.%d.x", &iViewProfileEmpireKey, &iHash) == 2)
+            {
+                unsigned int iResults;
+                int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
+                if (iErrCode != OK)
+                {
+                    AddMessage("CacheEmpire failed");
+                    return false;
+                }
+
+                if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
+                {
+                    AddMessage("That empire no longer exists");
+                    return false;
+                }
+
                 m_iReserved = iViewProfileEmpireKey;
                 *ppageRedirect = PROFILE_VIEWER;
                 return true;
-                
-            } else {
-                
-                AddMessage ("That empire no longer exists");
             }
         }
     }
@@ -5007,7 +5015,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     
                     WriteProfileAlienString (
                         ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
-                        ppvData[i][SystemEmpireNukeList::iEmpireKey].GetInteger(),
+                        ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
                         ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
                         0,
                         "ProfileLink",
@@ -5075,7 +5083,7 @@ void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
                     
                     WriteProfileAlienString (
                         ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
-                        ppvData[i][SystemEmpireNukeList::iEmpireKey].GetInteger(),
+                        ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
                         ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
                         0,
                         "ProfileLink",

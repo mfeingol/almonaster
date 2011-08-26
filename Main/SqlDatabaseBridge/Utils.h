@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Osal/Variant.h"
+#include "SqlDatabase.h"
 
 using namespace System::Data;
 
@@ -8,8 +9,8 @@ static const char* IdColumnName = "Id";
 
 System::Object^ Convert(const Variant& v);
 void Convert(System::Object^ object, Variant* pv);
-
 SqlDbType Convert(VariantType type);
+IsolationLevel Convert(TransactionIsolationLevel);
 
 System::Object^ Increment(System::Object^ original, const Variant& inc);
 

@@ -478,7 +478,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 // Individual page stuff starts here
 
@@ -586,70 +586,56 @@ if (iErrCode != OK) {
 
 SafeRelease (pGameEmpireTable);
 
-iErrCode = t_pCache->GetTable(
-    SYSTEM_EMPIRE_DATA, 
-    &pSystemEmpireDataTable
-    );
+GET_SYSTEM_EMPIRE_DATA(strEmpire, m_iEmpireKey);
+iErrCode = t_pCache->GetTable(strEmpire, &pSystemEmpireDataTable);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Wins, &iWins);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Nukes, &iNukes);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Nuked, &iNuked);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Draws, &iDraws);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Ruins, &iRuins);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::CreationTime, &tCreated);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
 if (iErrCode != OK) {
-    Assert (false);
     goto Cleanup;
 }
-
-SafeRelease (pSystemEmpireDataTable);
 
 Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
@@ -1068,8 +1054,8 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         iMil = GetMilitaryValue (fMil);
     }
 
-    // Do this every time to improve concurrency with logins, etc.
-    iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pSystemEmpireDataTable);
+    GET_SYSTEM_EMPIRE_DATA(strKnownEmpire, iKnownEmpireKey);
+    iErrCode = t_pCache->GetTable(strKnownEmpire, &pSystemEmpireDataTable);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1670,9 +1656,7 @@ if (pGameEmpireTable != NULL) {
     pGameEmpireTable->Release();
 }
 
-if (pSystemEmpireDataTable != NULL) {
-    pSystemEmpireDataTable->Release();
-}
+SafeRelease(pSystemEmpireDataTable);
 
 if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %> occurred processing the Diplomacy page<%

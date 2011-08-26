@@ -976,7 +976,6 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 int iPrivilege;
                 unsigned int iNewEmpireKey;
-                bool bFlag;
                 const char* pszNewName, * pszNewPass;
 
                 char pszStandardizedName [MAX_EMPIRE_NAME_LENGTH + 1];
@@ -1040,8 +1039,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Test empire existence
-                iErrCode = DoesEmpireExist (pszStandardizedName, &bFlag, &iNewEmpireKey, NULL, NULL);
-                if (iErrCode != OK || bFlag) {
+                Check(LookupEmpireByName(pszStandardizedName, &iNewEmpireKey, NULL, NULL));
+                if (iNewEmpireKey != NO_KEY)
+                {
                     AddMessage ("That empire already exists");
                     iServerAdminPage = 7;
                     goto Redirection;
@@ -1100,7 +1100,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(iServerAdminPage == 0);
+Check(OpenSystemPage(iServerAdminPage == 0));
 
 // Individual page stuff starts here
 switch (iServerAdminPage) {

@@ -1439,24 +1439,31 @@ Quote:
             // Handle association deletion
             if (WasButtonPressed (BID_REMOVE_ASSOCIATION)) {
 
-                if ((pHttpForm = m_pHttpRequest->GetForm ("Association")) == NULL) {
+                if ((pHttpForm = m_pHttpRequest->GetForm ("Association")) == NULL)
+                {
                     goto Redirection;
                 }
-                
-                iErrCode = DeleteAssociation (m_iEmpireKey, pHttpForm->GetIntValue());
-                switch (iErrCode) {
-                case OK:
-                    AddMessage ("The association was removed");
-                    break;
 
-                case ERROR_ASSOCIATION_NOT_FOUND:
-                    AddMessage ("The association no longer exists");
-                    break;
+                unsigned int iAssocKey = pHttpForm->GetIntValue();
+                if (IS_KEY(iAssocKey))
+                {
+                    Check(CacheEmpire(iAssocKey));
+                    iErrCode = DeleteAssociation(m_iEmpireKey, iAssocKey);
+                    switch (iErrCode)
+                    {
+                    case OK:
+                        AddMessage ("The association was removed");
+                        break;
 
-                default:
-                    AddMessage ("The association could not be removed. The error was ");
-                    AppendMessage (iErrCode);
-                    break;
+                    case ERROR_ASSOCIATION_NOT_FOUND:
+                        AddMessage ("The association no longer exists");
+                        break;
+
+                    default:
+                        AddMessage ("The association could not be removed. The error was ");
+                        AppendMessage(iErrCode);
+                        return iErrCode;
+                    }
                 }
 
                 m_bRedirectTest = false;
@@ -1621,7 +1628,7 @@ Quote:
                                 if (GetSystemMessageProperty(
                                     m_iEmpireKey,
                                     iMessageKey,
-                                    SystemEmpireMessages::Source,
+                                    SystemEmpireMessages::SourceName,
                                     &vSource
                                     ) == OK &&
 
@@ -2098,7 +2105,7 @@ if (m_bRedirectTest && !m_bRedirection) {
 }
 iNewButtonKey = m_iButtonKey;
 
-OpenSystemPage(iProfileEditorPage == 1 && iAlienSelect == 1);
+Check(OpenSystemPage(iProfileEditorPage == 1 && iAlienSelect == 1));
 
 // Individual page stuff starts here
 switch (iProfileEditorPage) {
@@ -3143,7 +3150,7 @@ case 2:
 
                 int iFlags = ppvMessage[piIndex[i]][SystemEmpireMessages::iFlags].GetInteger();
 
-                const char* pszSender = ppvMessage[piIndex[i]][SystemEmpireMessages::iSource].GetCharPtr();
+                const char* pszSender = ppvMessage[piIndex[i]][SystemEmpireMessages::iSourceName].GetCharPtr();
 
                 %><input type="hidden" name="MsgKey<% Write (i); %>" value ="<% Write (piMessageKey[piIndex[i]]); %>"><%
                 %><input type="hidden" name="MsgSrc<% Write (i); %>" value ="<% Write (pszSender); %>"><%

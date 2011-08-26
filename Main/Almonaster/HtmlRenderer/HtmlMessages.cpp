@@ -19,9 +19,10 @@
 #include "HtmlRenderer.h"
 
 
-void HtmlRenderer::WriteGameMessages() {
-    
-    if (!m_strMessage.IsBlank()) {
+int HtmlRenderer::WriteGameMessages()
+{
+    if (!m_strMessage.IsBlank())
+    {
         OutputText ("<strong>");
         m_pHttpResponse->WriteText (m_strMessage);
         OutputText ("</strong><p>");
@@ -31,102 +32,92 @@ void HtmlRenderer::WriteGameMessages() {
     Variant** ppvMessage;
     unsigned int iNumMessages, i;
     
-    int iErrCode = GetUnreadGameMessages (
-        m_iGameClass,
-        m_iGameNumber,
-        m_iEmpireKey,
-        &ppvMessage,
-        &iNumMessages
-        );
+    int iErrCode = GetUnreadGameMessages(m_iGameClass, m_iGameNumber, m_iEmpireKey, &ppvMessage, &iNumMessages);
+    if (iErrCode != OK)
+        return iErrCode;
     
-    if (iErrCode == OK && iNumMessages > 0) {
-        
-        const char* pszSource, * pszMessage, * pszFontColor;
+    if (iNumMessages > 0)
+    {
         String strHTMLMessage, strFiltered;
-        bool bExists;
         
-        unsigned int iSrcEmpireKey = NO_KEY, iNumMessagesFromPeople = 0;
+        unsigned int iNumMessagesFromPeople = 0;
         char pszDate [OS::MaxDateLength], pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
 
-        Variant vAlienKey;
+        // Cache empire tables of senders
+        unsigned int* piEmpires = (unsigned int*)StackAlloc(iNumMessages * sizeof(unsigned int));
+        for (i = 0; i < iNumMessages; i ++)
+        {
+            piEmpires[i] = ppvMessage[i][GameEmpireMessages::iSourceKey].GetInteger();
+        }
+        
+        iErrCode = CacheEmpires(piEmpires, iNumMessages);
+        if (iErrCode != OK)
+        {
+            OutputText("CacheEmpires failed");
+            return iErrCode;
+        }
 
         OutputText ("<table width=\"55%\">");
         
-        for (i = 0; i < iNumMessages; i ++) {
-
-            int iFlags = ppvMessage[i][GameEmpireMessages::iFlags].GetInteger();
-
-            if (i > 0) {
+        for (i = 0; i < iNumMessages; i ++)
+        {
+            if (i > 0)
+            {
                 OutputText ("<tr><td>&nbsp;</td></tr>");
             }
+
+            int iFlags = ppvMessage[i][GameEmpireMessages::iFlags].GetInteger();
+            const char* pszSource = ppvMessage[i][GameEmpireMessages::iSourceName].GetCharPtr();
             
-            pszSource = ppvMessage[i][GameEmpireMessages::iSource].GetCharPtr();
-            
-            if (iFlags & MESSAGE_BROADCAST) {
+            const char* pszFontColor;
+            if (iFlags & MESSAGE_BROADCAST)
+            {
                 pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
-            } else {
+            }
+            else
+            {
                 pszFontColor = m_vPrivateMessageColor.GetCharPtr();
             }
 
             // Format message
-            if (iFlags & MESSAGE_SYSTEM) {
+            const char* pszMessage;
+            if (iFlags & MESSAGE_SYSTEM)
+            {
                 pszMessage = ppvMessage[i][GameEmpireMessages::iText].GetCharPtr();
-            } else {
-                
-                if (HTMLFilter (
-                    ppvMessage[i][GameEmpireMessages::iText].GetCharPtr(), 
-                    &strFiltered, 
-                    MAX_NUM_SPACELESS_CHARS,
-                    true
-                    ) == OK) {
-                    
-                    pszMessage = strFiltered.GetCharPtr();
-                    
-                } else {
-                    
-                    pszMessage = "The server is out of memory";
-                }
+            }
+            else
+            {
+                iErrCode = HTMLFilter(ppvMessage[i][GameEmpireMessages::iText].GetCharPtr(), &strFiltered, MAX_NUM_SPACELESS_CHARS, true);
+                Assert(iErrCode == OK);
+                pszMessage = strFiltered.GetCharPtr();
             }
             
-            iErrCode = Time::GetDateString (ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
-            if (iErrCode != OK) {
-                StrNCpy (pszDate, "The server is out of memory");
-            }
+            iErrCode = Time::GetDateString(ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
+            Assert(iErrCode != OK);
             
             OutputText ("<tr><td align=\"left\">");
             
-            if (iFlags & MESSAGE_SYSTEM) {
-
-                iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlienKey);
-                if (iErrCode == OK) {
+            Variant vAlienKey;
+            if (iFlags & MESSAGE_SYSTEM)
+            {
+                iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vAlienKey);
+                if (iErrCode == OK)
+                {
                     WriteIcon (vAlienKey.GetInteger(), NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
                 }
+            }
+            else
+            {
+                Variant vSecretKey;
+                unsigned int iSrcEmpireKey = ppvMessage[i][GameEmpireMessages::iSourceKey].GetInteger();
+                if (GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) == OK &&
+                    vSecretKey.GetInteger() == ppvMessage[i][GameEmpireMessages::iSourceSecret].GetInteger() &&
+                    GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vAlienKey) == OK)
+                {
+                    sprintf (pszProfile, "View the profile of %s", pszSource);
 
-            } else {
-                
-                if (DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL) == OK && bExists) {
-
-                    if (GetEmpireProperty (
-                        iSrcEmpireKey, 
-                        SystemEmpireData::AlienKey, 
-                        &vAlienKey
-                        ) == OK) {
-                    
-                        sprintf (pszProfile, "View the profile of %s", pszSource);
-                        
-                        WriteProfileAlienString (
-                            vAlienKey.GetInteger(),
-                            iSrcEmpireKey,
-                            pszSource,
-                            0, 
-                            "ProfileLink",
-                            pszProfile,
-                            false,
-                            true
-                            );
-
-                        OutputText (" ");
-                    }
+                    WriteProfileAlienString(vAlienKey.GetInteger(), iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
+                    OutputText (" ");
                         
                     iNumMessagesFromPeople ++;
                 }
@@ -146,7 +137,7 @@ void HtmlRenderer::WriteGameMessages() {
                 }
 
                 OutputText ("<strong>");
-                m_pHttpResponse->WriteText (ppvMessage[i][GameEmpireMessages::iSource].GetCharPtr());
+                m_pHttpResponse->WriteText(ppvMessage[i][GameEmpireMessages::iSourceName].GetCharPtr());
                 OutputText ("</strong>");
                 
                 if (iFlags & MESSAGE_BROADCAST) {
@@ -185,7 +176,7 @@ void HtmlRenderer::WriteGameMessages() {
             WriteFormattedMessage (pszMessage);
             OutputText ("</font></td></tr>");
             
-            t_pCache->FreeData (ppvMessage[i]);
+            t_pCache->FreeData(ppvMessage[i]);
             
         }   // End empire loop
 
@@ -197,9 +188,11 @@ void HtmlRenderer::WriteGameMessages() {
         
         delete [] ppvMessage;
     }
+
+    return OK;
 }
 
-void HtmlRenderer::WriteSystemMessages() {
+int HtmlRenderer::WriteSystemMessages() {
     
     if (!m_strMessage.IsBlank()) {
         OutputText ("<strong>");
@@ -218,14 +211,31 @@ void HtmlRenderer::WriteSystemMessages() {
         &iNumMessages
         );
     
-    if (iErrCode == OK && iNumMessages > 0) {
-
+    if (iErrCode != OK)
+        return iErrCode;
+    
+    if (iNumMessages > 0)
+    {
         unsigned int iNumMessagesFromPeople = 0;
+
+        // Cache empire tables of senders
+        unsigned int* piEmpires = (unsigned int*)StackAlloc(iNumMessages * sizeof(unsigned int));
+        for (i = 0; i < iNumMessages; i ++)
+        {
+            piEmpires[i] = ppvMessage[i][SystemEmpireMessages::iSourceKey].GetInteger();
+        }
+        
+        iErrCode = CacheEmpires(piEmpires, iNumMessages);
+        if (iErrCode != OK)
+        {
+            OutputText("CacheEmpires failed");
+            return iErrCode;
+        }
 
         OutputText ("<table width=\"55%\">");
         
-        for (i = 0; i < iNumMessages; i ++) {
-
+        for (i = 0; i < iNumMessages; i ++)
+        {
             int iType = ppvMessage[i][SystemEmpireMessages::iType].GetInteger();
 
             // Slight hack to restrict invitations to one per screen
@@ -242,7 +252,7 @@ void HtmlRenderer::WriteSystemMessages() {
                 OutputText ("<tr><td>&nbsp</td></tr>");
             }
 
-            if (RenderSystemMessage (piMessageKey[i], ppvMessage[i])) {
+            if (RenderSystemMessage(piMessageKey[i], ppvMessage[i])) {
                 iNumMessagesFromPeople ++;
             }
 
@@ -258,19 +268,21 @@ void HtmlRenderer::WriteSystemMessages() {
         delete [] ppvMessage;
         t_pCache->FreeKeys (piMessageKey);
     }
+
+    return OK;
 }
 
-bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessage) {
-    
+bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage)
+{
     int iErrCode = OK;
     unsigned int iSrcEmpireKey = NO_KEY, iAlienKey = NO_KEY;
-    bool bEmpireLink = false, bExists;
+    bool bEmpireLink = false;
 
     char pszDate [OS::MaxDateLength];
     
     // Get message source
     int iFlags = pvMessage[SystemEmpireMessages::iFlags].GetInteger();
-    const char* pszSource = pvMessage[SystemEmpireMessages::iSource].GetCharPtr();
+    const char* pszSource = pvMessage[SystemEmpireMessages::iSourceName].GetCharPtr();
 
     // Get system / personal
     bool bSystem = (iFlags & MESSAGE_SYSTEM) != 0;
@@ -279,35 +291,32 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
     // Get date
     iErrCode = Time::GetDateString (pvMessage[SystemEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
-    if (iErrCode != OK) {
-        StrNCpy (pszDate, "The server is out of memory");
-        iMessageKey = NO_KEY;
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto Cleanup;
-    }
+    Assert(iErrCode == OK);
 
     // Get source empire and icon
-    if (bSystem) {
+    if (bSystem)
+    {
+        iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vTemp);
+        if (iErrCode != OK)
+        {
+            goto Cleanup;
+        }
+        iAlienKey = vTemp.GetInteger();
+    }
+    else
+    {
+        Variant vSecretKey;
+        iSrcEmpireKey = pvMessage[SystemEmpireMessages::iSourceKey].GetInteger();
 
-        iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vTemp);
-        if (iErrCode == OK) {
+        if (GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) == OK &&
+            vSecretKey.GetInteger64() == pvMessage[SystemEmpireMessages::iSourceSecret].GetInteger64() &&
+            GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vTemp) == OK)
+        {
             iAlienKey = vTemp.GetInteger();
         }
-        
-    } else {
-
-        iErrCode = DoesEmpireExist (pszSource, &bExists, &iSrcEmpireKey, NULL, NULL);
-        if (iErrCode == OK && bExists) {
-
-            iErrCode = GetEmpireProperty (
-                iSrcEmpireKey, 
-                SystemEmpireData::AlienKey,
-                &vTemp
-                );
-
-            if (iErrCode == OK) {
-                iAlienKey = vTemp.GetInteger();
-            }
+        else
+        {
+            pszSource = "Unknown";
         }
     }
 
@@ -322,26 +331,17 @@ bool HtmlRenderer::RenderSystemMessage (int iMessageKey, const Variant* pvMessag
 
     if (iAlienKey != NO_KEY) {
         
-        if (bSystem) {
-
+        if (bSystem)
+        {
             WriteIcon (iAlienKey, NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
-
-        } else {
-
+        }
+        else if (iAlienKey != NO_KEY)
+        {
             char pszProfile [MAX_EMPIRE_NAME_LENGTH + 64];
             sprintf (pszProfile, "View the profile of %s", pszSource);
             
-            WriteProfileAlienString (
-                iAlienKey,
-                iSrcEmpireKey,
-                pszSource,
-                0, 
-                "ProfileLink",
-                pszProfile,
-                false,
-                true
-                );
-            
+            Assert(iSrcEmpireKey != NO_KEY);
+            WriteProfileAlienString(iAlienKey, iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
             bEmpireLink  = true;
         }
 

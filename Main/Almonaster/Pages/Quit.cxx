@@ -195,7 +195,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 // Individual page starts here
 

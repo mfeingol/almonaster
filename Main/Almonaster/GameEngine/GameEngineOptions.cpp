@@ -121,7 +121,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
     iMaxNum = vTemp.GetInteger();
 
     // Set the max number of messages
-    iErrCode = t_pCache->WriteData (strOptions, GameEmpireData::MaxNumGameMessages, iMaxNumSavedMessages);
+    iErrCode = t_pCache->WriteData(strOptions, GameEmpireData::MaxNumGameMessages, iMaxNumSavedMessages);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -344,7 +344,7 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    return t_pCache->WriteData (strGameEmpireData, GameEmpireData::DefaultMessageTarget, iMessageTarget);
+    return t_pCache->WriteData(strGameEmpireData, GameEmpireData::DefaultMessageTarget, iMessageTarget);
 }
 
 int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int iEmpireKey) {

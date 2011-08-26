@@ -1128,18 +1128,15 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
             for (unsigned int i = 0;  i < iNumBlocks; i ++) {
                 
                 const char* pszName = pHttpForm->GetForm(i)->GetValue();
-                if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
-
-                    bool bExists;
+                if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0)
+                {
                     unsigned int iFilterEmpireKey;
                     Variant vRealName;
 
                     // Make sure empire exists
-                    iErrCode = DoesEmpireExist (pszName, &bExists, &iFilterEmpireKey, &vRealName, NULL);
-                    if (iErrCode == OK && bExists && iFilterEmpireKey != m_iEmpireKey) {
-
-                        Assert (iFilterEmpireKey != NO_KEY);
-
+                    iErrCode = LookupEmpireByName(pszName, &iFilterEmpireKey, &vRealName, NULL);
+                    if (iErrCode == OK && iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
+                    {
                         sprintf (pszFormIP, "FilterEmpireIP%i", i);
                         sprintf (pszFormID, "FilterEmpireID%i", i);
 
@@ -1200,12 +1197,10 @@ OnError:
     OutputText (" occurred while processing this page");
 }
 
-
 int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey,
                                                const Variant* pvGameClassInfo, GameOptions* pgoOptions) {
     
     int iErrCode, iTemp, iGameClassOptions, iMaxNumEmpires;
-    bool bFlag;
     Variant vMaxUpdatesBeforeGameCloses;
 
     const char* pszPassword;
@@ -1865,17 +1860,15 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 for (i = 0;  i < iNumBlocks; i ++) {
                 
                     const char* pszName = pHttpForm->GetForm(i)->GetValue();
-                    if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0) {
-
+                    if (pszName != NULL && _stricmp (pszName, m_vEmpireName.GetCharPtr()) != 0)
+                    {
                         unsigned int iFilterEmpireKey;
                         int64 iSecretKey;
 
                         // Make sure empire exists
-                        iErrCode = DoesEmpireExist (pszName, &bFlag, &iFilterEmpireKey, NULL, &iSecretKey);
-                        if (iErrCode == OK && bFlag && iFilterEmpireKey != m_iEmpireKey) {
-
-                            Assert (iFilterEmpireKey != NO_KEY);
-
+                        iErrCode = LookupEmpireByName(pszName, &iFilterEmpireKey, NULL, &iSecretKey);
+                        if (iErrCode == OK && iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
+                        {
                             bool bAlready = false;
 
                             char pszFormIP [64];

@@ -1079,7 +1079,11 @@ public:
 
     int RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire);
 
-    int DoesEmpireExist (const char* pszName, bool* pbExists, unsigned int* piEmpireKey, Variant* pvEmpireName, int64* piSecretKey);
+    int CacheEmpire(unsigned int iEmpireKey);
+    int CacheEmpire(unsigned int iEmpireKey, unsigned int* piResults);
+    int CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires);
+    int CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires, unsigned int* piResults);
+    int LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey);
     int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName);
 
     int CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, bool* pbMatch, int64* pi64SessionId, Variant* pvIPAddress);

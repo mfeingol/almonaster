@@ -224,27 +224,21 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon)
             {
                 // Look for empire name form
                 const char* pszName;
-                if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireName")) == NULL || 
-                    (pszName = pHttpForm->GetValue()) == NULL)
+                if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireName")) == NULL || (pszName = pHttpForm->GetValue()) == NULL)
                 {
                     AddMessage ("Missing EmpireKey form");
                     return ERROR_FAILURE;
                 }
                 else
                 {
-                    // Look up name
-                    iErrCode = DoesEmpireExist (
-                        pszName, 
-                        &bExists, 
-                        &m_iEmpireKey, 
-                        &m_vEmpireName,
-                        NULL
-                        );
-                    
-                    if (iErrCode != OK || !bExists)
+                    iErrCode = LookupEmpireByName(pszName, &m_iEmpireKey, &m_vEmpireName, NULL);
+                    if (iErrCode != OK)
+                        return iErrCode;
+
+                    if (m_iEmpireKey == NO_KEY)
                     {
-                        AddMessage ("That empire doesn't exist");
-                        return ERROR_FAILURE;
+                        AddMessage("That empire doesn't exist");
+                        return ERROR_EMPIRE_DOES_NOT_EXIST;
                     }
                 }
             }

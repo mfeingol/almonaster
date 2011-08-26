@@ -299,157 +299,157 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ShipBehavior, gcConfig.iShipBehavior);
+    iErrCode = pSystem->WriteData(SystemData::ShipBehavior, gcConfig.iShipBehavior);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ColonySimpleBuildFactor, gcConfig.iColonySimpleBuildFactor);
+    iErrCode = pSystem->WriteData(SystemData::ColonySimpleBuildFactor, gcConfig.iColonySimpleBuildFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ColonyMultipliedBuildFactor, gcConfig.fColonyMultipliedBuildFactor);
+    iErrCode = pSystem->WriteData(SystemData::ColonyMultipliedBuildFactor, gcConfig.fColonyMultipliedBuildFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ColonyMultipliedDepositFactor, gcConfig.fColonyMultipliedDepositFactor);
+    iErrCode = pSystem->WriteData(SystemData::ColonyMultipliedDepositFactor, gcConfig.fColonyMultipliedDepositFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ColonyExponentialDepositFactor, gcConfig.fColonyExponentialDepositFactor);
+    iErrCode = pSystem->WriteData(SystemData::ColonyExponentialDepositFactor, gcConfig.fColonyExponentialDepositFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::EngineerLinkCost, gcConfig.fEngineerLinkCost);
+    iErrCode = pSystem->WriteData(SystemData::EngineerLinkCost, gcConfig.fEngineerLinkCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::StargateGateCost, gcConfig.fStargateGateCost);
+    iErrCode = pSystem->WriteData(SystemData::StargateGateCost, gcConfig.fStargateGateCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::TerraformerPlowFactor, gcConfig.fTerraformerPlowFactor);
+    iErrCode = pSystem->WriteData(SystemData::TerraformerPlowFactor, gcConfig.fTerraformerPlowFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::TroopshipInvasionFactor, gcConfig.fTroopshipInvasionFactor);
+    iErrCode = pSystem->WriteData(SystemData::TroopshipInvasionFactor, gcConfig.fTroopshipInvasionFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::TroopshipFailureFactor, gcConfig.fTroopshipFailureFactor);
+    iErrCode = pSystem->WriteData(SystemData::TroopshipFailureFactor, gcConfig.fTroopshipFailureFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::TroopshipSuccessFactor, gcConfig.fTroopshipSuccessFactor);
+    iErrCode = pSystem->WriteData(SystemData::TroopshipSuccessFactor, gcConfig.fTroopshipSuccessFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::DoomsdayAnnihilationFactor, gcConfig.fDoomsdayAnnihilationFactor);
+    iErrCode = pSystem->WriteData(SystemData::DoomsdayAnnihilationFactor, gcConfig.fDoomsdayAnnihilationFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::CarrierCost, gcConfig.fCarrierCost);
+    iErrCode = pSystem->WriteData(SystemData::CarrierCost, gcConfig.fCarrierCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::BuilderMinBR, gcConfig.fBuilderMinBR);
+    iErrCode = pSystem->WriteData(SystemData::BuilderMinBR, gcConfig.fBuilderMinBR);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::BuilderBRDampener, gcConfig.fBuilderBRDampener);
+    iErrCode = pSystem->WriteData(SystemData::BuilderBRDampener, gcConfig.fBuilderBRDampener);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::BuilderMultiplier, gcConfig.fBuilderMultiplier);
+    iErrCode = pSystem->WriteData(SystemData::BuilderMultiplier, gcConfig.fBuilderMultiplier);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::MorpherCost, gcConfig.fMorpherCost);
+    iErrCode = pSystem->WriteData(SystemData::MorpherCost, gcConfig.fMorpherCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::JumpgateGateCost, gcConfig.fJumpgateGateCost);
+    iErrCode = pSystem->WriteData(SystemData::JumpgateGateCost, gcConfig.fJumpgateGateCost);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::JumpgateRangeFactor, gcConfig.fJumpgateRangeFactor);
+    iErrCode = pSystem->WriteData(SystemData::JumpgateRangeFactor, gcConfig.fJumpgateRangeFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::StargateRangeFactor, gcConfig.fStargateRangeFactor);
+    iErrCode = pSystem->WriteData(SystemData::StargateRangeFactor, gcConfig.fStargateRangeFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::PercentFirstTradeIncrease, gcConfig.iPercentFirstTradeIncrease);
+    iErrCode = pSystem->WriteData(SystemData::PercentFirstTradeIncrease, gcConfig.iPercentFirstTradeIncrease);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::PercentNextTradeIncrease, gcConfig.iPercentNextTradeIncrease);
+    iErrCode = pSystem->WriteData(SystemData::PercentNextTradeIncrease, gcConfig.iPercentNextTradeIncrease);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::NukesForQuarantine, gcConfig.iNukesForQuarantine);
+    iErrCode = pSystem->WriteData(SystemData::NukesForQuarantine, gcConfig.iNukesForQuarantine);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::UpdatesInQuarantine, gcConfig.iUpdatesInQuarantine);
+    iErrCode = pSystem->WriteData(SystemData::UpdatesInQuarantine, gcConfig.iUpdatesInQuarantine);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::PercentTechIncreaseForLatecomers, gcConfig.iPercentTechIncreaseForLatecomers);
+    iErrCode = pSystem->WriteData(SystemData::PercentTechIncreaseForLatecomers, gcConfig.iPercentTechIncreaseForLatecomers);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::PercentDamageUsedToDestroy, gcConfig.iPercentDamageUsedToDestroy);
+    iErrCode = pSystem->WriteData(SystemData::PercentDamageUsedToDestroy, gcConfig.iPercentDamageUsedToDestroy);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -489,37 +489,37 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ChanceNewLinkForms, mcConfig.iChanceNewLinkForms);
+    iErrCode = pSystem->WriteData(SystemData::ChanceNewLinkForms, mcConfig.iChanceNewLinkForms);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::MapDeviation, mcConfig.iMapDeviation);
+    iErrCode = pSystem->WriteData(SystemData::MapDeviation, mcConfig.iMapDeviation);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap, mcConfig.iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap);
+    iErrCode = pSystem->WriteData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap, mcConfig.iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap, mcConfig.iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap);
+    iErrCode = pSystem->WriteData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap, mcConfig.iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::LargeMapThreshold, mcConfig.iLargeMapThreshold);
+    iErrCode = pSystem->WriteData(SystemData::LargeMapThreshold, mcConfig.iLargeMapThreshold);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pSystem->WriteData (SystemData::ResourceAllocationRandomizationFactor, mcConfig.fResourceAllocationRandomizationFactor);
+    iErrCode = pSystem->WriteData(SystemData::ResourceAllocationRandomizationFactor, mcConfig.fResourceAllocationRandomizationFactor);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -534,8 +534,9 @@ Cleanup:
 
 
 // Return the system version string
-const char* GameEngine::GetSystemVersion() {
-    return "Almonaster Build 623 Beta 1";
+const char* GameEngine::GetSystemVersion()
+{
+    return "Almonaster Build 700 alpha";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId)

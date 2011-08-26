@@ -946,7 +946,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
     if (bUpdate) {
 
         // Write the new offer
-        iErrCode = t_pCache->WriteData (
+        iErrCode = t_pCache->WriteData(
             strGameEmpireDiplomacy, 
             iKey, 
             GameEmpireDiplomacy::DipOffer, 
@@ -1128,7 +1128,7 @@ int GameEngine::UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmp
 
         // Try to reset previous value
         int iErrCode2 = 
-            t_pCache->WriteData (
+            t_pCache->WriteData(
             strGameEmpireDiplomacy, 
             iKey, 
             GameEmpireDiplomacy::DipOffer, 
@@ -1222,17 +1222,11 @@ int GameEngine::SearchForDuplicates (int iGameClass, int iGameNumber, const char
     pbDup = (bool*) StackAlloc (iNumEmpires * sizeof (bool));
 
     // Get all empire values
-    for (i = 0; i < iNumEmpires; i ++) {
-
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_EMPIRE_DATA,
-            pvEmpireKey[i].GetInteger(),
-            pszSystemEmpireDataColumn,
-            pvData + i
-            );
-
+    for (i = 0; i < iNumEmpires; i ++)
+    {
+        GET_SYSTEM_EMPIRE_DATA(strThisEmpire, pvEmpireKey[i].GetInteger());
+        iErrCode = t_pCache->ReadData(strThisEmpire, pvEmpireKey[i].GetInteger(), pszSystemEmpireDataColumn, pvData + i);
         if (iErrCode != OK) {
-            Assert (false);
             goto Cleanup;
         }
 
@@ -1333,6 +1327,7 @@ int GameEngine::DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int i
     unsigned int i, iNumEmpires;
     Variant* pvEmpireKey, vOurData, vTheirData;
 
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
 
     // Get empires
@@ -1352,43 +1347,29 @@ int GameEngine::DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int i
     if (iNumEmpires == 0) return OK;
 
     // Get empire's data
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_EMPIRE_DATA,
-        iEmpireKey,
-        pszSystemEmpireDataColumn,
-        &vOurData
-        );
-
+    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, pszSystemEmpireDataColumn, &vOurData);
     if (iErrCode != OK) {
-        Assert (false);
         goto Cleanup;
     }
 
     // Scan for equals
-    for (i = 0; i < iNumEmpires; i ++) {
-
-        if (pvEmpireKey[i].GetInteger() != iEmpireKey) {
-            
-            iErrCode = t_pCache->ReadData(
-                SYSTEM_EMPIRE_DATA,
-                pvEmpireKey[i].GetInteger(),
-                pszSystemEmpireDataColumn,
-                &vTheirData
-                );
+    for (i = 0; i < iNumEmpires; i ++)
+    {
+        if (pvEmpireKey[i].GetInteger() != iEmpireKey)
+        {
+            GET_SYSTEM_EMPIRE_DATA(strThisEmpire, pvEmpireKey[i].GetInteger());
+            iErrCode = t_pCache->ReadData(strThisEmpire, pvEmpireKey[i].GetInteger(), pszSystemEmpireDataColumn, &vTheirData);
             if (iErrCode != OK) {
-                Assert (false);
                 goto Cleanup;
             }
             
             if (vOurData == vTheirData) {
 
                 // A dup!!
-                if (*ppiDuplicateKeys == NULL) {
+                if (*ppiDuplicateKeys == NULL)
+                {
                     *ppiDuplicateKeys = new int [iNumEmpires];
-                    if (*ppiDuplicateKeys == NULL) {
-                        iErrCode = ERROR_OUT_OF_MEMORY;
-                        goto Cleanup;
-                    }
+                    Assert(*ppiDuplicateKeys);
                 }
                 
                 (*ppiDuplicateKeys)[(*piNumDuplicates) ++] = pvEmpireKey[i].GetInteger();
@@ -1406,9 +1387,8 @@ Cleanup:
 }
 
 
-int GameEngine::BuildDuplicateList (int* piDuplicateKeys, unsigned int iNumDuplicates, 
-                                    String* pstrDuplicateList) {
-
+int GameEngine::BuildDuplicateList(int* piDuplicateKeys, unsigned int iNumDuplicates, String* pstrDuplicateList)
+{
     Assert (iNumDuplicates > 0);
 
     // Build list
@@ -1421,15 +1401,9 @@ int GameEngine::BuildDuplicateList (int* piDuplicateKeys, unsigned int iNumDupli
 
     for (i = 0; i < iLoopGuard;  i ++) {
         
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_EMPIRE_DATA,
-            piDuplicateKeys[i],
-            SystemEmpireData::Name,
-            &vName
-            );
-
+        GET_SYSTEM_EMPIRE_DATA(strEmpire, piDuplicateKeys[i]);
+        iErrCode = t_pCache->ReadData(strEmpire, piDuplicateKeys[i], SystemEmpireData::Name, &vName);
         if (iErrCode != OK) {
-            Assert (false);
             goto Cleanup;
         }
         
@@ -1443,14 +1417,9 @@ int GameEngine::BuildDuplicateList (int* piDuplicateKeys, unsigned int iNumDupli
     }
     
     // Get last guy
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_EMPIRE_DATA,
-        piDuplicateKeys[i],
-        SystemEmpireData::Name,
-        &vName
-        );
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, piDuplicateKeys[i]);
+    iErrCode = t_pCache->ReadData(strEmpire, piDuplicateKeys[i], SystemEmpireData::Name, &vName);
     if (iErrCode != OK) {
-        Assert (false);
         goto Cleanup;
     }
     
@@ -1471,15 +1440,8 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
 
     GAME_EMPIRE_DIPLOMACY (strGameEmpireDip, iGameClass, iGameNumber, iEmpireKey);
 
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA,
-        iGameClass,
-        SystemGameClassData::Options,
-        &vOptions
-        );
-
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
     if (iErrCode != OK) {
-        Assert (false);
         return iErrCode;
     }
 
@@ -2129,7 +2091,7 @@ int GameEngine::SetLastUsedMessageTarget(int iGameClass, int iGameNumber, int iE
         {
             Assert (iKey != NO_KEY);
 
-            iErrCode = t_pCache->WriteData (strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::LastMessageTargetFlag, 1);
+            iErrCode = t_pCache->WriteData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::LastMessageTargetFlag, 1);
             if (iErrCode != OK) {
                 Assert (false);
                 return iErrCode;

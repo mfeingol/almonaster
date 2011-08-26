@@ -58,6 +58,7 @@ public:
     Global();
 
     void TlsOpenConnection();
+    int TlsCommitTransaction();
     void TlsCloseConnection();
 
     int Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl);

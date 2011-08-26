@@ -150,7 +150,7 @@ int GameEngine::RenameSuperClass(int iKey, const char* pszNewName)
     if (stLen < 1 || stLen > MAX_SUPER_CLASS_NAME_LENGTH)
         return ERROR_INVALID_ARGUMENT;
 
-    int iErrCode = t_pCache->WriteData (SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
+    int iErrCode = t_pCache->WriteData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
         iErrCode = ERROR_SUPERCLASS_DOES_NOT_EXIST;
     return iErrCode;

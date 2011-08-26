@@ -293,15 +293,10 @@ int GameEngine::CleanupGame (int iGameClass, int iGameNumber, GameResult grResul
         }
 
         iErrCode = t_pCache->ReadData(strGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
-        if (iErrCode == OK) {
-
-            iErrCode = t_pCache->ReadData(
-                SYSTEM_EMPIRE_DATA, 
-                vEmpireKey.GetInteger(), 
-                SystemEmpireData::Name, 
-                &vName
-                );
-
+        if (iErrCode == OK)
+        {
+            GET_SYSTEM_EMPIRE_DATA(strEmpire, vEmpireKey.GetInteger());
+            iErrCode = t_pCache->ReadData(strEmpire, vEmpireKey.GetInteger(), SystemEmpireData::Name, &vName);
             if (iErrCode == OK) {
 
                 if (!strList.IsBlank()) {
@@ -818,7 +813,7 @@ int GameEngine::IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* 
 int GameEngine::SetGamePassword (int iGameClass, int iGameNumber, const char* pszNewPassword) {
 
     GAME_DATA (pszGameData, iGameClass, iGameNumber);
-    return t_pCache->WriteData (pszGameData, GameData::Password, pszNewPassword);
+    return t_pCache->WriteData(pszGameData, GameData::Password, pszNewPassword);
 }
 
 // Input:
@@ -849,7 +844,7 @@ int GameEngine::GetGameProperty(int iGameClass, int iGameNumber, const char* psz
 int GameEngine::SetGameProperty(int iGameClass, int iGameNumber, const char* pszColumn, const Variant& vProp) {
 
     GAME_DATA (pszGameData, iGameClass, iGameNumber);
-    return t_pCache->WriteData (pszGameData, pszColumn, vProp);
+    return t_pCache->WriteData(pszGameData, pszColumn, vProp);
 }
 
 
@@ -1182,16 +1177,13 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         // Bulk cache relevant empire rows
         if (goGameOptions.iNumSecurityEntries > 0)
         {
-            TableCacheEntry* entries = (TableCacheEntry*)StackAlloc(goGameOptions.iNumSecurityEntries * sizeof(TableCacheEntry));
+            unsigned int* piEmpireEntries = (unsigned int*)StackAlloc(goGameOptions.iNumSecurityEntries * sizeof(unsigned int));
             for (i = 0; i < goGameOptions.iNumSecurityEntries; i ++)
             {
-                entries[i].pszTableName = SYSTEM_EMPIRE_DATA;
-                entries[i].iKey = goGameOptions.pSecurity[i].iEmpireKey;
-                entries[i].iNumColumns = 0;
-                entries[i].pcColumns = NULL;
+                piEmpireEntries[i] = goGameOptions.pSecurity[i].iEmpireKey;
             }
 
-            iErrCode = t_pCache->Cache(entries, goGameOptions.iNumSecurityEntries);
+            iErrCode = CacheEmpires(piEmpireEntries, goGameOptions.iNumSecurityEntries);
             if (iErrCode != OK)
                goto OnError;
         }
@@ -1405,19 +1397,19 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
 
                         GET_GAME_EMPIRE_DATA (strTableName, iGameClass, *piGameNumber, aTeam.piEmpireKey[j]);
 
-                        iErrCode = t_pCache->WriteData (strTableName, GameEmpireData::NumTruces, iNumAtAlliance);
+                        iErrCode = t_pCache->WriteData(strTableName, GameEmpireData::NumTruces, iNumAtAlliance);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto OnError;
                         }
 
-                        iErrCode = t_pCache->WriteData (strTableName, GameEmpireData::NumTrades, iNumAtAlliance);
+                        iErrCode = t_pCache->WriteData(strTableName, GameEmpireData::NumTrades, iNumAtAlliance);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto OnError;
                         }
 
-                        iErrCode = t_pCache->WriteData (strTableName, GameEmpireData::NumAlliances, iNumAtAlliance);
+                        iErrCode = t_pCache->WriteData(strTableName, GameEmpireData::NumAlliances, iNumAtAlliance);
                         if (iErrCode != OK) {
                             Assert (false);
                             goto OnError;
@@ -1441,19 +1433,19 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
                                 goto OnError;
                             }
 
-                            iErrCode = t_pCache->WriteData (pszDip1, iKey, GameEmpireDiplomacy::DipOffer, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(pszDip1, iKey, GameEmpireDiplomacy::DipOffer, ALLIANCE);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto OnError;
                             }
 
-                            iErrCode = t_pCache->WriteData (pszDip1, iKey, GameEmpireDiplomacy::CurrentStatus, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(pszDip1, iKey, GameEmpireDiplomacy::CurrentStatus, ALLIANCE);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto OnError;
                             }
 
-                            iErrCode = t_pCache->WriteData (pszDip1, iKey, GameEmpireDiplomacy::VirtualStatus, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(pszDip1, iKey, GameEmpireDiplomacy::VirtualStatus, ALLIANCE);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto OnError;
@@ -1479,19 +1471,19 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
                                 goto OnError;
                             }
 
-                            iErrCode = t_pCache->WriteData (pszDip2, iKey, GameEmpireDiplomacy::DipOffer, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(pszDip2, iKey, GameEmpireDiplomacy::DipOffer, ALLIANCE);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto OnError;
                             }
 
-                            iErrCode = t_pCache->WriteData (pszDip2, iKey, GameEmpireDiplomacy::CurrentStatus, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(pszDip2, iKey, GameEmpireDiplomacy::CurrentStatus, ALLIANCE);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto OnError;
                             }
 
-                            iErrCode = t_pCache->WriteData (pszDip2, iKey, GameEmpireDiplomacy::VirtualStatus, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(pszDip2, iKey, GameEmpireDiplomacy::VirtualStatus, ALLIANCE);
                             if (iErrCode != OK) {
                                 Assert (false);
                                 goto OnError;
@@ -1764,7 +1756,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         goto OnError;
     }
 
-    iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+    iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -2048,7 +2040,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         
         if ((int) iCurrentNumEmpires > vMaxNumEmpires.GetInteger()) {
 
-            iErrCode = t_pCache->WriteData (strGameData, GameData::MaxNumEmpires, iCurrentNumEmpires);
+            iErrCode = t_pCache->WriteData(strGameData, GameData::MaxNumEmpires, iCurrentNumEmpires);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
@@ -2102,7 +2094,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
                 goto OnError;
             }
 
-            iErrCode = t_pCache->WriteData (SYSTEM_ACTIVE_GAMES, iGameKey, SystemActiveGames::State, 0);
+            iErrCode = t_pCache->WriteData(SYSTEM_ACTIVE_GAMES, iGameKey, SystemActiveGames::State, 0);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
@@ -2282,15 +2274,8 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     pvGameEmpireData[GameEmpireData::iNumAlliances] = 0;
 
     // Select default message target
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::DefaultMessageTarget, 
-        &pvGameEmpireData[GameEmpireData::iDefaultMessageTarget]
-        );
-
+    iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::DefaultMessageTarget, pvGameEmpireData + GameEmpireData::iDefaultMessageTarget);
     if (iErrCode != OK) {
-        Assert (false);
         goto OnError;
     }
 
@@ -2352,23 +2337,15 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     pvGameEmpireData[GameEmpireData::iNotepad] = "";
 
     // Default builder planet is empire's default
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::DefaultBuilderPlanet, 
-        &pvGameEmpireData[GameEmpireData::iDefaultBuilderPlanet]
-        );
-
+    iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::DefaultBuilderPlanet, pvGameEmpireData + GameEmpireData::iDefaultBuilderPlanet);
     if (iErrCode != OK) {
-        Assert (false);
         goto OnError;
     }
 
     pvGameEmpireData[GameEmpireData::iLastBuilderPlanet] = NO_KEY;
-
-    pvGameEmpireData [GameEmpireData::iMaxEcon] = 0;
-    pvGameEmpireData [GameEmpireData::iMaxMil] = 0;
-    pvGameEmpireData [GameEmpireData::iNumAlliancesLeaked] = 0;
+    pvGameEmpireData[GameEmpireData::iMaxEcon] = 0;
+    pvGameEmpireData[GameEmpireData::iMaxMil] = 0;
+    pvGameEmpireData[GameEmpireData::iNumAlliancesLeaked] = 0;
 
     if (vGameOptions.GetInteger() & GAME_COUNT_FOR_BRIDIER) {
 
@@ -2389,15 +2366,8 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         pvGameEmpireData [GameEmpireData::iInitialBridierIndex] = 0;
     }
 
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SystemEmpireData::GameRatios, 
-        pvGameEmpireData + GameEmpireData::iGameRatios
-        );
-
+    iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::GameRatios, pvGameEmpireData + GameEmpireData::iGameRatios);
     if (iErrCode != OK) {
-        Assert (false);
         goto OnError;
     }
 
@@ -2574,21 +2544,21 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
             iGameState |= STARTED;
             
             // Set last update time
-            iErrCode = t_pCache->WriteData (strGameData, GameData::LastUpdateTime, tTime);
+            iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateTime, tTime);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
             }
             
             // Set number of updates to zero
-            iErrCode = t_pCache->WriteData (strGameData, GameData::NumUpdates, 0);
+            iErrCode = t_pCache->WriteData(strGameData, GameData::NumUpdates, 0);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
             }
 
             // Set max num empires
-            iErrCode = t_pCache->WriteData (strGameData, GameData::MaxNumEmpires, iCurrentNumEmpires);
+            iErrCode = t_pCache->WriteData(strGameData, GameData::MaxNumEmpires, iCurrentNumEmpires);
             if (iErrCode != OK) {
                 Assert (false);
                 goto OnError;
@@ -2599,7 +2569,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
 
                 bPaused = true;
 
-                iErrCode = t_pCache->WriteData (strGameData, GameData::NumRequestingPause, iCurrentNumEmpires);
+                iErrCode = t_pCache->WriteData(strGameData, GameData::NumRequestingPause, iCurrentNumEmpires);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto OnError;
@@ -2896,7 +2866,7 @@ int GameEngine::SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmp
 
     GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-    return t_pCache->WriteData (
+    return t_pCache->WriteData(
         strGameEmpireData,
         GameEmpireData::EnterGameIPAddress,
         pszIPAddress
@@ -3699,7 +3669,7 @@ int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTim
     Seconds sSecondsUntil = Time::GetSecondDifference (tNextUpdateTime, tNow);
 
     // Write down seconds until next update
-    iErrCode = pGameData->WriteData (GameData::SecondsUntilNextUpdateWhilePaused, sSecondsUntil);
+    iErrCode = pGameData->WriteData(GameData::SecondsUntilNextUpdateWhilePaused, sSecondsUntil);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3857,7 +3827,7 @@ int GameEngine::UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool 
         &tNewLastUpdateTime
         );
 
-    iErrCode = pGameData->WriteData (GameData::LastUpdateTime, tNewLastUpdateTime);
+    iErrCode = pGameData->WriteData(GameData::LastUpdateTime, tNewLastUpdateTime);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -3987,7 +3957,7 @@ int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireK
     }
 
     // Set last login
-    iErrCode = pTable->WriteData (GameEmpireData::LastLogin, tTime);
+    iErrCode = pTable->WriteData(GameEmpireData::LastLogin, tTime);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

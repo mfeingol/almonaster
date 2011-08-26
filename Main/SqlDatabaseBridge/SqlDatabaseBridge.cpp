@@ -60,9 +60,9 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, unsigned int iOptio
     return iErrCode;
 }
 
-IDatabaseConnection* SqlDatabaseBridge::CreateConnection()
+IDatabaseConnection* SqlDatabaseBridge::CreateConnection(TransactionIsolationLevel isoLevel)
 {
-    return new SqlDatabaseConnection(m_sqlDatabase);
+    return new SqlDatabaseConnection(m_sqlDatabase, isoLevel);
 }
 
 // TODOTODO - Backups

@@ -26,7 +26,7 @@ int GameEngine::GetSystemProperty(const char* pszColumn, Variant* pvProperty)
 
 int GameEngine::SetSystemProperty(const char*  pszColumn, const Variant& vProperty)
 {
-    return t_pCache->WriteData (SYSTEM_DATA, pszColumn, vProperty);
+    return t_pCache->WriteData(SYSTEM_DATA, pszColumn, vProperty);
 }
 
 
@@ -146,7 +146,7 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    iErrCode = t_pCache->WriteData (SYSTEM_DATA, pszWriteColumn, fScore);
+    iErrCode = t_pCache->WriteData(SYSTEM_DATA, pszWriteColumn, fScore);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -194,24 +194,25 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
 //
 // When adept or apprentice score changes, this function is called
 //
-int GameEngine::ScanEmpiresOnScoreChanges() {
+int GameEngine::ScanEmpiresOnScoreChanges()
+{
+    // TODOTODO - Rewrite this
+    //int iErrCode;
+    //unsigned int iEmpireKey = NO_KEY;
 
-    int iErrCode;
-    unsigned int iEmpireKey = NO_KEY;
+    //while (true) {
 
-    while (true) {
+    //    iErrCode = t_pCache->GetNextKey (SYSTEM_EMPIRE_DATA, iEmpireKey, &iEmpireKey);
+    //    if (iErrCode != OK) {
+    //        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+    //            iErrCode = OK;
+    //        } else Assert (false);
+    //        break;
+    //    }
 
-        iErrCode = t_pCache->GetNextKey (SYSTEM_EMPIRE_DATA, iEmpireKey, &iEmpireKey);
-        if (iErrCode != OK) {
-            if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                iErrCode = OK;
-            } else Assert (false);
-            break;
-        }
-
-        // Best effort
-        CalculatePrivilegeLevel (iEmpireKey);
-    }
+    //    // Best effort
+    //    CalculatePrivilegeLevel (iEmpireKey);
+    //}
 
     return OK;
 }
@@ -354,7 +355,7 @@ int GameEngine::SetDefaultShipName (int iShipKey, const char* pszShipName) {
         return ERROR_WRONG_SHIP_TYPE;
     }
 
-    return t_pCache->WriteData (SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iShipKey], pszShipName);
+    return t_pCache->WriteData(SYSTEM_DATA, SYSTEM_DATA_SHIP_NAME_COLUMN [iShipKey], pszShipName);
 }
 
 int GameEngine::SetSystemOption (int iOption, bool bFlag) {

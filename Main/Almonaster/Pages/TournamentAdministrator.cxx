@@ -115,7 +115,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
 
-            iErrCode = DeleteTournament (iOwnerKey, pHttpForm->GetIntValue(), false);
+            iErrCode = DeleteTournament(iOwnerKey, pHttpForm->GetIntValue(), false);
             switch (iErrCode) {
 
             case OK:
@@ -169,7 +169,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_CREATENEWTOURNAMENT)) {
 
-            iErrCode = ProcessCreateTournament (iOwnerKey);
+            iErrCode = ProcessCreateTournament(iOwnerKey);
             if (iErrCode == OK) {
                 iTAdminPage = 0;
             } else {
@@ -585,14 +585,15 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iErrCode = InviteEmpireIntoTournament (iTournamentKey, iOwnerKey, m_iEmpireKey, pHttpForm->GetIntValue());
-            if (iErrCode != OK) {
-
+            if (iErrCode != OK)
+            {
                 if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
                     AddMessage ("The empire is already in the tournament");
                 }
 
                 else {
                     AddMessage ("The empire could not be invited");
+                    return iErrCode;
                 }
 
             } else {
@@ -636,7 +637,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("The empire could not be deleted from the tournament because it is still in a tournament game");
             } else {
                 AddMessage ("The empire was not deleted from the tournament. The error was ");
-                AppendMessage (iErrCode);
+                AppendMessage(iErrCode);
+                return iErrCode;
             }
         }
 
@@ -1272,7 +1274,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage((iTAdminPage == 10 || iTAdminPage == 11) && iIconSelect == 1);
+Check(OpenSystemPage((iTAdminPage == 10 || iTAdminPage == 11) && iIconSelect == 1));
 
 // Individual page stuff starts here
 switch (iTAdminPage) {
@@ -1356,35 +1358,23 @@ case 4:
     {
 
     unsigned int iInviteKey = NO_KEY;
-    bool bExists = false;
     Variant vInviteName;
 
-    if (pszInviteEmpire == NULL) {
-
+    if (pszInviteEmpire == NULL)
+    {
         pHttpForm = m_pHttpRequest->GetForm ("InviteEmpireKey");
-        if (pHttpForm != NULL && pHttpForm->GetValue() != NULL) {
-
-            bExists = true;
+        if (pHttpForm != NULL && pHttpForm->GetValue() != NULL)
+        {
             iInviteKey = pHttpForm->GetIntValue();
             iErrCode = GetEmpireName (iInviteKey, &vInviteName);
- 
-        } else {
-
-            iErrCode = ERROR_FAILURE;
         }
-
-    } else {
-
-        iErrCode = DoesEmpireExist (
-            pszInviteEmpire,
-            &bExists,
-            &iInviteKey,
-            &vInviteName,
-            NULL
-            );
+    }
+    else
+    {
+        Check(LookupEmpireByName(pszInviteEmpire, &iInviteKey, &vInviteName, NULL));
     }
 
-    if (iErrCode != OK || !bExists) {
+    if (iInviteKey == NO_KEY) {
         %><p><strong>That empire does not exist</strong><%
         goto Admin;
     }

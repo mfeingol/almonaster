@@ -1,5 +1,4 @@
 #include "Utils.h"
-#include "SqlDatabase.h"
 
 using namespace System::Collections::Generic;
 using namespace System::Linq;
@@ -64,6 +63,30 @@ SqlDbType Convert(VariantType type)
     default:
         Assert(false);
         return SqlDbType::Int;
+    }
+}
+
+IsolationLevel Convert(TransactionIsolationLevel isoLevel)
+{
+    switch (isoLevel)
+    {
+    case UNSPECIFIED:
+        return IsolationLevel::Unspecified;
+    case CHAOS:
+        return IsolationLevel::Chaos;
+    case READ_UNCOMMITTED:
+        return IsolationLevel::ReadUncommitted;
+    case READ_COMMITTED:
+        return IsolationLevel::ReadCommitted;
+    case REPEATABLE_READ:
+        return IsolationLevel::RepeatableRead;
+    case SERIALIZABLE:
+        return IsolationLevel::Serializable;
+    case SNAPSHOT:
+        return IsolationLevel::Snapshot;
+    default:
+        Assert(false);
+        return IsolationLevel::Unspecified;
     }
 }
 

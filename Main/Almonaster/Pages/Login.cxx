@@ -24,7 +24,7 @@ IHttpForm* pHttpForm;
 const char* pszPrintEmpireName = NULL;
 char pszStandardizedName [MAX_EMPIRE_NAME_LENGTH + 1];
 
-int iErrCode;
+int iErrCode = OK;
 
 m_iEmpireKey = NO_KEY;
 m_vEmpireName = m_vPassword = (const char*) NULL;
@@ -48,15 +48,13 @@ if (m_pHttpRequest->GetMethod() == GET) {
         i64SubmittedPasswordHash = pPasswordCookie->GetInt64Value();
     }
 
-    if (iAutoLogonKey != NO_KEY && i64SubmittedPasswordHash != -1) {
-
+    if (iAutoLogonKey != NO_KEY && i64SubmittedPasswordHash != -1)
+    {
         Variant vValue;
-
-        const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iAutoLogonKey, 0, NULL };
-        iErrCode = t_pCache->Cache(&entry, 1);
+        iErrCode = CacheEmpire(iAutoLogonKey);
         if (iErrCode == OK &&
-            GetEmpirePassword (iAutoLogonKey, &m_vPassword) == OK &&
-            GetEmpireProperty (iAutoLogonKey, SystemEmpireData::SecretKey, &vValue) == OK)
+            GetEmpirePassword(iAutoLogonKey, &m_vPassword) == OK &&
+            GetEmpireProperty(iAutoLogonKey, SystemEmpireData::SecretKey, &vValue) == OK)
         {
             // Authenticate
             m_i64SecretKey = vValue.GetInteger64();
@@ -124,17 +122,8 @@ else if (!m_bRedirection)
         goto Text;
     }
 
-    TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszStandardizedName };
-    TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
-        
-    ICachedTable* pEmpire;
-    iErrCode = t_pCache->Cache(entry, &pEmpire);
+    iErrCode = LookupEmpireByName(pszStandardizedName, &m_iEmpireKey, NULL, NULL);
     if (iErrCode != OK)
-        goto Text;
-
-    iErrCode = pEmpire->GetNextKey(NO_KEY, &m_iEmpireKey);
-    SafeRelease(pEmpire);
-    if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND)
         goto Text;
 
     if (m_pHttpRequest->GetFormBeginsWith("CreateEmpire"))
@@ -233,20 +222,25 @@ else if (!m_bRedirection)
 
 Text:
 
+if (iErrCode != OK)
+    return iErrCode;
+
 // Get a cookie for last empire used's graphics
 ICookie* pCookie = m_pHttpRequest->GetCookie (LAST_EMPIRE_USED_COOKIE);
-if (pCookie != NULL && pCookie->GetValue() != NULL) {
-
+if (pCookie != NULL && pCookie->GetValue() != NULL)
+{
     m_iEmpireKey = pCookie->GetIntValue();
 
-    const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL };
-    iErrCode = t_pCache->Cache(&entry, 1);
+    unsigned int iResults;
+    iErrCode = CacheEmpire(m_iEmpireKey, &iResults);
     if (iErrCode != OK)
+        return iErrCode;
+
+    if (iResults == 0)
     {
         m_iEmpireKey = NO_KEY;
     }
-    
-    if (pszPrintEmpireName == NULL)
+    else if (pszPrintEmpireName == NULL)
     {
         pszPrintEmpireName = m_vEmpireName.GetCharPtr();
     }

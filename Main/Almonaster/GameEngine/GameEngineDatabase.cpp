@@ -60,187 +60,190 @@ int GameEngine::PurgeDatabaseMsg(AsyncTask* pMessage) {
 
 int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
-    int iErrCode = OK;
-    unsigned int iNumEmpiresDeleted = 0;
+    // TODOTODO - rewrite purges
+    return OK;
 
-    char pszText [256];
+    //int iErrCode = OK;
+    //unsigned int iNumEmpiresDeleted = 0;
 
-    if ((iCriteria & (~TEST_PURGE_ONLY)) != 0) {
+    //char pszText [256];
 
-        const Seconds sThirtyDays = 30 * 24 * 60 * 60;
-        unsigned int iEmpireKey = NO_KEY;
+    //if ((iCriteria & (~TEST_PURGE_ONLY)) != 0) {
 
-        ICachedTable* pEmpires = NULL;
+    //    const Seconds sThirtyDays = 30 * 24 * 60 * 60;
+    //    unsigned int iEmpireKey = NO_KEY;
 
-        int iValue;
-        float fValue;
-        UTCTime tValue, tNow;
+    //    ICachedTable* pEmpires = NULL;
 
-        Time::GetTime (&tNow);
+    //    int iValue;
+    //    float fValue;
+    //    UTCTime tValue, tNow;
 
-        while (true) {
+    //    Time::GetTime (&tNow);
 
-            int64 i64SecretKey;
+    //    while (true) {
 
-            SafeRelease (pEmpires);
+    //        int64 i64SecretKey;
 
-            iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
-            if (iErrCode != OK) {
-                Assert (false);
-                continue;
-            }
+    //        SafeRelease (pEmpires);
 
-            iErrCode = pEmpires->GetNextKey (iEmpireKey, &iEmpireKey);
-            if (iErrCode != OK) {
-                if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                    iErrCode = OK;
-                } else Assert (false);
-                break;
-            }
+    //        iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
+    //        if (iErrCode != OK) {
+    //            Assert (false);
+    //            continue;
+    //        }
 
-            // Never purge administrators
-            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Privilege, &iValue);
-            if (iErrCode != OK || iValue >= ADMINISTRATOR) {
-                continue;
-            }
-            
-            // Never played a game
-            if (iCriteria & NEVER_PLAYED_A_GAME) {
-                
-                // If max econ = 0, then this empire never played a game
-                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::MaxEcon, &iValue);
-                if (iErrCode != OK || iValue > 0) {
-                    continue;
-                }
-            }
-            
-            // Never won a game
-            if (iCriteria & NEVER_WON_A_GAME) {
+    //        iErrCode = pEmpires->GetNextKey (iEmpireKey, &iEmpireKey);
+    //        if (iErrCode != OK) {
+    //            if (iErrCode == ERROR_DATA_NOT_FOUND) {
+    //                iErrCode = OK;
+    //            } else Assert (false);
+    //            break;
+    //        }
 
-                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Wins, &iValue);
-                if (iErrCode != OK || iValue > 0) {
-                    continue;
-                }
-            }
-            
-            // Only logged in once
-            if (iCriteria & ONLY_ONE_LOGIN) {
+    //        // Never purge administrators
+    //        iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Privilege, &iValue);
+    //        if (iErrCode != OK || iValue >= ADMINISTRATOR) {
+    //            continue;
+    //        }
+    //        
+    //        // Never played a game
+    //        if (iCriteria & NEVER_PLAYED_A_GAME) {
+    //            
+    //            // If max econ = 0, then this empire never played a game
+    //            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::MaxEcon, &iValue);
+    //            if (iErrCode != OK || iValue > 0) {
+    //                continue;
+    //            }
+    //        }
+    //        
+    //        // Never won a game
+    //        if (iCriteria & NEVER_WON_A_GAME) {
 
-                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::NumLogins, &iValue);
-                if (iErrCode != OK || iValue > 1) {
-                    continue;
-                }
-            }
-            
-            // Bad score
-            if (iCriteria & CLASSIC_SCORE_IS_ZERO_OR_LESS) {
-                
-                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::ClassicScore, &fValue);
-                if (iErrCode != OK || fValue <= 0) {
-                    continue;
-                }
-            }
-            
-            // Last logged in a while ago
-            if (iCriteria & LAST_LOGGED_IN_1_MONTH_AGO) {
+    //            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::Wins, &iValue);
+    //            if (iErrCode != OK || iValue > 0) {
+    //                continue;
+    //            }
+    //        }
+    //        
+    //        // Only logged in once
+    //        if (iCriteria & ONLY_ONE_LOGIN) {
 
-                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
-                if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < sThirtyDays) {
-                    continue;
-                }
-            }
-            if (iCriteria & LAST_LOGGED_IN_3_MONTHS_AGO) {
+    //            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::NumLogins, &iValue);
+    //            if (iErrCode != OK || iValue > 1) {
+    //                continue;
+    //            }
+    //        }
+    //        
+    //        // Bad score
+    //        if (iCriteria & CLASSIC_SCORE_IS_ZERO_OR_LESS) {
+    //            
+    //            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::ClassicScore, &fValue);
+    //            if (iErrCode != OK || fValue <= 0) {
+    //                continue;
+    //            }
+    //        }
+    //        
+    //        // Last logged in a while ago
+    //        if (iCriteria & LAST_LOGGED_IN_1_MONTH_AGO) {
 
-                iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
-                if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < 3 * sThirtyDays) {
-                    continue;
-                }
-            }
+    //            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
+    //            if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < sThirtyDays) {
+    //                continue;
+    //            }
+    //        }
+    //        if (iCriteria & LAST_LOGGED_IN_3_MONTHS_AGO) {
 
-            // Read secret key
-            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::SecretKey, &i64SecretKey);
-            if (iErrCode != OK) {
-                continue;
-            }
+    //            iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::LastLoginTime, &tValue);
+    //            if (iErrCode != OK || Time::GetSecondDifference (tNow, tValue) < 3 * sThirtyDays) {
+    //                continue;
+    //            }
+    //        }
 
-            SafeRelease (pEmpires);
+    //        // Read secret key
+    //        iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::SecretKey, &i64SecretKey);
+    //        if (iErrCode != OK) {
+    //            continue;
+    //        }
 
-            // Not on top lists
-            if (iCriteria & NOT_ON_TOP_LISTS) {
+    //        SafeRelease (pEmpires);
 
-                bool bOnTopList = false;
-                int i;
-                ENUMERATE_SCORING_SYSTEMS (i) {
+    //        // Not on top lists
+    //        if (iCriteria & NOT_ON_TOP_LISTS) {
 
-                    ScoringSystem ssTopList = (ScoringSystem) i;
-                    if (HasTopList (ssTopList)) {
+    //            bool bOnTopList = false;
+    //            int i;
+    //            ENUMERATE_SCORING_SYSTEMS (i) {
 
-                        const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
+    //                ScoringSystem ssTopList = (ScoringSystem) i;
+    //                if (HasTopList (ssTopList)) {
 
-                        unsigned int iKey;
-                        iErrCode = t_pCache->GetFirstKey(
-                            pszTableName,
-                            TopList::EmpireKey,
-                            iEmpireKey,
-                            &iKey
-                            );
+    //                    const char* pszTableName = TOPLIST_TABLE_NAME [ssTopList];
 
-                        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                            iErrCode = OK;
-                        } else {
-                            Assert (iErrCode == OK);
-                            bOnTopList = true;
-                            break;
-                        }
-                    }
-                }
+    //                    unsigned int iKey;
+    //                    iErrCode = t_pCache->GetFirstKey(
+    //                        pszTableName,
+    //                        TopList::EmpireKey,
+    //                        iEmpireKey,
+    //                        &iKey
+    //                        );
 
-                if (bOnTopList) {
-                    continue;
-                }
-            }
+    //                    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+    //                        iErrCode = OK;
+    //                    } else {
+    //                        Assert (iErrCode == OK);
+    //                        bOnTopList = true;
+    //                        break;
+    //                    }
+    //                }
+    //            }
 
-            unsigned int iNumGames;
-            iErrCode = GetEmpireActiveGames(iEmpireKey, NULL, NULL, &iNumGames);
-            if (iErrCode != OK || iNumGames > 0)
-            {
-                continue;
-            }
-            
-            // Best effort delete the empire
-            if (!(iCriteria & TEST_PURGE_ONLY)) {
-                iErrCode = DeleteEmpire (iEmpireKey, &i64SecretKey, true, false);
-            }
-            
-            if (iErrCode == OK) {
-                iNumEmpiresDeleted ++;
-            }
-        }
+    //            if (bOnTopList) {
+    //                continue;
+    //            }
+    //        }
 
-        SafeRelease (pEmpires);
-        iErrCode = OK;
-    }
+    //        unsigned int iNumGames;
+    //        iErrCode = GetEmpireActiveGames(iEmpireKey, NULL, NULL, &iNumGames);
+    //        if (iErrCode != OK || iNumGames > 0)
+    //        {
+    //            continue;
+    //        }
+    //        
+    //        // Best effort delete the empire
+    //        if (!(iCriteria & TEST_PURGE_ONLY)) {
+    //            iErrCode = DeleteEmpire (iEmpireKey, &i64SecretKey, true, false);
+    //        }
+    //        
+    //        if (iErrCode == OK) {
+    //            iNumEmpiresDeleted ++;
+    //        }
+    //    }
 
-    // Send message to originator of purge       
-    if (iCriteria & TEST_PURGE_ONLY) {
+    //    SafeRelease (pEmpires);
+    //    iErrCode = OK;
+    //}
 
-        if (iNumEmpiresDeleted == 1) {
-            strcpy (pszText, "1 empire would have been purged from the database");
-        } else {
-            sprintf (pszText, "%i empires would have been purged from the database", iNumEmpiresDeleted);
-        }
+    //// Send message to originator of purge       
+    //if (iCriteria & TEST_PURGE_ONLY) {
 
-    } else {
+    //    if (iNumEmpiresDeleted == 1) {
+    //        strcpy (pszText, "1 empire would have been purged from the database");
+    //    } else {
+    //        sprintf (pszText, "%i empires would have been purged from the database", iNumEmpiresDeleted);
+    //    }
 
-        if (iNumEmpiresDeleted == 1) {
-            strcpy (pszText, "1 empire was purged from the database");
-        } else {
-            sprintf (pszText, "%i empires were purged from the database", iNumEmpiresDeleted);
-        }
-    }
+    //} else {
 
-    // Best effort send message
-    SendSystemMessage (iEmpireKey, pszText, SYSTEM, MESSAGE_SYSTEM);
+    //    if (iNumEmpiresDeleted == 1) {
+    //        strcpy (pszText, "1 empire was purged from the database");
+    //    } else {
+    //        sprintf (pszText, "%i empires were purged from the database", iNumEmpiresDeleted);
+    //    }
+    //}
 
-    return iErrCode;
+    //// Best effort send message
+    //SendSystemMessage (iEmpireKey, pszText, SYSTEM, MESSAGE_SYSTEM);
+
+    //return iErrCode;
 }

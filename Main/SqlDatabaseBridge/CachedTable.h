@@ -14,19 +14,19 @@ private:
     gcroot<SqlCommandManager^> m_cmd;
     gcroot<BulkTableReadResult^> m_result;
 
+    // TODOTODO - does it need to be a sorted dictionary
     gcroot<SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_keyToRows;
+    gcroot<Dictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_writes;
 
     int InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows, unsigned int* piKey);
     IDictionary<System::String^, System::Object^>^ GetRow(unsigned int iKey, int* piErrCode);
-
-    struct ChangeLogEntry
-    {
-        gcroot<System::String^> ColumnName;
-        gcroot<IDictionary<System::String^, System::Object^>^> Row;
-    };
+    void SaveWrite(int64 id, System::String^ columnName, System::Object^ value);
 
 public:
     CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result);
+
+    BulkTableReadResult^ GetResult();
+    IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ GetWrites();
 
     // ICachedTable
     IMPLEMENT_INTERFACE(ICachedTable);

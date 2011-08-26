@@ -33,9 +33,40 @@ TableCacheCollection::~TableCacheCollection()
         char* pszKey = htiView.GetKey();
         OS::HeapFree(pszKey);
 
-        ICachedTable* pTable = htiView.GetData();
+        CachedTable* pTable = htiView.GetData();
         SafeRelease(pTable);
     }
+}
+
+int TableCacheCollection::Commit()
+{
+    List<BulkTableWriteRequest>^ requests = gcnew List<BulkTableWriteRequest>();
+
+    HashTableIterator<char*, CachedTable*> htiView;
+    while (m_htTableViews.GetNextIterator(&htiView))
+    {
+        CachedTable* pTable = htiView.GetData();
+        IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ writes = pTable->GetWrites();
+        if (writes->Count > 0)
+        {
+            BulkTableWriteRequest req = { pTable->GetResult()->TableName, writes };
+            requests->Add(req);
+        }
+    }
+
+    if (requests->Count > 0)
+    {
+        try
+        {
+            m_cmd->BulkWrite(requests, gcnew System::String(IdColumnName));
+        }
+        catch (SqlDatabaseException^)
+        {
+            return ERROR_FAILURE;
+        }
+    }
+    return OK;
+
 }
 
 CachedTable* TableCacheCollection::CreateEmptyTable(const char* pszCacheTableName)
@@ -213,10 +244,10 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
         pTable = new CachedTable(m_cmd, result);
         Assert(pTable);
 
-        bool ret = m_htTableViews.Insert(ppszCacheEntryName[index++], pTable);
+        bool ret = m_htTableViews.Insert(ppszCacheEntryName[index], pTable);
         Assert(ret);
 
-        if (pcCacheEntry->iNumColumns > 0 && Enumerable::Count(result->Rows) == 1)
+        if (Enumerable::Count(requests[index].Columns) > 0 && Enumerable::Count(result->Rows) == 1)
         {
             // One row found via column search, so allow the table to be looked up by key as well
             iKey = (unsigned int)(int64)Enumerable::First(result->Rows)[strIdColumnName];
@@ -228,10 +259,12 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
             bool ret = m_htTableViews.Insert(String::StrDup(pszCacheEntryName), pTable);
             Assert(ret);
         }
+
+        index ++;
     }
 
-    // If there happens to be one result, and you wanted it, here it is...
-    if (ppTable && Enumerable::Count(results) == 1)
+    // If there happens to be at most one result, and you wanted it, here it is...
+    if (ppTable && Enumerable::Count(results) <= 1)
     {
         pTable->AddRef();
         *ppTable = pTable;
@@ -384,7 +417,8 @@ int TableCacheCollection::GetNextKey(const char* pszCacheTableName, unsigned int
 
 int TableCacheCollection::GetEqualKeys(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
-    *ppiKey = NULL;
+    if (ppiKey)
+        *ppiKey = NULL;
     *piNumKeys = 0;
 
     CachedTable* pTable;

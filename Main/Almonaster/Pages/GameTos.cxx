@@ -85,7 +85,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 %><input type="hidden" name="TosPage" value="<% Write (iTosPage); %>"><%
 

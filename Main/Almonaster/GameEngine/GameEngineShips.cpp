@@ -2121,7 +2121,7 @@ int GameEngine::UpdateShipName(int iGameClass, int iGameNumber, int iEmpireKey, 
     GAME_EMPIRE_SHIPS(strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
 
     // Write new name
-    int iErrCode = t_pCache->WriteData (strEmpireShips, iShipKey, GameEmpireShips::Name, pszNewName);
+    int iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::Name, pszNewName);
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
         iErrCode = ERROR_SHIP_DOES_NOT_EXIST;
     return iErrCode;
@@ -2283,7 +2283,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
             if (iNewShipOrder == BUILD_AT) {
                 
                 // Set action to build at planet
-                iErrCode = t_pCache->WriteData (strEmpireShips, iShipKey, GameEmpireShips::Action, BUILD_AT);
+                iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::Action, BUILD_AT);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -2319,7 +2319,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                     }
                     
                     // Set no fleet key
-                    iErrCode = t_pCache->WriteData (strEmpireShips, iShipKey, GameEmpireShips::FleetKey, NO_KEY);
+                    iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, NO_KEY);
                     if (iErrCode != OK) {
                         Assert (false);
                         goto Cleanup;
@@ -2405,7 +2405,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
                 
                 // Set action to be "build in fleet"
-                iErrCode = t_pCache->WriteData (
+                iErrCode = t_pCache->WriteData(
                     strEmpireShips, 
                     iShipKey, 
                     GameEmpireShips::Action, 
@@ -2418,7 +2418,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
                 
                 // Set ship fleet
-                iErrCode = t_pCache->WriteData (
+                iErrCode = t_pCache->WriteData(
                     strEmpireShips, 
                     iShipKey, 
                     GameEmpireShips::FleetKey, 
@@ -2431,7 +2431,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
 
                 // Set the fleet to stand by
-                iErrCode = t_pCache->WriteData (
+                iErrCode = t_pCache->WriteData(
                     strEmpireFleets, 
                     iNewShipOrder, 
                     GameEmpireFleets::Action, 
@@ -2479,7 +2479,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         }
         
         // Set fleet key to new fleet
-        iErrCode = t_pCache->WriteData (strEmpireShips, iShipKey, GameEmpireShips::FleetKey, iNewShipOrder);
+        iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, iNewShipOrder);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -2619,7 +2619,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 }
 
                 // Set ship to no fleet
-                iErrCode = t_pCache->WriteData (strEmpireShips, iShipKey, GameEmpireShips::FleetKey, NO_KEY);
+                iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, NO_KEY);
                 if (iErrCode != OK) {
                     Assert (false);
                     goto Cleanup;
@@ -3411,7 +3411,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 // any possible planet.  However, range _will_ be enforced during
                 // the update algorithm
 
-                iErrCode = t_pCache->WriteData (
+                iErrCode = t_pCache->WriteData(
                     strEmpireShips, 
                     iShipKey, 
                     GameEmpireShips::GateDestination, 
@@ -3503,7 +3503,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     }
     
     // If we got here, then the order given was approved
-    iErrCode = t_pCache->WriteData (strEmpireShips, iShipKey, GameEmpireShips::Action, iNewShipOrder);
+    iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::Action, iNewShipOrder);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

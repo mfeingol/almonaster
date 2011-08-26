@@ -34,7 +34,16 @@ int GameEngine::Setup()
     if (bNewDatabase)
     {
         // Create a new database and we're done
-        return InitializeNewDatabase();
+        global.GetReport()->WriteReport("Setting up new database");
+        int iErrCode = InitializeNewDatabase();
+        if (iErrCode == OK)
+        {
+            global.GetReport()->WriteReport("Set up new database");
+        }
+        else
+        {
+            global.GetReport()->WriteReport("Error setting up new database");
+        }
     }
 
     if (!bGoodDatabase) {
@@ -59,11 +68,35 @@ int GameEngine::ReloadDatabase() {
     int iErrCode;
 
     //
+    // Cache tables
+    //
+
+    TableCacheEntry entries[] = 
+    {
+        { SYSTEM_DATA, NO_KEY, 0, NULL },
+        { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL },
+        { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL },
+        { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL },
+        { SYSTEM_ALMONASTER_SCORE_TOPLIST, NO_KEY, 0, NULL },
+        { SYSTEM_CLASSIC_SCORE_TOPLIST, NO_KEY, 0, NULL },
+        { SYSTEM_BRIDIER_SCORE_TOPLIST, NO_KEY, 0, NULL },
+        { SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, NO_KEY, 0, NULL },
+    };
+
+    iErrCode = t_pCache->Cache(entries, countof(entries));
+    if (iErrCode != OK)
+    {
+        global.GetReport()->WriteReport("GameEngine setup failed to cache system tables");
+        return iErrCode;
+    }
+
+    //
     // System
     //
 
     iErrCode = VerifySystem();
-    if (iErrCode != OK) {
+    if (iErrCode != OK)
+    {
         global.GetReport()->WriteReport("GameEngine setup failed to verify system data");
         return iErrCode;
     }
@@ -463,7 +496,7 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemNukeList::Sizes) == SystemNukeList::NumColumns);
     Assert(countof(SystemNukeList::ColumnNames) == SystemNukeList::NumColumns);
 
-    pszTable = SystemNukeList::Template.Name;
+    pszTable = SYSTEM_NUKE_LIST;
     if (t_pConn->DoesTableExist(pszTable))
     {
         if (bNewDatabase)
@@ -486,7 +519,7 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemLatestGames::Sizes) == SystemLatestGames::NumColumns);
     Assert(countof(SystemLatestGames::ColumnNames) == SystemLatestGames::NumColumns);
 
-    pszTable = SystemLatestGames::Template.Name;
+    pszTable = SYSTEM_LATEST_GAMES;
     if (t_pConn->DoesTableExist(pszTable))
     {
         if (bNewDatabase)
@@ -509,10 +542,69 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireMessages::Sizes) == SystemEmpireMessages::NumColumns);
     Assert(countof(SystemEmpireMessages::ColumnNames) == SystemEmpireMessages::NumColumns);
 
-    // SystemEmpireNukeList
+    pszTable = SYSTEM_EMPIRE_MESSAGES;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
+    // SystemEmpireNukerList
     Assert(countof(SystemEmpireNukeList::Types) == SystemEmpireNukeList::NumColumns);
     Assert(countof(SystemEmpireNukeList::Sizes) == SystemEmpireNukeList::NumColumns);
     Assert(countof(SystemEmpireNukeList::ColumnNames) == SystemEmpireNukeList::NumColumns);
+
+    pszTable = SYSTEM_EMPIRE_NUKER_LIST;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
+    // SystemEmpireNukedList
+    Assert(countof(SystemEmpireNukeList::Types) == SystemEmpireNukeList::NumColumns);
+    Assert(countof(SystemEmpireNukeList::Sizes) == SystemEmpireNukeList::NumColumns);
+    Assert(countof(SystemEmpireNukeList::ColumnNames) == SystemEmpireNukeList::NumColumns);
+
+    pszTable = SYSTEM_EMPIRE_NUKED_LIST;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
 
     // SystemEmpireActiveGames
     Assert(countof(SystemEmpireActiveGames::Types) == SystemEmpireActiveGames::NumColumns);
@@ -556,6 +648,28 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireTournaments::Types) == SystemEmpireTournaments::NumColumns);
     Assert(countof(SystemEmpireTournaments::Sizes) == SystemEmpireTournaments::NumColumns);
     Assert(countof(SystemEmpireTournaments::ColumnNames) == SystemEmpireTournaments::NumColumns);
+
+    pszTable = SYSTEM_EMPIRE_TOURNAMENTS;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
+    //
+    // Game tables
+    //
 
     // GameData
     Assert(countof(GameData::Types) == GameData::NumColumns);
@@ -1509,6 +1623,34 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemEmpireActiveGames table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_ACTIVE_GAMES, SystemEmpireActiveGames::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemEmpireMessages table
+    iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_MESSAGES, SystemEmpireMessages::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemEmpireTournaments table
+    iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_TOURNAMENTS, SystemEmpireTournaments::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemEmpireNukerList table
+    iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_NUKER_LIST, SystemEmpireNukeList::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemEmpireNukedList table
+    iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_NUKED_LIST, SystemEmpireNukeList::Template);
     if (iErrCode != OK)
     {
         return iErrCode;
@@ -3241,7 +3383,9 @@ int GameEngine::RebuildTopLists() {
 
 int GameEngine::RebuildTopList(ScoringSystem ssTopList) {
     
-    int iErrCode;
+    // TODOTODO - rewrite top lists
+    return OK;
+    /*int iErrCode;
     const char* pszTableName = TOPLIST_TABLE_NAME[ssTopList];
     
     iErrCode = t_pCache->DeleteAllRows(pszTableName);
@@ -3252,5 +3396,5 @@ int GameEngine::RebuildTopList(ScoringSystem ssTopList) {
 
     else Assert(false);
 
-    return iErrCode;
+    return iErrCode;*/
 }

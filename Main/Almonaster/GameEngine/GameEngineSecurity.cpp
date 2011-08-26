@@ -704,7 +704,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     } else {
 
                         // Nuke the key in the row
-                        iErrCode = t_pCache->WriteData (pszGameSec, iKey, GameSecurity::EmpireKey, NO_KEY);
+                        iErrCode = t_pCache->WriteData(pszGameSec, iKey, GameSecurity::EmpireKey, NO_KEY);
                         if (iErrCode != OK) {
                             goto Cleanup;
                         }

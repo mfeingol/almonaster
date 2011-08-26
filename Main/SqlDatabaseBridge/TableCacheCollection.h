@@ -42,6 +42,8 @@ public:
     TableCacheCollection(SqlCommandManager^ cmd);
     ~TableCacheCollection();
 
+    int Commit();
+
     int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate);
 
     int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries);

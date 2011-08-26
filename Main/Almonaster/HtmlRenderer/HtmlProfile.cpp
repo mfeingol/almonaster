@@ -21,8 +21,7 @@
 #include "Osal/Socket.h"
 
 
-void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, 
-                                 bool bEmpireAdmin, bool bSendMessage, bool bShowButtons)
+void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons)
 {
     bool bCanBroadcast;
 
@@ -41,20 +40,26 @@ void HtmlRenderer::WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEm
     m_pHttpResponse->WriteText (iTargetEmpireKey);
     OutputText ("\">");
 
-    if (iTargetEmpireKey != m_iEmpireKey)
-    {
-        const TableCacheEntryColumn col = { SystemEmpireActiveGames::EmpireKey, iTargetEmpireKey };
-        const TableCacheEntry entries[] = 
-        {
-            { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL },
-            { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &col },
-        };
+    // Cache profile data
+    const TableCacheEntryColumn systemActiveGamesCol = { SystemEmpireActiveGames::EmpireKey, iTargetEmpireKey };
+    const TableCacheEntryColumn systemEmpireTournamentsCol = { SystemEmpireTournaments::EmpireKey, iTargetEmpireKey };
+    const TableCacheEntryColumn systemEmpireMessagesCol = { SystemEmpireMessages::EmpireKey, iTargetEmpireKey };
+    const TableCacheEntryColumn systemEmpireNukeListCol = { SystemEmpireNukeList::EmpireKey, iTargetEmpireKey };
 
-        iErrCode = t_pCache->Cache(entries, countof(entries));
-        if (iErrCode != OK)
-        {
-           goto OnError;
-        }
+    const TableCacheEntry entries[] = 
+    {
+        { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL },
+        { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemActiveGamesCol },
+        { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol },
+        { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol },
+        { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol },
+        { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol },
+    };
+
+    iErrCode = t_pCache->Cache(entries, countof(entries));
+    if (iErrCode != OK)
+    {
+        goto OnError;
     }
     
     iErrCode = GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    

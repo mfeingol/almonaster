@@ -114,29 +114,18 @@ int GameEngine::CreateAssociation (unsigned int iEmpireKey, const char* pszSecon
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
     iErrCode = t_pCache->GetTable(strEmpires, &pEmpires);
     if (iErrCode != OK)
-    {
         goto Cleanup;
-    }
 
     // Find the second empire
     unsigned int iSecondKey;
-    {
-        TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszSecondEmpire };
-        TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &entryCol };
-        
-        ICachedTable* pSecondEmpire;
-        iErrCode = t_pCache->Cache(entry, &pSecondEmpire);
-        if (iErrCode != OK)
-            goto Cleanup;
+    iErrCode = LookupEmpireByName(pszSecondEmpire, &iSecondKey, NULL, NULL);
+    if (iErrCode != OK)
+        goto Cleanup;
 
-        iErrCode = pSecondEmpire->GetNextKey(NO_KEY, &iSecondKey);
-        SafeRelease(pSecondEmpire);
-        if (iErrCode != OK)
-        {
-            if (iErrCode == ERROR_DATA_NOT_FOUND)
-                iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
-            goto Cleanup;
-        }
+    if (iSecondKey == NO_KEY)
+    {
+        iErrCode = ERROR_EMPIRE_DOES_NOT_EXIST;
+        goto Cleanup;
     }
 
     // Make sure they're not the same empire

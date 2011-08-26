@@ -179,7 +179,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 // Individual page stuff starts here
 unsigned int iLivePlanetKey, iDeadPlanetKey, iNumPlanets;

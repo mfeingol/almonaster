@@ -65,4 +65,10 @@ namespace Almonaster.Database.Sql
         public string TableName;
         public List<IDictionary<string, object>> Rows;
     }
+
+    public struct BulkTableWriteRequest
+    {
+        public string TableName;
+        public IDictionary<long, IDictionary<string, object>> Rows;
+    }
 }

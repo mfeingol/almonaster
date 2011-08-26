@@ -5,11 +5,11 @@
 using namespace System::Collections::Generic;
 using namespace System::Data::SqlClient;
 
-SqlDatabaseConnection::SqlDatabaseConnection(SqlDatabase^ sqlDatabase)
+SqlDatabaseConnection::SqlDatabaseConnection(SqlDatabase^ sqlDatabase, TransactionIsolationLevel isoLevel)
     :
     m_iNumRefs(1),
     m_sqlDatabase(sqlDatabase),
-    m_cmd(m_sqlDatabase->CreateCommandManager()),
+    m_cmd(m_sqlDatabase->CreateCommandManager(Convert(isoLevel))),
     m_viewCollection(m_cmd)
 {
 }
@@ -19,7 +19,23 @@ SqlDatabaseConnection::~SqlDatabaseConnection()
     delete m_cmd;
 }
 
-// View operations
+int SqlDatabaseConnection::Commit()
+{
+    int iErrCode = m_viewCollection.Commit();
+    if (iErrCode == OK)
+    {
+        try
+        {
+            m_cmd->SetComplete();
+        }
+        catch (SqlDatabaseException^)
+        {
+            iErrCode = ERROR_FAILURE;
+        }
+    }
+    return iErrCode;
+}
+
 ICachedTableCollection* SqlDatabaseConnection::GetCache()
 {
     return &m_viewCollection;

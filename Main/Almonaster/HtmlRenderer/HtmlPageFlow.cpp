@@ -18,7 +18,7 @@
 
 #include "HtmlRenderer.h"
 
-void HtmlRenderer::OpenSystemPage(bool bFileUpload)
+int HtmlRenderer::OpenSystemPage(bool bFileUpload)
 {
     m_pHttpResponse->WriteText("<html><head><title>");
 
@@ -45,9 +45,13 @@ void HtmlRenderer::OpenSystemPage(bool bFileUpload)
         } 
     } 
 
-    WriteSystemMessages();
+    int iErrCode = WriteSystemMessages();
+    if (iErrCode != OK)
+        return iErrCode;
 
     WriteSeparatorString(m_iSeparatorKey);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::WriteSystemTitleString() {
@@ -227,7 +231,7 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
     OutputText ("<p>");
 }
 
-void HtmlRenderer::OpenGamePage()
+int HtmlRenderer::OpenGamePage()
 {
     m_pHttpResponse->WriteText("<html><head><title>");
     WriteGameTitleString();
@@ -243,15 +247,14 @@ void HtmlRenderer::OpenGamePage()
     } 
 
     m_pHttpResponse->WriteText("<center>");
-    WriteGameHeaderString();
+    return WriteGameHeaderString();
 }
 
 void HtmlRenderer::WriteGameTitleString()
 {
     const char* pszEmpireName = m_vEmpireName.GetCharPtr();
-
-    m_pHttpResponse->WriteText (pszEmpireName);
-    if (pszEmpireName [strlen (pszEmpireName) - 1] == 's')
+    m_pHttpResponse->WriteText(pszEmpireName);
+    if (pszEmpireName[strlen (pszEmpireName) - 1] == 's')
     {
         OutputText ("' ");
     }
@@ -260,13 +263,15 @@ void HtmlRenderer::WriteGameTitleString()
         OutputText ("'s ");
     }
 
-    m_pHttpResponse->WriteText (PageName [m_pgPageId]);
+    m_pHttpResponse->WriteText(PageName[m_pgPageId]);
     OutputText (": ");
     WriteVersionString();
 }
 
-void HtmlRenderer::WriteGameHeaderString()
+int HtmlRenderer::WriteGameHeaderString()
 {
+    int iErrCode;
+
     // Open form
     OutputText ("<form method=\"post\"><input type=\"hidden\" name=\"PageId\" value=\"");
     m_pHttpResponse->WriteText ((int) m_pgPageId);
@@ -305,8 +310,9 @@ void HtmlRenderer::WriteGameHeaderString()
     OutputText ("</strong></font><p>");
 
     // Informational forms
-    int iErrCode = PostGamePageInformation();
-    Assert(iErrCode == OK);
+    iErrCode = PostGamePageInformation();
+    if(iErrCode == OK)
+        return iErrCode;
 
     // Buttons
     WriteGameButtons();
@@ -327,10 +333,14 @@ void HtmlRenderer::WriteGameHeaderString()
     WriteGameNextUpdateString();
 
     // Messages
-    WriteGameMessages();
+    iErrCode = WriteGameMessages();
+    if (iErrCode != OK)
+        return iErrCode;
 
     // Last separator
     WriteSeparatorString(m_iSeparatorKey);
+
+    return OK;
 }
 
 void HtmlRenderer::WriteGameButtons() {
@@ -541,7 +551,7 @@ void HtmlRenderer::WriteGameNextUpdateString()
 int HtmlRenderer::PostGamePageInformation()
 {
     int64 i64PasswordHash = 0;
-    int iErrCode = GetPasswordHashForGamePage (m_tNewSalt, &i64PasswordHash);
+    int iErrCode = GetPasswordHashForGamePage(m_tNewSalt, &i64PasswordHash);
     if (iErrCode != OK) {
         return iErrCode;
     }

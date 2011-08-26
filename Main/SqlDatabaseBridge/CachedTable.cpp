@@ -10,14 +10,26 @@ CachedTable::CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result)
     m_iNumRefs(1),
     m_cmd(cmd),
     m_result(result),
-    m_keyToRows(gcnew SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>())
+    m_keyToRows(gcnew SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>()),
+    m_writes(gcnew Dictionary<int64, IDictionary<System::String^, System::Object^>^>())
 {
+    // Populate key lookup table
     System::String^ idCol = gcnew System::String(IdColumnName);
     for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
     {
         int64 id = (int64)row[idCol];
         m_keyToRows->Add(id, row);
     }
+}
+
+BulkTableReadResult^ CachedTable::GetResult()
+{
+    return m_result;
+}
+
+IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ CachedTable::GetWrites()
+{
+    return m_writes;
 }
 
 int CachedTable::GetNumCachedRows(unsigned int* piNumRows)
@@ -60,7 +72,7 @@ int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 
     if (m_result->Rows->Count == 0)
     {
-        return ERROR_UNKNOWN_ROW_KEY;
+        return iKey == NO_KEY ? ERROR_DATA_NOT_FOUND : ERROR_UNKNOWN_ROW_KEY;
     }
 
     if (iKey == NO_KEY)
@@ -94,7 +106,8 @@ int CachedTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsig
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("CachedTable :: GetEqualKeys :: {0} :: {1}", m_result->TableName, columnName);
 
-    *ppiKey = NULL;
+    if (ppiKey)
+        *ppiKey = NULL;
     *piNumKeys = 0;
 
     Vector<unsigned int> vectKeys;
@@ -118,10 +131,12 @@ int CachedTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsig
         return ERROR_DATA_NOT_FOUND;
     }
 
-    *ppiKey = new unsigned int[*piNumKeys];
-    Assert(*ppiKey);
-
-    memcpy(*ppiKey, vectKeys.GetData(), *piNumKeys * sizeof(unsigned int));
+    if (ppiKey)
+    {
+        *ppiKey = new unsigned int[*piNumKeys];
+        Assert(*ppiKey);
+        memcpy(*ppiKey, vectKeys.GetData(), *piNumKeys * sizeof(unsigned int));
+    }
     return OK;
 }
 
@@ -408,8 +423,7 @@ int CachedTable::ReadRow(unsigned int iKey, Variant** ppvData)
         // Skip id
         if (pair->Key != idCol)
         {
-            Convert(pair->Value, pvData + index - 1);
-            index ++;
+            Convert(pair->Value, pvData + index ++);
         }
     }
 
@@ -522,27 +536,23 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
         *piKey = NO_KEY;
 
     // Insert rows into the database
-    array<System::String^>^ columnNames = gcnew array<System::String^>(ttTemplate.NumColumns);
     array<InsertValue>^ values = gcnew array<InsertValue>(ttTemplate.NumColumns);
-
     for (unsigned int i = 0; i < ttTemplate.NumColumns; i ++)
     {
-        columnNames[i] = gcnew System::String(ttTemplate.ColumnNames[i]);
         values[i].Type = Convert(ttTemplate.Type[i]);
         values[i].Value = Convert(pvColVal[i]);
     }
-
+    
     List<IEnumerable<InsertValue>^>^ insert = gcnew List<IEnumerable<InsertValue>^>();
-
     for (unsigned int i = 0; i < iNumRows; i ++)
     {
         insert->Add(values);
     }
 
-    IEnumerable<int64>^ ids;
+    IList<int64>^ ids;
     try
     {
-        ids = m_cmd->Insert(m_result->TableName, columnNames, insert);
+        ids = m_cmd->Insert(m_result->TableName, insert);
     }
     catch (SqlDatabaseException^)
     {
@@ -559,8 +569,11 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
     Dictionary<System::String^, System::Object^>^ templateRow = gcnew Dictionary<System::String^, System::Object^>();
     for (unsigned int i = 0; i < ttTemplate.NumColumns; i ++)
     {
-        templateRow[columnNames[i]] = values[i].Value;
+        System::String^ columnName = gcnew System::String(ttTemplate.ColumnNames[i]);
+        templateRow[columnName] = values[i].Value;
     }
+
+    System::String^ idCol = gcnew System::String(IdColumnName);
 
     // Insert all the rows
     bool first = true;
@@ -576,7 +589,8 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
         {
             insertRow = gcnew Dictionary<System::String^, System::Object^>(templateRow);
         }
-
+        insertRow[idCol] = id;
+        
         m_result->Rows->Add(insertRow);
         m_keyToRows->Add(id, insertRow);
     }
@@ -634,6 +648,17 @@ int CachedTable::DeleteAllRows()
     return OK;
 }
 
+void CachedTable::SaveWrite(int64 id, System::String^ columnName, System::Object^ value)
+{
+    IDictionary<System::String^, System::Object^>^ writeRow;
+    if (!m_writes->TryGetValue(id, writeRow))
+    {
+        writeRow = gcnew Dictionary<System::String^, System::Object^>();
+        m_writes->Add(id, writeRow);
+    }
+    writeRow[columnName] = value;
+}
+
 int CachedTable::Increment(const char* pszColumn, const Variant& vIncrement)
 {
     return Increment(NO_KEY, pszColumn, vIncrement, NULL);
@@ -668,8 +693,7 @@ int CachedTable::Increment(unsigned int iKey, const char* pszColumn, const Varia
     if (pvOldValue)
         Convert(value, pvOldValue);
 
-    // TODOTODO - persist
-
+    SaveWrite(iKey, columnName, newValue);
     return OK;
 }
 
@@ -695,9 +719,10 @@ int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const char*
         return iErrCode;
     }
 
-    row[columnName] = gcnew System::String(pszData);
-    // TODOTODO - persist
-
+    System::String^ newValue = gcnew System::String(pszData);
+    row[columnName] = newValue;
+    
+    SaveWrite(iKey, columnName, newValue);
     return OK;
 }
 
@@ -713,9 +738,10 @@ int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const Varia
         return iErrCode;
     }
 
-    row[columnName] = Convert(vData);
-    // TODOTODO - persist
+    System::Object^ newValue = Convert(vData);
+    row[columnName] = newValue;
 
+    SaveWrite(iKey, columnName, newValue);
     return OK;
 }
 
@@ -737,8 +763,10 @@ int CachedTable::WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int
     }
 
     int iValue = (int)row[columnName];
-    row[columnName] = iValue & iBitField;
-    // TODOTODO - persist
+    System::Object^ newValue = int(iValue & iBitField);
+    row[columnName] = newValue;
+
+    SaveWrite(iKey, columnName, newValue);
 
     return OK;
 }
@@ -761,8 +789,9 @@ int CachedTable::WriteOr(unsigned int iKey, const char* pszColumn, unsigned int 
     }
 
     int iValue = (int)row[columnName];
-    row[columnName] = iValue | iBitField;
-    // TODOTODO - persist
+    System::Object^ newValue = int(iValue | iBitField);
+    row[columnName] = newValue;
 
+    SaveWrite(iKey, columnName, newValue);
     return OK;
 }

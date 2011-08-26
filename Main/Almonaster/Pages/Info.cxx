@@ -39,7 +39,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 bool bGameStarted = (m_iGameState & STARTED) != 0, bIsOpen;
 

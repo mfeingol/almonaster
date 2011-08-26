@@ -20,7 +20,7 @@ namespace Almonaster.Database.Sql
         {
             this.conn = new SqlConnection(connString);
             this.conn.Open();
-            
+
             if (isoLevel != IsolationLevel.Unspecified)
             {
                 this.tx = this.conn.BeginTransaction(isoLevel);
@@ -29,28 +29,33 @@ namespace Almonaster.Database.Sql
 
         public void Dispose()
         {
-            if (this.tx != null)
+            try
             {
-                if (this.setComplete)
+                if (this.tx != null)
                 {
-                    this.tx.Commit();
-                }
-                else
-                {
-                    this.tx.Rollback();
+                    if (this.setComplete)
+                    {
+                        this.tx.Commit();
+                    }
+                    else
+                    {
+                        this.tx.Rollback();
+                    }
                 }
             }
-
-            this.conn.Dispose();
-            this.conn = null;
-
-            if (this.tx != null)
+            finally
             {
-                this.tx.Dispose();
-                this.tx = null;
-            }
+                this.conn.Dispose();
+                this.conn = null;
 
-            GC.SuppressFinalize(this);
+                if (this.tx != null)
+                {
+                    this.tx.Dispose();
+                    this.tx = null;
+                }
+
+                GC.SuppressFinalize(this);
+            }
         }
 
         public void SetComplete()
@@ -75,18 +80,33 @@ namespace Almonaster.Database.Sql
 
         public bool DoesTableExist(string tableName)
         {
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.conn.ConnectionString);
-            ServerConnection serverConn = new ServerConnection(this.conn);
-            Server server = new Server(serverConn);
-            var database = server.Databases[builder.InitialCatalog];
+            string cmdText = String.Format("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE [TABLE_NAME] = '{0}'", tableName);
 
-            return database.Tables.Contains(tableName);
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
+            {
+                using (SqlDataReader reader = cmd.ExecuteReader())
+                {
+                    if (!reader.Read())
+                    {
+                        throw new SqlDatabaseException("No data returned from query");
+                    }
+                    return (int)reader[0] != 0;
+                }
+            }
+
+            //ServerConnection serverConn = new ServerConnection(this.conn);
+            //Server server = new Server(serverConn);
+
+            //var connString = new SqlConnectionStringBuilder(this.conn.ConnectionString);
+            //return server.Databases[connString.InitialCatalog].Tables.Contains(tableName);
         }
 
         public void CreateTable(TableDescription tableDesc)
         {
+            // TODOTODO - redo this to be transactional, use TSQL
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.conn.ConnectionString);
-            ServerConnection serverConn = new ServerConnection(this.conn);
+            ServerConnection serverConn = new ServerConnection(builder.DataSource);
+
             Server server = new Server(serverConn);
             var database = server.Databases[builder.InitialCatalog];
 
@@ -157,7 +177,7 @@ namespace Almonaster.Database.Sql
         public void DeleteTable(string tableName)
         {
             string cmdText = String.Format("DROP TABLE [{0}]", tableName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.ExecuteNonQuery();
             }
@@ -203,6 +223,7 @@ namespace Almonaster.Database.Sql
 
                 cmd.CommandText = sb.ToString();
                 cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
 
                 List<BulkTableReadResult> results = new List<BulkTableReadResult>();
 
@@ -241,22 +262,76 @@ namespace Almonaster.Database.Sql
             }
         }
 
-        // ...
-
-        public IEnumerable<long> Insert(string tableName, IEnumerable<string> columnNames, IEnumerable<IEnumerable<InsertValue>> rows)
+        public void BulkWrite(IEnumerable<BulkTableWriteRequest> tableWriteRequests, string idColumnName)
         {
-            //INSERT INTO @TableName
-            //VALUES (@p0, @p1, @p2, @p3), (@p4, @p5, @p6, @p7)
+            // UPDATE [Table]
+            // SET [Column1] = @p0, [Column2] = @p1
+            // WHERE [Id] = @p2
+
+            StringBuilder cmdText = new StringBuilder();
+            int index = 0;
+            string param;
 
             using (SqlCommand cmd = new SqlCommand())
             {
-                StringBuilder insert = new StringBuilder();
+                foreach (BulkTableWriteRequest writeReq in tableWriteRequests)
+                {
+                    foreach (KeyValuePair<long, IDictionary<string, object>> sparseRow in writeReq.Rows)
+                    {
+                        cmdText.AppendFormat("UPDATE [{0}] ", writeReq.TableName);
+
+                        bool first = true;
+                        foreach (KeyValuePair<string, object> value in sparseRow.Value)
+                        {
+                            param = "@p" + index++;
+                            if (first)
+                            {
+                                cmdText.AppendFormat("SET [{0}] = {1}", value.Key, param);
+                                first = false;
+                            }
+                            else
+                            {
+                                cmdText.AppendFormat(", [{0}] = {1}", value.Key, param);
+                            }
+                            cmd.Parameters.AddWithValue(param, value.Value);
+                        }
+
+                        param = "@p" + index++;
+                        cmdText.AppendFormat(" WHERE [{0}] = {1}; ", idColumnName, param);
+                        cmd.Parameters.AddWithValue(param, sparseRow.Key);
+                    }
+                }
+
+                cmd.CommandText = cmdText.ToString();
+                cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
+
+                try
+                {
+                    cmd.ExecuteNonQuery();
+                }
+                catch (SqlException e)
+                {
+                    throw new SqlDatabaseException(e);
+                }
+            }
+        }
+
+        // ...
+
+        public IList<long> Insert(string tableName, IEnumerable<IEnumerable<InsertValue>> rows)
+        {
+            // INSERT INTO [Table] VALUES (@p0, @p1, @p2, @p3), (@p4, @p5, @p6, @p7)
+
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                StringBuilder cmdText = new StringBuilder();
 
                 uint cRows = 0;
                 int index = 0;
                 foreach (IEnumerable<InsertValue> row in rows)
                 {
-                    insert.AppendFormat("INSERT INTO [{0}] VALUES (", tableName);
+                    cmdText.AppendFormat("INSERT INTO [{0}] VALUES (", tableName);
 
                     bool first = true;
                     foreach (InsertValue value in row)
@@ -264,12 +339,12 @@ namespace Almonaster.Database.Sql
                         string param = "@p" + index ++;
                         if (first)
                         {
-                            insert.Append(param);
+                            cmdText.Append(param);
                             first = false;
                         }
                         else
                         {
-                            insert.AppendFormat(", {0}", param);
+                            cmdText.AppendFormat(", {0}", param);
                         }
 
                         cmd.Parameters.Add(new SqlParameter(param, value.Type)
@@ -278,12 +353,13 @@ namespace Almonaster.Database.Sql
                         });
                     }
 
-                    insert.Append("); SELECT SCOPE_IDENTITY();");
+                    cmdText.Append("); SELECT SCOPE_IDENTITY();");
                     cRows++;
                 }
 
-                cmd.CommandText = insert.ToString();
+                cmd.CommandText = cmdText.ToString();
                 cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
 
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -302,7 +378,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT COUNT_BIG(*) FROM [{0}]", tableName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 try
                 {
@@ -323,7 +399,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT [{0}] FROM [{1}] WHERE [{0}] = @p0", idColumnName, tableName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
 
@@ -338,7 +414,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT TOP(1) [{0}] FROM [{1}] WHERE [{2}] = @p0 GROUP BY [{0}]", idColumnName, tableName, columnName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", data));
 
@@ -357,7 +433,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT TOP(1) [{0}] FROM [{1}] WHERE [{2}] > @p0 GROUP BY [{0}]", idColumnName, tableName, idColumnName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
 
@@ -423,6 +499,7 @@ namespace Almonaster.Database.Sql
 
                 cmd.CommandText = cmdText;
                 cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
 
                 try
                 {
@@ -487,6 +564,8 @@ namespace Almonaster.Database.Sql
 
                 cmd.CommandText = cmdText;
                 cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
+
                 try
                 {
                     return (long)GetSingleResult(cmd);
@@ -501,7 +580,8 @@ namespace Almonaster.Database.Sql
         public object ReadSingle(string tableName, string columnName)
         {
             string cmdText = String.Format("SELECT [{0}] FROM [{1}]", columnName, tableName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 return GetSingleResult(cmd);
             }
@@ -511,7 +591,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT [{0}] FROM [{1}] WHERE [{2}] = @p0", columnName, tableName, idColumnName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
 
@@ -542,7 +622,8 @@ namespace Almonaster.Database.Sql
             }
 
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = [{1}] {2} @p1 WHERE [{3}] = @p0", tableName, columnName, opString, idColumnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", bitField));
@@ -566,7 +647,8 @@ namespace Almonaster.Database.Sql
             }
 
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = [{1}] {2} @p0", tableName, columnName, opString);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", bitField));
                 cmd.ExecuteNonQuery();
@@ -576,7 +658,8 @@ namespace Almonaster.Database.Sql
         public void Write(string tableName, string idColumnName, long id, string columnName, object value)
         {
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = @p1 WHERE [{2}] = @p0", tableName, columnName, idColumnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", value));
@@ -587,7 +670,8 @@ namespace Almonaster.Database.Sql
         public void WriteSingle(string tableName, string columnName, object value)
         {
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = @p0", tableName, columnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", value));
                 cmd.ExecuteNonQuery();
@@ -597,7 +681,8 @@ namespace Almonaster.Database.Sql
         public void Increment(string tableName, string idColumnName, long id, string columnName, object inc)
         {
             string cmdText = String.Format("UPDATE [{0}] SET [{1}] = [{1}] + @p1 WHERE [{2}] = @p0", tableName, columnName, idColumnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", inc));
@@ -608,7 +693,8 @@ namespace Almonaster.Database.Sql
         public void Increment(string tableName, string idColumnName, long id, string columnName, object inc, out object oldValue)
         {
             string cmdText = String.Format("SELECT [{1}] FROM [{0}] WHERE [{2}] = @p0; UPDATE [{0}] SET [{1}] = [{1}] + @p1 WHERE [{2}] = @p0", tableName, columnName, idColumnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
                 cmd.Parameters.Add(new SqlParameter("@p1", inc));
@@ -630,7 +716,8 @@ namespace Almonaster.Database.Sql
         public object IncrementSingle(string tableName, string columnName, object inc)
         {
             string cmdText = String.Format("SELECT [{1}] FROM [{0}]; UPDATE [{0}] SET [{1}] = [{1}] + @p0", tableName, columnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", inc));
                 return GetSingleResult(cmd);
@@ -641,11 +728,11 @@ namespace Almonaster.Database.Sql
         {
             int cols;
             string columnSet = MakeColumnSet(columnNames, out cols);
-
             List<RowValues> rows = new List<RowValues>();
             
             string cmdText = String.Format("SELECT {0} FROM [{1}]", columnSet, tableName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 try
                 {
@@ -677,7 +764,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT * FROM [{0}] WHERE [{1}] = @p0", tableName, idColumnName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", id));
 
@@ -704,7 +791,7 @@ namespace Almonaster.Database.Sql
         {
             string cmdText = String.Format("SELECT * FROM [{0}]", tableName);
 
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 using (SqlDataReader reader = cmd.ExecuteReader())
                 {
@@ -734,7 +821,7 @@ namespace Almonaster.Database.Sql
             List<RowValues> rows = new List<RowValues>();
 
             string cmdText = String.Format("SELECT {0} FROM [{1}] WHERE [{2}] = @p0", columnSet, tableName, equalColumnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", value));
 
@@ -760,7 +847,7 @@ namespace Almonaster.Database.Sql
         public void DeleteRow(string tableName, string columnName, object value)
         {
             string cmdText = String.Format("DELETE FROM [{0}] WHERE [{1}] = @p0", tableName, columnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.Parameters.Add(new SqlParameter("@p0", value));
                 cmd.ExecuteNonQuery();
@@ -770,7 +857,7 @@ namespace Almonaster.Database.Sql
         public void DeleteAllRows(string tableName)
         {
             string cmdText = String.Format("DELETE FROM [{0}]", tableName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
                 cmd.ExecuteNonQuery();
             }
@@ -780,7 +867,7 @@ namespace Almonaster.Database.Sql
         //{
         //    string cmdText = String.Format("SELECT [{0}] FROM {1}", columnName, tableName);
 
-        //    using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+        //    using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
         //    {
         //        SqlDataReader reader = cmd.ExecuteReader();
         //        reader.Read();
@@ -793,7 +880,7 @@ namespace Almonaster.Database.Sql
         //    string cmdText = String.Format("SELECT * FROM {0} JOIN {2} ON {0}.{1} = {2}.{3} WHERE [{4}] = @p0",
         //                                   tableName1, joinColumnName1, tableName2, joinColumnName2, columnName);
 
-        //    using (SqlCommand cmd = new SqlCommand(cmdText, this.conn))
+        //    using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
         //    {
         //        cmd.Parameters.Add(new SqlParameter("@p0", data));
 
@@ -808,6 +895,7 @@ namespace Almonaster.Database.Sql
         //    using (SqlCommand cmd = new SqlCommand())
         //    {
         //        cmd.Connection = this.conn;
+        //        cmd.Transaction = this.tx;
         //        cmd.CommandText = "SELECT * FROM " + tableName + " WHERE [" + colName + "] = @p0";
         //        cmd.Parameters.Add(new SqlParameter("@p0", equals));
 

@@ -161,8 +161,9 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
     Time::GetTime (&tNow);
     
     // Update activity time
-    iErrCode = t_pCache->WriteData (
-        SYSTEM_EMPIRE_DATA, 
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
+    iErrCode = t_pCache->WriteData(
+        strEmpire, 
         iEmpireKey, 
         SystemEmpireData::LastBridierActivity, 
         tNow
@@ -200,10 +201,12 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
 
     if (iNewRank != iOldRank || iNewIndex != iOldIndex) {
 
+        GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
+
         if (iNewRank != iOldRank) {
 
-            iErrCode = t_pCache->WriteData (
-                SYSTEM_EMPIRE_DATA, 
+            iErrCode = t_pCache->WriteData(
+                strEmpire, 
                 iEmpireKey, 
                 SystemEmpireData::BridierRank, 
                 iNewRank
@@ -217,8 +220,8 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
 
         if (iNewIndex != iOldIndex) {
 
-            iErrCode = t_pCache->WriteData (
-                SYSTEM_EMPIRE_DATA, 
+            iErrCode = t_pCache->WriteData(
+                strEmpire, 
                 iEmpireKey, 
                 SystemEmpireData::BridierIndex, 
                 iNewIndex
@@ -323,6 +326,8 @@ Cleanup:
 
 int BridierObject::GetReplacementKeys(bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires)
 {
+    // TODOTODO - Rewrite this
+
 #ifdef _DEBUG
     const int iMaxIndex = bEstablished ? BRIDIER_ESTABLISHED_TOPLIST_INDEX : BRIDIER_TOPLIST_INDEX;
     Assert (pvScore == NULL || pvScore [BRIDIER_INDEX].GetInteger() <= iMaxIndex);

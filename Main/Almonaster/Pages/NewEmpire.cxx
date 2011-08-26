@@ -19,7 +19,7 @@
 
 int iErrCode = OK;
 unsigned int iEmpireKey = NO_KEY, iParentEmpireKey = NO_KEY;
-bool bFlag, bVerified = false, bRepost = false;
+bool bVerified = false, bRepost = false;
 
 // Make sure this is allowed
 
@@ -168,34 +168,39 @@ if (!m_bRedirection &&
             char pszStandardParentName [MAX_EMPIRE_NAME_LENGTH + 1];
             if (pszParentName != NULL) {
 
-                if (VerifyEmpireName (pszParentName) == OK &&
-                    StandardizeEmpireName (pszParentName, pszStandardParentName) == OK) {
-
-                    if ((pHttpForm = m_pHttpRequest->GetForm ("ParentPassword")) == NULL) {
+                if (VerifyEmpireName(pszParentName) == OK && StandardizeEmpireName(pszParentName, pszStandardParentName) == OK)
+                {
+                    if ((pHttpForm = m_pHttpRequest->GetForm ("ParentPassword")) == NULL)
+                    {
                         AddMessage ("Missing ParentPassword form");
                         return Redirect (LOGIN);
                     }
 
-                    if (VerifyPassword (pHttpForm->GetValue()) == OK)
+                    if (VerifyPassword(pHttpForm->GetValue()) == OK)
                     {
-                        Variant vParentName;
-                        iErrCode = DoesEmpireExist(pszStandardParentName, &bFlag, &iParentEmpireKey, &vParentName, NULL);
-                        if (!bFlag)
+                        iErrCode = LookupEmpireByName(pszStandardParentName, &iParentEmpireKey, NULL, NULL);
+                        if (iErrCode != OK)
+                            return iErrCode;
+
+                        if (iParentEmpireKey == NO_KEY)
                         {
-                            AddMessage ("The parent empire ");
-                            AppendMessage (pszStandardParentName);
-                            AppendMessage (" does not exist");
+                            AddMessage("The parent empire ");
+                            AppendMessage(pszStandardParentName);
+                            AppendMessage(" does not exist");
                         }
                         else
                         {
-                            iErrCode = IsPasswordCorrect (iParentEmpireKey, pHttpForm->GetValue());
-                            if (iErrCode != OK) {
+                            iErrCode = IsPasswordCorrect(iParentEmpireKey, pHttpForm->GetValue());
+                            if (iErrCode != OK)
+                            {
                                 AddMessage ("That was the wrong password for the parent empire");
                             }
                         }
                     }
 
-                } else {
+                }
+                else
+                {
                     AddMessage ("The parent empire does not exist");
                 }
             }
@@ -222,15 +227,6 @@ if (!m_bRedirection &&
                 switch (iErrCode)
                 {
                 case OK:
-                    {
-                        const TableCacheEntry entry = { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL };
-                        iErrCode = t_pCache->Cache(&entry, 1);
-                        if (iErrCode != OK)
-                        {
-                            AddMessage("Cache failed");
-                            return Redirect(ACTIVE_GAME_LIST);
-                        }
-                    }
 
                     ReportEmpireCreation (global.GetReport(), pszEmpireName);
                     SendWelcomeMessage (pszEmpireName);

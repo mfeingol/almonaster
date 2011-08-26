@@ -45,7 +45,7 @@ public:
     int Initialize(const char* pszConnString, unsigned int iOptions);
 
     // Connections
-    IDatabaseConnection* CreateConnection();
+    IDatabaseConnection* CreateConnection(TransactionIsolationLevel isoLevel);
 
     // Utilities
     int Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst);

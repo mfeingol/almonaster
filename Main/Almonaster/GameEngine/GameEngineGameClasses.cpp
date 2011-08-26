@@ -870,7 +870,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, unsigned int iSuperCl
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->WriteData (
+    iErrCode = t_pCache->WriteData(
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::SuperClassKey, 
@@ -1158,7 +1158,7 @@ int GameEngine::SetMinNumSecsPerUpdateForSystemGameClass (int iMinNumSecsPerUpda
         return ERROR_FAILURE;
     }
 
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::SystemMinSecs, iMinNumSecsPerUpdate);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::SystemMinSecs, iMinNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumSecsPerUpdateForSystemGameClass (int iMaxNumSecsPerUpdate) {
@@ -1177,7 +1177,7 @@ int GameEngine::SetMaxNumSecsPerUpdateForSystemGameClass (int iMaxNumSecsPerUpda
         return ERROR_FAILURE;
     }
 
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::SystemMaxSecs, iMaxNumSecsPerUpdate);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::SystemMaxSecs, iMaxNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumEmpiresForSystemGameClass (int iMaxNumEmpires) {
@@ -1185,7 +1185,7 @@ int GameEngine::SetMaxNumEmpiresForSystemGameClass (int iMaxNumEmpires) {
     if (iMaxNumEmpires < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::SystemMaxNumEmpires, iMaxNumEmpires);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::SystemMaxNumEmpires, iMaxNumEmpires);
 }
 
 int GameEngine::SetMaxNumPlanetsForSystemGameClass (int iMaxNumPlanets) {
@@ -1193,7 +1193,7 @@ int GameEngine::SetMaxNumPlanetsForSystemGameClass (int iMaxNumPlanets) {
     if (iMaxNumPlanets < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::SystemMaxNumPlanets, iMaxNumPlanets);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::SystemMaxNumPlanets, iMaxNumPlanets);
 }
 
 int GameEngine::SetMinNumSecsPerUpdateForPersonalGameClass (int iMinNumSecsPerUpdate) {
@@ -1212,7 +1212,7 @@ int GameEngine::SetMinNumSecsPerUpdateForPersonalGameClass (int iMinNumSecsPerUp
         return ERROR_FAILURE;
     }
     
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::PersonalMinSecs, iMinNumSecsPerUpdate);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::PersonalMinSecs, iMinNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumSecsPerUpdateForPersonalGameClass (int iMaxNumSecsPerUpdate) {
@@ -1231,7 +1231,7 @@ int GameEngine::SetMaxNumSecsPerUpdateForPersonalGameClass (int iMaxNumSecsPerUp
         return ERROR_FAILURE;
     }
 
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::PersonalMaxSecs, iMaxNumSecsPerUpdate);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::PersonalMaxSecs, iMaxNumSecsPerUpdate);
 }
 
 int GameEngine::SetMaxNumEmpiresForPersonalGameClass (int iMaxNumEmpires) {
@@ -1239,7 +1239,7 @@ int GameEngine::SetMaxNumEmpiresForPersonalGameClass (int iMaxNumEmpires) {
     if (iMaxNumEmpires < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::PersonalMaxNumEmpires, iMaxNumEmpires);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::PersonalMaxNumEmpires, iMaxNumEmpires);
 }
 
 int GameEngine::SetMaxNumPlanetsForPersonalGameClass (int iMaxNumPlanets) {
@@ -1247,7 +1247,7 @@ int GameEngine::SetMaxNumPlanetsForPersonalGameClass (int iMaxNumPlanets) {
     if (iMaxNumPlanets < 0) {
         return ERROR_INVALID_ARGUMENT;
     }
-    return t_pCache->WriteData (SYSTEM_DATA, SystemData::PersonalMaxNumPlanets, iMaxNumPlanets);
+    return t_pCache->WriteData(SYSTEM_DATA, SystemData::PersonalMaxNumPlanets, iMaxNumPlanets);
 }
 
 // Input:

@@ -200,7 +200,7 @@ Cleanup:
     if (fUpdateCheckTime && !bGameOver && iErrCode == OK) {
         
         // Update last checked
-        iErrCode = t_pCache->WriteData (strGameData, GameData::LastUpdateCheck, tNow);
+        iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateCheck, tNow);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -515,13 +515,13 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
     UTCTime tTime;
     Time::GetTime (&tTime);
 
-    iErrCode = pGameData->WriteData (GameData::LastUpdateTime, tTime);
+    iErrCode = pGameData->WriteData(GameData::LastUpdateTime, tTime);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
     }
 
-    iErrCode = pGameData->WriteData (GameData::LastUpdateCheck, tTime);
+    iErrCode = pGameData->WriteData(GameData::LastUpdateCheck, tTime);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;

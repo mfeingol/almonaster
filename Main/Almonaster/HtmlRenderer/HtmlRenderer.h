@@ -458,7 +458,10 @@ protected:
 
     // Caching
     String m_strGameData;
-    TableCacheEntryColumn m_activeGameCol;
+    TableCacheEntryColumn m_systemEmpireMessagesCol;
+    TableCacheEntryColumn m_systemEmpireActiveGamesCol;
+    TableCacheEntryColumn m_systemEmpireTournamentsCol;
+    TableCacheEntryColumn m_systemEmpireNukeListCol;
 
 public:
 
@@ -593,12 +596,12 @@ public:
     void ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon);
     void ReportEmpireCreation (IReport* pReport, const char* pszEmpireName);
 
-    void OpenSystemPage(bool bFileUpload);
+    int OpenSystemPage(bool bFileUpload);
     void WriteSystemTitleString();
     void WriteSystemHeaders (bool bFileUpload);
 
     void WriteSystemButtons(int iButtonKey, int iPrivilege);
-    void WriteSystemMessages();
+    int WriteSystemMessages();
     bool RenderSystemMessage (int iMessageKey, const Variant* pvMessage);
 
     void WriteBackupMessage();
@@ -648,9 +651,9 @@ public:
 
     void WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons);
 
-    void OpenGamePage();
+    int OpenGamePage();
     void WriteGameTitleString();
-    void WriteGameHeaderString();
+    int WriteGameHeaderString();
     
     bool RedirectOnSubmitGame (PageId* ppageRedirect);
 
@@ -658,7 +661,7 @@ public:
 
     int InitializeGame (PageId* ppageRedirect);
 
-    void WriteGameMessages();
+    int WriteGameMessages();
 
     int GetDefaultSystemIcon();
 
@@ -1040,7 +1043,7 @@ public:
         AppendMessage (" on line ");                                                \
         AppendMessage (__LINE__);                                                   \
         AppendMessage ("; please contact the administrator");                       \
-        return Redirect (LOGIN);                                                    \
+        return iErrCode;                                                            \
     }
 
 #define GameCheck(FxnCall) iErrCode = ##FxnCall;                                    \
@@ -1051,13 +1054,13 @@ public:
         AppendMessage (" on line ");                                                \
         AppendMessage (__LINE__);                                                   \
         AppendMessage ("; please contact the administrator");                       \
-        return Redirect (ACTIVE_GAME_LIST);                                         \
+        return iErrCode;                                                            \
     }
 
 #define EmpireCheck(FxnCall) iErrCode = ##FxnCall;                                  \
     if (iErrCode != OK) {                                                           \
         AddMessage ("That empire no longer exists");                                \
-        return Redirect (LOGIN);                                                    \
+        return iErrCode;                                                            \
     }
 
 #define HANDLE_CREATE_GAME_OUTPUT(iErrCode)                                         \

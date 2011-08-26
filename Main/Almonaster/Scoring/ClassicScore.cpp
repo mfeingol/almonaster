@@ -24,29 +24,26 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
 
     Assert (iEmpireNuker != NO_KEY || iEmpireNuked != NO_KEY);
 
+    GET_SYSTEM_EMPIRE_DATA(strNuker, iEmpireNuker);
+    GET_SYSTEM_EMPIRE_DATA(strNuked, iEmpireNuked);
+
     if (iEmpireNuker != NO_KEY) {
 
         // Reward nuker
         iErrCode = t_pCache->Increment(
-            SYSTEM_EMPIRE_DATA, 
+            strNuker, 
             iEmpireNuker,
             SystemEmpireData::ClassicScore, 
             CLASSIC_POINTS_FOR_NUKE
             );
         
         if (iErrCode != OK) {
-            Assert (false);
             return iErrCode;
         }
         
         // Update top list
-        iErrCode = m_pGameEngine->UpdateTopListOnIncrease (
-            CLASSIC_SCORE, 
-            iEmpireNuker
-            );
-        
+        iErrCode = m_pGameEngine->UpdateTopListOnIncrease(CLASSIC_SCORE, iEmpireNuker);
         if (iErrCode != OK) {
-            Assert (false);
             return iErrCode;
         }
     }
@@ -55,24 +52,18 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
 
         // Punish nuked
         iErrCode = t_pCache->Increment(
-            SYSTEM_EMPIRE_DATA, 
+            strNuked, 
             iEmpireNuked,
             SystemEmpireData::ClassicScore, 
             CLASSIC_POINTS_FOR_NUKED
             );
         
         if (iErrCode != OK) {
-            Assert (false);
             return iErrCode;
         }
         
-        iErrCode = m_pGameEngine->UpdateTopListOnDecrease (
-            CLASSIC_SCORE, 
-            iEmpireNuked
-            );
-        
+        iErrCode = m_pGameEngine->UpdateTopListOnDecrease(CLASSIC_SCORE, iEmpireNuked);
         if (iErrCode != OK) {
-            Assert (false);
             return iErrCode;
         }
     }
@@ -112,8 +103,9 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // Reward winner
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     iErrCode = t_pCache->Increment(
-        SYSTEM_EMPIRE_DATA, 
+        strEmpire, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
         CLASSIC_POINTS_FOR_WIN
@@ -125,13 +117,8 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
     }
 
     // Update top list
-    iErrCode = m_pGameEngine->UpdateTopListOnIncrease (
-        CLASSIC_SCORE, 
-        iEmpireKey
-        );
-
+    iErrCode = m_pGameEngine->UpdateTopListOnIncrease(CLASSIC_SCORE, iEmpireKey);
     if (iErrCode != OK) {
-        Assert (false);
         return iErrCode;
     }
 
@@ -143,8 +130,9 @@ int ClassicScore::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // Reward for draw
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     iErrCode = t_pCache->Increment(
-        SYSTEM_EMPIRE_DATA, 
+        strEmpire, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
         CLASSIC_POINTS_FOR_DRAW
@@ -175,8 +163,9 @@ int ClassicScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
     int iErrCode;
 
     // 'Reward' for ruin
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     iErrCode = t_pCache->Increment(
-        SYSTEM_EMPIRE_DATA, 
+        strEmpire, 
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
         CLASSIC_POINTS_FOR_RUIN
@@ -227,6 +216,8 @@ int ClassicScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 
 int ClassicScore::GetReplacementKeys(const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires)
 {
+    // TODOTODO - Rewrite this
+
     if (pvScore == NULL)
     {
         return t_pCache->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);

@@ -449,7 +449,7 @@ int GameEngine::MoveEmpireUpInTopList(ScoringSystem ssTopList, int iEmpireKey, u
 
         for (i = 0; i < iNumColumns; i ++) {
 
-            iErrCode = t_pCache->WriteData (pszTableName, iKey, TopList::Data + i, pvOurData[i]);
+            iErrCode = t_pCache->WriteData(pszTableName, iKey, TopList::Data + i, pvOurData[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -562,7 +562,7 @@ int GameEngine::MoveEmpireDownInTopList(ScoringSystem ssTopList, int iEmpireKey,
 
         for (i = 0; i < iNumColumns; i ++) {
 
-            iErrCode = t_pCache->WriteData (pszTableName, iKey, TopList::Data + i, pvOurData[i]);
+            iErrCode = t_pCache->WriteData(pszTableName, iKey, TopList::Data + i, pvOurData[i]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
@@ -1032,13 +1032,13 @@ int GameEngine::PrivateFlushTopListData(ScoringSystem ssTopList, Variant** ppvDa
 
         for (i = 0; i < iNumRows; i ++) {
             
-            iErrCode = pWriteTable->WriteData (i, TopList::EmpireKey, ppvData[i][TopList::iEmpireKey].GetInteger());
+            iErrCode = pWriteTable->WriteData(i, TopList::EmpireKey, ppvData[i][TopList::iEmpireKey].GetInteger());
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;
             }
             
-            iErrCode = pWriteTable->WriteData (i, TopList::Data, ppvData[i][TopList::iData]);
+            iErrCode = pWriteTable->WriteData(i, TopList::Data, ppvData[i][TopList::iData]);
             if (iErrCode != OK) {
                 Assert (false);
                 goto Cleanup;

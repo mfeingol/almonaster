@@ -22,13 +22,13 @@ private:
     TableCacheCollection m_viewCollection;
 
 public:
-    SqlDatabaseConnection(SqlDatabase^ sqlDatabase);
+    SqlDatabaseConnection(SqlDatabase^ sqlDatabase, TransactionIsolationLevel isoLevel);
     ~SqlDatabaseConnection();
 
     // IDatabaseConnection
     IMPLEMENT_INTERFACE(IDatabaseConnection);
     
-    // View operations
+    int Commit();
     ICachedTableCollection* GetCache();
 
     // Table operations

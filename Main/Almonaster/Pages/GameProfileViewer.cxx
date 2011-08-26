@@ -166,7 +166,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 default:
                     sprintf (pszBuffer, "Your message could not be sent due to error %i", iErrCode);
                     AddMessage (pszBuffer);
-                    break;
+                    return iErrCode;
                 }
 
             } else {
@@ -482,7 +482,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 // Individual page starts here
 

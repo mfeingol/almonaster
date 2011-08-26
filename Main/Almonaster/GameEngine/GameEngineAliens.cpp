@@ -137,10 +137,11 @@ Cleanup:
 int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
     int iErrCode = OK;
+    GET_SYSTEM_EMPIRE_DATA(strEmpireKey, iEmpireKey);
 
     if (iAlienKey == UPLOADED_ICON) {
 
-        iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
+        iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
     
     } else {
 
@@ -153,7 +154,7 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 
         } else {
         
-            iErrCode = t_pCache->WriteData (SYSTEM_EMPIRE_DATA, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
+            iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
         }
 
     }

@@ -450,7 +450,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 // Individual page stuff starts here
 if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {

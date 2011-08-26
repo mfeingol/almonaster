@@ -70,11 +70,16 @@ void Global::Close()
 
 void Global::TlsOpenConnection()
 {
-    t_pConn = m_pDatabase->CreateConnection();
+    t_pConn = m_pDatabase->CreateConnection(SERIALIZABLE);
     Assert(t_pConn);
 
     t_pCache = t_pConn->GetCache();
     Assert(t_pCache);
+}
+
+int Global::TlsCommitTransaction()
+{
+    return t_pConn->Commit();
 }
 
 void Global::TlsCloseConnection()
@@ -166,35 +171,35 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
 
     TlsOpenConnection();
 
-    if (iErrCode == WARNING)
+    GameEngine gameEngine;
+    iErrCode = gameEngine.Setup();
+    if (iErrCode != OK)
     {
-        m_pReport->WriteReport("Setting up new database");
-            
-        GameEngine gameEngine;
-        iErrCode = gameEngine.Setup();
-        if (iErrCode != OK)
-        {
-            m_pReport->WriteReport("Error setting up new database");
-        }
-        m_pReport->WriteReport("Set up new database");
+        m_pReport->WriteReport("Error to setup correctly");
     }
 
     iErrCode = InitializeState();
     if (iErrCode != OK)
     {
         m_pReport->WriteReport("Failed to initialize state");
-        return iErrCode;
+        goto Cleanup;
     }
 
     iErrCode = InitializeChatroom();
     if (iErrCode != OK)
     {
         m_pReport->WriteReport("Failed to initialize chatroom");
-        return iErrCode;
+        goto Cleanup;
     }
 
-    TlsCloseConnection();
+    if (iErrCode == OK)
+    {
+        iErrCode = TlsCommitTransaction();
+    }
 
+Cleanup:
+
+    TlsCloseConnection();
     return iErrCode;
 }
 

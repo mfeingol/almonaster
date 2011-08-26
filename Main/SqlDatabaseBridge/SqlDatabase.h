@@ -410,6 +410,7 @@ class IDatabaseConnection : virtual public IObject
 {
 public:
 
+    virtual int Commit() = 0;
     virtual ICachedTableCollection* GetCache() = 0;
 
     virtual bool DoesTableExist(const char* pszTableName) = 0;
@@ -489,6 +490,17 @@ public:
     //virtual void FreeKeys(unsigned int* piKeys) = 0;
 };
 
+enum TransactionIsolationLevel
+{
+    UNSPECIFIED,
+    CHAOS,
+    READ_UNCOMMITTED,
+    READ_COMMITTED,
+    REPEATABLE_READ,
+    SERIALIZABLE,
+    SNAPSHOT
+};
+
 class IDatabase : virtual public IObject {
 public:
 
@@ -498,7 +510,7 @@ public:
     virtual const char* GetConnectionString() = 0;
     virtual unsigned int GetOptions() = 0;
 
-    virtual IDatabaseConnection* CreateConnection() = 0;
+    virtual IDatabaseConnection* CreateConnection(TransactionIsolationLevel isoLevel) = 0;
 
     virtual int Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst) = 0;
     virtual unsigned int DeleteOldBackups(Seconds iNumSecondsOld) = 0;

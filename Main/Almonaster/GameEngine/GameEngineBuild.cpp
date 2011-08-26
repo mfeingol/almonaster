@@ -106,15 +106,9 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Get max num ships built at once
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_EMPIRE_DATA,
-        iEmpireKey,
-        SystemEmpireData::MaxNumShipsBuiltAtOnce,
-        &vTemp
-        );
-
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
+    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
         goto Cleanup;
     }
 
@@ -405,7 +399,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         }
 
         // Set the fleet to stand by
-        iErrCode = t_pCache->WriteData (strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
+        iErrCode = t_pCache->WriteData(strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -448,7 +442,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     }
 
     // Set last builder
-    iErrCode = t_pCache->WriteData (
+    iErrCode = t_pCache->WriteData(
         strEmpireData,
         GameEmpireData::LastBuilderPlanet,
         iPlanetKey

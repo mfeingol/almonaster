@@ -195,12 +195,8 @@ int GameEngine::SetDefaultEmpireShipName (int iEmpireKey, int iTechKey, const ch
         return ERROR_WRONG_TECHNOLOGY;
     }
 
-    return t_pCache->WriteData (
-        SYSTEM_EMPIRE_DATA, 
-        iEmpireKey, 
-        SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN [iTechKey], 
-        pszDefaultShipName
-        );
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
+    return t_pCache->WriteData(strEmpire, iEmpireKey, SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN [iTechKey], pszDefaultShipName);
 }
 
 

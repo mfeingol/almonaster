@@ -316,7 +316,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenGamePage();
+GameCheck(OpenGamePage());
 
 int iGameClassOptions;
 GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));

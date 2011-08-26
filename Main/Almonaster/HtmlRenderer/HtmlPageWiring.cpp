@@ -608,8 +608,11 @@ int HtmlRenderer::Render()
     {
         // Render the page
         iErrCode = g_pfxnRenderPage[m_pgPageId](this);
+        if (iErrCode == OK)
+        {
+            iErrCode = global.TlsCommitTransaction();
+        }
     }
-
     global.TlsCloseConnection();
     
     return iErrCode;

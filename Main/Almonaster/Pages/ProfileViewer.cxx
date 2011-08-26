@@ -27,9 +27,7 @@ if (InitializeEmpire(false) != OK)
 IHttpForm* pHttpForm;
 
 int iErrCode, iProfileViewerPage = 0;
-
-unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, 
-    iGameClassKey = NO_KEY;
+unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
 
 SearchColumn sc [MAX_NUM_SEARCH_COLUMNS];
 SearchDefinition sd;
@@ -170,9 +168,20 @@ SearchResults:
                 const char* pszMessage = pHttpForm->GetValue();
 
                 Variant vSentName;
-                if (pszMessage != NULL && pszTargetEmpire != NULL) {
+                if (pszMessage != NULL && pszTargetEmpire != NULL)
+                {
+                    const TableCacheEntryColumn col = { SystemEmpireMessages::EmpireKey, iTargetEmpireKey };
+                    const TableCacheEntry entries[] =
+                    {
+                        { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL },
+                        { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &col },
+                    };
 
-                    iErrCode = SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
+                    iErrCode = t_pCache->Cache(entries, countof(entries));
+                    if (iErrCode != OK)
+                        return iErrCode;
+
+                    iErrCode = SendSystemMessage(iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                     switch (iErrCode) {
 
                     case OK:
@@ -194,7 +203,7 @@ SearchResults:
                     default:
                         AddMessage ("Your message could not be sent due to error ");
                         AppendMessage (iErrCode);
-                        break;
+                        return iErrCode;
                     }
 
                 } else {
@@ -539,7 +548,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 // Individual page stuff starts here
 switch (iProfileViewerPage) {

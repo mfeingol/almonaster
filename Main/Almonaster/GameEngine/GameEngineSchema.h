@@ -592,10 +592,6 @@ namespace SystemData {
     char pszBuffer [sizeof("SystemEmpireData") + 32]; \
     sprintf (pszBuffer, "SystemEmpireData%i", i);
 
-//#define GET_SYSTEM_EMPIRE_DATA_NAME(pszBuffer, name)       \
-//    char pszBuffer [sizeof("SystemEmpireData") + sizeof("Name") + sizeof(name) + 16]; \
-//    sprintf (pszBuffer, "SystemEmpireData_Name_%s", name);
-
 namespace SystemEmpireData {
 
     static const char* const Name = "Name";
@@ -1580,19 +1576,19 @@ namespace SystemActiveGames {
 // SystemEmpireMessages(I) //
 /////////////////////////////
 
-#define SYSTEM_EMPIRE_MESSAGES(pszBuffer, i)                \
-                                                            \
-    char pszBuffer [sizeof ("SystemEmpireMessages") + 32];  \
-    sprintf (pszBuffer, "SystemEmpireMessages%i", i);
+#define SYSTEM_EMPIRE_MESSAGES "SystemEmpireMessages"
 
 #define GET_SYSTEM_EMPIRE_MESSAGES(pszBuffer, i)            \
-                                                            \
-    sprintf (pszBuffer, "SystemEmpireMessages%i", i);
+    char pszBuffer [sizeof ("SystemEmpireMessages_EmpireKey_") + 32];   \
+    sprintf (pszBuffer, "SystemEmpireMessages_EmpireKey_%i", i);
 
-namespace SystemEmpireMessages {
-
+namespace SystemEmpireMessages
+{
+    static const char* const EmpireKey = "EmpireKey";
     static const char* const Unread = "Unread";
-    static const char* const Source = "Source";
+    static const char* const SourceKey = "SourceKey";
+    static const char* const SourceName = "SourceName";
+    static const char* const SourceSecret = "SourceSecret";
     static const char* const TimeStamp = "TimeStamp";
     static const char* const Flags = "Flags";
     static const char* const Text = "Text";
@@ -1600,8 +1596,11 @@ namespace SystemEmpireMessages {
     static const char* const Data = "Data";
 
     enum Columns {
+        iEmpireKey,
         iUnread,
-        iSource,
+        iSourceKey,
+        iSourceName,
+        iSourceSecret,
         iTimeStamp,
         iFlags,
         iText,
@@ -1610,8 +1609,11 @@ namespace SystemEmpireMessages {
     };
 
     static const char* const ColumnNames[] = {
+        EmpireKey,
         Unread,
-        Source,
+        SourceKey,
+        SourceName,
+        SourceSecret,
         TimeStamp,
         Flags,
         Text,
@@ -1621,7 +1623,10 @@ namespace SystemEmpireMessages {
     
     static const VariantType Types[] = {
         V_INT,
+        V_INT,
+        V_INT,
         V_STRING,
+        V_INT64,
         V_INT64,
         V_INT,
         V_STRING,
@@ -1631,7 +1636,10 @@ namespace SystemEmpireMessages {
 
     static const unsigned int Sizes[] = {
         0,
+        0,
+        0,
         MAX_EMPIRE_NAME_LENGTH,
+        0,
         0,
         0,
         VARIABLE_LENGTH_STRING,
@@ -1656,56 +1664,66 @@ namespace SystemEmpireMessages {
 };
 
 
-/////////////////////////////
-// SystemEmpireNukeList(I) //
-/////////////////////////////
+//////////////////////////////
+// SystemEmpireNukerList(I) //
+//////////////////////////////
+//////////////////////////////
+// SystemEmpireNukedList(I) //
+//////////////////////////////
 
-#define SYSTEM_EMPIRE_NUKED_LIST(pszBuffer, i)              \
-                                                            \
-    char pszBuffer [sizeof ("SystemEmpireNukedList") + 32]; \
-    sprintf (pszBuffer, "SystemEmpireNukedList%i", i);
+#define SYSTEM_EMPIRE_NUKER_LIST "SystemEmpireNukerList"
 
-#define GET_SYSTEM_EMPIRE_NUKED_LIST(pszBuffer, i)          \
-                                                            \
-    sprintf (pszBuffer, "SystemEmpireNukedList%i", i);
+#define GET_SYSTEM_EMPIRE_NUKER_LIST(pszBuffer, i)                      \
+    char pszBuffer [sizeof ("SystemEmpireNukerList_EmpireKey_") + 32];  \
+    sprintf (pszBuffer, "SystemEmpireNukerList_EmpireKey_%i", i);
 
-#define SYSTEM_EMPIRE_NUKER_LIST(pszBuffer, i)              \
-                                                            \
-    char pszBuffer [sizeof ("SystemEmpireNukerList") + 32]; \
-    sprintf (pszBuffer, "SystemEmpireNukerList%i", i);
+#define COPY_SYSTEM_EMPIRE_NUKER_LIST(pszBuffer, i)                     \
+    sprintf (pszBuffer, "SystemEmpireNukerList_EmpireKey_%i", i);
 
-#define GET_SYSTEM_EMPIRE_NUKER_LIST(pszBuffer, i)          \
-                                                            \
-    sprintf (pszBuffer, "SystemEmpireNukerList%i", i);
+#define SYSTEM_EMPIRE_NUKED_LIST "SystemEmpireNukedList"
+
+#define GET_SYSTEM_EMPIRE_NUKED_LIST(pszBuffer, i)                      \
+    char pszBuffer [sizeof ("SystemEmpireNukedList_EmpireKey_") + 32];  \
+    sprintf (pszBuffer, "SystemEmpireNukedList_EmpireKey_%i", i);
+
+#define COPY_SYSTEM_EMPIRE_NUKED_LIST(pszBuffer, i)                     \
+    sprintf (pszBuffer, "SystemEmpireNukedList_EmpireKey_%i", i);
 
 namespace SystemEmpireNukeList
 {
+    static const char* EmpireKey = "EmpireKey";
     static const char* AlienKey = "AlienKey";
     static const char* EmpireName = "EmpireName";
-    static const char* EmpireKey = "EmpireKey";
+    static const char* ReferenceEmpireKey = "ReferenceEmpireKey";
     static const char* GameClassName = "GameClassName";
     static const char* GameNumber = "GameNumber";
     static const char* TimeStamp = "TimeStamp";
 
-    enum Columns {
+    enum Columns
+    {
+        iEmpireKey,
         iAlienKey,
         iEmpireName,
-        iEmpireKey,
+        iReferenceEmpireKey,
         iGameClassName,
         iGameNumber,
         iTimeStamp,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] = 
+    {
+        EmpireKey,
         AlienKey,
         EmpireName,
-        EmpireKey,
+        ReferenceEmpireKey,
         GameClassName,
         GameNumber,
         TimeStamp,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
+        V_INT,
         V_INT,
         V_STRING,
         V_INT,
@@ -1714,7 +1732,9 @@ namespace SystemEmpireNukeList
         V_INT64,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
+        0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
         0,
@@ -1725,7 +1745,8 @@ namespace SystemEmpireNukeList
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemEmpireNukeList",
         NumColumns,
         (char**)ColumnNames,
@@ -1905,7 +1926,7 @@ namespace SystemLatestGames {
 
 #define SYSTEM_EMPIRE_ACTIVE_GAMES "SystemEmpireActiveGames"
 
-#define GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszBuffer, i)       \
+#define GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszBuffer, i)                    \
     char pszBuffer [sizeof("SystemEmpireActiveGames_EmpireKey_") + 32]; \
     sprintf (pszBuffer, "SystemEmpireActiveGames_EmpireKey_%i", i);
 
@@ -2270,38 +2291,45 @@ namespace SystemTournamentActiveGames {
 // SystemEmpireTournaments(I) //
 ////////////////////////////////
 
-#define SYSTEM_EMPIRE_TOURNAMENTS(pszBuffer, i)             \
-                                                                \
-    char pszBuffer [sizeof ("SystemEmpireTournaments") + 32];   \
-    sprintf (pszBuffer, "SystemEmpireTournaments%i", i);
+#define SYSTEM_EMPIRE_TOURNAMENTS "SystemEmpireTournaments"
 
-#define GET_SYSTEM_EMPIRE_TOURNAMENTS(pszBuffer, i)         \
-                                                                \
-    sprintf (pszBuffer, "SystemEmpireTournaments%i", i);
+#define GET_SYSTEM_EMPIRE_TOURNAMENTS(pszBuffer, i)             \
+    char pszBuffer[sizeof("SystemEmpireTournaments_EmpireKey_") + 32];   \
+    sprintf(pszBuffer, "SystemEmpireTournaments_EmpireKey_%i", i);
 
 namespace SystemEmpireTournaments {
     
+    static const char* const EmpireKey = "EmpireKey";
     static const char* const TournamentKey = "TournamentKey";
 
-    enum Columns {
+    enum Columns
+    {
+        iEmpireKey,
         iTournamentKey,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
+        EmpireKey,
         TournamentKey,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
+        V_INT,
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
+        0,
         0,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemEmpireTournaments",
         NumColumns,
         (char**)ColumnNames,
@@ -3310,14 +3338,18 @@ namespace GameEmpireData {
 namespace GameEmpireMessages {
     
     static const char* Unread = "Unread";
-    static const char* Source = "Source";
+    static const char* SourceKey = "SourceKey";
+    static const char* SourceName = "SourceName";
+    static const char* SourceSecret = "SourceSecret";
     static const char* TimeStamp = "TimeStamp";
     static const char* Flags = "Flags";
     static const char* Text = "Text";
 
     enum Columns {
         iUnread,
-        iSource,
+        iSourceKey,
+        iSourceName,
+        iSourceSecret,
         iTimeStamp,
         iFlags,
         iText,
@@ -3325,7 +3357,9 @@ namespace GameEmpireMessages {
 
     static const char* const ColumnNames[] = {
         Unread,
-        Source,
+        SourceKey,
+        SourceName,
+        SourceSecret,
         TimeStamp,
         Flags,
         Text,
@@ -3333,7 +3367,9 @@ namespace GameEmpireMessages {
     
     static const VariantType Types[] = {
         V_INT,
+        V_INT,
         V_STRING,
+        V_INT64,
         V_INT64,
         V_INT,
         V_STRING,
@@ -3341,7 +3377,9 @@ namespace GameEmpireMessages {
 
     static const unsigned int Sizes[] = {
         0,
+        0,
         MAX_EMPIRE_NAME_LENGTH,
+        0,
         0,
         0,
         VARIABLE_LENGTH_STRING,

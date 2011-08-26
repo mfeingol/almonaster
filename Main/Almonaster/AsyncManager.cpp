@@ -82,9 +82,13 @@ int AsyncManager::AsyncTaskLoop() {
 
             global.TlsOpenConnection();
 
-            plrqMessage->pQueryCall(plrqMessage);
-            delete plrqMessage;
+            int iErrCode = plrqMessage->pQueryCall(plrqMessage);
+            if (iErrCode == OK)
+            {
+                global.TlsCommitTransaction();
+            }
 
+            delete plrqMessage;
             global.TlsCloseConnection();
         }
     }

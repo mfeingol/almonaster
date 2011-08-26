@@ -18,12 +18,18 @@
 
 #include "HtmlRenderer.h"
 
-static TableCacheEntry systemData = { SYSTEM_DATA, NO_KEY, 0, NULL };
-static TableCacheEntry systemThemes = { SYSTEM_THEMES, NO_KEY, 0, NULL };
-static TableCacheEntry systemGameClassData = { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL };
-static TableCacheEntry systemSystemGameClassData = { SYSTEM_SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL };
-static TableCacheEntry systemSuperClassData = { SYSTEM_SUPERCLASS_DATA, NO_KEY, 0, NULL };
-static TableCacheEntry systemActiveGames = { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL };
+static const TableCacheEntry systemData = { SYSTEM_DATA, NO_KEY, 0, NULL };
+static const TableCacheEntry systemThemes = { SYSTEM_THEMES, NO_KEY, 0, NULL };
+static const TableCacheEntry systemGameClassData = { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL };
+static const TableCacheEntry systemSystemGameClassData = { SYSTEM_SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL };
+static const TableCacheEntry systemSuperClassData = { SYSTEM_SUPERCLASS_DATA, NO_KEY, 0, NULL };
+static const TableCacheEntry systemActiveGames = { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL };
+static const TableCacheEntry systemTournaments = { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL };
+static const TableCacheEntry systemChatRoomData = { SYSTEM_CHATROOM_DATA, NO_KEY, 0, NULL };
+static const TableCacheEntry almonasterScore = { SYSTEM_ALMONASTER_SCORE_TOPLIST, NO_KEY, 0, NULL };
+static const TableCacheEntry classicScore = { SYSTEM_CLASSIC_SCORE_TOPLIST, NO_KEY, 0, NULL };
+static const TableCacheEntry bridierScore = { SYSTEM_BRIDIER_SCORE_TOPLIST, NO_KEY, 0, NULL };
+static const TableCacheEntry bridierEstablishedScore = { SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, NO_KEY, 0, NULL };
 
 void Cache(Vector<TableCacheEntry>& cache, const TableCacheEntry& entry)
 {
@@ -38,11 +44,17 @@ void HtmlRenderer::GatherCacheTablesForSystemPage(Vector<TableCacheEntry>& cache
     Cache(cache, systemGameClassData);
     Cache(cache, systemSystemGameClassData);
     Cache(cache, systemSuperClassData);
+    Cache(cache, systemTournaments);
 
     if (m_iEmpireKey != NO_KEY)
     {
-        TableCacheEntry systemEmpireDataN = { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL };
+        const TableCacheEntry systemEmpireDataN = { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL };
         Cache(cache, systemEmpireDataN);
+
+        m_systemEmpireMessagesCol.pszColumn = SystemEmpireMessages::EmpireKey;
+        m_systemEmpireMessagesCol.vData = m_iEmpireKey;
+        const TableCacheEntry systemEmpireMessagesN = { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &m_systemEmpireMessagesCol };
+        Cache(cache, systemEmpireMessagesN);
     }
 }
 
@@ -62,7 +74,7 @@ void HtmlRenderer::GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache)
     {
         GAME_DATA(pszGameData, m_iGameClass, m_iGameNumber);
         m_strGameData = pszGameData;
-        TableCacheEntry gameData = { m_strGameData.GetCharPtr(), NO_KEY, 0, NULL };
+        const TableCacheEntry gameData = { m_strGameData.GetCharPtr(), NO_KEY, 0, NULL };
         Cache(cache, gameData);
     }
 }
@@ -71,9 +83,9 @@ void HtmlRenderer::RegisterCache_ActiveGameList(Vector<TableCacheEntry>& cache)
 {
     if (m_iEmpireKey != NO_KEY)
     {
-        m_activeGameCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
-        m_activeGameCol.vData = m_iEmpireKey;
-        TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_activeGameCol };
+        m_systemEmpireActiveGamesCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
+        m_systemEmpireActiveGamesCol.vData = m_iEmpireKey;
+        TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireActiveGamesCol };
         Cache(cache, systemEmpireActiveGamesN);
     }
 }
@@ -91,9 +103,9 @@ void HtmlRenderer::RegisterCache_OpenGameList(Vector<TableCacheEntry>& cache)
     Cache(cache, systemActiveGames);
 
     Assert(m_iEmpireKey != NO_KEY);
-    m_activeGameCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
-    m_activeGameCol.vData = m_iEmpireKey;
-    TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_activeGameCol };
+    m_systemEmpireActiveGamesCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
+    m_systemEmpireActiveGamesCol.vData = m_iEmpireKey;
+    const TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireActiveGamesCol };
     Cache(cache, systemEmpireActiveGamesN);
 }
 
@@ -101,33 +113,49 @@ void HtmlRenderer::RegisterCache_SystemGameList(Vector<TableCacheEntry>& cache)
 {
     // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
     Assert(m_iEmpireKey != NO_KEY);
-    m_activeGameCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
-    m_activeGameCol.vData = m_iEmpireKey;
-    TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_activeGameCol };
+    m_systemEmpireActiveGamesCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
+    m_systemEmpireActiveGamesCol.vData = m_iEmpireKey;
+    const TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireActiveGamesCol };
     Cache(cache, systemEmpireActiveGamesN);
 }
 
 void HtmlRenderer::RegisterCache_ProfileEditor(Vector<TableCacheEntry>& cache)
 {
+    if (m_iEmpireKey != NO_KEY)
+    {
+        m_systemEmpireTournamentsCol.pszColumn = SystemEmpireTournaments::EmpireKey;
+        m_systemEmpireTournamentsCol.vData = m_iEmpireKey;
+        const TableCacheEntry systemEmpireTournamentsN = { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireTournamentsCol };
+        Cache(cache, systemEmpireTournamentsN);
+    }
 }
 
 void HtmlRenderer::RegisterCache_TopLists(Vector<TableCacheEntry>& cache)
 {
-    TableCacheEntry almonasterScore = { SYSTEM_ALMONASTER_SCORE_TOPLIST, NO_KEY };
     Cache(cache, almonasterScore);
-
-    TableCacheEntry classicScore = { SYSTEM_CLASSIC_SCORE_TOPLIST, NO_KEY };
     Cache(cache, classicScore);
-
-    TableCacheEntry bridierScore = { SYSTEM_BRIDIER_SCORE_TOPLIST, NO_KEY };
     Cache(cache, bridierScore);
-
-    TableCacheEntry bridierEstablishedScore = { SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, NO_KEY };
     Cache(cache, bridierEstablishedScore);
 }
 
 void HtmlRenderer::RegisterCache_ProfileViewer(Vector<TableCacheEntry>& cache)
 {
+    // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
+    Assert(m_iEmpireKey != NO_KEY);
+
+    m_systemEmpireActiveGamesCol.pszColumn = SystemEmpireActiveGames::EmpireKey;
+    m_systemEmpireActiveGamesCol.vData = m_iEmpireKey;
+    const TableCacheEntry systemEmpireActiveGamesN = { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireActiveGamesCol };
+    Cache(cache, systemEmpireActiveGamesN);
+
+    // Needed to determine whether to display nuke history
+    m_systemEmpireNukeListCol.pszColumn = SystemEmpireNukeList::EmpireKey;
+    m_systemEmpireNukeListCol.vData = m_iEmpireKey;
+    const TableCacheEntry systemEmpireNukerListN = { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &m_systemEmpireNukeListCol };
+    Cache(cache, systemEmpireNukerListN);
+
+    const TableCacheEntry systemEmpireNukedListN = { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &m_systemEmpireNukeListCol };
+    Cache(cache, systemEmpireNukedListN);
 }
 
 void HtmlRenderer::RegisterCache_ServerAdministrator(Vector<TableCacheEntry>& cache)
@@ -152,6 +180,7 @@ void HtmlRenderer::RegisterCache_PersonalGameClasses(Vector<TableCacheEntry>& ca
 
 void HtmlRenderer::RegisterCache_Chatroom(Vector<TableCacheEntry>& cache)
 {
+    Cache(cache, systemChatRoomData);
 }
 
 void HtmlRenderer::RegisterCache_SystemServerRules(Vector<TableCacheEntry>& cache)
