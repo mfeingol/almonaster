@@ -17,6 +17,8 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+int iErrCode;
+
 if (InitializeEmpire(false) != OK)
 {
     return Redirect(LOGIN);
@@ -31,7 +33,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 // Individual page stuff starts here
 WriteCredits();

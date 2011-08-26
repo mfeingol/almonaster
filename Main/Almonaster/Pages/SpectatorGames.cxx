@@ -151,7 +151,7 @@ if (iSpectatorGamesPage > 0)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 switch (iSpectatorGamesPage) {
 

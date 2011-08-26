@@ -87,7 +87,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 %><input type="hidden" name="TosPage" value="<% Write (iTosPage); %>"><%
 

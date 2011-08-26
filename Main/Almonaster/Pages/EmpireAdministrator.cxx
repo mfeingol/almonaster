@@ -568,7 +568,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 switch (iEmpireAdminPage) {
 

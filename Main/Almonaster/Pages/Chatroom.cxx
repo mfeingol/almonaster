@@ -114,7 +114,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 // Enter the chatroom
 if (bBroadcast && iInChatroom == CHATROOM_UNCHECKED) {

@@ -33,7 +33,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 int iNumNukes;
 Variant** ppvNukeData;

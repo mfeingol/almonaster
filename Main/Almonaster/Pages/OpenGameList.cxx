@@ -96,7 +96,7 @@ if (bConfirmPage) {
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 if (bConfirmPage) {
 

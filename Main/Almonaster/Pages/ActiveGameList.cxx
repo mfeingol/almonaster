@@ -79,7 +79,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 // Begin individual page
 unsigned int i, iNumGames;

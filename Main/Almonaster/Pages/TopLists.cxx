@@ -96,7 +96,7 @@ if (m_bRedirectTest)
     }
 }
 
-OpenSystemPage(false);
+Check(OpenSystemPage(false));
 
 // Individual page stuff starts here
 switch (iTopListPage) {
