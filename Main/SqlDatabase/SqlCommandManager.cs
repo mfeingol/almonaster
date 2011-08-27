@@ -847,9 +847,47 @@ namespace Almonaster.Database.Sql
         public void DeleteRow(string tableName, string columnName, object value)
         {
             string cmdText = String.Format("DELETE FROM [{0}] WHERE [{1}] = @p0", tableName, columnName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
+            try
             {
-                cmd.Parameters.Add(new SqlParameter("@p0", value));
+                using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
+                {
+                    cmd.Parameters.Add(new SqlParameter("@p0", value));
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (SqlException e)
+            {
+                throw new SqlDatabaseException(e);
+            }
+        }
+
+        public void DeleteRows(string tableName, string columnName, IEnumerable<long> values)
+        {
+            StringBuilder cmdText = new StringBuilder();
+            cmdText.AppendFormat("DELETE FROM [{0}]", tableName);
+
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                int index = 0;
+                bool first = false;
+                foreach (object value in values)
+                {
+                    string param = "@p" + index++;
+                    if (first)
+                    {
+                        first = false;
+                    }
+                    else
+                    {
+                        cmdText.Append(" OR");
+                    }
+                    cmdText.AppendFormat(" WHERE [{0}] = {1}", columnName, param);
+                    cmd.Parameters.Add(new SqlParameter(param, value));
+                }
+
+                cmd.CommandText = cmdText.ToString();
+                cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
                 cmd.ExecuteNonQuery();
             }
         }

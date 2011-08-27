@@ -30,8 +30,8 @@ void HtmlRenderer::WriteTournamentTeamIcon (int iIconKey, int iTournamentKey, in
     WriteIcon (iIconKey, iTournamentKey, iTournamentTeamKey, pszAlt, BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR, bVerifyUpload);
 }
 
-void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
-
+int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
+{
     int iErrCode, * piOptions = NULL, * piGameClass = NULL, * piGameNumber = NULL;
     Variant* pvData = NULL, * pvGameClassName = NULL, * pvEmpireName = NULL, * pvTeamName = NULL;
 
@@ -41,7 +41,7 @@ void HtmlRenderer::WriteAdministerTournament (unsigned int iTournamentKey) {
     unsigned int iNumHalted = 0, iNumNotHalted = 0, iNumMarked = 0, iNumUnmarked = 0, iNumStartable = 0;
     unsigned int iGames;
     Variant* pvEmpireKey = NULL;
-
+    
     iErrCode = GetTournamentData (iTournamentKey, &pvData);
     if (iErrCode != OK) {
         OutputText ("<p><strong>The tournament does not exist</strong>");
@@ -497,6 +497,8 @@ Cleanup:
     if (piGameNumber != NULL) {
         delete [] piGameNumber;
     }
+
+    return iErrCode;
 }
 
 void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey) {
@@ -760,7 +762,7 @@ int HtmlRenderer::ProcessCreateTournamentTeam (unsigned int iTournamentKey) {
     Variant pvSubmitArray [SystemTournamentTeams::NumColumns];
     
     // Parse the forms
-    iErrCode = ParseCreateTournamentTeamForms (pvSubmitArray, iTournamentKey);
+    iErrCode = ParseCreateTournamentTeamForms(pvSubmitArray, iTournamentKey);
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -793,6 +795,8 @@ int HtmlRenderer::ProcessCreateTournamentTeam (unsigned int iTournamentKey) {
 int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsigned int iTournamentKey) {
 
     IHttpForm* pHttpForm;
+
+    pvSubmitArray[SystemTournamentTeams::iTournamentKey] = iTournamentKey;
 
     // Name
     pHttpForm = m_pHttpRequest->GetForm ("TeamName");
@@ -1158,19 +1162,46 @@ Cleanup:
     return iErrCode;
 }
 
-void HtmlRenderer::RenderTournaments (const Variant* pvTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
+int HtmlRenderer::RenderTournaments(const Variant* pvTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
 {
     unsigned int* piTournamentKey = (unsigned int*)StackAlloc(iNumTournaments * sizeof(unsigned int));
     for (unsigned int i = 0; i < iNumTournaments; i ++)
     {
         piTournamentKey[i] = pvTournamentKey[i].GetInteger();
     }
-    RenderTournaments(piTournamentKey, iNumTournaments, bSingleOwner);
+    return RenderTournaments(piTournamentKey, iNumTournaments, bSingleOwner);
 }
 
-void HtmlRenderer::RenderTournaments (const unsigned int* piTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
+int HtmlRenderer::RenderTournaments(const unsigned int* piTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
 {
+    int iErrCode;
     unsigned int i;
+
+    // Cache tables for tournaments
+    TableCacheEntryColumn* pcCols = (TableCacheEntryColumn*)StackAlloc(iNumTournaments * 2 * sizeof(TableCacheEntryColumn));
+    TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumTournaments * 2 * sizeof(TableCacheEntry));
+    for (i = 0; i < iNumTournaments; i ++)
+    {
+        pcCols[i].pszColumn = SystemTournamentEmpires::TournamentKey;
+        pcCols[i].vData = piTournamentKey[i];
+
+        pcCols[i + iNumTournaments].pszColumn = SystemTournamentTeams::TournamentKey;
+        pcCols[i + iNumTournaments].vData = piTournamentKey[i];
+
+        pcEntries[i].pszTableName = SYSTEM_TOURNAMENT_EMPIRES;
+        pcEntries[i].iKey = NO_KEY;
+        pcEntries[i].iNumColumns = 1;
+        pcEntries[i].pcColumns = pcCols + i;
+
+        pcEntries[i + iNumTournaments].pszTableName = SYSTEM_TOURNAMENT_TEAMS;
+        pcEntries[i + iNumTournaments].iKey = NO_KEY;
+        pcEntries[i + iNumTournaments].iNumColumns = 1;
+        pcEntries[i + iNumTournaments].pcColumns = pcCols + i + iNumTournaments;
+    }
+
+    iErrCode = t_pCache->Cache(pcEntries, iNumTournaments * 2);
+    if (iErrCode != OK)
+        return iErrCode;
 
     OutputText ("<p><table width=\"75%\" bordercolor=\"#");
     m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
@@ -1233,6 +1264,8 @@ void HtmlRenderer::RenderTournaments (const unsigned int* piTournamentKey, unsig
     }
 
     OutputText ("</table>");
+
+    return OK;
 }
 
 
@@ -1347,16 +1380,19 @@ Cleanup:
     }
 }
 
-
-void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
-
+int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
+{
     int iErrCode;
-    unsigned int* piEmpireKey = NULL;
 
     Variant* pvData = NULL, * pvTeamName = NULL, * pvTeamData = NULL, * pvEmpireKey = NULL, * pvEmpTeamKey = NULL;
     unsigned int i, j, iNumTeams, * piTeamKey = NULL, iNumEmpires, iEmpiresRendered = 0;
 
     const char* pszString = NULL;
+
+    // Cache tables for tournament
+    iErrCode = CacheTournamentTables(&iTournamentKey, 1);
+    if (iErrCode != OK)
+        return iErrCode;
 
     iErrCode = GetTournamentData (iTournamentKey, &pvData);
     if (iErrCode != OK) {
@@ -1588,10 +1624,11 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
             }
 
             // Empires
-            for (j = 0; j < iNumEmpires; j ++) {
-
-                if ((unsigned int)pvEmpTeamKey[j].GetInteger() == piTeamKey[i]) {
-                    RenderEmpire (iTournamentKey, piEmpireKey[j]);
+            for (j = 0; j < iNumEmpires; j ++)
+            {
+                if ((unsigned int)pvEmpTeamKey[j].GetInteger() == piTeamKey[i])
+                {
+                    RenderEmpire (iTournamentKey, pvEmpireKey[j].GetInteger());
                     iEmpiresRendered ++;
                 }
             }
@@ -1661,10 +1698,11 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
 
         OutputText ("\">Ruins</th></tr>");
 
-        for (j = 0; j < iNumEmpires; j ++) {
-
-            if (pvEmpTeamKey[j].GetInteger() == NO_KEY) {
-                RenderEmpire (iTournamentKey, piEmpireKey[j]);
+        for (j = 0; j < iNumEmpires; j ++)
+        {
+            if (pvEmpTeamKey[j].GetInteger() == NO_KEY)
+            {
+                RenderEmpire (iTournamentKey, pvEmpireKey[j].GetInteger());
             }
         }
 
@@ -1692,10 +1730,10 @@ void HtmlRenderer::RenderTournamentDetailed (unsigned int iTournamentKey) {
     // Actions
     if (!m_bNotifiedTournamentInvitation && !NotifiedTournamentInvitation()) {
         
-        for (i = 0; i < iNumEmpires; i ++) {
-            
-            if (piEmpireKey[i] == m_iEmpireKey) {
-
+        for (i = 0; i < iNumEmpires; i ++)
+        {
+            if ((unsigned int)pvEmpireKey[i].GetInteger() == m_iEmpireKey)
+            {
                 OutputText ("<p>");
                 WriteSeparatorString (m_iSeparatorKey);
                 
@@ -1757,4 +1795,6 @@ Cleanup:
     if (pvEmpTeamKey != NULL) {
         t_pCache->FreeData(pvEmpTeamKey);
     }
+
+    return iErrCode;
 }

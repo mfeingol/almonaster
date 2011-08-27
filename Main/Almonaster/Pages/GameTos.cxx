@@ -78,13 +78,14 @@ if (m_bOwnPost && !m_bRedirection) {
 Redirection:
 if (m_bRedirectTest)
 {
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmitGame (&pageRedirect))
+    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
-
 GameCheck(OpenGamePage());
 
 %><input type="hidden" name="TosPage" value="<% Write (iTosPage); %>"><%

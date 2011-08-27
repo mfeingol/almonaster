@@ -1950,6 +1950,10 @@ Quote:
             sprintf (pszText, "%s requested to be deleted", m_vEmpireName.GetCharPtr());
             global.GetReport()->WriteReport (pszText);
 
+            iErrCode = CacheEmpireForDeletion(m_iEmpireKey);
+            if (iErrCode != OK)
+                return iErrCode;
+
             iErrCode = DeleteEmpire (m_iEmpireKey, NULL, true, false);
             switch (iErrCode) {
 
@@ -1991,7 +1995,7 @@ Quote:
                 sprintf (pszText, "%s was not deleted: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
                 global.GetReport()->WriteReport (pszText);
                 }
-                return Redirect (m_pgPageId);
+                return iErrCode;
             }
 
             }
@@ -2096,13 +2100,18 @@ Quote:
 } 
 
 Redirection:
-if (m_bRedirectTest && !m_bRedirection) {
+if (m_bRedirectTest)
+{
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmit (&pageRedirect)) {
+    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    if (bRedirected)
+    {
         m_iButtonKey = iNewButtonKey;
-        return Redirect (pageRedirect);
+        return Redirect(pageRedirect);
     }
 }
+
 iNewButtonKey = m_iButtonKey;
 
 Check(OpenSystemPage(iProfileEditorPage == 1 && iAlienSelect == 1));
@@ -3541,27 +3550,25 @@ case 9:
 
     // List all joined tournaments
     iErrCode = GetJoinedTournaments (m_iEmpireKey, &pvTournamentKey, NULL, &iTournaments);
-    if (iErrCode != OK) {
-        %><p>Error <% Write (iErrCode); %> occurred<%
-    }
+    if (iErrCode != OK)
+        return iErrCode;
 
-    if (iTournaments == 0) {
+    if (iTournaments == 0)
+    {
         %><p><h3>You are not in any tournaments</h3><%
     }
-
-    else {
-
+    else
+    {
         %><p>You are in <strong><% Write (iTournaments); %></strong> tournament<%
         if (iTournaments != 1) {
             %>s<%
         }
         %>:</h3><%
 
-        RenderTournaments(pvTournamentKey, iTournaments, false);
-    }
-
-    if (pvTournamentKey != NULL) {
+        iErrCode = RenderTournaments(pvTournamentKey, iTournaments, false);
         t_pCache->FreeData(pvTournamentKey);
+        if (iErrCode != OK)
+            return iErrCode;
     }
 
     }

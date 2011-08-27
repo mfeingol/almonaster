@@ -146,6 +146,6 @@ int SqlDatabaseBridge::Check()
 int SqlDatabaseBridge::GetStatistics(DatabaseStatistics* pdsStats)
 {
     // TODOTODO - Needs implementation
-    Assert(false);
+    memset(pdsStats, 0, sizeof(*pdsStats));
     return OK;
 }

@@ -13,6 +13,7 @@ class CachedTable : public ICachedTable
 private:
     gcroot<SqlCommandManager^> m_cmd;
     gcroot<BulkTableReadResult^> m_result;
+    bool m_bCompleteTable;
 
     // TODOTODO - does it need to be a sorted dictionary
     gcroot<SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_keyToRows;
@@ -23,7 +24,7 @@ private:
     void SaveWrite(int64 id, System::String^ columnName, System::Object^ value);
 
 public:
-    CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result);
+    CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result, bool bCompleteTable);
 
     BulkTableReadResult^ GetResult();
     IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ GetWrites();

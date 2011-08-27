@@ -12,7 +12,7 @@ System::Object^ Convert(const Variant& v)
     case V_INT64:
         return v.GetInteger64();
     case V_FLOAT:
-        return v.GetFloat();
+        return (double)v.GetFloat();
     case V_STRING:
         return gcnew System::String(v.GetString());
     default:

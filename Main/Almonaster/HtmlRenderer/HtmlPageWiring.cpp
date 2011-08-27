@@ -551,7 +551,7 @@ void HtmlRenderer::ReadStandardForms()
    
     if ((pHttpForm = m_pHttpRequest->GetForm("EmpireKey")) != NULL)
     {
-        m_iEmpireKey = pHttpForm->GetIntValue();
+        m_iEmpireKey = pHttpForm->GetUIntValue();
     }
 
     if (IsGamePage(m_pgPageId))
@@ -559,14 +559,24 @@ void HtmlRenderer::ReadStandardForms()
         // Get game class
         if ((pHttpForm = m_pHttpRequest->GetForm ("GameClass")) != NULL)
         {
-            m_iGameClass = pHttpForm->GetIntValue();
+            m_iGameClass = pHttpForm->GetUIntValue();
         }
 
         // Get game number
         if ((pHttpForm = m_pHttpRequest->GetForm ("GameNumber")) != NULL)
         {
-            m_iGameNumber = pHttpForm->GetIntValue();
+            m_iGameNumber = pHttpForm->GetUIntValue();
         }
+    }
+
+    // Get tournament key
+    if ((pHttpForm = m_pHttpRequest->GetForm ("TournamentKey")) != NULL)
+    {
+        m_iTournamentKey = pHttpForm->GetUIntValue();
+    }
+    else if ((pHttpForm = m_pHttpRequest->GetForm ("AdminTournament")) != NULL)
+    {
+        m_iTournamentKey = pHttpForm->GetUIntValue();
     }
 }
 

@@ -5,11 +5,12 @@
 
 using namespace System::Linq;
 
-CachedTable::CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result)
+CachedTable::CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result, bool bCompleteTable)
     :
     m_iNumRefs(1),
     m_cmd(cmd),
     m_result(result),
+    m_bCompleteTable(bCompleteTable),
     m_keyToRows(gcnew SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>()),
     m_writes(gcnew Dictionary<int64, IDictionary<System::String^, System::Object^>^>())
 {
@@ -86,15 +87,15 @@ int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
     for each (long id in m_keyToRows->Keys)
     {
         unsigned int iId = (unsigned int)id;
-        if (iKey == iId)
-        {
-            bNext = true;
-        }
-
         if (bNext)
         {
             *piNextKey = iId;
             return OK;
+        }
+
+        if (iKey == iId)
+        {
+            bNext = true;
         }
     }
 
@@ -628,12 +629,16 @@ int CachedTable::DeleteRow(unsigned int iKey)
 int CachedTable::DeleteAllRows()
 {
     Trace("CachedTable :: DeleteAllRows {0}", m_result->TableName);
-
-    // TODOTODO - if we're just a view, do the right thing
-    // First delete the actual rows
     try
     {
-        m_cmd->DeleteAllRows(m_result->TableName);
+        if (m_bCompleteTable)
+        {
+            m_cmd->DeleteAllRows(m_result->TableName);
+        }
+        else
+        {
+            m_cmd->DeleteRows(m_result->TableName, gcnew System::String(IdColumnName), m_keyToRows->Keys);
+        }
     }
     catch (SqlDatabaseException^)
     {

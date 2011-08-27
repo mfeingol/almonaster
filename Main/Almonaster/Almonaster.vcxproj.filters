@@ -365,6 +365,9 @@
     <ClCompile Include="HtmlRenderer\HtmlTableCache.cpp">
       <Filter>HtmlRenderer</Filter>
     </ClCompile>
+    <ClCompile Include="GameEngine\GameEngineTableCache.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">

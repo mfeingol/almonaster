@@ -24,8 +24,10 @@ static const TableCacheEntry systemGameClassData = { SYSTEM_GAMECLASS_DATA, NO_K
 static const TableCacheEntry systemSystemGameClassData = { SYSTEM_SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL };
 static const TableCacheEntry systemSuperClassData = { SYSTEM_SUPERCLASS_DATA, NO_KEY, 0, NULL };
 static const TableCacheEntry systemActiveGames = { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL };
+static const TableCacheEntry systemLatestGames = { SYSTEM_LATEST_GAMES, NO_KEY, 0, NULL };
 static const TableCacheEntry systemTournaments = { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL };
 static const TableCacheEntry systemChatRoomData = { SYSTEM_CHATROOM_DATA, NO_KEY, 0, NULL };
+static const TableCacheEntry systemNukeList = { SYSTEM_NUKE_LIST, NO_KEY, 0, NULL };
 static const TableCacheEntry almonasterScore = { SYSTEM_ALMONASTER_SCORE_TOPLIST, NO_KEY, 0, NULL };
 static const TableCacheEntry classicScore = { SYSTEM_CLASSIC_SCORE_TOPLIST, NO_KEY, 0, NULL };
 static const TableCacheEntry bridierScore = { SYSTEM_BRIDIER_SCORE_TOPLIST, NO_KEY, 0, NULL };
@@ -121,13 +123,12 @@ void HtmlRenderer::RegisterCache_SystemGameList(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_ProfileEditor(Vector<TableCacheEntry>& cache)
 {
-    if (m_iEmpireKey != NO_KEY)
-    {
-        m_systemEmpireTournamentsCol.pszColumn = SystemEmpireTournaments::EmpireKey;
-        m_systemEmpireTournamentsCol.vData = m_iEmpireKey;
-        const TableCacheEntry systemEmpireTournamentsN = { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireTournamentsCol };
-        Cache(cache, systemEmpireTournamentsN);
-    }
+    Assert(m_iEmpireKey != NO_KEY);
+
+    m_systemEmpireTournamentsCol.pszColumn = SystemEmpireTournaments::EmpireKey;
+    m_systemEmpireTournamentsCol.vData = m_iEmpireKey;
+    const TableCacheEntry systemEmpireTournamentsN = { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireTournamentsCol };
+    Cache(cache, systemEmpireTournamentsN);
 }
 
 void HtmlRenderer::RegisterCache_TopLists(Vector<TableCacheEntry>& cache)
@@ -185,6 +186,7 @@ void HtmlRenderer::RegisterCache_Chatroom(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_SystemServerRules(Vector<TableCacheEntry>& cache)
 {
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_SystemFAQ(Vector<TableCacheEntry>& cache)
@@ -249,10 +251,12 @@ void HtmlRenderer::RegisterCache_Quit(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_LatestNukes(Vector<TableCacheEntry>& cache)
 {
+    Cache(cache, systemNukeList);
 }
 
 void HtmlRenderer::RegisterCache_SpectatorGames(Vector<TableCacheEntry>& cache)
 {
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_GameContributions(Vector<TableCacheEntry>& cache)
@@ -273,10 +277,26 @@ void HtmlRenderer::RegisterCache_SystemCredits(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_LatestGames(Vector<TableCacheEntry>& cache)
 {
+    Cache(cache, systemLatestGames);
 }
 
 void HtmlRenderer::RegisterCache_TournamentAdministrator(Vector<TableCacheEntry>& cache)
 {
+    // Cache tables for tournament
+    if (m_iTournamentKey != NO_KEY)
+    {
+        m_systemTournamentEmpiresCol.pszColumn = SystemTournamentEmpires::TournamentKey;
+        m_systemTournamentEmpiresCol.vData = m_iTournamentKey;
+        const TableCacheEntry systemTournamentEmpires = { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &m_systemTournamentEmpiresCol };
+        Cache(cache, systemTournamentEmpires);
+
+        m_systemTournamentTeamsCol.pszColumn = SystemTournamentTeams::TournamentKey;
+        m_systemTournamentTeamsCol.vData = m_iTournamentKey;
+        const TableCacheEntry systemTournamentTeamsN = { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &m_systemTournamentTeamsCol };
+        Cache(cache, systemTournamentTeamsN);
+    }
+
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_PersonalTournaments(Vector<TableCacheEntry>& cache)
@@ -285,6 +305,29 @@ void HtmlRenderer::RegisterCache_PersonalTournaments(Vector<TableCacheEntry>& ca
 
 void HtmlRenderer::RegisterCache_Tournaments(Vector<TableCacheEntry>& cache)
 {
+    // Cache tables for tournament
+    if (m_iTournamentKey != NO_KEY)
+    {
+        m_systemTournamentEmpiresCol.pszColumn = SystemTournamentEmpires::TournamentKey;
+        m_systemTournamentEmpiresCol.vData = m_iTournamentKey;
+        const TableCacheEntry systemTournamentEmpires = { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &m_systemTournamentEmpiresCol };
+        Cache(cache, systemTournamentEmpires);
+
+        m_systemTournamentTeamsCol.pszColumn = SystemTournamentTeams::TournamentKey;
+        m_systemTournamentTeamsCol.vData = m_iTournamentKey;
+        const TableCacheEntry systemTournamentTeamsN = { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &m_systemTournamentTeamsCol };
+        Cache(cache, systemTournamentTeamsN);
+    }
+
+    if (m_iEmpireKey != NO_KEY)
+    {
+        m_systemEmpireTournamentsCol.pszColumn = SystemEmpireTournaments::EmpireKey;
+        m_systemEmpireTournamentsCol.vData = m_iEmpireKey;
+        const TableCacheEntry systemEmpireTournamentsN = { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireTournamentsCol };
+        Cache(cache, systemEmpireTournamentsN);
+    }
+
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_GameTos(Vector<TableCacheEntry>& cache)

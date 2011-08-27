@@ -116,18 +116,15 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
     {
         Variant* pvEmpireKey;
         iErrCode = t_pCache->ReadColumn (strGameEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
-        if (iErrCode != OK) {
-            Assert (false);
+        if (iErrCode != OK)
             return iErrCode;
-        }
         
-        if (iNumEmpires == 0) {
-
+        if (iNumEmpires == 0)
+        {
             *pbGameOver = true;
             iErrCode = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE);
-            Assert (iErrCode == OK);
-
-            return iResult;
+            if (iErrCode != OK)
+                return iErrCode;
         }
         
         // Initialize boolean alive array
@@ -135,14 +132,13 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         pbSendFatalMessage = pbAlive + iNumEmpires;
         piEmpireKey = (unsigned int*) StackAlloc (iNumEmpires * sizeof (unsigned int));
         
-        for (i = 0; i < iNumEmpires; i ++) {
-
+        for (i = 0; i < iNumEmpires; i ++)
+        {
             piEmpireKey[i] = pvEmpireKey[i].GetInteger();
             pbAlive[i] = true;
 
             iErrCode = GetEmpireOption (piEmpireKey[i], DISPLAY_FATAL_UPDATE_MESSAGES, pbSendFatalMessage + i);
             if (iErrCode != OK) {
-                Assert (false);
                 t_pCache->FreeData(pvEmpireKey);
                 return iErrCode;
             }

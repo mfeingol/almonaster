@@ -107,10 +107,12 @@ if (m_bOwnPost && !m_bRedirection) {
 Redirection:
 if (m_bRedirectTest)
 {
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmit (&pageRedirect))
+    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    if (bRedirected)
     {
-        return Redirect (pageRedirect);
+        return Redirect(pageRedirect);
     }
 }
 

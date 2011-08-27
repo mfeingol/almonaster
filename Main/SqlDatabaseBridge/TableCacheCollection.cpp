@@ -75,7 +75,7 @@ CachedTable* TableCacheCollection::CreateEmptyTable(const char* pszCacheTableNam
     result->TableName = gcnew System::String(pszCacheTableName);
     result->Rows = gcnew List<IDictionary<System::String^, System::Object^>^>();
 
-    CachedTable* pTable = new CachedTable(m_cmd, result);
+    CachedTable* pTable = new CachedTable(m_cmd, result, true);
     Assert(pTable);
     return pTable;
 }
@@ -234,20 +234,20 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
 
     IEnumerable<BulkTableReadResult^>^ results = m_cmd->BulkRead(requests);
 
-    // TODOTODOTODO - Handle zero results appropriately
-
     unsigned int iKey = NO_KEY;
     int index = 0;
     CachedTable* pTable = NULL;
     for each (BulkTableReadResult^ result in results)
     {
-        pTable = new CachedTable(m_cmd, result);
+        int cColumns = Enumerable::Count(requests[index].Columns);
+
+        pTable = new CachedTable(m_cmd, result, cColumns == 0);
         Assert(pTable);
 
         bool ret = m_htTableViews.Insert(ppszCacheEntryName[index], pTable);
         Assert(ret);
 
-        if (Enumerable::Count(requests[index].Columns) > 0 && Enumerable::Count(result->Rows) == 1)
+        if (cColumns > 0 && Enumerable::Count(result->Rows) == 1)
         {
             // One row found via column search, so allow the table to be looked up by key as well
             iKey = (unsigned int)(int64)Enumerable::First(result->Rows)[strIdColumnName];

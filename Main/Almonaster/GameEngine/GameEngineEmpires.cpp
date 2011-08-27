@@ -1261,50 +1261,6 @@ Cleanup:
     return iErrCode;
 }
 
-int GameEngine::CacheEmpire(unsigned int iEmpireKey)
-{
-    return CacheEmpires(&iEmpireKey, 1, NULL);
-}
-
-int GameEngine::CacheEmpire(unsigned int iEmpireKey, unsigned int* piResults)
-{
-    return CacheEmpires(&iEmpireKey, 1);
-}
-
-int GameEngine::CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires)
-{
-    return CacheEmpires(piEmpireKey, iNumEmpires, NULL);
-}
-
-int GameEngine::CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires, unsigned int* piResults)
-{
-    TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumEmpires * sizeof(TableCacheEntry));
-    for (unsigned int i = 0; i < iNumEmpires; i ++)
-    {
-        pcEntries[i].pszTableName = SYSTEM_EMPIRE_DATA;
-        pcEntries[i].iKey = piEmpireKey[i];
-        pcEntries[i].iNumColumns = 0;
-        pcEntries[i].pcColumns = NULL;
-    }
-    
-    int iErrCode = t_pCache->Cache(pcEntries, iNumEmpires);
-    if (iErrCode == OK && piResults)
-    {
-        *piResults = 0;
-        for (unsigned int i = 0; i < iNumEmpires; i ++)
-        {
-            unsigned int iNumRows;
-            GET_SYSTEM_EMPIRE_DATA(strEmpire, piEmpireKey[i]) 
-            iErrCode = t_pCache->GetNumCachedRows(strEmpire, &iNumRows);
-            if (iErrCode != OK)
-                break;
-            *piResults += iNumRows;
-        }
-    }
-
-    return iErrCode;
-}
-
 int GameEngine::LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey)
 {
     const TableCacheEntryColumn entryCol = { SystemEmpireData::Name, pszName };

@@ -541,10 +541,12 @@ SearchResults:
 Redirection:
 if (m_bRedirectTest)
 {
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmit (&pageRedirect))
+    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    if (bRedirected)
     {
-        return Redirect (pageRedirect);
+        return Redirect(pageRedirect);
     }
 }
 
@@ -657,7 +659,7 @@ case 7:
     %><input type="hidden" name="ProfileViewerPage" value="7"><%
 
     Assert (iTargetEmpireKey != NO_KEY);
-    WritePersonalTournaments (iTargetEmpireKey);
+    Check(WritePersonalTournaments(iTargetEmpireKey));
 
     break;
 

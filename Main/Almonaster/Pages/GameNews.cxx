@@ -32,13 +32,14 @@ if (InitializeGame(&pageRedirect) != OK)
 
 if (m_bRedirectTest)
 {
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmitGame (&pageRedirect))
+    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
-
 GameCheck(OpenGamePage());
 
 // Individual page starts here

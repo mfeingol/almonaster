@@ -815,3 +815,586 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     
     return OK;
 }
+
+int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
+{
+    if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
+
+        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE) {
+            *pbRedirected = false;
+            return OK;
+        }
+
+        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE) {
+            *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
+            *pbRedirected = true;
+            return OK;
+        }
+        *pbRedirected = false;
+        return OK;
+    }
+
+    if (m_bRedirection || WasButtonPressed (PageButtonId[m_pgPageId])) {
+        *pbRedirected = false;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_ACTIVEGAMELIST)) {
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_OPENGAMELIST)) {
+        *ppageRedirect = OPEN_GAME_LIST;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_SYSTEMGAMELIST)) {
+        *ppageRedirect = SYSTEM_GAME_LIST;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_PROFILEVIEWER)) {
+        *ppageRedirect = PROFILE_VIEWER;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_PROFILEEDITOR)) {
+        *ppageRedirect = PROFILE_EDITOR;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_TOPLISTS)) {
+        *ppageRedirect = TOP_LISTS;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_SPECTATORGAMES)) {
+        *ppageRedirect = SPECTATOR_GAMES;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_TOURNAMENTS)) {
+        m_iReserved = NO_KEY;
+        *ppageRedirect = TOURNAMENTS;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_LATESTGAMES)) {
+        *ppageRedirect = LATEST_GAMES;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_LATESTNUKES)) {
+        *ppageRedirect = LATEST_NUKES;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_CHATROOM)) {
+        *ppageRedirect = CHATROOM;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_EXIT)) {
+        *ppageRedirect = LOGIN;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_PERSONALGAMECLASSES)) {
+        *ppageRedirect = PERSONAL_GAME_CLASSES;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_PERSONALTOURNAMENTS)) {
+        *ppageRedirect = PERSONAL_TOURNAMENTS;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (m_iPrivilege >= ADMINISTRATOR) {
+
+        if (WasButtonPressed (BID_SERVERADMINISTRATOR)) {
+            *ppageRedirect = SERVER_ADMINISTRATOR;
+            *pbRedirected = true;
+            return OK;
+        }
+
+        if (WasButtonPressed (BID_GAMEADMINISTRATOR)) {
+            *ppageRedirect = GAME_ADMINISTRATOR;
+            *pbRedirected = true;
+            return OK;
+        }
+
+        if (WasButtonPressed (BID_EMPIREADMINISTRATOR)) {
+            *ppageRedirect = EMPIRE_ADMINISTRATOR;
+            *pbRedirected = true;
+            return OK;
+        }
+
+        if (WasButtonPressed (BID_THEMEADMINISTRATOR)) {
+            *ppageRedirect = THEME_ADMINISTRATOR;
+            *pbRedirected = true;
+            return OK;
+        }
+
+        if (WasButtonPressed (BID_TOURNAMENTADMINISTRATOR)) {
+            *ppageRedirect = TOURNAMENT_ADMINISTRATOR;
+            *pbRedirected = true;
+            return OK;
+        }
+    }
+
+    if (WasButtonPressed (BID_SERVERINFORMATION)) {
+        *ppageRedirect = SYSTEM_SERVER_INFORMATION;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_DOCUMENTATION)) {
+        *ppageRedirect = SYSTEM_DOCUMENTATION;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_SERVERNEWS)) {
+        *ppageRedirect = SYSTEM_NEWS;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_CONTRIBUTIONS)) {
+        *ppageRedirect = SYSTEM_CONTRIBUTIONS;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_CREDITS)) {
+        *ppageRedirect = SYSTEM_CREDITS;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (WasButtonPressed (BID_TOS)) {
+        *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    IHttpForm* pHttpForm = m_pHttpRequest->GetForm ("ProfileLink.x");
+    if (pHttpForm != NULL)
+    {
+        m_iReserved = m_iEmpireKey;
+        *ppageRedirect = PROFILE_VIEWER;
+        *pbRedirected = true;
+        return OK;
+    }
+
+    if (NotifiedProfileLink()) {
+
+        pHttpForm = m_pHttpRequest->GetFormBeginsWith ("ProfileLink");
+        if (pHttpForm != NULL)
+        {
+            const char* pszProfile = pHttpForm->GetName();
+            Assert (pszProfile != NULL);
+
+            int iViewProfileEmpireKey;
+            unsigned int iHash;
+
+            if (sscanf(pszProfile, "ProfileLink.%d.%d.x", &iViewProfileEmpireKey, &iHash) == 2)
+            {
+                unsigned int iResults;
+                int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
+                if (iErrCode != OK)
+                    return iErrCode;
+
+                if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
+                {
+                    AddMessage("That empire no longer exists");
+                    *pbRedirected = false;
+                    return OK;
+                }
+
+                m_iReserved = iViewProfileEmpireKey;
+                *ppageRedirect = PROFILE_VIEWER;
+                *pbRedirected = true;
+                return OK;
+            }
+        }
+    }
+
+    if (NotifiedTournamentInvitation()) {
+
+        int iErrCode, iMessageKey;
+        unsigned int iTournamentKey;
+
+        pHttpForm = m_pHttpRequest->GetForm ("HintTournamentInvite");
+        if (pHttpForm != NULL && sscanf (pHttpForm->GetValue(), "%i.%i", &iMessageKey, &iTournamentKey) == 2)
+        {
+            if (WasButtonPressed (BID_VIEWTOURNAMENTINFORMATION)) {
+                m_iReserved = iTournamentKey;
+                *ppageRedirect = TOURNAMENTS;
+                *pbRedirected = true;
+                return OK;
+            }
+
+            iErrCode = CacheTournamentTables(&iTournamentKey, 1);
+            if (iErrCode != OK)
+                return iErrCode;
+
+            bool bAccept = WasButtonPressed (BID_ACCEPT);
+            bool bDecline = bAccept ? false : WasButtonPressed (BID_DECLINE);
+
+            if (bAccept || bDecline) {
+
+                iErrCode = RespondToTournamentInvitation(m_iEmpireKey, iMessageKey, bAccept);
+                if (iErrCode == OK)
+                {
+                    if (bAccept)
+                    {
+                        AddMessage ("You have joined the tournament");
+                    }
+                    else
+                    {
+                        AddMessage ("You have declined to join the tournament");
+                    }
+                }
+                else
+                {
+                    if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT)
+                    {
+                        AddMessage ("You are already in the tournament");
+                    }
+                    else if (iErrCode == ERROR_MESSAGE_DOES_NOT_EXIST)
+                    {
+                        AddMessage ("You have already responded to that message");
+                    }
+                    else return iErrCode;
+                }
+            }
+        }
+    }
+
+    if (NotifiedTournamentJoinRequest()) {
+
+        int iErrCode, iMessageKey;
+        unsigned int iTournamentKey;
+
+        pHttpForm = m_pHttpRequest->GetForm("HintTournamentJoinRequest");
+        if (pHttpForm != NULL && sscanf (pHttpForm->GetValue(), "%i.%i", &iMessageKey, &iTournamentKey) == 2) {
+
+            if (WasButtonPressed (BID_VIEWTOURNAMENTINFORMATION))
+            {
+                m_iReserved = iTournamentKey;
+                *ppageRedirect = TOURNAMENTS;
+                *pbRedirected = true;
+                return OK;
+            }
+
+            bool bAccept = WasButtonPressed (BID_ACCEPT);
+            bool bDecline = bAccept ? false : WasButtonPressed (BID_DECLINE);
+
+            if (bAccept || bDecline)
+            {
+                iErrCode = CacheTournamentTables(&iTournamentKey, 1);
+                if (iErrCode != OK)
+                    return iErrCode;
+
+                iErrCode = RespondToTournamentJoinRequest(m_iEmpireKey, iMessageKey, bAccept);
+                if (iErrCode == OK)
+                {
+                    if (bAccept)
+                    {
+                        AddMessage ("You have accepted the empire into the tournament");
+                    }
+                    else
+                    {
+                        AddMessage ("You have declined to accept the empire into the tournament");
+                    }
+                }
+                else
+                {
+                    if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT)
+                    {
+                        AddMessage ("The empire is already in the tournament");
+                    }
+                    else if (iErrCode == ERROR_MESSAGE_DOES_NOT_EXIST)
+                    {
+                        AddMessage ("You have already responded to that message");
+                    }
+                    else return iErrCode;
+                }
+            }
+        }
+    }
+
+    *pbRedirected = false;
+    return OK;
+}
+
+void HtmlRenderer::CloseSystemPage() {
+    
+    String strFilter;
+    
+    int iButtonKey = m_iButtonKey, iPrivilege = m_iPrivilege;
+    
+    OutputText ("<p>");
+    WriteSeparatorString (m_iSeparatorKey);
+    OutputText ("<p>");
+    
+    if (m_bRepeatedButtons) {
+        WriteSystemButtons (iButtonKey, iPrivilege);
+    }
+    
+    WriteContactLine();
+    
+    if (m_pgPageId != LOGIN && m_pgPageId != NEW_EMPIRE) {
+        
+        OutputText ("<p>");
+        
+        WriteButton (BID_SERVERNEWS);
+        WriteButton (BID_SERVERINFORMATION);
+        WriteButton (BID_DOCUMENTATION);
+
+        OutputText ("<br>");
+
+        WriteButton (BID_CONTRIBUTIONS);
+        WriteButton (BID_CREDITS);
+        WriteButton (BID_TOS);
+    }
+    
+    OutputText("<p><strong><font size=\"3\">");
+    WriteVersionString();
+    
+    OutputText("<br>Script time: ");
+    MilliSeconds msTime = GetTimerCount();
+    m_pHttpResponse->WriteText((int) msTime);
+    OutputText(" ms</font></strong>");
+
+    OutputText("</center></form></body></html>");
+    OnPageRender(msTime);
+}
+
+int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected)
+{
+    int iErrCode;
+    bool bFlag;
+    
+    IHttpForm* pHttpForm;
+
+    Assert (m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
+    
+    /*if (WasButtonPressed (PageButtonId[m_pgPageId])) {
+        goto False;
+    }*/
+
+    if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
+
+        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE) {
+            goto False;
+        }
+
+        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE) {
+            *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
+            goto True;
+        }
+        goto False;
+    }
+
+    if (m_bRedirection) {
+        goto False;
+    }
+
+    if (WasButtonPressed (BID_INFO)) {
+        *ppageRedirect = INFO;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_BUILD)) {
+        *ppageRedirect = BUILD;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_TECH)) {
+        *ppageRedirect = TECH;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_OPTIONS)) {
+        *ppageRedirect = OPTIONS;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_SHIPS)) {
+        *ppageRedirect = SHIPS;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_PLANETS)) {
+        *ppageRedirect = PLANETS;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_MAP)) {
+        *ppageRedirect = MAP;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_DIPLOMACY)) {
+        *ppageRedirect = DIPLOMACY;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_ENDTURN)) {
+
+        if (m_iNumNewUpdates == m_iNumOldUpdates) {
+        
+            // End turn
+            iErrCode = SetEmpireReadyForUpdate(m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+            if (iErrCode != OK)
+                return iErrCode;
+            
+            // Redirect to same page
+            if (bFlag)
+            {
+                AddMessage ("You are now ready for an update");
+            }
+            *ppageRedirect = m_pgPageId;
+            goto True;
+        
+        }
+        else
+        {
+            // Tell empire that his end turn didn't work
+            AddMessage ("Your end turn was too late");
+            goto False;
+        }
+    }
+    
+    if (WasButtonPressed (BID_UNENDTURN))
+    {
+        if (m_iNumNewUpdates == m_iNumOldUpdates)
+        {
+            // Unend turn
+            iErrCode = SetEmpireNotReadyForUpdate(m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+            if (iErrCode != OK)
+                return iErrCode;
+
+            // Redirect to same page
+            if (bFlag)
+            {
+                AddMessage ("You are no longer ready for an update");
+            }
+            *ppageRedirect = m_pgPageId;
+            goto True;
+
+        } else {
+
+            // Tell empire that his end turn didn't work
+            AddMessage ("Your unend turn was too late");
+            goto False;
+        }
+    }
+    
+    if (WasButtonPressed (BID_EXIT)) {
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_QUIT)) {
+        m_iReserved = BID_QUIT;
+        *ppageRedirect = QUIT;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_SERVERINFORMATION)) {
+        *ppageRedirect = GAME_SERVER_INFORMATION;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_DOCUMENTATION)) {
+        *ppageRedirect = GAME_DOCUMENTATION;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_SERVERNEWS)) {
+        *ppageRedirect = GAME_NEWS;
+        goto True;
+    }
+
+    if (WasButtonPressed (BID_CONTRIBUTIONS)) {
+        *ppageRedirect = GAME_CONTRIBUTIONS;
+        goto True;
+    }
+    
+    if (WasButtonPressed (BID_CREDITS)) {
+        *ppageRedirect = GAME_CREDITS;
+        goto True;
+    }
+
+    if (WasButtonPressed (BID_TOS)) {
+        *ppageRedirect = GAME_TERMS_OF_SERVICE;
+        goto True;
+    }
+    
+    pHttpForm = m_pHttpRequest->GetForm ("ProfileLink.x");
+    if (pHttpForm != NULL)
+    {
+        m_iReserved = m_iEmpireKey;
+        *ppageRedirect = GAME_PROFILE_VIEWER;
+        goto True;
+    }
+    
+    if (NotifiedProfileLink()) {
+
+        pHttpForm = m_pHttpRequest->GetFormBeginsWith ("ProfileLink");
+        if (pHttpForm != NULL)
+        {
+            const char* pszProfile = pHttpForm->GetName();
+            Assert (pszProfile != NULL);
+
+            int iViewProfileEmpireKey;
+            unsigned int iHash;
+
+            if (sscanf(pszProfile, "ProfileLink.%d.%d.x", &iViewProfileEmpireKey, &iHash) == 2)
+            {
+                unsigned int iResults;
+                int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
+                if (iErrCode != OK)
+                    return iErrCode;
+
+                if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
+                {
+                    AddMessage("That empire no longer exists");
+                    goto False;
+                }
+
+                m_iReserved = iViewProfileEmpireKey;
+                *ppageRedirect = GAME_PROFILE_VIEWER;
+                goto True;
+            }
+        }
+    }
+
+False:
+
+    *pbRedirected = false;
+    return OK;
+    
+True:
+    
+    *pbRedirected = true;
+    return OK;
+}

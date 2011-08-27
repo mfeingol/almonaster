@@ -475,8 +475,10 @@ if (m_bOwnPost && !m_bRedirection) {
 Redirection:
 if (m_bRedirectTest)
 {
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmitGame (&pageRedirect))
+    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
@@ -499,7 +501,10 @@ case 1:
 
     bool bExists;
     iErrCode = DoesEmpireExist (iTargetEmpireKey, &bExists, NULL);
-    if (iErrCode != OK || !bExists) {
+    if (iErrCode != OK)
+        return iErrCode;
+
+    if (!bExists) {
         %><p>That empire no longer exists<%
     } else {
         WriteProfile (m_iEmpireKey, iTargetEmpireKey, false, false, true); 
@@ -540,8 +545,8 @@ case 4:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check (GetGameClassName (iGameClassKey, pszGameClassName));
-    Check (GetNextGameNumber (iGameClassKey, &iGameNumber));
+    Check(GetGameClassName (iGameClassKey, pszGameClassName));
+    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
 
     %><input type="hidden" name="ProfilePage" value="4"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
@@ -568,7 +573,7 @@ case 5:
     %><input type="hidden" name="TargetEmpireKey" value="<% Write (iTargetEmpireKey); %>"><%
 
     Assert (iTargetEmpireKey != NO_KEY);
-    WritePersonalTournaments (iTargetEmpireKey);
+    Check(WritePersonalTournaments(iTargetEmpireKey));
 
     break;
 

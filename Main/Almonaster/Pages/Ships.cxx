@@ -54,8 +54,10 @@ if (m_bOwnPost && !m_bRedirection) {
 
 if (m_bRedirectTest)
 {
+    bool bRedirected;
     PageId pageRedirect;
-    if (RedirectOnSubmitGame (&pageRedirect))
+    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    if (bRedirected)
     {
         return Redirect (pageRedirect);
     }

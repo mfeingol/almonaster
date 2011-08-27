@@ -367,6 +367,7 @@ protected:
     unsigned int m_iEmpireKey;
     unsigned int m_iGameClass;
     int m_iGameNumber;
+    unsigned int m_iTournamentKey;
     unsigned int m_iButtonKey;
     unsigned int m_iBackgroundKey;
     unsigned int m_iSeparatorKey;
@@ -462,6 +463,8 @@ protected:
     TableCacheEntryColumn m_systemEmpireActiveGamesCol;
     TableCacheEntryColumn m_systemEmpireTournamentsCol;
     TableCacheEntryColumn m_systemEmpireNukeListCol;
+    TableCacheEntryColumn m_systemTournamentEmpiresCol;
+    TableCacheEntryColumn m_systemTournamentTeamsCol;
 
 public:
 
@@ -560,7 +563,7 @@ public:
 
     void HashIPAddress (const char* pszIPAddress, char* pszHashedIPAddress);
 
-    bool RedirectOnSubmit (PageId* ppageRedirect);
+    int RedirectOnSubmit (PageId* ppageRedirect, bool* pbRedirected);
 
     void WriteTime (Seconds sNumSeconds);
     int ConvertTime (Seconds sNumSeconds, char pszTime[MAX_HTML_TIME_LENGTH]);
@@ -643,7 +646,7 @@ public:
     int ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsigned int iTournamentKey);
 
     void WriteTournamentAdministrator (int iEmpireKey);
-    void WriteAdministerTournament (unsigned int iTournamentKey);
+    int WriteAdministerTournament(unsigned int iTournamentKey);
 
     void WriteAdministerTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);
 
@@ -655,7 +658,7 @@ public:
     void WriteGameTitleString();
     int WriteGameHeaderString();
     
-    bool RedirectOnSubmitGame (PageId* ppageRedirect);
+    int RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected);
 
     void CloseGamePage();
 
@@ -723,10 +726,10 @@ public:
     int GetGoodBadResourceLimits (int iGameClass, int iGameNumber, int* piGoodAg, int* piBadAg, int* piGoodMin,
         int* piBadMin, int* piGoodFuel, int* piBadFuel);
 
-    void WriteNukeHistory (int iTargetEmpireKey);
-    void WritePersonalGameClasses (int iTargetEmpireKey);
-    void WritePersonalTournaments (int iTargetEmpireKey);
-    void WritePersonalTournaments();
+    void WriteNukeHistory(int iTargetEmpireKey);
+    void WritePersonalGameClasses(int iTargetEmpireKey);
+    int WritePersonalTournaments(int iTargetEmpireKey);
+    int WritePersonalTournaments();
 
     void WriteGameAdministratorGameData (const char* pszGameClassName, 
         int iGameNumber, Seconds iSeconds, Seconds iSecondsUntil, int iNumUpdates, bool bOpen, bool bPaused, 
@@ -833,10 +836,10 @@ public:
     void WriteAdministerGame (int iGameClass, int iGameNumber, bool bAdmin);
 
     // Tournaments
-    void RenderTournaments(const Variant* pvTournamentKey, unsigned int iTournaments, bool bSingleOwner);
-    void RenderTournaments(const unsigned int* piTournamentKey, unsigned int iTournaments, bool bSingleOwner);
+    int RenderTournaments(const Variant* pvTournamentKey, unsigned int iTournaments, bool bSingleOwner);
+    int RenderTournaments(const unsigned int* piTournamentKey, unsigned int iTournaments, bool bSingleOwner);
     void RenderTournamentSimple(unsigned int iTournamentKey, bool bSingleOwner);
-    void RenderTournamentDetailed(unsigned int iTournamentKey);
+    int RenderTournamentDetailed(unsigned int iTournamentKey);
 
     void RenderEmpire (unsigned int iTournamentKey, int iEmpireKey);
 

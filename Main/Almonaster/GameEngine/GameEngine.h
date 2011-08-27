@@ -999,8 +999,7 @@ public:
     int IsGameAdminPaused (int iGameClass, int iGameNumber, bool* pbAdminPaused);
     int IsSpectatorGame (int iGameClass, int iGameNumber, bool* pbSpectatorGame);
 
-    int AddToLatestGames (const Variant* pvColumns, unsigned int iTournamentKey);
-    int AddToLatestGames (const char* pszTable, const TemplateDescription& ttTemplate, const Variant* pvColumns);
+    int AddToLatestGames(const Variant* pvColumns);
 
     void GetGameClassGameNumber (const char* pszGameData, int* piGameClass, int* piGameNumber);
     void GetGameClassGameNumber (int iGameClass, int iGameNumber, char* pszGameData);
@@ -1083,6 +1082,11 @@ public:
     int CacheEmpire(unsigned int iEmpireKey, unsigned int* piResults);
     int CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires);
     int CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires, unsigned int* piResults);
+    int CacheEmpireAndMessages(unsigned int iEmpireKey);
+    int CacheEmpireMessagesAndTournaments(unsigned int iEmpireKey);
+    int CacheEmpireForDeletion(unsigned int iEmpireKey);
+    int CacheTournamentTables(unsigned int* piTournamentKey, unsigned int iNumTournaments);
+
     int LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey);
     int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName);
 

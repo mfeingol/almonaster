@@ -634,15 +634,46 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournamentTeams::Sizes) == SystemTournamentTeams::NumColumns);
     Assert(countof(SystemTournamentTeams::ColumnNames) == SystemTournamentTeams::NumColumns);
 
+    pszTable = SYSTEM_TOURNAMENT_TEAMS;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+
     // SystemTournamentEmpires
     Assert(countof(SystemTournamentEmpires::Types) == SystemTournamentEmpires::NumColumns);
     Assert(countof(SystemTournamentEmpires::Sizes) == SystemTournamentEmpires::NumColumns);
     Assert(countof(SystemTournamentEmpires::ColumnNames) == SystemTournamentEmpires::NumColumns);
 
-    // SystemTournamentActiveGames
-    Assert(countof(SystemTournamentActiveGames::Types) == SystemTournamentActiveGames::NumColumns);
-    Assert(countof(SystemTournamentActiveGames::Sizes) == SystemTournamentActiveGames::NumColumns);
-    Assert(countof(SystemTournamentActiveGames::ColumnNames) == SystemTournamentActiveGames::NumColumns);
+    pszTable = SYSTEM_TOURNAMENT_EMPIRES;
+    if (t_pConn->DoesTableExist(pszTable))
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
+    else
+    {
+        if (bNewDatabase)
+        {
+            bGoodDatabase = false;
+            goto Cleanup;
+        }
+    }
 
     // SystemEmpireTournaments
     Assert(countof(SystemEmpireTournaments::Types) == SystemEmpireTournaments::NumColumns);
@@ -1607,13 +1638,6 @@ int GameEngine::CreateDefaultSystemTables() {
         return iErrCode;
     }
 
-    // Create SystemTournaments table
-    iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENTS, SystemTournaments::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
     // Create SystemChatroomData table
     iErrCode = t_pCache->CreateTable(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template);
     if (iErrCode != OK) {
@@ -1637,6 +1661,27 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemEmpireTournaments table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_TOURNAMENTS, SystemEmpireTournaments::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemTournaments table
+    iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENTS, SystemTournaments::Template);
+    if (iErrCode != OK) {
+        Assert(false);
+        return iErrCode;
+    }
+
+    // Create SystemTournamentEmpires table
+    iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENT_EMPIRES, SystemTournamentEmpires::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemTournamentTeams table
+    iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENT_TEAMS, SystemTournamentTeams::Template);
     if (iErrCode != OK)
     {
         return iErrCode;
