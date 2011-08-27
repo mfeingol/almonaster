@@ -68,7 +68,7 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
     unsigned int iKey;
     Variant vTeamKey;
 
-    SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
+    GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
 
     iErrCode = t_pCache->GetFirstKey(pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode != OK) {
@@ -89,7 +89,7 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
 
     if (vTeamKey.GetInteger() != NO_KEY) {
 
-        SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
+        GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
         iErrCode = t_pCache->Increment(pszTeams, vTeamKey.GetInteger(), s_pszTeamColumn [event], 1);
         if (iErrCode != OK) {

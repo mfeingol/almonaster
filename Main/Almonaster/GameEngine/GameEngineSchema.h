@@ -16,13 +16,10 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#ifndef _GameEngineSchema_H_
-#define _GameEngineSchema_H_
+#pragma once
 
 #include "Osal/Variant.h"
-
 #include "SqlDatabase.h"
-
 #include "GameEngineStrings.h"
 
 ////////////////
@@ -1522,42 +1519,56 @@ namespace SystemThemes {
 
 #define SYSTEM_ACTIVE_GAMES "SystemActiveGames"
 
-namespace SystemActiveGames {
-
+namespace SystemActiveGames
+{
     static const char* const GameClassGameNumber = "GameClassGameNumber";
     static const char* const State = "State";
+    static const char* const TournamentKey = "TournamentKey";
 
-    enum Columns {
+    enum Columns
+    {
         iGameClassGameNumber,
-        iState
+        iState,
+        iTournamentKey,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] = 
+    {
         GameClassGameNumber,
         State,
+        TournamentKey,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
         V_STRING,
+        V_INT,
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
         VARIABLE_LENGTH_STRING,
+        0,
         0,
     };
 
-    static const char* IndexColumns[] = {
-        GameClassGameNumber
+    static const char* IndexColumns[] =
+    {
+        GameClassGameNumber,
+        TournamentKey,
     };
 
-    static unsigned int IndexFlags[] = {
+    static unsigned int IndexFlags[] = 
+    {
         INDEX_CASE_SENSITIVE,
+        0,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template = 
+    {
         "SystemActiveGames",
         NumColumns,
         (char**)ColumnNames,
@@ -1578,7 +1589,7 @@ namespace SystemActiveGames {
 
 #define SYSTEM_EMPIRE_MESSAGES "SystemEmpireMessages"
 
-#define GET_SYSTEM_EMPIRE_MESSAGES(pszBuffer, i)            \
+#define GET_SYSTEM_EMPIRE_MESSAGES(pszBuffer, i)                        \
     char pszBuffer [sizeof ("SystemEmpireMessages_EmpireKey_") + 32];   \
     sprintf (pszBuffer, "SystemEmpireMessages_EmpireKey_%i", i);
 
@@ -1849,8 +1860,8 @@ namespace SystemNukeList {
 
 #define SYSTEM_LATEST_GAMES "SystemLatestGames"
 
-namespace SystemLatestGames {
-
+namespace SystemLatestGames
+{
     static const char* const Name = "Name";
     static const char* const Number = "Number";
     static const char* const Created = "Created";
@@ -1859,8 +1870,10 @@ namespace SystemLatestGames {
     static const char* const Result = "Result";
     static const char* const Winners = "Winners";
     static const char* const Losers = "Losers";
+    static const char* const TournamentKey = "TournamentKey";
 
-    enum Columns {
+    enum Columns
+    {
         iName,
         iNumber,
         iCreated,
@@ -1869,9 +1882,11 @@ namespace SystemLatestGames {
         iResult,
         iWinners,
         iLosers,
+        iTournamentKey,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         Name,
         Number,
         Created,
@@ -1880,9 +1895,11 @@ namespace SystemLatestGames {
         Result,
         Winners,
         Losers,
+        TournamentKey,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
         V_STRING,
         V_INT,
         V_INT64,
@@ -1891,9 +1908,11 @@ namespace SystemLatestGames {
         V_INT,
         V_STRING,
         V_STRING,
+        V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
         VARIABLE_LENGTH_STRING,
         0,
         0,
@@ -1902,11 +1921,13 @@ namespace SystemLatestGames {
         0,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
+        0,
     };
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template = 
+    {
         "SystemLatestGames",
         NumColumns,
         (char**)ColumnNames,
@@ -1920,9 +1941,9 @@ namespace SystemLatestGames {
     };
 };
 
-/////////////////////////////
-// SystemEmpireActiveGames //
-/////////////////////////////
+////////////////////////////////
+// SystemEmpireActiveGames(I) //
+////////////////////////////////
 
 #define SYSTEM_EMPIRE_ACTIVE_GAMES "SystemEmpireActiveGames"
 
@@ -1953,7 +1974,8 @@ namespace SystemEmpireActiveGames
         V_STRING
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         0,
         VARIABLE_LENGTH_STRING
     };
@@ -1981,8 +2003,8 @@ namespace SystemEmpireActiveGames
 
 #define SYSTEM_TOURNAMENTS "SystemTournaments"
 
-namespace SystemTournaments {
-
+namespace SystemTournaments
+{
     static const char* const Name = "Name";
     static const char* const Description = "Description";
     static const char* const WebPage = "WebPage";
@@ -1991,7 +2013,8 @@ namespace SystemTournaments {
     static const char* const Icon = "Icon";
     static const char* const OwnerName = "OwnerName";
 
-    enum Columns {
+    enum Columns
+    {
         iName,
         iDescription,
         iWebPage,
@@ -2001,7 +2024,8 @@ namespace SystemTournaments {
         iOwnerName,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         Name,
         Description,
         WebPage,
@@ -2059,28 +2083,28 @@ namespace SystemTournaments {
 // SystemTournamentTeams(I) //
 //////////////////////////////
 
-#define SYSTEM_TOURNAMENT_TEAMS(pszBuffer, i)                   \
-                                                                \
-    char pszBuffer [sizeof ("SystemTournamentTeams") + 32];     \
-    sprintf (pszBuffer, "SystemTournamentTeams%i", i);
+#define SYSTEM_TOURNAMENT_TEAMS "SystemTournamentTeams"
 
-#define GET_SYSTEM_TOURNAMENT_TEAMS(pszBuffer, i)           \
-                                                                \
-    sprintf (pszBuffer, "SystemTournamentTeams%i", i);
+#define GET_SYSTEM_TOURNAMENT_TEAMS(pszBuffer, i)                           \
+    char pszBuffer [sizeof("SystemTournamentTeams_TournamentKey_") + 32];   \
+    sprintf (pszBuffer, "SystemTournamentTeams_TournamentKey_%i", i);
 
-namespace SystemTournamentTeams {
+namespace SystemTournamentTeams
+{
+    static const char* const TournamentKey = "TournamentKey";
+    static const char* const Name = "Name";
+    static const char* const Description = "Description";
+    static const char* const WebPage = "WebPage";
+    static const char* const Icon = "Icon";
+    static const char* const Wins = "Wins";
+    static const char* const Nukes = "Nukes";
+    static const char* const Nuked = "Nuked";
+    static const char* const Draws = "Draws";
+    static const char* const Ruins = "Ruins";
 
-    static const char* Name = "Name";
-    static const char* Description = "Description";
-    static const char* WebPage = "WebPage";
-    static const char* Icon = "Icon";
-    static const char* Wins = "Wins";
-    static const char* Nukes = "Nukes";
-    static const char* Nuked = "Nuked";
-    static const char* Draws = "Draws";
-    static const char* Ruins = "Ruins";
-
-    enum Columns {
+    enum Columns
+    {
+        iTournamentKey,
         iName,
         iDescription,
         iWebPage,
@@ -2092,7 +2116,9 @@ namespace SystemTournamentTeams {
         iRuins,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
+        TournamentKey,
         Name,
         Description,
         WebPage,
@@ -2104,7 +2130,9 @@ namespace SystemTournamentTeams {
         Ruins,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
+        V_INT,
         V_STRING,
         V_STRING,
         V_STRING,
@@ -2116,7 +2144,9 @@ namespace SystemTournamentTeams {
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
+        0,
         MAX_TOURNAMENT_TEAM_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -2130,7 +2160,8 @@ namespace SystemTournamentTeams {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template = 
+    {
         "SystemTournamentTeams",
         NumColumns,
         (char**)ColumnNames,
@@ -2148,26 +2179,26 @@ namespace SystemTournamentTeams {
 // SystemTournamentEmpires(I) //
 ////////////////////////////////
 
-#define SYSTEM_TOURNAMENT_EMPIRES(pszBuffer, i)             \
-                                                                \
-    char pszBuffer [sizeof ("SystemTournamentEmpires") + 32];   \
-    sprintf (pszBuffer, "SystemTournamentEmpires%i", i);
+#define SYSTEM_TOURNAMENT_EMPIRES "SystemTournamentEmpires"
 
-#define GET_SYSTEM_TOURNAMENT_EMPIRES(pszBuffer, i)         \
-                                                                \
-    sprintf (pszBuffer, "SystemTournamentEmpires%i", i);
+#define GET_SYSTEM_TOURNAMENT_EMPIRES(pszBuffer, i)                             \
+    char pszBuffer [sizeof ("SystemTournamentEmpires_TournamentKey_") + 32];    \
+    sprintf (pszBuffer, "SystemTournamentEmpires_TournamentKey_%i", i);
 
-namespace SystemTournamentEmpires {
+namespace SystemTournamentEmpires
+{
+    static const char* const TournamentKey = "TournamentKey";
+    static const char* const EmpireKey = "EmpireKey";
+    static const char* const TeamKey = "TeamKey";
+    static const char* const Wins = "Wins";
+    static const char* const Nukes = "Nukes";
+    static const char* const Nuked = "Nuked";
+    static const char* const Draws = "Draws";
+    static const char* const Ruins = "Ruins";
 
-    static const char* EmpireKey = "EmpireKey";
-    static const char* TeamKey = "TeamKey";
-    static const char* Wins = "Wins";
-    static const char* Nukes = "Nukes";
-    static const char* Nuked = "Nuked";
-    static const char* Draws = "Draws";
-    static const char* Ruins = "Ruins";
-
-    enum Columns {
+    enum Columns 
+    {
+        iTournamentKey,
         iEmpireKey,
         iTeamKey,
         iWins,
@@ -2177,7 +2208,9 @@ namespace SystemTournamentEmpires {
         iRuins,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] = 
+    {
+        TournamentKey,
         EmpireKey,
         TeamKey,
         Wins,
@@ -2187,7 +2220,9 @@ namespace SystemTournamentEmpires {
         Ruins,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
+        V_INT,
         V_INT,
         V_INT,
         V_INT,
@@ -2197,7 +2232,9 @@ namespace SystemTournamentEmpires {
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
+        0,
         0,
         0,
         0,
@@ -2209,7 +2246,8 @@ namespace SystemTournamentEmpires {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemTournamentEmpires",
         NumColumns,
         (char**)ColumnNames,
@@ -2223,70 +2261,6 @@ namespace SystemTournamentEmpires {
     };
 };
 
-////////////////////////////////////
-// SystemTournamentActiveGames(I) //
-////////////////////////////////////
-
-#define SYSTEM_TOURNAMENT_ACTIVE_GAMES(pszBuffer, i)                \
-                                                                    \
-    char pszBuffer [sizeof ("SystemTournamentActiveGames") + 32];   \
-    sprintf (pszBuffer, "SystemTournamentActiveGames%i", i);
-
-#define GET_SYSTEM_TOURNAMENT_ACTIVE_GAMES(pszBuffer, i)            \
-                                                                    \
-    sprintf (pszBuffer, "SystemTournamentActiveGames%i", i);
-
-namespace SystemTournamentActiveGames {
-
-    static const char* const GameClassGameNumber = "GameClassGameNumber";
-
-    enum Columns {
-        iGameClassGameNumber,
-    };
-
-    static const char* const ColumnNames[] = {
-        GameClassGameNumber,
-    };
-
-    static const VariantType Types[] = {
-        V_STRING,
-    };
-
-    static const unsigned int Sizes[] = {
-        VARIABLE_LENGTH_STRING,
-    };
-
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
-
-    static const TemplateDescription Template = {
-        "SystemTournamentActiveGames",
-        NumColumns,
-        (char**)ColumnNames,
-        (VariantType*)Types,
-        (unsigned int*)Sizes,
-        false,
-        0,
-        NULL,
-        10,
-        NULL,
-    };
-};
-
-////////////////////////////////////
-// SystemTournamentLatestGames(I) //
-////////////////////////////////////
-
-#define SYSTEM_TOURNAMENT_LATEST_GAMES(pszBuffer, i)                \
-                                                                    \
-    char pszBuffer [sizeof ("SystemTournamentLatestGames") + 32];   \
-    sprintf (pszBuffer, "SystemTournamentLatestGames%i", i);
-
-#define GET_SYSTEM_TOURNAMENT_LATEST_GAMES(pszBuffer, i)            \
-                                                                    \
-    sprintf (pszBuffer, "SystemTournamentLatestGames%i", i);
-
-#define SystemTournamentLatestGames SystemLatestGames
-
 ////////////////////////////////
 // SystemEmpireTournaments(I) //
 ////////////////////////////////
@@ -2297,8 +2271,8 @@ namespace SystemTournamentActiveGames {
     char pszBuffer[sizeof("SystemEmpireTournaments_EmpireKey_") + 32];   \
     sprintf(pszBuffer, "SystemEmpireTournaments_EmpireKey_%i", i);
 
-namespace SystemEmpireTournaments {
-    
+namespace SystemEmpireTournaments
+{
     static const char* const EmpireKey = "EmpireKey";
     static const char* const TournamentKey = "TournamentKey";
 
@@ -2339,6 +2313,63 @@ namespace SystemEmpireTournaments {
         0,
         NULL,
         10,
+        NULL,
+    };
+};
+
+////////////////////////
+// SystemChatroomData //
+////////////////////////
+
+#define SYSTEM_CHATROOM_DATA "SystemChatroomData"
+
+namespace SystemChatroomData
+{
+    static const char* const Flags = "Flags";
+    static const char* const Time = "Time";
+    static const char* const Speaker = "Speaker";
+    static const char* const Message = "Message";
+
+    enum Columns {
+        iFlags,
+        iTime,
+        iSpeaker,
+        iMessage,
+    };
+
+    static const char* const ColumnNames[] = {
+        Flags,
+        Time,
+        Speaker,
+        Message,
+    };
+    
+    static const VariantType Types[] = {
+        V_INT,
+        V_INT64,
+        V_STRING,
+        V_STRING,
+    };
+
+    static const unsigned int Sizes[] = {
+        0,
+        0,
+        MAX_EMPIRE_NAME_LENGTH,
+        VARIABLE_LENGTH_STRING,
+    };
+
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+
+    static const TemplateDescription Template = {
+        "SystemChatroomData",
+        NumColumns,
+        (char**)ColumnNames,
+        (VariantType*)Types,
+        (unsigned int*)Sizes,
+        false,
+        0,
+        NULL,
+        25,
         NULL,
     };
 };
@@ -4071,62 +4102,3 @@ namespace SystemBridierScoreEstablishedTopList {
         NULL,
     };
 };
-
-////////////////////////
-// SystemChatroomData //
-////////////////////////
-
-#define SYSTEM_CHATROOM_DATA "SystemChatroomData"
-
-namespace SystemChatroomData {
-        
-    static const char* Flags = "Flags";
-    static const char* Time = "Time";
-    static const char* Speaker = "Speaker";
-    static const char* Message = "Message";
-
-    enum Columns {
-        iFlags,
-        iTime,
-        iSpeaker,
-        iMessage,
-    };
-
-    static const char* const ColumnNames[] = {
-        Flags,
-        Time,
-        Speaker,
-        Message,
-    };
-    
-    static const VariantType Types[] = {
-        V_INT,
-        V_INT64,
-        V_STRING,
-        V_STRING,
-    };
-
-    static const unsigned int Sizes[] = {
-        0,
-        0,
-        MAX_EMPIRE_NAME_LENGTH,
-        VARIABLE_LENGTH_STRING,
-    };
-
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
-
-    static const TemplateDescription Template = {
-        "SystemChatroomData",
-        NumColumns,
-        (char**)ColumnNames,
-        (VariantType*)Types,
-        (unsigned int*)Sizes,
-        false,
-        0,
-        NULL,
-        25,
-        NULL,
-    };
-};
-
-#endif
