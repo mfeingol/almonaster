@@ -18,6 +18,7 @@ private:
     // TODOTODO - does it need to be a sorted dictionary
     gcroot<SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_keyToRows;
     gcroot<Dictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_writes;
+    gcroot<System::String^> m_ID_COLUMN_NAME;
 
     int InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows, unsigned int* piKey);
     IDictionary<System::String^, System::Object^>^ GetRow(unsigned int iKey, int* piErrCode);
@@ -27,7 +28,7 @@ public:
     CachedTable(SqlCommandManager^ cmd, BulkTableReadResult^ result, bool bCompleteTable);
 
     BulkTableReadResult^ GetResult();
-    IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ GetWrites();
+    IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ ObtainWrites();
 
     // ICachedTable
     IMPLEMENT_INTERFACE(ICachedTable);
@@ -69,10 +70,17 @@ public:
     int Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement);
     int Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue);
 
-    int WriteData(const char* pszColumn, const char* pszData);
     int WriteData(const char* pszColumn, const Variant& vData);
-    int WriteData(unsigned int iKey, const char* pszColumn, const char* pszData);
+    int WriteData(const char* pszColumn, int iData);
+    int WriteData(const char* pszColumn, float fData);
+    int WriteData(const char* pszColumn, int64 i64Data);
+    int WriteData(const char* pszColumn, const char* pszData);
+
     int WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData);
+    int WriteData(unsigned int iKey, const char* pszColumn, int iData);
+    int WriteData(unsigned int iKey, const char* pszColumn, float fData);
+    int WriteData(unsigned int iKey, const char* pszColumn, int64 i64Data);
+    int WriteData(unsigned int iKey, const char* pszColumn, const char* pszData);
 
     int WriteAnd(const char* pszColumn, unsigned int iBitField);
     int WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int iBitField);

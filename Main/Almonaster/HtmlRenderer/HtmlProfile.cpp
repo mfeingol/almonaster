@@ -20,8 +20,7 @@
 
 #include "Osal/Socket.h"
 
-
-void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons)
+int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons)
 {
     bool bCanBroadcast;
 
@@ -32,7 +31,7 @@ void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmp
     char pszHashedIPAddress [20];
     const char* pszIPAddress = NULL;
     
-    Variant* pvEmpireData = NULL;
+    Variant* pvEmpireData = NULL, * pvAssoc = NULL;
     int iErrCode, iOptions, iOptions2;
     unsigned int iNumActiveTournaments, iNumPersonalTournaments = 0, iNumUnreadMessages, iNumActiveGames, iNumPersonalGameClasses = 0;
 
@@ -41,28 +40,13 @@ void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmp
     OutputText ("\">");
 
     // Cache profile data
-    const TableCacheEntryColumn systemActiveGamesCol = { SystemEmpireActiveGames::EmpireKey, iTargetEmpireKey };
-    const TableCacheEntryColumn systemEmpireTournamentsCol = { SystemEmpireTournaments::EmpireKey, iTargetEmpireKey };
-    const TableCacheEntryColumn systemEmpireMessagesCol = { SystemEmpireMessages::EmpireKey, iTargetEmpireKey };
-    const TableCacheEntryColumn systemEmpireNukeListCol = { SystemEmpireNukeList::EmpireKey, iTargetEmpireKey };
-
-    const TableCacheEntry entries[] = 
-    {
-        { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL },
-        { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemActiveGamesCol },
-        { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol },
-        { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol },
-        { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol },
-        { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol },
-    };
-
-    iErrCode = t_pCache->Cache(entries, countof(entries));
+    iErrCode = CacheProfileData(iTargetEmpireKey);
     if (iErrCode != OK)
     {
         goto OnError;
     }
     
-    iErrCode = GetEmpireData (iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
+    iErrCode = GetEmpireData(iTargetEmpireKey, &pvEmpireData, &iNumActiveGames);    
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -91,16 +75,12 @@ void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmp
     char pszLoginTime [OS::MaxDateLength], pszCreationTime [OS::MaxDateLength];
     
     iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::iLastLoginTime].GetInteger64(), pszLoginTime);
-    if (iErrCode != OK) {
-        goto OnError;
-    }
+    Assert(iErrCode == OK);
     
     iErrCode = Time::GetDateString (pvEmpireData[SystemEmpireData::iCreationTime].GetInteger64(), pszCreationTime);
-    if (iErrCode != OK) {
-        goto OnError;
-    }
+    Assert(iErrCode == OK);
     
-    iErrCode = GetNumUnreadSystemMessages (iTargetEmpireKey, &iNumUnreadMessages);
+    iErrCode = GetNumUnreadSystemMessages(iTargetEmpireKey, &iNumUnreadMessages);
     if (iErrCode != OK) {
         goto OnError;
     }
@@ -108,7 +88,7 @@ void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmp
     // Name and alien icon
     OutputText ("<p>");
     
-    WriteEmpireIcon (
+    WriteEmpireIcon(
         pvEmpireData[SystemEmpireData::iAlienKey].GetInteger(),
         iTargetEmpireKey,
         NULL,
@@ -119,53 +99,67 @@ void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmp
     m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iName].GetCharPtr());
     OutputText ("</font><p>");
     
-    if (bShowButtons) {
+    if (bShowButtons)
+    {
+        if (!bEmpireAdmin && iEmpireKey == iTargetEmpireKey)
+        {
+            unsigned int iAssoc;
 
-        if (!bEmpireAdmin && iEmpireKey == iTargetEmpireKey) {
+            iErrCode = GetAssociations(iEmpireKey, &pvAssoc, &iAssoc);
+            if (iErrCode != OK)
+            {
+                goto OnError;
+            }
 
-            unsigned int* piAssoc, iAssoc;
-
-            iErrCode = GetAssociations (iEmpireKey, &piAssoc, &iAssoc);
-            if (iErrCode == OK && iAssoc > 0) {
+            if (iAssoc > 0)
+            {
+                iErrCode = CacheEmpires(pvAssoc, iAssoc);
+                if (iErrCode != OK)
+                {
+                    goto OnError;
+                }
 
                 char pszName [MAX_EMPIRE_NAME_LENGTH + 1];
 
                 WriteButton (BID_LOGIN);
                 OutputText (" as ");
                 
-                if (iAssoc == 1) {
-
-                    if (GetEmpireName (piAssoc[0], pszName) == OK) {
-                        m_pHttpResponse->WriteText (pszName);
-                        OutputText ("<input type=\"hidden\" name=\"Switch\" value=\"");
-                        m_pHttpResponse->WriteText (piAssoc[0]);
-                        OutputText ("\">");
+                if (iAssoc == 1)
+                {
+                    iErrCode = GetEmpireName(pvAssoc[0].GetInteger(), pszName);
+                    if (iErrCode != OK)
+                    {
+                        goto OnError;
                     }
-
-                } else {
-
+                    m_pHttpResponse->WriteText (pszName);
+                    OutputText ("<input type=\"hidden\" name=\"Switch\" value=\"");
+                    m_pHttpResponse->WriteText (pvAssoc[0].GetInteger());
+                    OutputText ("\">");
+                }
+                else
+                {
                     OutputText ("<select name=\"Switch\">");
 
-                    for (unsigned int i = 0; i < iAssoc; i ++) {
-
-                        if (GetEmpireName (piAssoc[i], pszName) == OK) {
-                            OutputText ("<option value=\"");
-                            m_pHttpResponse->WriteText (piAssoc[i]);
-                            OutputText ("\">");
-                            m_pHttpResponse->WriteText (pszName);
-                            OutputText ("</option>");
+                    for (unsigned int i = 0; i < iAssoc; i ++)
+                    {
+                        iErrCode = GetEmpireName(pvAssoc[i].GetInteger(), pszName);
+                        if (iErrCode != OK)
+                        {
+                            goto OnError;
                         }
+                        OutputText ("<option value=\"");
+                        m_pHttpResponse->WriteText(pvAssoc[i].GetInteger());
+                        OutputText ("\">");
+                        m_pHttpResponse->WriteText(pszName);
+                        OutputText ("</option>");
                     }
                     OutputText ("</select>");
                 }
                 OutputText ("<p>");
-
-                OS::HeapFree (piAssoc);
             }
         }
 
         int iNumNukes, iNumNuked;
-
         iErrCode = GetNumEmpiresInNukeHistory (iTargetEmpireKey, &iNumNukes, &iNumNuked);
         if (iErrCode != OK) {
             goto OnError;
@@ -653,17 +647,20 @@ void HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmp
         WriteButton (BID_SENDMESSAGE);
     }
     
-    t_pCache->FreeData (pvEmpireData);
-    
-    return;
-
 OnError:
 
-    if (pvEmpireData != NULL) {
-        t_pCache->FreeData (pvEmpireData);
+    if (pvAssoc)
+        t_pCache->FreeData(pvAssoc);
+
+    if (pvEmpireData)
+        t_pCache->FreeData(pvEmpireData);
+
+    if (iErrCode != OK)
+    {
+        OutputText ("<p><strong>Error ");
+        m_pHttpResponse->WriteText(iErrCode);
+        OutputText (" occurred reading data for this empire</strong>");
     }
-    
-    OutputText ("<p><strong>Error ");
-    m_pHttpResponse->WriteText (iErrCode);
-    OutputText (" occurred reading data for this empire</strong>");
+
+    return iErrCode;
 }

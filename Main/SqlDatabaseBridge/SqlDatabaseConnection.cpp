@@ -53,7 +53,7 @@ int SqlDatabaseConnection::CreateTable(const char* pszTableName, const TemplateD
     tableDesc.Columns = cols;
 
     ColumnDescription colDesc;
-    colDesc.Name = gcnew System::String(IdColumnName);
+    colDesc.Name = gcnew System::String(ID_COLUMN_NAME);
     colDesc.Type = SqlDbType::BigInt;
     colDesc.Size = 0;
     colDesc.IsPrimaryKey = true;
@@ -303,10 +303,16 @@ int SqlDatabaseConnection::GetEqualKeys(const char* pszTableName, const char* ps
     return read.GetEqualKeys(pszColumn, vData, ppiKey, piNumKeys);
 }
 
-int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
+int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
 {
     SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
-    return read.GetSearchKeys(sdSearch, ppiKey, piNumHits, piStopKey);
+    return read.GetSearchKeys(sdRange, ppiKey, piNumHits, piStopKey);
+}
+
+int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits)
+{
+    SqlDatabaseReadTable read(m_cmd, gcnew System::String(pszTableName));
+    return read.GetSearchKeys(sdRange, sdOrderBy, ppiKey, piNumHits);
 }
 
 int SqlDatabaseConnection::ReadColumnWhereEqual(const char* pszTableName, const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 

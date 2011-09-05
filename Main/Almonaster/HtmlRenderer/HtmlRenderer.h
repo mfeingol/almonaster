@@ -289,7 +289,7 @@ enum ButtonId {
     BID_TOURNAMENTS,
     BID_JOIN,
     BID_VIEWEMPIRESTOURNAMENTS,
-    BID_REBUILD,
+//    BID_REBUILD,
     BID_LOOKUP,
     BID_VIEWMINIMAP,
     BID_MINIBUILD,
@@ -458,13 +458,14 @@ protected:
     static ReadWriteLock ms_mTextFileLock;
 
     // Caching
-    String m_strGameData;
-    TableCacheEntryColumn m_systemEmpireMessagesCol;
-    TableCacheEntryColumn m_systemEmpireActiveGamesCol;
-    TableCacheEntryColumn m_systemEmpireTournamentsCol;
-    TableCacheEntryColumn m_systemEmpireNukeListCol;
-    TableCacheEntryColumn m_systemTournamentEmpiresCol;
-    TableCacheEntryColumn m_systemTournamentTeamsCol;
+    ColumnEntry m_systemEmpireCol;
+    ColumnEntry m_systemTournamentCol;
+
+    ColumnEntry m_gameCols[2];
+    ColumnEntry m_gameEmpireCols[3];
+
+    CrossJoinEntry m_crossJoinEntry;
+    CrossJoinEntry m_crossJoinEntry2;
 
 public:
 
@@ -491,7 +492,7 @@ public:
 
     int Render();
     int Redirect(PageId pageId);
-    int CacheTables(Vector<TableCacheEntry>& cache);
+    int CacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache);
 
     void ShutdownServer();
     void RestartServer();
@@ -652,7 +653,7 @@ public:
 
     int StartTournamentGame(unsigned int iTournamentKey, int iTeamOptions, bool bAdvanced);
 
-    void WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons);
+    int WriteProfile (unsigned int iEmpireKey, unsigned int iTargetEmpireKey, bool bEmpireAdmin, bool bSendMessage, bool bShowButtons);
 
     int OpenGamePage();
     void WriteGameTitleString();
@@ -726,7 +727,7 @@ public:
     int GetGoodBadResourceLimits (int iGameClass, int iGameNumber, int* piGoodAg, int* piBadAg, int* piGoodMin,
         int* piBadMin, int* piGoodFuel, int* piBadFuel);
 
-    void WriteNukeHistory(int iTargetEmpireKey);
+    int WriteNukeHistory(int iTargetEmpireKey);
     void WritePersonalGameClasses(int iTargetEmpireKey);
     int WritePersonalTournaments(int iTargetEmpireKey);
     int WritePersonalTournaments();
@@ -788,7 +789,7 @@ public:
 
     // Search interface
     int HandleSearchSubmission (
-        SearchDefinition& sd,
+        RangeSearchDefinition& sd,
 
         const char** pszFormName,
         const char** pszColName1,
@@ -802,7 +803,7 @@ public:
     void RenderSearchForms (bool fAdvanced);
 
     void RenderSearchResults (
-        SearchDefinition& sd,
+        RangeSearchDefinition& sd,
 
         const char** pszFormName,
         const char** pszColName1,
@@ -974,6 +975,49 @@ public:
     void RegisterCache_Tournaments(Vector<TableCacheEntry>& cache);
     void RegisterCache_GameTos(Vector<TableCacheEntry>& cache);
     void RegisterCache_SystemTos(Vector<TableCacheEntry>& cache);
+
+    int AfterCache_ActiveGameList();
+    int AfterCache_Login();
+    int AfterCache_NewEmpire();
+    int AfterCache_OpenGameList();
+    int AfterCache_SystemGameList();
+    int AfterCache_ProfileEditor();
+    int AfterCache_TopLists();
+    int AfterCache_ProfileViewer();
+    int AfterCache_ServerAdministrator();
+    int AfterCache_EmpireAdministrator();
+    int AfterCache_GameAdministrator();
+    int AfterCache_ThemeAdministrator();
+    int AfterCache_PersonalGameClasses();
+    int AfterCache_Chatroom();
+    int AfterCache_SystemServerRules();
+    int AfterCache_SystemFAQ();
+    int AfterCache_SystemNews();
+    int AfterCache_Info();
+    int AfterCache_Tech();
+    int AfterCache_Diplomacy();
+    int AfterCache_Map();
+    int AfterCache_Planets();
+    int AfterCache_Options();
+    int AfterCache_Build();
+    int AfterCache_Ships();
+    int AfterCache_GameServerRules();
+    int AfterCache_GameFAQ();
+    int AfterCache_GameNews();
+    int AfterCache_GameProfileViewer();
+    int AfterCache_Quit();
+    int AfterCache_LatestNukes();
+    int AfterCache_SpectatorGames();
+    int AfterCache_GameContributions();
+    int AfterCache_GameCredits();
+    int AfterCache_SystemContributions();
+    int AfterCache_SystemCredits();
+    int AfterCache_LatestGames();
+    int AfterCache_TournamentAdministrator();
+    int AfterCache_PersonalTournaments();
+    int AfterCache_Tournaments();
+    int AfterCache_GameTos();
+    int AfterCache_SystemTos();
 };
 
 #define DEFAULT_MESSAGE_FONT_SIZE           "-1"
@@ -1077,7 +1121,7 @@ public:
         m_iGameNumber = iGameNumber;                                                            \
         Check (SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
         Check (GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
-        sprintf (pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
+        sprintf(pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                        \
         return Redirect (INFO);                                                                         \
         }                                                                                               \
@@ -1133,7 +1177,7 @@ public:
         AddMessage ("Error ");                                                      \
         AppendMessage (iErrCode);                                                               \
         AppendMessage (" occurred while creating a game");                                  \
-        return Redirect (m_pgPageId);                       \
+        return iErrCode;                       \
     }
 
 #define HANDLE_ENTER_GAME_OUTPUT(iErrCode)                                                      \
@@ -1147,7 +1191,7 @@ public:
         m_iGameNumber = iGameNumber;                                                            \
         Check (SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
         Check (GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
-        sprintf (pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
+        sprintf(pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                \
         return Redirect (INFO);                                                                 \
         }                                                                                       \
@@ -1193,5 +1237,5 @@ public:
         AddMessage ("Unknown error ");                                                          \
         AppendMessage (iErrCode);                                                               \
         AppendMessage (" occurred while entering a game");                                      \
-        return Redirect (m_pgPageId);                                                           \
+        return iErrCode;                                                                        \
     }

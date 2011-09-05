@@ -496,7 +496,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
 
     if (vMax.GetInteger() == FAIR_DIPLOMACY) {
 
-        GAME_DATA (pszGameData, iGameClass, iGameNumber);
+        GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
         iErrCode = t_pCache->ReadData(
             pszGameData, 

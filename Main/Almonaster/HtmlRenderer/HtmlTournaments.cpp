@@ -917,7 +917,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     for (i = 0; i < iNumTeams; i ++) {
 
         char pszTeam [64];
-        sprintf (pszTeam, "TeamSel%i", piTeamKey[i]);
+        sprintf(pszTeam, "TeamSel%i", piTeamKey[i]);
 
         if (m_pHttpRequest->GetForm (pszTeam)) {
 
@@ -946,7 +946,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     for (i = 0; i < iNumEmpires; i ++) {
 
         char pszEmpire[64];
-        sprintf (pszEmpire, "EmpireSel%i", pvEmpireKey[i].GetInteger());
+        sprintf(pszEmpire, "EmpireSel%i", pvEmpireKey[i].GetInteger());
 
         if (m_pHttpRequest->GetForm (pszEmpire)) {
 
@@ -1174,32 +1174,7 @@ int HtmlRenderer::RenderTournaments(const Variant* pvTournamentKey, unsigned int
 
 int HtmlRenderer::RenderTournaments(const unsigned int* piTournamentKey, unsigned int iNumTournaments, bool bSingleOwner)
 {
-    int iErrCode;
-    unsigned int i;
-
-    // Cache tables for tournaments
-    TableCacheEntryColumn* pcCols = (TableCacheEntryColumn*)StackAlloc(iNumTournaments * 2 * sizeof(TableCacheEntryColumn));
-    TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumTournaments * 2 * sizeof(TableCacheEntry));
-    for (i = 0; i < iNumTournaments; i ++)
-    {
-        pcCols[i].pszColumn = SystemTournamentEmpires::TournamentKey;
-        pcCols[i].vData = piTournamentKey[i];
-
-        pcCols[i + iNumTournaments].pszColumn = SystemTournamentTeams::TournamentKey;
-        pcCols[i + iNumTournaments].vData = piTournamentKey[i];
-
-        pcEntries[i].pszTableName = SYSTEM_TOURNAMENT_EMPIRES;
-        pcEntries[i].iKey = NO_KEY;
-        pcEntries[i].iNumColumns = 1;
-        pcEntries[i].pcColumns = pcCols + i;
-
-        pcEntries[i + iNumTournaments].pszTableName = SYSTEM_TOURNAMENT_TEAMS;
-        pcEntries[i + iNumTournaments].iKey = NO_KEY;
-        pcEntries[i + iNumTournaments].iNumColumns = 1;
-        pcEntries[i + iNumTournaments].pcColumns = pcCols + i + iNumTournaments;
-    }
-
-    iErrCode = t_pCache->Cache(pcEntries, iNumTournaments * 2);
+    int iErrCode = CacheTournamentTables(piTournamentKey, iNumTournaments);
     if (iErrCode != OK)
         return iErrCode;
 
@@ -1258,7 +1233,7 @@ int HtmlRenderer::RenderTournaments(const unsigned int* piTournamentKey, unsigne
         "</tr>"
         );
 
-    for (i = 0; i < iNumTournaments; i ++)
+    for (unsigned int i = 0; i < iNumTournaments; i ++)
     {
         RenderTournamentSimple(piTournamentKey[i], bSingleOwner);
     }
@@ -1364,7 +1339,7 @@ void HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSi
         );
 
     char pszForm [40];
-    sprintf (pszForm, "ViewTourneyInfo%i", iTournamentKey);
+    sprintf(pszForm, "ViewTourneyInfo%i", iTournamentKey);
     WriteButtonString (m_iButtonKey, "ViewTournamentInformation", "View Tournament Information", pszForm);
 
     OutputText (

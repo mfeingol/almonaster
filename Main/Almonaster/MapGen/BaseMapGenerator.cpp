@@ -556,6 +556,8 @@ int BaseMapGenerator::CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLo
     unsigned int iNewPlanetIndex = m_iNumNewPlanetsCreated;
 
     // Set default values
+    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iGameClass] = m_iGameClass;
+    m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iGameNumber] = m_iGameNumber;
     m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iOwner] = iEmpireKey;
     m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iHomeWorld] = NOT_HOMEWORLD;
     m_ppvNewPlanetData[iNewPlanetIndex][GameMap::iLink] = 0;

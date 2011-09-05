@@ -1137,8 +1137,8 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
                     iErrCode = LookupEmpireByName(pszName, &iFilterEmpireKey, &vRealName, NULL);
                     if (iErrCode == OK && iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
                     {
-                        sprintf (pszFormIP, "FilterEmpireIP%i", i);
-                        sprintf (pszFormID, "FilterEmpireID%i", i);
+                        sprintf(pszFormIP, "FilterEmpireIP%i", i);
+                        sprintf(pszFormID, "FilterEmpireID%i", i);
 
                         IHttpForm* pFormIP = m_pHttpRequest->GetForm (pszFormIP);
                         IHttpForm* pFormID = m_pHttpRequest->GetForm (pszFormID);
@@ -1170,8 +1170,8 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
             }
         }
 
-        sprintf (pszFormIP, "FilterEmpireIP%i", iNumBlocks);
-        sprintf (pszFormID, "FilterEmpireID%i", iNumBlocks);
+        sprintf(pszFormIP, "FilterEmpireIP%i", iNumBlocks);
+        sprintf(pszFormID, "FilterEmpireID%i", iNumBlocks);
 
         OutputText ("Name: <input type=\"text\" name=\"FilterEmpireName\" size=\"20\" maxlength=\"");               
         m_pHttpResponse->WriteText (MAX_EMPIRE_NAME_LENGTH);
@@ -1874,8 +1874,8 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                             char pszFormIP [64];
                             char pszFormID [64];
 
-                            sprintf (pszFormIP, "FilterEmpireIP%i", i);
-                            sprintf (pszFormID, "FilterEmpireID%i", i);
+                            sprintf(pszFormIP, "FilterEmpireIP%i", i);
+                            sprintf(pszFormID, "FilterEmpireID%i", i);
 
                             IHttpForm* pFormIP = m_pHttpRequest->GetForm (pszFormIP);
                             IHttpForm* pFormID = m_pHttpRequest->GetForm (pszFormID);

@@ -926,7 +926,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 } else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred deleting the SuperClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred deleting the SuperClass", iErrCode);
                     AddMessage (pszMessage);
                 }
 
@@ -962,7 +962,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred renaming the SuperClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred renaming the SuperClass", iErrCode);
                     AddMessage (pszMessage);
                 }
 
@@ -995,7 +995,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred deleting the gameclass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred deleting the gameclass", iErrCode);
                     AddMessage (pszMessage);
                 }
                 break;
@@ -1030,7 +1030,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred undeleting the GameClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred undeleting the GameClass", iErrCode);
                     AddMessage (pszMessage);
                     }
 
@@ -1054,7 +1054,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred halting the GameClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred halting the GameClass", iErrCode);
                     AddMessage (pszMessage);
                 }
                 break;
@@ -1089,7 +1089,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred unhalting the GameClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred unhalting the GameClass", iErrCode);
                     AddMessage (pszMessage);
                     }
 
@@ -1107,7 +1107,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("All games were paused");
                 } else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred pausing all games", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred pausing all games", iErrCode);
                     AddMessage (pszMessage);
                 }
             }
@@ -1121,7 +1121,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("All games were unpaused");
                 } else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred unpausing all games", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred unpausing all games", iErrCode);
                     AddMessage (pszMessage);
                 }
             }
@@ -1135,7 +1135,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("All game update times were reset");
                 } else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred resetting update times on all games", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred resetting update times on all games", iErrCode);
                     AddMessage (pszMessage);
                 }
             }
@@ -1267,40 +1267,73 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Delete empire from game
-            if (WasButtonPressed (BID_DELETEEMPIRE)) {
-
+            if (WasButtonPressed (BID_DELETEEMPIRE))
+            {
                 pHttpForm = m_pHttpRequest->GetForm ("DeleteEmpireKey");
-                if (pHttpForm != NULL) {
-
+                if (pHttpForm != NULL)
+                {
                     int iTargetEmpireKey = pHttpForm->GetIntValue();
+                    GameCheck(CacheAllGameTables(iGameClass, iGameNumber));
 
-                    iErrCode = ERROR_FAILURE;
-                    if (!(m_iGameState & STARTED)) {
+                    if (m_iGameState & STARTED)
+                    {
+                        iErrCode = RemoveEmpireFromGame(iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                        switch (iErrCode)
+                        {
+                        case OK:
+                            AddMessage("The empire was deleted from the game");
+                            break;
 
-                        iErrCode = QuitEmpireFromGame (iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
-                        if (iErrCode == ERROR_GAME_HAS_STARTED) {
+                        case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                            AddMessage("The empire is no longer in this game");
+                            iErrCode = OK;
+                            break;
 
-                            // Try remove
-                            iErrCode = RemoveEmpireFromGame (iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
-                        }
-
-                    } else {
-
-                        if (m_iGameState & STILL_OPEN) {
-                            iErrCode = RemoveEmpireFromGame (iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                        default:
+                            return iErrCode;
                         }
                     }
-                    
-                    if (iErrCode == OK) {
-                        AddMessage ("The empire was deleted from the game");
-                    } else {
-                        AddMessage ("The empire could not be deleted from the game");
+                    else
+                    {
+                        iErrCode = QuitEmpireFromGame(iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                        switch (iErrCode)
+                        {
+                        case OK:
+                            AddMessage("The empire was deleted from the game");
+                            break;
+                        case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                            AddMessage("The empire is no longer in this game");
+                            iErrCode = OK;
+                            break;
+            
+                        case ERROR_GAME_HAS_STARTED:
+                            iErrCode = RemoveEmpireFromGame(iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                            switch (iErrCode)
+                            {
+                            case OK:
+                                AddMessage("The empire was deleted from the game");
+                                break;
+
+                            case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                                AddMessage("The empire is no longer in this game");
+                                iErrCode = OK;
+                                break;
+
+                            default:
+                               return iErrCode;
+                            }
+                            break;
+                        }
                     }
                 }
 
-                if (DoesGameExist (iGameClass, iGameNumber, &bExist) == OK && bExist) {
+                Check(DoesGameExist(iGameClass, iGameNumber, &bExist));
+                if (bExist)
+                {
                     iGameAdminPage = 3;
-                } else {
+                }
+                else
+                {
                     iGameAdminPage = 1;
                 }
 
@@ -1323,7 +1356,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             AddMessage ("The empire was restored");
                         } else {
                             char pszMessage [256];
-                            sprintf (pszMessage, "Error %i occurred restoring the empire", iErrCode);
+                            sprintf(pszMessage, "Error %i occurred restoring the empire", iErrCode);
                             AddMessage (pszMessage);
                         }
                     }
@@ -1421,6 +1454,8 @@ if (m_bOwnPost && !m_bRedirection) {
                     goto Redirection;
                 }
                 const char* pszMessage = pHttpForm->GetValue();
+
+                Check(CacheGameTablesForBroadcast(iGameClass, iGameNumber));
 
                 if ((iErrCode = BroadcastGameMessage (
                     iGameClass,
@@ -2538,7 +2573,7 @@ case 6:
 
     Variant* pvPlanetData = NULL;
 
-    GAME_MAP (pszGameMap, iGameClass, iGameNumber);
+    GET_GAME_MAP (pszGameMap, iGameClass, iGameNumber);
 
     iErrCode = HasGameStarted (iGameClass, iGameNumber, &bStarted);
     if (iErrCode != OK) {

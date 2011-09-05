@@ -57,14 +57,14 @@ if (m_bOwnPost && !m_bRedirection) {
         for (i = 0; i < iNumThemes; i ++) {
 
             // Get theme key
-            sprintf (pszForm, "ThemeKey%i", i);
+            sprintf(pszForm, "ThemeKey%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
             iThemeKey = pHttpForm->GetIntValue();
 
             // Check for delete
-            sprintf (pszForm, "DeleteTheme%i", i);
+            sprintf(pszForm, "DeleteTheme%i", i);
             iErrCode = GetButtonName (pszForm, m_iButtonKey, &strButtonName);
             if (iErrCode == OK && m_pHttpRequest->GetForm (strButtonName) != NULL) {
 
@@ -85,7 +85,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Name
-            sprintf (pszForm, "Name%i", i);
+            sprintf(pszForm, "Name%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 t_pCache->FreeData (pvThemeData);  goto Redirection;
             }
@@ -100,7 +100,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Version
-            sprintf (pszForm, "Version%i", i);
+            sprintf(pszForm, "Version%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 t_pCache->FreeData (pvThemeData);
                 goto Redirection;
@@ -116,7 +116,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // FileName
-            sprintf (pszForm, "File%i", i);
+            sprintf(pszForm, "File%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 t_pCache->FreeData (pvThemeData);
                 goto Redirection;
@@ -132,7 +132,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Author's Name
-            sprintf (pszForm, "AName%i", i);
+            sprintf(pszForm, "AName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 t_pCache->FreeData (pvThemeData);  goto Redirection;
             }
@@ -147,7 +147,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Author's Email
-            sprintf (pszForm, "AEmail%i", i);
+            sprintf(pszForm, "AEmail%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 t_pCache->FreeData (pvThemeData);  goto Redirection;
             }
@@ -162,7 +162,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Background
-            sprintf (pszForm, "BG%i", i);
+            sprintf(pszForm, "BG%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_BACKGROUND) != 0;
 
@@ -171,7 +171,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Live Planet
-            sprintf (pszForm, "LP%i", i);
+            sprintf(pszForm, "LP%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_LIVE_PLANET) != 0;
 
@@ -180,7 +180,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Dead Planet
-            sprintf (pszForm, "DP%i", i);
+            sprintf(pszForm, "DP%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_DEAD_PLANET) != 0;
 
@@ -189,7 +189,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Separator
-            sprintf (pszForm, "Sep%i", i);
+            sprintf(pszForm, "Sep%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_SEPARATOR) != 0;
 
@@ -198,7 +198,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Buttons
-            sprintf (pszForm, "Butt%i", i);
+            sprintf(pszForm, "Butt%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_BUTTONS) != 0;
 
@@ -207,7 +207,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Horz
-            sprintf (pszForm, "Horz%i", i);
+            sprintf(pszForm, "Horz%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_HORZ) != 0;
 
@@ -216,7 +216,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Vert
-            sprintf (pszForm, "Vert%i", i);
+            sprintf(pszForm, "Vert%i", i);
             bNewValue = m_pHttpRequest->GetForm (pszForm) != NULL;
             bOldValue = (pvThemeData[SystemThemes::iOptions].GetInteger() & THEME_VERT) != 0;
 
@@ -226,7 +226,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
 
             // Text color
-            sprintf (pszForm, "TextColor%i", i);
+            sprintf(pszForm, "TextColor%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -244,7 +244,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Good color
-            sprintf (pszForm, "GoodColor%i", i);
+            sprintf(pszForm, "GoodColor%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -262,7 +262,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Bad color
-            sprintf (pszForm, "BadColor%i", i);
+            sprintf(pszForm, "BadColor%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -280,7 +280,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Private color
-            sprintf (pszForm, "PrivateColor%i", i);
+            sprintf(pszForm, "PrivateColor%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -298,7 +298,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Broadcast color
-            sprintf (pszForm, "BroadcastColor%i", i);
+            sprintf(pszForm, "BroadcastColor%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -316,7 +316,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Table color
-            sprintf (pszForm, "TableColor%i", i);
+            sprintf(pszForm, "TableColor%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -334,7 +334,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Description
-            sprintf (pszForm, "Desc%i", i);
+            sprintf(pszForm, "Desc%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -749,7 +749,7 @@ if (iNumThemes > 0) {
         // Delete theme
         %><td align="center"><%
 
-        sprintf (pszDeleteTheme, "DeleteTheme%i", i);
+        sprintf(pszDeleteTheme, "DeleteTheme%i", i);
         WriteButtonString (m_iButtonKey, "DeleteTheme", "Delete Theme", pszDeleteTheme); %></td><%
 
         // Space between themes

@@ -58,36 +58,64 @@ struct DatabaseStatistics {
     FileHeapStatistics fhsTemplateStats;
 };
 
-struct SearchColumn {
-
+struct RangeSearchColumnDefinition
+{
     const char* pszColumn;
     unsigned int iFlags;
     Variant vData;
     Variant vData2;
 };
 
-struct SearchDefinition {
-
+struct RangeSearchDefinition
+{
     unsigned int iStartKey;
     unsigned int iSkipHits;
     unsigned int iMaxNumHits;
     unsigned int iNumColumns;
-    SearchColumn* pscColumns;
+    RangeSearchColumnDefinition* pscColumns;
 };
 
-struct TableCacheEntryColumn
+struct OrderByColumnDefinition
 {
     const char* pszColumn;
-    Variant vData;
+    bool bAscending;
+};
+
+struct OrderByDefinition
+{
+    unsigned int iNumColumns;
+    const OrderByColumnDefinition* pscColumns;
+};
+
+struct ColumnEntry
+{
+    const char* Name;
+    Variant Data;
+};
+
+struct TableEntry
+{
+    const char* Name;
+    unsigned int Key;
+    unsigned int NumColumns;
+    const ColumnEntry* Columns;
+};
+
+struct CrossJoinEntry
+{
+    TableEntry Table;
+    const char* LeftColumnName;
+    const char* RightColumnName;
 };
 
 struct TableCacheEntry
 {
-    const char* pszTableName;
-    unsigned int iKey;
-    unsigned int iNumColumns;
-    const TableCacheEntryColumn* pcColumns;
+    TableEntry Table;
+    const char* PartitionColumn;
+    CrossJoinEntry* CrossJoin;
 };
+
+#define ID_COLUMN_NAME "Id"
 
 //
 // Search flags
@@ -193,10 +221,17 @@ public:
     virtual int Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement) = 0;
     virtual int Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
 
-    virtual int WriteData(const char* pszColumn, const char* pszData) = 0;
     virtual int WriteData(const char* pszColumn, const Variant& vData) = 0;
-    virtual int WriteData(unsigned int iKey, const char* pszColumn, const char* pszData) = 0;
+    virtual int WriteData(const char* pszColumn, int iData) = 0;
+    virtual int WriteData(const char* pszColumn, float fData) = 0;
+    virtual int WriteData(const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteData(const char* pszColumn, const char* pszData) = 0;
+
     virtual int WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, int iData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, float fData) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteData(unsigned int iKey, const char* pszColumn, const char* pszData) = 0;
 
     virtual int WriteAnd(const char* pszColumn, unsigned int iBitField) = 0;
     virtual int WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
@@ -209,10 +244,12 @@ class ICachedTableCollection : virtual public IObject
 public:
 
     virtual int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate) = 0;
+    virtual int CreateEmpty(const char* pszTableName, const char* pszCachedTableName) = 0;
 
     virtual int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries) = 0;
     virtual int Cache(const TableCacheEntry& cCacheEntry, ICachedTable** ppTable) = 0;
 
+    virtual bool IsCached(const char* pszCacheTableName) = 0;
     virtual int GetTable(const char* pszCacheTableName, ICachedTable** ppTable) = 0;
 
     virtual int GetNumCachedRows(const char* pszCacheTableName, unsigned int* piNumRows) = 0;
@@ -245,10 +282,17 @@ public:
     virtual int Increment(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const Variant& vIncrement) = 0;
     virtual int Increment(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue) = 0;
 
-    virtual int WriteData(const char* pszCacheTableName, const char* pszColumn, const char* pszData) = 0;
     virtual int WriteData(const char* pszCacheTableName, const char* pszColumn, const Variant& vData) = 0;
-    virtual int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const char* pszData) = 0;
+    virtual int WriteData(const char* pszCacheTableName, const char* pszColumn, int iData) = 0;
+    virtual int WriteData(const char* pszCacheTableName, const char* pszColumn, float fData) = 0;
+    virtual int WriteData(const char* pszCacheTableName, const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteData(const char* pszCacheTableName, const char* pszColumn, const char* pszData) = 0;
+
     virtual int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const Variant& vData) = 0;
+    virtual int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, int iData) = 0;
+    virtual int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, float fData) = 0;
+    virtual int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, int64 i64Data) = 0;
+    virtual int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const char* pszData) = 0;
 
     virtual int WriteAnd(const char* pszCacheTableName, const char* pszColumn, unsigned int iBitField) = 0;
     virtual int WriteAnd(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField) = 0;
@@ -325,7 +369,7 @@ public:
 //    virtual int GetNextKey(unsigned int iKey, unsigned int* piNextKey) = 0;
 //
 //    virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-//    virtual int GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+//    virtual int GetSearchKeys(const RangeSearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
 //
 //    virtual int ReadData(unsigned int iKey, const char* pszColumn, int* piData) = 0;
 //    virtual int ReadData(unsigned int iKey, const char* pszColumn, float* pfData) = 0;
@@ -422,7 +466,8 @@ public:
     virtual int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows) = 0;
 
     virtual int GetFirstKey(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
-    virtual int GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+    virtual int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+    virtual int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits) = 0;
 
     //virtual int ReadData(const char* pszTableName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  
     //virtual int ReadData(const char* pszTableName, const char* pszColumn, Variant* pvData) = 0;

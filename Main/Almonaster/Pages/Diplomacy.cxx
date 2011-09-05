@@ -30,7 +30,7 @@ if (InitializeGame(&pageRedirect) != OK)
 }
 
 const char* pszColumns[] = {
-    GameEmpireDiplomacy::EmpireKey,
+    GameEmpireDiplomacy::ReferenceEmpireKey,
     GameEmpireDiplomacy::DipOffer,
     GameEmpireDiplomacy::CurrentStatus,
 };
@@ -148,9 +148,11 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
-                if (bBroadcast) {
+                if (bBroadcast)
+                {
+                    GameCheck(CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber));
 
-                    iErrCode = BroadcastGameMessage (
+                    iErrCode = BroadcastGameMessage(
                         m_iGameClass, 
                         m_iGameNumber, 
                         pszSentMessage,
@@ -173,12 +175,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("Your empire is not in that game");
                         break;
                     default:
-                        {
-                        char pszMessage [256];
-                        sprintf (pszMessage, "Error %i occurred sending your message", iErrCode);
-                        AddMessage (pszMessage);
-                        }
-                        break;
+                        return iErrCode;
                     }
 
                 } else {
@@ -289,7 +286,11 @@ if (m_bOwnPost && !m_bRedirection) {
                     String strYes, strIgnore, strNot;
                     Variant vTheEmpireName;
 
-                    for (i = 0; i < iDelayEmpireKeys; i ++) {
+                    for (i = 0; i < iDelayEmpireKeys; i ++)
+                    {
+                        iErrCode = CacheEmpiresAndGameMessages(m_iGameClass, m_iGameNumber, (unsigned int*)piDelayEmpireKey, iDelayEmpireKeys);
+                        if (iErrCode != OK)
+                            return iErrCode;
 
                         iErrCode = GetEmpireName (piDelayEmpireKey[i], &vTheEmpireName);
                         if (iErrCode != OK) {
@@ -338,14 +339,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             break;
 
                         default:
-
-                            if (strNot.IsBlank()) {
-                                strNot = vTheEmpireName.GetCharPtr();
-                            } else {
-                                strNot += ", ";
-                                strNot += vTheEmpireName.GetCharPtr();
-                            }
-                            break;
+                            return iErrCode;
                         }
                     }
 
@@ -375,19 +369,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 // Update last used, if necessary
                 if (iDefaultMessageTarget == MESSAGE_TARGET_LAST_USED) {
 
-                    iErrCode = SetLastUsedMessageTarget (
+                    GameCheck(SetLastUsedMessageTarget (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
                         iLastMessageTargetMask,
                         iNumLastUsed == 0 ? NULL : piLastMessageTargetKeyArray,
                         iNumLastUsed
-                        );
-
-                    if (iErrCode != OK) {
-                        AddMessage ("Could not set last used message target; error was ");
-                        AppendMessage (iErrCode);
-                    }
+                        ));
                 }
             }
         }
@@ -406,14 +395,14 @@ if (m_bOwnPost && !m_bRedirection) {
         for (i = 0; i < iNumDiplomaticEmpires; i ++) {
 
             // Get foe key
-            sprintf (pszForm, "FoeKey%i", i);
+            sprintf(pszForm, "FoeKey%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
             iFoeKey = pHttpForm->GetIntValue();
 
             // Ignore
-            sprintf (pszForm, "Ignore%i", i);
+            sprintf(pszForm, "Ignore%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -439,14 +428,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Get previously selected dip option
-            sprintf (pszForm, "SelectedDip%i", i);
+            sprintf(pszForm, "SelectedDip%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
             iSelectedDip = pHttpForm->GetIntValue();
 
             // Get selected dip option
-            sprintf (pszForm, "DipOffer%i", i);
+            sprintf(pszForm, "DipOffer%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -517,7 +506,7 @@ bool bPrivateMessages;
 
 Variant vKnownEmpireName, vTemp;
 
-GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, m_iGameClass, m_iGameNumber, m_iEmpireKey);
+GET_GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
 const char* pszTableColor = m_vTableColor.GetCharPtr();
 const char* pszGood = m_vGoodColor.GetCharPtr();
@@ -527,7 +516,7 @@ char pszProfile [MAX_EMPIRE_NAME_LENGTH + 128];
 
 ICachedTable* pGameEmpireTable = NULL, * pSystemEmpireDataTable = NULL;
 
-GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
+GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
 iErrCode = t_pCache->GetTable(
     pszEmpireData, 
@@ -640,7 +629,7 @@ if (iErrCode != OK) {
 }
 
 Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
-sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
+sprintf(pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
 
 iMil = GetMilitaryValue (fMil);
@@ -981,7 +970,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         }
     }
 
-    GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
+    COPY_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
 
     // Get empire data
     iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireTable);
@@ -1132,7 +1121,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     SafeRelease (pSystemEmpireDataTable);
 
     Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
-    sprintf (pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
+    sprintf(pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
     %><tr><td colspan="11">&nbsp;</td></tr><%
 
@@ -1178,7 +1167,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     %><td align="center"><%
 
-    sprintf (pszProfile, "View the profile of %s", vKnownEmpireName.GetCharPtr());
+    sprintf(pszProfile, "View the profile of %s", vKnownEmpireName.GetCharPtr());
     WriteProfileAlienString (
         iAlienKey,
         iKnownEmpireKey,

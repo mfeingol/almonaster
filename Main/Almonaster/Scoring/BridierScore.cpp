@@ -33,7 +33,7 @@ int BridierObject::IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridi
     int iErrCode;
     Variant vOptions;
 
-    GAME_DATA(pszGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA(pszGameData, iGameClass, iGameNumber);
 
     iErrCode = t_pCache->ReadData(pszGameData, GameData::Options, &vOptions);
     if (iErrCode != OK) {
@@ -232,68 +232,6 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
                 goto Cleanup;
             }
         }
-
-        if (iRankChange > 0) {
-
-            if (iNewIndex <= BRIDIER_TOPLIST_INDEX) {
-
-                iErrCode = m_pGameEngine->UpdateTopListOnIncrease (BRIDIER_SCORE, iEmpireKey);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-            }
-
-            if (iNewIndex <= BRIDIER_ESTABLISHED_TOPLIST_INDEX) {
-                
-                iErrCode = m_pGameEngine->UpdateTopListOnIncrease (BRIDIER_SCORE_ESTABLISHED, iEmpireKey);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-            }
-        }
-
-        else if (iRankChange < 0) {
-
-            iErrCode = m_pGameEngine->UpdateTopListOnDecrease (BRIDIER_SCORE, iEmpireKey);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-            
-            if (iNewIndex <= BRIDIER_TOPLIST_INDEX) {
-                
-                //
-                // This looks weird, but this empire just got his index lowered to
-                // where he qualifies for the top list - let's see if he deserves it
-                //
-                iErrCode = m_pGameEngine->UpdateTopListOnIncrease (BRIDIER_SCORE, iEmpireKey);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-            }
-            
-            iErrCode = m_pGameEngine->UpdateTopListOnDecrease (BRIDIER_SCORE_ESTABLISHED, iEmpireKey);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
-            
-            if (iNewIndex <= BRIDIER_ESTABLISHED_TOPLIST_INDEX) {
-                
-                //
-                // This looks weird, but this empire just got his index lowered to
-                // where he qualifies for the top list - let's see if he deserves it
-                //
-                iErrCode = m_pGameEngine->UpdateTopListOnIncrease (BRIDIER_SCORE_ESTABLISHED, iEmpireKey);
-                if (iErrCode != OK) {
-                    Assert (false);
-                    goto Cleanup;
-                }
-            }
-        }
     }
 
 Cleanup:
@@ -322,44 +260,6 @@ int BridierObject::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 Cleanup:
 
     return iErrCode;
-}
-
-int BridierObject::GetReplacementKeys(bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires)
-{
-    // TODOTODO - Rewrite this
-
-#ifdef _DEBUG
-    const int iMaxIndex = bEstablished ? BRIDIER_ESTABLISHED_TOPLIST_INDEX : BRIDIER_TOPLIST_INDEX;
-    Assert (pvScore == NULL || pvScore [BRIDIER_INDEX].GetInteger() <= iMaxIndex);
-#endif
-
-    SearchColumn sc [NUM_BRIDIER_COLUMNS];
-
-    sc[BRIDIER_RANK].pszColumn = SystemEmpireData::BridierRank;
-    sc[BRIDIER_RANK].iFlags = 0;
-    sc[BRIDIER_RANK].vData = pvScore != NULL ? pvScore [BRIDIER_RANK].GetInteger() : BRIDIER_MIN_RANK;
-    sc[BRIDIER_RANK].vData2 = BRIDIER_MAX_RANK;
-
-    sc[BRIDIER_INDEX].pszColumn = SystemEmpireData::BridierIndex;
-    sc[BRIDIER_INDEX].iFlags = 0;
-
-    if (bEstablished) {
-        sc[BRIDIER_INDEX].vData = BRIDIER_ESTABLISHED_TOPLIST_INDEX;
-        sc[BRIDIER_INDEX].vData2 = BRIDIER_ESTABLISHED_TOPLIST_INDEX;
-    } else {
-        sc[BRIDIER_INDEX].vData = BRIDIER_MIN_INDEX;
-        sc[BRIDIER_INDEX].vData2 = BRIDIER_TOPLIST_INDEX;
-    }
-
-    SearchDefinition sd;
-    sd.iMaxNumHits = 0;
-    sd.iSkipHits = 0;
-    sd.iStartKey = NO_KEY;
-    sd.iNumColumns = NUM_BRIDIER_COLUMNS;
-    sd.pscColumns = sc;
-
-    Assert (countof (sc) == NUM_BRIDIER_COLUMNS);
-    return t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, sd, ppiKey, piNumEmpires, NULL);
 }
 
 //
@@ -405,9 +305,9 @@ int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLose
         return iErrCode;
     }
 
-    GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
 
-    iErrCode = t_pCache->ReadColumn (pszEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+    iErrCode = t_pCache->ReadColumn(pszEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -479,7 +379,7 @@ int BridierScore::OnNukeInternal (int iGameClass, int iGameNumber, int iEmpireNu
         iNukedRankChange, iNukedIndexChange;
 
     // Get scores for players at start of game
-    GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireNuker);
+    GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireNuker);
 
     iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, pvNukerScore + BRIDIER_RANK);
     if (iErrCode != OK) {
@@ -493,7 +393,7 @@ int BridierScore::OnNukeInternal (int iGameClass, int iGameNumber, int iEmpireNu
         goto Cleanup;
     }
 
-    GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireNuked);
+    COPY_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireNuked);
 
     iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, pvNukedScore + BRIDIER_RANK);
     if (iErrCode != OK) {
@@ -558,12 +458,6 @@ int BridierScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) {
 
     return BridierObject::GetEmpireScore (iEmpireKey, pvScore);
 }
-
-int BridierScore::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
-
-    return BridierObject::GetReplacementKeys (false, pvScore, ppiKey, piNumEmpires);
-}
-
 
 //
 // BridierScoreEstablished
@@ -635,9 +529,4 @@ int BridierScoreEstablished::CompareScores (const Variant* pvLeft, const Variant
 int BridierScoreEstablished::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) {
 
     return BridierObject::GetEmpireScore (iEmpireKey, pvScore);
-}
-
-int BridierScoreEstablished::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
-
-    return BridierObject::GetReplacementKeys (true, pvScore, ppiKey, piNumEmpires);
 }

@@ -74,7 +74,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         for (i = 0; i < iNumShipTypes; i ++) {
 
-            sprintf (pszForm, "NumShips%i", i);
+            sprintf(pszForm, "NumShips%i", i);
 
             // Num ships
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
@@ -88,7 +88,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 String strFleetName, strPlanetName;
 
                 // We're building ships, so get the tech key
-                sprintf (pszForm, "TechKey%i", i);
+                sprintf(pszForm, "TechKey%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
@@ -99,7 +99,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Get the BR
-                sprintf (pszForm, "ShipBR%i", i);
+                sprintf(pszForm, "ShipBR%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
@@ -110,7 +110,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Get ship name
-                sprintf (pszForm, "ShipName%i", i);
+                sprintf(pszForm, "ShipName%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
@@ -133,21 +133,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Get location key
-                sprintf (pszForm, "ShipLocation%i", i);
+                sprintf(pszForm, "ShipLocation%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
                 iLocationKey = pHttpForm->GetIntValue();
 
                 // Get planet key
-                sprintf (pszForm, "LocPlanetKey%i", iLocationKey);
+                sprintf(pszForm, "LocPlanetKey%i", iLocationKey);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
                 iPlanetKey = pHttpForm->GetUIntValue();
 
                 // Get fleet key
-                sprintf (pszForm, "LocFleetKey%i", iLocationKey);
+                sprintf(pszForm, "LocFleetKey%i", iLocationKey);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }

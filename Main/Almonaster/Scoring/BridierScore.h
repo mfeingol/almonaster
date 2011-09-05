@@ -43,9 +43,6 @@ public:
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
 
     int UpdateBridierScore (int iEmpireKey, int iRankChange, int iIndexChange);
-
-    int GetReplacementKeys (bool bEstablished, const Variant* pvScore, unsigned int** ppiKey, 
-        unsigned int* piNumEmpires);
 };
 
 
@@ -77,7 +74,6 @@ public:
     int CompareScores (const Variant* pvLeft, const Variant* pvRight);
 
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
-    int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires);
 
 protected:
 
@@ -112,5 +108,4 @@ public:
     int CompareScores (const Variant* pvLeft, const Variant* pvRight);
 
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
-    int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires);
 };

@@ -25,14 +25,21 @@ class TableCacheCollection : public ICachedTableCollection
 {
 private:
     gcroot<SqlCommandManager^> m_cmd;
+    gcroot<System::String^> m_strID_COLUMN_NAME;
 
     HashTable<char*, CachedTable*, TableCacheHashValue, TableCacheEquals> m_htTableViews;
 
-    CachedTable* CreateEmptyTable(const char* pszCacheTableName);
+    CachedTable* CreateEmptyTable(const char* pszTableName, bool bCompleteTable);
     void InsertTable(const char* pszCacheTableName, CachedTable* pTable);
+    void InsertTableNoDup(const char* pszCacheTableName, CachedTable* pTable);
 
     int GetTable(const char* pszCacheTableName, CachedTable** ppTable);
     int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, ICachedTable** ppTable);
+
+    char* EnsureNewCacheEntry(const TableCacheEntry& entry);
+    array<BulkTableReadRequestColumn>^ ConvertToRequestColumns(const TableEntry& table);
+    void ConvertToRequest(const TableCacheEntry& entry, List<BulkTableReadRequest>^ requests);
+    void CreateTablePartitions(BulkTableReadResult^ result, const char* pszCacheEntryName, const char* pszPartitionColumn);
 
 public:
 
@@ -45,10 +52,12 @@ public:
     int Commit();
 
     int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate);
+    int CreateEmpty(const char* pszTableName, const char* pszCachedTableName);
 
     int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries);
     int Cache(const TableCacheEntry& cCacheEntry, ICachedTable** ppTable);
 
+    bool IsCached(const char* pszCacheTableName);
     int GetTable(const char* pszCacheTableName, ICachedTable** ppTable);
 
     int GetNumCachedRows(const char* pszCacheTableName, unsigned int* piNumRows);
@@ -81,10 +90,17 @@ public:
     int Increment(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const Variant& vIncrement);
     int Increment(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue);
 
-    int WriteData(const char* pszCacheTableName, const char* pszColumn, const char* pszData);
     int WriteData(const char* pszCacheTableName, const char* pszColumn, const Variant& vData);
-    int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const char* pszData);
+    int WriteData(const char* pszCacheTableName, const char* pszColumn, int iData);
+    int WriteData(const char* pszCacheTableName, const char* pszColumn, float fData);
+    int WriteData(const char* pszCacheTableName, const char* pszColumn, int64 i64Data);
+    int WriteData(const char* pszCacheTableName, const char* pszColumn, const char* pszData);
+
     int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const Variant& vData);
+    int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, int iData);
+    int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, float fData);
+    int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, int64 i64Data);
+    int WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, const char* pszData);
 
     int WriteAnd(const char* pszCacheTableName, const char* pszColumn, unsigned int iBitField);
     int WriteAnd(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, unsigned int iBitField);

@@ -205,6 +205,9 @@ case 0:
             unsigned int iSuperClassKey;
             bool bFlag;
 
+            // Cache GameData for each game
+            Check(CacheGameData(piGameClass, piGameNumber, m_iEmpireKey, iNumClosedGames));
+
             for (i = 0; i < (int)iNumClosedGames; i ++) {
 
                 iGameClass = piGameClass[i];
@@ -465,7 +468,7 @@ case 2:
     unsigned int iLivePlanetKey, iDeadPlanetKey;
     bool bTrue;
 
-    GAME_MAP (pszGameMap, iGameClassKey, iGameNumber);
+    GET_GAME_MAP (pszGameMap, iGameClassKey, iGameNumber);
 
     iErrCode = IsSpectatorGame (iGameClassKey, iGameNumber, &bTrue);
     if (iErrCode != OK) {

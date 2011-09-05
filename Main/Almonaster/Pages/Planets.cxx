@@ -72,14 +72,14 @@ if (m_bOwnPost && !m_bRedirection) {
             iUpdatePlanetKey = pHttpForm->GetUIntValue();
 
             // Get original name
-            sprintf (pszForm, "OldPlanetName%i", i);
+            sprintf(pszForm, "OldPlanetName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
             pszOldPlanetName = pHttpForm->GetValue();
 
             // Get new name
-            sprintf (pszForm, "NewPlanetName%i", i);
+            sprintf(pszForm, "NewPlanetName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -108,14 +108,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Get original MaxPop
-            sprintf (pszForm, "OldMaxPop%i", i);
+            sprintf(pszForm, "OldMaxPop%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
             iOldMaxPop = pHttpForm->GetIntValue();
 
             // Get new MaxPop
-            sprintf (pszForm, "NewMaxPop%i", i);
+            sprintf(pszForm, "NewMaxPop%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 goto Redirection;
             }
@@ -126,7 +126,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 // Get planet key
                 if (iUpdatePlanetKey == NO_KEY) {
 
-                    sprintf (pszForm, "KeyPlanet%i", i);
+                    sprintf(pszForm, "KeyPlanet%i", i);
 
                     if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                         goto Redirection;
@@ -208,7 +208,7 @@ if (bMapGenerated) {
 
     if (iNumPlanets > 0) {
 
-        GAME_MAP (strGameMap, m_iGameClass, m_iGameNumber);
+        GET_GAME_MAP (strGameMap, m_iGameClass, m_iGameNumber);
         Variant vOptions;
 
         int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;

@@ -35,7 +35,8 @@ public:
     int GetNextKey(unsigned int iKey, unsigned int* piNextKey);
 
     int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys);
-    int GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys(const RangeSearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys(const RangeSearchDefinition& sdSearch, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits);
 
     int ReadData(unsigned int iKey, const char* pszColumn, int* piData);
     int ReadData(unsigned int iKey, const char* pszColumn, float* pfData);

@@ -576,7 +576,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             ENUMERATE_SHIP_TYPES(i) {
 
-                sprintf (pszForm, "ShipName%i", i);
+                sprintf(pszForm, "ShipName%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
@@ -654,18 +654,6 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_PURGE)) {
                 m_bRedirectTest = false;
                 iServerAdminPage = 5;
-                break;
-            }
-
-            if (WasButtonPressed (BID_REBUILD)) {
-                iErrCode = RebuildTopLists();
-
-                if (iErrCode == OK) {
-                    AddMessage ("The Top Lists were rebuilt");
-                } else {
-                    AddMessage ("An unexpected error occurred: ");
-                    AppendMessage (iErrCode);
-                }
                 break;
             }
 
@@ -1354,10 +1342,6 @@ case 0:
     %><input type="text" size="4" maxlength="20" name="BridierScanSec" value="<%
     Write (sBridierScan);
     %>"> secs<%
-    %></td></tr><%
-
-    %><tr><td>Rebuild the system Top Lists:</td><td><%
-    WriteButton (BID_REBUILD);
     %></td></tr><%
 
     %><tr><td>Empire logins are:</td><td><select name="Logins"><%

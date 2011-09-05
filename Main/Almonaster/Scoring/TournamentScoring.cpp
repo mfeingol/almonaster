@@ -222,9 +222,3 @@ int TournamentScoring::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore
     Assert (false);
     return ERROR_NOT_IMPLEMENTED;
 }
-
-int TournamentScoring::GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) {
-
-    Assert (false);
-    return ERROR_NOT_IMPLEMENTED;
-}

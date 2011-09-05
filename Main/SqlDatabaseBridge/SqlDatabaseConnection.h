@@ -90,7 +90,8 @@ public:
 
     int GetFirstKey(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey);
     int GetEqualKeys(const char* pszTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys);
-    int GetSearchKeys(const char* pszTableName, const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
+    int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits);
 
     int ReadColumnWhereEqual(const char* pszTableName, const char* pszEqualColumn, const Variant& vData, 
                              const char* pszReadColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys);

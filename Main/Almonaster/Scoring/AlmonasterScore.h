@@ -64,5 +64,4 @@ public:
     int CompareScores (const Variant* pvLeft, const Variant* pvRight);
 
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
-    int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires);
 };

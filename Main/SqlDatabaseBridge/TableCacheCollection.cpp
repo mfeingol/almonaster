@@ -20,6 +20,7 @@ TableCacheCollection::TableCacheCollection(SqlCommandManager^ cmd)
     m_htTableViews(NULL, NULL)
 {
     m_cmd = cmd;
+    m_strID_COLUMN_NAME = gcnew System::String(ID_COLUMN_NAME);
 
     bool ret = m_htTableViews.Initialize(256);
     Assert(ret);
@@ -46,8 +47,8 @@ int TableCacheCollection::Commit()
     while (m_htTableViews.GetNextIterator(&htiView))
     {
         CachedTable* pTable = htiView.GetData();
-        IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ writes = pTable->GetWrites();
-        if (writes->Count > 0)
+        IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ writes = pTable->ObtainWrites();
+        if (writes && writes->Count > 0)
         {
             BulkTableWriteRequest req = { pTable->GetResult()->TableName, writes };
             requests->Add(req);
@@ -58,7 +59,7 @@ int TableCacheCollection::Commit()
     {
         try
         {
-            m_cmd->BulkWrite(requests, gcnew System::String(IdColumnName));
+            m_cmd->BulkWrite(requests, gcnew System::String(ID_COLUMN_NAME));
         }
         catch (SqlDatabaseException^)
         {
@@ -69,13 +70,13 @@ int TableCacheCollection::Commit()
 
 }
 
-CachedTable* TableCacheCollection::CreateEmptyTable(const char* pszCacheTableName)
+CachedTable* TableCacheCollection::CreateEmptyTable(const char* pszTableName, bool bCompleteTable)
 {
     BulkTableReadResult^ result = gcnew BulkTableReadResult();
-    result->TableName = gcnew System::String(pszCacheTableName);
+    result->TableName = gcnew System::String(pszTableName);
     result->Rows = gcnew List<IDictionary<System::String^, System::Object^>^>();
 
-    CachedTable* pTable = new CachedTable(m_cmd, result, true);
+    CachedTable* pTable = new CachedTable(m_cmd, result, bCompleteTable);
     Assert(pTable);
     return pTable;
 }
@@ -85,9 +86,15 @@ void TableCacheCollection::InsertTable(const char* pszCacheTableName, CachedTabl
     char* pszKey = String::StrDup(pszCacheTableName);
     Assert(pszKey);
 
-    pTable->AddRef();
+    InsertTableNoDup(pszKey, pTable);
+}
 
-    bool ret = m_htTableViews.Insert(pszKey, pTable);
+void TableCacheCollection::InsertTableNoDup(const char* pszCacheTableName, CachedTable* pTable)
+{
+    Trace("TableCacheCollection caching {0}", gcnew System::String(pszCacheTableName));
+
+    pTable->AddRef();
+    bool ret = m_htTableViews.Insert((char*)pszCacheTableName, pTable);
     Assert(ret);
 }
 
@@ -103,7 +110,7 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
     tableDesc.Columns = cols;
 
     ColumnDescription colDesc;
-    colDesc.Name = gcnew System::String(IdColumnName);
+    colDesc.Name = gcnew System::String(ID_COLUMN_NAME);
     colDesc.Type = SqlDbType::BigInt;
     colDesc.Size = 0;
     colDesc.IsPrimaryKey = true;
@@ -132,8 +139,20 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
     }
 
     // Add to cache
-    CachedTable* pTable = CreateEmptyTable(pszTableName);
+    CachedTable* pTable = CreateEmptyTable(pszTableName, true);
     InsertTable(pszTableName, pTable);
+    SafeRelease(pTable);
+
+    return OK;
+}
+
+int TableCacheCollection::CreateEmpty(const char* pszTableName, const char* pszCachedTableName)
+{
+    if (m_htTableViews.Contains((char*)pszCachedTableName))
+        return ERROR_TABLE_ALREADY_EXISTS;
+
+    CachedTable* pTable = CreateEmptyTable(pszTableName, false);
+    InsertTable(pszCachedTableName, pTable);
     SafeRelease(pTable);
 
     return OK;
@@ -151,119 +170,76 @@ int TableCacheCollection::Cache(const TableCacheEntry& cCacheEntry, ICachedTable
 
 int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, ICachedTable** ppTable)
 {
-    System::String^ strIdColumnName = gcnew System::String(IdColumnName);
-
     if (ppTable)
         *ppTable = NULL;
 
-    List<BulkTableReadRequest>^ requests = gcnew List<BulkTableReadRequest>(iNumEntries);
     char** ppszCacheEntryName = (char**)StackAlloc(iNumEntries * sizeof(char*));
-    
+    const TableCacheEntry** ppcActualCacheEntry = (const TableCacheEntry**)StackAlloc(iNumEntries * sizeof(TableCacheEntry*));
+
+    List<BulkTableReadRequest>^ requests = gcnew List<BulkTableReadRequest>(iNumEntries);
+
     unsigned int iActual = 0;
     for (unsigned int i = 0; i < iNumEntries; i ++)
     {
-        String s;
-        const char* pszTableName = pcCacheEntry[i].pszTableName;
-        unsigned int iNumColumns;
-
-        // Might already be cached
-        char* pszCacheEntryName;
-        if (pcCacheEntry[i].iKey == NO_KEY)
-        {
-            iNumColumns = pcCacheEntry[i].iNumColumns;
-            if (iNumColumns == 0)
-            {
-                pszCacheEntryName = (char*)pszTableName;
-            }
-            else
-            {
-                // TODOTODO - really?
-                s = pszTableName;
-                for (unsigned int j = 0; j < pcCacheEntry[i].iNumColumns; j ++)
-                {
-                    s += "_";
-                    s += pcCacheEntry[i].pcColumns[j].pszColumn;
-                    s += "_";
-                    s += (String)pcCacheEntry[i].pcColumns[j].vData;
-                }
-                pszCacheEntryName = s.GetCharPtr();
-            }
-        }
-        else
-        {
-            Assert(pcCacheEntry[i].iNumColumns == 0);
-            iNumColumns = 1;
-
-            pszCacheEntryName = (char*)StackAlloc((strlen(pszTableName) + 32) * sizeof(char));
-            sprintf(pszCacheEntryName, "%s%i", pszTableName, pcCacheEntry[i].iKey);
-        }
-
-        if (m_htTableViews.Contains(pszCacheEntryName))
+        char* pszEntryName = EnsureNewCacheEntry(pcCacheEntry[i]);
+        if (pszEntryName == NULL)
             continue;
 
-        array<BulkTableReadRequestColumn>^ columns = gcnew array<BulkTableReadRequestColumn>(iNumColumns);
-
-        BulkTableReadRequest request;
-        request.TableName = gcnew System::String(pszTableName);
-        request.Columns = columns;
-
-        if (pcCacheEntry[i].iKey == NO_KEY)
-        {
-            for (unsigned int j = 0; j < pcCacheEntry[i].iNumColumns; j ++)
-            {
-                columns[j].ColumnName = gcnew System::String(pcCacheEntry[i].pcColumns[j].pszColumn);
-                columns[j].ColumnValue = Convert(pcCacheEntry[i].pcColumns[j].vData);
-            }
-        }
-        else
-        {
-            columns[0].ColumnName = strIdColumnName;
-            columns[0].ColumnValue = (int64)pcCacheEntry[i].iKey;
-        }
-
-        // Add request to list
-        ppszCacheEntryName[iActual] = String::StrDup(pszCacheEntryName);
-        Assert(ppszCacheEntryName[iActual]);
-
-        requests->Add(request);
+        ppszCacheEntryName[iActual] = pszEntryName;
+        ppcActualCacheEntry[iActual] = pcCacheEntry + i;
         iActual ++;
+
+        ConvertToRequest(pcCacheEntry[i], requests);
     }
 
+    // Maybe we've already cached everything we wanted...
     if (iActual == 0)
         return OK;
 
-    IEnumerable<BulkTableReadResult^>^ results = m_cmd->BulkRead(requests);
-
-    unsigned int iKey = NO_KEY;
-    int index = 0;
-    CachedTable* pTable = NULL;
-    for each (BulkTableReadResult^ result in results)
+    // Go to the database
+    IEnumerable<BulkTableReadResult^>^ results;
+    try
     {
-        int cColumns = Enumerable::Count(requests[index].Columns);
-
-        pTable = new CachedTable(m_cmd, result, cColumns == 0);
-        Assert(pTable);
-
-        bool ret = m_htTableViews.Insert(ppszCacheEntryName[index], pTable);
-        Assert(ret);
-
-        if (cColumns > 0 && Enumerable::Count(result->Rows) == 1)
-        {
-            // One row found via column search, so allow the table to be looked up by key as well
-            iKey = (unsigned int)(int64)Enumerable::First(result->Rows)[strIdColumnName];
-
-            char* pszCacheEntryName = (char*)StackAlloc((result->TableName->Length + 32) * sizeof(char));
-            sprintf(pszCacheEntryName, "%s%i", result->TableName, iKey);
-
-            pTable->AddRef();
-            bool ret = m_htTableViews.Insert(String::StrDup(pszCacheEntryName), pTable);
-            Assert(ret);
-        }
-
-        index ++;
+        results = m_cmd->BulkRead(requests);
+    }
+    catch (SqlDatabaseException^)
+    {
+        // TODOTODO - error code?
+        return ERROR_FAILURE;
     }
 
-    // If there happens to be at most one result, and you wanted it, here it is...
+    // Process results
+    CachedTable* pTable = NULL;
+    iActual = 0;
+    for each (BulkTableReadResult^ result in results)
+    {
+        const TableCacheEntry& entry = *(ppcActualCacheEntry[iActual]);
+
+        pTable = new CachedTable(m_cmd, result, entry.Table.NumColumns == 0 && entry.CrossJoin == NULL);
+        Assert(pTable);
+
+        InsertTableNoDup(ppszCacheEntryName[iActual], pTable);
+        pTable->Release();
+
+        if (entry.PartitionColumn)
+        {
+            CreateTablePartitions(result, ppszCacheEntryName[iActual], entry.PartitionColumn);
+        }
+
+        if (entry.Table.NumColumns > 0 && Enumerable::Count(result->Rows) == 1)
+        {
+            // One row found via column search, so allow the table to be looked up by key as well
+            char* pszCacheEntryName = (char*)StackAlloc((result->TableName->Length + 32) * sizeof(char));
+            unsigned int iKey = (unsigned int)(int64)Enumerable::First(result->Rows)[m_strID_COLUMN_NAME];
+            sprintf(pszCacheEntryName, "%s_%s_%i", result->TableName, ID_COLUMN_NAME, iKey);
+
+            InsertTable(pszCacheEntryName, pTable);
+        }
+
+        iActual ++;
+    }
+
+    // If there happens to be one result, and you wanted it, here it is...
     if (ppTable && Enumerable::Count(results) <= 1)
     {
         pTable->AddRef();
@@ -271,6 +247,143 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     }
 
     return OK;
+}
+
+void TableCacheCollection::CreateTablePartitions(BulkTableReadResult^ result, const char* pszCacheEntryName, const char* pszPartitionColumn)
+{
+    Dictionary<System::Object^, BulkTableReadResult^>^ partitionedResults = gcnew Dictionary<System::Object^, BulkTableReadResult^>();
+
+    System::String^ columnName = gcnew System::String(pszPartitionColumn);
+    for each (IDictionary<System::String^, System::Object^>^ row in result->Rows)
+    {
+        System::Object^ value = row[columnName];
+
+        BulkTableReadResult^ newResult;
+        if (!partitionedResults->TryGetValue(value, newResult))
+        {
+            newResult = gcnew BulkTableReadResult();
+            newResult->TableName = result->TableName;
+            newResult->Rows = gcnew List<IDictionary<System::String^, System::Object^>^>();
+            partitionedResults[value] = newResult;
+        }
+
+        newResult->Rows->Add(row);
+    }
+
+    for each (KeyValuePair<System::Object^, BulkTableReadResult^>^ pair in partitionedResults)
+    {
+        Variant vValue;
+        Convert(pair->Key, &vValue);
+        String strValueText = vValue;
+        Assert(strValueText.GetCharPtr());
+
+        size_t cChars = strlen(pszCacheEntryName) + strlen(strValueText.GetCharPtr()) + strlen(pszCacheEntryName) + 3;
+        char* pszPartitionCacheName = (char*)OS::HeapAlloc(cChars * sizeof(char));
+        Assert(pszPartitionCacheName);
+        sprintf(pszPartitionCacheName, "%s_%s_%s", pszCacheEntryName, pszPartitionColumn, strValueText.GetCharPtr());
+
+        // We might have already processed the cache entry
+        if (m_htTableViews.Contains(pszPartitionCacheName))
+        {
+            OS::HeapFree(pszPartitionCacheName);
+        }
+        else
+        {
+            CachedTable* pTable = new CachedTable(m_cmd, pair->Value, false);
+            Assert(pTable);
+
+            InsertTableNoDup(pszPartitionCacheName, pTable);
+            SafeRelease(pTable);
+        }
+    }
+}
+
+array<BulkTableReadRequestColumn>^ TableCacheCollection::ConvertToRequestColumns(const TableEntry& table)
+{
+    array<BulkTableReadRequestColumn>^ columns;
+    
+    if (table.Key == NO_KEY)
+    {
+        columns = gcnew array<BulkTableReadRequestColumn>(table.NumColumns);
+        for (unsigned int i = 0; i < table.NumColumns; i ++)
+        {
+            columns[i].ColumnName = gcnew System::String(table.Columns[i].Name);
+            columns[i].ColumnValue = Convert(table.Columns[i].Data);
+        }
+    }
+    else if (table.Key != NO_KEY)
+    {
+        columns = gcnew array<BulkTableReadRequestColumn>(1);
+        columns[0].ColumnName = m_strID_COLUMN_NAME;
+        columns[0].ColumnValue = (int64)table.Key;
+    }
+
+    return columns;
+}
+
+void TableCacheCollection::ConvertToRequest(const TableCacheEntry& entry, List<BulkTableReadRequest>^ requests)
+{
+    BulkTableReadRequest request;
+    request.TableName = gcnew System::String(entry.Table.Name);
+    request.Columns = ConvertToRequestColumns(entry.Table);
+
+    if (entry.CrossJoin)
+    {
+        request.CrossJoin = gcnew CrossJoinRequest();
+        request.CrossJoin->TableName = gcnew System::String(entry.CrossJoin->Table.Name);
+        request.CrossJoin->LeftColumnName = entry.CrossJoin->LeftColumnName ? gcnew System::String(entry.CrossJoin->LeftColumnName) : m_strID_COLUMN_NAME;
+        request.CrossJoin->RightColumnName = gcnew System::String(entry.CrossJoin->RightColumnName);
+        request.CrossJoin->Columns = ConvertToRequestColumns(entry.CrossJoin->Table);
+    }
+
+    requests->Add(request);
+}
+
+char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry)
+{
+    String s;
+    char* pszCacheEntryName;
+
+    // Compute cache entry name
+    if (entry.Table.Key == NO_KEY)
+    {
+        if (entry.Table.NumColumns == 0)
+        {
+            pszCacheEntryName = (char*)entry.Table.Name;
+        }
+        else
+        {
+            s = entry.Table.Name;
+            for (unsigned int i = 0; i < entry.Table.NumColumns; i ++)
+            {
+                s += "_";
+                s += entry.Table.Columns[i].Name;
+                s += "_";
+                s += (String)entry.Table.Columns[i].Data;
+            }
+            pszCacheEntryName = s.GetCharPtr();
+        }
+    }
+    else
+    {
+        Assert(entry.Table.NumColumns == 0);
+
+        pszCacheEntryName = (char*)StackAlloc((strlen(entry.Table.Name) + 32) * sizeof(char));
+        sprintf(pszCacheEntryName, "%s_%s_%i", entry.Table.Name, ID_COLUMN_NAME, entry.Table.Key);
+    }
+
+    // We might have already processed the cache entry
+    if (m_htTableViews.Contains(pszCacheEntryName))
+        return NULL;
+
+    char* pszRet = String::StrDup(pszCacheEntryName);
+    Assert(pszRet);
+    return pszRet;
+}
+
+bool TableCacheCollection::IsCached(const char* pszCacheTableName)
+{
+    return m_htTableViews.Contains((char* const)pszCacheTableName);
 }
 
 int TableCacheCollection::GetTable(const char* pszCacheTableName, ICachedTable** ppTable)
@@ -559,6 +672,42 @@ int TableCacheCollection::Increment(const char* pszCacheTableName, const char* p
     return iErrCode;
 }
 
+int TableCacheCollection::WriteData(const char* pszCacheTableName, const char* pszColumn, int iData)
+{
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->WriteData(pszColumn, iData);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::WriteData(const char* pszCacheTableName, const char* pszColumn, float fData)
+{
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->WriteData(pszColumn, fData);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::WriteData(const char* pszCacheTableName, const char* pszColumn, int64 i64Data)
+{
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->WriteData(pszColumn, i64Data);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
 int TableCacheCollection::WriteData(const char* pszCacheTableName, const char* pszColumn, const char* pszData)
 {
     ICachedTable* pTable;
@@ -578,6 +727,42 @@ int TableCacheCollection::WriteData(const char* pszCacheTableName, const char* p
     if (iErrCode == OK)
     {
         iErrCode = pTable->WriteData(pszColumn, vData);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, int iData)
+{
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->WriteData(iKey, pszColumn, iData);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, float fData)
+{
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->WriteData(iKey, pszColumn, fData);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::WriteData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, int64 i64Data)
+{
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->WriteData(iKey, pszColumn, i64Data);
     }
     SafeRelease(pTable);
     return iErrCode;

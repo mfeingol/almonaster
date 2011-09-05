@@ -38,7 +38,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
 
     Variant vNumPrevUpdates;
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Get time
     UTCTime tNow;
@@ -104,12 +104,12 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             // Yes, we're going to update
             *pbUpdate = true;
 
-            for (i = 0; i < iNumNewUpdates && !bGameOver; i ++) {
-
+            for (i = 0; i < iNumNewUpdates && !bGameOver; i ++)
+            {
                 // Execute an update
                 iErrCode = RunUpdate (iGameClass, iGameNumber, ptUpdateTime[i], &bGameOver);
-                if (iErrCode != OK) {
-                    Assert (false);
+                if (iErrCode != OK)
+                {
                     goto Cleanup;
                 }
 
@@ -117,8 +117,8 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
 
                     // Break out of the loop if the game was paused
                     iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);
-                    if (iErrCode != OK) {
-                        Assert (false);
+                    if (iErrCode != OK)
+                    {
                         goto Cleanup;
                     }
 
@@ -132,8 +132,8 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             {
                 // Refresh game state
                 iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);
-                if (iErrCode != OK) {
-                    Assert (false);
+                if (iErrCode != OK)
+                {
                     goto Cleanup;
                 }
             }
@@ -146,7 +146,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
         // Check for all empires hitting end turn when game has already closed
         Variant vNumUpdated, vIdle = 0, vTemp;
 
-        GAME_EMPIRES(pszGameEmpires, iGameClass, iGameNumber);
+        GET_GAME_EMPIRES(pszGameEmpires, iGameClass, iGameNumber);
 
         // Loop until no more updates
         while (!bGameOver) {
@@ -252,7 +252,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     Seconds sUpdatePeriod;
     Seconds sFirstUpdateDelay = 0, sAfterWeekendDelay = 0;
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Get update period
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
@@ -438,7 +438,7 @@ int GameEngine::ResetAllGamesUpdateTime() {
     int iGameClass, iGameNumber;
     Variant* pvGame;
 
-    int iErrCode = t_pCache->ReadColumn (
+    int iErrCode = t_pCache->ReadColumn(
         SYSTEM_ACTIVE_GAMES,
         SystemActiveGames::GameClassGameNumber,
         NULL,
@@ -480,7 +480,7 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
     int iErrCode;
     ICachedTable* pGameData = NULL;
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     // Flush remaining updates
     bool bExists;
@@ -546,7 +546,7 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
     int iErrCode;
     Variant vOptions;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
@@ -557,7 +557,7 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
     *pbSet = (vOptions.GetInteger() & UPDATED) == 0;
     if (*pbSet) {
 
-        GAME_DATA (strGameData, iGameClass, iGameNumber);
+        GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
         
         iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, UPDATED);
         if (iErrCode != OK) {
@@ -571,13 +571,6 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
             Assert (false);
             goto Cleanup;
         }
-
-#ifdef _DEBUG
-        iErrCode = VerifyUpdatedEmpireCount (iGameClass, iGameNumber);
-        Assert (iErrCode == OK);
-        iErrCode = OK;
-#endif
-
     }
 
 Cleanup:
@@ -599,8 +592,8 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
     
     Variant vOptions;
 
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
@@ -622,13 +615,6 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
             Assert (false);
             goto Cleanup;
         }
-
-#ifdef _DEBUG
-        iErrCode = VerifyUpdatedEmpireCount (iGameClass, iGameNumber);
-        Assert (iErrCode == OK);
-        iErrCode = OK;
-#endif
-
     }
     
 Cleanup:
@@ -646,7 +632,7 @@ Cleanup:
 int GameEngine::ForceUpdate (int iGameClass, int iGameNumber) {
 
     Variant vStarted;
-    GAME_DATA (pszGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
     int iErrCode = t_pCache->ReadData(pszGameData, GameData::State, &vStarted);
 
@@ -676,7 +662,7 @@ int GameEngine::CheckAllGamesForUpdates (bool fUpdateCheckTime) {
     
     Variant* pvGame;
 
-    int iErrCode = t_pCache->ReadColumn (
+    int iErrCode = t_pCache->ReadColumn(
         SYSTEM_ACTIVE_GAMES, 
         SystemActiveGames::GameClassGameNumber,
         NULL,
@@ -767,8 +753,8 @@ int GameEngine::VerifyUpdatedEmpireCount (int iGameClass, int iGameNumber) {
     unsigned int iKey;
     Variant vEmpireKey;
 
-    GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES (pszGameEmpires, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     iKey = NO_KEY;
     while (true) {

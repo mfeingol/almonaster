@@ -24,7 +24,7 @@ int HtmlRenderer::PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGam
     ICachedTable* pMap = NULL;
     Variant vTemp;
 
-    GAME_MAP (strMap, iGameClass, iGameNumber);
+    GET_GAME_MAP (strMap, iGameClass, iGameNumber);
 
     int iErrCode = t_pCache->GetTable(strMap, &pMap);
     if (iErrCode != OK) {
@@ -66,8 +66,8 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                                 int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, 
                                 bool bInMapOrPlanets, unsigned int* piNumShips, unsigned int* piNumFleets) {
     
-    GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_SHIPS (pszShips, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
     ICachedTable* pRead = NULL;
 
@@ -132,7 +132,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
         
-        iErrCode = pRead->ReadColumn (
+        iErrCode = pRead->ReadColumn(
             GameEmpireShips::CurrentPlanet, 
             &piShipKey,
             &pvShipLoc, 
@@ -152,7 +152,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             goto Cleanup;
         }
         
-        iErrCode = pRead->ReadColumn (
+        iErrCode = pRead->ReadColumn(
             GameEmpireFleets::CurrentPlanet, 
             &piFleetKey, 
             &pvFleetLoc, 
@@ -545,10 +545,10 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 ButtonId bid;
 
                 if (bCollapsed) {
-                    sprintf (pszExpandButton, "FltClpse+%i", piFleetKey[i]);
+                    sprintf(pszExpandButton, "FltClpse+%i", piFleetKey[i]);
                     bid = BID_PLUS;
                 } else {
-                    sprintf (pszExpandButton, "FltClpse-%i", piFleetKey[i]);
+                    sprintf(pszExpandButton, "FltClpse-%i", piFleetKey[i]);
                     bid = BID_MINUS;
                 }
                 WriteButtonString (m_iButtonKey, ButtonName[bid], ButtonText[bid], pszExpandButton);
@@ -991,7 +991,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             iKey = NO_KEY;
             
             // Get old ship name
-            sprintf (pszForm, "OldShipName%i", i);
+            sprintf(pszForm, "OldShipName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
@@ -1001,7 +1001,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             }
             
             // Get new ship name
-            sprintf (pszForm, "ShipName%i", i);
+            sprintf(pszForm, "ShipName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
@@ -1021,7 +1021,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                     } else {
                         
                         // Get ship key
-                        sprintf (pszForm, "ShipKey%i", i);
+                        sprintf(pszForm, "ShipKey%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                             continue;
                         }
@@ -1040,14 +1040,14 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             }
             
             // Get old ship order
-            sprintf (pszForm, "ShipSelO%i", i);
+            sprintf(pszForm, "ShipSelO%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
             iOldOrderKey = pHttpForm->GetIntValue();
             
             // Get new ship order
-            sprintf (pszForm, "ShipOrder%i", i);
+            sprintf(pszForm, "ShipOrder%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
@@ -1061,7 +1061,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                 
                     // Get ship key if necessary
                     if (iKey == NO_KEY) {
-                        sprintf (pszForm, "ShipKey%i", i);
+                        sprintf(pszForm, "ShipKey%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                             continue;
                         }
@@ -1108,7 +1108,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             iKey = NO_KEY;
             
             // Get old fleet name
-            sprintf (pszForm, "OldFleetName%i", i);
+            sprintf(pszForm, "OldFleetName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
@@ -1118,7 +1118,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             }
             
             // Get new fleet name
-            sprintf (pszForm, "FleetName%i", i);
+            sprintf(pszForm, "FleetName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
@@ -1138,7 +1138,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                     } else {
                         
                         // Get fleet key
-                        sprintf (pszForm, "FleetKey%i", i);
+                        sprintf(pszForm, "FleetKey%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                             continue;
                         }
@@ -1157,14 +1157,14 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
             }
             
             // Get old fleet order
-            sprintf (pszForm, "FleetSelectedOrder%i", i);
+            sprintf(pszForm, "FleetSelectedOrder%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
             iOldOrderKey = pHttpForm->GetIntValue();
             
             // Get new fleet order
-            sprintf (pszForm, "FleetOrder%i", i);
+            sprintf(pszForm, "FleetOrder%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                 continue;
             }
@@ -1178,7 +1178,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
                     
                     // Get fleet key if necessary
                     if (iKey == NO_KEY) {
-                        sprintf (pszForm, "FleetKey%i", i);
+                        sprintf(pszForm, "FleetKey%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                             continue;
                         }

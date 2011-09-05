@@ -29,8 +29,8 @@ IHttpForm* pHttpForm;
 int iErrCode, iProfileViewerPage = 0;
 unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
 
-SearchColumn sc [MAX_NUM_SEARCH_COLUMNS];
-SearchDefinition sd;
+RangeSearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
+RangeSearchDefinition sd;
 sd.pscColumns = sc;
 
 const char* ppszFormName [MAX_NUM_SEARCH_COLUMNS];
@@ -111,7 +111,7 @@ SearchResults:
 
                     {
                     char pszMessage [64];
-                    sprintf (pszMessage, "Error %i occurred", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred", iErrCode);
                     AddMessage (pszMessage);
                     }
                     break;
@@ -170,14 +170,7 @@ SearchResults:
                 Variant vSentName;
                 if (pszMessage != NULL && pszTargetEmpire != NULL)
                 {
-                    const TableCacheEntryColumn col = { SystemEmpireMessages::EmpireKey, iTargetEmpireKey };
-                    const TableCacheEntry entries[] =
-                    {
-                        { SYSTEM_EMPIRE_DATA, iTargetEmpireKey, 0, NULL },
-                        { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &col },
-                    };
-
-                    iErrCode = t_pCache->Cache(entries, countof(entries));
+                    iErrCode = CacheEmpireAndMessages(iTargetEmpireKey);
                     if (iErrCode != OK)
                         return iErrCode;
 
@@ -245,36 +238,30 @@ SearchResults:
             }
 
             // Login
-            if (WasButtonPressed (BID_LOGIN)) {
-
+            if (WasButtonPressed (BID_LOGIN))
+            {
                 pHttpForm = m_pHttpRequest->GetForm ("Switch");
-                if (pHttpForm != NULL) {
-
+                if (pHttpForm != NULL)
+                {
                     unsigned int iSwitch = pHttpForm->GetIntValue();
 
                     bool bAuth;
-                    if (CheckAssociation (m_iEmpireKey, iSwitch, &bAuth) == OK && bAuth) {
-
+                    Check(CheckAssociation(m_iEmpireKey, iSwitch, &bAuth));
+                    if (bAuth)
+                    {
                         m_iReserved = 0;
                         m_i64SecretKey = 0;
-                        m_vPassword = 0;
-                        m_vEmpireName = 0;
-
+                        m_vPassword = (const char*)NULL;
+                        m_vEmpireName = (const char*)NULL;
                         m_iEmpireKey = iSwitch;
 
-                        iErrCode = HtmlLoginEmpire();
-                        if (iErrCode == OK) {
-                            iErrCode = InitializeEmpire(false);
-                            if (iErrCode == OK) {
-                                return Redirect (ACTIVE_GAME_LIST);
-                            }
-                        }
-
-                        AddMessage ("Login failed: error ");
-                        AppendMessage (iErrCode);
-
-                    } else {
-
+                        Check(CacheEmpire(iSwitch));
+                        Check(HtmlLoginEmpire());
+                        Check(InitializeEmpire(false));
+                        return Redirect (ACTIVE_GAME_LIST);
+                    }
+                    else
+                    {
                         AddMessage ("Access denied");
                     }
                 }
@@ -301,7 +288,7 @@ SearchResults:
 
                 // Check for advanced
                 char pszAdvanced [128];
-                sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
+                sprintf(pszAdvanced, "Advanced%i", iGameClassKey);
 
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
                     iProfileViewerPage = 6;
@@ -598,7 +585,7 @@ case 2:
     {
 
     %><input type="hidden" name="ProfileViewerPage" value="2"><%
-    WriteProfile (m_iEmpireKey, iTargetEmpireKey, false, true, true); 
+    Check(WriteProfile(m_iEmpireKey, iTargetEmpireKey, false, true, true)); 
     %><p><%
 
     }

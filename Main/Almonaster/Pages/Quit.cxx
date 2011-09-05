@@ -86,42 +86,52 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
     else if (WasButtonPressed (BID_QUIT)) {
 
-        if (m_iGameState & STARTED) {
+        if (m_iGameState & STARTED)
+        {
             AddMessage ("You cannot quit because the game has started");
-        } else {
-
+        }
+        else
+        {
             // Quit
-            iErrCode = QuitEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey);
-            if (iErrCode != OK) {
-                AddMessage ("You could not quit from the game; the error was ");
-                AppendMessage (iErrCode);
-            } else {
+            GameCheck(CacheAllGameTables(m_iGameClass, m_iGameNumber));
+            iErrCode = QuitEmpireFromGame(m_iGameClass, m_iGameNumber, m_iEmpireKey);
+            switch (iErrCode)
+            {
+            case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                AddMessage("You are no longer in this game");
+                return Redirect(ACTIVE_GAME_LIST);
+            
+            case ERROR_GAME_HAS_STARTED:
+                AddMessage("You cannot quit because the game has started");
+                return Redirect(ACTIVE_GAME_LIST);
 
-                pageRedirect = ACTIVE_GAME_LIST;
-                AddMessage ("You quit from ");
-                AppendMessage (m_pszGameClassName);
-                AppendMessage (" ");
-                AppendMessage (m_iGameNumber);
+            case OK:
+                AddMessage("You quit from ");
+                AppendMessage(m_pszGameClassName);
+                AppendMessage(" ");
+                AppendMessage(m_iGameNumber);
 
                 // Add to report
                 char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
-                sprintf (pszReport, "%s quit from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
+                sprintf(pszReport, "%s quit from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
                 global.GetReport()->WriteReport (pszReport);
 
                 // Make sure we still exist after quitting
                 bool bFlag;
-                iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
-
-                if (iErrCode != OK || !bFlag) {
+                GameCheck(DoesEmpireExist(m_iEmpireKey, &bFlag, NULL));
+                if (!bFlag)
+                {
                     pageRedirect = LOGIN;
-                    AddMessage ("The empire ");
-                    AppendMessage (m_vEmpireName.GetCharPtr());
-                    AppendMessage (" has been deleted");
+                    AddMessage("The empire ");
+                    AppendMessage(m_vEmpireName.GetCharPtr());
+                    AppendMessage(" has been deleted");
                 }
+                return Redirect(ACTIVE_GAME_LIST);
+
+            default:
+                return iErrCode;
             }
         }
-
-        return Redirect (pageRedirect);
     }
 
     else if (WasButtonPressed (BID_SURRENDER)) {

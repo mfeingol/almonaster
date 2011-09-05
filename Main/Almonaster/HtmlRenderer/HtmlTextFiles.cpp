@@ -27,7 +27,7 @@ void HtmlRenderer::WriteFaq() {
     OutputText ("<p>Printer-friendly documentation can be found <a href=\"" BASE_RESOURCE_DIR FAQ_FILE "\">here</a>.<p>");
     
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" FAQ_FILE, global.GetResourceDir());
+    sprintf(pszFileName, "%s/" FAQ_FILE, global.GetResourceDir());
     
     ICachedFile* pcfFaq = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFaq == NULL) {
@@ -68,7 +68,7 @@ void HtmlRenderer::WriteServerNews() {
 void HtmlRenderer::WriteContributions() {
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" CONTRIBUTIONS_FILE, global.GetResourceDir());
+    sprintf(pszFileName, "%s/" CONTRIBUTIONS_FILE, global.GetResourceDir());
 
     ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFile == NULL) {
@@ -86,7 +86,7 @@ void HtmlRenderer::WriteContributions() {
 void HtmlRenderer::WriteCredits() {
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" CREDITS_FILE, global.GetResourceDir());
+    sprintf(pszFileName, "%s/" CREDITS_FILE, global.GetResourceDir());
 
     ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFile == NULL) {
@@ -100,7 +100,7 @@ void HtmlRenderer::WriteCredits() {
 void HtmlRenderer::WriteIntro() {
     
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" INTRO_FILE, global.GetResourceDir());
+    sprintf(pszFileName, "%s/" INTRO_FILE, global.GetResourceDir());
     
     ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
     if (pcfFile == NULL) {
@@ -137,7 +137,7 @@ int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile,
     int iErrCode = OK;
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
+    sprintf(pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
 
     ms_mTextFileLock.WaitReader();
 
@@ -273,7 +273,7 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
 
     // Go ahead and update the file
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
+    sprintf(pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
 
     ms_mTextFileLock.WaitWriter();
     iErrCode = UpdateCachedFile (pszFileName, pszText);

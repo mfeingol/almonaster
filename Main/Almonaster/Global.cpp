@@ -175,7 +175,8 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     iErrCode = gameEngine.Setup();
     if (iErrCode != OK)
     {
-        m_pReport->WriteReport("Error to setup correctly");
+        m_pReport->WriteReport("Error setting up correctly");
+        goto Cleanup;
     }
 
     iErrCode = InitializeState();
@@ -191,11 +192,8 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
         m_pReport->WriteReport("Failed to initialize chatroom");
         goto Cleanup;
     }
-
-    if (iErrCode == OK)
-    {
-        iErrCode = TlsCommitTransaction();
-    }
+    
+    iErrCode = TlsCommitTransaction();
 
 Cleanup:
 

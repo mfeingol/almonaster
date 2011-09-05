@@ -588,7 +588,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iNewValue) == OK) {
 
                     char pszMessage [256];
-                    sprintf (pszMessage, "Up to %i game messages will be saved", iNewValue);
+                    sprintf(pszMessage, "Up to %i game messages will be saved", iNewValue);
                     AddMessage (pszMessage);
                 } else {
                     AddMessage ("Your max saved game messages setting could not be updated");
@@ -844,7 +844,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 for (i = 0; i < iNumTestMessages; i ++) {
 
                     // Get message key
-                    sprintf (pszForm, "MsgKey%i", i);
+                    sprintf(pszForm, "MsgKey%i", i);
                     if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                         goto Redirection;
                     }
@@ -866,11 +866,11 @@ if (m_bOwnPost && !m_bRedirection) {
                     for (i = 0; i < iNumTestMessages; i ++) {
 
                         // Get selected status of message's delete checkbox
-                        sprintf (pszForm, "DelChBx%i", i);
+                        sprintf(pszForm, "DelChBx%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) != NULL) {
 
                             // Get message key
-                            sprintf (pszForm, "MsgKey%i", i);
+                            sprintf(pszForm, "MsgKey%i", i);
                             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                                 goto Redirection;
                             }
@@ -894,7 +894,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         for (i = 0; i < iNumTestMessages; i ++) {
 
                             // Get message key
-                            sprintf (pszForm, "MsgKey%i", i);
+                            sprintf(pszForm, "MsgKey%i", i);
                             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                                 goto Redirection;
                             }
@@ -938,7 +938,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                             for (i = 0; i < iNumTestMessages; i ++) {
 
-                                sprintf (pszForm, "MsgKey%i", i);
+                                sprintf(pszForm, "MsgKey%i", i);
                                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                                     goto Redirection;
                                 }
@@ -1616,19 +1616,21 @@ case 1:
 
     %><input type="hidden" name="OptionPage" value="1"><%
 
-    if (iNumMessages == 0) {
+    if (iNumMessages == 0)
+    {
         %><p>You have no saved game messages<%
-    } else {
-
+    }
+    else
+    {
         // Sort
-        UTCTime* ptTime = (UTCTime*) StackAlloc (iNumMessages * sizeof (UTCTime));
-        int* piIndex = (int*) StackAlloc (iNumMessages * sizeof (int));
+        UTCTime* ptTime = (UTCTime*)StackAlloc(iNumMessages * sizeof(UTCTime));
+        int* piIndex = (int*)StackAlloc(iNumMessages * sizeof(int));
 
-        for (i = 0; i < iNumMessages; i ++) {
+        for (i = 0; i < iNumMessages; i ++)
+        {
             piIndex[i] = i;
             ptTime[i] = ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64();
         }
-
         Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
 
         // Display
@@ -1647,8 +1649,6 @@ case 1:
         %><input type="hidden" name="NumSavedGameMessages" value="<% Write (iNumMessages); %>"><%
 
         const char* pszFontColor = NULL;
-        char pszDate [OS::MaxDateLength];
-
         bool bSystemSent = false;
 
         for (i = 0; i < iNumMessages; i ++)
@@ -1658,53 +1658,64 @@ case 1:
             const char* pszSender = ppvMessage[piIndex[i]][GameEmpireMessages::iSourceName].GetCharPtr();
 
             %><input type="hidden" name="MsgKey<% Write (i); %>" value ="<% Write (piMessageKey[piIndex[i]]); 
-            %>"><input type="hidden" name="MsgSrc<% Write (i); %>" value ="<% Write (pszSender);
-            %>"><tr><td><strong>Time: </strong> <% 
+            %>"><input type="hidden" name="MsgSrc<% Write (i); %>" value="<% Write (pszSender); %>"><%
 
+            char pszDate [OS::MaxDateLength];
             iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][GameEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
-            if (iErrCode != OK) {
-                %>Could not read date<%
-            } else {
-                Write (pszDate);
+            Assert(iErrCode == OK);
+
+            %><tr><td><% 
+
+            if (iFlags & MESSAGE_BROADCAST)
+            {
+                %>Broadcast by <%
+            }
+            else
+            {
+                %>Sent by <%
             }
 
-            %><br><strong>Sender: </strong><%
-
-            if (iFlags & MESSAGE_SYSTEM) { 
-
+            if (iFlags & MESSAGE_SYSTEM)
+            { 
                 bSystemSent = true;
-                %><strong><% Write (SYSTEM_MESSAGE_SENDER); %></strong><%
-
-            } else {
-
-                %><strong><% Write (pszSender); %></strong><%
+                %><strong><% Write(SYSTEM_MESSAGE_SENDER); %></strong><%
+            }
+            else
+            {
+                %><strong><% Write(pszSender); %></strong><%
 
                 // Find name in lists
                 bFlag = false;
-                for (j = 0; j < iNumNames; j ++) {
-                    if (pstrNameList[j].Equals (pszSender)) {
+                for (j = 0; j < iNumNames; j ++)
+                {
+                    if (pstrNameList[j].Equals(pszSender))
+                    {
                         bFlag = true;
                         break;
                     }
                 }
 
                 // Add name to list if not found
-                if (!bFlag) {
+                if (!bFlag)
+                {
                     pstrNameList[iNumNames] = pszSender;
                     iNumNames ++;
                 }
             }
 
-            if (iFlags & MESSAGE_BROADCAST) {
-                %> (broadcast)<%
+            %> on <% Write (pszDate);
+
+            if (iFlags & MESSAGE_BROADCAST)
+            {
                 pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
-            } else {
+            }
+            else
+            {
                 pszFontColor = m_vPrivateMessageColor.GetCharPtr();
             }
 
-            %><br><strong>Delete: </strong><input type="checkbox" name="DelChBx<% Write (i); 
-            %>"></td></tr><tr><td><font size="<% Write (DEFAULT_MESSAGE_FONT_SIZE);
-            %>" face="<% Write (DEFAULT_MESSAGE_FONT); %>"<%
+            %><br><input type="checkbox" name="DelChBx<% Write(i); %>"> Delete</td></tr><%
+            %><tr><td><font size="<% Write(DEFAULT_MESSAGE_FONT_SIZE); %>" face="<% Write (DEFAULT_MESSAGE_FONT); %>"<%
 
             // Game messages from the system suffer from no special coloring
             if (!(iFlags & MESSAGE_SYSTEM)) {
@@ -1712,33 +1723,34 @@ case 1:
             }
             %>><%
 
-            WriteFormattedMessage (ppvMessage[piIndex[i]][0].GetCharPtr());
+            WriteFormattedMessage (ppvMessage[piIndex[i]][GameEmpireMessages::iText].GetCharPtr());
 
             %></font></td></tr><tr><td>&nbsp;</td></tr><%
-            %></table><p>Delete messages:<p><%
-
-            WriteButton (BID_ALL);
-            WriteButton (BID_SELECTION);
-
-            if (bSystemSent) {
-                WriteButton (BID_SYSTEM);
-            }
-
-            if (iNumNames > 0) {
-
-                WriteButton (BID_EMPIRE);
-                %><select name="SelectedEmpire"><%
-
-                for (j = 0; j < iNumNames; j ++) {
-                    %><option value="<% Write (pstrNameList[j]); %>"><% Write (pstrNameList[j]); %></option><%
-                }
-
-                %></select><%
-            }
-
-            t_pCache->FreeData (ppvMessage);
-            t_pCache->FreeKeys (piMessageKey);
         }
+        
+        %></table><p>Delete messages:<p><%
+
+        WriteButton (BID_ALL);
+        WriteButton (BID_SELECTION);
+
+        if (bSystemSent) {
+            WriteButton (BID_SYSTEM);
+        }
+
+        if (iNumNames > 0) {
+
+            WriteButton (BID_EMPIRE);
+            %><select name="SelectedEmpire"><%
+
+            for (j = 0; j < iNumNames; j ++) {
+                %><option value="<% Write (pstrNameList[j]); %>"><% Write (pstrNameList[j]); %></option><%
+            }
+
+            %></select><%
+        }
+
+        t_pCache->FreeData (ppvMessage);
+        t_pCache->FreeKeys (piMessageKey);
     }
 
     break;

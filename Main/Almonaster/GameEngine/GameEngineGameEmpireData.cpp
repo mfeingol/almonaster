@@ -19,6 +19,8 @@
 #include "GameEngine.h"
 #include "Global.h"
 
+// TODOTODO - entire module needs review for transactional error handling
+
 // Delete the player's tables from the given game:
 //
 // GameEmpireData(I.I.I)
@@ -27,394 +29,406 @@
 // GameEmpireShips(I.II)
 // GameEmpireFleets(I.I.I)
 // GameEmpireDiplomacy(I.I.I)
+//
+int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpireKey, ReasonForRemoval rReason, const GameUpdateInformation* pguInfo)
+{
+    GET_GAME_EMPIRE_DATA(strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA(strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_SHIPS(strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRES(strEmpires, iGameClass, iGameNumber);
+    GET_SYSTEM_EMPIRE_DATA(strSystemEmpireData, iEmpireKey);
 
-// TODOTODO - use Cleanup label
-
-int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey, ReasonForRemoval rReason,
-                                      const GameUpdateInformation* pguInfo) {
-
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
-    GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
-
+    ICachedTable* pEmpireActiveGames = NULL;
     Variant vOptions, vGameState, vTemp;
 
-    char strGameEmpireData [256];
+    Variant* pvPlanetKey = NULL, * pvData = NULL, * pvEmpireKey = NULL;
+    unsigned int* piShipKey = NULL, * piPlanetKey = NULL;
 
     // Independence?
     Variant vGameClassOptions;
-    int iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::Options, 
-        &vGameClassOptions
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    int iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     bool bIndependence = (vGameClassOptions.GetInteger() & INDEPENDENCE) != 0;
     bool bPermanentAlliances = (vGameClassOptions.GetInteger() & PERMANENT_ALLIANCES) != 0;
 
     // Get game state
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vGameState);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // Get empire's game options
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vOptions);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // Handle num updated
-    if (vOptions.GetInteger() & UPDATED) {
-
+    if (vOptions.GetInteger() & UPDATED)
+    {
         iErrCode = t_pCache->Increment(strGameData, GameData::NumEmpiresUpdated, -1, &vTemp);
-        Assert (iErrCode == OK);
+        if (iErrCode != OK)
+            goto Cleanup;
     }
 
     // Handle num paused
-    if (vOptions.GetInteger() & REQUEST_PAUSE) {
-        
+    if (vOptions.GetInteger() & REQUEST_PAUSE)
+    {
         // Decrement number of paused empires
         iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingPause, -1);
-        Assert (iErrCode == OK);
+        if (iErrCode != OK)
+            goto Cleanup;
     }
 
     // Handle num drawing
-    if (vOptions.GetInteger() & REQUEST_DRAW) {
+    if (vOptions.GetInteger() & REQUEST_DRAW)
+    {
         iErrCode = t_pCache->Increment(strGameData, GameData::NumRequestingDraw, -1);
-        Assert (iErrCode == OK);
+        if (iErrCode != OK)
+            goto Cleanup;
     }
     
     // Handle num resigned
-    if (vOptions.GetInteger() & RESIGNED) {
+    if (vOptions.GetInteger() & RESIGNED)
+    {
         iErrCode = t_pCache->Increment(strGameData, GameData::NumEmpiresResigned, -1);
-        Assert (iErrCode == OK);
+        if (iErrCode != OK)
+            goto Cleanup;
     }
 
     // Delete empire from empirelist
-    unsigned int i, j, iNumEmpires, iKey;
-
-    iErrCode = t_pCache->GetFirstKey(strEmpires, GameEmpires::EmpireKey, iEmpireKey, &iKey);
-    if (iKey == NO_KEY) {
-        Assert (false);
-        return ERROR_FAILURE;
-    }
-
-    iErrCode = t_pCache->DeleteRow(strEmpires, iKey);
-    if (iKey == NO_KEY) {
-        Assert (false);
-        return ERROR_FAILURE;
-    }
+    unsigned int i, j, iNumEmpires, iGameEmpireKey;
+    iErrCode = t_pCache->GetFirstKey(strEmpires, GameEmpires::EmpireKey, iEmpireKey, &iGameEmpireKey);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // If game started, add empire to dead empire list
     if (rReason != EMPIRE_GAME_ENDED && 
         rReason != EMPIRE_QUIT && 
         rReason != EMPIRE_GAME_ENTRY_ERROR &&
-        (vGameState.GetInteger() & STARTED)) {
+        (vGameState.GetInteger() & STARTED))
+    {
+        Variant pvGameEmpireData[GameNukedEmpires::NumColumns];
 
-        Variant pvTemp[GameDeadEmpires::NumColumns];
+        pvGameEmpireData[GameNukedEmpires::iGameClass] = iGameClass;
+        pvGameEmpireData[GameNukedEmpires::iGameNumber] = iGameNumber;
 
-        if (GetEmpireName (iEmpireKey, pvTemp + GameDeadEmpires::iName) == OK) {
+        iErrCode = GetEmpireName(iEmpireKey, pvGameEmpireData + GameNukedEmpires::iName);
+        if (iErrCode != OK)
+            goto Cleanup;
             
-            Variant vIcon;
-            if (GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienKey, &vIcon) == OK) {
+        Variant vIcon;
+        iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienKey, &vIcon);
+        if (iErrCode != OK)
+            goto Cleanup;
 
-                pvTemp[GameDeadEmpires::iKey] = iEmpireKey;
-                pvTemp[GameDeadEmpires::iIcon] = vIcon.GetInteger();
+        pvGameEmpireData[GameNukedEmpires::iNukedEmpireKey] = iEmpireKey;
+        pvGameEmpireData[GameNukedEmpires::iIcon] = vIcon.GetInteger();
+        pvGameEmpireData[GameNukedEmpires::iUpdate] = pguInfo == NULL ? 0 : pguInfo->iUpdate;
+        pvGameEmpireData[GameNukedEmpires::iReason] = rReason;
 
-                pvTemp[GameDeadEmpires::iUpdate] = pguInfo == NULL ? 0 : pguInfo->iUpdate;
-                pvTemp[GameDeadEmpires::iReason] = rReason;
+        iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::SecretKey, pvGameEmpireData + GameNukedEmpires::iSecretKey);
+        if (iErrCode != OK)
+            goto Cleanup;
 
-                if (GetEmpireProperty(iEmpireKey, SystemEmpireData::SecretKey, pvTemp + GameDeadEmpires::iSecretKey) == OK) {
-                    GET_GAME_DEAD_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
-                    iErrCode = t_pCache->InsertRow (strGameEmpireData, GameDeadEmpires::Template, pvTemp, NULL);
-                    Assert (iErrCode == OK);
-                }
-            }
-        }
+        GET_GAME_NUKED_EMPIRES(strGameNukedData, iGameClass, iGameNumber);
+        iErrCode = t_pCache->InsertRow(strGameNukedData, GameNukedEmpires::Template, pvGameEmpireData, NULL);
+        if (iErrCode != OK)
+            goto Cleanup;
     }
 
     // Read active empire keys
-    Variant* pvEmpireKey;
-    iErrCode = t_pCache->ReadColumn (strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+    iErrCode = t_pCache->ReadColumn(strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // Remove from other empires' dip tables
-    if (iErrCode == OK) {
-        
-        char strOtherEmpireDip [256];
-        Variant vDipOffer, vDipStatus;
-        int iDipCountStatus;
+    for (i = 0; i < iNumEmpires; i ++)
+    {
+        if (iEmpireKey == pvEmpireKey[i].GetInteger())
+            continue;
 
-        for (i = 0; i < iNumEmpires; i ++) {    
+        Variant vDipOffer, vDipStatus, vState;
+        GET_GAME_EMPIRE_DIPLOMACY(strOtherEmpireDip, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
             
-            GET_GAME_EMPIRE_DIPLOMACY (strOtherEmpireDip, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            
-            iErrCode = t_pCache->GetFirstKey(
-                strOtherEmpireDip, 
-                GameEmpireDiplomacy::EmpireKey, 
-                iEmpireKey, 
-                &iKey
-                );
-
-            Assert (iErrCode == OK || iErrCode == ERROR_DATA_NOT_FOUND);
-            
-            if (iErrCode == OK) {
-
-                Variant vState;
-
-                GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-                
-                // Collect info for dip counts
-                iErrCode = t_pCache->ReadData(strOtherEmpireDip, iKey, GameEmpireDiplomacy::DipOffer, &vDipOffer);
-                Assert (iErrCode == OK);
-
-                iErrCode = t_pCache->ReadData(strOtherEmpireDip, iKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
-                Assert (iErrCode == OK);
-
-                iErrCode = t_pCache->ReadData(strOtherEmpireDip, iKey, GameEmpireDiplomacy::State, &vState);
-                Assert (iErrCode == OK);
-
-                // Nuke the row
-                iErrCode = t_pCache->DeleteRow(strOtherEmpireDip, iKey);
-                Assert (iErrCode == OK);
-
-                if (vDipOffer.GetInteger() > vDipStatus.GetInteger() && vDipOffer.GetInteger() <= ALLIANCE) {
-                    iDipCountStatus = vDipOffer.GetInteger();
-                } else {
-                    iDipCountStatus = vDipStatus.GetInteger();
-                }
-
-                // Reduce diplomatic counts
-                switch (iDipCountStatus) {
-                
-                case WAR:
-                    break;
-
-                case ALLIANCE:
-
-                    if (!bPermanentAlliances) {
-
-                        // Decrement, since alliances aren't permanent
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
-                        Assert (iErrCode == OK);
-                    }
-                    
-                    else if (vDipStatus.GetInteger() == ALLIANCE) {
-
-                        // Increment leaked count
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliancesLeaked, 1);
-                        Assert (iErrCode == OK);
-                    }
-
-                    else {
-
-                        // If we weren't once allied with this empire, decrement
-                        if (iErrCode == OK && !(vState.GetInteger() & ONCE_ALLIED_WITH)) {
-
-                            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
-                            Assert (iErrCode == OK);
-                        }
-                    }
-
-                    // Always fall through...
-
-                case TRADE:
-
-                    iErrCode = t_pCache->Increment(
-                        strGameEmpireData,
-                        GameEmpireData::NumTrades,
-                        -1
-                        );
-                    Assert (iErrCode == OK);
-
-                    // Fall through...
-
-                case TRUCE:
-
-                    iErrCode = t_pCache->Increment(
-                        strGameEmpireData,
-                        GameEmpireData::NumTruces,
-                        -1
-                        );
-#ifdef _DEBUG
-                    iErrCode = CheckTruceTradeAllianceCounts (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-                    Assert (iErrCode == OK);
-#endif
-                    break;
-
-                default:
-
-                    Assert (false);
-                    break;
-                }
-            }
+        unsigned int iDiplomacyKey;
+        iErrCode = t_pCache->GetFirstKey(strOtherEmpireDip, GameEmpireDiplomacy::ReferenceEmpireKey, iEmpireKey, &iDiplomacyKey);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+            continue;
         }
 
-        t_pCache->FreeData(pvEmpireKey);
+        GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+                
+        // Collect info for dip counts
+        iErrCode = t_pCache->ReadData(strOtherEmpireDip, iDiplomacyKey, GameEmpireDiplomacy::DipOffer, &vDipOffer);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        iErrCode = t_pCache->ReadData(strOtherEmpireDip, iDiplomacyKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        iErrCode = t_pCache->ReadData(strOtherEmpireDip, iDiplomacyKey, GameEmpireDiplomacy::State, &vState);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        // Nuke the row
+        iErrCode = t_pCache->DeleteRow(strOtherEmpireDip, iDiplomacyKey);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        int iDipCountStatus;
+        if (vDipOffer.GetInteger() > vDipStatus.GetInteger() && vDipOffer.GetInteger() <= ALLIANCE)
+        {
+            iDipCountStatus = vDipOffer.GetInteger();
+        }
+        else
+        {
+            iDipCountStatus = vDipStatus.GetInteger();
+        }
+
+        // Reduce diplomatic counts
+        switch (iDipCountStatus)
+        {
+        case WAR:
+            break;
+
+        case ALLIANCE:
+
+            if (!bPermanentAlliances)
+            {
+                // Decrement, since alliances aren't permanent
+                iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
+                if (iErrCode != OK)
+                    goto Cleanup;
+            }
+                    
+            else if (vDipStatus.GetInteger() == ALLIANCE)
+            {
+                // Increment leaked count
+                iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliancesLeaked, 1);
+                if (iErrCode != OK)
+                    goto Cleanup;
+            }
+            else
+            {
+                // If we weren't once allied with this empire, decrement
+                if (!(vState.GetInteger() & ONCE_ALLIED_WITH))
+                {
+                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
+                    if (iErrCode != OK)
+                        goto Cleanup;
+                }
+            }
+
+            // Always fall through...
+
+        case TRADE:
+
+            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, -1);
+            if (iErrCode != OK)
+                goto Cleanup;
+            // Fall through...
+
+        case TRUCE:
+
+            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
+            if (iErrCode != OK)
+                goto Cleanup;
+#ifdef _DEBUG
+            iErrCode = CheckTruceTradeAllianceCounts (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
+            Assert (iErrCode == OK);
+#endif
+            break;
+
+        default:
+            Assert(false);
+            break;
+        }
     }
     
+    // Delete row from GameEmpires
+    iErrCode = t_pCache->DeleteRow(strEmpires, iGameEmpireKey);
+    if (iErrCode != OK)
+        goto Cleanup;
+
     // Remove empire's ownership of planets from map
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
-    
-    unsigned int* piPlanetKey, iNumKeys = 0;
-    int iMaxPop;
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
+
+    unsigned int iNumKeys;
     iErrCode = t_pCache->GetEqualKeys(strGameMap, GameMap::Owner, iEmpireKey, &piPlanetKey, &iNumKeys);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        //
+        // Set planets to the right ownership
+        //
+        Variant vMaxAgRatio;
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vMaxAgRatio);
+        if (iErrCode != OK)
+            goto Cleanup;
 
-    // Set planets to the right ownership, 
-    Variant vAg;
-    if (iErrCode == OK) {
-
-        Variant vMin, vFuel, vPop, vMaxAgRatio;
-
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::MaxAgRatio, 
-            &vMaxAgRatio
-            );
-        Assert (iErrCode == OK);
-
-        for (i = 0; i < iNumKeys; i ++) {
-
+        for (i = 0; i < iNumKeys; i ++)
+        {
             // Resolve ownership and population
+            Variant vAg;
             iErrCode = t_pCache->ReadData(strGameMap, piPlanetKey[i], GameMap::Ag, &vAg);
-            Assert (iErrCode == OK);
+            if (iErrCode != OK)
+                goto Cleanup;
 
-            if (bIndependence && vAg.GetInteger() > 0) {
-
+            Variant vMin, vFuel, vPop; 
+            if (bIndependence && vAg.GetInteger() > 0)
+            {
                 // Make planet independent
-                iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Owner, INDEPENDENT);
-                Assert (iErrCode == OK);
+                iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Owner, (int)INDEPENDENT);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 // Set max pop to ag
                 iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::MaxPop, vAg);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 // Calculate next population
                 iErrCode = t_pCache->ReadData(strGameMap, piPlanetKey[i], GameMap::Pop, &vPop);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
-                vPop = GetNextPopulation (
-                    vPop.GetInteger(), 
-                    GetAgRatio (vAg.GetInteger(), vPop.GetInteger(), vMaxAgRatio.GetFloat())
-                    );
-
-                // Normalize to max pop
-                if (vPop.GetInteger() > vAg.GetInteger()) {
+                // Normalize next pop to max pop
+                vPop = GetNextPopulation(vPop.GetInteger(), GetAgRatio (vAg.GetInteger(), vPop.GetInteger(), vMaxAgRatio.GetFloat()));
+                if (vPop.GetInteger() > vAg.GetInteger())
+                {
                     vPop = vAg;
                 }
 
                 // Set max pop
                 iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Pop, vPop);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
+            }
+            else
+            {
+                iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Owner, (int)SYSTEM);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
-            } else {
-
-                iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Owner, SYSTEM);
-                Assert (iErrCode == OK);
-
-                iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Pop, 0);
-                Assert (iErrCode == OK);
+                iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::Pop, (int)0);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 // Set max pop to the right thing
                 iErrCode = t_pCache->ReadData(strGameMap, piPlanetKey[i], GameMap::Minerals, &vMin);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 iErrCode = t_pCache->ReadData(strGameMap, piPlanetKey[i], GameMap::Fuel, &vFuel);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
-                iMaxPop = max (vMin, vFuel);
-                if (iMaxPop == 0) {
+                int iMaxPop = max(vMin, vFuel);
+                if (iMaxPop == 0)
+                {
                     iMaxPop = 1;
                 }
+
                 iErrCode = t_pCache->WriteData(strGameMap, piPlanetKey[i], GameMap::MaxPop, iMaxPop);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
             }
         }
-
-        t_pCache->FreeKeys(piPlanetKey);
     }
 
     // Set the empire's HW to non-HW status if the map already was generated
     unsigned int iNumRows;
-    if (t_pCache->GetNumCachedRows(strGameMap, &iNumRows) == OK && iNumRows > 0) {
+    iErrCode = t_pCache->GetNumCachedRows(strGameMap, &iNumRows);
+    if (iErrCode != OK)
+        goto Cleanup;
 
+    if (iNumRows > 0)
+    {
         Variant vHWKey, vStillHW;
         iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::HomeWorld, &vHWKey);
-        if (iErrCode == OK && vHWKey.GetInteger() != NO_KEY) {
+        if (iErrCode != OK)
+            goto Cleanup;
 
+        if (vHWKey.GetInteger() != NO_KEY)
+        {
             unsigned int iHWKey = vHWKey.GetInteger();
 
             // Is the homeworld still a homeworld?
             iErrCode = t_pCache->ReadData(strGameMap, iHWKey, GameMap::HomeWorld, &vStillHW);
-            Assert (iErrCode == OK);
+            if (iErrCode != OK)
+                goto Cleanup;
 
-            if (vStillHW.GetInteger() == HOMEWORLD) {
-
+            if (vStillHW.GetInteger() == HOMEWORLD)
+            {
                 Variant vAg, vMin, vFuel;
 
                 // Mark as not homeworld
                 iErrCode = t_pCache->WriteData(strGameMap, iHWKey, GameMap::HomeWorld, NOT_HOMEWORLD);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 // Halve resources
                 iErrCode = t_pCache->ReadData(strGameMap, iHWKey, GameMap::Ag, &vAg);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 iErrCode = t_pCache->ReadData(strGameMap, iHWKey, GameMap::Minerals, &vMin);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 iErrCode = t_pCache->ReadData(strGameMap, iHWKey, GameMap::Fuel, &vFuel);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 iErrCode = t_pCache->WriteData(strGameMap, iHWKey, GameMap::Ag, (int) (vAg.GetInteger() / 2));
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 iErrCode = t_pCache->WriteData(strGameMap, iHWKey, GameMap::MaxPop, (int) (vAg.GetInteger() / 2));
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 iErrCode = t_pCache->WriteData(strGameMap, iHWKey, GameMap::Fuel, (int) (vFuel.GetInteger() / 2));
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
                 
                 iErrCode = t_pCache->WriteData(strGameMap, iHWKey, GameMap::Minerals, (int) (vMin.GetInteger() / 2));
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
             }
         }
     }
 
     // Handle ships
-    unsigned int* piShipKey = NULL, iNumShips = 0;
-    Variant* pvPlanetKey = NULL, * pvData = NULL;
-
-    char strGameEmpireMap [256], strGameEmpireShips [256];
-    
-    iErrCode = t_pCache->ReadColumn (strEmpireShips, GameEmpireShips::CurrentPlanet, &piShipKey, &pvPlanetKey, &iNumShips);
-    Assert (iErrCode == OK || iErrCode == ERROR_DATA_NOT_FOUND);
-
-    if (iNumShips > 0) {
-        
-        if (!bIndependence) {
-            
+    unsigned int iNumShips;
+    iErrCode = t_pCache->ReadColumn(strEmpireShips, GameEmpireShips::CurrentPlanet, &piShipKey, &pvPlanetKey, &iNumShips);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        Assert(iNumShips > 0);
+        if (!bIndependence)
+        {
             // Destroy ships: subtract them from planetary ship counts
-            for (i = 0; i < iNumShips; i ++) {
-
+            for (i = 0; i < iNumShips; i ++)
+            {
                 iErrCode = DeleteShipFromDeadEmpire (strEmpireShips, strGameMap, piShipKey[i], pvPlanetKey[i]);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
             }
-
-        } else {
-            
-            Variant vOwner, vType, vBR, vMaxPop, vPop, vShipBehavior, vColonyMultipliedDepositFactor,
-                vColonyExponentialDepositFactor, vTemp;
+        }
+        else
+        {
+            Variant vOwner, vType, vBR, vMaxPop, vPop, vShipBehavior, vColonyMultipliedDepositFactor, vColonyExponentialDepositFactor, vTemp;
 
             unsigned int iInitPop, iOwnerKey;
             float fDecrease;
@@ -422,324 +436,299 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 
             unsigned int* piNumShipsAcquired = NULL;
 
-            if (pguInfo != NULL) {
+            if (pguInfo != NULL)
+            {
                 piNumShipsAcquired = (unsigned int*) StackAlloc (pguInfo->iNumEmpires * sizeof (unsigned int));
                 memset (piNumShipsAcquired, 0, pguInfo->iNumEmpires * sizeof (unsigned int));
             }
 
             // Get ship behavior
             iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ShipBehavior, &vShipBehavior);
-            Assert (iErrCode == OK);
+            if (iErrCode != OK)
+                goto Cleanup;
             
             iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ColonyMultipliedDepositFactor, &vColonyMultipliedDepositFactor);
-            Assert (iErrCode == OK);
+            if (iErrCode != OK)
+                goto Cleanup;
             
             iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ColonyExponentialDepositFactor, &vColonyExponentialDepositFactor);
-            Assert (iErrCode == OK);
+            if (iErrCode != OK)
+                goto Cleanup;
 
-            GAME_INDEPENDENT_SHIPS (strIndependentShips, iGameClass, iGameNumber);
-
-            for (i = 0; i < iNumShips; i ++) {
-
+            for (i = 0; i < iNumShips; i ++)
+            {
                 // Default to death of ship
                 iOwnerKey = NO_KEY;
 
                 // Get owner of planet
                 iErrCode = t_pCache->ReadData(strGameMap, pvPlanetKey[i], GameMap::Owner, &vOwner);
-                Assert (iErrCode == OK);
+                if (iErrCode != OK)
+                    goto Cleanup;
 
                 switch (vOwner.GetInteger()) {
                     
                 case INDEPENDENT:
-
                     // The ship becomes independent
                     iOwnerKey = INDEPENDENT;
                     break;
 
                 case SYSTEM:
-
-                    // The ship is on a system planet: it dies unless its a colony, in which case
-                    // it colonizes the planet
+                    // The ship is on a system planet: it dies unless its a colony, in which case it colonizes the planet
                     iErrCode = t_pCache->ReadData(strEmpireShips, piShipKey[i], GameEmpireShips::Type, &vType);
-                    if (iErrCode == OK) {
+                    if (iErrCode != OK)
+                         goto Cleanup;
 
-                        if (vType.GetInteger() == COLONY) {
+                    if (vType.GetInteger() == COLONY) {
 
-                            /////////////////////
-                            // Colonize planet //
-                            /////////////////////
+                        /////////////////////
+                        // Colonize planet //
+                        /////////////////////
 
-                            // Read planet's ag
-                            iErrCode = t_pCache->ReadData(strGameMap, pvPlanetKey[i], GameMap::Ag, &vAg);
+                        // Read planet's ag
+                        Variant vAg;
+                        iErrCode = t_pCache->ReadData(strGameMap, pvPlanetKey[i], GameMap::Ag, &vAg);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            // Only colonize if ag > 0
-                            if (vAg.GetInteger() > 0) {
-
-                                // Set independent planet, MaxPop = Ag
-                                if (vOwner.GetInteger() != INDEPENDENT) {
-
-                                    Assert (vOwner.GetInteger() == SYSTEM);
+                        // Only colonize if ag > 0
+                        if (vAg.GetInteger() > 0)
+                        {
+                            // Set independent planet, MaxPop = Ag
+                            if (vOwner.GetInteger() != INDEPENDENT)
+                            {
+                                Assert (vOwner.GetInteger() == SYSTEM);
                                     
-                                    iErrCode = t_pCache->WriteData(strGameMap, pvPlanetKey[i], GameMap::Owner, INDEPENDENT);
-                                    Assert (iErrCode == OK);
+                                iErrCode = t_pCache->WriteData(strGameMap, pvPlanetKey[i], GameMap::Owner, (int)INDEPENDENT);
+                                if (iErrCode != OK)
+                                    goto Cleanup;
 
-                                    iErrCode = t_pCache->WriteData(strGameMap, pvPlanetKey[i], GameMap::MaxPop, vAg);
-                                    Assert (iErrCode == OK);
-                                }
+                                iErrCode = t_pCache->WriteData(strGameMap, pvPlanetKey[i], GameMap::MaxPop, vAg);
+                                if (iErrCode != OK)
+                                    goto Cleanup;
+                            }
                                 
-                                // Get colony's capacity
-                                iErrCode = t_pCache->ReadData(strEmpireShips, piShipKey[i], GameEmpireShips::CurrentBR, &vBR);
-                                if (iErrCode == OK) {
+                            // Get colony's capacity
+                            iErrCode = t_pCache->ReadData(strEmpireShips, piShipKey[i], GameEmpireShips::CurrentBR, &vBR);
+                            if (iErrCode != OK)
+                                goto Cleanup;
 
-                                    iInitPop = GetColonizePopulation (
-                                        vShipBehavior.GetInteger(), 
-                                        vColonyMultipliedDepositFactor.GetFloat(), 
-                                        vColonyExponentialDepositFactor.GetFloat(),
-                                        vBR.GetFloat()
-                                        );
+                            iInitPop = GetColonizePopulation (
+                                vShipBehavior.GetInteger(), 
+                                vColonyMultipliedDepositFactor.GetFloat(), 
+                                vColonyExponentialDepositFactor.GetFloat(),
+                                vBR.GetFloat()
+                                );
                                     
-                                    // Does ship exhaust all pop?
-                                    if ((int) iInitPop <= vAg.GetInteger()) {
+                            // Does ship exhaust all pop?
+                            if ((int) iInitPop <= vAg.GetInteger())
+                            {
+                                // Ship will die
+                                iOwnerKey = NO_KEY;
+                            }
+                            else
+                            {
+                                // Calculate decrease
+                                int iInc = iInitPop - vAg.GetInteger();
+                                fDecrease = vBR.GetFloat() * (float) iInc / iInitPop;
+                                iInitPop = iInc;
                                         
-                                        // Ship will die
-                                        iOwnerKey = NO_KEY;
+                                // Reduce ship BR
+                                iErrCode = t_pCache->Increment(strEmpireShips, piShipKey[i], GameEmpireShips::CurrentBR, - fDecrease);
+                                if (iErrCode != OK)
+                                    goto Cleanup;
                                         
-                                    } else {
-                                        
-                                        // Calculate decrease
-                                        int iInc = iInitPop - vAg.GetInteger();
-                                        fDecrease = vBR.GetFloat() * (float) iInc / iInitPop;
-                                        iInitPop = iInc;
-                                        
-                                        // Reduce ship BR
-                                        iErrCode = t_pCache->Increment(strEmpireShips, piShipKey[i], GameEmpireShips::CurrentBR, - fDecrease);
-                                        Assert (iErrCode == OK);
-                                        
-                                        // Ship survives
-                                        iOwnerKey = INDEPENDENT;
+                                // Ship survives
+                                iOwnerKey = INDEPENDENT;
+                            }
+                                    
+                            // Deposit population
+                            iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::Pop, iInitPop);
+                            if (iErrCode != OK)
+                                goto Cleanup;
+
+                            // Add to update message for observer empires
+                            if (pguInfo != NULL && pguInfo->pstrUpdateMessage != NULL)
+                            {
+                                char pszMessage[MAX_PLANET_NAME_WITH_COORDINATES_LENGTH + 96] = "";
+                                for (j = 0; j < pguInfo->iNumEmpires; j ++)
+                                {
+                                    if (!pguInfo->pbAlive[j])
+                                        continue;
+
+                                    unsigned int iMapKey;
+                                    GET_GAME_EMPIRE_MAP (pszEmpMap, iGameClass, iGameNumber, pguInfo->piEmpireKey[j]);
+                                    iErrCode = t_pCache->GetFirstKey(pszEmpMap, GameEmpireMap::PlanetKey, pvPlanetKey[i], &iMapKey);
+                                    if (iErrCode == ERROR_DATA_NOT_FOUND)
+                                    {
+                                        iErrCode = OK;
+                                        continue;
                                     }
-                                    
-                                    // Deposit population
-                                    iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::Pop, iInitPop);
-                                    Assert (iErrCode == OK);
+                                    if (iErrCode != OK)
+                                        goto Cleanup;
 
-                                    char pszMessage [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH + 96] = "";
-
-                                    // Add to update message for observer empires
-                                    if (pguInfo != NULL && pguInfo->pstrUpdateMessage != NULL) {
-
-                                        for (j = 0; j < pguInfo->iNumEmpires; j ++) {
-                                            
-                                            if (!pguInfo->pbAlive[j]) {
-                                                continue;
-                                            }
-                                            
-                                            GAME_EMPIRE_MAP (pszEmpMap, iGameClass, iGameNumber, pguInfo->piEmpireKey[j]);
-                                            
-                                            iErrCode = t_pCache->GetFirstKey(
-                                                pszEmpMap,
-                                                GameEmpireMap::PlanetKey,
-                                                pvPlanetKey[i],
-                                                &iKey
-                                                );
-                                            
-                                            if (iErrCode == OK) {
-                                                
-                                                if (pszMessage[0] == '\0') {
-                                                    
-                                                    char pszPlanetName [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH];
-                                                    
-                                                    iErrCode = GetPlanetNameWithCoordinates (
-                                                        strGameMap,
-                                                        pvPlanetKey[i].GetInteger(),
-                                                        pszPlanetName
-                                                        );
-                                                    
-                                                    if (iErrCode == OK) {
+                                    if (pszMessage[0] == '\0')
+                                    {
+                                        char pszPlanetName[MAX_PLANET_NAME_WITH_COORDINATES_LENGTH];
+                                        iErrCode = GetPlanetNameWithCoordinates(strGameMap, pvPlanetKey[i].GetInteger(), pszPlanetName);
+                                        if (iErrCode != OK)
+                                            goto Cleanup;
                                                         
-                                                        sprintf (
-                                                            pszMessage,
-                                                            BEGIN_STRONG "%s" END_STRONG \
-                                                            " was colonized by an independent ship\n",
-                                                            pszPlanetName
-                                                            );
-                                                    }
-                                                    
-                                                    else Assert (false);
-                                                }
-                                                
-                                                pguInfo->pstrUpdateMessage[j] += pszMessage;
-                                            }
-                                            
-                                            else Assert (iErrCode == ERROR_DATA_NOT_FOUND);
-                                        }
+                                        sprintf(pszMessage, BEGIN_STRONG "%s" END_STRONG " was colonized by an independent ship\n", pszPlanetName);
                                     }
+
+                                    pguInfo->pstrUpdateMessage[j] += pszMessage;
                                 }
                             }
                         }
                     }
-
-                    else Assert (false);
-
                     break;
 
                 default:
-
-                    // Someone owns the planet, so give the ship to the planet's owner,
-                    // but only if he wants it
+                    // Someone owns the planet, so give the ship to the planet's owner, but only if he wants it
                     GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, vOwner.GetInteger());
-
                     iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vTemp);
-                    if (iErrCode == OK) {
+                    if (iErrCode != OK)
+                        goto Cleanup;
 
-                        if (!(vTemp.GetInteger() & REJECT_INDEPENDENT_SHIP_GIFTS)) {
-                            iOwnerKey = vOwner.GetInteger();
-                        }
+                    if (!(vTemp.GetInteger() & REJECT_INDEPENDENT_SHIP_GIFTS))
+                    {
+                        iOwnerKey = vOwner.GetInteger();
                     }
-
-                    else Assert (false);
-
                     break;
                 }
 
                 // Decide what to do with ship
-                if (iOwnerKey == NO_KEY) {
-
+                if (iOwnerKey == NO_KEY)
+                {
                     // Remove ship
                     iErrCode = DeleteShipFromDeadEmpire (strEmpireShips, strGameMap, piShipKey[i], pvPlanetKey[i]);
-                    Assert (iErrCode == OK);
-
-                } else {
+                    if (iErrCode != OK)
+                        goto Cleanup;
+                }
+                else
+                {
+                    GET_GAME_EMPIRE_SHIPS(strIndependentShips, iGameClass, iGameNumber, INDEPENDENT);
 
                     // Read ship data
                     iErrCode = t_pCache->ReadRow (strEmpireShips, piShipKey[i], &pvData);
-                    if (iErrCode == OK) {
+                    if (iErrCode != OK)
+                        goto Cleanup;
 
-                        // Set default parameters
-                        pvData[GameEmpireShips::iAction] = STAND_BY;
-                        pvData[GameEmpireShips::iFleetKey] = NO_KEY;
+                    // Set default parameters
+                    pvData[GameEmpireShips::iGameClass] = iGameClass;
+                    pvData[GameEmpireShips::iGameNumber] = iGameNumber;
+                    pvData[GameEmpireShips::iEmpireKey] = INDEPENDENT;
+                    pvData[GameEmpireShips::iAction] = STAND_BY;
+                    pvData[GameEmpireShips::iFleetKey] = NO_KEY;
+                    pvData[GameEmpireShips::iGateDestination] = NO_KEY;
+                    pvData[GameEmpireShips::iColonyBuildCost] = 0;
 
-                        bBuilding = pvData[GameEmpireShips::iBuiltThisUpdate].GetInteger() != 0;
-                        if (bBuilding) {
-                            pvData[GameEmpireShips::iBuiltThisUpdate] = 0;
+                    bBuilding = pvData[GameEmpireShips::iBuiltThisUpdate].GetInteger() != 0;
+                    if (bBuilding)
+                    {
+                        pvData[GameEmpireShips::iBuiltThisUpdate] = 0;
+                    }
+
+                    // Uncloak and build
+                    if (pvData[GameEmpireShips::iState].GetInteger() & CLOAKED)
+                    {
+                        if (bBuilding)
+                        {
+                            iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumCloakedBuildShips, -1);
+                            if (iErrCode != OK)
+                                goto Cleanup;
+
+                        }
+                        else
+                        {
+                            iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumCloakedShips, -1);
+                            if (iErrCode != OK)
+                                goto Cleanup;
+
                         }
 
-                        // Uncloak and build
-                        if (pvData[GameEmpireShips::iState].GetInteger() & CLOAKED) {
+                        iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumUncloakedShips, 1);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            if (bBuilding) {
-
-                                iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumCloakedBuildShips, -1);
-                                Assert (iErrCode == OK);
-
-                            } else {
-
-                                iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumCloakedShips, -1);
-                                Assert (iErrCode == OK);
-                            }
+                        pvData[GameEmpireShips::iState] = pvData[GameEmpireShips::iState].GetInteger() & ~CLOAKED;
+                    }
+                    else
+                    {
+                        if (bBuilding)
+                        {
+                            iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumUncloakedBuildShips, -1);
+                            if (iErrCode != OK)
+                                goto Cleanup;
 
                             iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumUncloakedShips, 1);
-                            Assert (iErrCode == OK);
-
-                            pvData[GameEmpireShips::iState] = pvData[GameEmpireShips::iState].GetInteger() & ~CLOAKED;
-
-                        } else {
-
-                            if (bBuilding) {
-
-                                iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumUncloakedBuildShips, -1);
-                                Assert (iErrCode == OK);
-
-                                iErrCode = t_pCache->Increment(strGameMap, pvPlanetKey[i], GameMap::NumUncloakedShips, 1);
-                                Assert (iErrCode == OK);
-                            }
+                            if (iErrCode != OK)
+                                goto Cleanup;
                         }
+                    }
 
-                        if (iOwnerKey == INDEPENDENT) {
+                    if (iOwnerKey == INDEPENDENT)
+                    {
+                        // The ship is independent
+                        iErrCode = t_pCache->InsertRow(strIndependentShips, GameEmpireShips::Template, pvData, NULL);
+                        if (iErrCode != OK)
+                            goto Cleanup;
+                    }
+                    else
+                    {
+                        Assert (iOwnerKey != SYSTEM);
 
-                            // The ship is independent
-                            iErrCode = t_pCache->InsertRow (strIndependentShips, GameIndependentShips::Template, pvData, NULL);
-                            Assert (iErrCode == OK);
+                        GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iOwnerKey);
+                        GET_GAME_EMPIRE_SHIPS(strGameEmpireShips, iGameClass, iGameNumber, iOwnerKey);
 
-                        } else {
+                        // Some empire now owns the ship
+                        iErrCode = t_pCache->InsertRow(strGameEmpireShips, GameEmpireShips::Template, pvData, NULL);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            Assert (iOwnerKey != SYSTEM);
+                        // Increment fuel and maintenance costs
+                        int iDeltaMaintenance = GetMaintenanceCost(pvData[GameEmpireShips::iType].GetInteger(), pvData[GameEmpireShips::iMaxBR].GetFloat());
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::TotalMaintenance, iDeltaMaintenance);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            GET_GAME_EMPIRE_SHIPS (strGameEmpireShips, iGameClass, iGameNumber, iOwnerKey);
+                        int iDeltaFuel = GetFuelCost(pvData[GameEmpireShips::iType].GetInteger(), pvData[GameEmpireShips::iMaxBR].GetFloat());
+                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::TotalFuelUse, iDeltaFuel);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            // Some empire now owns the ship
-                            iErrCode = t_pCache->InsertRow (strGameEmpireShips, GameEmpireShips::Template, pvData, NULL);
-                            Assert (iErrCode == OK);
+                        unsigned int iEmpireMapKey;
+                        GET_GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iOwnerKey);
+                        iErrCode = t_pCache->GetFirstKey(strGameEmpireMap, GameEmpireMap::PlanetKey, pvPlanetKey[i], &iEmpireMapKey);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            // Increment fuel and maintenance costs
-                            iErrCode = t_pCache->Increment(
-                                strGameEmpireData,
-                                GameEmpireData::TotalMaintenance,
-                                GetMaintenanceCost (
-                                    pvData[GameEmpireShips::iType].GetInteger(), 
-                                    pvData[GameEmpireShips::iMaxBR].GetFloat()
-                                    )
-                                );
-                            Assert (iErrCode == OK);
+                        iErrCode = t_pCache->Increment(strGameEmpireMap, iEmpireMapKey, GameEmpireMap::NumUncloakedShips, 1);
+                        if (iErrCode != OK)
+                            goto Cleanup;
 
-                            iErrCode = t_pCache->Increment(
-                                strGameEmpireData,
-                                GameEmpireData::TotalFuelUse,
-                                GetFuelCost (
-                                    pvData[GameEmpireShips::iType].GetInteger(), 
-                                    pvData[GameEmpireShips::iMaxBR].GetFloat()
-                                    )
-                                );
-                            Assert (iErrCode == OK);
-
-                            GET_GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iOwnerKey);
-
-                            iErrCode = t_pCache->GetFirstKey(
-                                strGameEmpireMap,
-                                GameEmpireMap::PlanetKey,
-                                pvPlanetKey[i],
-                                &iKey
-                                );
-
-                            if (iErrCode == OK) {
-
-                                iErrCode = t_pCache->Increment(
-                                    strGameEmpireMap, 
-                                    iKey, 
-                                    GameEmpireMap::NumUncloakedShips, 
-                                    1
-                                    );
-                                Assert (iErrCode == OK);
-                            }
-
-                            else Assert (false);
-
-                            if (pguInfo != NULL && pguInfo->piEmpireKey != NULL) {
-
-                                for (j = 0; j < pguInfo->iNumEmpires; j ++) {
-
-                                    if (pguInfo->piEmpireKey[j] == (int) iOwnerKey) {
-                                        piNumShipsAcquired [j] ++;
-                                    }
+                        if (pguInfo != NULL && pguInfo->piEmpireKey != NULL)
+                        {
+                            for (j = 0; j < pguInfo->iNumEmpires; j ++)
+                            {
+                                if (pguInfo->piEmpireKey[j] == (int) iOwnerKey)
+                                {
+                                    piNumShipsAcquired[j] ++;
                                 }
                             }
                         }
-
-                        t_pCache->FreeData(pvData);
                     }
-
-                    else Assert (false);
                 }
             }
 
             // Add to update message for recipient empire
-            if (pguInfo != NULL && pguInfo->pstrUpdateMessage != NULL) {
-                
-                for (j = 0; j < pguInfo->iNumEmpires; j ++) {
-                    
-                    if (piNumShipsAcquired[j] > 0) {
-                        
-                        char pszMessage [128];                  
+            if (pguInfo != NULL && pguInfo->pstrUpdateMessage != NULL)
+            {
+                for (j = 0; j < pguInfo->iNumEmpires; j ++)
+                {
+                    if (piNumShipsAcquired[j] > 0)
+                    {
+                        char pszMessage[128];                  
                         sprintf (
                             pszMessage,
                             "You acquired " BEGIN_STRONG "%i" END_STRONG " independent %s\n",
@@ -752,71 +741,82 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
                 }
             }
         }
-
-        t_pCache->FreeKeys(piShipKey);
-        t_pCache->FreeData(pvPlanetKey);
     }
 
-    ///////////////////
-    // Delete tables //
-    ///////////////////
+    // Update empire's MaxEcon and MaxMil
+    {       
+        Variant vMax, vOld;
+        iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::MaxEcon, &vMax);
+        if (iErrCode != OK)
+            goto Cleanup;
 
-    GET_SYSTEM_EMPIRE_DATA(strSystemEmpireData, iEmpireKey);
-
-    // Adjust maxecon and maxmil
-    Variant vMax, vOld;
-    iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::MaxEcon, &vMax);
-    Assert (iErrCode == OK);
-
-    iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxEcon, &vOld);
-    Assert (iErrCode == OK);
+        iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxEcon, &vOld);
+        if (iErrCode != OK)
+            goto Cleanup;
     
-    if (vMax.GetInteger() > vOld.GetInteger())
-    {
-        iErrCode = t_pCache->WriteData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxEcon, vMax);
-        Assert (iErrCode == OK);
+        if (vMax.GetInteger() > vOld.GetInteger())
+        {
+            iErrCode = t_pCache->WriteData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxEcon, vMax);
+            if (iErrCode != OK)
+                goto Cleanup;
+        }
+    
+        iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::MaxMil, &vMax);
+        if (iErrCode != OK)
+            goto Cleanup;
+
+        iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxMil, &vOld);
+        if (iErrCode != OK)
+            goto Cleanup;
+    
+        if (vMax.GetInteger() > vOld.GetInteger())
+        {
+            iErrCode = t_pCache->WriteData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxMil, vMax);
+            if (iErrCode != OK)
+                goto Cleanup;
+        }
     }
-    
-    iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::MaxMil, &vMax);
-    Assert (iErrCode == OK);
 
-    iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxMil, &vOld);
-    Assert (iErrCode == OK);
-    
-    if (vMax.GetInteger() > vOld.GetInteger())
-    {
-        iErrCode = t_pCache->WriteData(strSystemEmpireData, iEmpireKey, SystemEmpireData::MaxMil, vMax);
-        Assert (iErrCode == OK);
-    }
-
-    char pszTable [512];
+    /////////////////
+    // Delete rows //
+    /////////////////
 
     // GameEmpireData(I.I.I)
-    // TODOTODO - iErrCode = t_pCache->DeleteTable (strEmpireData);
+    iErrCode = t_pCache->DeleteAllRows(strEmpireData);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // GameEmpireMessages(I.I.I)
-    GET_GAME_EMPIRE_MESSAGES (pszTable, iGameClass, iGameNumber, iEmpireKey);
-    // TODOTODO - iErrCode = t_pCache->DeleteTable (pszTable);
+    GET_GAME_EMPIRE_MESSAGES(strEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
+    iErrCode = t_pCache->DeleteAllRows(strEmpireMessages);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // GameEmpireMap(I.I.I)
-    GET_GAME_EMPIRE_MAP (pszTable, iGameClass, iGameNumber, iEmpireKey);
-    // TODOTODO - iErrCode = t_pCache->DeleteTable (pszTable);
+    GET_GAME_EMPIRE_MAP(strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
+    iErrCode = t_pCache->DeleteAllRows(strEmpireMap);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // GameEmpireShips(I.I.I)
-    // TODOTODO - iErrCode = t_pCache->DeleteTable (strEmpireShips);
-    
+    iErrCode = t_pCache->DeleteAllRows(strEmpireShips);
+    if (iErrCode != OK)
+        goto Cleanup;
+
     // GameEmpireFleets(I.I.I)
-    GET_GAME_EMPIRE_FLEETS (pszTable, iGameClass, iGameNumber, iEmpireKey);
-    // TODOTODO - iErrCode = t_pCache->DeleteTable (pszTable);
+    GET_GAME_EMPIRE_FLEETS(strEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
+    iErrCode = t_pCache->DeleteAllRows(strEmpireFleets);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // GameEmpireDiplomacy(I.I.I)
-    GET_GAME_EMPIRE_DIPLOMACY (pszTable, iGameClass, iGameNumber, iEmpireKey);
-    // TODOTODO - iErrCode = t_pCache->DeleteTable (pszTable);
+    GET_GAME_EMPIRE_DIPLOMACY(strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
+    iErrCode = t_pCache->DeleteAllRows(strEmpireDiplomacy);
+    if (iErrCode != OK)
+        goto Cleanup;
 
     // Delete game from personal list
     unsigned int iGames = 1;
-    ICachedTable* pEmpireActiveGames = NULL;
-
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES(strEmpireActiveGames, iEmpireKey);
     iErrCode = t_pCache->GetTable(strEmpireActiveGames, &pEmpireActiveGames);
     if (iErrCode == OK)
@@ -855,11 +855,27 @@ int GameEngine::DeleteEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
 
             // Fire at will
             iErrCode = QueueDeleteEmpire (iEmpireKey, vSecretKey.GetInteger64());
-            Assert (iErrCode == OK);
+            if (iErrCode != OK)
+                goto Cleanup;
         }
     }
 
 Cleanup:
+
+    if (pvEmpireKey)
+        t_pCache->FreeData(pvEmpireKey);
+
+    if (piShipKey)
+        t_pCache->FreeKeys(piShipKey);
+    
+    if (piPlanetKey)
+        t_pCache->FreeKeys(piPlanetKey);
+
+    if (pvData)
+        t_pCache->FreeData(pvData);
+
+    if (pvPlanetKey)
+        t_pCache->FreeData(pvPlanetKey);
 
     SafeRelease(pEmpireActiveGames);
 
@@ -886,8 +902,7 @@ int GameEngine::DeleteEmpireMsg(AsyncTask* pMessage) {
     return iErrCode;
 }
 
-int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
-                                      unsigned int iKillerEmpire) {
+int GameEngine::RemoveEmpireFromGame(int iGameClass, int iGameNumber, unsigned int iEmpireKey, unsigned int iKillerEmpire) {
 
     int iErrCode;
     bool bFlag;
@@ -907,7 +922,7 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
         return ERROR_EMPIRE_IS_NOT_IN_GAME;
     }
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     Variant vState;
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vState);
@@ -918,10 +933,11 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
     Variant vAdmin;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    if (iKillerEmpire == NO_KEY) {
-        
+    if (iKillerEmpire == NO_KEY)
+    {
         // Make sure game is still open     
-        if (!(vState.GetInteger() & STILL_OPEN)) {
+        if (!(vState.GetInteger() & STILL_OPEN))
+        {
             return ERROR_GAME_CLOSED;
         }
 
@@ -931,7 +947,7 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
             return iErrCode;
         }
 
-        sprintf (pszMessage, "%s quit the game", vEmpireName.GetCharPtr());
+        sprintf(pszMessage, "%s quit the game", vEmpireName.GetCharPtr());
 
     } else {
         
@@ -994,7 +1010,7 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
     
     // Get number of empires remaining
     unsigned int iNumEmpires;
-    GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
 
     iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
     if (iErrCode != OK) {
@@ -1017,7 +1033,7 @@ int GameEngine::RemoveEmpireFromGame (int iGameClass, int iGameNumber, unsigned 
             Variant* pvEmpireKey;
             unsigned int iNumEmpires, i;
 
-            iErrCode = t_pCache->ReadColumn (
+            iErrCode = t_pCache->ReadColumn(
                 strGameEmpires, 
                 GameEmpires::EmpireKey,
                 NULL,
@@ -1148,11 +1164,14 @@ int GameEngine::QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpire
     int iErrCode;
 
     iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bExists);
-    if (iErrCode == OK) {
-
-        if (!bExists) {
+    if (iErrCode == OK)
+    {
+        if (!bExists)
+        {
             iErrCode = ERROR_EMPIRE_IS_NOT_IN_GAME;
-        } else {
+        }
+        else
+        {
             iErrCode = QuitEmpireFromGameInternal (iGameClass, iGameNumber, iEmpireKey, iKillerEmpire);
         }
     }
@@ -1160,98 +1179,81 @@ int GameEngine::QuitEmpireFromGame (int iGameClass, int iGameNumber, int iEmpire
     return iErrCode;
 }
 
-int GameEngine::QuitEmpireFromGameInternal (int iGameClass, int iGameNumber, int iEmpireKey, int iKillerEmpire) {
-
+int GameEngine::QuitEmpireFromGameInternal (int iGameClass, int iGameNumber, int iEmpireKey, int iKillerEmpire)
+{
     // Has the game started yet?
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     Variant vStarted;
     int iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vStarted);
-    if (iErrCode != OK) {
-        return ERROR_GAME_DOES_NOT_EXIST;
-    }
+    if (iErrCode != OK)
+        return iErrCode;
 
-    if (vStarted.GetInteger() & STARTED) {
-    
-        // We failed
+    if (vStarted.GetInteger() & STARTED)
+    {
+        // Can't quit anymore
         return ERROR_GAME_HAS_STARTED;
-
     }
 
-    GAME_EMPIRES(strEmpires, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES(strEmpires, iGameClass, iGameNumber);
     Variant vAdminName;
     
     char pszMessage [1024];
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
-
     
     // Get gameclass name
-    if (iKillerEmpire != NO_KEY) {
+    if (iKillerEmpire != NO_KEY)
+    {
+        iErrCode = GetGameClassName(iGameClass, pszGameClassName);
+        if (iErrCode != OK)
+            return iErrCode;
         
-        iErrCode = GetGameClassName (iGameClass, pszGameClassName);
-        if (iErrCode != OK) {
-            Assert (false);
-            *pszGameClassName = '\0';
-        }
-        
-        iErrCode = GetEmpireName (iKillerEmpire, &vAdminName);
-        if (iErrCode != OK) {
-            vAdminName = "";
-        }
+        iErrCode = GetEmpireName(iKillerEmpire, &vAdminName);
+        if (iErrCode != OK)
+            return iErrCode;
     }
     
     // How many empires left?
     unsigned int iNumEmpires;
     iErrCode = t_pCache->GetNumCachedRows(strEmpires, &iNumEmpires);
-    if (iErrCode != OK) {
-        Assert (false);
+    if (iErrCode != OK)
         return iErrCode;
-    }
     
     // If one, then we're done with this game
-    if (iNumEmpires == 1) {
-        
+    if (iNumEmpires == 1)
+    {
         // Destroy the game
         iErrCode = CleanupGame (iGameClass, iGameNumber, GAME_RESULT_NONE);
-        if (iErrCode != OK) {
-            Assert (false);
+        if (iErrCode != OK)
             return iErrCode;
-        }
-        
-    } else {
-        
+    }
+    else
+    {
         // Remove empire from game
         iErrCode = t_pCache->WriteOr(strGameData, GameData::State, GAME_DELETING_EMPIRE);
-        if (iErrCode != OK) {
-            Assert (false);
+        if (iErrCode != OK)
             return iErrCode;
-        }
 
         iErrCode = DeleteEmpireFromGame (iGameClass, iGameNumber, iEmpireKey, EMPIRE_QUIT, NULL);
-
-        int iErrCode2 = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_DELETING_EMPIRE);
-        
-        if (iErrCode != OK) {
-            Assert (false);
+        if (iErrCode != OK)
             return iErrCode;
-        }
-        
-        if (iErrCode2 != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+
+        iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_DELETING_EMPIRE);
+        if (iErrCode != OK)
+            return iErrCode;
         
         // If empires remain, so broadcast to other players
         Variant vEmpireName;
         iErrCode = GetEmpireName (iEmpireKey, &vEmpireName);
-        if (iErrCode != OK) {
-            Assert (false);
-            vEmpireName = "";
-        }
+        if (iErrCode != OK)
+            return iErrCode;
         
-        if (iKillerEmpire == NO_KEY) {
-            sprintf (pszMessage, "%s quit the game", vEmpireName.GetCharPtr());
-        } else {
+        if (iKillerEmpire == NO_KEY)
+        {
+            sprintf(pszMessage, "%s quit the game", vEmpireName.GetCharPtr());
+        }
+        else
+        {
             sprintf (
                 pszMessage, 
                 "%s as removed from the game by the administrator %s", 
@@ -1261,36 +1263,28 @@ int GameEngine::QuitEmpireFromGameInternal (int iGameClass, int iGameNumber, int
         }
         
         iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+        if (iErrCode != OK)
+            return iErrCode;
     }
 
-Cleanup:
-
     // If empire still exists, tell him what happened
-    if (iKillerEmpire != NO_KEY) {
-        
-        bool bFlag;
-        iErrCode = DoesEmpireExist (iEmpireKey, &bFlag, NULL);
-        if (iErrCode == OK && bFlag) {
+    if (iKillerEmpire != NO_KEY)
+    {
+        sprintf (
+            pszMessage, 
+            "You were removed from %s %i by the administrator %s",
+            pszGameClassName,
+            iGameNumber,
+            vAdminName.GetCharPtr()
+            );
             
-            sprintf (
-                pszMessage, 
-                "You were removed from %s %i by the administrator %s",
-                pszGameClassName,
-                iGameNumber,
-                vAdminName.GetCharPtr()
-                );
-            
-            SendSystemMessage (iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
-        }
+        iErrCode = SendSystemMessage(iEmpireKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
+        if (iErrCode != OK)
+            return iErrCode;
     }
 
     return iErrCode;
 }
-
 
 int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpireKey) {
 
@@ -1298,7 +1292,7 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
     bool bFlag;
 
     // Has the game started yet?
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     Variant vState;
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vState);
@@ -1311,8 +1305,8 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         return ERROR_GAME_HAS_NOT_STARTED;
     }
 
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
 
     unsigned int iShipKey = NO_KEY;
 
@@ -1392,7 +1386,7 @@ int GameEngine::ResignEmpireFromGame (int iGameClass, int iGameNumber, int iEmpi
         vEmpireName = "";
     }
     
-    sprintf (pszMessage, "%s resigned from the game", vEmpireName.GetCharPtr());
+    sprintf(pszMessage, "%s resigned from the game", vEmpireName.GetCharPtr());
 
     iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
     if (iErrCode != OK) {
@@ -1433,7 +1427,7 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
     int iErrCode;
     Variant vOptions;
 
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     // Is empire resigned?
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vOptions);
@@ -1457,7 +1451,7 @@ int GameEngine::UnresignEmpire (int iGameClass, int iGameNumber, int iEmpireKey,
             pszAdminName = NULL;
         }
 
-        GAME_DATA (strGameData, iGameClass, iGameNumber);
+        GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
         char pszMessage [2 * MAX_EMPIRE_NAME_LENGTH + 128];
 
@@ -1530,11 +1524,11 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
     Variant vTemp, vEmpireName, vHomeWorld, vNumUpdates, vSecretKey;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_DIPLOMACY (strDiplomacy, iGameClass, iGameNumber, iEmpireKey);
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
-    GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DIPLOMACY (strDiplomacy, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
 
     char pszString [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
 
@@ -1693,7 +1687,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
             strGameMap, 
             vHomeWorld.GetInteger(), 
             GameMap::SurrenderNumAllies, 
-            iNumAllies
+            (int)iNumAllies
             );
 
         if (iErrCode != OK) {
@@ -1724,7 +1718,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
         }
 
         // New name
-        sprintf (pszString, RUINS_OF, vEmpireName.GetCharPtr());
+        sprintf(pszString, RUINS_OF, vEmpireName.GetCharPtr());
 
         iErrCode = t_pCache->WriteData(strGameMap, vHomeWorld.GetInteger(), GameMap::Name, pszString);
         if (iErrCode != OK) {
@@ -1944,7 +1938,7 @@ int GameEngine::GetEmpirePartialMapData (int iGameClass, int iGameNumber, int iE
 
     ICachedTable* pGameEmpireData;
 
-    GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->GetTable(pszGameEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
@@ -2001,7 +1995,7 @@ int GameEngine::HasEmpireResignedFromGame (int iGameClass, int iGameNumber, int 
 
     Variant vOptions;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->ReadData(
         strGameEmpireData,
@@ -2024,7 +2018,7 @@ int GameEngine::GetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, 
     int iErrCode;
     Variant vDefault;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     iErrCode = t_pCache->ReadData(
         strGameEmpireData,
@@ -2105,7 +2099,7 @@ int GameEngine::SetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, 
         }
     }
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     return t_pCache->WriteData(
         strGameEmpireData,
@@ -2118,7 +2112,7 @@ int GameEngine::SetEmpireDefaultBuilderPlanet (int iGameClass, int iGameNumber, 
 int GameEngine::GetEmpireBR (int iGameClass, int iGameNumber, int iEmpireKey, int* piBR) {
 
     Variant vTech;
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->ReadData(
         strGameEmpireData,
@@ -2139,7 +2133,7 @@ int GameEngine::GetEmpireMaintenanceRatio (int iGameClass, int iGameNumber, int 
     int iMin, iBonusMin, iMaint, iBuild;
     ICachedTable* pGameEmpireData;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->GetTable(strGameEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
@@ -2188,7 +2182,7 @@ int GameEngine::GetEmpireNextMaintenanceRatio (int iGameClass, int iGameNumber, 
 
     ICachedTable* pGameEmpireData = NULL;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->GetTable(strGameEmpireData, &pGameEmpireData);
     if (iErrCode != OK) {
@@ -2259,8 +2253,8 @@ int GameEngine::WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpir
 
     Variant vTotalPop, vPop, vMaxPop, vMin, vFuel;
 
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
 #ifdef _DEBUG
 
@@ -2387,8 +2381,8 @@ void GameEngine::CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey
 
     Variant vTotalPop, vPop, vMaxPop, vMin, vFuel, vTemp;
 
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vTargetPop;
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::TargetPop, &vTargetPop);
@@ -2517,7 +2511,7 @@ int GameEngine::UpdateGameEmpireString (int iGameClass, int iGameNumber, int iEm
     ICachedTable* pWriteTable = NULL;
     Variant vOldString;
 
-    GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (pszGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     *pbTruncated = false;
 
@@ -2571,14 +2565,14 @@ Cleanup:
 
 int GameEngine::GetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszColumn, Variant* pvProperty) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     return t_pCache->ReadData(strGameEmpireData, pszColumn, pvProperty);
 }
 
 int GameEngine::SetEmpireGameProperty (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszColumn, const Variant& vProperty) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     return t_pCache->WriteData(strGameEmpireData, pszColumn, vProperty);
 }

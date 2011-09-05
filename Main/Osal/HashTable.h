@@ -157,7 +157,7 @@ public:
         return false;
     }
 
-    bool Contains(CKey key)
+    bool Contains(const CKey key)
     {
         return FindFirst(key, (CData*)NULL);
     }

@@ -63,27 +63,15 @@ int GameEngine::Setup()
 }
 
 
-int GameEngine::ReloadDatabase() {
-
+int GameEngine::ReloadDatabase()
+{
     int iErrCode;
 
     //
     // Cache tables
     //
 
-    TableCacheEntry entries[] = 
-    {
-        { SYSTEM_DATA, NO_KEY, 0, NULL },
-        { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL },
-        { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL },
-        { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL },
-        { SYSTEM_ALMONASTER_SCORE_TOPLIST, NO_KEY, 0, NULL },
-        { SYSTEM_CLASSIC_SCORE_TOPLIST, NO_KEY, 0, NULL },
-        { SYSTEM_BRIDIER_SCORE_TOPLIST, NO_KEY, 0, NULL },
-        { SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, NO_KEY, 0, NULL },
-    };
-
-    iErrCode = t_pCache->Cache(entries, countof(entries));
+    iErrCode = CacheForReload();
     if (iErrCode != OK)
     {
         global.GetReport()->WriteReport("GameEngine setup failed to cache system tables");
@@ -146,17 +134,6 @@ int GameEngine::ReloadDatabase() {
     }
     global.GetReport()->WriteReport("GameEngine setup successfully verified tournaments");
 
-    //
-    // Top lists
-    //
-
-    iErrCode = VerifyTopLists();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup failed to verify top lists");
-        return iErrCode;
-    }
-    global.GetReport()->WriteReport("GameEngine setup successfully verified top lists");
-
     //////////
     // Done //
     //////////
@@ -164,6 +141,39 @@ int GameEngine::ReloadDatabase() {
     global.GetReport()->WriteReport("GameEngine setup successfully reused the existing database");
 
     return OK;
+}
+
+bool GameEngine::VerifyTableExistence(const char* pszTable, bool bNewDatabase)
+{
+    bool bTableExists = t_pConn->DoesTableExist(pszTable);
+    if ((bTableExists && bNewDatabase) || (!bTableExists && !bNewDatabase))
+    {
+        return false;
+    }
+    return true;
+}
+
+bool GameEngine::VerifyTableExistenceWithRows(const char* pszTable, bool bNewDatabase)
+{
+    bool bTableExists = t_pConn->DoesTableExist(pszTable);
+    if ((bTableExists && bNewDatabase) || (!bTableExists && !bNewDatabase))
+    {
+        return false;
+    }
+
+    if (bTableExists)
+    {
+        unsigned int iNumRows;
+        int iErrCode = t_pConn->GetNumPhysicalRows(pszTable, &iNumRows);
+        Assert(iErrCode == OK);
+
+        if (iNumRows < 1)
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable)
@@ -198,22 +208,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_DATA;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (!bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemGameClassData
     Assert(countof(SystemGameClassData::Types) == SystemGameClassData::NumColumns);
@@ -221,22 +218,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemGameClassData::ColumnNames) == SystemGameClassData::NumColumns);
 
     pszTable = SYSTEM_GAMECLASS_DATA;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (!bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemAlienIcons
     Assert(countof(SystemAlienIcons::Types) == SystemAlienIcons::NumColumns);
@@ -244,22 +228,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemAlienIcons::ColumnNames) == SystemAlienIcons::NumColumns);
 
     pszTable = SYSTEM_ALIEN_ICONS;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemSystemGameClassData
     Assert(countof(SystemSystemGameClassData::Types) == SystemSystemGameClassData::NumColumns);
@@ -267,22 +238,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemSystemGameClassData::ColumnNames) == SystemSystemGameClassData::NumColumns);
 
     pszTable = SYSTEM_SYSTEM_GAMECLASS_DATA;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
     
     // SystemSuperClassData
     Assert(countof(SystemSuperClassData::Types) == SystemSuperClassData::NumColumns);
@@ -290,22 +248,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemSuperClassData::ColumnNames) == SystemSuperClassData::NumColumns);
 
     pszTable = SYSTEM_SUPERCLASS_DATA;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
     
     // SystemThemes
     Assert(countof(SystemThemes::Types) == SystemThemes::NumColumns);
@@ -313,22 +258,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemThemes::ColumnNames) == SystemThemes::NumColumns);
 
     pszTable = SYSTEM_THEMES;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase || t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows < 1)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
     
     // SystemActiveGames
     Assert(countof(SystemActiveGames::Types) == SystemActiveGames::NumColumns);
@@ -336,114 +268,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemActiveGames::ColumnNames) == SystemActiveGames::NumColumns);
 
     pszTable = SYSTEM_ACTIVE_GAMES;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    
-    // SystemAlmonasterScoreTopList
-    Assert(countof(SystemAlmonasterScoreTopList::Types) == SystemAlmonasterScoreTopList::NumColumns);
-    Assert(countof(SystemAlmonasterScoreTopList::Sizes) == SystemAlmonasterScoreTopList::NumColumns);
-    Assert(countof(SystemAlmonasterScoreTopList::ColumnNames) == SystemAlmonasterScoreTopList::NumColumns);
-
-    pszTable = SYSTEM_ALMONASTER_SCORE_TOPLIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    
-    // SystemClassicScoreTopList
-    Assert(countof(SystemClassicScoreTopList::Types) == SystemClassicScoreTopList::NumColumns);
-    Assert(countof(SystemClassicScoreTopList::Sizes) == SystemClassicScoreTopList::NumColumns);
-    Assert(countof(SystemClassicScoreTopList::ColumnNames) == SystemClassicScoreTopList::NumColumns);
-
-    pszTable = SYSTEM_CLASSIC_SCORE_TOPLIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-
-    // SystemBridierScoreTopList
-    Assert(countof(SystemBridierScoreTopList::Types) == SystemBridierScoreTopList::NumColumns);
-    Assert(countof(SystemBridierScoreTopList::Sizes) == SystemBridierScoreTopList::NumColumns);
-    Assert(countof(SystemBridierScoreTopList::ColumnNames) == SystemBridierScoreTopList::NumColumns);
-
-    pszTable = SYSTEM_BRIDIER_SCORE_TOPLIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-
-    // SystemBridierScoreEstablishedTopList
-    Assert(countof(SystemBridierScoreEstablishedTopList::Types) == SystemBridierScoreEstablishedTopList::NumColumns);
-    Assert(countof(SystemBridierScoreEstablishedTopList::Sizes) == SystemBridierScoreEstablishedTopList::NumColumns);
-    Assert(countof(SystemBridierScoreEstablishedTopList::ColumnNames) == SystemBridierScoreEstablishedTopList::NumColumns);
-
-    pszTable = SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemChatroomData
     Assert(countof(SystemChatroomData::Types) == SystemChatroomData::NumColumns);
@@ -451,22 +278,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemChatroomData::ColumnNames) == SystemChatroomData::NumColumns);
 
     pszTable = SYSTEM_CHATROOM_DATA;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemTournaments
     Assert(countof(SystemTournaments::Types) == SystemTournaments::NumColumns);
@@ -474,22 +288,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournaments::ColumnNames) == SystemTournaments::NumColumns);
 
     pszTable = SYSTEM_TOURNAMENTS;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemNukeList
     Assert(countof(SystemNukeList::Types) == SystemNukeList::NumColumns);
@@ -497,22 +298,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemNukeList::ColumnNames) == SystemNukeList::NumColumns);
 
     pszTable = SYSTEM_NUKE_LIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemLatestGames
     Assert(countof(SystemLatestGames::Types) == SystemLatestGames::NumColumns);
@@ -520,22 +308,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemLatestGames::ColumnNames) == SystemLatestGames::NumColumns);
 
     pszTable = SYSTEM_LATEST_GAMES;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
     
     // SystemEmpireMessages
     Assert(countof(SystemEmpireMessages::Types) == SystemEmpireMessages::NumColumns);
@@ -543,22 +318,19 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireMessages::ColumnNames) == SystemEmpireMessages::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_MESSAGES;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
+    // SystemEmpireAssociations
+    Assert(countof(SystemEmpireAssociations::Types) == SystemEmpireAssociations::NumColumns);
+    Assert(countof(SystemEmpireAssociations::Sizes) == SystemEmpireAssociations::NumColumns);
+    Assert(countof(SystemEmpireAssociations::ColumnNames) == SystemEmpireAssociations::NumColumns);
+
+    pszTable = SYSTEM_EMPIRE_ASSOCIATIONS;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemEmpireNukerList
     Assert(countof(SystemEmpireNukeList::Types) == SystemEmpireNukeList::NumColumns);
@@ -566,22 +338,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireNukeList::ColumnNames) == SystemEmpireNukeList::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_NUKER_LIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemEmpireNukedList
     Assert(countof(SystemEmpireNukeList::Types) == SystemEmpireNukeList::NumColumns);
@@ -589,22 +348,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireNukeList::ColumnNames) == SystemEmpireNukeList::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_NUKED_LIST;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemEmpireActiveGames
     Assert(countof(SystemEmpireActiveGames::Types) == SystemEmpireActiveGames::NumColumns);
@@ -612,22 +358,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireActiveGames::ColumnNames) == SystemEmpireActiveGames::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_ACTIVE_GAMES;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemTournamentTeams
     Assert(countof(SystemTournamentTeams::Types) == SystemTournamentTeams::NumColumns);
@@ -635,22 +368,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournamentTeams::ColumnNames) == SystemTournamentTeams::NumColumns);
 
     pszTable = SYSTEM_TOURNAMENT_TEAMS;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemTournamentEmpires
     Assert(countof(SystemTournamentEmpires::Types) == SystemTournamentEmpires::NumColumns);
@@ -658,22 +378,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournamentEmpires::ColumnNames) == SystemTournamentEmpires::NumColumns);
 
     pszTable = SYSTEM_TOURNAMENT_EMPIRES;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // SystemEmpireTournaments
     Assert(countof(SystemEmpireTournaments::Types) == SystemEmpireTournaments::NumColumns);
@@ -681,22 +388,9 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireTournaments::ColumnNames) == SystemEmpireTournaments::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_TOURNAMENTS;
-    if (t_pConn->DoesTableExist(pszTable))
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
-    else
-    {
-        if (bNewDatabase)
-        {
-            bGoodDatabase = false;
-            goto Cleanup;
-        }
-    }
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     //
     // Game tables
@@ -706,56 +400,111 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameData::Types) == GameData::NumColumns);
     Assert(countof(GameData::Sizes) == GameData::NumColumns);
     Assert(countof(GameData::ColumnNames) == GameData::NumColumns);
+
+    pszTable = GAME_DATA;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
     
     // GameEmpires
     Assert(countof(GameEmpires::Types) == GameEmpires::NumColumns);
     Assert(countof(GameEmpires::Sizes) == GameEmpires::NumColumns);
     Assert(countof(GameEmpires::ColumnNames) == GameEmpires::NumColumns);
 
-    // GameDeadEmpires
-    Assert(countof(GameDeadEmpires::Types) == GameDeadEmpires::NumColumns);
-    Assert(countof(GameDeadEmpires::Sizes) == GameDeadEmpires::NumColumns);
-    Assert(countof(GameDeadEmpires::ColumnNames) == GameDeadEmpires::NumColumns);
+    pszTable = GAME_EMPIRES;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
+    // GameNukedEmpires
+    Assert(countof(GameNukedEmpires::Types) == GameNukedEmpires::NumColumns);
+    Assert(countof(GameNukedEmpires::Sizes) == GameNukedEmpires::NumColumns);
+    Assert(countof(GameNukedEmpires::ColumnNames) == GameNukedEmpires::NumColumns);
+
+    pszTable = GAME_NUKED_EMPIRES;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // GameMap
     Assert(countof(GameMap::Types) == GameMap::NumColumns);
     Assert(countof(GameMap::Sizes) == GameMap::NumColumns);
     Assert(countof(GameMap::ColumnNames) == GameMap::NumColumns);
 
+    pszTable = GAME_MAP;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
     // GameEmpireData
     Assert(countof(GameEmpireData::Types) == GameEmpireData::NumColumns);
     Assert(countof(GameEmpireData::Sizes) == GameEmpireData::NumColumns);
     Assert(countof(GameEmpireData::ColumnNames) == GameEmpireData::NumColumns);
+
+    pszTable = GAME_DATA;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // GameEmpireMessages
     Assert(countof(GameEmpireMessages::Types) == GameEmpireMessages::NumColumns);
     Assert(countof(GameEmpireMessages::Sizes) == GameEmpireMessages::NumColumns);
     Assert(countof(GameEmpireMessages::ColumnNames) == GameEmpireMessages::NumColumns);
 
+    pszTable = GAME_EMPIRE_MESSAGES;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
     // GameEmpireMap
     Assert(countof(GameEmpireMap::Types) == GameEmpireMap::NumColumns);
     Assert(countof(GameEmpireMap::Sizes) == GameEmpireMap::NumColumns);
     Assert(countof(GameEmpireMap::ColumnNames) == GameEmpireMap::NumColumns);
     
+    pszTable = GAME_EMPIRE_MAP;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
     // GameEmpireDiplomacy
     Assert(countof(GameEmpireDiplomacy::Types) == GameEmpireDiplomacy::NumColumns);
     Assert(countof(GameEmpireDiplomacy::Sizes) == GameEmpireDiplomacy::NumColumns);
     Assert(countof(GameEmpireDiplomacy::ColumnNames) == GameEmpireDiplomacy::NumColumns);
+
+    pszTable = GAME_EMPIRE_DIPLOMACY;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
     // GameEmpireShips
     Assert(countof(GameEmpireShips::Types) == GameEmpireShips::NumColumns);
     Assert(countof(GameEmpireShips::Sizes) == GameEmpireShips::NumColumns);
     Assert(countof(GameEmpireShips::ColumnNames) == GameEmpireShips::NumColumns);
 
+    pszTable = GAME_EMPIRE_SHIPS;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
     // GameEmpireFleets
     Assert(countof(GameEmpireFleets::Types) == GameEmpireFleets::NumColumns);
     Assert(countof(GameEmpireFleets::Sizes) == GameEmpireFleets::NumColumns);
     Assert(countof(GameEmpireFleets::ColumnNames) == GameEmpireFleets::NumColumns);
 
+    pszTable = GAME_EMPIRE_FLEETS;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
+
     // GameSecurity
     Assert(countof(GameSecurity::Types) == GameSecurity::NumColumns);
     Assert(countof(GameSecurity::Sizes) == GameSecurity::NumColumns);
     Assert(countof(GameSecurity::ColumnNames) == GameSecurity::NumColumns);
+
+    pszTable = GAME_SECURITY;
+    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
 
 Cleanup:
 
@@ -843,17 +592,12 @@ int GameEngine::VerifyGameClasses() {
         return iErrCode;
     }
 
-    for(i = 0; i < iNumGameClasses; i ++) {
-
+    for(i = 0; i < iNumGameClasses; i ++)
+    {
         // TODOTODO - why?
         // Set number of active games in gameclass to 0
-        iErrCode = t_pCache->WriteData(
-            SYSTEM_GAMECLASS_DATA,
-            piGameClassKey[i],
-            SystemGameClassData::NumActiveGames,
-            0
-            );
-
+        Variant vZero = (int)0;
+        iErrCode = t_pCache->WriteData(SYSTEM_GAMECLASS_DATA, piGameClassKey[i], SystemGameClassData::NumActiveGames, vZero);
         if (iErrCode != OK) {
             Assert(false);
             goto Cleanup;
@@ -941,340 +685,329 @@ Cleanup:
 
 int GameEngine::VerifyActiveGames()
 {
-    int iErrCode, iNumUpdatesDownBeforeGameIsKilled;
-    unsigned int i, iNumGames;
-    Seconds sSecondsForLongtermStatus;
-    bool bUpdate;
+    return OK;
 
-    Variant* pvGame = NULL, * pvEmpireKey = NULL, vTemp;
+    // TODOTODO - verify none of this is necessary
 
-    UTCTime tNewTime, tCurrentTime;
-    Time::GetTime(&tCurrentTime);
-
-    iErrCode = t_pCache->ReadColumn(
-        SYSTEM_ACTIVE_GAMES, 
-        SystemActiveGames::GameClassGameNumber,
-        NULL,
-        &pvGame,
-        &iNumGames
-        );
-
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        return OK;
-    }
-
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-    // Read some system data
-    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-    sSecondsForLongtermStatus = vTemp.GetInteger();
-
-    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-    iNumUpdatesDownBeforeGameIsKilled = vTemp.GetInteger();
-
-    // Loop through all games
-    for(i = 0; i < iNumGames; i ++) {
-
-        char pszBuffer [512];
-
-        Seconds sPeriod, sConsumedTime, sElapsedTime;
-        UTCTime tLastUpdateTime, tLastCheckTime;
-
-        bool bPasswordProtected, bPaused, bStarted;
-        unsigned int j, iNumEmpires, iNumPaused;
-
-        int iGameClass, iGameNumber, iState;
-        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
-
-        GAME_DATA(strGameData, iGameClass, iGameNumber);
-        GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
-
-        // Increment number of games in gameclass
-        iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        
-        // Get game update period
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        sPeriod = vTemp.GetInteger();
-        
-        // Get game state
-        iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vTemp);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        iState = vTemp.GetInteger();
-
-        bPaused =(iState & PAUSED) ||(iState & ADMIN_PAUSED);
-        bStarted =(iState & STARTED) != 0;
-
-        // Get game last update check time
-        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateCheck, &vTemp);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        tLastCheckTime = vTemp.GetInteger64();
-        
-        // Reset state
-        iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_BUSY);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        
-        // Get num empires
-        iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-
-        // Is password protected?
-        iErrCode = IsGamePasswordProtected(iGameClass, iGameNumber, &bPasswordProtected);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-
-        // Get last update time
-        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        tLastUpdateTime = vTemp.GetInteger64();
-
-        // If started and not paused, reset last update time to current time minus 
-        //(last shutdown time minus last update time)
-        if (bStarted && !bPaused) {
-            
-            sConsumedTime = Time::GetSecondDifference(tLastCheckTime, tLastUpdateTime);
-            if (sConsumedTime < 0) {
-                Assert(false);
-                sConsumedTime = 0;
-            }
-
-            // Write final update time to database
-            Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
-
-            iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateTime, tNewTime);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-        }
-        
-        // Update empires' last login settings
-        iErrCode = t_pCache->ReadColumn(
-            strGameEmpires, 
-            GameEmpires::EmpireKey, 
-            NULL,
-            &pvEmpireKey, 
-            &iNumEmpires
-            );
-
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-
-        // Loop through all empires in game
-        iNumPaused = 0;
-
-        for(j = 0; j < iNumEmpires; j ++) {
-
-            UTCTime tLastLoginTime;
-            int iOptions;
-            unsigned int iEmpireKey = pvEmpireKey[j].GetInteger();
-
-            GAME_EMPIRE_DATA(strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::LastLogin, &vTemp);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-            tLastLoginTime = vTemp.GetInteger64();
-            
-            sConsumedTime = Time::GetSecondDifference(tLastCheckTime, tLastLoginTime);
-            if (sConsumedTime < 0) {
-                sConsumedTime = 0;
-            }
-            tLastLoginTime = vTemp.GetInteger64();
-            
-            Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
-            
-            iErrCode = t_pCache->WriteData(strEmpireData, GameEmpireData::LastLogin, tNewTime);
-            if (iErrCode != OK) {
-                Assert(false);
-                t_pCache->FreeData(pvEmpireKey);
-                goto Cleanup;
-            }
-            
-            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vTemp);
-            if (iErrCode != OK) {
-                Assert(false);
-                t_pCache->FreeData(pvEmpireKey);
-                goto Cleanup;
-            }
-            iOptions = vTemp.GetInteger();
-
-            if (iOptions & REQUEST_PAUSE) {
-                iNumPaused ++;
-            }
-        }
-
-        // Update num paused
-        iErrCode = t_pCache->WriteData(strGameData, GameData::NumRequestingPause, iNumPaused);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-        
-        // Set paused status
-        if (iNumPaused == iNumEmpires) {
-            
-            if (!bPaused) {
-
-                bool bIdle;
-                iErrCode = AreAllEmpiresIdle(iGameClass, iGameNumber, &bIdle);
-                if (iErrCode != OK) {
-                    Assert(false);
-                    goto Cleanup;
-                }
-
-                if (!bIdle) {
-
-                    iErrCode = PauseGame(iGameClass, iGameNumber, false, true);
-                    if (iErrCode != OK) {
-                        Assert(false);
-                        goto Cleanup;
-                    }
-                }
-            }
-            
-        } else {
-            
-            if (bPaused && !(iState & ADMIN_PAUSED)) {
-
-                iErrCode = UnpauseGame(iGameClass, iGameNumber, false, true);
-                if (iErrCode != OK) {
-                    Assert(false);
-                    goto Cleanup;
-                }
-            }
-        }
-
-        // Delete the game if it's in an 'interrupted' state
-        if ((iState & GAME_BUSY) && !(iState & GAME_WAITING_TO_UPDATE)) {
-
-            int iReason = iState & ~GAME_DELETION_REASON_MASK;
-            Assert(iReason != 0);
-
-            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", iReason);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-
-            sprintf(
-                pszBuffer,
-                "GameEngine setup deleted game %i of gameclass %i because it was in "\
-                "inconsistent state %i",
-                iGameNumber,
-                iGameClass,
-                iReason
-                );
-
-            global.GetReport()->WriteReport(pszBuffer);
-            continue;
-        }
-
-        // Game should be killed if it's not paused and it's not a longterm and 
-        // more than x updates have transpired while the server was down
-        sElapsedTime = Time::GetSecondDifference(tCurrentTime, tLastCheckTime);
-
-        if (!bPaused &&
-            sPeriod < sSecondsForLongtermStatus && 
-            sElapsedTime > sPeriod * iNumUpdatesDownBeforeGameIsKilled) {
-
-            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-                
-            sprintf(
-                pszBuffer,
-                "GameEngine setup deleted game %i of gameclass %i "\
-                "because it grew stale during a system shutdown",
-                iGameNumber,
-                iGameClass
-                );
-
-            global.GetReport()->WriteReport(pszBuffer);
-            continue;
-        }
-
-        // If game hasn't started and is password protected and has only one empire, kill it                    
-        if (!(iState & STARTED) && bPasswordProtected && iNumEmpires == 1) {
-            
-            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
-
-            sprintf(
-                pszBuffer,
-                "GameEngine setup deleted game %i of gameclass %i "\
-                "because it was password protected and only contained one empire",
-                iGameNumber,
-                iGameClass
-                );
-                
-            global.GetReport()->WriteReport(pszBuffer);
-            continue;
-        }
-
-        // Update the game
-        iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdate);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-    }
-    
-Cleanup:
-
-    if (pvGame != NULL) {
-        t_pCache->FreeData(pvGame);
-    }
-
-    if (pvEmpireKey != NULL) {
-        t_pCache->FreeData(pvEmpireKey);
-    }
-
-    return iErrCode;
+//    int iErrCode, iNumUpdatesDownBeforeGameIsKilled;
+//    unsigned int i, iNumGames;
+//    Seconds sSecondsForLongtermStatus;
+//    bool bUpdate;
+//
+//    Variant* pvGame = NULL, * pvEmpireKey = NULL, vTemp;
+//
+//    UTCTime tNewTime, tCurrentTime;
+//    Time::GetTime(&tCurrentTime);
+//
+//    iErrCode = t_pCache->ReadColumn(SYSTEM_ACTIVE_GAMES, SystemActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
+//    if (iErrCode == ERROR_DATA_NOT_FOUND) {
+//        return OK;
+//    }
+//
+//    if (iErrCode != OK)
+//        goto Cleanup;
+//
+//    // Read some system data
+//    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
+//    if (iErrCode != OK)
+//        goto Cleanup;
+//    sSecondsForLongtermStatus = vTemp.GetInteger();
+//
+//    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
+//    if (iErrCode != OK)
+//        goto Cleanup;
+//    iNumUpdatesDownBeforeGameIsKilled = vTemp.GetInteger();
+//
+//    // Loop through all games
+//    for(i = 0; i < iNumGames; i ++)
+//    {
+//        char pszBuffer [512];
+//
+//        Seconds sPeriod, sConsumedTime, sElapsedTime;
+//        UTCTime tLastUpdateTime, tLastCheckTime;
+//
+//        bool bPasswordProtected, bPaused, bStarted;
+//        unsigned int j, iNumEmpires, iNumPaused;
+//
+//        int iGameClass, iGameNumber, iState;
+//        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
+//
+//        GET_GAME_DATA(strGameData, iGameClass, iGameNumber);
+//        GET_GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
+//
+//        // Increment number of games in gameclass
+//        iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
+//        if (iErrCode != OK)
+//            goto Cleanup;
+//        
+//        // Get game update period
+//        iErrCode = t_pCache->ReadData(
+//            SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//        sPeriod = vTemp.GetInteger();
+//        
+//        // Get game state
+//        iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vTemp);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//        iState = vTemp.GetInteger();
+//
+//        bPaused =(iState & PAUSED) ||(iState & ADMIN_PAUSED);
+//        bStarted =(iState & STARTED) != 0;
+//
+//        // Get game last update check time
+//        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateCheck, &vTemp);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//        tLastCheckTime = vTemp.GetInteger64();
+//        
+//        // Reset state
+//        iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_BUSY);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//        
+//        // Get num empires
+//        iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//
+//        // Is password protected?
+//        iErrCode = IsGamePasswordProtected(iGameClass, iGameNumber, &bPasswordProtected);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//
+//        // Get last update time
+//        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//        tLastUpdateTime = vTemp.GetInteger64();
+//
+//        // If started and not paused, reset last update time to current time minus 
+//        //(last shutdown time minus last update time)
+//        if (bStarted && !bPaused) {
+//            
+//            sConsumedTime = Time::GetSecondDifference(tLastCheckTime, tLastUpdateTime);
+//            if (sConsumedTime < 0) {
+//                Assert(false);
+//                sConsumedTime = 0;
+//            }
+//
+//            // Write final update time to database
+//            Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
+//
+//            iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateTime, tNewTime);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                goto Cleanup;
+//            }
+//        }
+//        
+//        // Update empires' last login settings
+//        iErrCode = t_pCache->ReadColumn(
+//            strGameEmpires, 
+//            GameEmpires::EmpireKey, 
+//            NULL,
+//            &pvEmpireKey, 
+//            &iNumEmpires
+//            );
+//
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//
+//        // Loop through all empires in game
+//        iNumPaused = 0;
+//
+//        for(j = 0; j < iNumEmpires; j ++) {
+//
+//            UTCTime tLastLoginTime;
+//            int iOptions;
+//            unsigned int iEmpireKey = pvEmpireKey[j].GetInteger();
+//
+//            GET_GAME_EMPIRE_DATA(strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+//
+//            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::LastLogin, &vTemp);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                goto Cleanup;
+//            }
+//            tLastLoginTime = vTemp.GetInteger64();
+//            
+//            sConsumedTime = Time::GetSecondDifference(tLastCheckTime, tLastLoginTime);
+//            if (sConsumedTime < 0) {
+//                sConsumedTime = 0;
+//            }
+//            tLastLoginTime = vTemp.GetInteger64();
+//            
+//            Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
+//            
+//            iErrCode = t_pCache->WriteData(strEmpireData, GameEmpireData::LastLogin, tNewTime);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                t_pCache->FreeData(pvEmpireKey);
+//                goto Cleanup;
+//            }
+//            
+//            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vTemp);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                t_pCache->FreeData(pvEmpireKey);
+//                goto Cleanup;
+//            }
+//            iOptions = vTemp.GetInteger();
+//
+//            if (iOptions & REQUEST_PAUSE) {
+//                iNumPaused ++;
+//            }
+//        }
+//
+//        // Update num paused
+//        iErrCode = t_pCache->WriteData(strGameData, GameData::NumRequestingPause, iNumPaused);
+//        if (iErrCode != OK) {
+//            Assert(false);
+//            goto Cleanup;
+//        }
+//        
+//        // Set paused status
+//        if (iNumPaused == iNumEmpires) {
+//            
+//            if (!bPaused) {
+//
+//                bool bIdle;
+//                iErrCode = AreAllEmpiresIdle(iGameClass, iGameNumber, &bIdle);
+//                if (iErrCode != OK) {
+//                    Assert(false);
+//                    goto Cleanup;
+//                }
+//
+//                if (!bIdle) {
+//
+//                    iErrCode = PauseGame(iGameClass, iGameNumber, false, true);
+//                    if (iErrCode != OK) {
+//                        Assert(false);
+//                        goto Cleanup;
+//                    }
+//                }
+//            }
+//            
+//        } else {
+//            
+//            if (bPaused && !(iState & ADMIN_PAUSED)) {
+//
+//                iErrCode = UnpauseGame(iGameClass, iGameNumber, false, true);
+//                if (iErrCode != OK) {
+//                    Assert(false);
+//                    goto Cleanup;
+//                }
+//            }
+//        }
+//
+//        // Delete the game if it's in an 'interrupted' state
+//        if ((iState & GAME_BUSY) && !(iState & GAME_WAITING_TO_UPDATE)) {
+//
+//            int iReason = iState & ~GAME_DELETION_REASON_MASK;
+//            Assert(iReason != 0);
+//
+//            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", iReason);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                goto Cleanup;
+//            }
+//
+//            sprintf(
+//                pszBuffer,
+//                "GameEngine setup deleted game %i of gameclass %i because it was in "\
+//                "inconsistent state %i",
+//                iGameNumber,
+//                iGameClass,
+//                iReason
+//                );
+//
+//            global.GetReport()->WriteReport(pszBuffer);
+//            continue;
+//        }
+//
+//        // Game should be killed if it's not paused and it's not a longterm and 
+//        // more than x updates have transpired while the server was down
+//        sElapsedTime = Time::GetSecondDifference(tCurrentTime, tLastCheckTime);
+//
+//        if (!bPaused &&
+//            sPeriod < sSecondsForLongtermStatus && 
+//            sElapsedTime > sPeriod * iNumUpdatesDownBeforeGameIsKilled) {
+//
+//            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                goto Cleanup;
+//            }
+//                
+//            sprintf(
+//                pszBuffer,
+//                "GameEngine setup deleted game %i of gameclass %i "\
+//                "because it grew stale during a system shutdown",
+//                iGameNumber,
+//                iGameClass
+//                );
+//
+//            global.GetReport()->WriteReport(pszBuffer);
+//            continue;
+//        }
+//
+//        // If game hasn't started and is password protected and has only one empire, kill it                    
+//        if (!(iState & STARTED) && bPasswordProtected && iNumEmpires == 1) {
+//            
+//            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED);
+//            if (iErrCode != OK) {
+//                Assert(false);
+//                goto Cleanup;
+//            }
+//
+//            sprintf(
+//                pszBuffer,
+//                "GameEngine setup deleted game %i of gameclass %i "\
+//                "because it was password protected and only contained one empire",
+//                iGameNumber,
+//                iGameClass
+//                );
+//                
+//            global.GetReport()->WriteReport(pszBuffer);
+//            continue;
+//        }
+//
+//        // Update the game
+//        iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdate);
+//        if (iErrCode != OK) {
+//            goto Cleanup;
+//        }
+//    }
+//    
+//Cleanup:
+//
+//    if (pvGame != NULL) {
+//        t_pCache->FreeData(pvGame);
+//    }
+//
+//    if (pvEmpireKey != NULL) {
+//        t_pCache->FreeData(pvEmpireKey);
+//    }
+//
+//    return iErrCode;
 }
 
 //
@@ -1286,12 +1019,6 @@ int GameEngine::InitializeNewDatabase() {
     int iErrCode;
 
     global.GetReport()->WriteReport("GameEngine setup is initializing a new database");
-            
-    iErrCode = CreateDefaultSystemTemplates();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup could not create the default system templates");
-        return iErrCode;
-    }
 
     iErrCode = CreateDefaultSystemTables();
     if (iErrCode != OK) {
@@ -1314,224 +1041,6 @@ int GameEngine::InitializeNewDatabase() {
     global.GetReport()->WriteReport("GameEngine setup finished initializing a new database");
     return iErrCode;
 }
-
-
-// Create default templates
-int GameEngine::CreateDefaultSystemTemplates() {
-
-    /*int iErrCode = m_pGameData->CreateTemplate(SystemData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemEmpireData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemGameClassData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemAlienIcons::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemSystemGameClassData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemSuperClassData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemThemes::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemActiveGames::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemEmpireMessages::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemEmpireNukeList::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemNukeList::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemLatestGames::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemEmpireActiveGames::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemTournaments::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemTournamentTeams::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemTournamentEmpires::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-    
-    iErrCode = m_pGameData->CreateTemplate(SystemTournamentActiveGames::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemEmpireTournaments::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpires::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameDeadEmpires::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameMap::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpireData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpireMessages::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpireMap::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpireDiplomacy::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpireShips::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameEmpireFleets::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameIndependentShips::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemAlmonasterScoreTopList::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemClassicScoreTopList::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemBridierScoreTopList::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemBridierScoreEstablishedTopList::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(SystemChatroomData::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    iErrCode = m_pGameData->CreateTemplate(GameSecurity::Template);
-    if (iErrCode != OK && iErrCode != ERROR_TEMPLATE_ALREADY_EXISTS) {
-        Assert(false);
-        return iErrCode;
-    }*/
-
-    return OK;
-}
-
 
 //
 // Create the default system tables
@@ -1596,34 +1105,6 @@ int GameEngine::CreateDefaultSystemTables() {
         return iErrCode;
     }
 
-    // Create SystemAlmonasterScoreTopList table
-    iErrCode = t_pCache->CreateTable(SYSTEM_ALMONASTER_SCORE_TOPLIST, SystemAlmonasterScoreTopList::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    // Create SystemClassicScoreTopList table
-    iErrCode = t_pCache->CreateTable(SYSTEM_CLASSIC_SCORE_TOPLIST, SystemClassicScoreTopList::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    // Create SystemBridierScoreTopList table
-    iErrCode = t_pCache->CreateTable(SYSTEM_BRIDIER_SCORE_TOPLIST, SystemBridierScoreTopList::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
-    // Create SystemBridierScoreEstablishedTopList table
-    iErrCode = t_pCache->CreateTable(SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST, SystemBridierScoreEstablishedTopList::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
     // Create SystemNukeList table
     iErrCode = t_pCache->CreateTable(SYSTEM_NUKE_LIST, SystemNukeList::Template);
     if (iErrCode != OK) {
@@ -1654,6 +1135,13 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemEmpireMessages table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_MESSAGES, SystemEmpireMessages::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create SystemEmpireAssociations table
+    iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_ASSOCIATIONS, SystemEmpireAssociations::Template);
     if (iErrCode != OK)
     {
         return iErrCode;
@@ -1696,6 +1184,83 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemEmpireNukedList table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_NUKED_LIST, SystemEmpireNukeList::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameData table
+    iErrCode = t_pCache->CreateTable(GAME_DATA, GameData::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameSecurity table
+    iErrCode = t_pCache->CreateTable(GAME_SECURITY, GameSecurity::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpires table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRES, GameEmpires::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameNukedEmpires table
+    iErrCode = t_pCache->CreateTable(GAME_NUKED_EMPIRES, GameNukedEmpires::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameMap table
+    iErrCode = t_pCache->CreateTable(GAME_MAP, GameMap::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpireData table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRE_DATA, GameEmpireData::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpireMessages table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRE_MESSAGES, GameEmpireMessages::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpireMap table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRE_MAP, GameEmpireMap::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpireDiplomacy table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRE_DIPLOMACY, GameEmpireDiplomacy::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpireShips table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRE_SHIPS, GameEmpireShips::Template);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    // Create GameEmpireFleets table
+    iErrCode = t_pCache->CreateTable(GAME_EMPIRE_FLEETS, GameEmpireFleets::Template);
     if (iErrCode != OK)
     {
         return iErrCode;
@@ -3375,71 +2940,4 @@ int GameEngine::VerifyTournaments() {
     }
     
     return OK;
-}
-
-int GameEngine::VerifyTopLists() {
-
-    int i, iErrCode;
-    bool bRebuild = false;
-    
-    ENUMERATE_SCORING_SYSTEMS(i) {
-        
-        ScoringSystem ssTopList =(ScoringSystem) i;
-        if (HasTopList(ssTopList)) {
-
-            if (!bRebuild) {
-                
-                iErrCode = VerifyTopList(ssTopList);
-                if (iErrCode != OK) {
-                    bRebuild = true;
-                }
-            }
-            
-            if (bRebuild) {
-                
-                iErrCode = RebuildTopList(ssTopList);
-                if (iErrCode != OK) {
-                    Assert(false);
-                    return iErrCode;
-                }
-            }
-        }
-    }
-
-    return OK;
-}
-
-int GameEngine::RebuildTopLists() {
-
-    int i, iErrCode = OK;
-
-    ENUMERATE_SCORING_SYSTEMS(i) {
-
-        ScoringSystem ssTopList =(ScoringSystem) i;
-        if (HasTopList(ssTopList)) {
-
-            iErrCode = RebuildTopList(ssTopList);
-            if (iErrCode != OK) break;
-        }
-    }
-
-    return iErrCode;
-}
-
-int GameEngine::RebuildTopList(ScoringSystem ssTopList) {
-    
-    // TODOTODO - rewrite top lists
-    return OK;
-    /*int iErrCode;
-    const char* pszTableName = TOPLIST_TABLE_NAME[ssTopList];
-    
-    iErrCode = t_pCache->DeleteAllRows(pszTableName);
-    if (iErrCode == OK) {
-        iErrCode = InitializeEmptyTopList(ssTopList);
-        Assert(iErrCode == OK);
-    }
-
-    else Assert(false);
-
-    return iErrCode;*/
 }

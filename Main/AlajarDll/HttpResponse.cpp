@@ -1453,7 +1453,7 @@ int HttpResponse::Send() {
 
     m_stResponseLength += stSent;
 
-    Assert ((m_bNoBuffering && m_rType == RESPONSE_BUFFER) || !m_bNoBuffering);
+    Assert((m_bNoBuffering && m_rType == RESPONSE_BUFFER) || !m_bNoBuffering);
 
     // Send data
     if (m_pHttpRequest->GetMethod() != HEAD) {

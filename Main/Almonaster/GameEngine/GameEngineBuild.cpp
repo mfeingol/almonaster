@@ -53,13 +53,13 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
 
     unsigned int iProxyPlanetKey;
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
-    GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_FLEETS (strEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_FLEETS (strEmpireFleets, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_MAP (strEmpireMap, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     *piNumShipsBuilt = 0;
     *pbBuildReduced = false;
@@ -282,7 +282,11 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     {   // Scope
 
     // Prepare data for insertion
-    Variant pvColVal[GameEmpireShips::NumColumns] = {
+    Variant pvColVal[GameEmpireShips::NumColumns] = 
+    {
+        iGameClass,
+        iGameNumber,
+        iEmpireKey,
         pszShipName,
         iTechKey,
         fBR,
@@ -593,7 +597,7 @@ Cleanup:
 int GameEngine::GetNumBuilds (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumBuilds) {
 
     Variant vTemp;
-    GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireKey)
+    GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireKey)
 
     int iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::NumBuilds, &vTemp);
     if (iErrCode == OK) {
@@ -613,7 +617,7 @@ int GameEngine::GetNumBuilds (int iGameClass, int iGameNumber, int iEmpireKey, i
 
 int GameEngine::CancelAllBuilds (int iGameClass, int iGameNumber, int iEmpireKey) {
 
-    GAME_EMPIRE_SHIPS (strShips, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_SHIPS (strShips, iGameClass, iGameNumber, iEmpireKey);
 
     unsigned int i, iNumShips, * piShipKey = NULL;
 
@@ -682,7 +686,7 @@ int GameEngine::GetBuilderPlanetKeys(unsigned int iGameClass, int iGameNumber, u
         goto Cleanup;
 
     // Search for matches
-    GAME_MAP(strGameMap, iGameClass, iGameNumber);
+    GET_GAME_MAP(strGameMap, iGameClass, iGameNumber);
     iErrCode = t_pCache->GetTable(strGameMap, &pMap);
     if (iErrCode != OK)
         goto Cleanup;
@@ -734,7 +738,7 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
 
     BuildLocation* pblBuildLocation = NULL;
 
-    GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
 
     *ppblBuildLocation = NULL;
     *piNumLocations = 0;
@@ -859,7 +863,7 @@ int GameEngine::IsPlanetBuilder (unsigned int iGameClass, int iGameNumber, unsig
     int iErrCode;
     Variant vTemp, vPop;
 
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
     *pbBuilder = false;
 

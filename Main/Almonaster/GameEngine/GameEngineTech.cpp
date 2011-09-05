@@ -30,7 +30,7 @@
 
 int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpireKey, int* piNumAvailableTechs) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vNumAvailableTechs;
     
@@ -71,7 +71,7 @@ int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpi
 int GameEngine::GetDevelopedTechs (int iGameClass, int iGameNumber, int iEmpireKey, int* piTechDevs, 
                                    int* piTechUndevs) {
 
-    GAME_EMPIRE_DATA (strGameData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameData, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vTemp;
     int iErrCode = t_pCache->ReadData(strGameData, GameEmpireData::TechDevs, &vTemp);
@@ -106,7 +106,7 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
 
     // Make sure a tech dev is available to the empire
     Variant vTech;
-    GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
     if (iErrCode != OK || vTech.GetInteger() == 0) {

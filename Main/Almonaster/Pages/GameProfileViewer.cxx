@@ -146,7 +146,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     iErrCode = GetEmpireName (iTargetEmpireKey, &vSentName);
                     if (iErrCode == OK) {
-                        sprintf (pszBuffer, "Your message was sent to %s", vSentName.GetCharPtr());
+                        sprintf(pszBuffer, "Your message was sent to %s", vSentName.GetCharPtr());
                         AddMessage (pszBuffer);
                     } else {
                         AddMessage ("That empire no longer exists");
@@ -164,7 +164,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     break;
 
                 default:
-                    sprintf (pszBuffer, "Your message could not be sent due to error %i", iErrCode);
+                    sprintf(pszBuffer, "Your message could not be sent due to error %i", iErrCode);
                     AddMessage (pszBuffer);
                     return iErrCode;
                 }
@@ -211,7 +211,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Check for advanced
             char pszAdvanced [128];
-            sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
+            sprintf(pszAdvanced, "Advanced%i", iGameClassKey);
 
             if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
                 iProfilePage = 4;
@@ -259,7 +259,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                     else {
                         char pszBuffer [256];
-                        sprintf (pszBuffer, "Error %i occurred deleting the gameclass", iErrCode);
+                        sprintf(pszBuffer, "Error %i occurred deleting the gameclass", iErrCode);
                         AddMessage (pszBuffer);
                     }
                 }
@@ -303,7 +303,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         {
                         char pszBuffer [256];
-                        sprintf (pszBuffer, "The gameclass could not be undeleted; the error was %i", iErrCode);
+                        sprintf(pszBuffer, "The gameclass could not be undeleted; the error was %i", iErrCode);
                         AddMessage (pszBuffer);
                         }
                         break;
@@ -337,7 +337,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                     else {
                         char pszBuffer [256];
-                        sprintf (pszBuffer, "Error %i occurred halting the gameclass", iErrCode);
+                        sprintf(pszBuffer, "Error %i occurred halting the gameclass", iErrCode);
                         AddMessage (pszBuffer);
                     }
                 }
@@ -381,7 +381,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         {
                         char pszBuffer [256];
-                        sprintf (pszBuffer, "The gameclass could not be unhalted; the error was %i", iErrCode);
+                        sprintf(pszBuffer, "The gameclass could not be unhalted; the error was %i", iErrCode);
                         AddMessage (pszBuffer);
                         }
 
@@ -507,7 +507,7 @@ case 1:
     if (!bExists) {
         %><p>That empire no longer exists<%
     } else {
-        WriteProfile (m_iEmpireKey, iTargetEmpireKey, false, false, true); 
+        Check(WriteProfile(m_iEmpireKey, iTargetEmpireKey, false, false, true)); 
     }
 
     }

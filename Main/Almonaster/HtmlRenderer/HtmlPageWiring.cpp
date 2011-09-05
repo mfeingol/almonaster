@@ -19,7 +19,8 @@
 #include "HtmlRenderer.h"
 
 typedef int (*RenderFunction)(HtmlRenderer*);
-typedef void (*CacheFunction)(HtmlRenderer*, Vector<TableCacheEntry>& cache);
+typedef void (*RegisterCacheFunction)(HtmlRenderer*, Vector<TableCacheEntry>& cache);
+typedef int (*AfterCacheFunction)(HtmlRenderer*);
 
 //
 // Wiring
@@ -493,7 +494,7 @@ void Fxn_RegisterCache_SystemTos(HtmlRenderer* pThis, Vector<TableCacheEntry>& c
     pThis->RegisterCache_SystemTos(cache);
 }
 
-const CacheFunction g_pfxnRegisterCachePage[] = {
+const RegisterCacheFunction g_pfxnRegisterCachePage[] = {
     NULL,
     Fxn_RegisterCache_ActiveGameList,
     Fxn_RegisterCache_Login,
@@ -538,6 +539,264 @@ const CacheFunction g_pfxnRegisterCachePage[] = {
     Fxn_RegisterCache_Tournaments,
     Fxn_RegisterCache_SystemTos,
     Fxn_RegisterCache_Tournaments,
+    NULL
+};
+
+int Fxn_AfterCache_ActiveGameList(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_ActiveGameList();
+}
+
+int Fxn_AfterCache_Login(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Login();
+}
+
+int Fxn_AfterCache_NewEmpire(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_NewEmpire();
+}
+
+int Fxn_AfterCache_OpenGameList(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_OpenGameList();
+}
+
+int Fxn_AfterCache_SystemGameList(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemGameList();
+}
+
+int Fxn_AfterCache_ProfileEditor(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_ProfileEditor();
+}
+
+int Fxn_AfterCache_TopLists(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_TopLists();
+}
+
+int Fxn_AfterCache_ProfileViewer(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_ProfileViewer();
+}
+
+int Fxn_AfterCache_ServerAdministrator(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_ServerAdministrator();
+}
+
+int Fxn_AfterCache_EmpireAdministrator(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_EmpireAdministrator();
+}
+
+int Fxn_AfterCache_GameAdministrator(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameAdministrator();
+}
+
+int Fxn_AfterCache_ThemeAdministrator(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_ThemeAdministrator();
+}
+
+int Fxn_AfterCache_PersonalGameClasses(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_PersonalGameClasses();
+}
+
+int Fxn_AfterCache_Chatroom(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Chatroom();
+}
+
+int Fxn_AfterCache_SystemServerRules(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemServerRules();
+}
+
+int Fxn_AfterCache_SystemFAQ(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemFAQ();
+}
+
+int Fxn_AfterCache_SystemNews(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemNews();
+}
+
+int Fxn_AfterCache_Info(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Info();
+}
+
+int Fxn_AfterCache_Tech(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Tech();
+}
+
+int Fxn_AfterCache_Diplomacy(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Diplomacy();
+}
+
+int Fxn_AfterCache_Map(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Map();
+}
+
+int Fxn_AfterCache_Planets(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Planets();
+}
+
+int Fxn_AfterCache_Options(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Options();
+}
+
+int Fxn_AfterCache_Build(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Build();
+}
+
+int Fxn_AfterCache_Ships(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Ships();
+}
+
+int Fxn_AfterCache_GameServerRules(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameServerRules();
+}
+
+int Fxn_AfterCache_GameFAQ(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameFAQ();
+}
+
+int Fxn_AfterCache_GameNews(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameNews();
+}
+
+int Fxn_AfterCache_GameProfileViewer(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameProfileViewer();
+}
+
+int Fxn_AfterCache_Quit(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Quit();
+}
+
+int Fxn_AfterCache_LatestNukes(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_LatestNukes();
+}
+
+int Fxn_AfterCache_SpectatorGames(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SpectatorGames();
+}
+
+int Fxn_AfterCache_GameContributions(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameContributions();
+}
+
+int Fxn_AfterCache_GameCredits(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameCredits();
+}
+
+int Fxn_AfterCache_SystemContributions(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemContributions();
+}
+
+int Fxn_AfterCache_SystemCredits(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemCredits();
+}
+
+int Fxn_AfterCache_LatestGames(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_LatestGames();
+}
+
+int Fxn_AfterCache_TournamentAdministrator(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_TournamentAdministrator();
+}
+
+int Fxn_AfterCache_PersonalTournaments(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_PersonalTournaments();
+}
+
+int Fxn_AfterCache_Tournaments(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_Tournaments();
+}
+
+int Fxn_AfterCache_GameTos(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_GameTos();
+}
+
+int Fxn_AfterCache_SystemTos(HtmlRenderer* pThis)
+{
+    return pThis->AfterCache_SystemTos();
+}
+
+const AfterCacheFunction g_pfxnAfterCachePage[] = {
+    NULL,
+    Fxn_AfterCache_ActiveGameList,
+    Fxn_AfterCache_Login,
+    Fxn_AfterCache_NewEmpire,
+    Fxn_AfterCache_OpenGameList,
+    Fxn_AfterCache_SystemGameList,
+    Fxn_AfterCache_ProfileEditor,
+    Fxn_AfterCache_TopLists,
+    Fxn_AfterCache_ProfileViewer,
+    Fxn_AfterCache_ServerAdministrator,
+    Fxn_AfterCache_EmpireAdministrator,
+    Fxn_AfterCache_GameAdministrator,
+    Fxn_AfterCache_ThemeAdministrator,
+    Fxn_AfterCache_PersonalGameClasses,
+    Fxn_AfterCache_Chatroom,
+    Fxn_AfterCache_SystemServerRules,
+    Fxn_AfterCache_SystemFAQ,
+    Fxn_AfterCache_SystemNews,
+    Fxn_AfterCache_Info,
+    Fxn_AfterCache_Tech,
+    Fxn_AfterCache_Diplomacy,
+    Fxn_AfterCache_Map,
+    Fxn_AfterCache_Planets,
+    Fxn_AfterCache_Options,
+    Fxn_AfterCache_Build,
+    Fxn_AfterCache_Ships,
+    Fxn_AfterCache_GameServerRules,
+    Fxn_AfterCache_GameFAQ,
+    Fxn_AfterCache_GameNews,
+    Fxn_AfterCache_GameProfileViewer,
+    Fxn_AfterCache_GameContributions,
+    Fxn_AfterCache_GameCredits,
+    Fxn_AfterCache_GameTos,
+    Fxn_AfterCache_Quit,
+    Fxn_AfterCache_LatestNukes,
+    Fxn_AfterCache_SpectatorGames,
+    Fxn_AfterCache_SystemContributions,
+    Fxn_AfterCache_SystemCredits,
+    Fxn_AfterCache_LatestGames,
+    Fxn_AfterCache_TournamentAdministrator,
+    Fxn_AfterCache_PersonalTournaments,
+    Fxn_AfterCache_Tournaments,
+    Fxn_AfterCache_SystemTos,
+    Fxn_AfterCache_Tournaments,
     NULL
 };
 
@@ -596,10 +855,22 @@ void HtmlRenderer::GatherCacheTables(PageId pgPageId, Vector<TableCacheEntry>& c
     g_pfxnRegisterCachePage[pgPageId](this, cache);
 }
 
-int HtmlRenderer::CacheTables(Vector<TableCacheEntry>& cache)
+int HtmlRenderer::CacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache)
 {
     // Prefetch tables of interest
-    return t_pCache->Cache(cache.GetData(), cache.GetNumElements());
+    int iErrCode = t_pCache->Cache(cache.GetData(), cache.GetNumElements());
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    iErrCode = g_pfxnAfterCachePage[pgPageId](this);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    return iErrCode;
 }
 
 int HtmlRenderer::Render()
@@ -613,7 +884,7 @@ int HtmlRenderer::Render()
     
     global.TlsOpenConnection();
     
-    int iErrCode = CacheTables(cache);
+    int iErrCode = CacheTables(m_pgPageId, cache);
     if (iErrCode == OK)
     {
         // Render the page
@@ -642,7 +913,7 @@ int HtmlRenderer::Redirect(PageId pageId)
     // Add to cache if needed
     Vector<TableCacheEntry> cache;
     GatherCacheTables(pageId, cache);
-    int iErrCode = CacheTables(cache);
+    int iErrCode = CacheTables(pageId, cache);
     if (iErrCode == OK)
     {
         // Render the page
@@ -650,368 +921,3 @@ int HtmlRenderer::Redirect(PageId pageId)
     }
     return iErrCode;
 }
-
-//static inline IPage* CreateActiveGameList(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ActiveGameListPage* pPage = new ActiveGameListPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateLogin(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    LoginPage* pPage = new LoginPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateNewEmpire(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    NewEmpirePage* pPage = new NewEmpirePage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateOpenGameList(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    OpenGameListPage* pPage = new OpenGameListPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemGameList(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemGameListPage* pPage = new SystemGameListPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateProfileEditor(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ProfileEditorPage* pPage = new ProfileEditorPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateTopLists(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    TopListsPage* pPage = new TopListsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateProfileViewer(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ProfileViewerPage* pPage = new ProfileViewerPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateServerAdministrator(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ServerAdministratorPage* pPage = new ServerAdministratorPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateEmpireAdministrator(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    EmpireAdministratorPage* pPage = new EmpireAdministratorPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameAdministrator(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameAdministratorPage* pPage = new GameAdministratorPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateThemeAdministrator(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ThemeAdministratorPage* pPage = new ThemeAdministratorPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreatePersonalGameClasses(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    PersonalGameClassesPage* pPage = new PersonalGameClassesPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateChatroom(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ChatroomPage* pPage = new ChatroomPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemServerRules(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemServerRulesPage* pPage = new SystemServerRulesPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemFAQ(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemFAQPage* pPage = new SystemFAQPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemNews(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemNewsPage* pPage = new SystemNewsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateInfo(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    InfoPage* pPage = new InfoPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateTech(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    TechPage* pPage = new TechPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateDiplomacy(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    DiplomacyPage* pPage = new DiplomacyPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateMap(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    MapPage* pPage = new MapPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreatePlanets(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    PlanetsPage* pPage = new PlanetsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateOptions(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    OptionsPage* pPage = new OptionsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateBuild(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    BuildPage* pPage = new BuildPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateShips(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    ShipsPage* pPage = new ShipsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameServerRules(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameServerRulesPage* pPage = new GameServerRulesPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameFAQ(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameFAQPage* pPage = new GameFAQPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameNews(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameNewsPage* pPage = new GameNewsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameProfileViewer(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameProfileViewerPage* pPage = new GameProfileViewerPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateQuit(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    QuitPage* pPage = new QuitPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateLatestNukes(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    LatestNukesPage* pPage = new LatestNukesPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSpectatorGames(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SpectatorGamesPage* pPage = new SpectatorGamesPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameContributions(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameContributionsPage* pPage = new GameContributionsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameCredits(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameCreditsPage* pPage = new GameCreditsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemContributions(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemContributionsPage* pPage = new SystemContributionsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemCredits(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemCreditsPage* pPage = new SystemCreditsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateLatestGames(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    LatestGamesPage* pPage = new LatestGamesPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateTournamentAdministrator(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    TournamentAdministratorPage* pPage = new TournamentAdministratorPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreatePersonalTournaments(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    PersonalTournamentsPage* pPage = new PersonalTournamentsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateTournaments(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    TournamentsPage* pPage = new TournamentsPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateGameTos(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    GameTosPage* pPage = new GameTosPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//static inline IPage* CreateSystemTos(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    SystemTosPage* pPage = new SystemTosPage();
-//    pPage->Initialize(pgePageId, pHttpRequest, pHttpResponse, bRedirected);
-//    return pPage;
-//}
-//
-//typedef IPage* (*CreatePageFunction)(PageId pgePageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected);
-//
-//const CreatePageFunction g_pfxnCreatePage[] = {
-//    NULL,
-//    CreateActiveGameList,
-//    CreateLogin,
-//    CreateNewEmpire,
-//    CreateOpenGameList,
-//    CreateSystemGameList,
-//    CreateProfileEditor,
-//    CreateTopLists,
-//    CreateProfileViewer,
-//    CreateServerAdministrator,
-//    CreateEmpireAdministrator,
-//    CreateGameAdministrator,
-//    CreateThemeAdministrator,
-//    CreatePersonalGameClasses,
-//    CreateChatroom,
-//    CreateSystemServerRules,
-//    CreateSystemFAQ,
-//    CreateSystemNews,
-//    CreateInfo,
-//    CreateTech,
-//    CreateDiplomacy,
-//    CreateMap,
-//    CreatePlanets,
-//    CreateOptions,
-//    CreateBuild,
-//    CreateShips,
-//    CreateGameServerRules,
-//    CreateGameFAQ,
-//    CreateGameNews,
-//    CreateGameProfileViewer,
-//    CreateGameContributions,
-//    CreateGameCredits,
-//    CreateGameTos,
-//    CreateQuit,
-//    CreateLatestNukes,
-//    CreateSpectatorGames,
-//    CreateSystemContributions,
-//    CreateSystemCredits,
-//    CreateLatestGames,
-//    CreateTournamentAdministrator,
-//    CreatePersonalTournaments,
-//    CreateTournaments,
-//    CreateSystemTos,
-//    CreateTournaments,
-//    NULL
-//};
-//
-//IPage* HtmlRenderer::CreatePage(PageId pageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, bool bRedirected)
-//{
-//    Assert(pageId > MIN_PAGE_ID && pageId < MAX_PAGE_ID);
-//    return g_pfxnCreatePage[pageId](pageId, pHttpRequest, pHttpResponse, bRedirected);
-//}
-//
-//int HtmlRenderer::Redirect(PageId pageId)
-//{
-//    // Best effort
-//    m_pHttpResponse->Clear();
-//
-//    Assert(pageId > MIN_PAGE_ID && pageId < MAX_PAGE_ID);
-//    IPage* pNewPage = CreatePage(pageId, m_pHttpRequest, m_pHttpResponse, true);
-//    Assert(pNewPage);
-//
-//    int iErrCode = pNewPage->Render();
-//    SafeRelease(pNewPage);
-//
-//    return iErrCode;
-//}

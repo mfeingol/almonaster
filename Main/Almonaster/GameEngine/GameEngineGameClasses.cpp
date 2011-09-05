@@ -90,7 +90,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
 
         if (iOwner == SYSTEM) {
 
-            sprintf (pszName, "%s [%s]", vGameClassName.GetCharPtr(), vTournamentName.GetCharPtr());
+            sprintf(pszName, "%s [%s]", vGameClassName.GetCharPtr(), vTournamentName.GetCharPtr());
 
         } else {
 
@@ -100,7 +100,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
                 goto Cleanup;
             }
 
-            sprintf (pszName, "%s [%s (%s)]", vGameClassName.GetCharPtr(), vTournamentName.GetCharPtr(), vOwnerName.GetCharPtr());
+            sprintf(pszName, "%s [%s (%s)]", vGameClassName.GetCharPtr(), vTournamentName.GetCharPtr(), vOwnerName.GetCharPtr());
         }
 
         break;
@@ -115,7 +115,7 @@ int GameEngine::GetGameClassName (int iGameClass, char pszName [MAX_FULL_GAME_CL
             goto Cleanup;
         }
         
-        sprintf (pszName, "%s (%s)", vGameClassName.GetCharPtr(), vOwnerName.GetCharPtr());
+        sprintf(pszName, "%s (%s)", vGameClassName.GetCharPtr(), vOwnerName.GetCharPtr());
         break;
     }
 
@@ -285,13 +285,7 @@ bool GameEngine::DoesGameClassHaveActiveGames (int iGameClass) {
 
     Variant vNumActiveGames;
 
-    int iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA,
-        iGameClass,
-        SystemGameClassData::NumActiveGames,
-        &vNumActiveGames
-        );
-
+    int iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, &vNumActiveGames);
     if (iErrCode != OK || vNumActiveGames.GetInteger() > 0) {
         return true;
     }
@@ -517,7 +511,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     }
 
     // Insert new row into SystemGameClassData and obtain key to that row
-    iErrCode = t_pCache->InsertRow (SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template, pvGameClassData, &iGameClass);
+    iErrCode = t_pCache->InsertRow(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template, pvGameClassData, &iGameClass);
     if (iErrCode != OK)
     {
         goto Cleanup;
@@ -608,7 +602,7 @@ int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** p
     *ppbDeleted = NULL;
     *piNumKeys = 0;
 
-    iErrCode = t_pCache->ReadColumn (
+    iErrCode = t_pCache->ReadColumn(
         SYSTEM_SYSTEM_GAMECLASS_DATA, 
         SystemSystemGameClassData::GameClass, 
         NULL, 
@@ -737,7 +731,7 @@ int GameEngine::GetStartableSystemGameClassKeys(unsigned int** ppiKey, unsigned 
         return iErrCode;
     }
 
-    iErrCode = pSystemSystemGameClassData->ReadColumn (
+    iErrCode = pSystemSystemGameClassData->ReadColumn(
         SystemSystemGameClassData::GameClass,
         NULL,
         &pvGameClassKey,
@@ -874,7 +868,7 @@ int GameEngine::SetGameClassSuperClassKey (int iGameClass, unsigned int iSuperCl
         SYSTEM_GAMECLASS_DATA, 
         iGameClass, 
         SystemGameClassData::SuperClassKey, 
-        iSuperClassKey
+        (int)iSuperClassKey
         );
     Assert (iErrCode == OK);
 

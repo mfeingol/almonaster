@@ -357,7 +357,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
                 else {
                     char pszMessage [128];
-                    sprintf (pszMessage, "Error %i occurred deleting the gameclass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred deleting the gameclass", iErrCode);
                     AddMessage (pszMessage);
                 }
 
@@ -403,7 +403,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                     {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred undeleting the GameClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred undeleting the GameClass", iErrCode);
                     AddMessage (pszMessage);
                     }
 
@@ -440,7 +440,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
                 else {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred halting the GameClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred halting the GameClass", iErrCode);
                     AddMessage (pszMessage);
                 }
 
@@ -487,7 +487,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                     {
                     char pszMessage [256];
-                    sprintf (pszMessage, "Error %i occurred unhalting the GameClass", iErrCode);
+                    sprintf(pszMessage, "Error %i occurred unhalting the GameClass", iErrCode);
                     AddMessage (pszMessage);
                     }
 
@@ -665,7 +665,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                 // Check for advanced option
                 char pszAdvanced [128];
-                sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
+                sprintf(pszAdvanced, "Advanced%i", iGameClassKey);
 
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
                     bAdvanced = true;
@@ -695,7 +695,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                 // Check for advanced option
                 char pszAdvanced [128];
-                sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
+                sprintf(pszAdvanced, "Advanced%i", iGameClassKey);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
                     bAdvanced = true;
                 }
@@ -1010,37 +1010,71 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             if (WasButtonPressed (BID_DELETEEMPIRE)) {
 
                 pHttpForm = m_pHttpRequest->GetForm ("DeleteEmpireKey");
-                if (pHttpForm != NULL) {
-
+                if (pHttpForm != NULL)
+                {
                     int iTargetEmpireKey = pHttpForm->GetIntValue();
 
-                    iErrCode = ERROR_FAILURE;
-                    if (!(m_iGameState & STARTED)) {
+                    GameCheck(CacheAllGameTables(m_iGameClass, m_iGameNumber));
 
-                        iErrCode = QuitEmpireFromGame (m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
-                        if (iErrCode == ERROR_GAME_HAS_STARTED) {
+                    if (m_iGameState & STARTED)
+                    {
+                        iErrCode = RemoveEmpireFromGame (m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                        switch (iErrCode)
+                        {
+                        case OK:
+                            AddMessage("The empire was deleted from the game");
+                            break;
 
-                            // Try remove
-                            iErrCode = RemoveEmpireFromGame (m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
-                        }
+                        case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                            AddMessage("The empire is no longer in this game");
+                            iErrCode = OK;
+                            break;
 
-                    } else {
-
-                        if (m_iGameState & STILL_OPEN) {
-                            iErrCode = RemoveEmpireFromGame (m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                        default:
+                            return iErrCode;
                         }
                     }
+                    else
+                    {
+                        iErrCode = QuitEmpireFromGame(m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                        switch (iErrCode)
+                        {
+                        case OK:
+                            AddMessage("The empire was deleted from the game");
+                            break;
+                        case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                            AddMessage("The empire is no longer in this game");
+                            iErrCode = OK;
+                            break;
+            
+                        case ERROR_GAME_HAS_STARTED:
+                            iErrCode = RemoveEmpireFromGame(m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
+                            switch (iErrCode)
+                            {
+                            case OK:
+                                AddMessage("The empire was deleted from the game");
+                                break;
 
-                    if (iErrCode == OK) {
-                        AddMessage ("The empire was deleted from the game");
-                    } else {
-                        AddMessage ("The empire could not be deleted from the game");
+                            case ERROR_EMPIRE_IS_NOT_IN_GAME:
+                                AddMessage("The empire is no longer in this game");
+                                iErrCode = OK;
+                                break;
+
+                            default:
+                               return iErrCode;
+                            }
+                            break;
+                        }
                     }
                 }
 
-                if (DoesGameExist (m_iGameClass, m_iGameNumber, &bExist) == OK && bExist) {
+                Check(DoesGameExist(m_iGameClass, m_iGameNumber, &bExist));
+                if (bExist)
+                {
                     iTAdminPage = 13;
-                } else {
+                }
+                else
+                {
                     iTAdminPage = 12;
                 }
 
@@ -1063,7 +1097,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                             AddMessage ("The empire was restored");
                         } else {
                             char pszMessage [256];
-                            sprintf (pszMessage, "Error %i occurred restoring the empire", iErrCode);
+                            sprintf(pszMessage, "Error %i occurred restoring the empire", iErrCode);
                             AddMessage (pszMessage);
                         }
                     }
@@ -1137,6 +1171,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                     goto Redirection;
                 }
                 pszMessage = pHttpForm->GetValue();
+
+                Check(CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber));
 
                 if ((iErrCode = BroadcastGameMessage (
                     m_iGameClass,
@@ -1387,7 +1423,7 @@ case 4:
         %><p><%
         WriteSeparatorString (m_iSeparatorKey);
 
-        WriteProfile (m_iEmpireKey, iInviteKey, false, false, false);
+        Check(WriteProfile(m_iEmpireKey, iInviteKey, false, false, false));
 
         }
         break;
@@ -1417,7 +1453,7 @@ case 5:
         %><p><%
         WriteSeparatorString (m_iSeparatorKey);
 
-        WriteProfile (m_iEmpireKey, iDeleteEmpire, false, false, false);
+        Check(WriteProfile(m_iEmpireKey, iDeleteEmpire, false, false, false));
 
         }
         break;
@@ -1909,7 +1945,7 @@ case 16:
         bool bStarted, bFalse;
 
         Variant* pvPlanetData = NULL;
-        GAME_MAP(pszGameMap, m_iGameClass, m_iGameNumber);
+        GET_GAME_MAP(pszGameMap, m_iGameClass, m_iGameNumber);
 
         iErrCode = HasGameStarted (m_iGameClass, m_iGameNumber, &bStarted);
         if (iErrCode != OK) {

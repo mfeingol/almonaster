@@ -223,7 +223,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 // Check for advanced
                 char pszAdvanced [64];
-                sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
+                sprintf(pszAdvanced, "Advanced%i", iGameClassKey);
 
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
                     iPersonalGameClassesPage = 1;

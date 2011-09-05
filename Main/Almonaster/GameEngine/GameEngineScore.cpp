@@ -192,7 +192,7 @@ int GameEngine::UpdateScoresOn30StyleSurrender (int iLoserKey, const char* pszLo
 
     // Report
     char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 64];
-    sprintf (pszMessage, "%s surrendered out of %s %i", pszLoserName, pszGameClassName, iGameNumber);
+    sprintf(pszMessage, "%s surrendered out of %s %i", pszLoserName, pszGameClassName, iGameNumber);
     global.GetReport()->WriteReport(pszMessage);
 
     // Increment nuked for loser
@@ -221,7 +221,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     int iErrCode, iLoserKey;
 
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
     Variant vPlanetName, vEmpireSecretKey, vNukedKey, vTemp;
     char pszNukedName [MAX_EMPIRE_NAME_LENGTH + 1] = "";
@@ -1283,7 +1283,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
     if (iNumRows >= iNumNukesListed) {
     
         // Find smallest timestamp
-        iErrCode = pWriteTable->ReadColumn (
+        iErrCode = pWriteTable->ReadColumn(
             pszTimeStampCol, 
             &piKey, 
             &pvTime, 
@@ -1327,7 +1327,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
             tTime
         };
         
-        iErrCode = pWriteTable->InsertRow (SystemNukeList::Template, pvColData, NULL);
+        iErrCode = pWriteTable->InsertRow(SystemNukeList::Template, pvColData, NULL);
 
     } else {
     
@@ -1342,7 +1342,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
             tTime
         };
         
-        iErrCode = pWriteTable->InsertRow (SystemEmpireNukeList::Template, pvColData, NULL);
+        iErrCode = pWriteTable->InsertRow(SystemEmpireNukeList::Template, pvColData, NULL);
     }
     
     if (iErrCode != OK) {
@@ -1433,7 +1433,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryMsg (AsyncTask* pMessage)
 
 int GameEngine::TriggerBridierTimeBombIfNecessaryCallback()
 {
-    // TODOTODO - rewrite Bridier
+    // TODOTODO - rewrite Bridier time bomb scanning to be more efficient
 
     //int iErrCode, iFinalIndex;
 
@@ -1511,14 +1511,6 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback()
     //        if (iFinalIndex != vIndex.GetInteger())
     //        {
     //            iErrCode = t_pCache->WriteData(strEmpire, iKey, SystemEmpireData::BridierIndex, iFinalIndex);
-    //            if (iErrCode == OK)
-    //            {
-    //                iErrCode = UpdateTopListOnDecrease (BRIDIER_SCORE, iKey);
-    //            }
-    //            if (iErrCode == OK)
-    //            {
-    //                iErrCode = UpdateTopListOnDecrease (BRIDIER_SCORE_ESTABLISHED, iKey);
-    //            }
     //            if (iErrCode == OK)
     //            {
     //                Variant vName;

@@ -33,7 +33,6 @@
 Almonaster::Almonaster()
 {
     m_bIsDefault = false;
-    m_bNoBuffering = false;
 
     m_iNumRefs = 1;
 
@@ -65,9 +64,8 @@ int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPage
         return iErrCode;
     }
 
-    // Weak refs
+    // Weak ref
     IReport* pReport = global.GetReport();
-    IConfigFile* pConfig = global.GetConfigFile();
 
     // Prepare URI's
     m_bIsDefault = pPageSourceControl->IsDefault();
@@ -95,16 +93,6 @@ int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPage
         m_pszUri2[stLen] = '/';
         m_pszUri2[stLen + 1] = '\0';
     }
-
-    char* pszTemp;
-    iErrCode = pConfig->GetParameter ("BufferedPageRendering", &pszTemp);
-    if (iErrCode != OK || pszTemp == NULL)
-    {
-        pReport->WriteReport ("Error: Could not read the BufferedPageRendering value from the configuration file");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
-    }
-    m_bNoBuffering = atoi (pszTemp) == 0;
 
     // Initialize HtmlRenderer statics
     iErrCode = HtmlRenderer::StaticInitialize();
@@ -169,11 +157,11 @@ int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
         }
     }
 
-    // Enable chunked encoding if so configured if the page requested is a doc page
-    if (m_bNoBuffering || pageId == SYSTEM_DOCUMENTATION || pageId == GAME_DOCUMENTATION)
-    {
-        pHttpResponse->SetNoBuffering();
-    }
+    //// Enable chunked encoding if so configured if the page requested is a doc page
+    //if (pageId == SYSTEM_DOCUMENTATION || pageId == GAME_DOCUMENTATION)
+    //{
+    //    pHttpResponse->SetNoBuffering();
+    //}
 
     // Render the page
     HtmlRenderer renderer(pageId, pHttpRequest, pHttpResponse);

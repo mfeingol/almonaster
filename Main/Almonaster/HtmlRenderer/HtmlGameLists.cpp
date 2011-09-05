@@ -284,7 +284,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     
         OutputText ("<p>");
 
-        sprintf (pszLogin, "Login%i.%i", iGameClass, iGameNumber);
+        sprintf(pszLogin, "Login%i.%i", iGameClass, iGameNumber);
         WriteButtonString (iButtonKey, "Login", "Login", pszLogin);
     }
 
@@ -710,7 +710,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
 
         OutputText ("<p>");
 
-        sprintf (pszEnter, "Spectate%i.%i", iGameClass, iGameNumber);
+        sprintf(pszEnter, "Spectate%i.%i", iGameClass, iGameNumber);
         WriteButtonString (m_iButtonKey, ButtonName[BID_VIEWMAP], ButtonText[BID_VIEWMAP], pszEnter);
 
     } else {
@@ -719,7 +719,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
             
             OutputText ("<p>");
 
-            sprintf (pszEnter, "Enter%i.%i", iGameClass, iGameNumber);          
+            sprintf(pszEnter, "Enter%i.%i", iGameClass, iGameNumber);          
             WriteButtonString (m_iButtonKey, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
 
             if (bFlag) {
@@ -857,7 +857,7 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
             
             OutputText ("<p>");
             
-            sprintf (pszForm, "Start%i", iGameClass);
+            sprintf(pszForm, "Start%i", iGameClass);
             WriteButtonString (m_iButtonKey, ButtonName[BID_START], ButtonText[BID_START], pszForm);
             
             // Password protection

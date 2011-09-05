@@ -311,7 +311,7 @@ int HtmlRenderer::WriteGameHeaderString()
 
     // Informational forms
     iErrCode = PostGamePageInformation();
-    if(iErrCode == OK)
+    if(iErrCode != OK)
         return iErrCode;
 
     // Buttons

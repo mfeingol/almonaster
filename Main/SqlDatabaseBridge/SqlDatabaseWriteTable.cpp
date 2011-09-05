@@ -31,7 +31,7 @@ int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, c
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("WriteData {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, gcnew System::String(pszData));
+    m_cmd->Write(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, columnName, gcnew System::String(pszData));
     return OK;
 }
 
@@ -40,7 +40,7 @@ int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, i
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("WriteData {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, i64Data);
+    m_cmd->Write(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, columnName, i64Data);
     return OK;
 }
 
@@ -49,7 +49,7 @@ int SqlDatabaseWriteTable::WriteData(unsigned int iKey, const char* pszColumn, c
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("WriteData {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->Write(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, Convert(vData));
+    m_cmd->Write(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, columnName, Convert(vData));
     return OK;
 }
 
@@ -91,7 +91,7 @@ int SqlDatabaseWriteTable::WriteAnd(unsigned int iKey, const char* pszColumn, un
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("WriteAnd {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->WriteBitField(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, BooleanOperation::And, iBitField);
+    m_cmd->WriteBitField(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, columnName, BooleanOperation::And, iBitField);
     return OK;
 }
 
@@ -109,7 +109,7 @@ int SqlDatabaseWriteTable::WriteOr(unsigned int iKey, const char* pszColumn, uns
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("WriteOr {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->WriteBitField(m_tableName, gcnew System::String(IdColumnName), iKey, columnName, BooleanOperation::Or, iBitField);
+    m_cmd->WriteBitField(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, columnName, BooleanOperation::Or, iBitField);
     return OK;
 }
 
@@ -232,7 +232,7 @@ int SqlDatabaseWriteTable::Increment(unsigned int iKey, const char* pszColumn, c
     System::String^ columnName = gcnew System::String(pszColumn);
     Trace("Increment {0} :: {1}", m_tableName, columnName);
 
-    m_cmd->Increment(m_tableName, gcnew System::String(IdColumnName), (int64)iKey, columnName, Convert(vIncrement));
+    m_cmd->Increment(m_tableName, gcnew System::String(ID_COLUMN_NAME), (int64)iKey, columnName, Convert(vIncrement));
     return OK;
 }
 
@@ -242,7 +242,7 @@ int SqlDatabaseWriteTable::Increment(unsigned int iKey, const char* pszColumn, c
     Trace("Increment {0} :: {1}", m_tableName, columnName);
 
     System::Object^ oldValue;
-    m_cmd->Increment(m_tableName, gcnew System::String(IdColumnName), (int64)iKey, columnName, Convert(vIncrement), oldValue);
+    m_cmd->Increment(m_tableName, gcnew System::String(ID_COLUMN_NAME), (int64)iKey, columnName, Convert(vIncrement), oldValue);
     Convert(oldValue, pvOldValue);
 
     return OK;
@@ -252,7 +252,7 @@ int SqlDatabaseWriteTable::DeleteRow(unsigned int iKey)
 {
     Trace("DeleteRows {0}", m_tableName);
 
-    m_cmd->DeleteRow(m_tableName, gcnew System::String(IdColumnName), (int64)iKey);
+    m_cmd->DeleteRow(m_tableName, gcnew System::String(ID_COLUMN_NAME), (int64)iKey);
     return OK;
 }
 
@@ -318,9 +318,14 @@ int SqlDatabaseWriteTable::GetEqualKeys(const char* pszColumn, const Variant& vD
     return m_readTable.GetEqualKeys(pszColumn, vData, ppiKey, piNumKeys);
 }
 
-int SqlDatabaseWriteTable::GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
+int SqlDatabaseWriteTable::GetSearchKeys(const RangeSearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
 {
     return m_readTable.GetSearchKeys(sdSearch, ppiKey, piNumHits, piStopKey);
+}
+
+int SqlDatabaseWriteTable::GetSearchKeys(const RangeSearchDefinition& sdSearch, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits)
+{
+    return m_readTable.GetSearchKeys(sdSearch, sdOrderBy, ppiKey, piNumHits);
 }
 
 int SqlDatabaseWriteTable::ReadData(unsigned int iKey, const char* pszColumn, int* piData)

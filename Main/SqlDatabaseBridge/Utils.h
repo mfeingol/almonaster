@@ -5,8 +5,6 @@
 
 using namespace System::Data;
 
-static const char* IdColumnName = "Id";
-
 System::Object^ Convert(const Variant& v);
 void Convert(System::Object^ object, Variant* pv);
 SqlDbType Convert(VariantType type);
@@ -43,7 +41,8 @@ public:
     virtual int GetNextKey(unsigned int iKey, unsigned int* piNextKey) = 0;
 
     virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
-    virtual int GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+    virtual int GetSearchKeys(const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
+    virtual int GetSearchKeys(const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits) = 0;
 
     virtual int ReadData(unsigned int iKey, const char* pszColumn, int* piData) = 0;
     virtual int ReadData(unsigned int iKey, const char* pszColumn, float* pfData) = 0;

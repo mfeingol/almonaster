@@ -230,7 +230,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
     //    if (iNumEmpiresDeleted == 1) {
     //        strcpy (pszText, "1 empire would have been purged from the database");
     //    } else {
-    //        sprintf (pszText, "%i empires would have been purged from the database", iNumEmpiresDeleted);
+    //        sprintf(pszText, "%i empires would have been purged from the database", iNumEmpiresDeleted);
     //    }
 
     //} else {
@@ -238,7 +238,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
     //    if (iNumEmpiresDeleted == 1) {
     //        strcpy (pszText, "1 empire was purged from the database");
     //    } else {
-    //        sprintf (pszText, "%i empires were purged from the database", iNumEmpiresDeleted);
+    //        sprintf(pszText, "%i empires were purged from the database", iNumEmpiresDeleted);
     //    }
     //}
 

@@ -34,8 +34,8 @@ if (m_iPrivilege < ADMINISTRATOR) {
     return Redirect (LOGIN);
 }
 
-SearchColumn sc [MAX_NUM_SEARCH_COLUMNS];
-SearchDefinition sd;
+RangeSearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
+RangeSearchDefinition sd;
 sd.pscColumns = sc;
 
 const char* pszFormName [MAX_NUM_SEARCH_COLUMNS];
@@ -136,7 +136,7 @@ SearchResults:
 
                         {
                         char pszMessage [64];
-                        sprintf (pszMessage, "Error %i occurred", iErrCode);
+                        sprintf(pszMessage, "Error %i occurred", iErrCode);
                         AddMessage (pszMessage);
                         }
                         break;
@@ -535,7 +535,7 @@ SearchResults:
                             AddMessage ("The empire was successfully obliterated from the server");
                         } else {
                             char pszMessage [256];
-                            sprintf (pszMessage, "Error %i occurred while obliterating the empire", iErrCode);
+                            sprintf(pszMessage, "Error %i occurred while obliterating the empire", iErrCode);
                             AddMessage (pszMessage);
                         }
                     }
@@ -648,7 +648,7 @@ case 3:
     %><input type="hidden" name="EmpireAdminPage" value="3"><%
     %><input type="hidden" name="TargetEmpire" value="<% Write (iTargetEmpireKey); %>"><%
 
-    WriteProfile (m_iEmpireKey, iTargetEmpireKey, true, false, false);
+    Check(WriteProfile(m_iEmpireKey, iTargetEmpireKey, true, false, false));
 
     %><p><% 
 

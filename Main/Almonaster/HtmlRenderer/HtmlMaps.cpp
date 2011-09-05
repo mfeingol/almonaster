@@ -30,8 +30,8 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
 
     size_t stTemp;
     
-    GAME_MAP (strGameMap, iGameClass, iGameNumber);
-    GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
 
     unsigned int piEasyProxyKeys[9], iGridX, iGridY, iGridLocX, iGridLocY, iNumEmpires;
 
@@ -376,8 +376,8 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     pszHorz = (char*) StackAlloc (strHorz.GetLength() + 100);
     pszVert = (char*) StackAlloc (strVert.GetLength() + 100);
     
-    //sprintf (pszHorz, "<td align=\"center\">%s</td>", strHorz.GetCharPtr());
-    //sprintf (pszVert, "<td align=\"center\">%s</td>", strVert.GetCharPtr());
+    //sprintf(pszHorz, "<td align=\"center\">%s</td>", strHorz.GetCharPtr());
+    //sprintf(pszVert, "<td align=\"center\">%s</td>", strVert.GetCharPtr());
     
     stTemp = sizeof ("<td align=\"center\">") - 1;
     
@@ -1317,7 +1317,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 }
                 
                 char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
-                sprintf (pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
+                sprintf(pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
                 
                 WriteProfileAlienString (
                     iAlienKey,
@@ -1835,7 +1835,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         }
                         
                         char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
-                        sprintf (pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
+                        sprintf(pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
                         
                         WriteProfileAlienString (
                             iAlienKey,

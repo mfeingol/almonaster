@@ -29,7 +29,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
 
     Variant vOptions;
 
-    GAME_DATA (pszGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
     // Read game options
     iErrCode = t_pCache->ReadData(pszGameData, GameData::Options, &vOptions);
@@ -174,8 +174,8 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
     char pszGameData [256] = "";
 
-    GAME_SECURITY (pszGameSec, iGameClass, iGameNumber);
-    GAME_DEAD_EMPIRES (pszDeadEmpires, iGameClass, iGameNumber);
+    GET_GAME_SECURITY (pszGameSec, iGameClass, iGameNumber);
+    GET_GAME_NUKED_EMPIRES (pszDeadEmpires, iGameClass, iGameNumber);
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
 
     bool bFlag;
@@ -191,7 +191,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
         goto Cleanup;
     }
 
-    iErrCode = t_pCache->GetFirstKey(pszDeadEmpires, GameDeadEmpires::SecretKey, vEmpireSecretKey, &iKey);
+    iErrCode = t_pCache->GetFirstKey(pszDeadEmpires, GameNukedEmpires::SecretKey, vEmpireSecretKey, &iKey);
     if (iErrCode != ERROR_DATA_NOT_FOUND && iErrCode != ERROR_UNKNOWN_TABLE_NAME) {
         *prAccessDeniedReason = ACCESS_DENIED_IN_DEAD_EMPIRES_TABLE;
         goto Cleanup;
@@ -239,7 +239,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             goto Cleanup;
         }
 
-        GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
+        COPY_GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
         iErrCode = t_pCache->ReadData(pszGameData, GameData::Options, &vGame);
         if (iErrCode != OK) {
@@ -458,7 +458,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
         Variant vGameRank, vGameIndex, vOwnerKey;
         int iNukerRankChange, iNukerIndexChange, iNukedRankChange, iNukedIndexChange, iEmpireRank, iEmpireIndex;
 
-        GAME_EMPIRES(pszGameEmpires, iGameClass, iGameNumber);
+        GET_GAME_EMPIRES(pszGameEmpires, iGameClass, iGameNumber);
         unsigned int iNumRows;
         iErrCode = t_pCache->GetNumCachedRows(pszGameEmpires, &iNumRows);
         if (iErrCode != OK) {
@@ -479,7 +479,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                 goto Cleanup;
             }
             
-            GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, vOwnerKey.GetInteger());
+            GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, vOwnerKey.GetInteger());
             
             iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, &vGameRank);
             if (iErrCode != OK) {
@@ -704,7 +704,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
                     } else {
 
                         // Nuke the key in the row
-                        iErrCode = t_pCache->WriteData(pszGameSec, iKey, GameSecurity::EmpireKey, NO_KEY);
+                        iErrCode = t_pCache->WriteData(pszGameSec, iKey, GameSecurity::EmpireKey, (int)NO_KEY);
                         if (iErrCode != OK) {
                             goto Cleanup;
                         }

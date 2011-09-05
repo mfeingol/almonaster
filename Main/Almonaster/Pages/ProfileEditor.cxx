@@ -1231,7 +1231,7 @@ Quote:
 
             ENUMERATE_SHIP_TYPES(i) {
 
-                sprintf (pszForm, "ShipName%i", i);
+                sprintf(pszForm, "ShipName%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
                 }
@@ -1400,9 +1400,9 @@ Quote:
 
                 char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
                 if (pszReport == NULL) {
-                    sprintf (pszText, "UndeleteEmpire failed for %s: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
+                    sprintf(pszText, "UndeleteEmpire failed for %s: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
                 } else {
-                    sprintf (pszText, "%s %s", m_vEmpireName.GetCharPtr(), pszReport);
+                    sprintf(pszText, "%s %s", m_vEmpireName.GetCharPtr(), pszReport);
                 }
                 global.GetReport()->WriteReport (pszText);
                 break;
@@ -1460,8 +1460,6 @@ Quote:
                         break;
 
                     default:
-                        AddMessage ("The association could not be removed. The error was ");
-                        AppendMessage(iErrCode);
                         return iErrCode;
                     }
                 }
@@ -1528,7 +1526,7 @@ Quote:
                 for (i = 0; i < iNumTestMessages; i ++) {
 
                     // Get message key
-                    sprintf (pszForm, "MsgKey%i", i);
+                    sprintf(pszForm, "MsgKey%i", i);
                     if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                         goto Redirection;
                     }
@@ -1550,11 +1548,11 @@ Quote:
                     for (i = 0; i < iNumTestMessages; i ++) {
 
                         // Get selected status of message's delete checkbox
-                        sprintf (pszForm, "DelChBx%i", i);
+                        sprintf(pszForm, "DelChBx%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) != NULL) {
 
                             // Get message key
-                            sprintf (pszForm, "MsgKey%i", i);
+                            sprintf(pszForm, "MsgKey%i", i);
                             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                                 goto Redirection;
                             }
@@ -1579,7 +1577,7 @@ Quote:
                         for (i = 0; i < iNumTestMessages; i ++) {
 
                             // Get message key
-                            sprintf (pszForm, "MsgKey%i", i);
+                            sprintf(pszForm, "MsgKey%i", i);
                             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                                 goto Redirection;
                             }
@@ -1619,7 +1617,7 @@ Quote:
 
                             for (i = 0; i < iNumTestMessages; i ++) {
 
-                                sprintf (pszForm, "MsgKey%i", i);
+                                sprintf(pszForm, "MsgKey%i", i);
                                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                                     goto Redirection;
                                 }
@@ -1947,7 +1945,7 @@ Quote:
             {
 
             char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-            sprintf (pszText, "%s requested to be deleted", m_vEmpireName.GetCharPtr());
+            sprintf(pszText, "%s requested to be deleted", m_vEmpireName.GetCharPtr());
             global.GetReport()->WriteReport (pszText);
 
             iErrCode = CacheEmpireForDeletion(m_iEmpireKey);
@@ -1973,7 +1971,7 @@ Quote:
                 m_iSystemOptions |= EMPIRE_MARKED_FOR_DELETION;
 
                 char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-                sprintf (pszText, "%s was marked for deletion", m_vEmpireName.GetCharPtr());
+                sprintf(pszText, "%s was marked for deletion", m_vEmpireName.GetCharPtr());
                 global.GetReport()->WriteReport (pszText);
 
                 break;
@@ -1992,7 +1990,7 @@ Quote:
                 AppendMessage (iErrCode);
                 {
                 char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-                sprintf (pszText, "%s was not deleted: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
+                sprintf(pszText, "%s was not deleted: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
                 global.GetReport()->WriteReport (pszText);
                 }
                 return iErrCode;
@@ -2007,7 +2005,7 @@ Quote:
             AddMessage ("Your empire's statistics have been blanked");
 
             char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-            sprintf (pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
+            sprintf(pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
             global.GetReport()->WriteReport (pszText);
 
             break;
@@ -2083,10 +2081,7 @@ Quote:
                         break;
 
                     default:
-                        AddMessage ("The association could not be created. The error was ");
-                        AppendMessage (iErrCode);
-                        iProfileEditorPage = 0;
-                        break;
+                        return iErrCode;
                     }
                 }
             }
@@ -2346,27 +2341,35 @@ case 0:
     
     WriteButton (BID_ADD_ASSOCIATION);
 
-    unsigned int* piAssoc, iAssoc;
-    if (GetAssociations (m_iEmpireKey, &piAssoc, &iAssoc) == OK && iAssoc > 0) {
+    Variant* pvAssoc = NULL;
+    unsigned int iAssoc;
+    Check(GetAssociations(m_iEmpireKey, &pvAssoc, &iAssoc));
+    if (iAssoc > 0)
+    {
+        Check(CacheEmpires(pvAssoc, iAssoc));
 
-        char pszName [MAX_EMPIRE_NAME_LENGTH + 1];
+        char pszName[MAX_EMPIRE_NAME_LENGTH + 1];
 
         %> <%
 
-        if (iAssoc == 1) {
-            
-            if (GetEmpireName (piAssoc[0], pszName) == OK) {
+        if (iAssoc == 1)
+        {
+            iErrCode = GetEmpireName(pvAssoc[0].GetInteger(), pszName);
+            if (iErrCode == OK)
+            {
                 Write (pszName);
-                %><input type="hidden" name="Association" value="<% Write (piAssoc[0]); %>"><%
+                %><input type="hidden" name="Association" value="<% Write (pvAssoc[0].GetInteger()); %>"><%
             }
-
-        } else {
-
+        }
+        else
+        {
             %><select name="Association"><%
-            for (unsigned int a = 0; a < iAssoc; a ++) {
-            
-                if (GetEmpireName (piAssoc[a], pszName) == OK) {
-                    %><option value="<% Write (piAssoc[a]); %>"><% Write (pszName); %></option><%
+            for (unsigned int a = 0; a < iAssoc && iErrCode == OK; a ++)
+            {
+                iErrCode = GetEmpireName(pvAssoc[a].GetInteger(), pszName);
+                if (iErrCode == OK)
+                {
+                    %><option value="<% Write (pvAssoc[a].GetInteger()); %>"><% Write (pszName); %></option><%
                 }
             }
             %></select><%
@@ -2374,16 +2377,18 @@ case 0:
 
         %> <%
 
-        WriteButton (BID_REMOVE_ASSOCIATION);
-        OS::HeapFree (piAssoc);
+        WriteButton(BID_REMOVE_ASSOCIATION);
+        t_pCache->FreeData(pvAssoc);
+        if (iErrCode != OK)
+        {
+            return iErrCode;
+        }
     }
 
     %></td></tr><%
 
-
     %><tr><td align="center" colspan="2">&nbsp;</td></tr><%
     %><tr><td align="center" colspan="2"><h3>System User Interface:</h3></td></tr><%
-
 
     %><tr><td>Choose an icon:</td><td><%
 

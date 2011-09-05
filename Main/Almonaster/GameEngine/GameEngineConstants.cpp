@@ -337,52 +337,6 @@ const char* const TOPLIST_NAME [NUM_SCORING_SYSTEMS] = {
     "Established Bridier Score",
 };
 
-const char* const TOPLIST_TABLE_NAME[NUM_SCORING_SYSTEMS] = {
-    SYSTEM_ALMONASTER_SCORE_TOPLIST,
-    SYSTEM_CLASSIC_SCORE_TOPLIST,
-    SYSTEM_BRIDIER_SCORE_TOPLIST,
-    SYSTEM_BRIDIER_SCORE_ESTABLISHED_TOPLIST,
-};
-
-const TemplateDescription* TOPLIST_TEMPLATE[NUM_SCORING_SYSTEMS] = {
-    &SystemAlmonasterScoreTopList::Template,
-    &SystemClassicScoreTopList::Template,
-    &SystemBridierScoreTopList::Template,
-    &SystemBridierScoreEstablishedTopList::Template,
-};
-
-const unsigned int TOPLIST_SYSTEM_EMPIRE_DATA_NUM_COLUMNS [NUM_SCORING_SYSTEMS] = {
-    SystemAlmonasterScoreTopList::NumColumns - 1,
-    SystemClassicScoreTopList::NumColumns - 1,
-    SystemBridierScoreTopList::NumColumns - 1,
-    SystemBridierScoreEstablishedTopList::NumColumns - 1,
-};
-
-const char* ALMONASTER_SCORE_TOPLIST_COLUMNS[] = {
-    SystemEmpireData::AlmonasterScore,
-};
-
-const char* CLASSIC_SCORE_TOPLIST_COLUMNS[] = {
-    SystemEmpireData::ClassicScore,
-};
-
-const char* BRIDIER_SCORE_TOPLIST_COLUMNS[] = {
-    SystemEmpireData::BridierRank,
-    SystemEmpireData::BridierIndex,
-};
-
-const char* BRIDIER_SCORE_ESTABLISHED_TOPLIST_COLUMNS[] = {
-    SystemEmpireData::BridierRank,
-    SystemEmpireData::BridierIndex,
-};
-
-const char* const * TOPLIST_SYSTEM_EMPIRE_DATA_COLUMNS [NUM_SCORING_SYSTEMS] = {
-    ALMONASTER_SCORE_TOPLIST_COLUMNS,
-    CLASSIC_SCORE_TOPLIST_COLUMNS,
-    BRIDIER_SCORE_TOPLIST_COLUMNS,
-    BRIDIER_SCORE_ESTABLISHED_TOPLIST_COLUMNS,
-};
-
 const char* const RESERVED_EMPIRE_NAMES[3] = {
     "Independent",
     "System",

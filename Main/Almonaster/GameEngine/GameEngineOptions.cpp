@@ -27,7 +27,7 @@
 int GameEngine::GetEmpireOption (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iFlag, 
                                      bool* pbOption) {
 
-    GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vOptions;
     int iErrCode = t_pCache->ReadData(strEmpireOptions, GameEmpireData::Options, &vOptions);
@@ -42,7 +42,7 @@ int GameEngine::GetEmpireOption (int iGameClass, int iGameNumber, int iEmpireKey
 int GameEngine::SetEmpireOption (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int iFlag, 
                                      bool bOption) {
 
-    GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
     if (bOption) {
         return t_pCache->WriteOr(strEmpireOptions, GameEmpireData::Options, iFlag);
@@ -53,7 +53,7 @@ int GameEngine::SetEmpireOption (int iGameClass, int iGameNumber, int iEmpireKey
 
 int GameEngine::GetEmpireOptions (int iGameClass, int iGameNumber, int iEmpireKey, int* piOptions) {
 
-    GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vOptions;
     int iErrCode = t_pCache->ReadData(strEmpireOptions, GameEmpireData::Options, &vOptions);
@@ -79,7 +79,7 @@ int GameEngine::GetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
 
     int iErrCode = OK;
 
-    GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strEmpireOptions, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vTemp;
     iErrCode = t_pCache->ReadData(strEmpireOptions, GameEmpireData::MaxNumGameMessages, &vTemp);
@@ -109,8 +109,8 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
    
     Variant vTemp, * pvTimeStamp = NULL;
 
-    GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
-    GAME_EMPIRE_DATA (strOptions, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strOptions, iGameClass, iGameNumber, iEmpireKey);
 
     ICachedTable* pMessages = NULL;
 
@@ -121,7 +121,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
     iMaxNum = vTemp.GetInteger();
 
     // Set the max number of messages
-    iErrCode = t_pCache->WriteData(strOptions, GameEmpireData::MaxNumGameMessages, iMaxNumSavedMessages);
+    iErrCode = t_pCache->WriteData(strOptions, GameEmpireData::MaxNumGameMessages, (int)iMaxNumSavedMessages);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -150,7 +150,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages (int iGameClass, int iGameNumbe
         unsigned int iReadNumMessages, i, iCurrentNumMessages;
 
         // Get the oldest messages' keys
-        iErrCode = pMessages->ReadColumn (GameEmpireMessages::TimeStamp, &piKey, &pvTimeStamp, &iReadNumMessages);
+        iErrCode = pMessages->ReadColumn(GameEmpireMessages::TimeStamp, &piKey, &pvTimeStamp, &iReadNumMessages);
         if (iErrCode != OK) {
             Assert (false);
             goto Cleanup;
@@ -224,11 +224,11 @@ int GameEngine::GetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iE
     }
 
     unsigned int iKey;
-    GAME_EMPIRE_DIPLOMACY (pszDip, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DIPLOMACY (pszDip, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->GetFirstKey(
         pszDip, 
-        GameEmpireDiplomacy::EmpireKey, 
+        GameEmpireDiplomacy::ReferenceEmpireKey, 
         iIgnoredEmpire,
         &iKey
         );
@@ -270,11 +270,11 @@ int GameEngine::GetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iE
 int GameEngine::SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iEmpireKey, int iIgnoredEmpire, bool bIgnore) {
 
     unsigned int iKey;
-    GAME_EMPIRE_DIPLOMACY (pszDip, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DIPLOMACY (pszDip, iGameClass, iGameNumber, iEmpireKey);
 
     int iErrCode = t_pCache->GetFirstKey(
         pszDip, 
-        GameEmpireDiplomacy::EmpireKey, 
+        GameEmpireDiplomacy::ReferenceEmpireKey, 
         iIgnoredEmpire,
         &iKey
         );
@@ -313,7 +313,7 @@ int GameEngine::SetEmpireIgnoreMessages (int iGameClass, int iGameNumber, int iE
 
 int GameEngine::GetEmpireNotepad (int iGameClass, int iGameNumber, int iEmpireKey, Variant* pvNotepad) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     return t_pCache->ReadData(strGameEmpireData, GameEmpireData::Notepad, pvNotepad);
 }
@@ -322,7 +322,7 @@ int GameEngine::GetEmpireNotepad (int iGameClass, int iGameNumber, int iEmpireKe
 int GameEngine::GetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, 
                                                int* piMessageTarget) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     Variant vData;
     int iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::DefaultMessageTarget, &vData);
@@ -342,7 +342,7 @@ int GameEngine::SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, 
         return ERROR_INVALID_ARGUMENT;
     }
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     return t_pCache->WriteData(strGameEmpireData, GameEmpireData::DefaultMessageTarget, iMessageTarget);
 }
@@ -351,8 +351,8 @@ int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int i
 
     int iErrCode;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
 #ifdef _DEBUG
     Variant vTemp;
@@ -396,9 +396,9 @@ int GameEngine::RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, i
     int iErrCode, iGameState = 0, iOptions;
     unsigned int iNumEmpires;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
-    GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
     Variant vTemp, vOldNum;
     
@@ -544,8 +544,8 @@ int GameEngine::RequestNoPause (int iGameClass, int iGameNumber, int iEmpireKey,
     int iErrCode, iState = 0, iOptions;
     Variant vTemp;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
@@ -610,7 +610,7 @@ Cleanup:
 
 int GameEngine::IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     
     Variant vPaused;
     int iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vPaused);
@@ -634,7 +634,7 @@ int GameEngine::IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iE
 
 int GameEngine::GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, unsigned int* piNumEmpires) {
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     Variant vNumPaused;
     int iErrCode = t_pCache->ReadData(strGameData, GameData::NumRequestingPause, &vNumPaused);
@@ -661,9 +661,9 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
     int iErrCode;
     unsigned int iNumEmpires;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
-    GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
     Variant vTemp, vOldNum;
     int iOptions, iState = 0;
@@ -731,8 +731,8 @@ int GameEngine::RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey) 
 
     int iErrCode;
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     Variant vState, vOptions;
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vState);
@@ -784,7 +784,7 @@ Cleanup:
 
 int GameEngine::IsEmpireRequestingDraw (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbDraw) {
 
-    GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     
     Variant vPaused;
     int iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vPaused);
@@ -808,7 +808,7 @@ int GameEngine::IsEmpireRequestingDraw (int iGameClass, int iGameNumber, int iEm
 
 int GameEngine::GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, unsigned int* piNumEmpires) {
 
-    GAME_DATA (strGameData, iGameClass, iGameNumber);
+    GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
 
     Variant vNum;
     int iErrCode = t_pCache->ReadData(strGameData, GameData::NumRequestingDraw, &vNum);

@@ -859,9 +859,11 @@ Variant::operator String() const {
 
     switch (m_iType) {
     case V_INT:
-        return String (m_vArg.iArg);
+        return String(m_vArg.iArg);
+    case V_INT64:
+        return String(m_vArg.i64Arg);
     case V_FLOAT:
-        return String (m_vArg.fArg);
+        return String(m_vArg.fArg);
     case V_STRING:
         return m_vArg.pszArg;
     default:
@@ -880,6 +882,8 @@ Variant::operator float() const {
     switch (m_iType) {
     case V_INT:
         return (float) m_vArg.iArg;
+    case V_INT64:
+        return (float) m_vArg.i64Arg;
     case V_FLOAT:
         return m_vArg.fArg;
     case V_STRING:

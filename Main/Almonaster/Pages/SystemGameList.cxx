@@ -63,7 +63,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Check for advanced option
             char pszAdvanced [128];
-            sprintf (pszAdvanced, "Advanced%i", iGameClassKey);
+            sprintf(pszAdvanced, "Advanced%i", iGameClassKey);
 
             if ((pHttpForm = m_pHttpRequest->GetForm (pszAdvanced)) != NULL) {
                 iSystemGameListPage = 1;

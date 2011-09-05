@@ -122,7 +122,7 @@ else {
             &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
-        sprintf (pszDate, "%s, %i %s %i", 
+        sprintf(pszDate, "%s, %i %s %i", 
             Time::GetAbbreviatedDayOfWeekName (dayOfWeek), iDay, Time::GetAbbreviatedMonthName (iMonth), iYear);
 
         m_pHttpResponse->WriteText (pszDate);
@@ -137,7 +137,7 @@ else {
             &iSec, &iMin, &Hour, &dayOfWeek, &iDay, &iMonth, &iYear
             );
 
-        sprintf (pszDate, "%s, %i %s %i", 
+        sprintf(pszDate, "%s, %i %s %i", 
             Time::GetAbbreviatedDayOfWeekName (dayOfWeek), iDay, Time::GetAbbreviatedMonthName (iMonth), iYear);
 
         m_pHttpResponse->WriteText (pszDate);

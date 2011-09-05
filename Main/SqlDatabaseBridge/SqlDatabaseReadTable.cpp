@@ -36,7 +36,7 @@ int SqlDatabaseReadTable::DoesRowExist(unsigned int iKey, bool* pbExists)
 {
     Trace("DoesRowExist {0}", m_tableName);
 
-    *pbExists = m_cmd->DoesRowExist(m_tableName, gcnew System::String(IdColumnName), iKey);
+    *pbExists = m_cmd->DoesRowExist(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey);
     return OK;
 }
 
@@ -58,7 +58,7 @@ int SqlDatabaseReadTable::GetFirstKey(const char* pszColumn, const char* pszData
 {
     Trace("GetFirstKey {0} :: {1} = {2}", m_tableName, gcnew System::String(pszColumn), gcnew System::String(pszData));
 
-    int64 id = m_cmd->GetIdOfFirstMatch(m_tableName, gcnew System::String(IdColumnName), gcnew System::String(pszColumn), gcnew System::String(pszData));
+    int64 id = m_cmd->GetIdOfFirstMatch(m_tableName, gcnew System::String(ID_COLUMN_NAME), gcnew System::String(pszColumn), gcnew System::String(pszData));
     if (id == System::Int64::MinValue)
     {
         *piKey = NO_KEY;
@@ -82,7 +82,7 @@ int SqlDatabaseReadTable::GetFirstKey(const char* pszColumn, const Variant& vDat
 {
     Trace("GetFirstKey {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
-    int64 id = m_cmd->GetIdOfFirstMatch(m_tableName, gcnew System::String(IdColumnName), gcnew System::String(pszColumn), Convert(vData));
+    int64 id = m_cmd->GetIdOfFirstMatch(m_tableName, gcnew System::String(ID_COLUMN_NAME), gcnew System::String(pszColumn), Convert(vData));
     if (id == System::Int64::MinValue)
     {
         *piKey = NO_KEY;
@@ -100,7 +100,7 @@ int SqlDatabaseReadTable::GetAllKeys(unsigned int** ppiKey, unsigned int* piNumK
     Trace("GetAllKeys {0}", m_tableName);
 
     array<System::String^>^ cols = gcnew array<System::String^>(1);
-    cols[0] = gcnew System::String(IdColumnName);
+    cols[0] = gcnew System::String(ID_COLUMN_NAME);
 
     IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
 
@@ -134,7 +134,7 @@ int SqlDatabaseReadTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
     if (iKey != NO_KEY)
         i64Key = iKey;
     
-    int64 id = m_cmd->GetNextId(m_tableName, gcnew System::String(IdColumnName), i64Key);
+    int64 id = m_cmd->GetNextId(m_tableName, gcnew System::String(ID_COLUMN_NAME), i64Key);
     if (id == System::Int64::MinValue)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -146,8 +146,8 @@ int SqlDatabaseReadTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 
 int SqlDatabaseReadTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
-    array<ColumnSearchDescription>^ cols = gcnew array<ColumnSearchDescription>(1);
-    cols[0].Name = gcnew System::String(pszColumn);
+    array<RangeSearchColumn>^ cols = gcnew array<RangeSearchColumn>(1);
+    cols[0].ColumnName = gcnew System::String(pszColumn);
     cols[0].GreaterThanOrEqual = Convert(vData);
     cols[0].LessThanOrEqual = cols[0].GreaterThanOrEqual;
 
@@ -160,7 +160,7 @@ int SqlDatabaseReadTable::GetEqualKeys(const char* pszColumn, const Variant& vDa
         }
         else
         {
-            IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(IdColumnName), System::Int32::MaxValue, 0, cols);
+            IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(ID_COLUMN_NAME), System::Int32::MaxValue, 0, cols, nullptr);
             *ppiKey = ConvertIdsToKeys(results, piNumKeys);
         }
     }
@@ -184,40 +184,40 @@ int SqlDatabaseReadTable::GetEqualKeys(const char* pszColumn, const Variant& vDa
     return OK;
 }
 
-int SqlDatabaseReadTable::GetSearchKeys(const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
+int SqlDatabaseReadTable::GetSearchKeys(const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
 {
-    array<ColumnSearchDescription>^ cols = gcnew array<ColumnSearchDescription>(sdSearch.iNumColumns);
+    array<RangeSearchColumn>^ cols = gcnew array<RangeSearchColumn>(sdRange.iNumColumns);
 
-    for (unsigned int i = 0; i < sdSearch.iNumColumns; i ++)
+    for (unsigned int i = 0; i < sdRange.iNumColumns; i ++)
     {
-        cols[i].Name = gcnew System::String(sdSearch.pscColumns[i].pszColumn);
-        cols[i].GreaterThanOrEqual = Convert(sdSearch.pscColumns[i].vData);
-        if (sdSearch.pscColumns[i].vData.GetType() == V_STRING)
+        cols[i].ColumnName = gcnew System::String(sdRange.pscColumns[i].pszColumn);
+        cols[i].GreaterThanOrEqual = Convert(sdRange.pscColumns[i].vData);
+        if (sdRange.pscColumns[i].vData.GetType() == V_STRING)
         {
             cols[i].LessThanOrEqual = cols[i].GreaterThanOrEqual;
         }
         else
         {
-            cols[i].LessThanOrEqual = Convert(sdSearch.pscColumns[i].vData2);
+            cols[i].LessThanOrEqual = Convert(sdRange.pscColumns[i].vData2);
         }
 
         // TODOTODO - Flags
     }
 
-    int64 maxHits = sdSearch.iMaxNumHits == 0 ? System::Int32::MaxValue : sdSearch.iMaxNumHits + 1;
-    IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(IdColumnName), maxHits, sdSearch.iSkipHits, cols);
+    int64 maxHits = sdRange.iMaxNumHits == 0 ? System::Int32::MaxValue : sdRange.iMaxNumHits + 1;
+    IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(ID_COLUMN_NAME), maxHits, sdRange.iSkipHits, cols, nullptr);
 
     unsigned int iNumHits;
     *ppiKey = ConvertIdsToKeys(results, &iNumHits);
 
-    if (sdSearch.iMaxNumHits > 0 && iNumHits > sdSearch.iMaxNumHits)
+    if (sdRange.iMaxNumHits > 0 && iNumHits > sdRange.iMaxNumHits)
     {
         if (piStopKey != NULL)
         {
             *piStopKey = (*ppiKey)[iNumHits - 1];
         }
 
-        *piNumHits = sdSearch.iMaxNumHits;
+        *piNumHits = sdRange.iMaxNumHits;
         return ERROR_TOO_MANY_HITS;
     }
     else
@@ -232,11 +232,56 @@ int SqlDatabaseReadTable::GetSearchKeys(const SearchDefinition& sdSearch, unsign
     }
 }
 
+int SqlDatabaseReadTable::GetSearchKeys(const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits)
+{
+    array<RangeSearchColumn>^ rangeCols = gcnew array<RangeSearchColumn>(sdRange.iNumColumns);
+
+    for (unsigned int i = 0; i < sdRange.iNumColumns; i ++)
+    {
+        rangeCols[i].ColumnName = gcnew System::String(sdRange.pscColumns[i].pszColumn);
+        rangeCols[i].GreaterThanOrEqual = Convert(sdRange.pscColumns[i].vData);
+        if (sdRange.pscColumns[i].vData.GetType() == V_STRING)
+        {
+            rangeCols[i].LessThanOrEqual = rangeCols[i].GreaterThanOrEqual;
+        }
+        else
+        {
+            rangeCols[i].LessThanOrEqual = Convert(sdRange.pscColumns[i].vData2);
+        }
+
+        // TODOTODO - Flags
+    }
+
+    array<OrderBySearchColumn>^ orderByCols = gcnew array<OrderBySearchColumn>(sdOrderBy.iNumColumns);
+    for (unsigned int i = 0; i < sdOrderBy.iNumColumns; i ++)
+    {
+        orderByCols[i].ColumnName = gcnew System::String(sdOrderBy.pscColumns[i].pszColumn);
+        orderByCols[i].Ascending = sdOrderBy.pscColumns[i].bAscending;
+    }
+
+    int64 maxHits = sdRange.iMaxNumHits == 0 ? System::Int32::MaxValue : sdRange.iMaxNumHits + 1;
+    IEnumerable<int64>^ results = m_cmd->Search(m_tableName, gcnew System::String(ID_COLUMN_NAME), maxHits, sdRange.iSkipHits, rangeCols, orderByCols);
+
+    unsigned int iNumHits;
+    *ppiKey = ConvertIdsToKeys(results, &iNumHits);
+
+    if (sdRange.iMaxNumHits > 0 && iNumHits > sdRange.iMaxNumHits)
+    {
+        *piNumHits = sdRange.iMaxNumHits;
+        return ERROR_TOO_MANY_HITS;
+    }
+    else
+    {
+        *piNumHits = iNumHits;
+        return OK;
+    }
+}
+
 int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, int* piData)
 {
     Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
-    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
+    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, gcnew System::String(pszColumn));
     if (read == nullptr)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -257,7 +302,7 @@ int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, int
 {
     Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
-    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
+    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, gcnew System::String(pszColumn));
     if (read == nullptr)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -271,7 +316,7 @@ int SqlDatabaseReadTable::ReadData(unsigned int iKey, const char* pszColumn, Var
 {
     Trace("ReadData {0} :: {1}", m_tableName, gcnew System::String(pszColumn));
 
-    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(IdColumnName), iKey, gcnew System::String(pszColumn));
+    System::Object^ read = m_cmd->Read(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey, gcnew System::String(pszColumn));
     if (read == nullptr)
     {
         return ERROR_DATA_NOT_FOUND;
@@ -336,7 +381,7 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKe
     array<System::String^>^ cols = gcnew array<System::String^>(iNumCols);
     cols[0] = gcnew System::String(pszColumn);
     if (ppiKey != NULL)
-        cols[1] = gcnew System::String(IdColumnName);
+        cols[1] = gcnew System::String(ID_COLUMN_NAME);
 
     IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
     unsigned int iNumRows = Enumerable::Count(rows);
@@ -403,7 +448,7 @@ int SqlDatabaseReadTable::ReadColumn(const char* pszColumn, unsigned int** ppiKe
     array<System::String^>^ cols = gcnew array<System::String^>(iNumCols);
     cols[0] = gcnew System::String(pszColumn);
     if (ppiKey != NULL)
-        cols[1] = gcnew System::String(IdColumnName);
+        cols[1] = gcnew System::String(ID_COLUMN_NAME);
 
     IEnumerable<RowValues>^ rows;
     try
@@ -493,7 +538,7 @@ int SqlDatabaseReadTable::ReadColumns(unsigned int iNumColumns, const char* cons
     }
 
     if (ppiKey != NULL)
-        cols[iNumColumns] = gcnew System::String(IdColumnName);
+        cols[iNumColumns] = gcnew System::String(ID_COLUMN_NAME);
 
     IEnumerable<RowValues>^ rows = m_cmd->ReadColumns(m_tableName, cols);
     unsigned int iNumRows = Enumerable::Count(rows);
@@ -553,7 +598,7 @@ int SqlDatabaseReadTable::ReadRow(unsigned int iKey, Variant** ppvData)
     }
     else
     {
-        row = m_cmd->ReadRow(m_tableName, gcnew System::String(IdColumnName), iKey);
+        row = m_cmd->ReadRow(m_tableName, gcnew System::String(ID_COLUMN_NAME), iKey);
     }
 
     IEnumerable<System::Object^>^ values = row.Values;
@@ -590,7 +635,7 @@ int SqlDatabaseReadTable::ReadColumnWhereEqual(const char* pszEqualColumn, const
     array<System::String^>^ cols = gcnew array<System::String^>(iNumCols);
     cols[0] = readColumnName;
     if (ppiKey != NULL)
-        cols[1] = gcnew System::String(IdColumnName);
+        cols[1] = gcnew System::String(ID_COLUMN_NAME);
 
     IEnumerable<RowValues>^ rows = m_cmd->ReadColumnsWhere(m_tableName, cols, equalColumnName, data);
     unsigned int iNumRows = Enumerable::Count(rows);

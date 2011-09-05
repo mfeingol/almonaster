@@ -353,7 +353,7 @@ bool HtmlRenderer::ParseDateField (const char* pszField, UTCTime* ptTime) {
     return true;
 }
 
-int HtmlRenderer::HandleSearchSubmission (SearchDefinition& sd,
+int HtmlRenderer::HandleSearchSubmission (RangeSearchDefinition& sd,
 
                                           const char** pszFormName,
                                           const char** pszColName1,
@@ -519,7 +519,7 @@ int HtmlRenderer::HandleSearchSubmission (SearchDefinition& sd,
     return iErrCode;
 }
 
-void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
+void HtmlRenderer::RenderSearchResults (RangeSearchDefinition& sd,
 
                                         const char** pszFormName,
                                         const char** pszColName1,
@@ -565,7 +565,7 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
     
     for (i = 0; i < iNumSearchColumns; i ++) {
         
-        SearchColumn& sc = sd.pscColumns[i];
+        RangeSearchColumnDefinition& sc = sd.pscColumns[i];
         if (sc.pszColumn == NULL)
         {            
             OutputText ("<th align=\"center\" bgcolor=\"");
@@ -603,7 +603,7 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
             m_pHttpResponse->WriteText (vName.GetCharPtr());
             OutputText ("</strong></td><td align=\"center\">");
             
-            sprintf (pszProfile, "View the profile of %s", vName.GetCharPtr());
+            sprintf(pszProfile, "View the profile of %s", vName.GetCharPtr());
             
             WriteProfileAlienString (
                 vAlien.GetInteger(), 
@@ -622,7 +622,7 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
 
                 Variant vData;
                 
-                SearchColumn& sc = sd.pscColumns[j];
+                RangeSearchColumnDefinition& sc = sd.pscColumns[j];
                 const char* pszCol = sc.pszColumn;
 
                 if (pszCol != SystemEmpireData::Name) {
@@ -696,7 +696,7 @@ void HtmlRenderer::RenderSearchResults (SearchDefinition& sd,
         
         for (i = 0; i < iNumSearchColumns; i ++) {
 
-            SearchColumn& sc = sd.pscColumns[i];
+            RangeSearchColumnDefinition& sc = sd.pscColumns[i];
             
             OutputText ("<input type=\"hidden\" name=\"");
             m_pHttpResponse->WriteText (pszFormName[i]);

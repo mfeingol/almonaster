@@ -185,6 +185,9 @@ namespace Almonaster.Database.Sql
 
         public IEnumerable<BulkTableReadResult> BulkRead(IEnumerable<BulkTableReadRequest> requests)
         {
+            const string t1Alias = "T1";
+            const string t2Alias = "T2";
+
             int index = 0;
             StringBuilder sb = new StringBuilder(512);
 
@@ -194,30 +197,44 @@ namespace Almonaster.Database.Sql
             {
                 foreach (BulkTableReadRequest req in requests)
                 {
-                    if (req.Columns == null || req.Columns.Count() == 0)
+                    if (req.CrossJoin == null)
                     {
-                        sb.AppendLine(String.Format("SELECT * FROM [{0}];", req.TableName));
+                        sb.AppendFormat("SELECT * FROM [{0}] AS [{1}]", req.TableName, t1Alias);
                     }
                     else
                     {
-                        bool first = true;
-                        sb.AppendLine(String.Format("SELECT * FROM [{0}] ", req.TableName));
+                        sb.AppendFormat("SELECT [{1}].* FROM [{0}] AS [{1}] CROSS JOIN [{3}] AS [{4}] WHERE [{1}].[{2}] = [{4}].[{5}]",
+                                        req.TableName, t1Alias, req.CrossJoin.LeftColumnName, req.CrossJoin.TableName, t2Alias, req.CrossJoin.RightColumnName);
+
+                        foreach (BulkTableReadRequestColumn col in req.CrossJoin.Columns)
+                        {
+                            string param = "@p" + index++;
+                            sb.Append(String.Format(" AND [{0}].[{1}] = {2}", t2Alias, col.ColumnName, param));
+                            cmd.Parameters.Add(new SqlParameter(param, col.ColumnValue));
+                        }
+                    }
+
+                    if (req.Columns != null && req.Columns.Count() > 0)
+                    {
+                        bool first = req.CrossJoin == null;
                         foreach (BulkTableReadRequestColumn col in req.Columns)
                         {
                             string param = "@p" + index++;
                             if (first)
                             {
-                                sb.AppendLine(String.Format("WHERE [{0}] = {1};", col.ColumnName, param));
+                                sb.Append(" WHERE");
                                 first = false;
                             }
                             else
                             {
-                                sb.AppendLine(String.Format("AND [{0}] = {1};", col.ColumnName, param));
+                                sb.Append(" AND");
                             }
+                            sb.AppendFormat(" [{0}].[{1}] = {2}", t1Alias, col.ColumnName, param);
                             cmd.Parameters.Add(new SqlParameter(param, col.ColumnValue));
                         }
                     }
 
+                    sb.Append(";");
                     tableNames.Add(req.TableName);
                 }
 
@@ -227,35 +244,42 @@ namespace Almonaster.Database.Sql
 
                 List<BulkTableReadResult> results = new List<BulkTableReadResult>();
 
-                using (SqlDataReader reader = cmd.ExecuteReader())
+                try
                 {
-                    int tableIndex = 0;
-                    do
+                    using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        List<IDictionary<string, object>> rows = new List<IDictionary<string, object>>();
-                        while (reader.Read())
+                        int tableIndex = 0;
+                        do
                         {
-                            Dictionary<string, object> values = new Dictionary<string, object>();
-
-                            for (int i = 0; i < reader.VisibleFieldCount; i++)
+                            List<IDictionary<string, object>> rows = new List<IDictionary<string, object>>();
+                            while (reader.Read())
                             {
-                                string name = reader.GetName(i);
-                                object value = reader.GetValue(i);
-                                values.Add(name, value);
+                                Dictionary<string, object> values = new Dictionary<string, object>();
+
+                                for (int i = 0; i < reader.VisibleFieldCount; i++)
+                                {
+                                    string name = reader.GetName(i);
+                                    object value = reader.GetValue(i);
+                                    values.Add(name, value);
+                                }
+
+                                rows.Add(values);
                             }
 
-                            rows.Add(values);
+                            BulkTableReadResult result = new BulkTableReadResult()
+                            {
+                                TableName = tableNames[tableIndex++],
+                                Rows = rows
+                            };
+
+                            results.Add(result);
                         }
-
-                        BulkTableReadResult result = new BulkTableReadResult()
-                        {
-                            TableName = tableNames[tableIndex++],
-                            Rows = rows
-                        };
-
-                        results.Add(result);
+                        while (reader.NextResult());
                     }
-                    while (reader.NextResult());
+                }
+                catch (SqlException e)
+                {
+                    throw new SqlDatabaseException(e);
                 }
 
                 return results;
@@ -365,10 +389,15 @@ namespace Almonaster.Database.Sql
                 {
                     long[] ids = new long[cRows];
                     index = 0;
-                    while (reader.Read())
+                    do
                     {
-                        ids[index++] = (long)(decimal)reader[0];
+                        while (reader.Read())
+                        {
+                            ids[index++] = (long)(decimal)reader[0];
+                        }
                     }
+                    while (reader.NextResult());
+
                     return ids;
                 }
             }
@@ -448,53 +477,82 @@ namespace Almonaster.Database.Sql
             }
         }
 
-        public IEnumerable<long> Search(string tableName, string idColumnName, long maxResults, long skipResults, IEnumerable<ColumnSearchDescription> searchCols)
+        public IEnumerable<long> Search(string tableName, string idColumnName, long maxResults, long skipResults, 
+                                        IEnumerable<RangeSearchColumn> rangeCols, IEnumerable<OrderBySearchColumn> orderByCols)
         {
             // TODOTODO - search flags
             // TODOTODO - skip hits
 
-            string where = String.Empty;
-            uint index = 0;
-
+            int index = 0;
             using (SqlCommand cmd = new SqlCommand())
             {
-                foreach (ColumnSearchDescription col in searchCols)
+                StringBuilder where = new StringBuilder();
+
+                if (rangeCols != null)
                 {
-                    if (String.IsNullOrEmpty(where))
+                    bool first = true;
+                    foreach (RangeSearchColumn col in rangeCols)
                     {
-                        where = "WHERE ";
-                    }
-                    else
-                    {
-                        where += " AND ";
-                    }
+                        if (first)
+                        {
+                            where.Append("WHERE ");
+                            first = false;
+                        }
+                        else
+                        {
+                            where.Append(" AND ");
+                        }
 
-                    if (col.LessThanOrEqual == col.GreaterThanOrEqual)
-                    {
-                        string param = "@p" + index++;
-                        where += String.Format("[{0}] = {1}", col.Name, param);
-                        cmd.Parameters.Add(new SqlParameter(param, col.LessThanOrEqual));
-                    }
-                    else
-                    {
-                        string lessThanParam = "@p" + index++;
-                        string greaterThanParam = "@p" + index++;
+                        if (col.LessThanOrEqual == col.GreaterThanOrEqual)
+                        {
+                            string param = "@p" + index++;
+                            where.AppendFormat("[{0}] = {1}", col.ColumnName, param);
+                            cmd.Parameters.Add(new SqlParameter(param, col.LessThanOrEqual));
+                        }
+                        else
+                        {
+                            string lessThanParam = "@p" + index++;
+                            string greaterThanParam = "@p" + index++;
 
-                        where += String.Format("[{0}] >= {1} AND [{0}] <= {2}", col.Name, greaterThanParam, lessThanParam);
+                            where.AppendFormat("[{0}] >= {1} AND [{0}] <= {2}", col.ColumnName, greaterThanParam, lessThanParam);
 
-                        cmd.Parameters.Add(new SqlParameter(lessThanParam, col.LessThanOrEqual));
-                        cmd.Parameters.Add(new SqlParameter(greaterThanParam, col.GreaterThanOrEqual));
+                            cmd.Parameters.Add(new SqlParameter(lessThanParam, col.LessThanOrEqual));
+                            cmd.Parameters.Add(new SqlParameter(greaterThanParam, col.GreaterThanOrEqual));
+                        }
                     }
+                }
+
+                StringBuilder orderOrGroupBy = new StringBuilder();
+                if (orderByCols != null)
+                {
+                    bool first = true;
+                    foreach (OrderBySearchColumn orderByCol in orderByCols)
+                    {
+                        if (first)
+                        {
+                            first = false;
+                            orderOrGroupBy.AppendFormat("ORDER BY [{0}]", orderByCol.ColumnName);
+                        }
+                        else
+                        {
+                            orderOrGroupBy.AppendFormat(",[{0}]", orderByCol.ColumnName);
+                        }
+                        orderOrGroupBy.Append(orderByCol.Ascending ? " ASC" : " DESC");
+                    }
+                }
+                else
+                {
+                    orderOrGroupBy.AppendFormat("GROUP BY [{0}]", idColumnName);
                 }
 
                 string cmdText;
                 if (maxResults == Int32.MaxValue)
                 {
-                    cmdText = String.Format("SELECT [{1}] FROM [{2}] {3} GROUP BY [{1}]", maxResults, idColumnName, tableName, where);
+                    cmdText = String.Format("SELECT [{0}] FROM [{1}] {2} {3};", idColumnName, tableName, where.ToString(), orderOrGroupBy.ToString());
                 }
                 else
                 {
-                    cmdText = String.Format("SELECT TOP({0}) [{1}] FROM [{2}] {3} GROUP BY [{1}]", maxResults, idColumnName, tableName, where);
+                    cmdText = String.Format("SELECT TOP({0}) [{1}] FROM [{2}] {3} {4};", maxResults, idColumnName, tableName, where.ToString(), orderOrGroupBy.ToString());
                 }
 
                 cmd.CommandText = cmdText;
@@ -520,7 +578,7 @@ namespace Almonaster.Database.Sql
             }
         }
 
-        public long SearchCount(string tableName, IEnumerable<ColumnSearchDescription> searchCols)
+        public long SearchCount(string tableName, IEnumerable<RangeSearchColumn> rangeSearchCols)
         {
             // TODOTODO - refactor this with Search()
             // TODOTODO - search flags
@@ -530,7 +588,7 @@ namespace Almonaster.Database.Sql
 
             using (SqlCommand cmd = new SqlCommand())
             {
-                foreach (ColumnSearchDescription col in searchCols)
+                foreach (RangeSearchColumn col in rangeSearchCols)
                 {
                     if (String.IsNullOrEmpty(where))
                     {
@@ -544,7 +602,7 @@ namespace Almonaster.Database.Sql
                     if (col.LessThanOrEqual == col.GreaterThanOrEqual)
                     {
                         string param = "@p" + index++;
-                        where += String.Format("[{0}] = {1}", col.Name, param);
+                        where += String.Format("[{0}] = {1}", col.ColumnName, param);
                         cmd.Parameters.Add(new SqlParameter(param, col.LessThanOrEqual));
                     }
                     else
@@ -552,7 +610,7 @@ namespace Almonaster.Database.Sql
                         string lessThanParam = "@p" + index++;
                         string greaterThanParam = "@p" + index++;
 
-                        where += String.Format("[{0}] >= {1} AND [{0}] <= {2}", col.Name, greaterThanParam, lessThanParam);
+                        where += String.Format("[{0}] >= {1} AND [{0}] <= {2}", col.ColumnName, greaterThanParam, lessThanParam);
 
                         cmd.Parameters.Add(new SqlParameter(lessThanParam, col.LessThanOrEqual));
                         cmd.Parameters.Add(new SqlParameter(greaterThanParam, col.GreaterThanOrEqual));
@@ -863,25 +921,29 @@ namespace Almonaster.Database.Sql
 
         public void DeleteRows(string tableName, string columnName, IEnumerable<long> values)
         {
+            if (values.Count() == 0)
+                return;
+
             StringBuilder cmdText = new StringBuilder();
             cmdText.AppendFormat("DELETE FROM [{0}]", tableName);
 
             using (SqlCommand cmd = new SqlCommand())
             {
                 int index = 0;
-                bool first = false;
+                bool first = true;
                 foreach (object value in values)
                 {
                     string param = "@p" + index++;
                     if (first)
                     {
                         first = false;
+                        cmdText.Append(" WHERE");
                     }
                     else
                     {
                         cmdText.Append(" OR");
                     }
-                    cmdText.AppendFormat(" WHERE [{0}] = {1}", columnName, param);
+                    cmdText.AppendFormat(" [{0}] = {1}", columnName, param);
                     cmd.Parameters.Add(new SqlParameter(param, value));
                 }
 

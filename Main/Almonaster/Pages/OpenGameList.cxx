@@ -40,21 +40,26 @@ if (m_bOwnPost && !m_bRedirection) {
         sscanf (pszStart, "Enter%d.%d", &iGameClassKey, &iGameNumber) == 2) {
 
         char pszForm[128];
-        sprintf (pszForm, "Pass%i.%i", iGameClassKey, iGameNumber);
+        sprintf(pszForm, "Pass%i.%i", iGameClassKey, iGameNumber);
 
-        if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) != NULL) {
+        if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) != NULL)
+        {
             pszPassword = pHttpForm->GetValue();
         }
 
         bool bConfirm = false;
-
-        if (m_pHttpRequest->GetForm ("Confirm") == NULL) {
+        if (m_pHttpRequest->GetForm ("Confirm") == NULL)
+        {
             bConfirm = (m_iSystemOptions & CONFIRM_IMPORTANT_CHOICES) != 0;
         }
 
-        if (bConfirm) {
+        if (bConfirm)
+        {
             bConfirmPage = true;
-        } else {
+        }
+        else
+        {
+            Check(CacheAllGameTables(iGameClassKey, iGameNumber));
 
             // Enter game!
             int iNumUpdatesTranspired;
@@ -83,18 +88,6 @@ if (m_bRedirectTest)
     if (bRedirected)
     {
         return Redirect(pageRedirect);
-    }
-}
-
-if (bConfirmPage) {
-
-    bool bFlag;
-
-    // Make sure game exists
-    iErrCode = DoesGameExist (iGameClassKey, iGameNumber, &bFlag);
-    if (iErrCode != OK || !bFlag) {
-        AddMessage ("That game no longer exists");
-        bConfirmPage = false;
     }
 }
 
@@ -128,7 +121,7 @@ if (bConfirmPage) {
     WriteButton (BID_CANCEL);
 
     char pszEnter[128];
-    sprintf (pszEnter, "Enter%i.%i", iGameClassKey, iGameNumber);
+    sprintf(pszEnter, "Enter%i.%i", iGameClassKey, iGameNumber);
 
     WriteButtonString (m_iButtonKey, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
 
@@ -181,21 +174,8 @@ if (bConfirmPage) {
             unsigned int iSuperClassKey;
             bool bFlag, bIdle = false;
 
-            // Cache GameData for each
-	        TableCacheEntry* peGameData = (TableCacheEntry*)StackAlloc(iNumOpenGames * sizeof(TableCacheEntry));
-	        for (i = 0; i < (int)iNumOpenGames; i ++)
-	        {
-	            char* pszTable;
-	        
-	            pszTable = (char*)StackAlloc(countof(_GAME_DATA) + 64);
-	            GET_GAME_DATA(pszTable, piGameClass[i], piGameNumber[i]);
-
-	            peGameData[i].pszTableName = pszTable;
-	            peGameData[i].iKey = NO_KEY;
-	            peGameData[i].iNumColumns = 0;
-	            peGameData[i].pcColumns = NULL;
-	        }
-            Check(t_pCache->Cache(peGameData, iNumOpenGames * 2));
+            // Cache GameData for each game
+            Check(CacheGameData(piGameClass, piGameNumber, m_iEmpireKey, iNumOpenGames));
 
             for (i = 0; i < (int)iNumOpenGames; i ++)
             {

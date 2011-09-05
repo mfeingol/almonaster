@@ -149,12 +149,6 @@ struct GameOptions
     GameSecurityEntry* pSecurity;
 };
 
-struct TopListQuery
-{
-    ScoringSystem TopList;
-    int EmpireKey;
-};
-
 enum GameAction
 {
     VIEW_GAME,
@@ -319,7 +313,6 @@ public:
     virtual int CompareScores (const Variant* pvLeft, const Variant* pvRight) = 0;
 
     virtual int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) = 0;
-    virtual int GetReplacementKeys (const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires) = 0;
 };
 
 class IMapGenerator
@@ -392,7 +385,6 @@ private:
     int InitializeNewDatabase();
     int ReloadDatabase();
 
-    int CreateDefaultSystemTemplates();
     int CreateDefaultSystemTables();
     int SetupDefaultSystemTables();
     int SetupDefaultThemes(unsigned int* piDefaultThemeKey);
@@ -404,10 +396,10 @@ private:
     int VerifyActiveGames();
 
     int VerifyTournaments();
-    int VerifyTopLists();
-    int RebuildTopList (ScoringSystem ssTopList);
 
-    void VerifySystemTables (bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable);
+    bool VerifyTableExistence(const char* pszTable, bool bNewDatabase);
+    bool VerifyTableExistenceWithRows(const char* pszTable, bool bNewDatabase);
+    void VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable);
 
     // Games
     int CleanupGame (int iGameClass, int iGameNumber, GameResult grResult, const char* pszWinnerName = NULL);
@@ -457,8 +449,10 @@ private:
 
 #ifdef _DEBUG
 
+    typedef HashTable<unsigned int, unsigned int, GenericHashValue<unsigned int>, GenericEquals<unsigned int>> PlanetHashTable;
+
     int VerifyMap (int iGameClass, int iGameNumber);
-    int DfsTraversePlanets (ICachedTable* pGameMap, unsigned int iPlanetKey, Variant* pvLink, bool* pbVisited, unsigned int iNumPlanets);
+    int DfsTraversePlanets (ICachedTable* pGameMap, unsigned int iPlanetKey, PlanetHashTable& htVisited, unsigned int iNumPlanets);
 
     int VerifyUpdatedEmpireCount (int iGameClass, int iGameNumber);
 
@@ -524,19 +518,6 @@ private:
 
     // Options
     int CheckForDelayedPause (int iGameClass, int iGameNumber, const UTCTime& tNow, bool* pbNewlyPaused);
-
-    static int THREAD_CALL UpdateTopListOnIncreaseMsg (AsyncTask* pMessage);
-    static int THREAD_CALL UpdateTopListOnDecreaseMsg (AsyncTask* pMessage);
-    static int THREAD_CALL UpdateTopListOnDeletionMsg (AsyncTask* pMessage);
-
-    int CacheTopLists(int iEmpireKey);
-
-    int UpdateTopListOnIncrease(TopListQuery* pQuery);
-    int UpdateTopListOnDecrease(TopListQuery* pQuery);
-    int UpdateTopListOnDeletion(TopListQuery* pQuery);
-
-    bool HasTopList (ScoringSystem ssTopList);
-    int VerifyTopList (ScoringSystem ssTopList);
 
     // Updates
     int RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpdateTime, bool* pbGameOver);
@@ -635,7 +616,7 @@ private:
         const char** pstrEmpireData, const char** pstrEmpireDip,
         const char* strGameMap, const GameConfiguration& gcConfig, int iGameClassOptions);
 
-    int GateShips (unsigned int iGaterEmpireIndex, const char* pszGaterEmpireName,
+    int GateShips (int iGameClass, int iGameNumber, unsigned int iGaterEmpireIndex, const char* pszGaterEmpireName,
         unsigned int iGatedEmpireIndex, const char* pszGatedEmpireName, int iGatedEmpireKey,
         int iShipType, const char* pszGateName,
         unsigned int iOldPlanetKey, unsigned int iNewPlanetKey,
@@ -655,11 +636,10 @@ private:
         unsigned int iNumEmpires, const char** pstrEmpireMap, const char** pstrEmpireDip,
         const char** pstrEmpireData);
 
-    int CheckForFirstContact (int iEmpireKey, int i, int iPlanetKey, const char* pszPlanetName,
-        int iNewX, int iNewY, unsigned int iNumEmpires, const unsigned int* piEmpireKey, 
-        const Variant* pvEmpireName, 
-        const char* strEmpireDip, const char* strGameMap, const char** pstrEmpireDip, 
-        String* pstrUpdateMessage);
+    int CheckForFirstContact(int iGameClass, int iGameNumber, int iEmpireKey, int iEmpireIndex,
+        int iPlanetKey, const char* pszPlanetName,
+        int iNewX, int iNewY, unsigned int iNumEmpires, const unsigned int* piEmpireKey, const Variant* pvEmpireName, 
+        const char* strEmpireDip, const char* strGameMap, const char** pstrEmpireDip, String* pstrUpdateMessage);
 
     // Updates
     void GetNextUpdateTime (const UTCTime& tLastUpdate, Seconds sUpdatePeriod, int iNumUpdates,
@@ -669,28 +649,6 @@ private:
 
     void GetLastUpdateTimeForPausedGame (const UTCTime& tNow, Seconds sSecondsUntilNextUpdate,
         Seconds sUpdatePeriod, int iNumUpdates, Seconds sFirstUpdateDelay, UTCTime* ptLastUpdateTime);
-
-    // Top Lists
-    int MoveEmpireUpInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
-        const Variant* pvOurData);
-
-    int MoveEmpireDownInTopList (ScoringSystem ssTopList, int iEmpireKey, unsigned int iKey, 
-        const Variant* pvOurData);
-
-    int PrivateMoveEmpireUpInTopList (ScoringSystem ssTopList, Variant** ppvData, unsigned int iNumRows, 
-        int iEmpireKey, unsigned int iKey, const Variant* pvOurData, bool* pbChanged);
-
-    int PrivateMoveEmpireDownInTopList (ScoringSystem ssTopList, Variant** ppvData, unsigned int iNumRows, 
-        int iEmpireKey, unsigned int iKey, const Variant* pvOurData, unsigned int* piNewNumRows, bool* pbChanged);
-
-    int PrivateFindNewEmpireForTopList (ScoringSystem ssTopList, Variant** ppvData, unsigned int iNumRows, 
-        bool bKeep, unsigned int* piNewNumRows);
-
-    int PrivateFlushTopListData (ScoringSystem ssTopList, Variant** ppvData, unsigned int iNumRows);
-
-    int InitializeEmptyTopList (ScoringSystem ssTopList);
-
-    int AddEmpireToTopList (ScoringSystem ssTopList, int iEmpireKey, const Variant* pvOurData);
 
     // Planets
     int SetNewMinMaxIfNecessary (int iGameClass, int iGameNumber, int iEmpireKey, int iX, int iY);
@@ -749,8 +707,6 @@ private:
     int AddEmpireToTournament (unsigned int iTournamentKey, int iInviteKey);
 
     // Associations
-    int GetAssociations(char* pszAssoc, unsigned int** ppiEmpires, unsigned int* piNumAssoc);
-    int DeleteSpecificAssociation(unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
     int RemoveDeadEmpireAssociations(unsigned int iEmpireKey);
 
 public:
@@ -1080,14 +1036,39 @@ public:
 
     int CacheEmpire(unsigned int iEmpireKey);
     int CacheEmpire(unsigned int iEmpireKey, unsigned int* piResults);
-    int CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires);
-    int CacheEmpires(unsigned int* piEmpireKey, unsigned int iNumEmpires, unsigned int* piResults);
+    int CacheEmpires(const Variant* pvEmpireKey, unsigned int iNumEmpires);
+    int CacheEmpires(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
+    int CacheEmpires(const unsigned int* piEmpireKey, unsigned int iNumEmpires, unsigned int* piResults);
     int CacheEmpireAndMessages(unsigned int iEmpireKey);
     int CacheEmpireMessagesAndTournaments(unsigned int iEmpireKey);
     int CacheEmpireForDeletion(unsigned int iEmpireKey);
-    int CacheTournamentTables(unsigned int* piTournamentKey, unsigned int iNumTournaments);
+    int CacheTournamentTables(const unsigned int* piTournamentKey, unsigned int iNumTournaments);
+    int CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKey, unsigned int iNumGames);
+    int CacheGameEmpireData(unsigned int iEmpireKey, const Variant* pvGame, unsigned int iNumGames);
+    int CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
+    int CacheEmpiresAndGameMessages(int iGameClass, int iGameNumber, const unsigned int* piEmpireKey, unsigned int iNumEmpires);
+    int CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
+    int CacheAllGameTables(int iGameClass, int iGameNumber);
+    int CacheGameTablesForBroadcast(int iGameClass, int iGameNumber);
+    int CacheProfileData(unsigned int iEmpireKey);
+    int CacheNukeHistory(unsigned int iEmpireKey);
+    int CacheMutualAssociations(unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
+    int CacheForReload();
+
+    enum GameCacheEntryFlags
+    {
+        EMPTY_GAME_EMPIRE_DIPLOMACY = 0x00000001,
+        EMPTY_GAME_EMPIRE_MAP       = 0x00000002,
+        EMPTY_GAME_EMPIRE_SHIPS     = 0x00000004,
+        EMPTY_GAME_EMPIRE_MESSAGES  = 0x00000008,
+        EMPTY_GAME_EMPIRE_FLEETS    = 0x00000010,
+    };
+
+    int CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyKey, int eFlags);
 
     int LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey);
+    int LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey, ICachedTable** ppTable);
+
     int DoesEmpireExist (unsigned int iEmpireKey, bool* pbExists, Variant* pvEmpireName);
 
     int CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, bool* pbMatch, int64* pi64SessionId, Variant* pvIPAddress);
@@ -1243,10 +1224,6 @@ public:
     int GetBridierTimeBombScanFrequency (Seconds* piFrequency);
     int SetBridierTimeBombScanFrequency (Seconds iFrequency);
 
-    int UpdateTopListOnIncrease (ScoringSystem ssTopList, int iEmpireKey);
-    int UpdateTopListOnDecrease (ScoringSystem ssTopList, int iEmpireKey);
-    int UpdateTopListOnDeletion (ScoringSystem ssTopList, int iEmpireKey);
-
     IScoringSystem* CreateScoringSystem(ScoringSystem ssTopList);
 
     int CalculatePrivilegeLevel (int iEmpireKey);
@@ -1285,12 +1262,10 @@ public:
     int SetEmpireAlienKey (int iEmpireKey, int iAlienKey);
 
     // Top Lists
-    int GetTopList (ScoringSystem ssListType, Variant*** pppvData, unsigned int* piNumEmpires);
-    int RebuildTopLists();
+    int GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey, unsigned int* piNumEmpires);
 
     // Search
-    int PerformMultipleSearch (const SearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, 
-        unsigned int* piStopKey);
+    int PerformMultipleSearch(const RangeSearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
 
     // Updates
     int CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpdateCheckTime, bool* pbUpdate);
@@ -1550,7 +1525,7 @@ public:
     int SetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int iIcon);
 
     // Associations
-    int GetAssociations (unsigned int iEmpireKey, unsigned int** ppiEmpires, unsigned int* piNumAssoc);
+    int GetAssociations (unsigned int iEmpireKey, Variant** ppvAssoc, unsigned int* piNumAssoc);
     int CheckAssociation (unsigned int iEmpireKey, unsigned int iSwitch, bool* pbAuth);
     int CreateAssociation (unsigned int iEmpireKey, const char* pszSecondEmpire, const char* pszPassword);
     int DeleteAssociation (unsigned int iEmpireKey, unsigned int iSecondEmpireKey);

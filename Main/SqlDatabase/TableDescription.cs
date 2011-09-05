@@ -34,11 +34,17 @@ namespace Almonaster.Database.Sql
         public object Value;
     }
 
-    public struct ColumnSearchDescription
+    public struct RangeSearchColumn
     {
-        public string Name;
+        public string ColumnName;
         public object GreaterThanOrEqual;
         public object LessThanOrEqual;
+    }
+
+    public struct OrderBySearchColumn
+    {
+        public string ColumnName;
+        public bool Ascending;
     }
 
     public struct RowValues
@@ -54,10 +60,19 @@ namespace Almonaster.Database.Sql
         public object ColumnValue;
     }
 
+    public class CrossJoinRequest
+    {
+        public string TableName;
+        public string LeftColumnName;
+        public string RightColumnName;
+        public IEnumerable<BulkTableReadRequestColumn> Columns;
+    }
+
     public struct BulkTableReadRequest
     {
         public string TableName;
         public IEnumerable<BulkTableReadRequestColumn> Columns;
+        public CrossJoinRequest CrossJoin;
     }
 
     public class BulkTableReadResult

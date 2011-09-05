@@ -121,6 +121,23 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_i64SessionId = NO_SESSION_ID;
 
     m_iNumOldUpdates = 0;
+
+    // Bit of a hack, but it works and saves lots of time and space
+    m_systemEmpireCol.Name = SystemEmpireActiveGames::EmpireKey;
+    m_systemEmpireCol.Data = NO_KEY;
+
+    m_systemTournamentCol.Name = SystemEmpireTournaments::EmpireKey;
+    m_systemTournamentCol.Data = NO_KEY;
+
+    m_gameCols[0].Name = GameData::GameClass;
+    m_gameCols[0].Data = NO_KEY;
+    m_gameCols[1].Name = GameData::GameNumber;
+    m_gameCols[1].Data = -1;
+
+    m_gameEmpireCols[0] = m_gameCols[0];
+    m_gameEmpireCols[1] = m_gameCols[1];
+    m_gameEmpireCols[2].Name = GameEmpireData::EmpireKey;
+    m_gameEmpireCols[2].Data = NO_KEY;
 }
 
 int HtmlRenderer::StaticInitialize()
@@ -146,7 +163,7 @@ int HtmlRenderer::StaticInitialize()
     m_siNumGamingEmpires = 0;
 
     char pszFileName[OS::MaxFileNameLength];
-    sprintf (pszFileName, "%s/" NEWS_FILE, global.GetResourceDir());
+    sprintf(pszFileName, "%s/" NEWS_FILE, global.GetResourceDir());
 
     if (File::DoesFileExist(pszFileName))
     {
@@ -244,7 +261,7 @@ int HtmlRenderer::VerifyPassword (const char* pszPassword, bool bPrintErrors) {
         
         if (bPrintErrors) {
             char pszText [256];
-            sprintf (pszText, "Passwords cannot be longer than %i characters", MAX_PASSWORD_LENGTH);
+            sprintf(pszText, "Passwords cannot be longer than %i characters", MAX_PASSWORD_LENGTH);
             AddMessage (pszText);
         }
         
@@ -283,7 +300,7 @@ int HtmlRenderer::VerifyEmpireName (const char* pszEmpireName, bool bPrintErrors
         if (bPrintErrors) {
             
             char pszText [128];
-            sprintf (pszText, "Empire names cannot be longer than %i characters", MAX_EMPIRE_NAME_LENGTH );
+            sprintf(pszText, "Empire names cannot be longer than %i characters", MAX_EMPIRE_NAME_LENGTH );
             
             AddMessage (pszText);
         }
@@ -688,7 +705,7 @@ int HtmlRenderer::ConvertTime (Seconds sNumSeconds, char pszTime[MAX_HTML_TIME_L
     *pszTime = '\0';
     
     if (sNumSeconds < 0) {
-        sprintf (pszTime, "<strong>Error: %i</strong>", sNumSeconds);
+        sprintf(pszTime, "<strong>Error: %i</strong>", sNumSeconds);
         return ERROR_INVALID_ARGUMENT;
     }
     
@@ -702,7 +719,7 @@ int HtmlRenderer::ConvertTime (Seconds sNumSeconds, char pszTime[MAX_HTML_TIME_L
         iHrs = sNumSeconds / 3600;
         sNumSeconds -= iHrs * 3600;
         
-        sprintf (pszTime, "<strong>%i</strong> hr", iHrs);
+        sprintf(pszTime, "<strong>%i</strong> hr", iHrs);
         
         if (iHrs != 1) {
             StrNCat (pszTime, "s");
@@ -718,7 +735,7 @@ int HtmlRenderer::ConvertTime (Seconds sNumSeconds, char pszTime[MAX_HTML_TIME_L
             StrNCat (pszTime, ", ");
         }
         
-        sprintf (pszTime + strlen (pszTime), "<strong>%i</strong> min", iMin);
+        sprintf(pszTime + strlen (pszTime), "<strong>%i</strong> min", iMin);
     }
     
     if (sNumSeconds > 0) {
@@ -727,7 +744,7 @@ int HtmlRenderer::ConvertTime (Seconds sNumSeconds, char pszTime[MAX_HTML_TIME_L
             StrNCat (pszTime, ", ");
         }
         
-        sprintf (pszTime + strlen (pszTime), "<strong>%i</strong> sec", sNumSeconds);
+        sprintf(pszTime + strlen (pszTime), "<strong>%i</strong> sec", sNumSeconds);
     }
     
     return OK;
@@ -915,7 +932,7 @@ void HtmlRenderer::SearchForDuplicateIPAddresses (int iGameClass, int iGameNumbe
     
     if (iErrCode != OK) {
         
-        sprintf (pszBuffer, "Error %i occurred searching for empires with the same IP address", iErrCode);
+        sprintf(pszBuffer, "Error %i occurred searching for empires with the same IP address", iErrCode);
         AddMessage (pszBuffer);
         
     } else {
@@ -930,7 +947,7 @@ void HtmlRenderer::SearchForDuplicateIPAddresses (int iGameClass, int iGameNumbe
                 
             } else {
                 
-                sprintf (pszBuffer, "%i</strong> duplicate IP addresses were found:<strong>", iNumDuplicates);
+                sprintf(pszBuffer, "%i</strong> duplicate IP addresses were found:<strong>", iNumDuplicates);
                 AddMessage (pszBuffer);
             }
             
@@ -995,7 +1012,7 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
     
     if (iErrCode != OK) {
         
-        sprintf (pszBuffer, "Error %i occurred searching for empires with the same Session Id", iErrCode);
+        sprintf(pszBuffer, "Error %i occurred searching for empires with the same Session Id", iErrCode);
         AddMessage (pszBuffer);
         
     } else {
@@ -1010,7 +1027,7 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
                 
             } else {
                 
-                sprintf (pszBuffer, "%i</strong> duplicate Session Ids were found:<strong>", iNumDuplicates);
+                sprintf(pszBuffer, "%i</strong> duplicate Session Ids were found:<strong>", iNumDuplicates);
                 AddMessage (pszBuffer);
             }
             
@@ -1060,7 +1077,7 @@ void HtmlRenderer::SearchForDuplicateSessionIds (int iGameClass, int iGameNumber
 void HtmlRenderer::ReportLoginFailure (IReport* pReport, const char* pszEmpireName)
 {
     char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
-    sprintf (pszMessage, "Logon failure for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+    sprintf(pszMessage, "Logon failure for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
         
     pReport->WriteReport (pszMessage);
 }
@@ -1070,9 +1087,9 @@ void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireNa
     char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
 
     if (bAutoLogon) {
-        sprintf (pszMessage, "Autologon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+        sprintf(pszMessage, "Autologon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
     } else {
-        sprintf (pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+        sprintf(pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
     }
 
     pReport->WriteReport (pszMessage);
@@ -1082,7 +1099,7 @@ void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireNa
 void HtmlRenderer::ReportEmpireCreation (IReport* pReport, const char* pszEmpireName)
 {
     char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
-    sprintf (pszMessage, "Creation success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
+    sprintf(pszMessage, "Creation success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
         
     pReport->WriteReport (pszMessage);
 }
@@ -1631,12 +1648,12 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
 
             char pszShip [64];
 
-            sprintf (pszShip, "InitShip%i", i);
+            sprintf(pszShip, "InitShip%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszShip)) != NULL) {
                 iSelInitShip |= TECH_BITS[i];
             }
 
-            sprintf (pszShip, "DevShip%i", i);
+            sprintf(pszShip, "DevShip%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszShip)) != NULL) {
                 iSelDevShip |= TECH_BITS[i];
             }
@@ -4273,7 +4290,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     iNumInitTechDevs = 0;
     ENUMERATE_TECHS(i) {
         
-        sprintf (pszTechString, "InitShip%i", i);
+        sprintf(pszTechString, "InitShip%i", i);
         
         if ((pHttpForm = m_pHttpRequest->GetForm (pszTechString)) != NULL) {
             iInitTechDevs |= TECH_BITS[i];
@@ -4288,7 +4305,7 @@ int HtmlRenderer::ParseCreateGameClassForms (Variant* pvSubmitArray, int iOwnerK
     iNumTechDevs = 0;
     ENUMERATE_TECHS(i) {
         
-        sprintf (pszTechString, "DevShip%i", i);
+        sprintf(pszTechString, "DevShip%i", i);
         
         if ((pHttpForm = m_pHttpRequest->GetForm (pszTechString)) != NULL) {
             iDevTechDevs |= TECH_BITS[i];
@@ -4413,182 +4430,180 @@ int HtmlRenderer::RenderHyperText (const char* pszText, const char* pszUrl) {
     return OK;
 }
 
-void HtmlRenderer::WriteNukeHistory (int iTargetEmpireKey) {
+int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
+{
+    Variant vNukeEmpireName, ** ppvNukedData = NULL, ** ppvNukerData = NULL;
+    int iNumNuked, iNumNukers, i;
     
-    Variant vNukeEmpireName;
-    
-    Variant** ppvNukedData, ** ppvNukerData;
-    int iNumNuked, iNumNukers, i;   
-    
-    if (GetEmpireName (iTargetEmpireKey, &vNukeEmpireName) != OK || 
-        GetNukeHistory (iTargetEmpireKey, &iNumNuked, &ppvNukedData, &iNumNukers, 
-        &ppvNukerData) != OK) {
+    int iErrCode = CacheNukeHistory(iTargetEmpireKey);
+    if (iErrCode != OK)
+    {
+        goto Cleanup;
+    }
+
+    iErrCode = GetEmpireName(iTargetEmpireKey, &vNukeEmpireName);
+    if (iErrCode != OK)
+    {
+        goto Cleanup;
+    }
+
+    iErrCode = GetNukeHistory(iTargetEmpireKey, &iNumNuked, &ppvNukedData, &iNumNukers, &ppvNukerData);
+    if (iErrCode != OK)
+    {
+        goto Cleanup;
+    }
         
-        OutputText ("<p><strong>The empire's nuke history could not be read</strong>");
+    OutputText ("<input type=\"hidden\" name=\"NumNukerEmps\" value=\"");
+    m_pHttpResponse->WriteText (iNumNukers);
+    OutputText ("\"><input type=\"hidden\" name=\"NumNukedEmps\" value=\"");
+    m_pHttpResponse->WriteText (iNumNuked);
+    OutputText ("\">");
         
+    if (iNumNuked == 0 && iNumNukers == 0) { 
+        OutputText ("<p><strong>This empire has no nuke history</strong>");
     } else {
-        
-        OutputText ("<input type=\"hidden\" name=\"NumNukerEmps\" value=\"");
-        m_pHttpResponse->WriteText (iNumNukers);
-        OutputText ("\"><input type=\"hidden\" name=\"NumNukedEmps\" value=\"");
-        m_pHttpResponse->WriteText (iNumNuked);
-        OutputText ("\">");
-        
-        if (iNumNuked == 0 && iNumNukers == 0) { 
-            OutputText ("<p><strong>This empire has no nuke history</strong>");
-        } else {
             
-            NotifyProfileLink();
+        NotifyProfileLink();
             
-            char pszDateString [OS::MaxDateLength];
+        char pszDateString [OS::MaxDateLength];
             
-            int iErrCode, iAlloc = max (iNumNukers, iNumNuked);
+        int iErrCode, iAlloc = max (iNumNukers, iNumNuked);
             
-            UTCTime* ptTime = (UTCTime*) StackAlloc (iAlloc * sizeof (UTCTime));
-            Variant** ppvData = (Variant**) StackAlloc (iAlloc * sizeof (Variant*));
+        UTCTime* ptTime = (UTCTime*) StackAlloc (iAlloc * sizeof (UTCTime));
+        Variant** ppvData = (Variant**) StackAlloc (iAlloc * sizeof (Variant*));
             
-            if (iNumNuked > 0) {
+        if (iNumNuked > 0) {
                 
-                OutputText ("<p><h3>Empires who were nuked by ");
-                m_pHttpResponse->WriteText (vNukeEmpireName.GetCharPtr());
-                OutputText (":</h3><p><table width=\"90%\"><tr><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
-                OutputText ("\" align=\"center\">Empire</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
-                OutputText ("\" align=\"center\">Icon</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Game</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Time</th></tr>");
+            OutputText ("<p><h3>Empires who were nuked by ");
+            m_pHttpResponse->WriteText (vNukeEmpireName.GetCharPtr());
+            OutputText (":</h3><p><table width=\"90%\"><tr><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
+            OutputText ("\" align=\"center\">Empire</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr()); 
+            OutputText ("\" align=\"center\">Icon</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("\" align=\"center\">Game</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("\" align=\"center\">Time</th></tr>");
                 
-                // Sort by timestamp
-                for (i = 0; i < iNumNuked; i ++) {
-                    ptTime[i] = ppvNukedData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64();
-                    ppvData[i] = ppvNukedData[i];
-                }
-                
-                Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumNuked);
-                
-                char pszEmpire [256 + MAX_EMPIRE_NAME_LENGTH];
-                
-                for (i = 0; i < iNumNuked; i ++) {
-                    
-                    OutputText ("<tr><td align=\"center\"><strong>");
-                    
-                    m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()); 
-                    OutputText ("</strong></td><td align=\"center\">");
-                    
-                    sprintf (
-                        pszEmpire, 
-                        "View the profile of %s",
-                        ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()
-                        );
-                    
-                    WriteProfileAlienString (
-                        ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
-                        ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
-                        ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
-                        0,
-                        "ProfileLink",
-                        pszEmpire,
-                        true,
-                        true
-                        );
-                    
-                    OutputText ("</td><td align=\"center\">");
-                    m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
-                    OutputText (" ");
-                    m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameNumber].GetInteger());
-                    OutputText ("</td><td align=\"center\">");
-                    
-                    iErrCode = Time::GetDateString (
-                        ppvData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64(), 
-                        pszDateString
-                        );
-                    
-                    if (iErrCode == OK) {
-                        m_pHttpResponse->WriteText (pszDateString);
-                    } else {
-                        OutputText ("Could not read date string");
-                    }
-                    
-                    OutputText ("</td></tr>");
-                }
-                
-                t_pCache->FreeData (ppvNukedData);
-                
-                OutputText ("</table>");
+            // Sort by timestamp
+            for (i = 0; i < iNumNuked; i ++)
+            {
+                ptTime[i] = ppvNukedData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64();
+                ppvData[i] = ppvNukedData[i];
             }
-            
-            if (iNumNukers > 0) {
                 
-                OutputText ("<p><h3>Empires who nuked ");
-                m_pHttpResponse->WriteText (vNukeEmpireName.GetCharPtr());
+            Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumNuked);
                 
-                OutputText (":</h3><p><table width=\"90%\"><tr><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Empire</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Icon</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Game</th><th bgcolor=\"");
-                m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
-                OutputText ("\" align=\"center\">Time</th></tr>");
+            char pszEmpire [256 + MAX_EMPIRE_NAME_LENGTH];
                 
-                // Sort by timestamp
-                for (i = 0; i < iNumNukers; i ++) {
-                    ptTime[i] = ppvNukerData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64();
-                    ppvData[i] = ppvNukerData[i];
-                }
-                Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumNukers);
-                
-                char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
-                
-                for (i = 0; i < iNumNukers; i ++) {
+            for (i = 0; i < iNumNuked; i ++)
+            {
+                OutputText ("<tr><td align=\"center\"><strong>");
                     
-                    OutputText ("<tr><td align=\"center\"><strong>");
-                    m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()); 
-                    OutputText ("</strong></td><td align=\"center\">");
+                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()); 
+                OutputText("</strong></td><td align=\"center\">");
                     
-                    sprintf (pszProfile, "View the profile of %s", ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr());
+                sprintf (
+                    pszEmpire, 
+                    "View the profile of %s",
+                    ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()
+                    );
                     
-                    WriteProfileAlienString (
-                        ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
-                        ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
-                        ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
-                        0,
-                        "ProfileLink",
-                        pszProfile,
-                        true,
-                        true
-                        );
+                WriteProfileAlienString (
+                    ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
+                    ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
+                    ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
+                    0,
+                    "ProfileLink",
+                    pszEmpire,
+                    true,
+                    true
+                    );
                     
-                    OutputText ("</td><td align=\"center\">");
-                    m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
-                    OutputText (" ");
-                    m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameNumber].GetInteger());
-                    OutputText ("</td><td align=\"center\">");
+                OutputText ("</td><td align=\"center\">");
+                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
+                OutputText (" ");
+                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameNumber].GetInteger());
+                OutputText ("</td><td align=\"center\">");
                     
-                    iErrCode = Time::GetDateString (
-                        ppvData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64(), 
-                        pszDateString
-                        );
+                iErrCode = Time::GetDateString(ppvData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64(), pszDateString);
+                Assert(iErrCode == OK);
                     
-                    if (iErrCode == OK) {
-                        m_pHttpResponse->WriteText (pszDateString);
-                    } else {
-                        OutputText ("Could not read date string");
-                    }
-                    
-                    OutputText ("</td></tr>");
-                }
-                
-                t_pCache->FreeData (ppvNukerData);
-                
-                OutputText ("</table>");
+                OutputText ("</td></tr>");
             }
+                
+            OutputText ("</table>");
+        }
+            
+        if (iNumNukers > 0) {
+                
+            OutputText ("<p><h3>Empires who nuked ");
+            m_pHttpResponse->WriteText (vNukeEmpireName.GetCharPtr());
+                
+            OutputText (":</h3><p><table width=\"90%\"><tr><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("\" align=\"center\">Empire</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("\" align=\"center\">Icon</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("\" align=\"center\">Game</th><th bgcolor=\"");
+            m_pHttpResponse->WriteText (m_vTableColor.GetCharPtr());
+            OutputText ("\" align=\"center\">Time</th></tr>");
+                
+            // Sort by timestamp
+            for (i = 0; i < iNumNukers; i ++) {
+                ptTime[i] = ppvNukerData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64();
+                ppvData[i] = ppvNukerData[i];
+            }
+            Algorithm::QSortTwoDescending<UTCTime, Variant*> (ptTime, ppvData, iNumNukers);
+                
+            char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
+                
+            for (i = 0; i < iNumNukers; i ++) {
+                    
+                OutputText ("<tr><td align=\"center\"><strong>");
+                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()); 
+                OutputText ("</strong></td><td align=\"center\">");
+                    
+                sprintf(pszProfile, "View the profile of %s", ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr());
+                    
+                WriteProfileAlienString (
+                    ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
+                    ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
+                    ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
+                    0,
+                    "ProfileLink",
+                    pszProfile,
+                    true,
+                    true
+                    );
+                    
+                OutputText ("</td><td align=\"center\">");
+                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
+                OutputText (" ");
+                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameNumber].GetInteger());
+                OutputText ("</td><td align=\"center\">");
+                    
+                iErrCode = Time::GetDateString(ppvData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64(), pszDateString);
+                Assert(iErrCode == OK);
+                    
+                OutputText ("</td></tr>");
+            }
+                
+            OutputText ("</table>");
         }
     }
+
+Cleanup:
+
+    if (ppvNukerData)
+        t_pCache->FreeData(ppvNukerData);
+
+    if (ppvNukedData)
+        t_pCache->FreeData (ppvNukedData);
+ 
+    return iErrCode;
 }
 
 void HtmlRenderer::WritePersonalGameClasses (int iTargetEmpireKey) {
@@ -5330,12 +5345,12 @@ int HtmlRenderer::OnDeleteEmpire(int iEmpireKey) {
 
         char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
             
-        sprintf (pszMessage, "%s was deleted", pszEmpireName);
+        sprintf(pszMessage, "%s was deleted", pszEmpireName);
         global.GetReport()->WriteReport (pszMessage);
 
         if (bFileDeleted)
         {
-            sprintf (pszMessage, "Uploaded icon %i was deleted", iEmpireKey);
+            sprintf(pszMessage, "Uploaded icon %i was deleted", iEmpireKey);
             global.GetReport()->WriteReport (pszMessage);
         }
     }
@@ -5509,7 +5524,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
 #ifdef _DEBUG
         CheckTargetPop (iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
 #endif
-        GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
+        COPY_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
 
         iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vValue);
         if (iErrCode != OK) {
@@ -5599,7 +5614,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
         int iOptions;
         unsigned int iCurrentEmpireKey = ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger();
 
-        GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iCurrentEmpireKey);
+        COPY_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iCurrentEmpireKey);
 
         OutputText ("<tr>");
 
@@ -5631,7 +5646,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
 
         OutputText ("<td align=\"center\">");
 
-        sprintf (pszProfile, "View the profile of %s", vValue.GetCharPtr());
+        sprintf(pszProfile, "View the profile of %s", vValue.GetCharPtr());
 
         WriteProfileAlienString (
             iValue,
@@ -5696,8 +5711,8 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
         if (bAdmin)
         {
             // Ships
-            GET_GAME_EMPIRE_SHIPS(pszGameEmpireShips, iGameClass, iGameNumber, iCurrentEmpireKey);
-            GET_GAME_EMPIRE_DIPLOMACY(pszGameEmpireDip, iGameClass, iGameNumber, iCurrentEmpireKey);
+            COPY_GAME_EMPIRE_SHIPS(pszGameEmpireShips, iGameClass, iGameNumber, iCurrentEmpireKey);
+            COPY_GAME_EMPIRE_DIPLOMACY(pszGameEmpireDip, iGameClass, iGameNumber, iCurrentEmpireKey);
 
             unsigned int iShips;
             iErrCode = t_pCache->GetNumCachedRows(pszGameEmpireShips, &iShips);
@@ -5758,7 +5773,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
                 }
                 iValue = vValue.GetInteger();
 
-                iErrCode = t_pCache->ReadData(pszGameEmpireDip, iKey, GameEmpireDiplomacy::EmpireKey, &vValue);
+                iErrCode = t_pCache->ReadData(pszGameEmpireDip, iKey, GameEmpireDiplomacy::ReferenceEmpireKey, &vValue);
                 if (iErrCode != OK) {
                     goto Cleanup;
                 }
@@ -5912,7 +5927,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
     // Dead empires
     //
 
-    GET_GAME_DEAD_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
+    COPY_GAME_NUKED_EMPIRES (strGameEmpireData, iGameClass, iGameNumber);
     if (t_pCache->GetNumCachedRows(strGameEmpireData, &iNumRows) == OK && iNumRows > 0)
     {
         const int iNumHeaders = sizeof (g_pszDeadEmpireHeaders) / sizeof (char*);
@@ -5958,19 +5973,19 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
                 goto Cleanup;
             }
             
-            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Icon, &vValue);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::Icon, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
             iIcon = vValue.GetInteger();
             
-            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Key, &vValue);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::NukedEmpireKey, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
             iDeadEmpireKey = vValue.GetInteger();
 
-            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Name, &vValue);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::Name, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -5980,7 +5995,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
             m_pHttpResponse->WriteText (pszName);
             OutputText ("</td><td align=\"center\">");
             
-            sprintf (pszProfile, "View the profile of %s", pszName);
+            sprintf(pszProfile, "View the profile of %s", pszName);
 
             WriteProfileAlienString (
                 iIcon,
@@ -5995,7 +6010,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
 
             OutputText ("</td><td colspan=\"2\" align=\"center\">");
 
-            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Update, &vValue);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::Update, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -6003,7 +6018,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
 
             OutputText ("</td><td colspan=\"2\" align=\"center\">");
 
-            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameDeadEmpires::Reason, &vValue);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::Reason, &vValue);
             if (iErrCode != OK) {
                 goto Cleanup;
             }
@@ -6630,7 +6645,7 @@ void HtmlRenderer::WriteActiveGameAdministration (int* piGameClass,
 
         OutputText ("<td align=\"center\">"); 
 
-        sprintf (pszAdmin, "AdministerGame%i.%i", piGameClass[i], piGameNumber[i]);
+        sprintf(pszAdmin, "AdministerGame%i.%i", piGameClass[i], piGameNumber[i]);
 
         WriteButtonString (
             m_iButtonKey,
@@ -6903,7 +6918,7 @@ void HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey) {
     // Icon
     OutputText("<tr><td align=\"center\">");
 
-    sprintf (pszProfile, "View the profile of %s", pszName);
+    sprintf(pszProfile, "View the profile of %s", pszName);
 
     WriteProfileAlienString (
         iAlienKey,

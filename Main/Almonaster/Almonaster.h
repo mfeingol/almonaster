@@ -31,7 +31,6 @@ private:
     ~Almonaster();
 
     bool m_bIsDefault;
-    bool m_bNoBuffering;
 
     char* m_pszUri1;
     char* m_pszUri2;

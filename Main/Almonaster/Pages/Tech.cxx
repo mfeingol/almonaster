@@ -178,7 +178,7 @@ if (!(m_iGameState & STARTED)) {
 
             if (iNumAvailableTechs > 0) {
 
-                sprintf (pszTech, "Tech%i", piUndevKey[i]);
+                sprintf(pszTech, "Tech%i", piUndevKey[i]);
 
                 WriteButtonString (
                     m_iButtonKey,

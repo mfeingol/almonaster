@@ -66,7 +66,7 @@ int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
             pszAuthorName,
         };
 
-        iErrCode = t_pCache->InsertRow (SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
         Assert (iErrCode == OK);
 
     } else {

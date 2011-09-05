@@ -93,7 +93,7 @@ int HtmlRenderer::WriteGameMessages()
             }
             
             iErrCode = Time::GetDateString(ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
-            Assert(iErrCode != OK);
+            Assert(iErrCode == OK);
             
             OutputText ("<tr><td align=\"left\">");
             
@@ -111,10 +111,10 @@ int HtmlRenderer::WriteGameMessages()
                 Variant vSecretKey;
                 unsigned int iSrcEmpireKey = ppvMessage[i][GameEmpireMessages::iSourceKey].GetInteger();
                 if (GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) == OK &&
-                    vSecretKey.GetInteger() == ppvMessage[i][GameEmpireMessages::iSourceSecret].GetInteger() &&
+                    vSecretKey.GetInteger64() == ppvMessage[i][GameEmpireMessages::iSourceSecret].GetInteger64() &&
                     GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vAlienKey) == OK)
                 {
-                    sprintf (pszProfile, "View the profile of %s", pszSource);
+                    sprintf(pszProfile, "View the profile of %s", pszSource);
 
                     WriteProfileAlienString(vAlienKey.GetInteger(), iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
                     OutputText (" ");
@@ -338,7 +338,7 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
         else if (iAlienKey != NO_KEY)
         {
             char pszProfile [MAX_EMPIRE_NAME_LENGTH + 64];
-            sprintf (pszProfile, "View the profile of %s", pszSource);
+            sprintf(pszProfile, "View the profile of %s", pszSource);
             
             Assert(iSrcEmpireKey != NO_KEY);
             WriteProfileAlienString(iAlienKey, iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);

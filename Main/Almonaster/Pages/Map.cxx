@@ -588,7 +588,7 @@ case 1:
 
         Variant vOptions;
 
-        GAME_MAP (pszGameMap, m_iGameClass, m_iGameNumber);
+        GET_GAME_MAP (pszGameMap, m_iGameClass, m_iGameNumber);
 
         // Make sure we've explored that planet
         iErrCode = HasEmpireExploredPlanet (

@@ -186,12 +186,11 @@ Page0:
 case 1:
     {
 
-    unsigned int iNumEmpires;
-    Variant** ppvData;
-
+    unsigned int* piEmpireKey, iNumEmpires;
     const char* pszTableColor = m_vTableColor.GetCharPtr();
+    unsigned int iDataColumn1 = -1, iDataColumn2 = -1;
 
-    Check (GetTopList (ssListType, &ppvData, &iNumEmpires));
+    Check(GetTopList(ssListType, &piEmpireKey, &iNumEmpires));
 
     if (iNumEmpires == 0) {
         %><p><strong>No empires are currently on the <% Write (TOPLIST_NAME [ssListType]); %> list</strong><%
@@ -223,16 +222,21 @@ case 1:
     switch (ssListType) {
 
     case ALMONASTER_SCORE:
+        iDataColumn1 = SystemEmpireData::iAlmonasterScore;
+        iDataColumn2 = SystemEmpireData::iAlmonasterScoreSignificance;
         %>Score</th><%
         %><th align="center" bgcolor="<% Write (pszTableColor); %>">Significance</th><%
         break;
 
     case CLASSIC_SCORE:
+        iDataColumn1 = SystemEmpireData::iClassicScore;
         %>Score<%
         break;
 
     case BRIDIER_SCORE:
     case BRIDIER_SCORE_ESTABLISHED:
+        iDataColumn1 = SystemEmpireData::iBridierRank;
+        iDataColumn2 = SystemEmpireData::iBridierIndex;
 
         // Best effort ask for Bridier time bomb scan
         iErrCode = TriggerBridierTimeBombIfNecessary();
@@ -250,112 +254,98 @@ case 1:
     %><th align="center" bgcolor="<% Write (pszTableColor); %>">Games</th><%    
     %></tr><%
 
-    Variant* pvEmpData;
     String strName, strEmail;
 
-    TableCacheEntry* pEntries = (TableCacheEntry*)StackAlloc(iNumEmpires * 2 * sizeof(TableCacheEntry));
-    for (i = 0; i < iNumEmpires; i ++)
+    iErrCode = CacheEmpireAndActiveGames(piEmpireKey, iNumEmpires);
+
+    for (i = 0; iErrCode == OK && i < iNumEmpires; i ++)
     {
-        pEntries[i].pszTableName = SYSTEM_EMPIRE_DATA;
-        pEntries[i].iKey = ppvData[i][TopList::iEmpireKey].GetInteger();
-        pEntries[i].iNumColumns = 0;
-        pEntries[i].pcColumns = NULL;
-
-        TableCacheEntryColumn* pCol = (TableCacheEntryColumn*)StackAlloc(sizeof(TableCacheEntryColumn));
-        pCol->pszColumn = SystemEmpireActiveGames::EmpireKey;
-        pCol->vData = ppvData[i][TopList::iEmpireKey].GetInteger();
-
-        pEntries[iNumEmpires + i].pszTableName = SYSTEM_EMPIRE_ACTIVE_GAMES;
-        pEntries[iNumEmpires + i].iKey = NO_KEY;
-        pEntries[iNumEmpires + i].iNumColumns = 1;
-        pEntries[iNumEmpires + i].pcColumns = pCol;
-    }
-
-    iErrCode = t_pCache->Cache(pEntries, iNumEmpires * 2);
-    if (iErrCode == OK)
-    {
-        for (i = 0; i < iNumEmpires; i ++)
+        unsigned int iNumActiveGames;
+        Variant* pvEmpData = NULL;
+        if (GetEmpireData(piEmpireKey[i], &pvEmpData, &iNumActiveGames) == OK)
         {
-            unsigned int iNumActiveGames;
-            if (GetEmpireData(ppvData[i][TopList::iEmpireKey].GetInteger(), &pvEmpData, &iNumActiveGames) == OK)
-            {
-                %><tr><td align="center"><strong><% Write (i + 1); %></strong></td><%
-                %><td align="center"><% Write (pvEmpData[SystemEmpireData::iName].GetCharPtr()); %></td><%
-                %><td align="center"><%
+            %><tr><td align="center"><strong><% Write (i + 1); %></strong></td><%
+            %><td align="center"><% Write (pvEmpData[SystemEmpireData::iName].GetCharPtr()); %></td><%
+            %><td align="center"><%
 
-                char pszProfile[128 + MAX_EMPIRE_NAME_LENGTH];
-                sprintf(pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::iName].GetCharPtr());
+            char pszProfile[128 + MAX_EMPIRE_NAME_LENGTH];
+            sprintf(pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::iName].GetCharPtr());
 
-                WriteProfileAlienString (
-                    pvEmpData[SystemEmpireData::iAlienKey].GetInteger(),
-                    ppvData[i][TopList::iEmpireKey].GetInteger(),
-                    pvEmpData[SystemEmpireData::iName].GetCharPtr(),
-                    0,
-                    "ProfileLink",
-                    pszProfile,
-                    true,
-                    true
-                    );
+            WriteProfileAlienString (
+                pvEmpData[SystemEmpireData::iAlienKey].GetInteger(),
+                piEmpireKey[i],
+                pvEmpData[SystemEmpireData::iName].GetCharPtr(),
+                0,
+                "ProfileLink",
+                pszProfile,
+                true,
+                true
+                );
 
-                %></td><td align="center"><%
+            %></td><td align="center"><%
 
-                iErrCode = HTMLFilter (pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
-                if (iErrCode == OK && !strName.IsBlank()) {
+            iErrCode = HTMLFilter(pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
+            if (iErrCode == OK && !strName.IsBlank()) {
 
-                    iErrCode = HTMLFilter (pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
-                    if (iErrCode == OK) {
+                iErrCode = HTMLFilter(pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
+                if (iErrCode == OK) {
 
-                        if (!strEmail.IsBlank()) {
-                            %><a href="mailto:<% Write (strEmail.GetCharPtr(), strEmail.GetLength()); %>"><%
-                        }
+                    if (!strEmail.IsBlank()) {
+                        %><a href="mailto:<% Write (strEmail.GetCharPtr(), strEmail.GetLength()); %>"><%
+                    }
 
-                        Write (strName.GetCharPtr(), strName.GetLength());
+                    Write (strName.GetCharPtr(), strName.GetLength());
 
-                        if (!strEmail.IsBlank()) {
-                            %></a><%
-                        }
+                    if (!strEmail.IsBlank()) {
+                        %></a><%
                     }
                 }
-
-                %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iWins].GetInteger());
-                %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNukes].GetInteger());
-                %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNuked].GetInteger());
-                %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iDraws].GetInteger());
-                %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iRuins].GetInteger());
-
-                %></td><td align="center"><% Write (ppvData[i][TopList::iData]);
-
-                switch (ssListType) {
-
-                case ALMONASTER_SCORE:
-                    %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iAlmonasterScoreSignificance].GetInteger());
-                    break;
-
-                case BRIDIER_SCORE:
-                case BRIDIER_SCORE_ESTABLISHED:
-                    %></td><td align="center"><% Write (ppvData[i][TopList::iData2]);
-                    break;
-                }
-                %></td><%
-                %></td><td align="center"><% Write (iNumActiveGames); %></td><%
-                %></tr><%
-
-                t_pCache->FreeData (pvEmpData);
             }
+
+            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iWins].GetInteger());
+            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNukes].GetInteger());
+            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNuked].GetInteger());
+            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iDraws].GetInteger());
+            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iRuins].GetInteger());
+
+            Assert(iDataColumn1 >= 0);
+            %></td><td align="center"><% Write (pvEmpData[iDataColumn1]);
+
+            switch (ssListType) {
+
+            case ALMONASTER_SCORE:
+                Assert(iDataColumn2 >= 0);
+                %></td><td align="center"><% Write (pvEmpData[iDataColumn2].GetInteger());
+                break;
+
+            case BRIDIER_SCORE:
+            case BRIDIER_SCORE_ESTABLISHED:
+                Assert(iDataColumn2 >= 0);
+                %></td><td align="center"><% Write(pvEmpData[iDataColumn2]);
+                break;
+            }
+            %></td><%
+            %></td><td align="center"><% Write(iNumActiveGames); %></td><%
+            %></tr><%
+
+            t_pCache->FreeData(pvEmpData);
         }
     }
     %></table><%
 
     NotifyProfileLink();
 
-    t_pCache->FreeData (ppvData);
+    t_pCache->FreeKeys(piEmpireKey);
+
+    if (iErrCode != OK)
+        return iErrCode;
 
     }
     break;
 
 default:
-
-    Assert (false);
+    Assert(false);
+    break;
 }
 
 CloseSystemPage();

@@ -493,7 +493,7 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
     }
 
     char pszTournamentKey [64];
-    sprintf (pszTournamentKey, "%i.%i", iTournamentKey, iOwnerKey);
+    sprintf(pszTournamentKey, "%i.%i", iTournamentKey, iOwnerKey);
 
     UTCTime tTime;
     Time::GetTime (&tTime);
@@ -524,7 +524,7 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
     {
         iFlags |= MESSAGE_SYSTEM;
         pvData[SystemEmpireMessages::iSourceName] = (const char*)NULL;
-        pvData[SystemEmpireMessages::iSourceSecret] = 0;
+        pvData[SystemEmpireMessages::iSourceSecret] = (int64)0;
     }
     else
     {
@@ -583,7 +583,7 @@ int GameEngine::InviteSelfIntoTournament (unsigned int iTournamentKey, int iEmpi
         return iErrCode;
 
     char pszTournamentKey [64];
-    sprintf (pszTournamentKey, "%i.%i", iTournamentKey, iEmpireKey);
+    sprintf(pszTournamentKey, "%i.%i", iTournamentKey, iEmpireKey);
 
     UTCTime tTime;
     Time::GetTime (&tTime);
@@ -822,7 +822,7 @@ int GameEngine::AddEmpireToTournament(unsigned int iTournamentKey, int iInviteKe
         goto Cleanup;
     }
     
-    iErrCode = pWriteTable->InsertRow (SystemTournamentEmpires::Template, pvData, &iProxyKey);
+    iErrCode = pWriteTable->InsertRow(SystemTournamentEmpires::Template, pvData, &iProxyKey);
     if (iErrCode != OK) {
         goto Cleanup;
     }
@@ -1297,7 +1297,7 @@ int GameEngine::GetTournamentTeams (unsigned int iTournamentKey, unsigned int** 
 
     } else {
 
-        iErrCode = t_pCache->ReadColumn (pszTeams, SystemTournamentTeams::Name, ppiTeamKey, ppvName, piNumKeys);
+        iErrCode = t_pCache->ReadColumn(pszTeams, SystemTournamentTeams::Name, ppiTeamKey, ppvName, piNumKeys);
     }
 
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -1334,7 +1334,7 @@ int GameEngine::CreateTournamentTeam(unsigned int iTournamentKey, Variant* pvTea
     }
 
     // Create team
-    iErrCode = pTable->InsertRow (SystemTournamentTeams::Template, pvTeamData, piTeamKey);
+    iErrCode = pTable->InsertRow(SystemTournamentTeams::Template, pvTeamData, piTeamKey);
     if (iErrCode != OK) {
         Assert (false);
         goto Cleanup;
@@ -1535,7 +1535,7 @@ int GameEngine::GetTournamentIcon (unsigned int iTournamentKey, unsigned int* pi
 
 int GameEngine::SetTournamentIcon (unsigned int iTournamentKey, unsigned int iIcon) {
 
-    return t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, iIcon);
+    return t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, (int)iIcon);
 }
 
 int GameEngine::GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int* piIcon) {
@@ -1557,7 +1557,7 @@ int GameEngine::SetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int
 
     GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
-    return t_pCache->WriteData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, iIcon);
+    return t_pCache->WriteData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, (int)iIcon);
 }
 
 

@@ -40,12 +40,6 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
         if (iErrCode != OK) {
             return iErrCode;
         }
-        
-        // Update top list
-        iErrCode = m_pGameEngine->UpdateTopListOnIncrease(CLASSIC_SCORE, iEmpireNuker);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
     }
 
     if (iEmpireNuked != NO_KEY) {
@@ -58,11 +52,6 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
             CLASSIC_POINTS_FOR_NUKED
             );
         
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-        
-        iErrCode = m_pGameEngine->UpdateTopListOnDecrease(CLASSIC_SCORE, iEmpireNuked);
         if (iErrCode != OK) {
             return iErrCode;
         }
@@ -116,12 +105,6 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
         return iErrCode;
     }
 
-    // Update top list
-    iErrCode = m_pGameEngine->UpdateTopListOnIncrease(CLASSIC_SCORE, iEmpireKey);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
     return iErrCode;
 }
 
@@ -136,17 +119,6 @@ int ClassicScore::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
         iEmpireKey,
         SystemEmpireData::ClassicScore, 
         CLASSIC_POINTS_FOR_DRAW
-        );
-
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
-    // Update top list
-    iErrCode = m_pGameEngine->UpdateTopListOnIncrease (
-        CLASSIC_SCORE, 
-        iEmpireKey
         );
 
     if (iErrCode != OK) {
@@ -171,13 +143,6 @@ int ClassicScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
         CLASSIC_POINTS_FOR_RUIN
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
-
-    // Update top list
-    iErrCode = m_pGameEngine->UpdateTopListOnDecrease(CLASSIC_SCORE, iEmpireKey);
     if (iErrCode != OK) {
         Assert (false);
         return iErrCode;
@@ -212,29 +177,4 @@ int ClassicScore::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
 {
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
     return t_pCache->ReadData(strEmpires, iEmpireKey, SystemEmpireData::ClassicScore, pvScore);
-}
-
-int ClassicScore::GetReplacementKeys(const Variant* pvScore, unsigned int** ppiKey, unsigned int* piNumEmpires)
-{
-    // TODOTODO - Rewrite this
-
-    if (pvScore == NULL)
-    {
-        return t_pCache->GetAllKeys (SYSTEM_EMPIRE_DATA, ppiKey, piNumEmpires);
-    }
-
-    SearchColumn sc;    
-    sc.pszColumn = SystemEmpireData::ClassicScore;
-    sc.iFlags = 0;
-    sc.vData = *pvScore;
-    sc.vData2 = CLASSIC_MAX_SCORE;
-
-    SearchDefinition sd;
-    sd.iMaxNumHits = 0;
-    sd.iSkipHits = 0;
-    sd.iStartKey = NO_KEY;
-    sd.iNumColumns = 1;
-    sd.pscColumns = &sc;
-
-    return t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, sd, ppiKey, piNumEmpires, NULL);
 }
