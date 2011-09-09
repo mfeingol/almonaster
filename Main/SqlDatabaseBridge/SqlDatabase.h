@@ -182,7 +182,7 @@ const unsigned int VARIABLE_LENGTH_STRING = 0xffffffff;
 // Interfaces
 //
 
-class ICachedTable : virtual public IObject
+class ICachedTable : public IObject
 {
 public:
     virtual int GetNumCachedRows(unsigned int* piNumRows) = 0;

@@ -55,30 +55,27 @@ int GameEngine::GetAlienKeys(Variant*** pppvData, unsigned int* piNumAliens)
 //
 // Create a new alien icon
 
-int GameEngine::CreateAlienIcon (int iAlienKey, const char* pszAuthorName) {
+int GameEngine::CreateAlienIcon(int iAlienKey, const char* pszAuthorName) {
 
     unsigned int iKey;
     int iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
-    if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
 
-        Variant pvArray [SystemAlienIcons::NumColumns] = {
+        Variant pvArray[SystemAlienIcons::NumColumns] = 
+        {
             iAlienKey,
             pszAuthorName,
         };
 
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
-        Assert (iErrCode == OK);
-
-    } else {
-
-        if (iErrCode == OK) {
-            iErrCode = ERROR_ALIEN_ICON_ALREADY_EXISTS;
-        }
-
-        else Assert (false);
+        RETURN_ON_ERROR(iErrCode);
+        return iErrCode;
     }
-
-    return iErrCode;
+    
+    RETURN_ON_ERROR(iErrCode);
+    return ERROR_ALIEN_ICON_ALREADY_EXISTS;
 }
 
 
@@ -95,35 +92,23 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
     Variant vDefaultAlien;
 
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (vDefaultAlien.GetInteger() == iAlienKey) {
-        iErrCode = ERROR_DEFAULT_ALIEN_ICON;
-        goto Cleanup;
+    if (vDefaultAlien.GetInteger() == iAlienKey)
+    {
+        return ERROR_DEFAULT_ALIEN_ICON;
     }
 
     iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
-    if (iErrCode == ERROR_DATA_NOT_FOUND || iKey == NO_KEY) {
-        iErrCode = ERROR_ALIEN_ICON_DOES_NOT_EXIST;
-        goto Cleanup;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
     }
-
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Delete the icon!
     iErrCode = t_pCache->DeleteRow(SYSTEM_ALIEN_ICONS, iKey);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -139,24 +124,23 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
     int iErrCode = OK;
     GET_SYSTEM_EMPIRE_DATA(strEmpireKey, iEmpireKey);
 
-    if (iAlienKey == UPLOADED_ICON) {
-
+    if (iAlienKey == UPLOADED_ICON)
+    {
         iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
-    
-    } else {
-
+        RETURN_ON_ERROR(iErrCode);
+    }
+    else
+    {
         unsigned int iKey;
         iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
-        if (iKey == NO_KEY) {
-
-            Assert (iErrCode == ERROR_DATA_NOT_FOUND);
-            iErrCode = ERROR_ALIEN_ICON_DOES_NOT_EXIST;
-
-        } else {
-        
-            iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
         }
+        RETURN_ON_ERROR(iErrCode);
 
+        iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -168,15 +152,16 @@ int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
 //
 // Return the alien's author name
 
-int GameEngine::GetAlienAuthorName (int iAlienKey, Variant* pvAuthorName) {
+int GameEngine::GetAlienAuthorName(int iAlienKey, Variant* pvAuthorName) {
 
     int iErrCode;
     unsigned int iKey;
 
     iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    return t_pCache->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
+    iErrCode = t_pCache->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }

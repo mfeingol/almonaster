@@ -3696,43 +3696,42 @@ int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireK
 
     int iErrCode;
 
-    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> release(pTable);
+    
+    // Update lastLogin, logged in this update (if necessary)
+    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+    iErrCode = t_pCache->GetTable(strGameEmpireData, &pTable);
+    RETURN_ON_ERROR(iErrCode);
+
+    Variant vLastLogin;
+    iErrCode = pTable->ReadData(GameEmpireData::LastLogin, &vLastLogin);
+    RETURN_ON_ERROR(iErrCode);
 
     UTCTime tTime;
-    Time::GetTime (&tTime);
-    
-    // Update LastLogin, NumUpdatesIdle, IP Address
-    iErrCode = t_pCache->GetTable(strGameEmpireData, &pTable);
-    if (iErrCode != OK) {
-        return ERROR_GAME_DOES_NOT_EXIST;
+    Time::GetTime(&tTime);
+
+    if (Time::GetSecondDifference(vLastLogin.GetInteger64(), tTime) >= LAST_LOGIN_PRECISION_IN_SECONDS)
+    {
+        // Set last login
+        iErrCode = pTable->WriteData(GameEmpireData::LastLogin, tTime);
+        RETURN_ON_ERROR(iErrCode);
     }
 
-    // Set last login
-    iErrCode = pTable->WriteData(GameEmpireData::LastLogin, tTime);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    Variant vOptions;
+    iErrCode = pTable->ReadData(GameEmpireData::Options, &vOptions);
+    RETURN_ON_ERROR(iErrCode);
 
-    // Set logged in this update
-    iErrCode = pTable->WriteOr(GameEmpireData::Options, LOGGED_IN_THIS_UPDATE);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
+    if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE))
+    {
+        // Set logged in this update
+        iErrCode = pTable->WriteOr(GameEmpireData::Options, LOGGED_IN_THIS_UPDATE);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // Read idle updates
     iErrCode = pTable->ReadData(GameEmpireData::NumUpdatesIdle, piIdleUpdates);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pTable);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }

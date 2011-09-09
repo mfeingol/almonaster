@@ -602,6 +602,7 @@ enum MessageTargets {
 #define MAX_NUM_UPDATES_BEFORE_RUIN 25
 #define MAX_NUM_UPDATE_PERIODS_FOR_FIRST_DELAY 10
 
+#define LAST_LOGIN_PRECISION_IN_SECONDS (60)
 
 // Privilege levels
 #define NUM_PRIVILEGES 5

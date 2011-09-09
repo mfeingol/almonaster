@@ -44,7 +44,7 @@ Almonaster::Almonaster()
 
 Almonaster::~Almonaster()
 {
-    if (!m_bIsDefault && m_pszUri1 != NULL)
+    if (!m_bIsDefault && m_pszUri1)
     {
         delete [] m_pszUri1;
     }
@@ -52,38 +52,35 @@ Almonaster::~Almonaster()
 
 Almonaster* Almonaster::CreateInstance()
 {
-    return new Almonaster();
+    Almonaster* pThis = new Almonaster();
+    Assert(pThis);
+    return pThis;
 }
 
 int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl)
 {
     // Initialize global state
     int iErrCode = global.Initialize(pHttpServer, pPageSourceControl);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Weak ref
     IReport* pReport = global.GetReport();
+    Assert(pReport);
 
     // Prepare URI's
     m_bIsDefault = pPageSourceControl->IsDefault();
-
-    if (m_bIsDefault) {
-
+    if (m_bIsDefault)
+    {
         m_pszUri1 = "/";
         m_pszUri2 = "";
-
-    } else {
-
+    }
+    else
+    {
         const char* pszPageSourceName = pPageSourceControl->GetName();
-        size_t stLen = strlen (pszPageSourceName) + 1;
+        size_t stLen = strlen(pszPageSourceName) + 1;
 
-        m_pszUri1 = new char [stLen * 2 + 3];
-        if (m_pszUri1 == NULL) {
-            return ERROR_OUT_OF_MEMORY;
-        }
+        m_pszUri1 = new char[stLen * 2 + 3];
+        Assert(m_pszUri1);
 
         m_pszUri1[0] = '/';
         memcpy (m_pszUri1 + 1, pszPageSourceName, stLen);
@@ -96,26 +93,11 @@ int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPage
 
     // Initialize HtmlRenderer statics
     iErrCode = HtmlRenderer::StaticInitialize();
-    if (iErrCode != OK)
-    {
-        pReport->WriteReport ("Error: HtmlRenderer::Initialize failed");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-Cleanup:
-
-    if (iErrCode != OK)
-    {
-        pReport->WriteReport ("Almonaster could not be initialize successfully");
-    }
-    else
-    {
-        pReport->WriteReport ("Finished initializing GameEngine");
-
-        pReport->WriteReport ("Almonaster will now begin");
-        pReport->WriteReport ("===================================================");
-    }
+    pReport->WriteReport ("Finished initializing GameEngine");
+    pReport->WriteReport ("Almonaster will now begin");
+    pReport->WriteReport ("===================================================");
 
     return iErrCode;
 }
@@ -166,6 +148,7 @@ int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
     // Render the page
     HtmlRenderer renderer(pageId, pHttpRequest, pHttpResponse);
     iErrCode = renderer.Render();
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -174,17 +157,20 @@ int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 int Almonaster::OnFinalize() {
     
     IReport* pReport = global.GetReport();
+    Assert(pReport);
 
     pReport->WriteReport ("Shutting down Almonaster");
+    
     global.Close();
+
     pReport->WriteReport ("Finished shutting down Almonaster");
     pReport->WriteReport ("===================================================");
 
     return OK;
 }
 
-int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
-
+int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+{
     HttpStatusReason rReason = pHttpResponse->GetStatusCodeReason();
 
     pHttpResponse->WriteText (
@@ -242,16 +228,19 @@ int Almonaster::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpRespons
     return OK;
 }
 
-const char* Almonaster::GetAuthenticationRealm (IHttpRequest* pHttpRequest) {
+const char* Almonaster::GetAuthenticationRealm (IHttpRequest* pHttpRequest)
+{
     return NULL;
 }
 
-int Almonaster::OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {
+int Almonaster::OnBasicAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated)
+{
     *pbAuthenticated = false;
     return OK;
 }
 
-int Almonaster::OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated) {  
+int Almonaster::OnDigestAuthenticate (IHttpRequest* pHttpRequest, bool* pbAuthenticated)
+{
     *pbAuthenticated = false;
     return OK;
 }

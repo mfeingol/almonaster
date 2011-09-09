@@ -2159,8 +2159,6 @@ int GameEngine::UpdateShipName(int iGameClass, int iGameNumber, int iEmpireKey, 
 //
 // Updates the a given ship's current orders
 
-// TODO: transaction
-
 int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
                                   unsigned int iShipKey, const ShipOrder& soOrder) {
 

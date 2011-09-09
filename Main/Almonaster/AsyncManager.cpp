@@ -58,14 +58,14 @@ int AsyncManager::AsyncTaskLoop() {
     AsyncTask* plrqMessage;
     bool bExit = false;
 
-    while (!bExit) {
-
+    while (!bExit)
+    {
         // Wait for action
         m_eQueryEvent.Wait();
 
         // Process messages
-        while (true) {
-
+        while (true)
+        {
             // Lock queue and get message
             if (!m_tsfqQueryQueue.Pop (&plrqMessage)) {
                 // Back to sleep
@@ -100,18 +100,14 @@ int AsyncManager::QueueTask(Fxn_QueryCallBack pfxnFunction, void* pVoid) {
 
     // Build the message
     AsyncTask* pMessage = new AsyncTask;
-    if (pMessage == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
+    Assert(pMessage);
 
     pMessage->pArguments = pVoid;
     pMessage->pQueryCall = pfxnFunction;
 
     // Push message into the queue
-    if (!m_tsfqQueryQueue.Push (pMessage)) {
-        delete pMessage;
-        return ERROR_OUT_OF_MEMORY;
-    }
+    bool ret = m_tsfqQueryQueue.Push (pMessage);
+    Assert(ret);
 
     // Signal the event
     m_eQueryEvent.Signal();

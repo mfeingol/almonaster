@@ -36,10 +36,7 @@ struct DatabasePurge {
 int GameEngine::PurgeDatabase (int iEmpireKey, int iCriteria) {
 
     DatabasePurge* pPurgeInfo = new DatabasePurge;
-    if (pPurgeInfo == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-    
+    Assert(pPurgeInfo);
     pPurgeInfo->Criteria = iCriteria; 
     pPurgeInfo->EmpireKey = iEmpireKey;
 

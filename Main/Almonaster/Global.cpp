@@ -36,6 +36,9 @@ __declspec(thread) ICachedTableCollection* t_pCache = NULL;
 
 Global global;
 
+Variant* AutoFreeData::g_pvData = NULL;
+Variant** AutoFreeData::g_ppvData = NULL;
+
 Global::Global() 
     : m_pHttpServer(NULL),
       m_pReport(NULL),
@@ -105,11 +108,11 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
 
     // AsyncManager
     iErrCode = m_asyncManager.Initialize();
-    if (iErrCode != OK)
-    {
-        m_pReport->WriteReport("Error: Could not initialize the async manager");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
+
+    //
+    // Configuration
+    //
 
     // DatabaseLibrary
     iErrCode = m_pConfig->GetParameter ("DatabaseLibrary", &pszTemp);
@@ -156,7 +159,7 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
         m_pReport->WriteReport("Error: Could not read the ResourceDirectory value from the configuration file");
         return ERROR_FAILURE;
     }
-    if (File::ResolvePath(pszTemp, m_pszResourceDir) == ERROR_FAILURE)
+    if (File::ResolvePath(pszTemp, m_pszResourceDir) != OK)
     {
         m_pReport->WriteReport("Error: The ResourceDirectory value from the configuration file was invalid");
         return ERROR_FAILURE;
@@ -173,29 +176,16 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
 
     GameEngine gameEngine;
     iErrCode = gameEngine.Setup();
-    if (iErrCode != OK)
-    {
-        m_pReport->WriteReport("Error setting up correctly");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = InitializeState();
-    if (iErrCode != OK)
-    {
-        m_pReport->WriteReport("Failed to initialize state");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = InitializeChatroom();
-    if (iErrCode != OK)
-    {
-        m_pReport->WriteReport("Failed to initialize chatroom");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = TlsCommitTransaction();
-
-Cleanup:
+    RETURN_ON_ERROR(iErrCode);
 
     TlsCloseConnection();
     return iErrCode;
@@ -206,18 +196,12 @@ int Global::InitializeState()
     int iErrCode;
 
     iErrCode = t_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, ROOT_NAME, &m_iRootKey);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, GUEST_NAME, &m_iGuestKey);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
-    return OK;
+    return iErrCode;
 }
 
 int Global::InitializeChatroom()
@@ -228,12 +212,15 @@ int Global::InitializeChatroom()
     ChatroomConfig ccConfig;
     ccConfig.cchMaxSpeakerNameLen = MAX_EMPIRE_NAME_LENGTH;
 
+    //
+    // Config
+    //
+
     iErrCode = m_pConfig->GetParameter ("ChatroomMaxNumSpeakers", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
         m_pReport->WriteReport("Error: Could not read the ChatroomMaxNumSpeakers value from the configuration file");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
+        return ERROR_FAILURE;
     }
     ccConfig.iMaxNumSpeakers = atoi (pszTemp);
 
@@ -241,8 +228,7 @@ int Global::InitializeChatroom()
     if (iErrCode != OK || pszTemp == NULL)
     {
         m_pReport->WriteReport("Error: Could not read the ChatroomNumMessages value from the configuration file");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
+        return ERROR_FAILURE;
     }
     ccConfig.iMaxNumMessages = atoi (pszTemp);
 
@@ -250,8 +236,7 @@ int Global::InitializeChatroom()
     if (iErrCode != OK || pszTemp == NULL)
     {
         m_pReport->WriteReport("Error: Could not read the ChatroomMaxMessageLength value from the configuration file");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
+        return ERROR_FAILURE;
     }
     ccConfig.iMaxMessageLength = atoi (pszTemp);
 
@@ -259,28 +244,25 @@ int Global::InitializeChatroom()
     if (iErrCode != OK || pszTemp == NULL)
     {
         m_pReport->WriteReport("Error: Could not read the ChatroomTimeOut value from the configuration file");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
+        return ERROR_FAILURE;
     }
-    ccConfig.sTimeOut = atoi (pszTemp);
+    ccConfig.sTimeOut = atoi(pszTemp);
+    if (ccConfig.sTimeOut == 0)
+    {
+        m_pReport->WriteReport("Error: Invalid ChatroomTimeOut value from the configuration file");
+        return ERROR_FAILURE;
+    }
 
     iErrCode = m_pConfig->GetParameter ("ChatroomPostSystemMessages", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
         m_pReport->WriteReport("Error: Could not read the ChatroomPostSystemMessages value from the configuration file");
-        iErrCode = ERROR_FAILURE;
-        goto Cleanup;
+        return ERROR_FAILURE;
     }
-    ccConfig.bPostSystemMessages = atoi (pszTemp) != 0;
+    ccConfig.bPostSystemMessages = atoi(pszTemp) != 0;
 
     iErrCode = m_cChatroom.Initialize(ccConfig);
-    if (iErrCode != OK)
-    {
-        m_pReport->WriteReport("Failed to initialize chatroom");
-        goto Cleanup;
-    }
-
-Cleanup:
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -324,7 +306,7 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
         m_pReport->WriteReport("New database successfully created");
         break;
     default:
-        m_pReport->WriteReport("Error initializing database");
+        RETURN_ON_ERROR(iErrCode);
         break;
     }
 

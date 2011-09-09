@@ -22,231 +22,124 @@
 int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
     int iErrCode;
+
     ICachedTable* pSystem = NULL;
+    AutoRelease<ICachedTable> release(pSystem);
 
     Assert (pgcConfig != NULL);
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ShipBehavior, &pgcConfig->iShipBehavior);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ColonySimpleBuildFactor, &pgcConfig->iColonySimpleBuildFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ColonyMultipliedBuildFactor, &pgcConfig->fColonyMultipliedBuildFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ColonyMultipliedDepositFactor, &pgcConfig->fColonyMultipliedDepositFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ColonyExponentialDepositFactor, &pgcConfig->fColonyExponentialDepositFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::EngineerLinkCost, &pgcConfig->fEngineerLinkCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::StargateGateCost, &pgcConfig->fStargateGateCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::TerraformerPlowFactor, &pgcConfig->fTerraformerPlowFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::TroopshipInvasionFactor, &pgcConfig->fTroopshipInvasionFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::TroopshipFailureFactor, &pgcConfig->fTroopshipFailureFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::TroopshipSuccessFactor, &pgcConfig->fTroopshipSuccessFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::DoomsdayAnnihilationFactor, &pgcConfig->fDoomsdayAnnihilationFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::CarrierCost, &pgcConfig->fCarrierCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::BuilderMinBR, &pgcConfig->fBuilderMinBR);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::BuilderBRDampener, &pgcConfig->fBuilderBRDampener);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::BuilderMultiplier, &pgcConfig->fBuilderMultiplier);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::MorpherCost, &pgcConfig->fMorpherCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::JumpgateGateCost, &pgcConfig->fJumpgateGateCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::JumpgateRangeFactor, &pgcConfig->fJumpgateRangeFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::StargateRangeFactor, &pgcConfig->fStargateRangeFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::PercentFirstTradeIncrease, &pgcConfig->iPercentFirstTradeIncrease);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::PercentNextTradeIncrease, &pgcConfig->iPercentNextTradeIncrease);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::NukesForQuarantine, &pgcConfig->iNukesForQuarantine);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::UpdatesInQuarantine, &pgcConfig->iUpdatesInQuarantine);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::PercentTechIncreaseForLatecomers, &pgcConfig->iPercentTechIncreaseForLatecomers);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::PercentDamageUsedToDestroy, &pgcConfig->iPercentDamageUsedToDestroy);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pSystem);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
 
-int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig) {
+int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig)
+{
+    Assert (pmcConfig != NULL);
 
     int iErrCode;
     ICachedTable* pSystem = NULL;
-
-    Assert (pmcConfig != NULL);
+    AutoRelease<ICachedTable> release(pSystem);
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ChanceNewLinkForms, &pmcConfig->iChanceNewLinkForms);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::MapDeviation, &pmcConfig->iMapDeviation);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap, &pmcConfig->iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap, &pmcConfig->iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::LargeMapThreshold, &pmcConfig->iLargeMapThreshold);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->ReadData(SystemData::ResourceAllocationRandomizationFactor, &pmcConfig->fResourceAllocationRandomizationFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pSystem);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -255,12 +148,12 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
 
     int iErrCode;
     ICachedTable* pSystem = NULL;
+    AutoRelease<ICachedTable> release(pSystem);
 
     int iShipBehavior = gcConfig.iShipBehavior;
 
     // Sanity checks
     if ((iShipBehavior &= ALL_SHIP_BEHAVIOR_OPTIONS) != iShipBehavior ||
-
         gcConfig.iColonySimpleBuildFactor < 0 ||
         gcConfig.fColonyMultipliedBuildFactor < 0 ||
         gcConfig.fColonyMultipliedDepositFactor < 0 ||
@@ -294,170 +187,85 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
     }
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ShipBehavior, gcConfig.iShipBehavior);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ColonySimpleBuildFactor, gcConfig.iColonySimpleBuildFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ColonyMultipliedBuildFactor, gcConfig.fColonyMultipliedBuildFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ColonyMultipliedDepositFactor, gcConfig.fColonyMultipliedDepositFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ColonyExponentialDepositFactor, gcConfig.fColonyExponentialDepositFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::EngineerLinkCost, gcConfig.fEngineerLinkCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::StargateGateCost, gcConfig.fStargateGateCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::TerraformerPlowFactor, gcConfig.fTerraformerPlowFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::TroopshipInvasionFactor, gcConfig.fTroopshipInvasionFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::TroopshipFailureFactor, gcConfig.fTroopshipFailureFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::TroopshipSuccessFactor, gcConfig.fTroopshipSuccessFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::DoomsdayAnnihilationFactor, gcConfig.fDoomsdayAnnihilationFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::CarrierCost, gcConfig.fCarrierCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::BuilderMinBR, gcConfig.fBuilderMinBR);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::BuilderBRDampener, gcConfig.fBuilderBRDampener);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::BuilderMultiplier, gcConfig.fBuilderMultiplier);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::MorpherCost, gcConfig.fMorpherCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::JumpgateGateCost, gcConfig.fJumpgateGateCost);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::JumpgateRangeFactor, gcConfig.fJumpgateRangeFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::StargateRangeFactor, gcConfig.fStargateRangeFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::PercentFirstTradeIncrease, gcConfig.iPercentFirstTradeIncrease);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::PercentNextTradeIncrease, gcConfig.iPercentNextTradeIncrease);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::NukesForQuarantine, gcConfig.iNukesForQuarantine);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::UpdatesInQuarantine, gcConfig.iUpdatesInQuarantine);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::PercentTechIncreaseForLatecomers, gcConfig.iPercentTechIncreaseForLatecomers);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::PercentDamageUsedToDestroy, gcConfig.iPercentDamageUsedToDestroy);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pSystem);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -466,6 +274,7 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
 
     int iErrCode;
     ICachedTable* pSystem = NULL;
+    AutoRelease<ICachedTable> release(pSystem);
 
     // Sanity checks
     if (
@@ -484,50 +293,25 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
     }
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ChanceNewLinkForms, mcConfig.iChanceNewLinkForms);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::MapDeviation, mcConfig.iMapDeviation);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap, mcConfig.iChanceNewPlanetLinkedToLastCreatedPlanetLargeMap);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap, mcConfig.iChanceNewPlanetLinkedToLastCreatedPlanetSmallMap);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::LargeMapThreshold, mcConfig.iLargeMapThreshold);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystem->WriteData(SystemData::ResourceAllocationRandomizationFactor, mcConfig.fResourceAllocationRandomizationFactor);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pSystem);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -542,12 +326,9 @@ const char* GameEngine::GetSystemVersion()
 int GameEngine::GetNewSessionId (int64* pi64SessionId)
 {
     Variant vSessionId;
-
     int iErrCode = t_pCache->Increment(SYSTEM_DATA, SystemData::SessionId, (int64) 1, &vSessionId);
-    if (iErrCode == OK) {
-        *pi64SessionId = vSessionId.GetInteger64();
-        return OK;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
+    *pi64SessionId = vSessionId.GetInteger64();
     return iErrCode;
 }

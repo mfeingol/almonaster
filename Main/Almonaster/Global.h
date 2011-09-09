@@ -82,3 +82,76 @@ public:
 };
 
 extern Global global;
+
+#define TRACE_ERROR(iErrCode)                                                               \
+    char* pszError = (char*)StackAlloc(512 * sizeof(char));                                 \
+    sprintf(pszError, "Error %i occurred in %s line %i", iErrCode, __FILE__, __LINE__);     \
+    global.GetReport()->WriteReport(pszError);
+
+#define GOTO_CLEANUP_ON_ERROR(iErrCode)                                                     \
+    if (iErrCode != OK)                                                                     \
+    {                                                                                       \
+        TRACE_ERROR(iErrCode);                                                              \
+        goto Cleanup;                                                                       \
+    }                                                                                       
+
+#define RETURN_ON_ERROR(iErrCode)                                                           \
+    if (iErrCode != OK)                                                                     \
+    {                                                                                       \
+        TRACE_ERROR(iErrCode);                                                              \
+        return iErrCode;                                                                    \
+    }
+
+class AutoFreeData
+{
+    static Variant* g_pvData;
+    static Variant** g_ppvData;
+
+private:
+    Variant*& m_pvData;
+    Variant**& m_ppvData;
+
+public:
+    AutoFreeData(Variant**& ppvData) : m_pvData(g_pvData), m_ppvData(ppvData)
+    {
+    }
+
+    AutoFreeData(Variant*& pvData) : m_pvData(pvData), m_ppvData(g_ppvData)
+    {
+    }
+
+    ~AutoFreeData()
+    {
+        if (m_ppvData)
+        {
+            t_pCache->FreeData(m_ppvData);
+            m_ppvData = NULL;
+        }
+
+        if (m_pvData)
+        {
+            t_pCache->FreeData(m_pvData);
+            m_pvData = NULL;
+        }
+    }
+};
+
+class AutoFreeKeys
+{
+private:
+    unsigned int*& m_piKeys;
+
+public:
+    AutoFreeKeys(unsigned int*& piKeys) : m_piKeys(piKeys)
+    {
+    }
+
+    ~AutoFreeKeys()
+    {
+        if (m_piKeys)
+        {
+            t_pCache->FreeKeys(m_piKeys);
+            m_piKeys = NULL;
+        }
+    }
+};

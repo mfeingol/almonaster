@@ -26,8 +26,9 @@ int GameEngine::GetAssociations(unsigned int iEmpireKey, Variant** ppvAssoc, uns
     {
         iErrCode = OK;
     }
-    else if (iErrCode != OK)
+    else
     {
+        RETURN_ON_ERROR(iErrCode);
     }
     return iErrCode;
 }
@@ -43,11 +44,9 @@ int GameEngine::CheckAssociation(unsigned int iEmpireKey, unsigned int iSwitch, 
     {
         iErrCode = OK;
     }
-    else if (iErrCode != OK)
-    {
-    }
     else
     {
+        RETURN_ON_ERROR(iErrCode);
         *pbAuth = true;
     }
     return iErrCode;
@@ -58,10 +57,7 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
     // Find the second empire
     unsigned int iSecondKey;
     int iErrCode = LookupEmpireByName(pszSecondEmpire, &iSecondKey, NULL, NULL);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Make sure the empire exists
     if (iSecondKey == NO_KEY)
@@ -79,10 +75,7 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
     Variant vPassword;
     GET_SYSTEM_EMPIRE_DATA(strSecondEmpire, iSecondKey);
     iErrCode = t_pCache->ReadData(strSecondEmpire, iSecondKey, SystemEmpireData::Password, &vPassword);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (strcmp(pszPassword, vPassword.GetCharPtr()) != 0)
     {
@@ -92,10 +85,7 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
     // Make sure the association doesn't already exist
     bool bExists;
     iErrCode = CheckAssociation(iEmpireKey, iSecondKey, &bExists);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (bExists)
     {
@@ -111,10 +101,7 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
 
     GET_SYSTEM_EMPIRE_ASSOCIATIONS(strAssoc1, iEmpireKey);
     iErrCode = t_pCache->InsertRow(strAssoc1, SystemEmpireAssociations::Template, pvAssoc1, NULL);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     const Variant pvAssoc2[SystemEmpireAssociations::NumColumns] = 
     {
@@ -126,17 +113,11 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
     if (!t_pCache->IsCached(strAssoc2))
     {
         iErrCode = t_pCache->CreateEmpty(SYSTEM_EMPIRE_ASSOCIATIONS, strAssoc2);
-        if (iErrCode != OK)
-        {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     iErrCode = t_pCache->InsertRow(strAssoc2, SystemEmpireAssociations::Template, pvAssoc2, NULL);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -144,10 +125,7 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
 int GameEngine::DeleteAssociation(unsigned int iEmpireKey, unsigned int iSecondEmpireKey)
 {
     int iErrCode = CacheMutualAssociations(iEmpireKey, iSecondEmpireKey);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     unsigned int iKey;
 
@@ -158,16 +136,10 @@ int GameEngine::DeleteAssociation(unsigned int iEmpireKey, unsigned int iSecondE
     {
         return ERROR_ASSOCIATION_NOT_FOUND;
     }
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->DeleteRow(strAssoc1, iKey);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Remove from second
     GET_SYSTEM_EMPIRE_ASSOCIATIONS(strAssoc2, iSecondEmpireKey);
@@ -176,16 +148,10 @@ int GameEngine::DeleteAssociation(unsigned int iEmpireKey, unsigned int iSecondE
     {
         return ERROR_ASSOCIATION_NOT_FOUND;
     }
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->DeleteRow(strAssoc2, iKey);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -193,26 +159,17 @@ int GameEngine::DeleteAssociation(unsigned int iEmpireKey, unsigned int iSecondE
 int GameEngine::RemoveDeadEmpireAssociations(unsigned int iEmpireKey)
 {
     Variant* pvAssoc = NULL;
+    AutoFreeData free(pvAssoc);
+
     unsigned int iNumAssoc;
     int iErrCode = GetAssociations(iEmpireKey, &pvAssoc, &iNumAssoc);
-    if (iErrCode != OK)
-    {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     for (unsigned int i = 0; i < iNumAssoc; i ++)
     {
         iErrCode = DeleteAssociation(iEmpireKey, pvAssoc[i].GetInteger());
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
-
-Cleanup:
-
-    if (pvAssoc)
-        t_pCache->FreeData(pvAssoc);
 
     return iErrCode;
 }

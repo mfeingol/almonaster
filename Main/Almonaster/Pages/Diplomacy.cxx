@@ -442,16 +442,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iDipOffer = pHttpForm->GetIntValue();
 
             // Only update if we changed the selected option
-            if (iSelectedDip != iDipOffer) {
-
-                // Best effort
-                iErrCode = UpdateDiplomaticOffer (
-                    m_iGameClass,
-                    m_iGameNumber,
-                    m_iEmpireKey,
-                    iFoeKey,
-                    iDipOffer
-                    );
+            if (iSelectedDip != iDipOffer)
+            {
+                GameCheck(UpdateDiplomaticOffer(m_iGameClass, m_iGameNumber, m_iEmpireKey, iFoeKey, iDipOffer));
             }
         }
     }

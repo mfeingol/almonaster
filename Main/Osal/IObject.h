@@ -130,4 +130,20 @@ public:                                                                     \
         return ERROR_NO_INTERFACE;                                          \
     }
 
+template <class T> class AutoRelease
+{
+private:
+    T*& m_pObj;
+
+public:
+    AutoRelease(T*& pObj) : m_pObj(pObj)
+    {
+    }
+
+    ~AutoRelease()
+    {
+        SafeRelease(m_pObj);
+    }
+};
+
 #endif
