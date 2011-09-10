@@ -40,16 +40,12 @@ int GameEngine::GetNumAvailableTechs (int iGameClass, int iGameNumber, int iEmpi
         &vNumAvailableTechs
         );
 
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     Variant vTechUndevs;
     
     iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::TechUndevs, &vTechUndevs);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *piNumAvailableTechs = min (vNumAvailableTechs.GetInteger(), GetNumTechs (vTechUndevs.GetInteger()));
 
@@ -75,16 +71,12 @@ int GameEngine::GetDevelopedTechs (int iGameClass, int iGameNumber, int iEmpireK
 
     Variant vTemp;
     int iErrCode = t_pCache->ReadData(strGameData, GameEmpireData::TechDevs, &vTemp);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *piTechDevs = vTemp.GetInteger();
 
     iErrCode = t_pCache->ReadData(strGameData, GameEmpireData::TechUndevs, &vTemp);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *piTechUndevs = vTemp.GetInteger();
 
@@ -102,59 +94,36 @@ int GameEngine::GetDevelopedTechs (int iGameClass, int iGameNumber, int iEmpireK
 
 int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int iEmpireKey, int iTechKey) {
 
-    int iErrCode, iErrCode2;
+    int iErrCode;
 
     // Make sure a tech dev is available to the empire
     Variant vTech;
     GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::NumAvailableTechUndevs, &vTech);
-    if (iErrCode != OK || vTech.GetInteger() == 0) {
-        iErrCode = ERROR_NO_TECHNOLOGY_AVAILABLE;
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
+    if (vTech.GetInteger() == 0) {
+        return ERROR_NO_TECHNOLOGY_AVAILABLE;
     }
 
     // Make sure the tech dev can be selected
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::TechUndevs, &vTech);
-
-    if (iErrCode != OK || !(vTech.GetInteger() & TECH_BITS[iTechKey])) {
-        iErrCode = ERROR_WRONG_TECHNOLOGY;
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
+    if (!(vTech.GetInteger() & TECH_BITS[iTechKey])) {
+        return ERROR_WRONG_TECHNOLOGY;
     }
 
     // Add tech to developed field
     iErrCode = t_pCache->WriteOr(strEmpireData, GameEmpireData::TechDevs, TECH_BITS[iTechKey]);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Delete tech from undeveloped field
     iErrCode = t_pCache->WriteAnd(strEmpireData, GameEmpireData::TechUndevs, ~TECH_BITS[iTechKey]);
-    if (iErrCode != OK) {
-        Assert(false);
-
-        iErrCode2 = t_pCache->WriteAnd(strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
-        Assert(iErrCode2 == OK);
-
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Subtract one from number of available techs to develop
     iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NumAvailableTechUndevs, -1);
-    if (iErrCode != OK) {
-        Assert(false);
-
-        iErrCode2 = t_pCache->WriteAnd(strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
-        Assert(iErrCode2 == OK);
-
-        iErrCode2 = t_pCache->WriteOr(strEmpireData, GameEmpireData::TechUndevs, TECH_BITS[iTechKey]);
-        Assert(iErrCode2 == OK);
-
-        goto Cleanup;
-    }
-
-Cleanup:
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }

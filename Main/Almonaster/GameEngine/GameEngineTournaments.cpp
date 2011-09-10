@@ -25,6 +25,7 @@ int GameEngine::GetOwnedTournaments (int iEmpireKey, unsigned int** ppiTournamen
     int iErrCode;
 
     ICachedTable* pTournaments = NULL;
+    AutoRelease<ICachedTable> rel(pTournaments);
 
     if (ppiTournamentKey != NULL) {
         *ppiTournamentKey = NULL;
@@ -37,14 +38,11 @@ int GameEngine::GetOwnedTournaments (int iEmpireKey, unsigned int** ppiTournamen
     *piNumTournaments = 0;
 
     iErrCode = t_pCache->GetTable(SYSTEM_TOURNAMENTS, &pTournaments);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Query
-    if (ppvName == NULL) {
-
+    if (ppvName == NULL)
+    {
         iErrCode = pTournaments->GetEqualKeys(
             SystemTournaments::Owner,
             iEmpireKey,
@@ -52,8 +50,14 @@ int GameEngine::GetOwnedTournaments (int iEmpireKey, unsigned int** ppiTournamen
             piNumTournaments
             );
 
-    } else {
-
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
+        RETURN_ON_ERROR(iErrCode);
+    }
+    else
+    {
         iErrCode = pTournaments->ReadColumnWhereEqual (
             SystemTournaments::Owner,
             iEmpireKey,
@@ -62,12 +66,13 @@ int GameEngine::GetOwnedTournaments (int iEmpireKey, unsigned int** ppiTournamen
             ppvName,
             piNumTournaments
             );
-    }
 
-    SafeRelease (pTournaments);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
+        RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = OK;
     }
 
     return iErrCode;
@@ -79,10 +84,12 @@ int GameEngine::GetJoinedTournaments(int iEmpireKey, Variant** ppvTournamentKey,
     int iErrCode;
     unsigned int i, iNumTournaments;
     Variant* pvTournamentKey = NULL;
+    AutoFreeData free(pvTournamentKey);
 
     GET_SYSTEM_EMPIRE_TOURNAMENTS(strEmpTournaments, iEmpireKey);
 
     ICachedTable* pReadTable = NULL;
+    AutoRelease<ICachedTable> rel(pReadTable);
 
     if (ppvTournamentKey != NULL)
         *ppvTournamentKey = NULL;
@@ -94,64 +101,50 @@ int GameEngine::GetJoinedTournaments(int iEmpireKey, Variant** ppvTournamentKey,
 
     // Read keys
     iErrCode = t_pCache->GetTable(strEmpTournaments, &pReadTable);
-    if (iErrCode != OK)
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
 
     if (ppvTournamentKey == NULL && ppvName == NULL)
     {
         iErrCode = pReadTable->GetNumCachedRows(&iNumTournaments);
+        RETURN_ON_ERROR(iErrCode);
     }
     else
     {
         iErrCode = pReadTable->ReadColumn(SystemEmpireTournaments::TournamentKey, NULL, &pvTournamentKey, &iNumTournaments);
+        RETURN_ON_ERROR(iErrCode);
     }
 
-    SafeRelease (pReadTable);
-
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    if (ppvName != NULL) {
-
-        *ppvName = new Variant[iNumTournaments];
-        Assert(*ppvName);
-
-        iErrCode = t_pCache->GetTable(SYSTEM_TOURNAMENTS, &pReadTable);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-
-        for (i = 0; i < iNumTournaments; i ++) {
-
-            iErrCode = pReadTable->ReadData(pvTournamentKey[i].GetInteger(), SystemTournaments::Name, (*ppvName) + i);
-            if (iErrCode != OK) {
-                goto Cleanup;
-            }
-        }
+    Variant* pvName = NULL;
+    Algorithm::AutoDelete<Variant> autoDel(pvName, true);
+    if (ppvName)
+    {
+        pvName = new Variant[iNumTournaments];
+        Assert(pvName);
 
         SafeRelease (pReadTable);
+        iErrCode = t_pCache->GetTable(SYSTEM_TOURNAMENTS, &pReadTable);
+        RETURN_ON_ERROR(iErrCode);
+
+        for (i = 0; i < iNumTournaments; i ++)
+        {
+            iErrCode = pReadTable->ReadData(pvTournamentKey[i].GetInteger(), SystemTournaments::Name, pvName + i);
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
-    if (ppvTournamentKey != NULL)
+    if (ppvTournamentKey)
     {
         *ppvTournamentKey = pvTournamentKey;
         pvTournamentKey = NULL;
     }
 
+    if (ppvName)
+    {
+        *ppvName = pvName;
+        pvName = NULL;
+    }
+
     *piNumTournaments = iNumTournaments;
-
-Cleanup:
-
-    SafeRelease (pReadTable);
-
-    if (pvTournamentKey != NULL) {
-        t_pCache->FreeData(pvTournamentKey);
-    }
-
-    if (iErrCode != OK && ppvName != NULL && *ppvName != NULL) {
-        delete [] (*ppvName);
-    }
 
     return iErrCode;
 }
@@ -163,6 +156,7 @@ int GameEngine::CreateTournament(Variant* pvTournamentData, unsigned int* piTour
     unsigned int iKey;
 
     ICachedTable* pTournaments = NULL;
+    AutoRelease<ICachedTable> rel(pTournaments);
 
     int iOwner = pvTournamentData [SystemTournaments::iOwner].GetInteger();
     Variant vLimit;
@@ -170,15 +164,11 @@ int GameEngine::CreateTournament(Variant* pvTournamentData, unsigned int* piTour
     if (iOwner != SYSTEM) {
 
         iErrCode = GetSystemProperty (SystemData::MaxNumPersonalTournaments, &vLimit);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     iErrCode = t_pCache->GetTable(SYSTEM_TOURNAMENTS, &pTournaments);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Make sure we're under the limit for personal tournaments
     if (iOwner != SYSTEM) {
@@ -192,34 +182,32 @@ int GameEngine::CreateTournament(Variant* pvTournamentData, unsigned int* piTour
             &iNumEqual
             );
 
-        if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            goto Cleanup;
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
         }
+        RETURN_ON_ERROR(iErrCode);
 
         if (iNumEqual >= (unsigned int) vLimit.GetInteger()) {
-            iErrCode = ERROR_TOO_MANY_TOURNAMENTS;
-            goto Cleanup;
+            return ERROR_TOO_MANY_TOURNAMENTS;
         }
     }   
 
     // Make sure tournament name is unique
     iErrCode = pTournaments->GetFirstKey(SystemTournaments::Name, pvTournamentData[SystemTournaments::iName].GetCharPtr(), &iKey);
-    if (iErrCode == OK)
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        iErrCode = ERROR_TOURNAMENT_ALREADY_EXISTS;
-        goto Cleanup;
+        iErrCode = OK;
     }
-    if (iErrCode != ERROR_DATA_NOT_FOUND)
-        goto Cleanup;
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        return ERROR_TOURNAMENT_ALREADY_EXISTS;
+    }
 
     // Insert the row
     iErrCode = pTournaments->InsertRow(SystemTournaments::Template, pvTournamentData, piTournamentKey);
-    if (iErrCode != OK)
-        goto Cleanup;
-
-Cleanup:
-
-    SafeRelease (pTournaments);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -232,29 +220,25 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
     Variant vKey, vTournamentName, vTemp;
 
     unsigned int i, iGameClasses, iGames, iKey, * piGameClassKey = NULL;
+    AutoFreeKeys free(piGameClassKey);
 
     Assert(!bOwnerDeleted || iEmpireKey != DELETED_EMPIRE_KEY);
     
     // Make sure correct owner
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vTemp);
-    if (iErrCode != OK)
-    {
-        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-            iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
-    iOwnerKey = vTemp.GetInteger();
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        return ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iEmpireKey != iOwnerKey) {
-        iErrCode = ERROR_ACCESS_DENIED;
-        goto Cleanup;
+    iOwnerKey = vTemp.GetInteger();
+    if (iEmpireKey != iOwnerKey)
+    {
+        return ERROR_ACCESS_DENIED;
     }
 
     // Can't delete a tournament with games
     iErrCode = GetTournamentGames (iTournamentKey, NULL, NULL, &iGames);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iGames > 0) {
 
@@ -262,46 +246,34 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
 
             // Mark the tournament for deletion
             iErrCode = t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, (int) DELETED_EMPIRE_KEY);
-            if (iErrCode != OK) {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
-        iErrCode = ERROR_TOURNAMENT_HAS_GAMES;
-
-        goto Cleanup;
+        return ERROR_TOURNAMENT_HAS_GAMES;
     }
 
     // Can't delete a live tournament if it has gameclasses
     if (iEmpireKey != DELETED_EMPIRE_KEY && !bOwnerDeleted) {
 
         iErrCode = GetTournamentGameClasses (iTournamentKey, NULL, NULL, &iGameClasses);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if (iGameClasses > 0) {
-            iErrCode = ERROR_TOURNAMENT_HAS_GAMECLASSES;
-            goto Cleanup;
+            return ERROR_TOURNAMENT_HAS_GAMECLASSES;
         }
     }
 
     // Read name
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Name, &vTournamentName);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->DeleteRow(SYSTEM_TOURNAMENTS, iTournamentKey);
-    if (iErrCode != OK)
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
 
     // Delete the tables
     GET_SYSTEM_TOURNAMENT_TEAMS(strTournamentTeams, iTournamentKey);
     iErrCode = t_pCache->DeleteAllRows(strTournamentTeams);
-    if (iErrCode != OK)
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
 
     sprintf(pszMessage, "The %s tournament was deleted", vTournamentName.GetCharPtr());
 
@@ -320,18 +292,14 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
     }
     else
     {
-        if (iErrCode != OK)
-            goto Cleanup;
+        RETURN_ON_ERROR(iErrCode);
 
         for (i = 0; i < iGameClasses; i ++)
         {
             bool bFlag;
             iErrCode = DeleteGameClass (piGameClassKey[i], &bFlag);
-            if (iErrCode != OK)
-                goto Cleanup;
+            RETURN_ON_ERROR(iErrCode);
         }
-
-        t_pCache->FreeKeys(piGameClassKey);
     }
 
     // Remove empires from tournament
@@ -347,40 +315,31 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
             iErrCode = OK;
             break;
         }
-
-        if (iErrCode != OK)
-            goto Cleanup;
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->ReadData(pszTable, iKey, SystemTournamentEmpires::EmpireKey, &vKey);
-        if (iErrCode != OK)
-            goto Cleanup;
+        RETURN_ON_ERROR(iErrCode);
 
         GET_SYSTEM_EMPIRE_TOURNAMENTS(strEmpireTournaments, vKey.GetInteger());
         iErrCode = t_pCache->GetFirstKey(strEmpireTournaments, SystemEmpireTournaments::TournamentKey, iTournamentKey, &iEmpireTourneyKey);
-        if (iErrCode != OK)
-            goto Cleanup;
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->DeleteRow(pszEmpireTournaments, iEmpireTourneyKey);
-        if (iErrCode != OK)
-            goto Cleanup;
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = SendSystemMessage(vKey.GetInteger(), pszMessage, SYSTEM, MESSAGE_SYSTEM);
-        if (iErrCode != OK)
-            goto Cleanup;
+        RETURN_ON_ERROR(iErrCode);
     }
 
     GET_SYSTEM_TOURNAMENT_EMPIRES(strTournamentEmpires, iTournamentKey);
     iErrCode = t_pCache->DeleteAllRows(strTournamentEmpires);
-    if (iErrCode != OK)
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
 
     //
     // Notify the UI
     //
 
     global.GetEventSink()->OnDeleteTournament (iTournamentKey);
-
-Cleanup:
 
     return iErrCode;
 }
@@ -394,7 +353,8 @@ int GameEngine::GetTournamentName(unsigned int iTournamentKey, Variant* pvTourna
 {
     int iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Name, pvTournamentName);
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-        iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
+        return ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }
 
@@ -402,10 +362,10 @@ int GameEngine::GetTournamentOwner(unsigned int iTournamentKey, unsigned int* pi
 {
     Variant vOwner;
     int iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwner);
-    if (iErrCode == OK)
-        *piOwnerKey = vOwner.GetInteger();
-    else if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-        iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        return ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
+    *piOwnerKey = vOwner.GetInteger();
     return iErrCode;
 }
 
@@ -442,23 +402,9 @@ int GameEngine::SetTournamentNews (unsigned int iTournamentKey, const char* pszT
 int GameEngine::SetTournamentString (unsigned int iTournamentKey, const char* pszColumn, const char* pszString) {
 
     int iErrCode;
-    ICachedTable* pWrite = NULL;
 
-    iErrCode = t_pCache->GetTable(SYSTEM_TOURNAMENTS, &pWrite);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-    iErrCode = pWrite->WriteData(iTournamentKey, pszColumn, pszString);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pWrite);
+    iErrCode = t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, pszColumn, pszString);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -471,9 +417,7 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
 
     // Verify access
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (vOwnerKey.GetInteger() != iOwnerKey) {
         return ERROR_ACCESS_DENIED;
@@ -484,12 +428,14 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
     // Make sure empire isn't already in the tournament
     unsigned int iKey;
     iErrCode = t_pCache->GetFirstKey(pszEmpires, SystemTournamentEmpires::EmpireKey, iInviteKey, &iKey);
-    if (iErrCode == OK) {
-        return ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
     }
-
-    if (iErrCode != ERROR_DATA_NOT_FOUND) {
-        return ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        return ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT;
     }
 
     char pszTournamentKey [64];
@@ -529,12 +475,10 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
     else
     {
         iErrCode = GetEmpireName(iUseSourceKey, pvData + SystemEmpireMessages::iSourceName);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireProperty(iUseSourceKey, SystemEmpireData::SecretKey, pvData + SystemEmpireMessages::iSourceSecret);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
     }
 
     pvData[SystemEmpireMessages::iTimeStamp] = tTime;
@@ -542,6 +486,7 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
     pvData[SystemEmpireMessages::iText] = (const char*) NULL;
     pvData[SystemEmpireMessages::iType] = MESSAGE_TOURNAMENT_INVITATION;
     pvData[SystemEmpireMessages::iData] = pszTournamentKey;
+    Assert(pvData[SystemEmpireMessages::iData].GetCharPtr());
 
     return DeliverSystemMessage (iInviteKey, pvData);
 }
@@ -557,19 +502,19 @@ int GameEngine::InviteSelfIntoTournament (unsigned int iTournamentKey, int iEmpi
     
     // Make sure empire isn't already in the tournament
     iErrCode = t_pCache->GetFirstKey(pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
-    if (iErrCode == OK) {
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
         return ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT;
     }
-
-    if (iErrCode != ERROR_DATA_NOT_FOUND) {
-        return iErrCode;
-    }
-
+    
     // Find owner
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Bit of a hack... Use 'root' for approvals if system tournament
     if (vOwnerKey.GetInteger() == SYSTEM)
@@ -579,8 +524,7 @@ int GameEngine::InviteSelfIntoTournament (unsigned int iTournamentKey, int iEmpi
 
     // Cache the owner key and his message table; no way higher levels can do this for us
     iErrCode = CacheEmpireAndMessages(vOwnerKey.GetInteger());
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     char pszTournamentKey [64];
     sprintf(pszTournamentKey, "%i.%i", iTournamentKey, iEmpireKey);
@@ -593,20 +537,17 @@ int GameEngine::InviteSelfIntoTournament (unsigned int iTournamentKey, int iEmpi
     pvData[SystemEmpireMessages::iSourceKey] = iEmpireKey;
 
     iErrCode = GetEmpireName(iEmpireKey, pvData + SystemEmpireMessages::iSourceName);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::SecretKey, pvData + SystemEmpireMessages::iSourceSecret);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     pvData[SystemEmpireMessages::iTimeStamp] = tTime;
     pvData[SystemEmpireMessages::iFlags] = 0;
     pvData[SystemEmpireMessages::iText] = (const char*) NULL;
     pvData[SystemEmpireMessages::iType] = MESSAGE_TOURNAMENT_JOIN_REQUEST;
     pvData[SystemEmpireMessages::iData] = pszTournamentKey;
+    Assert(pvData[SystemEmpireMessages::iData].GetCharPtr());
 
     return DeliverSystemMessage(vOwnerKey.GetInteger(), pvData);
 }
@@ -625,50 +566,34 @@ int GameEngine::HandleEmpireTournamentAddition(int iEmpireKey, int iMessageKey, 
     Variant vVal, vEmpireName, vTourneyName;
 
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel1(pTable);
+
     ICachedTable* pMessages = NULL;
+    AutoRelease<ICachedTable> rel2(pMessages);
 
     GET_SYSTEM_EMPIRE_MESSAGES(strMessages, iEmpireKey);
     iErrCode = t_pCache->GetTable(strMessages, &pMessages);
-    if (iErrCode != OK)
-    {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pMessages->ReadData (iMessageKey, SystemEmpireMessages::Type, &iVal);
-    if (iErrCode != OK)
-    {
-        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-            iErrCode = ERROR_MESSAGE_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        return ERROR_MESSAGE_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
         
     if (iVal != iMessageType)
     {
-        iErrCode = ERROR_MESSAGE_DOES_NOT_EXIST;
-        goto Cleanup;
+        return ERROR_MESSAGE_DOES_NOT_EXIST;
     }
 
     iErrCode = pMessages->ReadData (iMessageKey, SystemEmpireMessages::Data, &vVal);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pMessages->DeleteRow(iMessageKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-    SafeRelease (pMessages);
+    RETURN_ON_ERROR(iErrCode);
 
     if (iMessageType == MESSAGE_TOURNAMENT_INVITATION) {
 
-        if (sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iOwnerKey) != 2) {
-            Assert(false);
-            iErrCode = ERROR_FAILURE;
-            goto Cleanup;
-        }
+        Assert(sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iOwnerKey) == 2);
 
         iInviteKey = iEmpireKey;
         iSendMessageKey = iOwnerKey;
@@ -682,11 +607,7 @@ int GameEngine::HandleEmpireTournamentAddition(int iEmpireKey, int iMessageKey, 
 
     } else {
 
-        if (sscanf (vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iInviteKey) != 2) {
-            Assert(false);
-            iErrCode = ERROR_FAILURE;
-            goto Cleanup;
-        }
+        Assert(sscanf(vVal.GetCharPtr(), "%i.%i", &iTournamentKey, &iInviteKey) == 2);
 
         iOwnerKey = iEmpireKey;
         iSendMessageKey = iInviteKey;
@@ -697,32 +618,21 @@ int GameEngine::HandleEmpireTournamentAddition(int iEmpireKey, int iMessageKey, 
 
     // Get the active empire's name
     iErrCode = GetEmpireName (iEmpireKey, &vEmpireName);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
+    SafeRelease (pTable);
     iErrCode = t_pCache->GetTable(SYSTEM_TOURNAMENTS, &pTable);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Verify ownership
     iErrCode = pTable->ReadData(iTournamentKey, SystemTournaments::Owner, &vVal);
-    if (iErrCode != OK)
-    {
-        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-            iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
-        goto Cleanup;
-    }
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        return ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
 
     // Get name 
     iErrCode = pTable->ReadData(iTournamentKey, SystemTournaments::Name, &vTourneyName);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    SafeRelease (pTable);
+    RETURN_ON_ERROR(iErrCode);
 
     if (vVal.GetInteger() != iOwnerKey) {
 
@@ -730,10 +640,7 @@ int GameEngine::HandleEmpireTournamentAddition(int iEmpireKey, int iMessageKey, 
 
             int iPrivilege;
             iErrCode = GetEmpirePrivilege (iOwnerKey, &iPrivilege);
-            if (iErrCode != OK) {
-                iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             if (iPrivilege >= ADMINISTRATOR) {
                 iOwnerKey = SYSTEM;
@@ -741,23 +648,19 @@ int GameEngine::HandleEmpireTournamentAddition(int iEmpireKey, int iMessageKey, 
         }
 
         if (vVal.GetInteger() != iOwnerKey) {
-            iErrCode = ERROR_TOURNAMENT_DOES_NOT_EXIST;
-            goto Cleanup;
+            return ERROR_TOURNAMENT_DOES_NOT_EXIST;
         }
     }
 
     // Cache the owner key and his message table; no way higher levels can do this for us
     iErrCode = CacheEmpireMessagesAndTournaments(iSendMessageKey);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     // Finally, do something
     if (bAccept)
     {
         iErrCode = AddEmpireToTournament (iTournamentKey, iInviteKey);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_TOURNAMENT_TEAM_NAME_LENGTH + 64];
@@ -770,13 +673,7 @@ int GameEngine::HandleEmpireTournamentAddition(int iEmpireKey, int iMessageKey, 
         );
 
     iErrCode = SendSystemMessage(iSendMessageKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
-    if (iErrCode != OK)
-        goto Cleanup;
-
-Cleanup:
-
-    SafeRelease (pTable);
-    SafeRelease (pMessages);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -789,6 +686,7 @@ int GameEngine::AddEmpireToTournament(unsigned int iTournamentKey, int iInviteKe
     Variant vVal;
 
     ICachedTable* pWriteTable = NULL;
+    AutoRelease<ICachedTable> rel(pWriteTable);
     
     // Join the tournament!
     GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
@@ -808,27 +706,23 @@ int GameEngine::AddEmpireToTournament(unsigned int iTournamentKey, int iInviteKe
     };
     
     iErrCode = t_pCache->GetTable(pszEmpires, &pWriteTable);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = pWriteTable->GetFirstKey(SystemTournamentEmpires::EmpireKey, iInviteKey, &iProxyKey);
-    if (iErrCode == OK) {
-        iErrCode = ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT;
-        goto Cleanup;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        return ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT;
     }
 
-    if (iErrCode != ERROR_DATA_NOT_FOUND) {
-        goto Cleanup;
-    }
-    
     iErrCode = pWriteTable->InsertRow(SystemTournamentEmpires::Template, pvData, &iProxyKey);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // Add to SystemEmpireTournaments
-    {
     Variant pvSystemEmpireTournaments[SystemEmpireTournaments::NumColumns] = 
     {
         iInviteKey,
@@ -836,13 +730,7 @@ int GameEngine::AddEmpireToTournament(unsigned int iTournamentKey, int iInviteKe
     };
     
     iErrCode = t_pCache->InsertRow(pszTourneys, SystemEmpireTournaments::Template, pvSystemEmpireTournaments, NULL);
-    if (iErrCode != OK)
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pWriteTable);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -859,8 +747,10 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
     unsigned int iKey, iNumGames, i;
 
     ICachedTable* pEmpires = NULL;
+    AutoRelease<ICachedTable> rel(pEmpires);
 
     Variant vTourneyName, * pvGameClassGameNumber = NULL;
+    AutoFreeData free(pvGameClassGameNumber);
 
     GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
     GET_SYSTEM_EMPIRE_TOURNAMENTS(pszTourneys, iDeleteKey);
@@ -868,30 +758,19 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
     char pszMessage [MAX_TOURNAMENT_TEAM_NAME_LENGTH + 96];
 
     iErrCode = GetTournamentName (iTournamentKey, &vTourneyName);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->GetFirstKey(pszEmpires, SystemTournamentEmpires::EmpireKey, iDeleteKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT;
-        goto Cleanup;
+        return ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT;
     }
-
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadColumnWhereEqual(SYSTEM_ACTIVE_GAMES, SystemActiveGames::TournamentKey, iTournamentKey, 
                                               SystemActiveGames::GameClassGameNumber, NULL, &pvGameClassGameNumber, &iNumGames);
-    if (iErrCode != OK)
-    {
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-            iErrCode = OK;
-        else
-            goto Cleanup;
-    }
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+        iErrCode = OK;
+    RETURN_ON_ERROR(iErrCode);
 
     for (i = 0; i < iNumGames; i ++)
     {
@@ -901,40 +780,27 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
         GetGameClassGameNumber (pvGameClassGameNumber[i].GetCharPtr(), &iGameClass, &iGameNumber);
 
         iErrCode = IsEmpireInGame(iGameClass, iGameNumber, iDeleteKey, &bInGame);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if (bInGame)
         {
-            iErrCode = ERROR_EMPIRE_IS_IN_GAMES;
-            goto Cleanup;
+            return ERROR_EMPIRE_IS_IN_GAMES;
         }
     }
 
     // No more empire in tournament
     iErrCode = t_pCache->DeleteRow(pszEmpires, iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // No more tournament for empire
     iErrCode = t_pCache->GetTable(pszTourneys, &pEmpires);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pEmpires->GetFirstKey(SystemEmpireTournaments::TournamentKey, iTournamentKey, &iKey);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pEmpires->DeleteRow(iKey);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     SafeRelease (pEmpires);
         
@@ -945,14 +811,7 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
         );
     
     iErrCode = SendSystemMessage (iDeleteKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
-
-Cleanup:
-
-    SafeRelease (pEmpires);
-
-    if (pvGameClassGameNumber != NULL) {
-        t_pCache->FreeData(pvGameClassGameNumber);
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -963,6 +822,7 @@ int GameEngine::GetTournamentGameClasses (unsigned int iTournamentKey, unsigned 
     int iErrCode;
 
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     if (ppiGameClassKey != NULL) {
         *ppiGameClassKey = NULL;
@@ -974,9 +834,7 @@ int GameEngine::GetTournamentGameClasses (unsigned int iTournamentKey, unsigned 
     *piNumKeys = 0;
 
     iErrCode = t_pCache->GetTable(SYSTEM_GAMECLASS_DATA, &pTable);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Query
     if (ppvName == NULL) {
@@ -988,6 +846,10 @@ int GameEngine::GetTournamentGameClasses (unsigned int iTournamentKey, unsigned 
             piNumKeys
             );
 
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            iErrCode = OK;
+        RETURN_ON_ERROR(iErrCode);
+
     } else {
 
         iErrCode = pTable->ReadColumnWhereEqual (
@@ -998,12 +860,7 @@ int GameEngine::GetTournamentGameClasses (unsigned int iTournamentKey, unsigned 
             ppvName,
             piNumKeys
             );
-    }
 
-    SafeRelease (pTable);
-
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = OK;
     }
 
     return iErrCode;
@@ -1015,9 +872,9 @@ int GameEngine::GetGameClassTournament (int iGameClass, unsigned int* piTourname
     Variant vValue;
 
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::TournamentKey, &vValue);
-    if (iErrCode == OK) {
-        *piTournamentKey = vValue.GetInteger();
-    }
+    RETURN_ON_ERROR(iErrCode);
+    
+    *piTournamentKey = vValue.GetInteger();
 
     return iErrCode;
 }
@@ -1027,113 +884,114 @@ int GameEngine::GetTournamentEmpires(unsigned int iTournamentKey, Variant** ppvE
     int iErrCode;
     unsigned int i;
 
+    Variant* pvEmpireKey = NULL, * pvTeamKey = NULL, * pvName = NULL;
+    AutoFreeData free1(pvEmpireKey);
+    AutoFreeData free2(pvTeamKey);
+    Algorithm::AutoDelete<Variant> del(pvName);
+
+    if (ppvEmpireKey)
+        *ppvEmpireKey = NULL;
+
+    if (ppvTeamKey)
+        *ppvTeamKey = NULL;
+
+    if (ppvName)
+        *ppvName = NULL;
+
+    *piNumKeys = 0;
+
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
 
     iErrCode = t_pCache->GetTable(pszEmpires, &pTable);
-    if (iErrCode != OK) {
-        goto Cleanup;
+    RETURN_ON_ERROR(iErrCode);
+
+    if (ppvEmpireKey)
+    {
+        iErrCode = pTable->ReadColumn(SystemTournamentEmpires::EmpireKey, NULL, &pvEmpireKey, piNumKeys);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            return OK;
+        RETURN_ON_ERROR(iErrCode);
     }
-
-    if (ppvEmpireKey != NULL) {
-
-        iErrCode = pTable->ReadColumn(SystemTournamentEmpires::EmpireKey, NULL, ppvEmpireKey, piNumKeys);
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-            goto Cleanup;
-        }
-
-    } else {
-
+    else
+    {
         iErrCode = pTable->GetNumCachedRows(piNumKeys);
+        RETURN_ON_ERROR(iErrCode);
     }
 
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-    if (ppvTeamKey != NULL) {
-
+    if (ppvTeamKey)
+    {
         unsigned int iNumKeys2;
-
-        iErrCode = pTable->ReadColumn(SystemTournamentEmpires::TeamKey, NULL, ppvTeamKey, &iNumKeys2);
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            Assert(false);
-            goto Cleanup;
-        }
-
-        Assert(iNumKeys2 == *piNumKeys);
+        iErrCode = pTable->ReadColumn(SystemTournamentEmpires::TeamKey, NULL, &pvTeamKey, &iNumKeys2);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            return OK;
+        RETURN_ON_ERROR(iErrCode);
     }
 
-    SafeRelease (pTable);
+    if (ppvName)
+    {
+        pvName = new Variant[*piNumKeys];
+        Assert(pvName);
 
-    if (ppvName != NULL) {
-
-        *ppvName = new Variant[*piNumKeys];
-        Assert(*ppvName);
-
-        for (i = 0; i < *piNumKeys; i ++) {
-
-            int ec = GetEmpireName ((*ppvEmpireKey)[i], (*ppvName) + i);
-            if (ec != OK) {
-                (*ppvEmpireKey)[i] = (*ppvEmpireKey)[*piNumKeys - 1];
-                i --;
-            }
+        for (i = 0; i < *piNumKeys; i ++)
+        {
+            iErrCode = GetEmpireName(pvEmpireKey[i], pvName + i);
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
-Cleanup:
-
-    if (iErrCode != OK || (iErrCode == OK && *piNumKeys == 0)) {
-        
-        if (ppvEmpireKey != NULL && *ppvEmpireKey != NULL) {
-            t_pCache->FreeData(*ppvEmpireKey);
-            *ppvEmpireKey = NULL;
-        }
-        
-        if (ppvName != NULL && *ppvName != NULL) {
-            delete [] (*ppvName);
-            *ppvName = NULL;
-        }
-        
-        if (ppvTeamKey != NULL && *ppvTeamKey != NULL) {
-            t_pCache->FreeData(*ppvTeamKey);
-            *ppvTeamKey = NULL;
-        }
+    if (ppvEmpireKey)
+    {
+        *ppvEmpireKey = pvEmpireKey;
+        pvEmpireKey = NULL;
     }
 
-    SafeRelease (pTable);
+    if (ppvTeamKey)
+    {
+        *ppvTeamKey = pvTeamKey;
+        pvTeamKey = NULL;
+    }
+
+    if (ppvName)
+    {
+        *ppvName = pvName;
+        pvName = NULL;
+    }
 
     return iErrCode;
 }
 
 
 int GameEngine::GetAvailableTournamentEmpires (unsigned int iTournamentKey, Variant** ppvEmpireKey,
-                                               Variant** ppvTeamKey, Variant** ppvName, unsigned int* piNumKeys) {
-
+                                               Variant** ppvTeamKey, Variant** ppvName, unsigned int* piNumKeys)
+{
     int iErrCode, iOptions;
     unsigned int iNumKeys, i;
+
     Variant* pvName = NULL, * pvTeamKey = NULL, * pvEmpireKey = NULL;
+    AutoFreeData free1(pvName);
+    AutoFreeData free2(pvTeamKey);
+    Algorithm::AutoDelete<Variant> del(pvEmpireKey);
 
     iErrCode = GetTournamentEmpires(
         iTournamentKey,
-        ppvEmpireKey == NULL ? NULL : &pvEmpireKey,
-        ppvTeamKey == NULL ? NULL : &pvTeamKey,
-        ppvName == NULL ? NULL : &pvName,
+        ppvEmpireKey ? NULL : &pvEmpireKey,
+        ppvTeamKey ? NULL : &pvTeamKey,
+        ppvName ? NULL : &pvName,
         &iNumKeys
         );
 
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    for (i = 0; i < iNumKeys; i ++) {
-
-        if (GetEmpireOptions2 (pvEmpireKey[i], &iOptions) != OK || 
-            (iOptions & UNAVAILABLE_FOR_TOURNAMENTS)) {
-
+    for (i = 0; i < iNumKeys; i ++)
+    {
+        iErrCode = GetEmpireOptions2 (pvEmpireKey[i], &iOptions);
+        RETURN_ON_ERROR(iErrCode);
+        
+        if (iOptions & UNAVAILABLE_FOR_TOURNAMENTS)
+        {
             // Remove from list
             if (pvEmpireKey != NULL) {
                 pvEmpireKey[i] = pvEmpireKey [iNumKeys - 1];
@@ -1151,36 +1009,22 @@ int GameEngine::GetAvailableTournamentEmpires (unsigned int iTournamentKey, Vari
         }
     }
 
-Cleanup:
-
-    if (iErrCode == OK && iNumKeys == 0) {
-
-        if (pvEmpireKey != NULL) {
-            t_pCache->FreeData(pvEmpireKey);
-            pvEmpireKey = NULL;
-        }
-
-        if (pvTeamKey != NULL) {
-            t_pCache->FreeData(pvTeamKey);
-            pvTeamKey = NULL;
-        }
-
-        if (pvName != NULL) {
-            delete [] pvName;
-            pvName = NULL;
-        }
-    }
-
-    if (ppvEmpireKey != NULL) {
+    if (ppvEmpireKey)
+    {
         *ppvEmpireKey = pvEmpireKey;
+        pvEmpireKey = NULL;
     }
 
-    if (ppvTeamKey != NULL) {
+    if (ppvTeamKey)
+    {
         *ppvTeamKey = pvTeamKey;
+        pvTeamKey = NULL;
     }
 
-    if (ppvName != NULL) {
+    if (ppvName)
+    {
         *ppvName = pvName;
+        pvName = NULL;
     }
 
     *piNumKeys = iNumKeys;
@@ -1194,87 +1038,62 @@ int GameEngine::GetTournamentTeamEmpires (unsigned int iTournamentKey, unsigned 
 
     int iErrCode;
     unsigned int i, * piProxyKey = NULL;
+    AutoFreeKeys freeKey(piProxyKey);
 
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     GET_SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
 
     iErrCode = t_pCache->GetTable(pszEmpires, &pTable);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->GetEqualKeys(SystemTournamentEmpires::TeamKey, iTeamKey, &piProxyKey, piNumKeys);
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = OK;
-        goto Cleanup;
-    }
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+        return OK;
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    int* piEmpireKey = NULL;
+    Algorithm::AutoDelete<int>(piEmpireKey, true);
 
-    if (ppiEmpireKey != NULL) {
+    Variant* pvName = NULL;
+    Algorithm::AutoDelete<Variant>(pvName, true);
 
-        *ppiEmpireKey = new int [*piNumKeys];
-        if (*ppiEmpireKey == NULL) {
-            iErrCode = ERROR_OUT_OF_MEMORY;
-            goto Cleanup;
-        }
+    if (ppiEmpireKey)
+    {
+        piEmpireKey = new int[*piNumKeys];
+        Assert(piEmpireKey);
 
-        for (i = 0; i < *piNumKeys; i ++) {
-
-            iErrCode = pTable->ReadData (piProxyKey[i], SystemTournamentEmpires::EmpireKey, (*ppiEmpireKey) + i);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+        for (i = 0; i < *piNumKeys; i ++)
+        {
+            iErrCode = pTable->ReadData (piProxyKey[i], SystemTournamentEmpires::EmpireKey, piEmpireKey + i);
+            RETURN_ON_ERROR(iErrCode);
         }
     }   
 
-    SafeRelease (pTable);
+    if (ppvName)
+    {
+        pvName = new Variant[*piNumKeys];
+        Assert(pvName);
 
-    if (ppvName != NULL) {
-
-        *ppvName = new Variant [*piNumKeys];
-        if (*ppvName == NULL) {
-
-            if (ppiEmpireKey != NULL) {
-                delete [] (*ppiEmpireKey);
-                *ppiEmpireKey = NULL;
-            }
-
-            iErrCode = ERROR_OUT_OF_MEMORY;
-            goto Cleanup;
-        }
-
-        for (i = 0; i < *piNumKeys; i ++) {
-
-            int ec = GetEmpireName ((*ppiEmpireKey)[i], (*ppvName) + i);
-            if (ec!= OK) {
-                (*ppiEmpireKey)[i] = (*ppiEmpireKey)[*piNumKeys - 1];
-                i --;
-            }
+        for (i = 0; i < *piNumKeys; i ++)
+        {
+            iErrCode = GetEmpireName (piEmpireKey[i], pvName + i);
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
-Cleanup:
-    
-    if (iErrCode != OK || (iErrCode == OK && *piNumKeys == 0)) {
-        
-        if (ppiEmpireKey != NULL && *ppiEmpireKey != NULL) {
-            delete [] (*ppiEmpireKey);
-            *ppiEmpireKey = NULL;
-        }
-        
-        if (ppvName != NULL && *ppvName != NULL) {
-            delete [] (*ppvName);
-            *ppvName = NULL;
-        }
+    if (ppiEmpireKey)
+    {
+        *ppiEmpireKey = piEmpireKey;
+        piEmpireKey = NULL;
     }
-    
-    SafeRelease (pTable);
+
+    if (ppvName)
+    {
+        *ppvName = pvName;
+        pvName = NULL;
+    }
 
     return iErrCode;
 }
@@ -1287,21 +1106,27 @@ int GameEngine::GetTournamentTeams (unsigned int iTournamentKey, unsigned int** 
 
     GET_SYSTEM_TOURNAMENT_TEAMS(pszTeams, iTournamentKey);
 
-    if (ppvName == NULL) {
-
-        if (ppiTeamKey == NULL) {
+    if (ppvName == NULL)
+    {
+        if (ppiTeamKey == NULL)
+        {
             iErrCode = t_pCache->GetNumCachedRows(pszTeams, piNumKeys);
-        } else {
-            iErrCode = t_pCache->GetAllKeys (pszTeams, ppiTeamKey, piNumKeys);
+            RETURN_ON_ERROR(iErrCode);
         }
-
-    } else {
-
-        iErrCode = t_pCache->ReadColumn(pszTeams, SystemTournamentTeams::Name, ppiTeamKey, ppvName, piNumKeys);
+        else
+        {
+            iErrCode = t_pCache->GetAllKeys (pszTeams, ppiTeamKey, piNumKeys);
+            if (iErrCode == ERROR_DATA_NOT_FOUND)
+                iErrCode = OK;
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
-
-    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = OK;
+    else
+    {
+        iErrCode = t_pCache->ReadColumn(pszTeams, SystemTournamentTeams::Name, ppiTeamKey, ppvName, piNumKeys);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            iErrCode = OK;
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -1313,13 +1138,12 @@ int GameEngine::CreateTournamentTeam(unsigned int iTournamentKey, Variant* pvTea
     unsigned int iKey;
 
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
     iErrCode = t_pCache->GetTable(pszTeams, &pTable);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Make sure team doesn't already exist
     iErrCode = pTable->GetFirstKey(
@@ -1328,21 +1152,19 @@ int GameEngine::CreateTournamentTeam(unsigned int iTournamentKey, Variant* pvTea
         &iKey
         );
 
-    if (iErrCode != ERROR_DATA_NOT_FOUND) {
-        iErrCode = ERROR_TOURNAMENT_TEAM_ALREADY_EXISTS;
-        goto Cleanup;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        return ERROR_TOURNAMENT_TEAM_ALREADY_EXISTS;
     }
 
     // Create team
     iErrCode = pTable->InsertRow(SystemTournamentTeams::Template, pvTeamData, piTeamKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pTable);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 
@@ -1354,52 +1176,33 @@ int GameEngine::DeleteTournamentTeam (unsigned int iTournamentKey, unsigned int 
     unsigned int iKey = NO_KEY;
 
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
     GET_SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
 
     iErrCode = t_pCache->GetTable(pszEmpires, &pTable);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Remove empires from team
     while (pTable->GetNextKey (iKey, &iKey) != ERROR_DATA_NOT_FOUND) {
 
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = pTable->ReadData (iKey, SystemTournamentEmpires::TeamKey, &iTryTeamKey);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if ((unsigned int) iTryTeamKey == iTeamKey) {
 
             iErrCode = pTable->WriteData(iKey, SystemTournamentEmpires::TeamKey, (int) NO_KEY);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
-    SafeRelease (pTable);
-
     iErrCode = t_pCache->DeleteRow(pszTeams, iTeamKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     global.GetEventSink()->OnDeleteTournamentTeam (iTournamentKey, iTeamKey);
-
-Cleanup:
-
-    SafeRelease (pTable);
 
     return iErrCode;
 }
@@ -1410,6 +1213,7 @@ int GameEngine::SetEmpireTournamentTeam (unsigned int iTournamentKey, int iEmpir
     unsigned int iKey;
 
     ICachedTable* pWriteTable = NULL;
+    AutoRelease<ICachedTable> rel(pWriteTable);
 
     GET_SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
 
@@ -1419,40 +1223,22 @@ int GameEngine::SetEmpireTournamentTeam (unsigned int iTournamentKey, int iEmpir
         GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
         Variant vTemp;
         iErrCode = t_pCache->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Draws, &vTemp);
-        if (iErrCode != OK)
-        {
-            if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-                iErrCode = ERROR_TOURNAMENT_TEAM_DOES_NOT_EXIST;
-            goto Cleanup;
-        }
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+            return ERROR_TOURNAMENT_TEAM_DOES_NOT_EXIST;
+        RETURN_ON_ERROR(iErrCode);
     }
 
     iErrCode = t_pCache->GetTable(pszEmpires, &pWriteTable);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pWriteTable->GetFirstKey(SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
-        iErrCode = ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT;
-        goto Cleanup;
+        return ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT;
     }
-
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pWriteTable->WriteData(iKey, SystemTournamentEmpires::TeamKey, (int) iTeamKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pWriteTable);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -1465,13 +1251,12 @@ int GameEngine::GetTournamentTeamData (unsigned int iTournamentKey, unsigned int
     return t_pCache->ReadRow (pszTeams, iTeamKey, ppvTournamentTeamData);
 }
 
-int GameEngine::GetTournamentEmpireData (unsigned int iTournamentKey, unsigned int iEmpireKey, 
-                                         Variant** ppvTournamentEmpireData) {
-
+int GameEngine::GetTournamentEmpireData (unsigned int iTournamentKey, unsigned int iEmpireKey, Variant** ppvTournamentEmpireData)
+{
     int iErrCode;
     unsigned int iKey;
 
-    GET_SYSTEM_TOURNAMENT_EMPIRES (pszEmpires, iTournamentKey);
+    GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
 
     iErrCode = t_pCache->GetFirstKey(
         pszEmpires, 
@@ -1480,9 +1265,10 @@ int GameEngine::GetTournamentEmpireData (unsigned int iTournamentKey, unsigned i
         &iKey
         );
 
-    if (iErrCode == OK) {
-        iErrCode = t_pCache->ReadRow (pszEmpires, iKey, ppvTournamentEmpireData);
-    }
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = t_pCache->ReadRow (pszEmpires, iKey, ppvTournamentEmpireData);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -1526,10 +1312,10 @@ int GameEngine::GetTournamentIcon (unsigned int iTournamentKey, unsigned int* pi
     Variant vVal;
 
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, &vVal);
-    if (iErrCode == OK) {
-        *piIcon = vVal.GetInteger();
-    }
+    RETURN_ON_ERROR(iErrCode);
 
+    *piIcon = vVal.GetInteger();
+    
     return iErrCode;
 }
 
@@ -1546,10 +1332,9 @@ int GameEngine::GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int
     GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
     iErrCode = t_pCache->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, &vVal);
-    if (iErrCode == OK) {
-        *piIcon = vVal.GetInteger();
-    }
-
+    RETURN_ON_ERROR(iErrCode);
+    
+    *piIcon = vVal.GetInteger();
     return iErrCode;
 }
 
@@ -1567,22 +1352,24 @@ int GameEngine::GetTournamentGames(unsigned int iTournamentKey, int** ppiGameCla
 
     if (ppiGameClass)
         *ppiGameClass = NULL;
+
     if (ppiGameNumber)
         *ppiGameNumber = NULL;
 
     Variant* pvGame = NULL;
+    AutoFreeData free(pvGame);
+    
     int iErrCode = t_pCache->ReadColumnWhereEqual(SYSTEM_ACTIVE_GAMES, SystemActiveGames::TournamentKey, iTournamentKey, 
                                                   SystemActiveGames::GameClassGameNumber, NULL, &pvGame, piNumGames);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
-    {
-        iErrCode = OK;
-        goto Cleanup;
-    }
-
+        return OK;
+    RETURN_ON_ERROR(iErrCode);
+    
     if (ppiGameClass != NULL)
     {
         *ppiGameClass = new int[*piNumGames];
         Assert(*ppiGameClass);
+
         *ppiGameNumber = new int[*piNumGames];
         Assert(*ppiGameNumber);
 
@@ -1591,11 +1378,6 @@ int GameEngine::GetTournamentGames(unsigned int iTournamentKey, int** ppiGameCla
             GetGameClassGameNumber(pvGame[i].GetCharPtr(), (*ppiGameClass) + i, (*ppiGameNumber) + i);
         }
     }
-
-Cleanup:
-
-    if (pvGame)
-        t_pCache->FreeData(pvGame);
 
     return iErrCode;
 }

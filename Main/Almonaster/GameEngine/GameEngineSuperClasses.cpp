@@ -35,27 +35,25 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
         &iKey
         );
     
-    if (iErrCode != ERROR_DATA_NOT_FOUND) {
-        iErrCode = ERROR_SUPERCLASS_ALREADY_EXISTS;
-        goto Cleanup;
-    }
-
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        Variant pvSuperClass[SystemSuperClassData::NumColumns] = {
-            pszName,
-            0
-        };
-
-        if (pvSuperClass[SystemSuperClassData::iName].GetCharPtr() == NULL) {
-            iErrCode = ERROR_OUT_OF_MEMORY;
-            goto Cleanup;
-        }
-        
-        iErrCode = t_pCache->InsertRow(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template, pvSuperClass, (unsigned int*) piKey);
-        Assert(iErrCode == OK);
+        iErrCode = OK;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        return ERROR_SUPERCLASS_ALREADY_EXISTS;
     }
 
-Cleanup:
+    Variant pvSuperClass[SystemSuperClassData::NumColumns] = {
+        pszName,
+        0
+    };
+
+    Assert(pvSuperClass[SystemSuperClassData::iName].GetCharPtr());
+        
+    iErrCode = t_pCache->InsertRow(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template, pvSuperClass, (unsigned int*) piKey);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -71,23 +69,19 @@ Cleanup:
 
 int GameEngine::DeleteSuperClass (int iSuperClassKey, bool* pbResult) {
 
+    *pbResult = false;
+
     Variant vGameClasses;
-
-    int iErrCode = t_pCache->ReadData(
-        SYSTEM_SUPERCLASS_DATA, 
-        iSuperClassKey, 
-        SystemSuperClassData::NumGameClasses,
-        &vGameClasses
-        );
-    if (iErrCode != OK) {
+    int iErrCode = t_pCache->ReadData(SYSTEM_SUPERCLASS_DATA, iSuperClassKey, SystemSuperClassData::NumGameClasses, &vGameClasses);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
         return ERROR_SUPERCLASS_DOES_NOT_EXIST;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (vGameClasses.GetInteger() == 0) {
+    if (vGameClasses.GetInteger() == 0)
+    {
         iErrCode = t_pCache->DeleteRow(SYSTEM_SUPERCLASS_DATA, iSuperClassKey);
-        *pbResult = (iErrCode == OK);
-    } else {
-        *pbResult = false;
+        RETURN_ON_ERROR(iErrCode);
+        *pbResult = true;
     }
     
     return iErrCode;
@@ -108,6 +102,7 @@ int GameEngine::GetSuperClassKeys(unsigned int** ppiKey, Variant** ppvName, unsi
     {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -126,6 +121,7 @@ int GameEngine::GetSuperClassKeys(unsigned int** ppiKey, unsigned int* piNumSupe
     {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -152,6 +148,7 @@ int GameEngine::RenameSuperClass(int iKey, const char* pszNewName)
 
     int iErrCode = t_pCache->WriteData(SYSTEM_SUPERCLASS_DATA, iKey, SystemSuperClassData::Name, pszNewName);
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-        iErrCode = ERROR_SUPERCLASS_DOES_NOT_EXIST;
+        return ERROR_SUPERCLASS_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }

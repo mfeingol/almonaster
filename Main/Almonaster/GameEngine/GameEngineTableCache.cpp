@@ -7,35 +7,35 @@ int GameEngine::LookupEmpireByName(const char* pszName, unsigned int* piEmpireKe
     Assert(col.Data.GetCharPtr());
 
     ICachedTable* pEmpire = NULL;
-    int iErrCode = t_pCache->Cache(entry, &pEmpire);
-    if (iErrCode == OK)
-    {
-        iErrCode = pEmpire->GetNextKey(NO_KEY, piEmpireKey);
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-        {
-            iErrCode = OK;
-        }
-        else
-        {
-            if (iErrCode == OK && pvName)
-            {
-                iErrCode = pEmpire->ReadData(*piEmpireKey, SystemEmpireData::Name, pvName);
-            }
+    AutoRelease<ICachedTable> rel(pEmpire);
 
-            if (iErrCode == OK && pi64SecretKey)
-            {
-                iErrCode = pEmpire->ReadData(*piEmpireKey, SystemEmpireData::SecretKey, pi64SecretKey);
-            }
-        }
+    int iErrCode = t_pCache->Cache(entry, &pEmpire);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = pEmpire->GetNextKey(NO_KEY, piEmpireKey);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    if (pvName)
+    {
+        iErrCode = pEmpire->ReadData(*piEmpireKey, SystemEmpireData::Name, pvName);
+        RETURN_ON_ERROR(iErrCode);
     }
 
-    if (iErrCode == OK && ppTable)
+    if (pi64SecretKey)
+    {
+        iErrCode = pEmpire->ReadData(*piEmpireKey, SystemEmpireData::SecretKey, pi64SecretKey);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    if (ppTable)
     {
         *ppTable = pEmpire;
         pEmpire->AddRef();
     }
-
-    SafeRelease(pEmpire);
 
     return iErrCode;
 }
@@ -79,7 +79,9 @@ int GameEngine::CacheEmpires(const unsigned int* piEmpireKey, unsigned int iNumE
     }
     
     int iErrCode = t_pCache->Cache(pcEntries, iNumEmpires);
-    if (iErrCode == OK && piResults)
+    RETURN_ON_ERROR(iErrCode);
+
+    if (piResults)
     {
         *piResults = 0;
         for (unsigned int i = 0; i < iNumEmpires; i ++)
@@ -87,8 +89,7 @@ int GameEngine::CacheEmpires(const unsigned int* piEmpireKey, unsigned int iNumE
             unsigned int iNumRows;
             GET_SYSTEM_EMPIRE_DATA(strEmpire, piEmpireKey[i]) 
             iErrCode = t_pCache->GetNumCachedRows(strEmpire, &iNumRows);
-            if (iErrCode != OK)
-                break;
+            RETURN_ON_ERROR(iErrCode);
             *piResults += iNumRows;
         }
     }
@@ -416,6 +417,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
     int iErrCode;
 
     Variant* pvEmpireKey = NULL;
+    AutoFreeData free(pvEmpireKey);
     unsigned int iNumEmpires;
 
     // Try to save an I/O if we already have the empires table cached
@@ -423,10 +425,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
     if (t_pCache->IsCached(strEmpires))
     {
         iErrCode = t_pCache->ReadColumn(strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         unsigned int iNumEntries = countof(entries) + iNumEmpires * 5;
         TableCacheEntry* pEntries = (TableCacheEntry*)StackAlloc(iNumEntries * sizeof(TableCacheEntry));
@@ -481,26 +480,17 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires * 4].CrossJoin = NULL;
         }
 
-        int iErrCode = t_pCache->Cache(pEntries, iNumEntries);
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        iErrCode = t_pCache->Cache(pEntries, iNumEntries);
+        RETURN_ON_ERROR(iErrCode);
     }
     else
     {
         // Do it in two I/Os, sigh...
         iErrCode = t_pCache->Cache(entries, countof(entries));
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->ReadColumn(strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         unsigned int* piEmpireKey = (unsigned int*)StackAlloc(iNumEmpires * sizeof(unsigned int));
         for (unsigned int i = 0; i < iNumEmpires; i ++)
@@ -508,10 +498,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             piEmpireKey[i] = pvEmpireKey[i].GetInteger();
         }
         iErrCode = CacheEmpireActiveGamesMessagesNukeLists(piEmpireKey, iNumEmpires);
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     Assert(pvEmpireKey && iNumEmpires);
@@ -519,14 +506,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
     iErrCode = CreateEmptyGameCacheEntries(iGameClass, iGameNumber, NO_KEY, NO_KEY, 
                                            EMPTY_GAME_EMPIRE_MESSAGES | EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_DIPLOMACY | 
                                            EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_FLEETS);
-    if (iErrCode != OK)
-    {
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    t_pCache->FreeData(pvEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -548,13 +528,11 @@ int GameEngine::CacheGameTablesForBroadcast(int iGameClass, int iGameNumber)
     };
 
     int iErrCode = t_pCache->Cache(entries, countof(entries));
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     // Create empty entries for all empires
     iErrCode = CreateEmptyGameCacheEntries(iGameClass, iGameNumber, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MESSAGES | EMPTY_GAME_EMPIRE_DIPLOMACY);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -632,8 +610,9 @@ int CreateEmptyIfNecessary(const char* pszTable, const char* pszCacheTable)
 
 int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyKey, int eFlags)
 {
-    int iErrCode;
-    Variant* pvEmpireKey = NULL, vTemp;
+    int iErrCode = OK;
+    Variant* pvEmpireKey = NULL, * pvFreeEmpireKey = NULL, vTemp;
+    AutoFreeData free(pvFreeEmpireKey);
     unsigned int iNumEmpires;
 
     Assert(iEmpireKey == NO_KEY || iDiplomacyKey == NO_KEY);
@@ -642,29 +621,27 @@ int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int
     {
         GET_GAME_EMPIRE_DIPLOMACY(strDipEmpires, iGameClass, iGameNumber, iDiplomacyKey);
         iErrCode = t_pCache->ReadColumn(strDipEmpires, GameEmpireDiplomacy::ReferenceEmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            return OK;
+        RETURN_ON_ERROR(iErrCode);
+        pvFreeEmpireKey = pvEmpireKey;
     }
     else if (iEmpireKey != NO_KEY)
     {
         vTemp = iEmpireKey;
         pvEmpireKey = &vTemp;
         iNumEmpires = 1;
-        iErrCode = OK;
     }
     else
     {
         GET_GAME_EMPIRES(strEmpires, iGameClass, iGameNumber);
         iErrCode = t_pCache->ReadColumn(strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+            return OK;
+        RETURN_ON_ERROR(iErrCode);
+        pvFreeEmpireKey = pvEmpireKey;
     }
 
-    if (iErrCode != OK)
-    {
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-        {
-            iErrCode = OK;
-        }
-        goto Cleanup;
-    }
-    
     for (unsigned int i = 0; i < iNumEmpires; i ++)
     {
         unsigned int iThisEmpire = pvEmpireKey[i].GetInteger();
@@ -673,50 +650,35 @@ int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int
         {
             GET_GAME_EMPIRE_DIPLOMACY(strTable, iGameClass, iGameNumber, iThisEmpire);
             iErrCode = CreateEmptyIfNecessary(GAME_EMPIRE_DIPLOMACY, strTable);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (eFlags & EMPTY_GAME_EMPIRE_MAP)
         {
             GET_GAME_EMPIRE_MAP(strTable, iGameClass, iGameNumber, iThisEmpire);
             iErrCode = CreateEmptyIfNecessary(GAME_EMPIRE_MAP, strTable);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (eFlags & EMPTY_GAME_EMPIRE_SHIPS)
         {
             GET_GAME_EMPIRE_SHIPS(strTable, iGameClass, iGameNumber, iThisEmpire);
             iErrCode = CreateEmptyIfNecessary(GAME_EMPIRE_SHIPS, strTable);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (eFlags & EMPTY_GAME_EMPIRE_FLEETS)
         {
             GET_GAME_EMPIRE_FLEETS(strTable, iGameClass, iGameNumber, iThisEmpire);
             iErrCode = CreateEmptyIfNecessary(GAME_EMPIRE_FLEETS, strTable);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (eFlags & EMPTY_GAME_EMPIRE_MESSAGES)
         {
             GET_GAME_EMPIRE_MESSAGES(strTable, iGameClass, iGameNumber, iThisEmpire);
             iErrCode = CreateEmptyIfNecessary(GAME_EMPIRE_MESSAGES, strTable);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
@@ -726,17 +688,9 @@ int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int
         if (!t_pCache->IsCached(strEmpireIndependentShips))
         {
             iErrCode = t_pCache->CreateEmpty(GAME_EMPIRE_SHIPS, strEmpireIndependentShips);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
-
-Cleanup:
-
-    if (pvEmpireKey && pvEmpireKey != &vTemp)
-        t_pCache->FreeData(pvEmpireKey);
 
     return iErrCode;
 }

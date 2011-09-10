@@ -28,12 +28,15 @@
 
 int GameEngine::DoesThemeExist(int iThemeKey, bool* pbExist)
 {
+    *pbExist = false;
+
     Variant vTemp;
     int iErrCode = t_pCache->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, &vTemp);
-    *pbExist = iErrCode == OK;
-
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-        iErrCode = OK;
+        return OK;
+    RETURN_ON_ERROR(iErrCode);
+
+    *pbExist = true;
     return iErrCode;
 }
 
@@ -49,34 +52,31 @@ int GameEngine::CreateTheme (Variant* pvData, unsigned int* piKey) {
 
     int iErrCode;
     unsigned int iKey;
+
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     *piKey = NO_KEY;
 
     iErrCode = t_pCache->GetTable(SYSTEM_THEMES, &pTable);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Make sure there isn't a name collision
     iErrCode = pTable->GetFirstKey(SystemThemes::Name, pvData[SystemThemes::iName], &iKey);
-    if (iErrCode == OK) {
-        iErrCode = ERROR_THEME_ALREADY_EXISTS;
-        goto Cleanup;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        return ERROR_THEME_ALREADY_EXISTS;
     }
 
     iErrCode = pTable->InsertRow(SystemThemes::Template, pvData, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *piKey = iKey;
-
-Cleanup:
-
-    SafeRelease (pTable);
 
     return iErrCode;
 }
@@ -93,6 +93,7 @@ int GameEngine::GetThemeKeys(unsigned int** ppiThemeKey, unsigned int* piNumKeys
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -110,6 +111,7 @@ int GameEngine::GetFullThemeKeys(unsigned int** ppiThemeKey, unsigned int* piNum
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -250,20 +252,26 @@ int GameEngine::SetThemeAuthorEmail (int iThemeKey, const char* pszAuthorEmail) 
     return t_pCache->WriteData(SYSTEM_THEMES, iThemeKey, SystemThemes::AuthorEmail, pszAuthorEmail);
 }
 
+int SetThemeOption(int iThemeKey, int iOption, bool bSet)
+{
 
-// Input:
-// iThemeKey -> Key of theme
-// bExists -> Feature exists
-//
-// Set the background key of the theme
-
-int GameEngine::SetThemeBackground (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BACKGROUND);
+    int iErrCode;
+    if (bSet)
+    {
+        iErrCode = t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, iOption);
+        RETURN_ON_ERROR(iErrCode);
     }
-    
-    return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BACKGROUND);
+    else
+    {
+        iErrCode = t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~iOption);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    return iErrCode;
+}
+
+int GameEngine::SetThemeBackground (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_BACKGROUND, bExists);
 }
 
 
@@ -273,15 +281,10 @@ int GameEngine::SetThemeBackground (int iThemeKey, bool bExists) {
 //
 // Set the LivePlanet key of the theme
 
-int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_LIVE_PLANET);
-    }
-    
-    return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_LIVE_PLANET);
+int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_LIVE_PLANET, bExists);
 }
-
 
 // Input:
 // iThemeKey -> Key of theme
@@ -289,13 +292,9 @@ int GameEngine::SetThemeLivePlanet (int iThemeKey, bool bExists) {
 //
 // Set the theme key of the theme
 
-int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_DEAD_PLANET);
-    } else {
-        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_DEAD_PLANET);
-    }
+int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_DEAD_PLANET, bExists);
 }
 
 
@@ -305,15 +304,10 @@ int GameEngine::SetThemeDeadPlanet (int iThemeKey, bool bExists) {
 //
 // Set the separator key of the theme
 
-int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_SEPARATOR);
-    } else {
-        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_SEPARATOR);
-    }
+int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_SEPARATOR, bExists);
 }
-
 
 // Input:
 // iThemeKey -> Key of theme
@@ -321,15 +315,10 @@ int GameEngine::SetThemeSeparator (int iThemeKey, bool bExists) {
 //
 // Set the button key of the theme
 
-int GameEngine::SetThemeButtons (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_BUTTONS);
-    } else {
-        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_BUTTONS);
-    }
+int GameEngine::SetThemeButtons (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_BUTTONS, bExists);
 }
-
 
 // Input:
 // iThemeKey -> Key of theme
@@ -348,13 +337,9 @@ int GameEngine::SetThemeDescription (int iThemeKey, const char* pszDescription) 
 //
 // Set the horz key of the theme
 
-int GameEngine::SetThemeHorz (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_HORZ);
-    } else {
-        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_HORZ);
-    }
+int GameEngine::SetThemeHorz (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_HORZ, bExists);
 }
 
 
@@ -364,13 +349,9 @@ int GameEngine::SetThemeHorz (int iThemeKey, bool bExists) {
 //
 // Set the horz key of the theme
 
-int GameEngine::SetThemeVert (int iThemeKey, bool bExists) {
-
-    if (bExists) {
-        return t_pCache->WriteOr(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, THEME_VERT);
-    } else {
-        return t_pCache->WriteAnd(SYSTEM_THEMES, iThemeKey, SystemThemes::Options, ~THEME_VERT);
-    }
+int GameEngine::SetThemeVert (int iThemeKey, bool bExists)
+{
+    return SetThemeOption(iThemeKey, THEME_VERT, bExists);
 }
 
 
@@ -423,10 +404,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UIButtons, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -434,10 +412,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UIBackground, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -445,10 +420,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UILivePlanet, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -456,10 +428,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UIDeadPlanet, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -467,10 +436,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UISeparator, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -478,10 +444,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UIHorz, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -489,10 +452,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UIVert, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteData(
             strEmpire, 
@@ -500,10 +460,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             SystemEmpireData::UIColor, 
             iThemeKey
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     iErrCode = t_pCache->WriteData(
@@ -512,10 +469,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
         SystemEmpireData::AlmonasterTheme, 
         iThemeKey
         );
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+   RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }

@@ -49,55 +49,34 @@ int GameEngine::GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLi
 
     int iErrCode;
     ICachedTable* pTable = NULL;
+    AutoRelease<ICachedTable> rel(pTable);
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pTable);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIBackground, (int*) piBackground);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUILivePlanet, (int*) piLivePlanet);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIDeadPlanet, (int*) piDeadPlanet);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIButtons, (int*) piButtons);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUISeparator, (int*) piSeparator);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIHorz, (int*) piHorz);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIVert, (int*) piVert);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIColor, (int*) piColor);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pTable);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -122,6 +101,7 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
         vLowerScore = fScore;
         pszWriteColumn = SystemData::ApprenticeScore;
         iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vHigherScore);
+        RETURN_ON_ERROR(iErrCode);
         break;
 
     case ADEPT:
@@ -129,6 +109,7 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
         vHigherScore = fScore;
         pszWriteColumn = SystemData::AdeptScore;
         iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vLowerScore);
+        RETURN_ON_ERROR(iErrCode);
         break;
 
     default:
@@ -137,22 +118,17 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
         return ERROR_INVALID_ARGUMENT;
     }
 
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
     if (vLowerScore.GetFloat() > vHigherScore.GetFloat()) {
         return ERROR_INVALID_ARGUMENT;
     }
 
     iErrCode = t_pCache->WriteData(SYSTEM_DATA, pszWriteColumn, fScore);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    return ScanEmpiresOnScoreChanges();
+    iErrCode = ScanEmpiresOnScoreChanges();
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 
@@ -183,10 +159,9 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
     }
 
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, pszReadColumn, &vTemp);
-    if (iErrCode == OK) {
-        *pfScore = vTemp.GetFloat();
-    }
-
+    RETURN_ON_ERROR(iErrCode);
+        
+    *pfScore = vTemp.GetFloat();
     return iErrCode;
 }
 
@@ -222,9 +197,9 @@ int GameEngine::GetSystemOptions (int* piOptions) {
     Variant vTemp;
 
     int iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
-    if (iErrCode == OK) {
-        *piOptions = vTemp.GetInteger();
-    }
+    RETURN_ON_ERROR(iErrCode);
+    
+    *piOptions = vTemp.GetInteger();
 
     return iErrCode;
 }
@@ -238,9 +213,7 @@ int GameEngine::GetDefaultGameOptions(int iGameClass, GameOptions* pgoOptions)
     // iNumUpdatesBeforeGameCloses
     Variant vValue;
     iErrCode = GetSystemProperty(SystemData::DefaultNumUpdatesBeforeClose, &vValue);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     pgoOptions->iNumUpdatesBeforeGameCloses = vValue.GetInteger();
 
@@ -249,9 +222,7 @@ int GameEngine::GetDefaultGameOptions(int iGameClass, GameOptions* pgoOptions)
 
     int iOptions;
     iErrCode = GetSystemOptions(&iOptions);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iOptions & DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS) {
         pgoOptions->iOptions |= GAME_WARN_ON_DUPLICATE_IP_ADDRESS;
@@ -282,10 +253,9 @@ int GameEngine::GetDefaultGameOptions(int iGameClass, GameOptions* pgoOptions)
         Variant vGameClassOptions;
         iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vGameClassOptions);
         if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
-        if (iErrCode != OK)
-            return iErrCode;
-
+            return ERROR_GAMECLASS_DOES_NOT_EXIST;
+        RETURN_ON_ERROR(iErrCode);
+        
         if ((vGameClassOptions.GetInteger() & EXPOSED_SPECTATORS) == EXPOSED_SPECTATORS) {
             pgoOptions->iOptions |= GAME_ALLOW_SPECTATORS;
         }
@@ -296,10 +266,9 @@ int GameEngine::GetDefaultGameOptions(int iGameClass, GameOptions* pgoOptions)
         Variant vMaxNumEmpires;
         iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumEmpires, &vMaxNumEmpires);
         if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-            iErrCode = ERROR_GAMECLASS_DOES_NOT_EXIST;
-        if (iErrCode != OK)
-            return iErrCode;
-
+            return ERROR_GAMECLASS_DOES_NOT_EXIST;
+        RETURN_ON_ERROR(iErrCode);
+        
         if (vMaxNumEmpires.GetInteger() == 2)
         {
             pgoOptions->iOptions |= GAME_COUNT_FOR_BRIDIER;
@@ -360,9 +329,13 @@ int GameEngine::SetDefaultShipName (int iShipKey, const char* pszShipName) {
 
 int GameEngine::SetSystemOption (int iOption, bool bFlag) {
     
+    int iErrCode;
     if (bFlag) {
-        return t_pCache->WriteOr(SYSTEM_DATA, SystemData::Options, iOption);
+        iErrCode = t_pCache->WriteOr(SYSTEM_DATA, SystemData::Options, iOption);
+        RETURN_ON_ERROR(iErrCode);
     } else {
-        return t_pCache->WriteAnd(SYSTEM_DATA, SystemData::Options, ~iOption);
+        iErrCode = t_pCache->WriteAnd(SYSTEM_DATA, SystemData::Options, ~iOption);
+        RETURN_ON_ERROR(iErrCode);
     }
+    return iErrCode;
 }
