@@ -192,7 +192,7 @@ case 1:
 
 default:
 
-    Assert (false);
+    Assert(false);
     break;
 }
 

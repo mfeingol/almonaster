@@ -226,7 +226,7 @@ if (bMapGenerated) {
         // Visible builds?
         iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -242,13 +242,13 @@ if (bMapGenerated) {
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         iErrCode = GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -258,19 +258,19 @@ if (bMapGenerated) {
 
             iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
             iErrCode = GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
             iErrCode = GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
         }
@@ -279,7 +279,7 @@ if (bMapGenerated) {
 
             iErrCode = t_pCache->ReadRow (strGameMap, pvPlanetKey[i].GetInteger(), &pvPlanetData);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
@@ -293,7 +293,7 @@ if (bMapGenerated) {
                 );
 
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 

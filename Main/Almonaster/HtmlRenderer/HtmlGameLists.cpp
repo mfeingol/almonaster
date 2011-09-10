@@ -626,7 +626,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
         if (iErrCode != OK) {
             goto Cleanup;
         }
-        Assert (iNumEmpiresInGame > 0);
+        Assert(iNumEmpiresInGame > 0);
 
         unsigned int i;
         for (i = 0; i < iNumEmpiresInGame - 1; i ++)
@@ -645,7 +645,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
             goto Cleanup;
         }
         
-        Assert (iNumEmpiresInGame > 0);
+        Assert(iNumEmpiresInGame > 0);
     }
     
     // Password
@@ -1010,7 +1010,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
 
     if (iWhichList == OPEN_GAME_LIST || iWhichList == ACTIVE_GAME_LIST) {
 
-        Assert (iGameClass != NO_KEY);
+        Assert(iGameClass != NO_KEY);
 
         iErrCode = GetGameOptions (iGameClass, iGameNumber, &iGameOptions);
         if (iErrCode != OK) {
@@ -1428,7 +1428,7 @@ void HtmlRenderer::AddOptions (int iWhichList, const Variant* pvGameClassInfo, i
         
     default:
         
-        Assert (false);
+        Assert(false);
         break;
     }
     

@@ -111,20 +111,20 @@ int TournamentScoring::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker
     
     iErrCode = IsTournamentGame (iGameClass, iGameNumber, &iTournamentKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     if (iTournamentKey == NO_KEY) {
         return OK;
     }
 
-    Assert (iEmpireNuker != NO_KEY || iEmpireNuked != NO_KEY);
+    Assert(iEmpireNuker != NO_KEY || iEmpireNuked != NO_KEY);
 
     if (iEmpireNuker != NO_KEY) {
 
         iErrCode = OnEvent (iTournamentKey, iEmpireNuker, TOURNAMENT_NUKE);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
     }
@@ -133,7 +133,7 @@ int TournamentScoring::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker
 
         iErrCode = OnEvent (iTournamentKey, iEmpireNuked, TOURNAMENT_NUKED);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
     }
@@ -173,7 +173,7 @@ int TournamentScoring::OnEvent (int iGameClass, int iGameNumber, int iEmpireKey,
     
     iErrCode = IsTournamentGame (iGameClass, iGameNumber, &iTournamentKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     if (iTournamentKey == NO_KEY) {
@@ -182,7 +182,7 @@ int TournamentScoring::OnEvent (int iGameClass, int iGameNumber, int iEmpireKey,
 
     iErrCode = OnEvent (iTournamentKey, iEmpireKey, event);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -207,18 +207,18 @@ int TournamentScoring::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) 
 
 bool TournamentScoring::IsValidScore (const Variant* pvScore) {
 
-    Assert (false);
+    Assert(false);
     return false;
 }
 
 int TournamentScoring::CompareScores (const Variant* pvLeft, const Variant* pvRight) {
 
-    Assert (false);
+    Assert(false);
     return 0;
 }
 
 int TournamentScoring::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore) {
 
-    Assert (false);
+    Assert(false);
     return ERROR_NOT_IMPLEMENTED;
 }

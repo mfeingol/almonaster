@@ -78,7 +78,7 @@ if (m_bOwnPost && !m_bRedirection) {
             break;
 
         default:
-            Assert (false);
+            Assert(false);
         }
 
     } else {
@@ -240,14 +240,14 @@ case 1:
 
         // Best effort ask for Bridier time bomb scan
         iErrCode = TriggerBridierTimeBombIfNecessary();
-        Assert (iErrCode == OK);
+        Assert(iErrCode == OK);
 
         %>Rank</th><%
         %><th align="center" bgcolor="<% Write (pszTableColor); %>">Index<%
         break;
 
     default:
-        Assert (false);
+        Assert(false);
         break;
     }
     %></th><%

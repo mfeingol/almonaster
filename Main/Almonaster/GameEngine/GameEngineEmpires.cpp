@@ -651,7 +651,7 @@ int GameEngine::SetEmpireMaxNumSavedSystemMessages(int iEmpireKey, unsigned int 
             return OK;
         }
         RETURN_ON_ERROR(iErrCode);
-        Assert (iNumReadMessages == iNumMessages);
+        Assert(iNumReadMessages == iNumMessages);
 
         // Sort the messages by age
         Algorithm::QSortTwoAscending<Variant, unsigned int>(pvTimeStamp, piKey, iNumReadMessages);
@@ -911,8 +911,8 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
-    Assert (iEmpireKey != NO_KEY);
-    Assert (iKillerEmpire != NO_KEY);
+    Assert(iEmpireKey != NO_KEY);
+    Assert(iKillerEmpire != NO_KEY);
     
     bool bFlag;
 

@@ -167,9 +167,9 @@ iXRadius:
                             }
                         }
 
-                        Assert (iCenterX != MAX_COORDINATE);
-                        Assert (iMinX != MAX_COORDINATE);
-                        Assert (iMaxX != MAX_COORDINATE);
+                        Assert(iCenterX != MAX_COORDINATE);
+                        Assert(iMinX != MAX_COORDINATE);
+                        Assert(iMaxX != MAX_COORDINATE);
 
                         iMaxRadius = max (iCenterX - iMinX, iMaxX - iCenterX);
 
@@ -242,9 +242,9 @@ iYRadius:
                             }
                         }
 
-                        Assert (iCenterY != MAX_COORDINATE);
-                        Assert (iMinY != MAX_COORDINATE);
-                        Assert (iMaxY != MAX_COORDINATE);
+                        Assert(iCenterY != MAX_COORDINATE);
+                        Assert(iMinY != MAX_COORDINATE);
+                        Assert(iMaxY != MAX_COORDINATE);
 
                         iMaxRadius = max (iCenterY - iMinY, iMaxY - iCenterY);
 
@@ -436,7 +436,7 @@ EndPartialMaps:
         break;
 
     default:
-        Assert (false);
+        Assert(false);
     }
 }
 
@@ -622,7 +622,7 @@ case 1:
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             AddMessage ("Error reading resource limits for good/bad colors. The error was ");
             AppendMessage (iErrCode);
             goto RenderWholeMap;
@@ -754,7 +754,7 @@ case 2:
 
 default:
 
-    Assert (false);
+    Assert(false);
     break;
 }
 

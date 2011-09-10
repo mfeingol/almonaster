@@ -170,7 +170,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             goto Redirection;
                         }
 
-                        Assert (iNumNewFleets < NUM_SHIP_TYPES);
+                        Assert(iNumNewFleets < NUM_SHIP_TYPES);
                         nfkNewFleet [iNumNewFleets].iPlanetKey = iPlanetKey;
                         nfkNewFleet [iNumNewFleets].iFleetKey = iFleetKey;
                         iNumNewFleets ++;
@@ -709,7 +709,7 @@ if (iNumTechs > 0) {
         }
     } 
 
-    Assert (iNumBuildableTechs == iNumTechs);
+    Assert(iNumBuildableTechs == iNumTechs);
 
     %></table><p><%
 }

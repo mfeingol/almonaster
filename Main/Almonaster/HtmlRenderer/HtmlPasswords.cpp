@@ -202,7 +202,7 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon)
 
         if (m_bAuthenticated)
         {
-            Assert (m_iEmpireKey != NO_KEY);
+            Assert(m_iEmpireKey != NO_KEY);
             iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
             if (iErrCode != OK || !bExists) {       
                 AddMessage ("That empire no longer exists");
@@ -495,7 +495,7 @@ int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
     }
 
     // Secret key
-    Assert (m_i64SecretKey != 0);
+    Assert(m_i64SecretKey != 0);
     iErrCode = hash.HashData (&m_i64SecretKey, sizeof (m_i64SecretKey));
     if (iErrCode != OK) {
         return iErrCode;
@@ -513,7 +513,7 @@ int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
         return iErrCode;
     }
 
-    Assert (stHashLen >= sizeof (int64));
+    Assert(stHashLen >= sizeof (int64));
     *pi64Hash = *(int64*) pbHashData;
 
     return OK;
@@ -533,7 +533,7 @@ int HtmlRenderer::GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64H
     }
 
     // Salt
-    Assert (tSalt != NULL_TIME);
+    Assert(tSalt != NULL_TIME);
     iErrCode = hash.HashData (&tSalt, sizeof (tSalt));
     if (iErrCode != OK) {
         return iErrCode;
@@ -549,7 +549,7 @@ int HtmlRenderer::GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64H
     }
 
     // Secret key
-    Assert (m_i64SecretKey != 0);
+    Assert(m_i64SecretKey != 0);
     iErrCode = hash.HashData ((Byte*) &m_i64SecretKey, sizeof (m_i64SecretKey));
     if (iErrCode != OK) {
         return iErrCode;
@@ -586,7 +586,7 @@ int HtmlRenderer::GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64H
         return iErrCode;
     }
 
-    Assert (stHashLen >= sizeof (int64));
+    Assert(stHashLen >= sizeof (int64));
     *pi64Hash = *(int64*) pbHashData;
 
     return OK;
@@ -606,7 +606,7 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
     }
 
     // Salt
-    Assert (tSalt != NULL_TIME);
+    Assert(tSalt != NULL_TIME);
     iErrCode = hash.HashData (&tSalt, sizeof (tSalt));
     if (iErrCode != OK) {
         return iErrCode;
@@ -622,7 +622,7 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
     }
 
     // Secret key
-    Assert (m_i64SecretKey != 0);
+    Assert(m_i64SecretKey != 0);
     iErrCode = hash.HashData (&m_i64SecretKey, sizeof (m_i64SecretKey));
     if (iErrCode != OK) {
         return iErrCode;
@@ -640,7 +640,7 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
         return iErrCode;
     }
 
-    Assert (stHashLen >= sizeof (int64));
+    Assert(stHashLen >= sizeof (int64));
     *pi64Hash = *(int64*) pbHashData;
 
     return OK;

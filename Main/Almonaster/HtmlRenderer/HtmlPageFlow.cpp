@@ -431,7 +431,7 @@ void HtmlRenderer::WriteGameNextUpdateString()
     unsigned int iNumEmpires;
     iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return;
     }
     
@@ -443,7 +443,7 @@ void HtmlRenderer::WriteGameNextUpdateString()
             
             iErrCode = GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 return;
             }
             
@@ -521,7 +521,7 @@ void HtmlRenderer::WriteGameNextUpdateString()
         int iUpdated;
         iErrCode = GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return;
         }
 
@@ -801,7 +801,7 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         ) != OK
         ) {
         
-        Assert (false);
+        Assert(false);
 
         AddMessage ("The game no longer exists");
         *ppageRedirect = ACTIVE_GAME_LIST;
@@ -1008,7 +1008,7 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
         if (pHttpForm != NULL)
         {
             const char* pszProfile = pHttpForm->GetName();
-            Assert (pszProfile != NULL);
+            Assert(pszProfile != NULL);
 
             int iViewProfileEmpireKey;
             unsigned int iHash;
@@ -1194,7 +1194,7 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
     
     IHttpForm* pHttpForm;
 
-    Assert (m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
+    Assert(m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
     
     /*if (WasButtonPressed (PageButtonId[m_pgPageId])) {
         goto False;
@@ -1363,7 +1363,7 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
         if (pHttpForm != NULL)
         {
             const char* pszProfile = pHttpForm->GetName();
-            Assert (pszProfile != NULL);
+            Assert(pszProfile != NULL);
 
             int iViewProfileEmpireKey;
             unsigned int iHash;

@@ -130,7 +130,7 @@ int GameEngine::SetEmpireMaxNumSavedGameMessages(int iGameClass, int iGameNumber
             unsigned int iNumUnreadMessages;
             iErrCode = GetNumUnreadSystemMessagesPrivate(pMessages, &iNumUnreadMessages);
             RETURN_ON_ERROR(iErrCode);
-            Assert (iNumMessages >= iNumUnreadMessages);
+            Assert(iNumMessages >= iNumUnreadMessages);
 
             iErrCode = DeleteOverflowMessages(pMessages, GameEmpireMessages::TimeStamp, GameEmpireMessages::Unread, iNumMessages, iNumUnreadMessages, iMaxNumSavedMessages, true);
             RETURN_ON_ERROR(iErrCode);
@@ -281,7 +281,7 @@ int GameEngine::RequestPauseDuringUpdate (int iGameClass, int iGameNumber, int i
     Variant vTemp;
     iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vTemp);
     RETURN_ON_ERROR(iErrCode);
-    Assert (!(vTemp.GetInteger() & REQUEST_PAUSE));
+    Assert(!(vTemp.GetInteger() & REQUEST_PAUSE));
 #endif
 
     iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, REQUEST_PAUSE);

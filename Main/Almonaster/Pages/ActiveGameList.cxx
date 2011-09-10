@@ -156,7 +156,7 @@ if (iNumGames == 0) {
                 }
             }
 
-            Assert (iSuperClassIndex != NO_KEY);
+            Assert(iSuperClassIndex != NO_KEY);
 
             int& iNumGamesSoFar = ppiTable [iSuperClassIndex][iNumGames];
 

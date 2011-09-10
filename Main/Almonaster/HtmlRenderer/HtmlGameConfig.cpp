@@ -1226,7 +1226,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     
     if (iGameClass == NO_KEY) {
 
-        Assert (pvGameClassInfo != NULL);
+        Assert(pvGameClassInfo != NULL);
 
         sUpdatePeriod = pvGameClassInfo[SystemGameClassData::iNumSecPerUpdate].GetInteger();
         iGameClassOptions = pvGameClassInfo[SystemGameClassData::iOptions].GetInteger();
@@ -1234,7 +1234,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     
     } else {
 
-        Assert (pvGameClassInfo == NULL);
+        Assert(pvGameClassInfo == NULL);
 
         iErrCode = GetGameClassUpdatePeriod (iGameClass, &sUpdatePeriod);
         if (iErrCode != OK) {

@@ -550,7 +550,7 @@ SearchResults:
 
         default:
 
-            Assert (false);
+            Assert(false);
         }
 
     } else {
@@ -595,7 +595,7 @@ case 1:
 
     %><input type="hidden" name="EmpireAdminPage" value="1"><%
 
-    Assert (piSearchEmpireKey != NULL);
+    Assert(piSearchEmpireKey != NULL);
 
     RenderSearchResults (
         sd,
@@ -702,7 +702,7 @@ case 4:
 
 default:
 
-    Assert (false);
+    Assert(false);
     break;
 }
 

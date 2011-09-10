@@ -53,12 +53,12 @@ iErrCode = GetEmpireDefaultMessageTarget (
     );
 
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     AddMessage ("Could not read default message target; error was ");
     AppendMessage (iErrCode);
     iDefaultMessageTarget = MESSAGE_TARGET_BROADCAST;
 }
-Assert (iDefaultMessageTarget >= MESSAGE_TARGET_NONE && iDefaultMessageTarget <= MESSAGE_TARGET_LAST_USED);
+Assert(iDefaultMessageTarget >= MESSAGE_TARGET_NONE && iDefaultMessageTarget <= MESSAGE_TARGET_LAST_USED);
 
 if (m_bOwnPost && !m_bRedirection) {
 
@@ -92,7 +92,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 int iNumTargets = pHttpForm->GetNumForms();
                 unsigned int iNumEmpires;
 
-                Assert (iNumTargets > 0);
+                Assert(iNumTargets > 0);
 
                 iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
                 if (iErrCode != OK) {
@@ -223,7 +223,7 @@ if (m_bOwnPost && !m_bRedirection) {
                                 break;
                             default:
                                 bDelete = true;
-                                Assert (false);
+                                Assert(false);
                             }
 
                             if (bDelete) {
@@ -516,55 +516,55 @@ iErrCode = t_pCache->GetTable(
     &pGameEmpireTable
     );
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::LastLogin, &tLastLogin);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Options, &iGameOptions);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Econ, &iEcon);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTruces, &iNumTruces);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTrades, &iNumTrades);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumAlliances, &iNumAlliances);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
@@ -634,43 +634,43 @@ if (bGameStarted) {
 
     iErrCode = GetGameClassVisibleDiplomacy(m_iGameClass, &bVisible);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = DoesGameClassHaveSubjectiveViews (m_iGameClass, &bSubjective);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRUCE, &iMaxNumTruces);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRADE, &iMaxNumTrades);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, ALLIANCE, &iMaxNumAlliances);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = GetGameClassOptions (m_iGameClass, &m_iGameClassOptions);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = GetGameClassDiplomacyLevel (m_iGameClass, &m_iGameClassDip);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -904,7 +904,7 @@ iErrCode = t_pCache->ReadColumns (
     );
 
 if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
@@ -941,7 +941,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -958,7 +958,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -968,25 +968,25 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     // Get empire data
     iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireTable);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameEmpireTable->ReadData(GameEmpireData::LastLogin, &tLastLogin);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Options, &iGameOptions);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -1002,7 +1002,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         iEcon = vTemp.GetInteger();
@@ -1014,7 +1014,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
             &vTemp
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         iMil = vTemp.GetInteger();
@@ -1023,13 +1023,13 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
         iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Econ, &iEcon);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -1041,73 +1041,73 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     GET_SYSTEM_EMPIRE_DATA(strKnownEmpire, iKnownEmpireKey);
     iErrCode = t_pCache->GetTable(strKnownEmpire, &pSystemEmpireDataTable);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Name, &vKnownEmpireName);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::AlienKey, &iAlienKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Wins, &iWins);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Nukes, &iNukes);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Nuked, &iNuked);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Draws, &iDraws);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Ruins, &iRuins);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::CreationTime, &tCreated);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -1266,7 +1266,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         &bIgnore
         );
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -1356,13 +1356,13 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
 iErrCode = DoesGameClassAllowPrivateMessages (m_iGameClass, &bPrivateMessages);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
 iErrCode = GetNumEmpiresInGame(m_iGameClass, m_iGameNumber, &iActiveEmpires);
 if (iErrCode != OK) {
-    Assert (false);
+    Assert(false);
     goto Cleanup;
 }
 
@@ -1396,7 +1396,7 @@ if (iActiveEmpires > 1) {
                 );
 
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 iWar = iTruce = iTrade = iAlliance = iDipTargets = 0;
             } else {
 
@@ -1452,7 +1452,7 @@ if (iActiveEmpires > 1) {
                 );
 
             // Best effort
-            Assert (iErrCode == OK);
+            Assert(iErrCode == OK);
 
             if (iErrCode == OK) {
 
@@ -1597,7 +1597,7 @@ if (iActiveEmpires > 1) {
                     &bIgnore
                     );
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
 
@@ -1605,7 +1605,7 @@ if (iActiveEmpires > 1) {
 
                     iErrCode = GetEmpireName (iKnownEmpireKey, &vSendEmpireName);
                     if (iErrCode != OK) {
-                        Assert (false);
+                        Assert(false);
                         goto Cleanup;
                     }
 

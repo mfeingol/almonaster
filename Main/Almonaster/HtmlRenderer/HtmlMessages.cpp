@@ -544,7 +544,7 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
 
     default:
 
-        Assert (false);
+        Assert(false);
         break;
     }
 

@@ -133,12 +133,12 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
 
     default:
 
-        Assert (false);
+        Assert(false);
         return ERROR_INVALID_ARGUMENT;
     }
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -148,7 +148,7 @@ int GameEngine::SetScoreForPrivilege (Privilege privLevel, float fScore) {
 
     iErrCode = t_pCache->WriteData(SYSTEM_DATA, pszWriteColumn, fScore);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -178,7 +178,7 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
         break;
 
     default:
-        Assert (false);
+        Assert(false);
         return ERROR_INVALID_ARGUMENT;
     }
 
@@ -206,7 +206,7 @@ int GameEngine::ScanEmpiresOnScoreChanges()
     //    if (iErrCode != OK) {
     //        if (iErrCode == ERROR_DATA_NOT_FOUND) {
     //            iErrCode = OK;
-    //        } else Assert (false);
+    //        } else Assert(false);
     //        break;
     //    }
 
@@ -233,7 +233,7 @@ int GameEngine::GetDefaultGameOptions(int iGameClass, GameOptions* pgoOptions)
 {
     int iErrCode;
 
-    Assert (iGameClass != NO_KEY);
+    Assert(iGameClass != NO_KEY);
 
     // iNumUpdatesBeforeGameCloses
     Variant vValue;

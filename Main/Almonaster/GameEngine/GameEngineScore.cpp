@@ -241,7 +241,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     RETURN_ON_ERROR(iErrCode);
 
-    Assert (vNukedKey.GetInteger() != NO_KEY);
+    Assert(vNukedKey.GetInteger() != NO_KEY);
 
     iErrCode = CheckSecretKey (vNukedKey.GetInteger(), vEmpireSecretKey.GetInteger64(), &bValid, NULL, NULL);
     RETURN_ON_ERROR(iErrCode);
@@ -257,7 +257,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     // Parse out empire's name
     int scanf = sscanf (vPlanetName.GetCharPtr(), RUINS_OF, pszNukedName);
-    Assert (scanf == 1);
+    Assert(scanf == 1);
 
     int iNukerAlienKey, iNukedAlienKey;
 
@@ -780,7 +780,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
     int iErrCode = OK;
     int iOptions;
 
-    Assert (iNukerKey != NO_KEY);
+    Assert(iNukerKey != NO_KEY);
 
     char pszMessage [1024 + MAX_FULL_GAME_CLASS_NAME_LENGTH + MAX_EMPIRE_NAME_LENGTH + MAX_EMPIRE_NAME_LENGTH];
 
@@ -827,7 +827,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
         break;
 
     default:
-        Assert (false);
+        Assert(false);
         return ERROR_INVALID_ARGUMENT;
     }
 
@@ -842,7 +842,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 
         if (pscChanges->iFlags & ALMONASTER_NUKER_SCORE_CHANGE) {
 
-            Assert (pscChanges->fAlmonasterNukerChange > 0);
+            Assert(pscChanges->fAlmonasterNukerChange > 0);
 
             sprintf (
                 pszAlmonasterIncrease,
@@ -865,7 +865,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 
             } else {
 
-                Assert (pscChanges->fAlmonasterNukedChange < 0);
+                Assert(pscChanges->fAlmonasterNukedChange < 0);
 
                 sprintf (
                     pszAlmonasterDecrease,
@@ -890,7 +890,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
             
             } else {
 
-                Assert (pscChanges->iBridierNukerRankChange > 0);
+                Assert(pscChanges->iBridierNukerRankChange > 0);
 
                 sprintf (
                     pszBridierIncrease,
@@ -914,7 +914,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
             
             } else {
 
-                Assert (pscChanges->iBridierNukedRankChange < 0);
+                Assert(pscChanges->iBridierNukedRankChange < 0);
 
                 sprintf (
                     pszBridierDecrease,
@@ -934,7 +934,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
         if (pszNukedName == NULL) {
 
             // Otherwise, read it from the database
-            Assert (iNukedKey != NO_KEY);
+            Assert(iNukedKey != NO_KEY);
             iErrCode = GetEmpireName (iNukedKey, pszEmpireName);
             RETURN_ON_ERROR(iErrCode);
             pszNukedName = pszEmpireName;
@@ -989,7 +989,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 
             if (pscChanges->iFlags & ALMONASTER_NUKER_SCORE_CHANGE) {
 
-                Assert (pscChanges->fAlmonasterNukerChange > 0);
+                Assert(pscChanges->fAlmonasterNukerChange > 0);
 
                 sprintf (
                     pszAlmonasterIncrease,
@@ -1012,7 +1012,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 
                 } else {
 
-                    Assert (pscChanges->fAlmonasterNukedChange < 0);
+                    Assert(pscChanges->fAlmonasterNukedChange < 0);
 
                     sprintf (
                         pszAlmonasterDecrease,
@@ -1038,7 +1038,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 
                 } else {
 
-                    Assert (pscChanges->iBridierNukerRankChange > 0);
+                    Assert(pscChanges->iBridierNukerRankChange > 0);
 
                     sprintf (
                         pszBridierIncrease,
@@ -1062,7 +1062,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 
                 } else {
 
-                    Assert (pscChanges->iBridierNukedRankChange < 0);
+                    Assert(pscChanges->iBridierNukedRankChange < 0);
 
                     sprintf (
                         pszBridierDecrease,
@@ -1155,7 +1155,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
     
     default:
 
-        Assert (false);
+        Assert(false);
         return ERROR_INVALID_ARGUMENT;
     };
 
@@ -1310,7 +1310,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback()
     //    }
     //    
     //    if (iErrCode != OK) {
-    //        Assert (false);
+    //        Assert(false);
     //        return iErrCode;
     //    }
     //    

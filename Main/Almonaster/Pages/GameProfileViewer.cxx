@@ -452,7 +452,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     default:
 
-        Assert (false);
+        Assert(false);
         break;
     }
 
@@ -520,7 +520,7 @@ case 2:
     %><input type="hidden" name="ProfilePage" value="2"><%
     %><input type="hidden" name="TargetEmpireKey" value="<% Write (iTargetEmpireKey); %>"><%
 
-    Assert (iTargetEmpireKey != NO_KEY);
+    Assert(iTargetEmpireKey != NO_KEY);
     WriteNukeHistory (iTargetEmpireKey);
 
     }
@@ -572,14 +572,14 @@ case 5:
     %><input type="hidden" name="ProfilePage" value="5"><%
     %><input type="hidden" name="TargetEmpireKey" value="<% Write (iTargetEmpireKey); %>"><%
 
-    Assert (iTargetEmpireKey != NO_KEY);
+    Assert(iTargetEmpireKey != NO_KEY);
     Check(WritePersonalTournaments(iTargetEmpireKey));
 
     break;
 
 default:
 
-    Assert (false);
+    Assert(false);
     break;
 }
 

@@ -781,7 +781,7 @@ bool HtmlRenderer::IsLegalButtonId (ButtonId bidButton) {
 
 bool HtmlRenderer::WasButtonPressed (ButtonId bidButton) {
     
-    Assert (IsLegalButtonId (bidButton));
+    Assert(IsLegalButtonId (bidButton));
     
     if (m_iButtonKey == NULL_THEME) {   
         return m_pHttpRequest->GetForm (ButtonName[bidButton]) != NULL;
@@ -792,7 +792,7 @@ bool HtmlRenderer::WasButtonPressed (ButtonId bidButton) {
 
 void HtmlRenderer::WriteButton (ButtonId bidButton) {
     
-    Assert (IsLegalButtonId (bidButton));
+    Assert(IsLegalButtonId (bidButton));
     
     switch (m_iButtonKey) {
         

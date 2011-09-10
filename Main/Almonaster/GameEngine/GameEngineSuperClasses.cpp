@@ -52,7 +52,7 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
         }
         
         iErrCode = t_pCache->InsertRow(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template, pvSuperClass, (unsigned int*) piKey);
-        Assert (iErrCode == OK);
+        Assert(iErrCode == OK);
     }
 
 Cleanup:

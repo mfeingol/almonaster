@@ -644,14 +644,14 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
         if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
             // Can't assert here because linked planets may not be in map yet
-            // Assert (!(iLink & LINK_X[cpDir]));
+            // Assert(!(iLink & LINK_X[cpDir]));
             pvPlanetData[GameMap::iNorthPlanetKey + cpDir] = NO_KEY;
         }
         else
         {
             RETURN_ON_ERROR(iErrCode);
             
-            Assert (iKey != NO_KEY);
+            Assert(iKey != NO_KEY);
             
             pvPlanetData[GameMap::iNorthPlanetKey + cpDir] = iKey;
 
@@ -693,7 +693,7 @@ int GameEngine::CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
         // Increment some empire statistics
         GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
-        Assert (pWrite == NULL);
+        Assert(pWrite == NULL);
         iErrCode = t_pCache->GetTable(strGameEmpireData, &pWrite);
         RETURN_ON_ERROR(iErrCode);
 
@@ -828,7 +828,7 @@ int GameEngine::InsertPlanetIntoGameEmpireData(int iGameClass, int iGameNumber, 
     //
     int iMinX, iMaxX, iMinY, iMaxY;
 
-    Assert (pEmpireData == NULL);
+    Assert(pEmpireData == NULL);
     iErrCode = t_pCache->GetTable(pszGameEmpireData, &pEmpireData);
     RETURN_ON_ERROR(iErrCode);
     
@@ -955,7 +955,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
         if (pvLink[i].GetInteger() == 0 && iNumPlanetsPerEmpire != 1)
         {
-            Assert (!"Planet has no links");
+            Assert(!"Planet has no links");
         }
 
         GetCoordinates(pvCoord[i].GetCharPtr(), &iX, &iY);
@@ -983,15 +983,15 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
                 }
                 else
                 {
-                    Assert (iKey != NO_KEY);
-                    Assert (!"Existing planet not listed among a planet's neighbours");
+                    Assert(iKey != NO_KEY);
+                    Assert(!"Existing planet not listed among a planet's neighbours");
                 }
                 RETURN_ON_ERROR(iErrCode);
 
                 // Make sure we're not linked to nowhere
                 if (pvLink[i].GetInteger() & LINK_X[cpDir])
                 {
-                    Assert (!"Linked planet does not exist");
+                    Assert(!"Linked planet does not exist");
                 }
             }
             else 
@@ -1004,7 +1004,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
                 if (strcmp (vCoord.GetCharPtr(), pszNewCoord) != 0)
                 {
-                    Assert (!"Planet has wrong coordinates");
+                    Assert(!"Planet has wrong coordinates");
                 }
 
                 if (iHomeWorld == HOMEWORLD && iNumPlanetsPerEmpire > 1)
@@ -1017,7 +1017,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
                         // Make sure there's no link between two homeworlds
                         if (pvLink[i].GetInteger() & LINK_X[cpDir])
                         {
-                            Assert (!"Homeworlds are adjacent");
+                            Assert(!"Homeworlds are adjacent");
                         }
                     }
                 }
@@ -1027,7 +1027,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
         if (iNumMatches == 0 && iNumPlanets != 1)
         {
-            Assert (!"A planet has no neighbours");
+            Assert(!"A planet has no neighbours");
         }
 
     }   // End all planets loop
@@ -1047,7 +1047,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
         {
             if (!htVisited.Contains(piPlanetKey[i]))
             {
-                Assert (!"The map is not a connected graph");
+                Assert(!"The map is not a connected graph");
             }
         }
     }
@@ -1064,7 +1064,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
     
     if (iNumMatches != iNumEmpires)
     {
-        Assert (!"The map does not contain the right number of homeworlds");
+        Assert(!"The map does not contain the right number of homeworlds");
     }
 
     for (i = 0; i < iNumMatches; i ++)
@@ -1079,7 +1079,7 @@ int GameEngine::VerifyMap (int iGameClass, int iGameNumber) {
 
         if ((int) piKey[i] != vTemp.GetInteger())
         {
-            Assert (!"A homeworld does not match its owner's data");
+            Assert(!"A homeworld does not match its owner's data");
         }
     }
 
@@ -1111,7 +1111,7 @@ int GameEngine::DfsTraversePlanets(ICachedTable* pGameMap, unsigned int iPlanetK
             RETURN_ON_ERROR(iErrCode);
 
             if (iNextPlanetKey == NO_KEY) {
-                Assert (!"Linked planet does not exist");
+                Assert(!"Linked planet does not exist");
                 return ERROR_FAILURE;
             }
 
@@ -1403,7 +1403,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                                         bool bIndependence, unsigned int** ppiShipOwnerData)
 {
     int iErrCode;
-    Assert (iTotalNumShips > 0);
+    Assert(iTotalNumShips > 0);
 
     *ppiShipOwnerData = NULL;
 
@@ -1575,19 +1575,19 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                     piShipOwnerData[0] ++;
 
                     // Write owner's key
-                    Assert (iCounter < iSlotsAllocated);
+                    Assert(iCounter < iSlotsAllocated);
                     piShipOwnerData[iCounter] = (i == iNumEmpires) ? INDEPENDENT : pvKey[i].GetInteger();
                     iCounter ++;
 
                     // Write number of ships owner has
-                    Assert (iCounter < iSlotsAllocated);
+                    Assert(iCounter < iSlotsAllocated);
                     piShipOwnerData[iCounter] = iNumDisplayShips;
                     iCounter ++;
 
                     // Start off type count at zero
                     unsigned int iTypeCountIndex = iCounter;
 
-                    Assert (iCounter < iSlotsAllocated);
+                    Assert(iCounter < iSlotsAllocated);
                     piShipOwnerData[iCounter] = 0;
                     iCounter ++;
 
@@ -1599,11 +1599,11 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                             piShipOwnerData[iTypeCountIndex] ++;
 
                             // Add type and count
-                            Assert (iCounter < iSlotsAllocated);
+                            Assert(iCounter < iSlotsAllocated);
                             piShipOwnerData[iCounter] = iType;
                             iCounter ++;
 
-                            Assert (iCounter < iSlotsAllocated);
+                            Assert(iCounter < iSlotsAllocated);
                             piShipOwnerData[iCounter] = piIndex[iType];
                             iCounter ++;
                         }
@@ -1730,7 +1730,7 @@ int GameEngine::SetPlanetMaxPop (int iGameClass, int iGameNumber, int iEmpireKey
     iErrCode = t_pCache->ReadData(strMap, iPlanetKey, GameMap::PopLostToColonies, &vTemp);
     RETURN_ON_ERROR(iErrCode);
     iPopLostToColonies = vTemp.GetInteger();
-    Assert (iPopLostToColonies >= 0);
+    Assert(iPopLostToColonies >= 0);
     
     // Calculate next pop
     int iNewPlanetPop = GetNextPopulation(
@@ -2442,10 +2442,10 @@ int GameEngine::GetPlanetPopulationWithColonyBuilds (unsigned int iGameClass, un
 
     SafeRelease (pTable);
 
-    Assert (iPop >= 0);
-    Assert (iCost >= 0);
+    Assert(iPop >= 0);
+    Assert(iCost >= 0);
     iPop -= iCost;
-    Assert (iPop >= 0);
+    Assert(iPop >= 0);
 
     *piPop = iPop;
 

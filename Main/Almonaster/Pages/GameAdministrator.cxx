@@ -1569,7 +1569,7 @@ if (m_bOwnPost && !m_bRedirection) {
             break;
 
         default:
-            Assert (false);
+            Assert(false);
             break;
         }
     }
@@ -2707,7 +2707,7 @@ case 8:
 
 default:
 
-    Assert (false);
+    Assert(false);
     break;
 }
 

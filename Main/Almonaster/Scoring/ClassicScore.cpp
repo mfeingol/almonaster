@@ -22,7 +22,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
 
     int iErrCode = OK;
 
-    Assert (iEmpireNuker != NO_KEY || iEmpireNuked != NO_KEY);
+    Assert(iEmpireNuker != NO_KEY || iEmpireNuked != NO_KEY);
 
     GET_SYSTEM_EMPIRE_DATA(strNuker, iEmpireNuker);
     GET_SYSTEM_EMPIRE_DATA(strNuked, iEmpireNuked);
@@ -101,7 +101,7 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -122,7 +122,7 @@ int ClassicScore::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -144,7 +144,7 @@ int ClassicScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 

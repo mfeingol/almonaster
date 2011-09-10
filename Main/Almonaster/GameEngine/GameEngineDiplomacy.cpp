@@ -139,7 +139,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
         iErrCode = pTable->GetFirstKey(GameEmpireDiplomacy::ReferenceEmpireKey, iEmpireKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
-            Assert (piWeOffer == NULL && piCurrent == NULL);
+            Assert(piWeOffer == NULL && piCurrent == NULL);
             if (pbMet)
             {
                 *pbMet = false;
@@ -350,7 +350,7 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
 
     default:
         
-        Assert (false);
+        Assert(false);
         break;
     }
 
@@ -434,7 +434,7 @@ int GameEngine::AddDiplomaticOption (int iGameClass, int iGameNumber, int iTarge
             iErrCode = t_pCache->ReadData(pszEmpireData, pszEmpireDataColumn, &vValue);
             RETURN_ON_ERROR(iErrCode);
 
-            Assert (vValue.GetInteger() >= 0);
+            Assert(vValue.GetInteger() >= 0);
             
             if (vValue.GetInteger() < iMaxCount) {
             
@@ -474,7 +474,7 @@ int GameEngine::AddDiplomaticOption (int iGameClass, int iGameNumber, int iTarge
                                 &vValue
                                 );
 
-                            Assert (iErrCode == OK && vValue.GetInteger() > 0);
+                            Assert(iErrCode == OK && vValue.GetInteger() > 0);
 #endif
                             piDipOptKey[(*piNumOptions) ++] = ALLIANCE;
                         }
@@ -645,7 +645,7 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                         
                     } else {
                         
-                        Assert (iDipOffer == ACCEPT_SURRENDER);
+                        Assert(iDipOffer == ACCEPT_SURRENDER);
                         bUpdate = true;
                     }
                 }
@@ -689,7 +689,7 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                     return iErrCode;
                 }
 
-                Assert (vCount.GetInteger() >= 0);
+                Assert(vCount.GetInteger() >= 0);
                 
                 bLimited = vCount.GetInteger() >= iMax;
                 
@@ -725,7 +725,7 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                                 &vCount
                                 );
                             
-                            Assert (iErrCode == OK && vCount.GetInteger() > 0);
+                            Assert(iErrCode == OK && vCount.GetInteger() > 0);
 #endif
                             bLimited = false;
                         }
@@ -744,7 +744,7 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                 
             case TRUCE:
                 
-                Assert (GameAllowsDiplomacy (iDipLevel, TRUCE));
+                Assert(GameAllowsDiplomacy (iDipLevel, TRUCE));
 
                 switch (vStatus.GetInteger()) {
                     
@@ -769,7 +769,7 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                 
             case TRADE:
 
-                Assert (GameAllowsDiplomacy (iDipLevel, TRADE));
+                Assert(GameAllowsDiplomacy (iDipLevel, TRADE));
                 
                 switch (vStatus.GetInteger()) {
                     
@@ -822,7 +822,7 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                 break;
                 
             default:
-                Assert (false);
+                Assert(false);
                 break;
             }
         }
@@ -1198,7 +1198,7 @@ int GameEngine::DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int i
 
 int GameEngine::BuildDuplicateList(int* piDuplicateKeys, unsigned int iNumDuplicates, String* pstrDuplicateList)
 {
-    Assert (iNumDuplicates > 0);
+    Assert(iNumDuplicates > 0);
 
     // Build list
     int iErrCode;
@@ -1465,9 +1465,9 @@ int GameEngine::CheckTruceTradeAllianceCounts (int iGameClass, int iGameNumber, 
 
     RETURN_ON_ERROR(iErrCode);
     
-    Assert (iNumTruces == iNumRealTruces);
-    Assert (iNumTrades == iNumRealTrades);
-    Assert (iNumAlliances == iNumRealAlliances);
+    Assert(iNumTruces == iNumRealTruces);
+    Assert(iNumTrades == iNumRealTrades);
+    Assert(iNumAlliances == iNumRealAlliances);
         
     if (iNumTruces != iNumRealTruces ||
         iNumTrades != iNumRealTrades ||
@@ -1545,7 +1545,7 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatusNextUpdate (int iGameClass, int i
             break;
 
         default:
-            Assert (false);
+            Assert(false);
             break;
         }
     }
@@ -1611,7 +1611,7 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber
             break;
 
         default:
-            Assert (false);
+            Assert(false);
             break;
         }
     }
@@ -1690,7 +1690,7 @@ int GameEngine::GetEmpiresAtDiplomaticStatus (int iGameClass, int iGameNumber, i
             break;
 
         default:
-            Assert (false);
+            Assert(false);
             break;
         }
     }

@@ -421,7 +421,7 @@ void HtmlRenderer::WriteServerRules() {
                         m_siNumGamingEmpires = iNumGamingEmpires;
                     }
 
-                    else Assert (false);
+                    else Assert(false);
 
                 } else {
 

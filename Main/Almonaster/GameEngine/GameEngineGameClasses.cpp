@@ -302,7 +302,7 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
 
     unsigned int iGameClass, iTournamentKey = NO_KEY;
 
-    Assert (iCreator != TOURNAMENT);
+    Assert(iCreator != TOURNAMENT);
 
     // Check name length
     if (String::StrLen (pvGameClassData[SystemGameClassData::iName].GetCharPtr()) > MAX_GAME_CLASS_NAME_LENGTH)

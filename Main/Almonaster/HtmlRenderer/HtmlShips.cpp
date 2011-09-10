@@ -111,7 +111,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
     iErrCode = GetGameClassOptions (m_iGameClass, &gameInfo.iGameClassOptions);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     gameInfo.fMaintRatio = fMaintRatio;
@@ -120,7 +120,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
     GameConfiguration gcConfig;
     iErrCode = GetGameConfiguration (&gcConfig);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -128,7 +128,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
         iErrCode = t_pCache->GetTable(pszShips, &pRead);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -142,13 +142,13 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
         SafeRelease (pRead);
         
         if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         iErrCode = t_pCache->GetTable(pszFleets, &pRead);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -162,7 +162,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
         SafeRelease (pRead);
         
         if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -186,7 +186,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             );
         
         if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -199,7 +199,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             );
         
         if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -263,7 +263,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                     );
                 
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
                 
@@ -313,7 +313,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             iErrCode = t_pCache->ReadData(pszShips, piShipKey[i], GameEmpireShips::FleetKey, &vTemp);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             iFleetKey = vTemp.GetInteger();
@@ -346,7 +346,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                 iErrCode = t_pCache->ReadRow (pszShips, piShipKey[i], &pvShipData);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
 
@@ -372,7 +372,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                 if (shipInfo.bBuilding && !bReadLocations) {
 
-                    Assert (pblLocations == NULL);
+                    Assert(pblLocations == NULL);
 
                     iErrCode = GetBuildLocations (
                         m_iGameClass,
@@ -384,7 +384,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                         );
 
                     if (iErrCode != OK) {
-                        Assert (false);
+                        Assert(false);
                         goto Cleanup;
                     }
 
@@ -409,7 +409,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 pvShipData = NULL;
                 
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
                 
@@ -464,7 +464,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             iErrCode = t_pCache->ReadRow (pszFleets, piFleetKey[i], &pvFleetData);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
@@ -480,10 +480,10 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                 );
             
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
-            Assert (iNumOrders > 1);
+            Assert(iNumOrders > 1);
 
             // Gather information
             bCollapsed = (pvFleetData[GameEmpireFleets::iFlags].GetInteger() & FLEET_COLLAPSED_DISPLAY) != 0;
@@ -496,11 +496,11 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             }
 
             if (piNumShipsInFleet == NULL) {
-                Assert (iNumShipsInFleet == 0);
+                Assert(iNumShipsInFleet == 0);
             } else {
-                Assert (piNumShipsInFleet[i] == iNumShipsInFleet);
+                Assert(piNumShipsInFleet[i] == iNumShipsInFleet);
             }
-            Assert (iNumShipsInFleet == (unsigned int) pvFleetData[GameEmpireFleets::iNumShips].GetInteger());
+            Assert(iNumShipsInFleet == (unsigned int) pvFleetData[GameEmpireFleets::iNumShips].GetInteger());
 #endif
             if (piNumShipsInFleet == NULL) {
                 iNumShipsInFleet = 0;
@@ -534,7 +534,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             
             iErrCode = HTMLFilter (pvFleetData[GameEmpireFleets::iName].GetCharPtr(), &strHtml, 0, false);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             
@@ -579,7 +579,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             // Determine next and after next strength
             if (iNumShipsInFleet > 0) {
 
-                Assert (pRead == NULL);
+                Assert(pRead == NULL);
                 iErrCode = t_pCache->GetTable(pszShips, &pRead);
                 if (iErrCode == OK) {
 
@@ -621,7 +621,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                                 break;
                             }
 
-                            Assert (iType < countof (piShipsByType));
+                            Assert(iType < countof (piShipsByType));
                             piShipsByType [iType] ++;
                         }
                     }
@@ -631,7 +631,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             }
 
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 fNextStrength = fAfterMaxStrength = fCurrentStrength;
             }
 
@@ -826,7 +826,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                         iErrCode = t_pCache->ReadRow (pszShips, piShipKey[iIndex], &pvShipData);
                         if (iErrCode != OK) {
-                            Assert (false);
+                            Assert(false);
                             goto Cleanup;
                         }
 
@@ -852,7 +852,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
 
                         if (shipInfo.bBuilding && !bReadLocations) {
 
-                            Assert (pblLocations == NULL);
+                            Assert(pblLocations == NULL);
 
                             iErrCode = GetBuildLocations (
                                 m_iGameClass,
@@ -864,7 +864,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                                 );
 
                             if (iErrCode != OK) {
-                                Assert (false);
+                                Assert(false);
                                 goto Cleanup;
                             }
 
@@ -889,7 +889,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
                         pvShipData = NULL;
                         
                         if (iErrCode != OK) {
-                            Assert (false);
+                            Assert(false);
                             goto Cleanup;
                         }
                         
@@ -978,7 +978,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
     // Danger!
     iErrCode = GetNumShips (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iRealNumber);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     
@@ -1095,7 +1095,7 @@ int HtmlRenderer::HandleShipMenuSubmissions() {
     // Danger!
     iErrCode = GetNumFleets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iRealNumber);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     
@@ -1382,7 +1382,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
         goto Cleanup;
     }
     
-    Assert (iNumOrders > 1);
+    Assert(iNumOrders > 1);
     
     OutputText ("<select name=\"ShipOrder");
     m_pHttpResponse->WriteText (iIndex);

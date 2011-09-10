@@ -136,10 +136,10 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
     {
         iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::PopLostToColonies, &vPopLostToColonies);
         RETURN_ON_ERROR(iErrCode);
-        Assert (vPopLostToColonies.GetInteger() >= 0);
+        Assert(vPopLostToColonies.GetInteger() >= 0);
 
         int iPopAvailable = vPop.GetInteger() - vPopLostToColonies.GetInteger();
-        Assert (iPopAvailable >= 0);
+        Assert(iPopAvailable >= 0);
 
         iPopLostToColoniesPerShip = GetColonyPopulationBuildCost(
             vShipBehavior.GetInteger(), 
@@ -148,7 +148,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
             fBR
             );
 
-        Assert (iPopLostToColoniesPerShip >= 0);
+        Assert(iPopLostToColoniesPerShip >= 0);
 
         if (iPopLostToColoniesPerShip * iNumShips > (unsigned int)iPopAvailable) {
 
@@ -189,7 +189,7 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         RETURN_ON_ERROR(iErrCode);
 
         iNumAvailableShips = vTemp.GetInteger() - iNumAvailableShips;
-        Assert (iNumAvailableShips >= 0);
+        Assert(iNumAvailableShips >= 0);
 
         if (iNumShips > iNumAvailableShips) {
 
@@ -627,13 +627,13 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
         unsigned int *piFleetKey = NULL, iNumFleetsOnPlanet, j;
 
         // Add self, no fleet
-        Assert (iNumLocations < iNumLocationsAllocated);
+        Assert(iNumLocations < iNumLocationsAllocated);
         pblBuildLocation [iNumLocations].iPlanetKey = piBuilderKey[i];
         pblBuildLocation [iNumLocations].iFleetKey = NO_KEY;
         iNumLocations ++;
 
         // Add self, new fleet
-        Assert (iNumLocations < iNumLocationsAllocated);
+        Assert(iNumLocations < iNumLocationsAllocated);
         pblBuildLocation [iNumLocations].iPlanetKey = piBuilderKey[i];
         pblBuildLocation [iNumLocations].iFleetKey = FLEET_NEWFLEETKEY;
         iNumLocations ++;
@@ -650,13 +650,13 @@ int GameEngine::GetBuildLocations (unsigned int iGameClass, int iGameNumber, uns
             {
                 RETURN_ON_ERROR(iErrCode);
 
-                Assert (iNumFleetsOnPlanet > 0);
+                Assert(iNumFleetsOnPlanet > 0);
                 iRemainingFleets -= iNumFleetsOnPlanet;
-                Assert (iRemainingFleets < iNumFleets);
+                Assert(iRemainingFleets < iNumFleets);
 
                 for (j = 0; j < iNumFleetsOnPlanet; j ++)
                 {
-                    Assert (iNumLocations < iNumLocationsAllocated);
+                    Assert(iNumLocations < iNumLocationsAllocated);
                     pblBuildLocation [iNumLocations].iPlanetKey = piBuilderKey[i];
                     pblBuildLocation [iNumLocations].iFleetKey = piFleetKey[j];
                     iNumLocations ++;

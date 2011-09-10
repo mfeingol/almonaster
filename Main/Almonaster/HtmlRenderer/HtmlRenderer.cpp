@@ -896,7 +896,7 @@ int HtmlRenderer::GetGoodBadResourceLimits (int iGameClass, int iGameNumber, int
     
     int iErrCode = GetGameAveragePlanetResources (iGameClass, iGameNumber, &iAg, &iMin, &iFuel);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     
@@ -1117,13 +1117,13 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
 
         iErrCode = GetNewSessionId (&m_i64SessionId);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
         iErrCode = EndResetEmpireSessionId (m_iEmpireKey);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -1154,7 +1154,7 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
             // Generate a new session id
             iErrCode = GetNewSessionId (&m_i64SessionId);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 return iErrCode;
             }
             
@@ -1197,7 +1197,7 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
     IHttpForm* pHttpForm;
 
     if (iTournamentKey != NO_KEY) {
-        Assert (!bPersonalGame);
+        Assert(!bPersonalGame);
     }
 
     // Conserve last settings variables
@@ -3168,11 +3168,11 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
     }
 
     // Bridier sanity
-    Assert (pvSubmitArray[SystemGameClassData::iMaxNumEmpires].GetInteger() == 2 || 
+    Assert(pvSubmitArray[SystemGameClassData::iMaxNumEmpires].GetInteger() == 2 || 
         !(goOptions.iOptions & GAME_COUNT_FOR_BRIDIER));
 
     // Spectator sanity
-    Assert (
+    Assert(
         ((pvSubmitArray[SystemGameClassData::iOptions].GetInteger() & EXPOSED_SPECTATORS) == 
         EXPOSED_SPECTATORS) || 
         !(goOptions.iOptions & GAME_ALLOW_SPECTATORS));
@@ -3188,14 +3188,14 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
         
         // Halt the gameclass
         int iErrCode2 = HaltGameClass (*piGameClass);
-        Assert (iErrCode2 == OK);
+        Assert(iErrCode2 == OK);
         
     } else {
         
         // Delete the gameclass
         bool bDeleted;
         int iErrCode2 = DeleteGameClass (*piGameClass, &bDeleted);
-        Assert (iErrCode2 == OK);
+        Assert(iErrCode2 == OK);
     }
 
 Cleanup:
@@ -4809,7 +4809,7 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
     m_pHttpResponse->WriteText (iNumActiveEmpires);
     OutputText ("</strong> (");
     
-    Assert (iNumActiveEmpires > 0);
+    Assert(iNumActiveEmpires > 0);
     
     for (i = 0; i < iNumActiveEmpires - 1; i ++) {
         m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
@@ -5222,7 +5222,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
         );
     
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto End;
     }
     
@@ -5245,7 +5245,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
             iNumOwnerShips = piOwnerData [iBase + 1];
             iNumOwnerTechs = piOwnerData [iBase + 2];
             
-            Assert (iNumOwnerTechs > 0);
+            Assert(iNumOwnerTechs > 0);
             
             if (iOwnerKey == m_iEmpireKey) {
                 *pstrAltTag += m_vEmpireName.GetCharPtr();
@@ -5259,7 +5259,7 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
                 
                 iErrCode = GetEmpireName (iOwnerKey, &vEmpireName);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     continue;
                 }
                 
@@ -5273,8 +5273,8 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
                 iType = piOwnerData [iBase + 3 + j * 2];
                 iNumShips = piOwnerData [iBase + 4 + j * 2];
                 
-                Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP);
-                Assert (iNumShips > 0);
+                Assert(iType >= FIRST_SHIP && iType <= LAST_SHIP);
+                Assert(iNumShips > 0);
                 
                 if (j > 0) {
                     *pstrAltTag += ", ";
@@ -5764,7 +5764,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
                     if (iErrCode == ERROR_DATA_NOT_FOUND) {
                         break;
                     }
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
 
@@ -5808,7 +5808,7 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
                     break;
 
                 default:
-                    Assert (false);
+                    Assert(false);
                     break;
                 }
 

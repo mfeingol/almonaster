@@ -53,7 +53,7 @@ int AlmonasterScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, 
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -67,7 +67,7 @@ int AlmonasterScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, 
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -88,39 +88,39 @@ int AlmonasterScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, 
 
     iErrCode = t_pCache->Increment(strNuked, iEmpireNuked, SystemEmpireData::AlmonasterScore, -fDecrease);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
     iErrCode = t_pCache->Increment(strNuker, iEmpireNuker, SystemEmpireData::AlmonasterScore, fIncrease);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
     // Increment significance
     iErrCode = t_pCache->Increment(strNuker, iEmpireNuker, SystemEmpireData::AlmonasterScoreSignificance, 1);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
     iErrCode = t_pCache->Increment(strNuked, iEmpireNuked, SystemEmpireData::AlmonasterScoreSignificance, 1);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
     // Adjust privileges after score changes
     iErrCode = m_pGameEngine->CalculatePrivilegeLevel (iEmpireNuker);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
     iErrCode = m_pGameEngine->CalculatePrivilegeLevel (iEmpireNuked);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -171,7 +171,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -187,7 +187,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -212,7 +212,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -224,7 +224,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -237,7 +237,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
     // This doesn't really belong here, but it's a convenient place to do it for perf
     iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -253,7 +253,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -265,7 +265,7 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -303,7 +303,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -327,7 +327,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
             goto Cleanup;
         }
 
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -355,7 +355,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
                         continue;
                     }
 
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
 
@@ -375,14 +375,14 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
                         );
                 
                     if (iErrCode != OK) {
-                        Assert (false);
+                        Assert(false);
                         goto Cleanup;
                     }
                 }
             }
 
             // Handle all necessary processing
-            Assert (pvEmpireKey != NULL);
+            Assert(pvEmpireKey != NULL);
 
             iErrCode = HandleUncolonizedHomeWorldOnEndGame (
                 iGameClass,
@@ -396,7 +396,7 @@ int AlmonasterScore::OnGameEnd (int iGameClass, int iGameNumber) {
                 );
 
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
         }
@@ -446,7 +446,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
 
     iErrCode = m_pGameEngine->GetEmpireProperty(iEmpireKey, SystemEmpireData::AlmonasterScore, &vScore);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -457,7 +457,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -470,13 +470,13 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
         }
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
         iErrCode = t_pCache->ReadData(pszEmpires, iKey, GameEmpires::EmpireKey, &vKey);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -486,7 +486,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
             &vEmpScore
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -496,7 +496,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
             &vEmpSignificance
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -510,14 +510,14 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
             &fNukerIncrease,
             &fNukedDecrease
             );
-        Assert (fNukedDecrease >= (float) 0.0);
+        Assert(fNukedDecrease >= (float) 0.0);
 
         if (fNukedDecrease > fMaxNukedDecrease) {
             fMaxNukedDecrease = fNukedDecrease;
         }
     }
 
-    Assert (fMaxNukedDecrease >= 0);
+    Assert(fMaxNukedDecrease >= 0);
 
     if (fMaxNukedDecrease > 0) {
 
@@ -530,7 +530,7 @@ int AlmonasterScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
     }
@@ -543,12 +543,12 @@ void AlmonasterScore::GetAlmonasterScoreChanges (float fNukerScore, float fNuked
                                                  int iNumNukedAllies, float* pfNukerIncrease, 
                                                  float* pfNukedDecrease) {
 
-    Assert (fNukerScore >= ALMONASTER_MIN_SCORE && fNukedScore <= ALMONASTER_MAX_SCORE);
-    Assert (fNukedScore >= ALMONASTER_MIN_SCORE && fNukedScore <= ALMONASTER_MAX_SCORE);
-    Assert (iNukerSignificance >= 0);
-    Assert (iNukedSignificance >= 0);
-    Assert (iNumNukerAllies >= 0);
-    Assert (iNumNukedAllies >= 0);
+    Assert(fNukerScore >= ALMONASTER_MIN_SCORE && fNukedScore <= ALMONASTER_MAX_SCORE);
+    Assert(fNukedScore >= ALMONASTER_MIN_SCORE && fNukedScore <= ALMONASTER_MAX_SCORE);
+    Assert(iNukerSignificance >= 0);
+    Assert(iNukedSignificance >= 0);
+    Assert(iNumNukerAllies >= 0);
+    Assert(iNumNukedAllies >= 0);
 
     // Prevent division by zero
     iNumNukedAllies += 2;
@@ -613,7 +613,7 @@ void AlmonasterScore::GetAlmonasterScoreChanges (float fNukerScore, float fNuked
         *pfNukerIncrease = fNukerScore - ALMONASTER_MAX_SCORE;
     }
 
-    Assert (*pfNukedDecrease >= (float) 0.0 && *pfNukerIncrease > (float) 0.0);
+    Assert(*pfNukedDecrease >= (float) 0.0 && *pfNukerIncrease > (float) 0.0);
 }
 
 int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int iEmpireKey,
@@ -638,7 +638,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -652,7 +652,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -677,7 +677,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
     }
     
     else {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -698,7 +698,7 @@ int AlmonasterScore::GetRelevantStatistics (int iGameClass, int iGameNumber, int
     }
 
     else {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -719,37 +719,37 @@ int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, in
     // Get loser's score, significance and allies
     iErrCode = t_pCache->GetTable(pszGameMap, &pGameMap);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderAlmonasterScore, pfScore);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderAlmonasterSignificance, piSignificance);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderNumAllies, piNumAllies);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::HomeWorld, piLoserKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::SurrenderEmpireSecretKey, pi64EmpireSecretKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -757,7 +757,7 @@ int AlmonasterScore::GetRelevantStatisticsFromPlanet (const char* pszGameMap, in
         
         iErrCode = pGameMap->ReadData(iPlanetKey, GameMap::Name, pvPlanetName);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -809,7 +809,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -844,7 +844,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -856,7 +856,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -864,7 +864,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
     // If empire is valid, decrement its score
     iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -888,7 +888,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         float fNewScore = vTemp.GetFloat();
@@ -906,7 +906,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -992,7 +992,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
 
         // Parse out nuked empire's name
         int scanf = sscanf (vPlanetName.GetCharPtr(), RUINS_OF, pszNukedName);
-        Assert (scanf == 1);
+        Assert(scanf == 1);
         scChanges.pszNukedName = pszNukedName;
 
         int iNukerAlienKey, iNukedAlienKey;
@@ -1000,7 +1000,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         // Get nuker alien key
         iErrCode = t_pCache->ReadData(strNukerEmpire, iNukerEmpireKey, SystemEmpireData::AlienKey, &vTemp);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         iNukerAlienKey = vTemp.GetInteger();
@@ -1016,7 +1016,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
 
             iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);            
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             iNukedAlienKey = vTemp.GetInteger();
@@ -1035,14 +1035,14 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
                 );
 
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
             // Send victory sneer
             iErrCode = m_pGameEngine->SendVictorySneer (iNukerEmpireKey, vNukerName.GetCharPtr(), iLoserKey);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
         }
@@ -1053,7 +1053,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         // We ignore scoring changes when accounting this nuke
         iErrCode = classicScore.OnNuke (iGameClass, iGameNumber, iNukerEmpireKey, NO_KEY, &scChanges);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -1071,7 +1071,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -1089,7 +1089,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -1097,7 +1097,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         int iNumUpdates;
         iErrCode = m_pGameEngine->GetNumUpdates (iGameClass, iGameNumber, &iNumUpdates);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -1105,7 +1105,7 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             iGameClass, iGameNumber, iNukerEmpireKey, iLoserKey, iNumUpdates, EMPIRE_SURRENDERED, pszGameClassName, &scChanges);
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }

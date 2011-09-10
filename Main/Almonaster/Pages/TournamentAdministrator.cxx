@@ -1286,7 +1286,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
         default:
 
-            Assert (false);
+            Assert(false);
             break;
         }
     }
@@ -1315,7 +1315,7 @@ case 0:
 
         WriteTournamentAdministrator (iOwnerKey);
         if (iOwnerKey != SYSTEM) {
-            Assert (iOwnerKey == m_iEmpireKey);
+            Assert(iOwnerKey == m_iEmpireKey);
             Check(WritePersonalTournaments());
         }
         break;
@@ -1633,7 +1633,7 @@ case 7:
                         }
                     }
 
-                    Assert (j < iNumTeams);
+                    Assert(j < iNumTeams);
                 }
 
                 %></td><%
@@ -2056,7 +2056,7 @@ case 17:
 
     default:
 
-        Assert (false);
+        Assert(false);
         break;
     }
 

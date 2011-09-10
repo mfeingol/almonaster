@@ -420,7 +420,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
 
         if (iNumRows > 0)
         {
-            Assert (iNumRows == 1);
+            Assert(iNumRows == 1);
 
             iErrCode = GetBridierScore (iEmpireKey, &iEmpireRank, &iEmpireIndex);
             RETURN_ON_ERROR(iErrCode);
@@ -664,7 +664,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             // Check session id match
             if (iSecOptions & GAME_SECURITY_CHECK_SESSIONID) {
 
-                Assert (i64SessionId != NO_SESSION_ID);
+                Assert(i64SessionId != NO_SESSION_ID);
                 
                 // Fault in session id
                 if (i64EmpireSessionId == NO_SESSION_ID) {
@@ -682,7 +682,7 @@ int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey
             // Check ip address
             if (iSecOptions & GAME_SECURITY_CHECK_IPADDRESS) {
 
-                Assert (pszIPAddress != NULL);
+                Assert(pszIPAddress != NULL);
                 
                 // Fault in ip address
                 if (vEmpireIPAddress.GetType() != V_STRING) {

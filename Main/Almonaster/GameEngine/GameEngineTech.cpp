@@ -125,17 +125,17 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     // Add tech to developed field
     iErrCode = t_pCache->WriteOr(strEmpireData, GameEmpireData::TechDevs, TECH_BITS[iTechKey]);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     // Delete tech from undeveloped field
     iErrCode = t_pCache->WriteAnd(strEmpireData, GameEmpireData::TechUndevs, ~TECH_BITS[iTechKey]);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
 
         iErrCode2 = t_pCache->WriteAnd(strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
-        Assert (iErrCode2 == OK);
+        Assert(iErrCode2 == OK);
 
         goto Cleanup;
     }
@@ -143,13 +143,13 @@ int GameEngine::RegisterNewTechDevelopment (int iGameClass, int iGameNumber, int
     // Subtract one from number of available techs to develop
     iErrCode = t_pCache->Increment(strEmpireData, GameEmpireData::NumAvailableTechUndevs, -1);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
 
         iErrCode2 = t_pCache->WriteAnd(strEmpireData, GameEmpireData::TechDevs, ~TECH_BITS[iTechKey]);
-        Assert (iErrCode2 == OK);
+        Assert(iErrCode2 == OK);
 
         iErrCode2 = t_pCache->WriteOr(strEmpireData, GameEmpireData::TechUndevs, TECH_BITS[iTechKey]);
-        Assert (iErrCode2 == OK);
+        Assert(iErrCode2 == OK);
 
         goto Cleanup;
     }
@@ -191,7 +191,7 @@ int GameEngine::GetDefaultEmpireShipName (int iEmpireKey, int iTechKey, Variant*
 int GameEngine::SetDefaultEmpireShipName (int iEmpireKey, int iTechKey, const char* pszDefaultShipName) {
 
     if (iTechKey < 0 || iTechKey >= NUM_SHIP_TYPES) {
-        Assert (false);
+        Assert(false);
         return ERROR_WRONG_TECHNOLOGY;
     }
 

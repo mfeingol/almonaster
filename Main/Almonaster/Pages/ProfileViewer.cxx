@@ -520,7 +520,7 @@ SearchResults:
             break;
 
         default:
-            Assert (false);
+            Assert(false);
         }
     }
 } 
@@ -547,7 +547,7 @@ case 1:
 
     %><input type="hidden" name="ProfileViewerPage" value="1"><%
 
-    Assert (piSearchEmpireKey != NULL);
+    Assert(piSearchEmpireKey != NULL);
 
     RenderSearchResults (
         sd,
@@ -608,7 +608,7 @@ case 5:
 
     %><input type="hidden" name="ProfileViewerPage" value="5"><%
 
-    Assert (iTargetEmpireKey != NO_KEY);
+    Assert(iTargetEmpireKey != NO_KEY);
     WriteNukeHistory (iTargetEmpireKey);
 
     }
@@ -645,13 +645,13 @@ case 7:
 
     %><input type="hidden" name="ProfileViewerPage" value="7"><%
 
-    Assert (iTargetEmpireKey != NO_KEY);
+    Assert(iTargetEmpireKey != NO_KEY);
     Check(WritePersonalTournaments(iTargetEmpireKey));
 
     break;
 
 default:
-    Assert (false);
+    Assert(false);
 }
 
 CloseSystemPage();

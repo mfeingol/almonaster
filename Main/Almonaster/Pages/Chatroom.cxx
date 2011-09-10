@@ -136,7 +136,7 @@ if (iInChatroom == CHATROOM_OUT) {
 
     unsigned int iNumSpeakers, iNumMessages;
 
-    Assert (!bBroadcast || iInChatroom == CHATROOM_IN);
+    Assert(!bBroadcast || iInChatroom == CHATROOM_IN);
 
     // Get speaket list
     iErrCode = pChatroom->GetSpeakers (&pcsSpeaker, &iNumSpeakers);

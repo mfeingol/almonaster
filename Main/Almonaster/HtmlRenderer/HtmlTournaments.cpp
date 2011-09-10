@@ -931,7 +931,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
                         goto Cleanup;
                     }
 
-                    Assert (iTotalEmpires < iMaxNumEmpires);
+                    Assert(iTotalEmpires < iMaxNumEmpires);
 
                     piJoinedKey [iTotalEmpires] = pvEmpireKey[j].GetInteger();
                     piJoinedTeamKey [iTotalEmpires] = pvTeamEmpireKey[j].GetInteger();
@@ -966,7 +966,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
                     goto Cleanup;
                 }
 
-                Assert (iTotalEmpires < iMaxNumEmpires);
+                Assert(iTotalEmpires < iMaxNumEmpires);
 
                 piJoinedKey[iTotalEmpires] = pvEmpireKey[i].GetInteger();
                 piJoinedTeamKey[iTotalEmpires] = pvTeamEmpireKey[j].GetInteger();
@@ -1068,11 +1068,11 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
             if (piJoinedTeamKey[i] != iCurrentTeam) {
 
                 if (paTeam [iCountedTeams].piEmpireKey == NULL) {
-                    Assert (paTeam [iCountedTeams].iNumEmpires == 0);
+                    Assert(paTeam [iCountedTeams].iNumEmpires == 0);
                     paTeam [iCountedTeams].piEmpireKey = piJoinedKey + i;
                 }
 
-                Assert (iCountedTeams < iNumTeams);
+                Assert(iCountedTeams < iNumTeams);
                 paTeam [iCountedTeams].iNumEmpires ++;
 
                 iCountedTeams ++;
@@ -1080,13 +1080,13 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
             
             } else {
 
-                Assert (iCountedTeams <= iNumTeams);
-                Assert (paTeam [iCountedTeams - 1].piEmpireKey != NULL);
+                Assert(iCountedTeams <= iNumTeams);
+                Assert(paTeam [iCountedTeams - 1].piEmpireKey != NULL);
                 paTeam [iCountedTeams - 1].iNumEmpires ++;
             }
         }
 
-        Assert (iCountedTeams == iNumTeams);
+        Assert(iCountedTeams == iNumTeams);
 
         goOptions.iNumPrearrangedTeams = iNumTeams;
         goOptions.paPrearrangedTeam = paTeam;

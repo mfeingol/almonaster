@@ -33,7 +33,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
     // Get empire's preferences
     iErrCode = GetEmpirePlanetIcons (iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -49,7 +49,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         );
     
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -89,11 +89,11 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         );
 
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
-    Assert (iNumPlanets > 0);
+    Assert(iNumPlanets > 0);
 
     // Put all planets onto the grid
     for (i = 0; i < iNumPlanets; i ++) {
@@ -105,24 +105,24 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
 
         iErrCode = GetPlanetCoordinates (iGameClass, iGameNumber, iPlanetKey, &iX, &iY);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Owner, &vValue);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
-        Assert (iX >= iMapMinX && iX <= iMapMaxX);
-        Assert (iY >= iMapMinY && iY <= iMapMaxY);
+        Assert(iX >= iMapMinX && iX <= iMapMaxX);
+        Assert(iY >= iMapMinY && iY <= iMapMaxY);
 
         unsigned int iIndexX = iX - iMapMinX;
         unsigned int iIndexY = iMapMaxY - iY;
 
-        Assert (iIndexX < iNumHorz);
-        Assert (iIndexY < iNumVert);
+        Assert(iIndexX < iNumHorz);
+        Assert(iIndexY < iNumVert);
 
         ppMiniMap[iIndexX][iIndexY].iOwnerKey = vValue.GetInteger();
         ppMiniMap[iIndexX][iIndexY].iPlanetKey = iPlanetKey;
@@ -136,7 +136,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
 
             iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Annihilated, &vValue);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
@@ -156,7 +156,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
 
             iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienKey, &vValue);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 

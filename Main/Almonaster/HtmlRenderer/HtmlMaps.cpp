@@ -50,7 +50,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     bool bLinkNorth, bLinkEast, bLinkSouth, bLinkWest, bVisible, bIndependence, bSensitive, bMapColoring, 
         bShipColoring, bHighlightShips;
     
-    Assert (!(bSpectators && bAdmin));
+    Assert(!(bSpectators && bAdmin));
 
     if (!bAdmin && !bSpectators) {
 
@@ -73,7 +73,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -103,14 +103,14 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 );
             
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             
             pvPlanetKey = pvEasyWayOut;
             piProxyKey = piEasyProxyKeys;
             
-            Assert (iNumPlanets > 0);
+            Assert(iNumPlanets > 0);
             
         } else {
             
@@ -124,11 +124,11 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 );
             
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             
-            Assert (iNumPlanets > 0);
+            Assert(iNumPlanets > 0);
             
             iMinX = iMapMinX;
             iMaxX = iMapMaxX; 
@@ -157,13 +157,13 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
         iErrCode = t_pCache->GetAllKeys (strGameMap, &piPlanetKey, &iNumPlanets);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -176,7 +176,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     // Partial map menus
     if (pPartialMapInfo != NULL) {
 
-        Assert (!bSpectators);
+        Assert(!bSpectators);
         
         if (!bPartialMapShortcut) {
             
@@ -197,7 +197,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                     );
                 
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
             }
@@ -205,13 +205,13 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             if (pPartialMapInfo->iXRadius != PARTIAL_MAP_UNLIMITED_RADIUS) {
                 iMinX = iCenterX - pPartialMapInfo->iXRadius;
                 iMaxX = iCenterX + pPartialMapInfo->iXRadius;
-                Assert (iMinX >= 0);
+                Assert(iMinX >= 0);
             }
             
             if (pPartialMapInfo->iYRadius != PARTIAL_MAP_UNLIMITED_RADIUS) {
                 iMinY = iCenterY - pPartialMapInfo->iYRadius;
                 iMaxY = iCenterY + pPartialMapInfo->iYRadius;
-                Assert (iMinY >= 0);
+                Assert(iMinY >= 0);
             }
         }
         
@@ -220,8 +220,8 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
             unsigned int iValue, iMaxXRadius, iMaxYRadius;
             
-            Assert (iCenterX != MAX_COORDINATE);
-            Assert (iCenterY != MAX_COORDINATE);
+            Assert(iCenterX != MAX_COORDINATE);
+            Assert(iCenterY != MAX_COORDINATE);
             
             iMaxXRadius = max (iCenterX - iMapMinX, iMapMaxX - iCenterX);
             iMaxYRadius = max (iCenterY - iMapMinY, iMapMaxY - iCenterY);
@@ -264,7 +264,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                     );
 
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
                 
@@ -352,7 +352,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
 
         iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
@@ -363,13 +363,13 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     
     iErrCode = GetHorzString (iHorzKey, &strHorz, false);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
     iErrCode = GetVertString (iVertKey, &strVert, false);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -398,7 +398,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         );
     
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -415,7 +415,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
             iErrCode = t_pCache->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             
@@ -430,28 +430,28 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
             iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedShips, &vTemp);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             iNumUncloakedShips = vTemp.GetInteger();
             
             iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedShips, &vTemp);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             iNumCloakedShips = vTemp.GetInteger();
             
             iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumUncloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             iNumUncloakedBuildShips = vTemp.GetInteger();
             
             iErrCode = t_pCache->ReadData(strGameEmpireMap, iProxyKey, GameEmpireMap::NumCloakedBuildShips, &vTemp);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             iNumCloakedBuildShips = vTemp.GetInteger();
@@ -465,7 +465,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             
             iErrCode = t_pCache->ReadRow (strGameMap, iPlanetKey, &pvPlanetData);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             
@@ -481,7 +481,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             iNumOtherShips += pvPlanetData[GameMap::iNumUncloakedBuildShips].GetInteger() - iNumUncloakedBuildShips;
         }
         
-        Assert (iNumOtherShips >= 0 && iNumOwnShips >= 0);
+        Assert(iNumOtherShips >= 0 && iNumOwnShips >= 0);
         
         iLink = pvPlanetData[GameMap::iLink].GetInteger();
 
@@ -498,7 +498,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         iGridLocX = (iX - iMinX) * 3 + 1;
         iGridLocY = (iMaxY - iY) * 3 + 1;
         
-        Assert (iGridLocX >= 0 && iGridLocY >= 0 && iGridLocX < iGridX && iGridLocY < iGridY);
+        Assert(iGridLocX >= 0 && iGridLocY >= 0 && iGridLocX < iGridX && iGridLocY < iGridY);
         
         if (bSensitive) {
             
@@ -515,7 +515,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 );
             
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
         }
@@ -548,7 +548,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 
                 iErrCode = GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     goto Cleanup;
                 }
                 iAlienKey = vTemp.GetInteger();
@@ -588,7 +588,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                         }
                         
                         else if (iErrCode != OK) {
-                            Assert (false);
+                            Assert(false);
                             goto Cleanup;
                         }
                         
@@ -724,7 +724,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 &pvEmpireKey
                 );
             
-            Assert (iAccountingNumOtherShips == iNumOtherShips);
+            Assert(iAccountingNumOtherShips == iNumOtherShips);
             
             if (iAccountingNumOtherShips > 0) {
                 
@@ -1297,7 +1297,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     }
                     
                     else if (iErrCode != OK) {
-                        Assert (false);
+                        Assert(false);
                         return iErrCode;
                     }
                 }
@@ -1305,14 +1305,14 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 Variant vTemp;
                 iErrCode = GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     return iErrCode;
                 }
                 iAlienKey = vTemp.GetInteger();
                 
                 iErrCode = GetEmpireName (iOwner, &vEmpireName);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     return iErrCode;
                 }
                 
@@ -1424,7 +1424,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 
                 iErrCode = GetEmpireName (iOwner, &vEmpireName);
                 if (iErrCode != OK) {
-                    Assert (false);
+                    Assert(false);
                     return iErrCode;
                 }
                 
@@ -1551,7 +1551,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         int iCost = pvPlanetData[GameMap::iPopLostToColonies].GetInteger();
         int iPop = pvPlanetData[GameMap::iPop].GetInteger();
         
-        Assert (iCost >= 0 && iCost <= iPop);
+        Assert(iCost >= 0 && iCost <= iPop);
         
         int iNextPop = GetNextPopulation (
             iPop - iCost,
@@ -1636,7 +1636,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             iCounter ++;
         }
         
-        Assert (iCounter == iNumJumps);
+        Assert(iCounter == iNumJumps);
 
         Variant vTemp;
         String strPlanetName;
@@ -1653,11 +1653,11 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 );
             
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 return iErrCode;
             }
             
-            Assert (iNeighbourKey != NO_KEY);
+            Assert(iNeighbourKey != NO_KEY);
             
             if (!bAdmin && !bSpectator) {
                 
@@ -1680,7 +1680,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             }
 
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 return iErrCode;
             }
 
@@ -1731,7 +1731,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             );
         
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -1821,7 +1821,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         Variant vTemp;
                         iErrCode = GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienKey, &vTemp);
                         if (iErrCode != OK) {
-                            Assert (false);
+                            Assert(false);
                             delete [] piOwnerData;
                             return iErrCode;
                         }
@@ -1829,7 +1829,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         
                         iErrCode = GetEmpireName (piOwnerKey[i], &vEmpireName);
                         if (iErrCode != OK) {
-                            Assert (false);
+                            Assert(false);
                             delete [] piOwnerData;
                             return iErrCode;
                         }
@@ -1872,7 +1872,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         
                         iErrCode = GetEmpireName (piOwnerKey[i], &vEmpireName);
                         if (iErrCode != OK) {
-                            Assert (false);
+                            Assert(false);
                             delete [] piOwnerData;
                             return iErrCode;
                         }
@@ -1895,7 +1895,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                                 );
 
                             if (iErrCode != OK) {
-                                Assert (false);
+                                Assert(false);
                                 delete [] piOwnerData;
                                 return iErrCode;
                             }

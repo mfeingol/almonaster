@@ -26,7 +26,7 @@ int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
     ICachedTable* pSystem = NULL;
     AutoRelease<ICachedTable> release(pSystem);
 
-    Assert (pgcConfig != NULL);
+    Assert(pgcConfig != NULL);
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystem);
     RETURN_ON_ERROR(iErrCode);
@@ -114,7 +114,7 @@ int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
 int GameEngine::GetMapConfiguration (MapConfiguration* pmcConfig)
 {
-    Assert (pmcConfig != NULL);
+    Assert(pmcConfig != NULL);
 
     int iErrCode;
     ICachedTable* pSystem = NULL;

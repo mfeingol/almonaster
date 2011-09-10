@@ -26,7 +26,7 @@ BaseMapGenerator::BaseMapGenerator(GameEngine* pGameEngine)
     : 
     m_htCoordinates (NULL, NULL)
 {
-    Assert (pGameEngine != NULL);
+    Assert(pGameEngine != NULL);
     m_pGameEngine = pGameEngine;
 
     m_iGameClass = NO_KEY;
@@ -131,7 +131,7 @@ int BaseMapGenerator::CreatePlanets (
     // Read map configuration
     iErrCode = m_pGameEngine->GetMapConfiguration(&m_mcConfig);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -148,7 +148,7 @@ int BaseMapGenerator::CreatePlanets (
     // Call the derived class to create all planet chains
     iErrCode = CreatePlanetChains();
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 
@@ -483,7 +483,7 @@ void BaseMapGenerator::ComputeGameResources() {
 
         iMin = m_pvGameClassData[SystemGameClassData::iMinNumPlanets].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxNumPlanets].GetInteger();
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
 
         m_iNumPlanetsPerEmpire = iMin;
         if (iMin != iMax) {
@@ -500,7 +500,7 @@ void BaseMapGenerator::ComputeGameResources() {
         iMin = m_pvGameClassData[SystemGameClassData::iMinAgHW].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxAgHW].GetInteger();
 
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
         
         m_pvGameData[GameData::iHWAg] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
@@ -508,7 +508,7 @@ void BaseMapGenerator::ComputeGameResources() {
         iMin = m_pvGameClassData[SystemGameClassData::iMinMinHW].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxMinHW].GetInteger();
 
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
 
         m_pvGameData[GameData::iHWMin] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
@@ -516,7 +516,7 @@ void BaseMapGenerator::ComputeGameResources() {
         iMin = m_pvGameClassData[SystemGameClassData::iMinFuelHW].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxFuelHW].GetInteger();
 
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
 
         m_pvGameData[GameData::iHWFuel] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
@@ -528,7 +528,7 @@ void BaseMapGenerator::ComputeGameResources() {
         iMin = m_pvGameClassData[SystemGameClassData::iMinAvgAg].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxAvgAg].GetInteger();
 
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
         
         m_pvGameData[GameData::iAvgAg] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
@@ -536,7 +536,7 @@ void BaseMapGenerator::ComputeGameResources() {
         iMin = m_pvGameClassData[SystemGameClassData::iMinAvgMin].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxAvgMin].GetInteger();
 
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
         
         m_pvGameData[GameData::iAvgMin] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
 
@@ -544,7 +544,7 @@ void BaseMapGenerator::ComputeGameResources() {
         iMin = m_pvGameClassData[SystemGameClassData::iMinAvgFuel].GetInteger();
         iMax = m_pvGameClassData[SystemGameClassData::iMaxAvgFuel].GetInteger();
 
-        Assert (iMin <= iMax);
+        Assert(iMin <= iMax);
 
         m_pvGameData[GameData::iAvgFuel] = iMin + Algorithm::GetRandomInteger (iMax - iMin + 1);
     }
@@ -673,13 +673,13 @@ int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
         unsigned int iNumEmpiresInGame;
         iErrCode = m_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpiresInGame);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
         iErrCode = m_pGameEngine->GetNumUpdatesBeforeGameCloses (m_iGameClass, m_iGameNumber, &iUpdatesBeforeClose);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -698,7 +698,7 @@ int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
     int iMaxCoordinate = iMaxNumEmpires * m_iNumPlanetsPerEmpire * 2;
     int iMapDeviation = m_mcConfig.iMapDeviation;
 
-    Assert (iMaxCoordinate > 0);
+    Assert(iMaxCoordinate > 0);
 
     plLocation->iX = Algorithm::GetRandomInteger (iMaxCoordinate) + 
            iMapDeviation + Algorithm::GetRandomInteger (iMapDeviation);
@@ -904,7 +904,7 @@ int BaseMapGenerator::GetNewPlanetLocationFromMap(PlanetLocation* plLocation) {
     }
 
     // No open directions anywhere on the existing map. This should never happen
-    Assert (false);
+    Assert(false);
     return ERROR_NO_NEW_PLANETS_AVAILABLE;
 }
 

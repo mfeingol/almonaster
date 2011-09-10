@@ -222,7 +222,7 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
             RETURN_ON_ERROR(iErrCode);
 #ifdef _DEBUG
             iErrCode = CheckTruceTradeAllianceCounts (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            Assert (iErrCode == OK);
+            Assert(iErrCode == OK);
 #endif
             break;
 
@@ -453,7 +453,7 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
                             // Set independent planet, MaxPop = Ag
                             if (vOwner.GetInteger() != INDEPENDENT)
                             {
-                                Assert (vOwner.GetInteger() == SYSTEM);
+                                Assert(vOwner.GetInteger() == SYSTEM);
                                     
                                 iErrCode = t_pCache->WriteData(strGameMap, pvPlanetKey[i], GameMap::Owner, (int)INDEPENDENT);
                                 RETURN_ON_ERROR(iErrCode);
@@ -615,7 +615,7 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
                     }
                     else
                     {
-                        Assert (iOwnerKey != SYSTEM);
+                        Assert(iOwnerKey != SYSTEM);
 
                         GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iOwnerKey);
                         GET_GAME_EMPIRE_SHIPS(strGameEmpireShips, iGameClass, iGameNumber, iOwnerKey);
@@ -1479,7 +1479,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
             }
         }
 
-        Assert (iWinnerKey != NO_KEY);
+        Assert(iWinnerKey != NO_KEY);
 
         if (sType == NORMAL_SURRENDER) {
 
@@ -1520,7 +1520,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
     else
     {
         GameUpdateInformation guInfo = { vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
-        Assert (sType != NORMAL_SURRENDER);
+        Assert(sType != NORMAL_SURRENDER);
 
         // Delete surrendering empire from game
         iErrCode = DeleteEmpireFromGame (iGameClass, iGameNumber, iEmpireKey, EMPIRE_SURRENDERED, &guInfo);
@@ -1587,14 +1587,14 @@ int GameEngine::DeleteShipFromDeadEmpire(const char* pszEmpireShips, const char*
         
         if (vState.GetInteger() & CLOAKED) {
             iErrCode = t_pCache->Increment(pszGameMap, iPlanetKey, GameMap::NumCloakedShips, -1);
-            Assert (iErrCode == OK);
+            Assert(iErrCode == OK);
         } else {
             iErrCode = t_pCache->Increment(pszGameMap, iPlanetKey, GameMap::NumUncloakedShips, -1);
             RETURN_ON_ERROR(iErrCode);
 #ifdef _DEBUG
             Variant vFooBar;
             iErrCode = t_pCache->ReadData(pszGameMap, iPlanetKey, GameMap::NumUncloakedShips, &vFooBar);
-            Assert (iErrCode == OK && vFooBar.GetInteger() >= 0);
+            Assert(iErrCode == OK && vFooBar.GetInteger() >= 0);
 #endif
         }
     }
@@ -1826,10 +1826,10 @@ int GameEngine::GetEmpireNextMaintenanceRatio (int iGameClass, int iGameNumber, 
     RETURN_ON_ERROR(iErrCode);
 
     int iCalcMin = iMin + iBonusMin + iNextMin;
-    Assert (iCalcMin >= 0);
+    Assert(iCalcMin >= 0);
 
     int iCalcMaint = iMaint + iNextMaint;
-    Assert (iCalcMaint >= 0);
+    Assert(iCalcMaint >= 0);
 
     *pfNextMaintenanceRatio = GetMaintenanceRatio (iCalcMin, iCalcMaint, 0);
 
@@ -1922,7 +1922,7 @@ int GameEngine::WriteNextStatistics (int iGameClass, int iGameNumber, int iEmpir
     }
 
 #ifdef _DEBUG
-    Assert (iTotalMaxPop == vTargetPop.GetInteger());
+    Assert(iTotalMaxPop == vTargetPop.GetInteger());
 #endif
 
     // Write nextpop, nextmin, next fuel
@@ -2023,7 +2023,7 @@ int GameEngine::CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey)
         iNextFuel += min (vFuel.GetInteger(), iNewPop) - min (vFuel.GetInteger(), vPop.GetInteger());
     }
 
-    Assert (iTotalMaxPop == vTargetPop.GetInteger());
+    Assert(iTotalMaxPop == vTargetPop.GetInteger());
 
     return iErrCode;
 }

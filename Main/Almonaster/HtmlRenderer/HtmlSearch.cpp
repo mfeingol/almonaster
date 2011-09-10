@@ -123,7 +123,7 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
 
     const char* pszName = sfField.pszName;
     if (pszName == NULL) {
-        Assert (sfField.pszSystemEmpireDataColumn != NULL);
+        Assert(sfField.pszSystemEmpireDataColumn != NULL);
         pszName = sfField.pszSystemEmpireDataColumn;
     }
 
@@ -284,7 +284,7 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
         
     default:
         
-        Assert (false);
+        Assert(false);
         break;
     }
 
@@ -476,7 +476,7 @@ int HtmlRenderer::HandleSearchSubmission (RangeSearchDefinition& sd,
 
         default:
 
-            Assert (false);
+            Assert(false);
             break;
         }
 
@@ -484,7 +484,7 @@ int HtmlRenderer::HandleSearchSubmission (RangeSearchDefinition& sd,
         iNumSearchColumns ++;
     }
 
-    Assert (iNumSearchColumns <= MAX_NUM_SEARCH_COLUMNS);
+    Assert(iNumSearchColumns <= MAX_NUM_SEARCH_COLUMNS);
     
     if ((pHttpForm = m_pHttpRequest->GetForm ("Skip")) == NULL) {
         return ERROR_INVALID_ARGUMENT;
@@ -646,7 +646,7 @@ void HtmlRenderer::RenderSearchResults (RangeSearchDefinition& sd,
                             }
                             else if (strcmp(pszCol, SystemEmpireData::Gender) == 0)
                             {
-                                Assert (vData.GetInteger() >= EMPIRE_GENDER_UNKNOWN && 
+                                Assert(vData.GetInteger() >= EMPIRE_GENDER_UNKNOWN && 
                                         vData.GetInteger() <= EMPIRE_GENDER_FEMALE);
                                 m_pHttpResponse->WriteText(EMPIRE_GENDER_STRING[vData.GetInteger()]);
                             }

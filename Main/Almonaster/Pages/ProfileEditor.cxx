@@ -1985,7 +1985,7 @@ Quote:
 
             default:
 
-                Assert (false);
+                Assert(false);
                 AddMessage ("An unexpected error occurred: ");
                 AppendMessage (iErrCode);
                 {
@@ -2089,7 +2089,7 @@ Quote:
             break;
 
         default:
-            Assert (false);
+            Assert(false);
         }
     }   // End if not cancel
 } 
@@ -3620,7 +3620,7 @@ case 10:
 
 default:
 
-    Assert (false);
+    Assert(false);
 }
 
 CloseSystemPage();

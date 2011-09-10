@@ -65,7 +65,7 @@ int GameEngine::SendSystemMessage(int iTargetEmpireKey, const char* pszMessage, 
 
     if (iSourceEmpireKey == SYSTEM)
     {
-        Assert (iFlags & MESSAGE_SYSTEM);
+        Assert(iFlags & MESSAGE_SYSTEM);
         pvData[SystemEmpireMessages::iSourceName] = (const char*)NULL;
         pvData[SystemEmpireMessages::iSourceSecret] = 0;
     }
@@ -122,7 +122,7 @@ int GameEngine::DeliverSystemMessage(int iEmpireKey, const Variant* pvData)
     // Get unread message count
     iErrCode = GetNumUnreadSystemMessagesPrivate(pMessages, &iNumUnreadMessages);
     RETURN_ON_ERROR(iErrCode);
-    Assert (iNumMessages >= iNumUnreadMessages);
+    Assert(iNumMessages >= iNumUnreadMessages);
 
     iErrCode = DeleteOverflowMessages(pMessages, SystemEmpireMessages::TimeStamp, SystemEmpireMessages::Unread, iNumMessages, iNumUnreadMessages, iMaxNumMessages, true);
     RETURN_ON_ERROR(iErrCode);
@@ -204,7 +204,7 @@ int GameEngine::SendMessageToAll (int iEmpireKey, const char* pszMessage) {
     //    if (iErrCode != OK) {
     //        if (iErrCode == ERROR_DATA_NOT_FOUND) {
     //            iErrCode = OK;
-    //        } else Assert (false);
+    //        } else Assert(false);
     //        break;
     //    }
 
@@ -588,7 +588,7 @@ int GameEngine::DeleteOverflowMessages(ICachedTable* pMessages, const char* pszT
         unsigned int iNumRows;
         iErrCode = pMessages->ReadColumn(pszTimeStampColumn, &piKey, &pvTime, &iNumRows);
         RETURN_ON_ERROR(iErrCode);
-        Assert (iNumRows == iNumMessages);
+        Assert(iNumRows == iNumMessages);
 
         // Sort timestamps
         Algorithm::QSortTwoAscending<Variant, unsigned int>(pvTime, piKey, iNumRows);
@@ -746,7 +746,7 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     // than the max, we delete the oldest messages (best effort)
     iErrCode = pMessages->GetNumCachedRows(&iTotalNumMessages);
     GOTO_CLEANUP_ON_ERROR(iErrCode);
-    Assert (iTotalNumMessages >= iNumMessages);
+    Assert(iTotalNumMessages >= iNumMessages);
 
     // Delete stale messages
     iErrCode = DeleteOverflowMessages(pMessages, GameEmpireMessages::TimeStamp, GameEmpireMessages::Unread, iTotalNumMessages, 0, iMaxNumMessages, false);
@@ -803,27 +803,27 @@ int GameEngine::BroadcastGameMessage(int iGameClass, int iGameNumber, const char
 {
     int iErrCode;
 
-    Assert (iFlags & MESSAGE_BROADCAST);
+    Assert(iFlags & MESSAGE_BROADCAST);
 
 #ifdef _DEBUG
 
     if (iFlags & MESSAGE_SYSTEM)
     {
-        Assert (!(iFlags & (MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR)));
+        Assert(!(iFlags & (MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR)));
     }
 
     if (iFlags & MESSAGE_ADMINISTRATOR)
     {
-        Assert (!(iFlags & MESSAGE_TOURNAMENT_ADMINISTRATOR));
+        Assert(!(iFlags & MESSAGE_TOURNAMENT_ADMINISTRATOR));
     }
 
     if (iSourceKey == SYSTEM)
     {
-        Assert (iFlags & MESSAGE_SYSTEM);
+        Assert(iFlags & MESSAGE_SYSTEM);
     }
     else
     {
-        Assert (!(iFlags & MESSAGE_SYSTEM));
+        Assert(!(iFlags & MESSAGE_SYSTEM));
     }
 
 #endif

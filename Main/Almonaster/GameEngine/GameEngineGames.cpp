@@ -155,7 +155,7 @@ int GameEngine::DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, con
             break;
 
         default:
-            Assert (false);
+            Assert(false);
             sprintf (
                 pszTemp,
                 "%s %i was deleted for an unknown reason",
@@ -777,7 +777,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
     const unsigned int* piEmpireKey = goGameOptions.piEmpireKey;
     const unsigned int iNumEmpires = goGameOptions.iNumEmpires;
 
-    Assert (iEmpireCreator != TOURNAMENT || (piEmpireKey != NULL && iNumEmpires > 0));
+    Assert(iEmpireCreator != TOURNAMENT || (piEmpireKey != NULL && iNumEmpires > 0));
 
     // Make sure new game creation is enabled
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::Options, &vTemp);
@@ -993,7 +993,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
     if (goGameOptions.iOptions & GAME_ENFORCE_SECURITY)
     {
         unsigned int i;
-        Assert (goGameOptions.iOptions > 0);
+        Assert(goGameOptions.iOptions > 0);
 
         // Bulk cache relevant empire rows
         if (goGameOptions.iNumSecurityEntries > 0)
@@ -1827,7 +1827,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     {
         if (pvGameEmpireData[GameEmpireData::iTechDevs].GetInteger() & TECH_BITS[i])
         {
-            Assert (pvGameEmpireData[GameEmpireData::iTechUndevs].GetInteger() & TECH_BITS[i]);
+            Assert(pvGameEmpireData[GameEmpireData::iTechUndevs].GetInteger() & TECH_BITS[i]);
             pvGameEmpireData[GameEmpireData::iTechUndevs] = pvGameEmpireData[GameEmpireData::iTechUndevs].GetInteger() & ~(TECH_BITS[i]);
         }
     }
@@ -2809,8 +2809,8 @@ int GameEngine::CheckGameForDrawOut (int iGameClass, int iGameNumber, bool* pbDr
     iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
     RETURN_ON_ERROR(iErrCode);
 
-    Assert (iNumEmpires > 0);
-    Assert (iRequesting <= iNumEmpires);
+    Assert(iNumEmpires > 0);
+    Assert(iRequesting <= iNumEmpires);
     if (iRequesting == iNumEmpires)
     {
         // Draw out iff someone isn't idle
@@ -2939,7 +2939,7 @@ int GameEngine::PauseGameInternal (int iGameClass, int iGameNumber, const UTCTim
     // Read the state again - it's cheap, and the state may have changed
     iErrCode = pGameData->ReadData(GameData::State, &iState);
     RETURN_ON_ERROR(iErrCode);
-    Assert (iState & STARTED);
+    Assert(iState & STARTED);
 
     if (bAdmin && !(iState & ADMIN_PAUSED))
     {
@@ -3449,14 +3449,14 @@ int GameEngine::GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber
     int iOptions;
     iErrCode = GetGameOptions(iGameClass, iGameNumber, &iOptions);
     RETURN_ON_ERROR(iErrCode);
-    Assert (iOptions & GAME_COUNT_FOR_BRIDIER);
+    Assert(iOptions & GAME_COUNT_FOR_BRIDIER);
 
 #endif
 
     iErrCode = t_pCache->GetNumCachedRows(pszGameEmpires, &iNumEmpires);
     RETURN_ON_ERROR(iErrCode);
 
-    Assert (iNumEmpires <= 2);
+    Assert(iNumEmpires <= 2);
 
     // Read 1st empire
     iErrCode = t_pCache->ReadData(pszGameEmpires, 0, GameEmpires::EmpireKey, &v0Key);
@@ -3524,7 +3524,7 @@ int GameEngine::GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber
     
     } else {
 
-        Assert (v0Key.GetInteger() != iEmpireKey);
+        Assert(v0Key.GetInteger() != iEmpireKey);
 
         iErrCode = GetBridierScore (iEmpireKey, &iEmpireRank, &iEmpireIndex);
         RETURN_ON_ERROR(iErrCode);

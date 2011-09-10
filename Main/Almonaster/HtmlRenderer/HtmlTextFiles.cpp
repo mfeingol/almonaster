@@ -267,7 +267,7 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
                 }
             }
 
-            else Assert (iErrCode == ERROR_SMALL_BUFFER);
+            else Assert(iErrCode == ERROR_SMALL_BUFFER);
         }
     }
 
@@ -315,7 +315,7 @@ int HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText
 
     iErrCode = fCachedFile.OpenWrite (pszFileName);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 

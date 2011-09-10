@@ -55,7 +55,7 @@ int GameEngine::CreateTheme (Variant* pvData, unsigned int* piKey) {
 
     iErrCode = t_pCache->GetTable(SYSTEM_THEMES, &pTable);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -68,7 +68,7 @@ int GameEngine::CreateTheme (Variant* pvData, unsigned int* piKey) {
 
     iErrCode = pTable->InsertRow(SystemThemes::Template, pvData, &iKey);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -424,7 +424,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -435,7 +435,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -446,7 +446,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -457,7 +457,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -468,7 +468,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -479,7 +479,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -490,7 +490,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
 
@@ -501,7 +501,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
             iThemeKey
             );
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
     }
@@ -513,7 +513,7 @@ int GameEngine::SetEmpireThemeKey(int iEmpireKey, int iThemeKey) {
         iThemeKey
         );
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
 

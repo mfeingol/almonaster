@@ -509,7 +509,7 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
     
     if (iAlienKey == UPLOADED_ICON) {
 
-        Assert (iEmpireKey != NO_KEY);
+        Assert(iEmpireKey != NO_KEY);
 
         bool bDisplay = true;
         
@@ -618,7 +618,7 @@ bool HtmlRenderer::VerifyGIF (const char* pszFileName) {
     Variant vMaxIconSize;
     iErrCode = GetSystemProperty (SystemData::MaxIconSize, &vMaxIconSize);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         AddMessage ("The max icon size could could not be read");
         return false;
     }
@@ -671,7 +671,7 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
     int iErrCode;
     char pszDestFileName[OS::MaxFileNameLength];
 
-    Assert (iKey1 != NO_KEY);
+    Assert(iKey1 != NO_KEY);
 
     if (iKey2 == NO_KEY) {
     
@@ -710,7 +710,7 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
         OS::Sleep (250);
     }
 
-    Assert (false);
+    Assert(false);
     return ERROR_FAILURE;
 }
 

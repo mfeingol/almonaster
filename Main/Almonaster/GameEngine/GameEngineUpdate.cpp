@@ -55,7 +55,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
     int iGameState;
     iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -81,23 +81,23 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             );
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         // Get num updates already executed
         iErrCode = t_pCache->ReadData(strGameData, GameData::NumUpdates, &vNumPrevUpdates);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         // Are we in time for an update?
         if (iNumUpdates - vNumPrevUpdates.GetInteger() != 0) {
 
-            Assert (iNumUpdates > vNumPrevUpdates.GetInteger());
+            Assert(iNumUpdates > vNumPrevUpdates.GetInteger());
             unsigned int i, iNumNewUpdates = iNumUpdates - vNumPrevUpdates.GetInteger();
-            Assert (iNumNewUpdates == vecUpdateTimes.GetNumElements());
+            Assert(iNumNewUpdates == vecUpdateTimes.GetNumElements());
 
             const UTCTime* ptUpdateTime = vecUpdateTimes.GetData();
 
@@ -153,7 +153,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             
             iErrCode = t_pCache->ReadData(strGameData, GameData::NumEmpiresUpdated, &vTemp);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             unsigned int iNumUpdated = vTemp.GetInteger();
@@ -161,7 +161,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             unsigned int iNumNeeded;
             iErrCode = t_pCache->GetNumCachedRows(pszGameEmpires, &iNumNeeded);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
@@ -169,13 +169,13 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             if (iNumUpdated < iNumNeeded) {
                 break;
             }
-            Assert (iNumUpdated == iNumNeeded);
+            Assert(iNumUpdated == iNumNeeded);
 
             // Only update if not all empires are idle
             bool bIdle;
             iErrCode = AreAllEmpiresIdle (iGameClass, iGameNumber, &bIdle);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
 
@@ -187,7 +187,7 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
             // Execute an update
             iErrCode = RunUpdate (iGameClass, iGameNumber, tNow, &bGameOver);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 goto Cleanup;
             }
             
@@ -202,7 +202,7 @@ Cleanup:
         // Update last checked
         iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateCheck, tNow);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -257,7 +257,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     // Get update period
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     sUpdatePeriod = vTemp.GetInteger();
@@ -265,7 +265,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     // Get game state
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     iGameState = vTemp.GetInteger();
@@ -276,7 +276,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         // Get first update delay
         iErrCode = t_pCache->ReadData(strGameData, GameData::FirstUpdateDelay, &vTemp);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
         sFirstUpdateDelay = vTemp.GetInteger();
@@ -292,7 +292,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     // Get num updates
     iErrCode = t_pCache->ReadData(strGameData, GameData::NumUpdates, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     int iNumUpdates = vTemp.GetInteger();
@@ -302,7 +302,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         
         iErrCode = t_pCache->ReadData(strGameData, GameData::FirstUpdateDelay, &vTemp);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
         sFirstUpdateDelay = vTemp.GetInteger();
@@ -312,7 +312,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     UTCTime tLastUpdateTime;
     iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     tLastUpdateTime = vTemp.GetInteger64();
@@ -320,7 +320,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     UTCTime tRealLastUpdateTime;
     iErrCode = t_pCache->ReadData(strGameData, GameData::RealLastUpdateTime, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     tRealLastUpdateTime = vTemp.GetInteger64();
@@ -328,7 +328,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
     // Get options
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vTemp);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         return iErrCode;
     }
     bool bWeekends = (vTemp.GetInteger() & WEEKEND_UPDATES) != 0;
@@ -338,7 +338,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
         // Get after weekend delay
         iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AfterWeekendDelay, &vTemp);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
         sAfterWeekendDelay = vTemp.GetInteger();
@@ -352,7 +352,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
 
         iErrCode = t_pCache->ReadData(strGameData, GameData::SecondsUntilNextUpdateWhilePaused, &vTemp);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             return iErrCode;
         }
         Seconds sSecondsUntilNext = vTemp.GetInteger();
@@ -416,7 +416,7 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
             
             iErrCode = pvecUpdateTimes->Add (tNextUpdateTime);
             if (iErrCode != OK) {
-                Assert (false);
+                Assert(false);
                 return iErrCode;
             }
         }
@@ -463,7 +463,7 @@ int GameEngine::ResetAllGamesUpdateTime() {
         if (iErrCode == ERROR_DATA_NOT_FOUND) {
             iErrCode = OK;
         }
-        else Assert (false);
+        else Assert(false);
     }
 
     return iErrCode;
@@ -503,7 +503,7 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
     int iState;
     iErrCode = pGameData->ReadData(GameData::State, &iState);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -517,13 +517,13 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
 
     iErrCode = pGameData->WriteData(GameData::LastUpdateTime, tTime);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
     iErrCode = pGameData->WriteData(GameData::LastUpdateCheck, tTime);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
@@ -550,7 +550,7 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
 
     iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -561,14 +561,14 @@ int GameEngine::SetEmpireReadyForUpdate (int iGameClass, int iGameNumber, int iE
         
         iErrCode = t_pCache->WriteOr(strGameEmpireData, GameEmpireData::Options, UPDATED);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         // Increment empire updated count
         iErrCode = t_pCache->Increment(strGameData, GameData::NumEmpiresUpdated, 1);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -597,7 +597,7 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
 
     iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vOptions);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
     
@@ -606,13 +606,13 @@ int GameEngine::SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int
         
         iErrCode = t_pCache->WriteAnd(strEmpireData, GameEmpireData::Options, ~UPDATED);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
         
         iErrCode = t_pCache->Increment(strGameData, GameData::NumEmpiresUpdated, -1);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
     }
@@ -645,7 +645,7 @@ int GameEngine::ForceUpdate (int iGameClass, int iGameNumber) {
 
     bool bGameOver;
     iErrCode = RunUpdate (iGameClass, iGameNumber, tUpdateTime, &bGameOver);
-    Assert (iErrCode == OK);
+    Assert(iErrCode == OK);
 
     return iErrCode;
 }
@@ -717,7 +717,7 @@ void GameEngine::AdvanceWeekendTime (const UTCTime& tNextUpdateTime, Seconds sAf
         
         // Add the rest of the weekend and the after weekend delay 
         sAdd = Time::GetRemainingWeekendSeconds (tNextUpdateTime) + sAfterWeekendDelay;
-        Assert (sAdd > 0);
+        Assert(sAdd > 0);
 
     } else if (sAfterWeekendDelay > 0) {
 
@@ -728,13 +728,13 @@ void GameEngine::AdvanceWeekendTime (const UTCTime& tNextUpdateTime, Seconds sAf
         // push it to the end of the weekend delay
         if (Time::IsWeekendTime (tTemp)) {
             sAdd = Time::GetRemainingWeekendSeconds (tTemp);
-            Assert (sAdd > 0);
+            Assert(sAdd > 0);
         }
     }
     
     if (sAdd != 0) {
         
-        Assert (sAdd > 0);
+        Assert(sAdd > 0);
         Time::AddSeconds (tNextUpdateTime, sAdd, ptNextUpdateTime);
     
     } else {
@@ -766,19 +766,19 @@ int GameEngine::VerifyUpdatedEmpireCount (int iGameClass, int iGameNumber) {
         }
 
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         iErrCode = t_pCache->ReadData(pszGameEmpires, iKey, GameEmpires::EmpireKey, &vEmpireKey);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
         iErrCode = GetEmpireOptions (iGameClass, iGameNumber, vEmpireKey.GetInteger(), &iOptions);
         if (iErrCode != OK) {
-            Assert (false);
+            Assert(false);
             goto Cleanup;
         }
 
@@ -789,11 +789,11 @@ int GameEngine::VerifyUpdatedEmpireCount (int iGameClass, int iGameNumber) {
 
     iErrCode = GetNumUpdatedEmpires (iGameClass, iGameNumber, &iNumCountedEmpires);
     if (iErrCode != OK) {
-        Assert (false);
+        Assert(false);
         goto Cleanup;
     }
 
-    Assert (iRealNumUpdated == iNumCountedEmpires && "Bad updated empire count!");
+    Assert(iRealNumUpdated == iNumCountedEmpires && "Bad updated empire count!");
 
 Cleanup:
 

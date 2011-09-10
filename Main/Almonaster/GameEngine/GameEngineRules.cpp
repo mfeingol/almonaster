@@ -40,7 +40,7 @@ int GameEngine::GetMilitaryValue (float fAttack) {
 // Return an empire's maintenance ratio, given its minerals, maintenance and build
 float GameEngine::GetMaintenanceRatio (int iMin, int iMaint, int iBuild) {
 
-    Assert (iMin >= 0 && iMaint >= 0 && iBuild >= 0);
+    Assert(iMin >= 0 && iMaint >= 0 && iBuild >= 0);
 
     if (iMin == 0) {
         return 0.0;
@@ -58,7 +58,7 @@ float GameEngine::GetMaintenanceRatio (int iMin, int iMaint, int iBuild) {
 // Return an empire's fuel ratio, given its fuel and fuel use
 float GameEngine::GetFuelRatio (int iFuel, int iFuelUse) {
 
-    Assert (iFuel >= 0 && iFuelUse >= 0);
+    Assert(iFuel >= 0 && iFuelUse >= 0);
 
     if (iFuel == 0) {
         return 0.0;
@@ -75,7 +75,7 @@ float GameEngine::GetFuelRatio (int iFuel, int iFuelUse) {
 // Return an empire's ag ratio, given its ag and pop
 float GameEngine::GetAgRatio (int iAg, int iPop, float fMaxAgRatio) {
 
-    Assert (iAg >= 0 && iPop >= 0);
+    Assert(iAg >= 0 && iPop >= 0);
 
     if (iAg == 0) {
         return 0.0;
@@ -92,13 +92,13 @@ float GameEngine::GetAgRatio (int iAg, int iPop, float fMaxAgRatio) {
 
 float GameEngine::GetShipNextBR (float fBR, float fMaint) {
 
-    Assert (fBR > 0);
+    Assert(fBR > 0);
     return fBR * fMaint;
 }
 
 int GameEngine::GetNextPopulation (int iPop, float fAgRatio) {
 
-    Assert (iPop >= 0 && fAgRatio >= (float) 0.0);
+    Assert(iPop >= 0 && fAgRatio >= (float) 0.0);
 
     return (int) (fAgRatio * (double) iPop) + 1;
 }
@@ -106,7 +106,7 @@ int GameEngine::GetNextPopulation (int iPop, float fAgRatio) {
 // Return en empire's econ, given its fuel, min and ag
 int GameEngine::GetEcon (int iFuel, int iMin, int iAg) {
 
-    Assert (iFuel >= 0 && iMin >= 0 && iAg >= 0);
+    Assert(iFuel >= 0 && iMin >= 0 && iAg >= 0);
 
     int iResources = iFuel + iMin + iAg;
     if (iResources == 0) {
@@ -125,7 +125,7 @@ int GameEngine::GetEcon (int iFuel, int iMin, int iAg) {
 float GameEngine::GetTechDevelopment (int iFuel, int iMin, int iMaint, int iBuild, int iFuelUse, 
                                       float fMaxTechDev) {
 
-    Assert (iFuel >= 0 && iMin >= 0 && iMaint >= 0 && iBuild >= 0 && iFuelUse >= 0);
+    Assert(iFuel >= 0 && iMin >= 0 && iMaint >= 0 && iBuild >= 0 && iFuelUse >= 0);
 
     int iResTotal = iFuel + iMin;
 
@@ -133,7 +133,7 @@ float GameEngine::GetTechDevelopment (int iFuel, int iMin, int iMaint, int iBuil
         iResTotal = 1;
     }
 
-    Assert (iResTotal > 0);
+    Assert(iResTotal > 0);
 
     int iResUsed = iMaint + iBuild + iFuelUse;
 
@@ -148,7 +148,7 @@ float GameEngine::GetTechDevelopment (int iFuel, int iMin, int iMaint, int iBuil
 // Return the build cost of a given ship
 int GameEngine::GetBuildCost (int iType, float fBR) {
 
-    Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
+    Assert(iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
 
     int iFactor = (int) fBR + 4;
     int iCost = iFactor * iFactor;
@@ -200,7 +200,7 @@ int GameEngine::GetBuildCost (int iType, float fBR) {
 // Return the mantenance cost of a given ship
 int GameEngine::GetMaintenanceCost (int iType, float fBR) {
 
-    Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
+    Assert(iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
 
     int iCost = (int) (fBR * 2);
 
@@ -255,7 +255,7 @@ int GameEngine::GetMaintenanceCost (int iType, float fBR) {
 // Return the fuel use cost of a given ship
 int GameEngine::GetFuelCost (int iType, float fBR) {
 
-    Assert (iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
+    Assert(iType >= FIRST_SHIP && iType <= LAST_SHIP && fBR > 0.0);
 
     int iCost = (int) (fBR * 4);
 
@@ -307,7 +307,7 @@ int GameEngine::GetFuelCost (int iType, float fBR) {
 int GameEngine::GetColonizePopulation (int iShipBehavior, float fColonyMultipliedDepositFactor, 
                                        float fColonyExponentialDepositFactor, float fBR) {
 
-    Assert (fBR > 0.0);
+    Assert(fBR > 0.0);
 
     int iPop;
 
@@ -329,9 +329,9 @@ int GameEngine::GetColonizePopulation (int iShipBehavior, float fColonyMultiplie
 unsigned int GameEngine::GetColonyPopulationBuildCost(int iShipBehavior, float fColonyMultipliedBuildFactor, 
                                                       int iColonySimpleBuildFactor, float fBR) {
 
-    Assert (fBR > 0.0);
-    Assert (fColonyMultipliedBuildFactor >= 0.0);
-    Assert (iColonySimpleBuildFactor >= 0);
+    Assert(fBR > 0.0);
+    Assert(fColonyMultipliedBuildFactor >= 0.0);
+    Assert(iColonySimpleBuildFactor >= 0);
 
     if (iShipBehavior & COLONY_USE_MULTIPLIED_BUILD_COST) {
         return (int) (fColonyMultipliedBuildFactor * fBR);
@@ -344,7 +344,7 @@ unsigned int GameEngine::GetColonyPopulationBuildCost(int iShipBehavior, float f
 // Return the ag increase produced by a terraformer of given BR
 int GameEngine::GetTerraformerAg (float fTerraformerPlowFactor, float fBR) {
 
-    Assert (fBR > 0.0);
+    Assert(fBR > 0.0);
 
     return (int) (fTerraformerPlowFactor * fBR);
 }
@@ -353,21 +353,21 @@ int GameEngine::GetTerraformerAg (float fTerraformerPlowFactor, float fBR) {
 // Return the pop that a troopship of given BR can handle
 int GameEngine::GetTroopshipPop (float fTroopshipInvasionFactor, float fBR) {
 
-    Assert (fBR > 0.0);
+    Assert(fBR > 0.0);
 
     return (int) (fTroopshipInvasionFactor * fBR);
 }
 
 int GameEngine::GetTroopshipFailurePopDecrement (float fTroopshipFailureFactor, float fBR) {
 
-    Assert (fBR > 0.0);
+    Assert(fBR > 0.0);
 
     return (int) (- fTroopshipFailureFactor * fBR);
 }
 
 int GameEngine::GetTroopshipSuccessPopDecrement (float fTroopshipSuccessFactor, int iPop) {
 
-    Assert (iPop >= 0);
+    Assert(iPop >= 0);
 
     return (int) ceil ((double) iPop * (- fTroopshipSuccessFactor));
 }
@@ -376,7 +376,7 @@ int GameEngine::GetTroopshipSuccessPopDecrement (float fTroopshipSuccessFactor, 
 // a doomsday of given BR annihilates it
 int GameEngine::GetDoomsdayUpdates (float fDoomsdayAnnihilationFactor, float fBR) {
 
-    Assert (fBR > 0.0);
+    Assert(fBR > 0.0);
     return (int) (fDoomsdayAnnihilationFactor * fBR);
 }
 
@@ -384,7 +384,7 @@ void GameEngine::GetBuilderNewPlanetResources (float fBR, float fBRDampening, fl
                                                int iAvgAg, int iAvgMin, int iAvgFuel,
                                                int* piNewAvgAg, int* piNewAvgMin, int* piNewAvgFuel) {
 
-    Assert (fBRDampening <= fBR);
+    Assert(fBRDampening <= fBR);
 
     double fMultiple = (fBR - fBRDampening + (double) 1.0) / fBR;
     double fBase = (double) fMultiplier * fMultiple * fMultiple;
@@ -420,7 +420,7 @@ bool GameEngine::IsMobileShip (int iShipType) {
 float GameEngine::GetLateComerTechIncrease (int iPercentTechIncreaseForLatecomers, int iNumUpdates, 
                                             float fMaxTechDev) {
 
-    Assert (fMaxTechDev >= 0.0);
+    Assert(fMaxTechDev >= 0.0);
 
     return (float) ((double) iNumUpdates * fMaxTechDev * ((double) iPercentTechIncreaseForLatecomers / 100));
 }
@@ -442,7 +442,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
     int iErrCode = OK;
     Variant vMax;
 
-    Assert (iDiplomacyLevel != WAR);
+    Assert(iDiplomacyLevel != WAR);
     
     switch (iDiplomacyLevel) {
 
@@ -558,6 +558,6 @@ int GameEngine::GetNextDiplomaticStatus (int iOffer1, int iOffer2, int iCurrentS
     }
 
     int iStatus = min (iOffer1, iOffer2);
-    Assert (iStatus <= ALLIANCE);
+    Assert(iStatus <= ALLIANCE);
     return iStatus;
 }

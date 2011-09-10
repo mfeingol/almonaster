@@ -86,7 +86,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
     //        iErrCode = t_pCache->GetTable(SYSTEM_EMPIRE_DATA, &pEmpires);
     //        if (iErrCode != OK) {
-    //            Assert (false);
+    //            Assert(false);
     //            continue;
     //        }
 
@@ -94,7 +94,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
     //        if (iErrCode != OK) {
     //            if (iErrCode == ERROR_DATA_NOT_FOUND) {
     //                iErrCode = OK;
-    //            } else Assert (false);
+    //            } else Assert(false);
     //            break;
     //        }
 
@@ -188,7 +188,7 @@ int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
     //                    if (iErrCode == ERROR_DATA_NOT_FOUND) {
     //                        iErrCode = OK;
     //                    } else {
-    //                        Assert (iErrCode == OK);
+    //                        Assert(iErrCode == OK);
     //                        bOnTopList = true;
     //                        break;
     //                    }

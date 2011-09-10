@@ -575,7 +575,7 @@ case 3:
 
 default:
 
-    Assert (false);
+    Assert(false);
     break;
 }
 
