@@ -454,10 +454,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
             SystemGameClassData::MaxNumTruces, 
             &vMax
             );
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         break;
 
     case TRADE:
@@ -468,10 +465,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
             SystemGameClassData::MaxNumTrades, 
             &vMax
             );
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         break;
 
     case ALLIANCE:
@@ -482,15 +476,11 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
             SystemGameClassData::MaxNumAlliances, 
             &vMax
             );
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         break;
 
     default:
-
-        Assert (false);
+        Assert(false);
         return ERROR_INVALID_ARGUMENT;
     }   
 
@@ -503,10 +493,7 @@ int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int
             GameData::MaxNumEmpires, 
             &vMax
             );
-        if (iErrCode != OK) {
-            Assert (false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         *piMaxNumPartners = (int) ((double) (vMax.GetInteger() - 2) / 2);
         return OK;

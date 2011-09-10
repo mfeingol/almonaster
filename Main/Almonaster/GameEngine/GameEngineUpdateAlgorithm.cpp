@@ -212,8 +212,7 @@ int GameEngine::RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpda
         }
         GameFairnessOption gfoFairness = (GameFairnessOption)vTemp.GetInteger();
 
-        bool bCommit;
-        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, (int*) piEmpireKey, iNumEmpires, gfoFairness, &bCommit);
+        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, (int*) piEmpireKey, iNumEmpires, gfoFairness);
         if (iErrCode != OK) {
             Assert (false);
             return iErrCode;

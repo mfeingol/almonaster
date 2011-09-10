@@ -34,6 +34,7 @@ int GameEngine::PerformMultipleSearch(const RangeSearchDefinition& sdSearch, uns
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }

@@ -42,36 +42,31 @@
 // Returns "Info" data about an empire
 
 // TODO: reconsider use of this function - call GetRatioInformation instead
-int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpData,
-                                   int* piNumShips, int* piBattleRank, int* piMilVal, float* pfTechDev, 
-                                   float* pfMaintRatio, float* pfFuelRatio, float* pfAgRatio, 
-                                   float* pfHypMaintRatio, float* pfHypFuelRatio, float* pfHypAgRatio,
-                                   float* pfNextTechIncrease, int* piShipLimit) {
-
+int GameEngine::GetEmpireGameInfo(int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpData,
+                                  int* piNumShips, int* piBattleRank, int* piMilVal, float* pfTechDev, 
+                                  float* pfMaintRatio, float* pfFuelRatio, float* pfAgRatio, 
+                                  float* pfHypMaintRatio, float* pfHypFuelRatio, float* pfHypAgRatio,
+                                  float* pfNextTechIncrease, int* piShipLimit)
+{
     int iErrCode;
 
     GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GET_GAME_EMPIRE_SHIPS (strGameEmpireShips, iGameClass, iGameNumber, iEmpireKey);
 
     // Read the GameEmpireData
-    Variant* pvEmpData = NULL, vTemp;
+    Variant* pvEmpData = NULL;
+    AutoFreeData free(pvEmpData);
 
     iErrCode = t_pCache->ReadRow (strEmpireData, NO_KEY, &pvEmpData);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Get the extras
     RatioInformation ratInfo;
     iErrCode = GetRatioInformation (iGameClass, iGameNumber, iEmpireKey, &ratInfo);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->GetNumCachedRows(strGameEmpireShips, (unsigned int*) piNumShips);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *piBattleRank = GetBattleRank (ratInfo.fTechLevel);
     *piMilVal = GetMilitaryValue (pvEmpData[GameEmpireData::iMil].GetFloat());
@@ -85,20 +80,13 @@ int GameEngine::GetEmpireGameInfo (int iGameClass, int iGameNumber, int iEmpireK
     *pfHypAgRatio = ratInfo.fNextAgRatio;
     *pfNextTechIncrease = ratInfo.fNextTechDev;
 
+    Variant vTemp;
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     *piShipLimit = vTemp.GetInteger();
 
     *ppvEmpData = pvEmpData;
     pvEmpData = NULL;
-
-Cleanup:
-
-    if (pvEmpData != NULL) {
-        t_pCache->FreeData(pvEmpData);
-    }
 
     return iErrCode;
 }
@@ -120,47 +108,25 @@ int GameEngine::GetEmpireAgRatio (int iGameClass, int iGameNumber, int iEmpireKe
     Variant vMaxAgRatio;
 
     ICachedTable* pGameEmpireData = NULL;
+    AutoRelease<ICachedTable> rel(pGameEmpireData);
     
     GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
     iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireData);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pGameEmpireData->ReadData(GameEmpireData::TotalAg, &iTotalAg);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pGameEmpireData->ReadData(GameEmpireData::BonusAg, &iBonusAg);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pGameEmpireData->ReadData(GameEmpireData::TotalPop, &iTotalPop);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    SafeRelease (pGameEmpireData);
-
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MaxAgRatio, 
-        &vMaxAgRatio
-        );
-
-    if (iErrCode == OK) {
-        *pfAgRatio = GetAgRatio (iTotalAg + iBonusAg, iTotalPop, vMaxAgRatio.GetFloat());
-    }
-
-    else Assert (false);
-
-Cleanup:
-
-    SafeRelease (pGameEmpireData);
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxAgRatio, &vMaxAgRatio);
+    RETURN_ON_ERROR(iErrCode);
+    *pfAgRatio = GetAgRatio (iTotalAg + iBonusAg, iTotalPop, vMaxAgRatio.GetFloat());
 
     return iErrCode;
 }

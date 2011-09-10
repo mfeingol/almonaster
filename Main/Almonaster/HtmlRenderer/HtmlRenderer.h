@@ -1228,11 +1228,6 @@ public:
     case ERROR_DUPLICATE_SESSION_ID:                                                            \
         AddMessage ("You could not enter the game because your Session Id was the same as an empire already playing the game");                                         \
         return Redirect (m_pgPageId);                                                           \
-    case ERROR_COULD_NOT_CREATE_PLANETS:                                                        \
-        /* Fatal error:  we should never reach this case */                                     \
-        Assert (false);                                                                         \
-        iErrCode = DeleteGame (iGameClassKey, iGameNumber, SYSTEM, NULL, MAP_CREATION_ERROR);                                                                \
-        break;                                                                                  \
     default:                                                                                    \
         AddMessage ("Unknown error ");                                                          \
         AppendMessage (iErrCode);                                                               \

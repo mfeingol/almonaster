@@ -51,16 +51,10 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
 
     // Increment nukes and nuked
     iErrCode = t_pCache->Increment(strNukerEmpire, iNukerKey, SystemEmpireData::Nukes, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->Increment(strNukedEmpire, iNukedKey, SystemEmpireData::Nuked, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Update nuker and nuked lists
     int iNukedAlienKey, iNukerAlienKey;
@@ -87,10 +81,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukedAlienKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (t_pCache->ReadData(strNukerEmpire, iNukerKey, SystemEmpireData::AlienKey, &vValue) == OK)
     {
@@ -113,10 +104,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukerAlienKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Update system nuke list
     iErrCode = AddNukeToHistory (
@@ -131,39 +119,30 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukedAlienKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Update scores
     ScoringChanges scChanges;
     scChanges.pszNukedName = pszNukedName;
 
-    if (reason == EMPIRE_SURRENDERED) {
+    if (reason == EMPIRE_SURRENDERED)
+    {
         iErrCode = UpdateScoresOnSurrender (iGameClass, iGameNumber, iNukerKey, iNukedKey, &scChanges);
-    } else {
-        iErrCode = UpdateScoresOnNuke (iGameClass, iGameNumber, iNukerKey, iNukedKey, &scChanges);
+        RETURN_ON_ERROR(iErrCode);
     }
-
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
+    else
+    {
+        iErrCode = UpdateScoresOnNuke (iGameClass, iGameNumber, iNukerKey, iNukedKey, &scChanges);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // Send messages
     iErrCode = SendScoringChangeMessages (iGameClass, iGameNumber, iNukerKey, iNukedKey, iUpdate, reason, pszGameClassName, &scChanges);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Send victory sneer
     iErrCode = SendVictorySneer (iNukerKey, pszNukerName, iNukedKey);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -172,7 +151,7 @@ int GameEngine::UpdateScoresOnSurrender (int iNukerKey, int iNukedKey, const cha
                                          const char* pszNukedName, int iGameClass, int iGameNumber,
                                          int iUpdate, const char* pszGameClassName) {
 
-    return UpdateScoresOnNuke (
+    return UpdateScoresOnNuke(
         iNukerKey, 
         iNukedKey, 
         pszNukerName, 
@@ -198,18 +177,12 @@ int GameEngine::UpdateScoresOn30StyleSurrender (int iLoserKey, const char* pszLo
     // Increment nuked for loser
     GET_SYSTEM_EMPIRE_DATA(strLoser, iLoserKey);
     iErrCode = t_pCache->Increment(strLoser, iLoserKey, SystemEmpireData::Nuked, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Ignore scoring changes for this event
     ScoringChanges scChanges;
     iErrCode = UpdateScoresOn30StyleSurrender (iGameClass, iGameNumber, iLoserKey, &scChanges);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -229,10 +202,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     bool bValid;
 
     iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Name, &vPlanetName);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Report
     char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + MAX_PLANET_NAME_LENGTH + 64];
@@ -251,10 +221,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     // Give empire credit for nuke
     GET_SYSTEM_EMPIRE_DATA(strWinner, iWinnerKey);
     iErrCode = t_pCache->Increment(strWinner, iWinnerKey, SystemEmpireData::Nukes, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(
         strGameMap, 
@@ -263,10 +230,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         &vEmpireSecretKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(
         strGameMap, 
@@ -275,18 +239,12 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         &vNukedKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     Assert (vNukedKey.GetInteger() != NO_KEY);
 
     iErrCode = CheckSecretKey (vNukedKey.GetInteger(), vEmpireSecretKey.GetInteger64(), &bValid, NULL, NULL);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (bValid) {
         iLoserKey = vNukedKey.GetInteger();
@@ -305,10 +263,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
 
     // Get nuker alien key
     iErrCode = t_pCache->ReadData(strWinnerEmpire, iWinnerKey, SystemEmpireData::AlienKey, &vTemp);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     iNukerAlienKey = vTemp.GetInteger();
 
     // Get nuked alien key
@@ -319,10 +274,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     } else {
 
         iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
         iNukedAlienKey = vTemp.GetInteger();
 
         // Add to nuked's nuke history
@@ -338,17 +290,11 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
             iNukerAlienKey
             );
 
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         // Send the loser a victory sneer
         iErrCode = SendVictorySneer(iWinnerKey, pszWinnerName, iLoserKey);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // Add to nuker's nuke history
@@ -364,10 +310,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         iNukedAlienKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Update system nuke list
     iErrCode = AddNukeToHistory (
@@ -382,29 +325,16 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         iNukedAlienKey
         );
 
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    {   // Scope
-        ScoringChanges scChanges;
-        scChanges.pszNukedName = pszNukedName;
+    ScoringChanges scChanges;
+    scChanges.pszNukedName = pszNukedName;
 
-        iErrCode = UpdateScoresOn30StyleSurrenderColonization (iGameClass, iGameNumber, iWinnerKey, iPlanetKey, &scChanges);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+    iErrCode = UpdateScoresOn30StyleSurrenderColonization (iGameClass, iGameNumber, iWinnerKey, iPlanetKey, &scChanges);
+    RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = SendScoringChangeMessages (iGameClass, iGameNumber, iWinnerKey, iLoserKey, iUpdate, EMPIRE_COLONIZED_RUINS, pszGameClassName, &scChanges);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
-    }
-
-Cleanup:
+    iErrCode = SendScoringChangeMessages (iGameClass, iGameNumber, iWinnerKey, iLoserKey, iUpdate, EMPIRE_COLONIZED_RUINS, pszGameClassName, &scChanges);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -417,8 +347,8 @@ int GameEngine::UpdateScoresOnGameEnd (int iGameClass, int iGameNumber)
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         int iErrCode = pScoringSystem->OnGameEnd(iGameClass, iGameNumber);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -430,8 +360,8 @@ int GameEngine::UpdateScoresOnNuke (int iGameClass, int iGameNumber, int iNukerK
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         int iErrCode = pScoringSystem->OnNuke(iGameClass, iGameNumber, iNukerKey, iNukedKey, pscChanges);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -443,8 +373,8 @@ int GameEngine::UpdateScoresOnSurrender (int iGameClass, int iGameNumber, int iW
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         int iErrCode = pScoringSystem->OnSurrender(iGameClass, iGameNumber, iWinnerKey, iLoserKey, pscChanges);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -456,8 +386,8 @@ int GameEngine::UpdateScoresOn30StyleSurrender (int iGameClass, int iGameNumber,
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         int iErrCode = pScoringSystem->On30StyleSurrender(iGameClass, iGameNumber, iLoserKey, pscChanges);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -469,8 +399,8 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iGameClass, int 
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         int iErrCode = pScoringSystem->On30StyleSurrenderColonization(iGameClass, iGameNumber, iWinnerKey, iPlanetKey, pscChanges);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -480,18 +410,15 @@ int GameEngine::UpdateScoresOnWin (int iGameClass, int iGameNumber, int iEmpireK
     // Add win to empires' statistics
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     int iErrCode = t_pCache->Increment(strEmpire, iEmpireKey, SystemEmpireData::Wins, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     int i;
     ENUMERATE_SCORING_SYSTEMS(i)
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         iErrCode = pScoringSystem->OnWin(iGameClass, iGameNumber, iEmpireKey);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -501,18 +428,15 @@ int GameEngine::UpdateScoresOnDraw (int iGameClass, int iGameNumber, int iEmpire
     // Add draw to empires' statistics
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     int iErrCode = t_pCache->Increment(strEmpire, iEmpireKey, SystemEmpireData::Draws, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     int i;
     ENUMERATE_SCORING_SYSTEMS(i)
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         iErrCode = pScoringSystem->OnDraw(iGameClass, iGameNumber, iEmpireKey);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -523,18 +447,15 @@ int GameEngine::UpdateScoresOnRuin (int iGameClass, int iGameNumber, int iEmpire
     // Add ruin to empires' statistics
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     int iErrCode = t_pCache->Increment(strEmpire, iEmpireKey, SystemEmpireData::Ruins, 1);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     int i;
     ENUMERATE_SCORING_SYSTEMS(i)
     {
         IScoringSystem* pScoringSystem = CreateScoringSystem((ScoringSystem)i);
         iErrCode = pScoringSystem->OnRuin(iGameClass, iGameNumber, iEmpireKey);
-        Assert (iErrCode == OK);
         delete pScoringSystem;
+        RETURN_ON_ERROR(iErrCode);
     }
     return OK;
 }
@@ -552,13 +473,14 @@ int GameEngine::GetNumEmpiresInNukeHistory(int iEmpireKey, int* piNumNukes, int*
 {
     *piNumNukes = *piNumNuked = 0;
 
-    GET_SYSTEM_EMPIRE_NUKER_LIST (strTable, iEmpireKey);
-    int iErrCode = t_pCache->GetNumCachedRows(strTable, (unsigned int*) piNumNukes);
-    if (iErrCode == OK)
-    {
-        GET_SYSTEM_EMPIRE_NUKED_LIST (strTable, iEmpireKey);
-        iErrCode = t_pCache->GetNumCachedRows(strTable, (unsigned int*) piNumNuked);
-    }
+    GET_SYSTEM_EMPIRE_NUKER_LIST(strNukerTable, iEmpireKey);
+    int iErrCode = t_pCache->GetNumCachedRows(strNukerTable, (unsigned int*) piNumNukes);
+    RETURN_ON_ERROR(iErrCode);
+
+    GET_SYSTEM_EMPIRE_NUKED_LIST(strNukedTable, iEmpireKey);
+    iErrCode = t_pCache->GetNumCachedRows(strNukedTable, (unsigned int*) piNumNuked);
+    RETURN_ON_ERROR(iErrCode);
+
     return iErrCode;
 }
 
@@ -573,6 +495,10 @@ int GameEngine::GetNumEmpiresInNukeHistory(int iEmpireKey, int* piNumNukes, int*
 int GameEngine::GetNukeHistory(int iEmpireKey, int* piNumNuked, Variant*** pppvNukedData, int* piNumNukers, Variant*** pppvNukerData)
 {
     int iErrCode;
+
+    Variant** ppvNukedData = NULL, ** ppvNukerData = NULL;
+    AutoFreeData free1(ppvNukedData);
+    AutoFreeData free2(ppvNukerData);
 
     GET_SYSTEM_EMPIRE_NUKER_LIST(strNuker, iEmpireKey);
     GET_SYSTEM_EMPIRE_NUKED_LIST(strNuked, iEmpireKey);
@@ -597,13 +523,15 @@ int GameEngine::GetNukeHistory(int iEmpireKey, int* piNumNuked, Variant*** pppvN
         countof(pszNukeColumns),
         pszNukeColumns,
         NULL,
-        pppvNukedData,
+        &ppvNukedData,
         (unsigned int*) piNumNuked
         );
 
-    if (iErrCode != OK && iErrCode != ERROR_UNKNOWN_TABLE_NAME && iErrCode != ERROR_DATA_NOT_FOUND) {
-        return iErrCode;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     // Get Nuker data
     iErrCode = t_pCache->ReadColumns (
@@ -611,20 +539,23 @@ int GameEngine::GetNukeHistory(int iEmpireKey, int* piNumNuked, Variant*** pppvN
         countof(pszNukeColumns),
         pszNukeColumns,
         NULL,
-        pppvNukerData,
+        &ppvNukerData,
         (unsigned int*) piNumNukers
         );
 
-    if (iErrCode != OK && iErrCode != ERROR_UNKNOWN_TABLE_NAME && iErrCode != ERROR_DATA_NOT_FOUND) {
-
-        if (*pppvNukedData != NULL) {
-            t_pCache->FreeData(*pppvNukedData);
-            *pppvNukedData = NULL;
-        }
-        return iErrCode;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
-    return OK;
+    *pppvNukedData = ppvNukedData;
+    ppvNukedData = NULL;
+
+    *pppvNukerData = ppvNukerData;
+    ppvNukerData = NULL;
+
+    return iErrCode;
 }
 
 // Output
@@ -657,6 +588,7 @@ int GameEngine::GetSystemNukeHistory (int* piNumNukes, Variant*** pppvNukedData)
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -687,6 +619,7 @@ int GameEngine::GetSystemLatestGames (int* piNumGames, Variant*** pppvGameData) 
     if (iErrCode == ERROR_DATA_NOT_FOUND) {
         iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -701,9 +634,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
 
     // Admins stay the same
     iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, &vPrivilege);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (vPrivilege.GetInteger() == ADMINISTRATOR) {
         return OK;
@@ -711,9 +642,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
 
     // See if the system allows it
     iErrCode = GetSystemOptions (&iSystemOptions);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iSystemOptions & DISABLE_PRIVILEGE_SCORE_ELEVATION) {
         return OK;
@@ -721,9 +650,7 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
 
     // See if the empire's settings allow it
     iErrCode = GetEmpireOptions2 (iEmpireKey, &iEmpireOptions2);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iEmpireOptions2 & ADMINISTRATOR_FIXED_PRIVILEGE) {
         return OK;
@@ -731,19 +658,13 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
 
     // Read the data we need
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::AdeptScore, &vAdeptLevel);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::ApprenticeScore, &vApprenticeLevel);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::AlmonasterScore, &vScore);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Check for attainment of adepthood
     if (vPrivilege.GetInteger() == NOVICE) {
@@ -752,33 +673,31 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
             
             // Advance to apprentice
             iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, APPRENTICE);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
-            SendSystemMessage (
-                iEmpireKey, 
+            iErrCode = SendSystemMessage (
+                iEmpireKey,
                 "Congratulations! You have attained the level of Apprentice and can now create your own personal games",
                 SYSTEM,
                 MESSAGE_SYSTEM
-            );
+                );
+            RETURN_ON_ERROR(iErrCode);
         }
         
         else if (vScore >= vAdeptLevel) {
             
             // Advance to adept
             iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, ADEPT);         
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
-            SendSystemMessage (
+            iErrCode = SendSystemMessage (
                 iEmpireKey, 
                 "Congratulations! You have attained the level of Adept, "\
                 "so you can now create your own personal gameclasses",
                 SYSTEM,
                 MESSAGE_SYSTEM
                 );
+            RETURN_ON_ERROR(iErrCode);
         }
     }
     
@@ -789,34 +708,32 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
             
             // Demote to novice
             iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
-            SendSystemMessage (
+            iErrCode = SendSystemMessage (
                 iEmpireKey, 
                 "Unfortunately, you have lost your Apprentice status, "\
                 "so you can no longer create your own personal games",
                 SYSTEM,
                 MESSAGE_SYSTEM
                 );
+            RETURN_ON_ERROR(iErrCode);
         }
         
         else if (vScore >= vAdeptLevel) {
             
             // Advance to adept
             iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, ADEPT);         
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
-            SendSystemMessage (
+            iErrCode = SendSystemMessage (
                 iEmpireKey, 
                 "Congratulations! You have attained the level of Adept, "\
                 "so you can now create personal gameclasses",
                 SYSTEM,
                 MESSAGE_SYSTEM
                 );
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
@@ -826,32 +743,30 @@ int GameEngine::CalculatePrivilegeLevel(int iEmpireKey) {
             
             // Demote to novice
             iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, NOVICE);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
-            SendSystemMessage (
+            iErrCode = SendSystemMessage (
                 iEmpireKey, 
                 "Unfortunately, you have lost your Adept and Apprentice status and can no longer\n"\
                 "create personal gameclasses or personal games",
                 SYSTEM,
                 MESSAGE_SYSTEM
                 );
+            RETURN_ON_ERROR(iErrCode);
             
         } else {
             
             // Demote to apprentice
             iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Privilege, APPRENTICE);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
-            SendSystemMessage (
+            iErrCode = SendSystemMessage (
                 iEmpireKey, 
                 "Unfortunately, you have lost your Adept status and can no longer create personal gameclasses",
                 SYSTEM,
                 MESSAGE_SYSTEM
                 );
+            RETURN_ON_ERROR(iErrCode);
         }
     }
     
@@ -921,10 +836,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
     //
 
     iErrCode = GetEmpireOptions (iNukerKey, &iOptions);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iOptions & SEND_SCORE_MESSAGE_ON_NUKE) {
 
@@ -1024,9 +936,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
             // Otherwise, read it from the database
             Assert (iNukedKey != NO_KEY);
             iErrCode = GetEmpireName (iNukedKey, pszEmpireName);
-            if (iErrCode != OK) {
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
             pszNukedName = pszEmpireName;
         }
 
@@ -1046,9 +956,7 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
             );
 
         iErrCode = SendSystemMessage (iNukerKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     //
@@ -1058,15 +966,10 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
     if (iNukedKey != NO_KEY) {
 
         iErrCode = GetEmpireOptions (iNukedKey, &iOptions);
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireName (iNukerKey, pszEmpireName);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
         const char* pszNukerName = pszEmpireName;
 
         if (!(iOptions & SEND_SCORE_MESSAGE_ON_NUKE)) {
@@ -1189,11 +1092,9 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
                 );
         }
 
-        // This could fail
-        SendSystemMessage (iNukedKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
+        iErrCode = SendSystemMessage(iNukedKey, pszMessage, SYSTEM, MESSAGE_SYSTEM);
+        RETURN_ON_ERROR(iErrCode);
     }
-
-Cleanup:
 
     return iErrCode;
 }
@@ -1209,10 +1110,13 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
     int iErrCode;
 
     ICachedTable* pWriteTable = NULL;
+    AutoRelease<ICachedTable> rel(pWriteTable);
 
     Variant* pvTime = NULL, vNumNukesListed;
+    AutoFreeData freeData(pvTime);
 
     unsigned int iNumRows, * piKey = NULL, i, iNumKeys, iNumNukesListed;
+    AutoFreeKeys freeKeys(piKey);
     char pszTable [256];
 
     const char* pszLimitCol = NULL, * pszTimeStampCol = NULL;
@@ -1257,28 +1161,19 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
 
     // Get nuke history limit
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, pszLimitCol, &vNumNukesListed);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iNumNukesListed = vNumNukesListed.GetInteger();
 
     // Get the table
     iErrCode = t_pCache->GetTable(pszTable, &pWriteTable);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     //
     // Delete the oldest nuke if the limit has been reached
     //
     iErrCode = pWriteTable->GetNumCachedRows(&iNumRows);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumRows >= iNumNukesListed) {
     
@@ -1290,10 +1185,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
             &iNumKeys
             );
         
-        if (iErrCode != OK) {
-            Assert (false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         Algorithm::QSortTwoAscending<Variant, unsigned int>(pvTime, piKey, iNumKeys);
         
@@ -1301,10 +1193,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
         while (i < iNumKeys && iNumRows >= iNumNukesListed) {
             
             iErrCode = pWriteTable->DeleteRow(piKey[i]);
-            if (iErrCode != OK) {
-                Assert (false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
             iNumRows --;
             i ++;
@@ -1328,6 +1217,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
         };
         
         iErrCode = pWriteTable->InsertRow(SystemNukeList::Template, pvColData, NULL);
+        RETURN_ON_ERROR(iErrCode);
 
     } else {
     
@@ -1343,23 +1233,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
         };
         
         iErrCode = pWriteTable->InsertRow(SystemEmpireNukeList::Template, pvColData, NULL);
-    }
-    
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pWriteTable);
-
-    if (pvTime != NULL) {
-        t_pCache->FreeData(pvTime);
-    }
-
-    if (piKey != NULL) {
-        t_pCache->FreeKeys(piKey);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -1370,29 +1244,17 @@ int GameEngine::GetBridierScore (int iEmpireKey, int* piRank, int* piIndex) {
     int iErrCode;
 
     ICachedTable* pEmpires = NULL;
+    AutoRelease<ICachedTable> rel(pEmpires);
 
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
     iErrCode = t_pCache->GetTable(strEmpire, &pEmpires);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::BridierRank, piRank);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pEmpires->ReadData(iEmpireKey, SystemEmpireData::BridierIndex, piIndex);
-    if (iErrCode != OK) {
-        Assert (false);
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    SafeRelease (pEmpires);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -1407,25 +1269,21 @@ int GameEngine::TriggerBridierTimeBombIfNecessary() {
 
     // Check if necessary
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::LastBridierTimeBombScan, &vLastScan);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, &vFrequency);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (Time::GetSecondDifference (tNow, vLastScan.GetInteger64()) > vFrequency.GetInteger()) {
+    if (Time::GetSecondDifference (tNow, vLastScan.GetInteger64()) > vFrequency.GetInteger())
+    {
         iErrCode = global.GetAsyncManager()->QueueTask(TriggerBridierTimeBombIfNecessaryMsg, NULL);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
 }
 
-int GameEngine::TriggerBridierTimeBombIfNecessaryMsg (AsyncTask* pMessage)
+int GameEngine::TriggerBridierTimeBombIfNecessaryMsg(AsyncTask* pMessage)
 {
     GameEngine gameEngine;
     return gameEngine.TriggerBridierTimeBombIfNecessaryCallback();
@@ -1542,10 +1400,7 @@ int GameEngine::GetBridierTimeBombScanFrequency (Seconds* piFrequency) {
     Variant vValue;
 
     iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::BridierTimeBombScanFrequency, &vValue);
-    if (iErrCode != OK) {
-        Assert (false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *piFrequency = (Seconds) vValue.GetInteger();
     return OK;

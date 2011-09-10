@@ -5522,7 +5522,8 @@ void HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool
     for (i = 0; i < iNumEmpires; i ++) {
 
 #ifdef _DEBUG
-        CheckTargetPop (iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
+        iErrCode = CheckTargetPop (iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
+        Assert(iErrCode == OK);
 #endif
         COPY_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
 

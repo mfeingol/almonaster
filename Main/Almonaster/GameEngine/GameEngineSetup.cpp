@@ -36,14 +36,8 @@ int GameEngine::Setup()
         // Create a new database and we're done
         global.GetReport()->WriteReport("Setting up new database");
         int iErrCode = InitializeNewDatabase();
-        if (iErrCode == OK)
-        {
-            global.GetReport()->WriteReport("Set up new database");
-        }
-        else
-        {
-            global.GetReport()->WriteReport("Error setting up new database");
-        }
+        RETURN_ON_ERROR(iErrCode);
+        global.GetReport()->WriteReport("Set up new database");
     }
 
     if (!bGoodDatabase) {
@@ -62,7 +56,6 @@ int GameEngine::Setup()
     return ReloadDatabase();
 }
 
-
 int GameEngine::ReloadDatabase()
 {
     int iErrCode;
@@ -72,22 +65,14 @@ int GameEngine::ReloadDatabase()
     //
 
     iErrCode = CacheForReload();
-    if (iErrCode != OK)
-    {
-        global.GetReport()->WriteReport("GameEngine setup failed to cache system tables");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     //
     // System
     //
 
     iErrCode = VerifySystem();
-    if (iErrCode != OK)
-    {
-        global.GetReport()->WriteReport("GameEngine setup failed to verify system data");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     global.GetReport()->WriteReport("GameEngine setup successfully verified system data");
 
     //
@@ -95,10 +80,7 @@ int GameEngine::ReloadDatabase()
     //
 
     iErrCode = VerifyGameClasses();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup failed to verify gameclasses");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     global.GetReport()->WriteReport("GameEngine setup successfully verified gameclasses");
 
     //
@@ -106,10 +88,7 @@ int GameEngine::ReloadDatabase()
     //
 
     iErrCode = VerifyActiveGames();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup failed to verify active games");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     global.GetReport()->WriteReport("GameEngine setup successfully verified active games");    
 
     //
@@ -117,10 +96,7 @@ int GameEngine::ReloadDatabase()
     //
 
     iErrCode = VerifyMarkedGameClasses();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup failed to verify marked gameclasses");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     global.GetReport()->WriteReport("GameEngine setup successfully verified marked gameclasses");
 
     //
@@ -128,10 +104,7 @@ int GameEngine::ReloadDatabase()
     //
 
     iErrCode = VerifyTournaments();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup failed to verify tournaments");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     global.GetReport()->WriteReport("GameEngine setup successfully verified tournaments");
 
     //////////
@@ -140,7 +113,7 @@ int GameEngine::ReloadDatabase()
 
     global.GetReport()->WriteReport("GameEngine setup successfully reused the existing database");
 
-    return OK;
+    return iErrCode;
 }
 
 bool GameEngine::VerifyTableExistence(const char* pszTable, bool bNewDatabase)
@@ -520,60 +493,37 @@ int GameEngine::VerifySystem() {
 
     int iOptions;
     iErrCode = GetSystemOptions(&iOptions);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (!(iOptions & ACCESS_ENABLED)) {
 
         iErrCode = GetSystemProperty(SystemData::AccessDisabledReason, &vTemp);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if (strcmp(vTemp.GetString(), BACKUP_BLOCK_REASON) == 0) {
 
             iErrCode = SetSystemProperty(SystemData::AccessDisabledReason,(const char*) NULL);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = SetSystemOption(ACCESS_ENABLED, true);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
     if (!(iOptions & NEW_EMPIRES_ENABLED)) {
 
         iErrCode = GetSystemProperty(SystemData::NewEmpiresDisabledReason, &vTemp);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if (strcmp(vTemp.GetString(), BACKUP_BLOCK_REASON) == 0) {
 
             iErrCode = SetSystemProperty(SystemData::NewEmpiresDisabledReason,(const char*) NULL);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = SetSystemOption(NEW_EMPIRES_ENABLED, true);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
-
-Cleanup:
 
     return iErrCode;
 }
@@ -582,34 +532,23 @@ int GameEngine::VerifyGameClasses() {
 
     int iErrCode;
     unsigned int* piGameClassKey = NULL, iNumGameClasses = 0, i;
+    AutoFreeKeys free(piGameClassKey);
 
     iErrCode = t_pCache->GetAllKeys(SYSTEM_GAMECLASS_DATA, &piGameClassKey, &iNumGameClasses);
-    if (iErrCode != OK) {
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        }
-        else Assert(false);
-        return iErrCode;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return OK;
     }
+    RETURN_ON_ERROR(iErrCode);
 
-    for(i = 0; i < iNumGameClasses; i ++)
+    for (i = 0; i < iNumGameClasses; i ++)
     {
         // TODOTODO - why?
         // Set number of active games in gameclass to 0
-        Variant vZero = (int)0;
-        iErrCode = t_pCache->WriteData(SYSTEM_GAMECLASS_DATA, piGameClassKey[i], SystemGameClassData::NumActiveGames, vZero);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        iErrCode = t_pCache->WriteData(SYSTEM_GAMECLASS_DATA, piGameClassKey[i], SystemGameClassData::NumActiveGames, (int)0);
+        RETURN_ON_ERROR(iErrCode);
     }
-
-Cleanup:
-
-    if (piGameClassKey != NULL) {
-        t_pCache->FreeKeys(piGameClassKey);
-    }
-
+    
     return iErrCode;
 }
 
@@ -618,45 +557,33 @@ int GameEngine::VerifyMarkedGameClasses() {
 
     int iErrCode;
     unsigned int* piGameClassKey = NULL, iNumGameClasses = 0, i;
+    AutoFreeKeys free(piGameClassKey);
 
     iErrCode = t_pCache->GetAllKeys(SYSTEM_GAMECLASS_DATA, &piGameClassKey, &iNumGameClasses);
-    if (iErrCode != OK) {
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-        }
-        else Assert(false);
-        return iErrCode;
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return OK;
     }
+    RETURN_ON_ERROR(iErrCode);
     
-    for(i = 0; i < iNumGameClasses; i ++) {
-
+    for (i = 0; i < iNumGameClasses; i ++)
+    {
         Variant vOptions;
-        
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA,
-            piGameClassKey[i],
-            SystemGameClassData::Options,
-            &vOptions
-            );
+        iErrCode = GetGameClassProperty(piGameClassKey[i], SystemGameClassData::Options, &vOptions);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
-            
-        if (vOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION) {
-            
-            // Make sure there are active games belonging to this game
-            if (!DoesGameClassHaveActiveGames(piGameClassKey[i])) {
-                
+        if (vOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION)
+        {
+            Variant vActiveGames;
+            iErrCode = GetGameClassProperty(piGameClassKey[i], SystemGameClassData::NumActiveGames, &vActiveGames);
+            RETURN_ON_ERROR(iErrCode);
+
+            if (vActiveGames.GetInteger() > 0)
+            {
                 // This game class needs to be deleted
                 bool bDeleted;
-
                 iErrCode = DeleteGameClass(piGameClassKey[i], &bDeleted);
-                if (iErrCode != OK) {
-                    Assert(false);
-                    goto Cleanup;
-                }
+                RETURN_ON_ERROR(iErrCode);
                 Assert(bDeleted);
                 
                 if (bDeleted) {
@@ -671,12 +598,6 @@ int GameEngine::VerifyMarkedGameClasses() {
                 }
             }
         }
-    }
-
-Cleanup:
-
-    if (piGameClassKey != NULL) {
-        t_pCache->FreeKeys(piGameClassKey);
     }
 
     return iErrCode;
@@ -719,7 +640,7 @@ int GameEngine::VerifyActiveGames()
 //    iNumUpdatesDownBeforeGameIsKilled = vTemp.GetInteger();
 //
 //    // Loop through all games
-//    for(i = 0; i < iNumGames; i ++)
+//    for (i = 0; i < iNumGames; i ++)
 //    {
 //        char pszBuffer [512];
 //
@@ -834,7 +755,7 @@ int GameEngine::VerifyActiveGames()
 //        // Loop through all empires in game
 //        iNumPaused = 0;
 //
-//        for(j = 0; j < iNumEmpires; j ++) {
+//        for (j = 0; j < iNumEmpires; j ++) {
 //
 //            UTCTime tLastLoginTime;
 //            int iOptions;
@@ -1021,22 +942,13 @@ int GameEngine::InitializeNewDatabase() {
     global.GetReport()->WriteReport("GameEngine setup is initializing a new database");
 
     iErrCode = CreateDefaultSystemTables();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup could not create the default system tables");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = SetupDefaultSystemTables();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup could not set up the default system tables");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = SetupDefaultSystemGameClasses();
-    if (iErrCode != OK) {
-        global.GetReport()->WriteReport("GameEngine setup could not set up the default system gameclasses");
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     global.GetReport()->WriteReport("GameEngine setup finished initializing a new database");
     return iErrCode;
@@ -1051,220 +963,127 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemData table
     iErrCode = t_pCache->CreateTable(SYSTEM_DATA, SystemData::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemGameClassData table
     iErrCode = t_pCache->CreateTable(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemSystemGameClassData table
     iErrCode = t_pCache->CreateTable(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemActiveGames table
     iErrCode = t_pCache->CreateTable(SYSTEM_ACTIVE_GAMES, SystemActiveGames::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireData table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_DATA, SystemEmpireData::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemThemes table
     iErrCode = t_pCache->CreateTable(SYSTEM_THEMES, SystemThemes::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemSuperClassData table
     iErrCode = t_pCache->CreateTable(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemAlienIcons table
     iErrCode = t_pCache->CreateTable(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemNukeList table
     iErrCode = t_pCache->CreateTable(SYSTEM_NUKE_LIST, SystemNukeList::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemLatestGames table
     iErrCode = t_pCache->CreateTable(SYSTEM_LATEST_GAMES, SystemLatestGames::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemChatroomData table
     iErrCode = t_pCache->CreateTable(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireActiveGames table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_ACTIVE_GAMES, SystemEmpireActiveGames::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireMessages table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_MESSAGES, SystemEmpireMessages::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireAssociations table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_ASSOCIATIONS, SystemEmpireAssociations::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireTournaments table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_TOURNAMENTS, SystemEmpireTournaments::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemTournaments table
     iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENTS, SystemTournaments::Template);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemTournamentEmpires table
     iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENT_EMPIRES, SystemTournamentEmpires::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemTournamentTeams table
     iErrCode = t_pCache->CreateTable(SYSTEM_TOURNAMENT_TEAMS, SystemTournamentTeams::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireNukerList table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_NUKER_LIST, SystemEmpireNukeList::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create SystemEmpireNukedList table
     iErrCode = t_pCache->CreateTable(SYSTEM_EMPIRE_NUKED_LIST, SystemEmpireNukeList::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameData table
     iErrCode = t_pCache->CreateTable(GAME_DATA, GameData::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameSecurity table
     iErrCode = t_pCache->CreateTable(GAME_SECURITY, GameSecurity::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpires table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRES, GameEmpires::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameNukedEmpires table
     iErrCode = t_pCache->CreateTable(GAME_NUKED_EMPIRES, GameNukedEmpires::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameMap table
     iErrCode = t_pCache->CreateTable(GAME_MAP, GameMap::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpireData table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRE_DATA, GameEmpireData::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpireMessages table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRE_MESSAGES, GameEmpireMessages::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpireMap table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRE_MAP, GameEmpireMap::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpireDiplomacy table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRE_DIPLOMACY, GameEmpireDiplomacy::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpireShips table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRE_SHIPS, GameEmpireShips::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Create GameEmpireFleets table
     iErrCode = t_pCache->CreateTable(GAME_EMPIRE_FLEETS, GameEmpireFleets::Template);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -1282,10 +1101,7 @@ int GameEngine::SetupDefaultSystemTables() {
     // Set up themes first
     unsigned int iDefaultThemeKey;
     iErrCode = SetupDefaultThemes(&iDefaultThemeKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Insert data into SYSTEM_DATA
     Variant pvSystemData [SystemData::NumColumns] = {
@@ -1401,50 +1217,24 @@ int GameEngine::SetupDefaultSystemTables() {
     };
 
     iErrCode = t_pCache->InsertRow(SYSTEM_DATA, SystemData::Template, pvSystemData, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Set up default administrator empire(root)
     iErrCode = CreateEmpire(ROOT_NAME, ROOT_DEFAULT_PASSWORD, ADMINISTRATOR, NO_KEY, true, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = SetEmpireOption2(iKey, EMPIRE_ACCEPTED_TOS, true);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Set up default guest empire(Guest)
-    iErrCode = CreateEmpire(
-        GUEST_NAME,
-        GUEST_DEFAULT_PASSWORD,
-        GUEST,
-        NO_KEY,
-        true,
-        &iKey
-        );
-
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    iErrCode = CreateEmpire(GUEST_NAME, GUEST_DEFAULT_PASSWORD, GUEST, NO_KEY, true, &iKey);
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = SetEmpireOption(iKey, CAN_BROADCAST, false);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = SetEmpireOption2(iKey, EMPIRE_ACCEPTED_TOS, true);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -1476,10 +1266,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "F7EF80";
 
     iErrCode = CreateTheme(pvColVal, piDefaultThemeKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Classic theme
     pvColVal[SystemThemes::iName] = "Classic Theme";
@@ -1497,10 +1284,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "F0F011";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // MkII theme
     pvColVal[SystemThemes::iName] = "MkII Theme";
@@ -1518,10 +1302,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEEEE";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Mensan's first beta theme
     pvColVal[SystemThemes::iName] = "Mensan's First Beta Theme";
@@ -1539,10 +1320,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEEEE";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Mensan's second beta theme
     pvColVal[SystemThemes::iName] = "Mensan's Second Beta Theme";
@@ -1560,10 +1338,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEEEE";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // DPR's animated theme
     pvColVal[SystemThemes::iName] = "DPR's Animated Theme";
@@ -1581,10 +1356,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "FFFF00";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Techno Theme
     pvColVal[SystemThemes::iName] = "Mensan's Techno Theme";
@@ -1602,10 +1374,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEE00";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Animated Theme
     pvColVal[SystemThemes::iName] = "Mensan's Animated Theme";
@@ -1623,10 +1392,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEE00";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Blues Theme
     pvColVal[SystemThemes::iName] = "Mensan's Blues Theme";
@@ -1644,10 +1410,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "9CC6FF";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Dark Mood Theme
     pvColVal[SystemThemes::iName] = "Mensan's Dark Mood Theme";
@@ -1665,10 +1428,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "D5D5D5";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Chamber Theme
     pvColVal[SystemThemes::iName] = "Chamber Theme";
@@ -1686,10 +1446,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "D0D0D0";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // NASA Theme
     pvColVal[SystemThemes::iName] = "NASA Theme";
@@ -1707,10 +1464,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "F09525";
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Alien Glow Theme
     pvColVal[SystemThemes::iName] = "Alien Glow Theme";
@@ -1728,10 +1482,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "FFFFCC";   // Dull yellow
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Iceberg Theme
     pvColVal[SystemThemes::iName] = "Iceberg Theme";
@@ -1749,10 +1500,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "90A0CC";   // Light blue
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Iceberg Theme II
     pvColVal[SystemThemes::iName] = "Iceberg Theme II";
@@ -1770,39 +1518,28 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iBroadcastMessageColor] = "E0F0E0";   // Light green
 
     iErrCode = CreateTheme(pvColVal, &iKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
 
 // Create default superclasses and gameclasses
-int GameEngine::SetupDefaultSystemGameClasses() {
-
+int GameEngine::SetupDefaultSystemGameClasses()
+{
     // Add SuperClasses
     int i, iErrCode, iBeginnerKey, iGrudgeKey, iLongTermKey, iBlitzKey, iGameClass;
     
     iErrCode = CreateSuperClass("Beginner Games", &iBeginnerKey);
-    if (iErrCode != OK && iErrCode != ERROR_SUPERCLASS_ALREADY_EXISTS) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = CreateSuperClass("Grudge Matches", &iGrudgeKey);
-    if (iErrCode != OK && iErrCode != ERROR_SUPERCLASS_ALREADY_EXISTS) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = CreateSuperClass("Blitzes", &iBlitzKey);
-    if (iErrCode != OK && iErrCode != ERROR_SUPERCLASS_ALREADY_EXISTS) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = CreateSuperClass("Longterm Games", &iLongTermKey);
-    if (iErrCode != OK && iErrCode != ERROR_SUPERCLASS_ALREADY_EXISTS) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     Variant pvSubmitArray [SystemGameClassData::NumColumns];
 
@@ -1813,8 +1550,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iMaxTechDev] =(float) 3.5;
     pvSubmitArray[SystemGameClassData::iOpenGameNum] = 1;                            
     pvSubmitArray[SystemGameClassData::iNumSecPerUpdate] = 210;
-    pvSubmitArray[SystemGameClassData::iOptions] = 
-        WEEKEND_UPDATES | VISIBLE_DIPLOMACY | PRIVATE_MESSAGES | ONLY_SURRENDER_WITH_TWO_EMPIRES;
+    pvSubmitArray[SystemGameClassData::iOptions] = WEEKEND_UPDATES | VISIBLE_DIPLOMACY | PRIVATE_MESSAGES | ONLY_SURRENDER_WITH_TWO_EMPIRES;
     pvSubmitArray[SystemGameClassData::iInitialTechLevel] =(float) 1.0;             
     pvSubmitArray[SystemGameClassData::iMinNumEmpires] = 2;
     pvSubmitArray[SystemGameClassData::iMinAvgAg] = 30;
@@ -1854,10 +1590,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
     
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Apprentice Blitz
@@ -1910,10 +1643,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Assassin Grudge
@@ -1964,10 +1694,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Darkstar Battle
@@ -2021,10 +1748,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
 
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     
     // Tiberia Series
@@ -2077,10 +1801,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     
     // Galaxy of Andromeda
@@ -2133,10 +1854,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     
     // Natural Selection Universe
@@ -2189,10 +1907,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Texan KnifeFight
     pvSubmitArray[SystemGameClassData::iName] = "Texan KnifeFight";
@@ -2244,10 +1959,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     
     // 21st Century Blood   
@@ -2299,10 +2011,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Nanotech World
@@ -2355,10 +2064,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
 
     // Land of Bounty
@@ -2411,10 +2117,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
 
     // Perfect Information Battle
@@ -2465,10 +2168,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Caveman Deathmatch
@@ -2520,10 +2220,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
         
     
     // Low Orbit SuperBlitz
@@ -2576,10 +2273,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Kindergarten Universe
@@ -2632,10 +2326,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     // Guns'n Troopships
@@ -2686,10 +2377,7 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     pvSubmitArray[SystemGameClassData::iNumInitialTechDevs] = 1;
 
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
 
     //////////////////////
@@ -2698,178 +2386,127 @@ int GameEngine::SetupDefaultSystemGameClasses() {
     
     // 1 to 42
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ken Eppstein";
-    for(i = 1; i <= 42; i ++) {
+    for (i = 1; i <= 42; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 43 to 82
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for(i = 43; i <= 82; i ++) {
+    for (i = 43; i <= 82; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 83
     pvSubmitArray[SystemAlienIcons::iAlienKey] = 83;
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Unknown";
     iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // 84 to 89
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for(i = 84; i <= 89; i ++) {
+    for (i = 84; i <= 89; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 90
     pvSubmitArray[SystemAlienIcons::iAlienKey] = 90;
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
     iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // 91
     pvSubmitArray[SystemAlienIcons::iAlienKey] = 91;
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
     iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // 92 to 101
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
-    for(i = 92; i <= 101; i ++) {
+    for (i = 92; i <= 101; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 102 to 103
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for(i = 102; i <= 103; i ++) {
+    for (i = 102; i <= 103; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 104 to 105
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    for(i = 104; i <= 105; i ++) {
+    for (i = 104; i <= 105; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 106 to 125
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for(i = 106; i <= 125; i ++) {
+    for (i = 106; i <= 125; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 126 to 127
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    for(i = 126; i <= 127; i ++) {
+    for (i = 126; i <= 127; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 128
     pvSubmitArray[SystemAlienIcons::iAlienKey] = 128;
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Haavard Fledsberg";
     iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // 129 to 135
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    for(i = 129; i <= 135; i ++) {
+    for (i = 129; i <= 135; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 136 to 145
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
-    for(i = 136; i <= 145; i ++) {
+    for (i = 136; i <= 145; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // 146
     pvSubmitArray[SystemAlienIcons::iAlienKey] = 146;
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Michel Lemieux";
     iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // 147 to 152
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Unknown";
-    for(i = 147; i <= 152; i ++) {
+    for (i = 147; i <= 152; i ++) {
         pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
         iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // 153
     pvSubmitArray[SystemAlienIcons::iAlienKey] = 153;
     pvSubmitArray[SystemAlienIcons::iAuthorName] = "Kia";
     iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -2881,41 +2518,30 @@ int GameEngine::VerifyTournaments() {
 
     bool bExists;
 
-    while(true) {
-
+    while (true)
+    {
         iErrCode = t_pCache->GetNextKey(SYSTEM_TOURNAMENTS, iKey, &iKey);
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
             iErrCode = OK;
             break;
         }
         
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetTournamentOwner(iKey, &iOwner);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         // Check for tournament that needs to be deleted
-        if (iOwner == DELETED_EMPIRE_KEY) {
-
+        if (iOwner == DELETED_EMPIRE_KEY)
+        {
             iErrCode = GetTournamentGames(iKey, NULL, NULL, &iNumGames);
-            if (iErrCode != OK) {
-                Assert(false);
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
-            if (iNumGames == 0) {
-
+            if (iNumGames == 0)
+            {
                 iErrCode = DeleteTournament(DELETED_EMPIRE_KEY, iKey, false);
-                if (iErrCode != OK) {
-                    Assert(false);
-                    return iErrCode;
-                }
+                RETURN_ON_ERROR(iErrCode);
             }
         }
 
@@ -2923,21 +2549,19 @@ int GameEngine::VerifyTournaments() {
         else if (iOwner != SYSTEM) {
 
             iErrCode = DoesEmpireExist(iOwner, &bExists, NULL);
-            if (iErrCode != OK) {
-                Assert(false);
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             if (!bExists) {
 
                 iErrCode = DeleteTournament(iOwner, iKey, true);
-                if (iErrCode != OK && iErrCode != ERROR_TOURNAMENT_HAS_GAMES) {
-                    Assert(false);
-                    return iErrCode;
+                if (iErrCode == ERROR_TOURNAMENT_HAS_GAMES)
+                {
+                    iErrCode = OK;
                 }
+                RETURN_ON_ERROR(iErrCode);
             }
         }
     }
     
-    return OK;
+    return iErrCode;
 }

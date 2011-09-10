@@ -18,13 +18,9 @@
 
 #include "GameEngine.h"
 
-#include "Osal/OS.h"
-
-// TODO: transactions?
-
 // Delete a ship from a game
-int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey) {
-
+int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int iShipKey)
+{
     int iErrCode, iErrCode2;
     unsigned int iKey, iFleetKey;
 

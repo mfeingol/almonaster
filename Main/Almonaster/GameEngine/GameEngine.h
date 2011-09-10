@@ -429,14 +429,12 @@ private:
     static int THREAD_CALL DeleteEmpireMsg (AsyncTask* pMessage);
 
     // Planets
-    int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, 
-        GameFairnessOption gfoFairness, bool* pbCommit);
+    int AddEmpiresToMap (int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, GameFairnessOption gfoFairness);
 
     int CreateMapFromMapGeneratorData(int iGameClass, int iGameNumber, int* piNewEmpireKey, 
         unsigned int iNumNewEmpires, Variant* pvGameClassData, Variant* pvGameData, 
         Variant** ppvNewPlanetData, unsigned int iNumNewPlanets,
-        unsigned int* piExistingPlanetKey, Variant** ppvExistingPlanetData, unsigned int iNumExistingPlanets,
-        bool* pbCommit);
+        unsigned int* piExistingPlanetKey, Variant** ppvExistingPlanetData, unsigned int iNumExistingPlanets);
 
     int CreatePlanetFromMapGeneratorData (Variant* pvPlanetData,
         int iGameClass, int iGameNumber, int iEmpireKey, int iGameClassOptions,
@@ -653,9 +651,6 @@ private:
     // Planets
     int SetNewMinMaxIfNecessary (int iGameClass, int iGameNumber, int iEmpireKey, int iX, int iY);
 
-    // GameClasses
-    bool DoesGameClassHaveActiveGames (int iGameClass);
-
     // Database ops
     int PurgeDatabasePrivate (int iEmpireKey, int iCriteria);
     static int THREAD_CALL PurgeDatabaseMsg (AsyncTask* pMessage);
@@ -765,7 +760,7 @@ public:
     int GetMaxPop (int iMin, int iFuel);
 
 #ifdef _DEBUG
-    void CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey);
+    int CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey);
 #endif
 
     int GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel, int* piMaxNumPartners);
