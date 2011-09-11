@@ -36,13 +36,10 @@ int MirroredMapGenerator::CreatePlanetChains() {
     // 2) Pick the edge with the most connectivity of the four
     // 3) Mirror the map on that edge, adding a layer of buffer planets
 
-    int iErrCode = OK;
-
     AssertGameClassSettings();
 
     // Allocate memory for two halves of the map, not counting buffer planets
-    if (!AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires))
-        return ERROR_OUT_OF_MEMORY;
+    AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires);
 
     // Create half the map, one side of the mirror
     CreateHalfMap();
@@ -59,7 +56,7 @@ int MirroredMapGenerator::CreatePlanetChains() {
     // Mirror the planets we just created
     CompleteMirror();
 
-    return iErrCode;
+    return OK;
 }
 
 void MirroredMapGenerator::AssertGameClassSettings() {
@@ -80,13 +77,10 @@ int MirroredMapGenerator::CreateHalfMap() {
     int iErrCode = OK;
 
     const unsigned int iHalfNumEmpires = m_iNumNewEmpires / 2;
-    for (unsigned int i = 0; i < iHalfNumEmpires; i ++) {
-
+    for (unsigned int i = 0; i < iHalfNumEmpires; i ++)
+    {
         iErrCode = CreatePlanetChain(m_piNewEmpireKey[i]);
-        if (iErrCode != OK) {
-            Assert(false);
-            break;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     Assert(m_iNumNewPlanetsCreated * 2 == m_iTotalNumNewPlanets);
@@ -163,9 +157,7 @@ void MirroredMapGenerator::ComputeBestMirroredEdge() {
     // each other from across the mirror. Such is life.
 }
 
-int MirroredMapGenerator::CompleteMirror() {
-
-    int iErrCode = OK;
+void MirroredMapGenerator::CompleteMirror() {
 
     // Mirror the map
     const unsigned int iHalfNumPlanets = m_iNumNewPlanetsCreated;
@@ -177,9 +169,7 @@ int MirroredMapGenerator::CompleteMirror() {
 
         const unsigned int iMirrorIndex = iHalfNumPlanets + iMapIndex;
 
-        iErrCode = CopyPlanetData(m_ppvNewPlanetData[iMapIndex], m_ppvNewPlanetData[iMirrorIndex]);
-        if (iErrCode != OK)
-            return iErrCode;
+        CopyPlanetData(m_ppvNewPlanetData[iMapIndex], m_ppvNewPlanetData[iMirrorIndex]);
 
         // Execute the transform
         int iMapX, iMapY;
@@ -193,37 +183,28 @@ int MirroredMapGenerator::CompleteMirror() {
         m_ppvNewPlanetData[iMirrorIndex][GameMap::iLink] = iMirrorLink;
 
         // Set mirrored coordinates
-        iErrCode = SetCoordinates(iMirrorIndex, iMirrorX, iMirrorY);
-        if (iErrCode != OK)
-            return iErrCode;
+        SetCoordinates(iMirrorIndex, iMirrorX, iMirrorY);
 
         // Add to lookup table
-        iErrCode = InsertIntoCoordinatesTable(iMirrorIndex);
-        if (iErrCode != OK)
-            return iErrCode;
+        InsertIntoCoordinatesTable(iMirrorIndex);
 
         // Make buffer planets if needed
-        iErrCode = CreateBufferPlanetsIfNecessary(iMapIndex, iMirrorIndex, iMapX, iMapY, iMirrorX, iMirrorY);
-        if (iErrCode != OK)
-            return iErrCode;
+        CreateBufferPlanetsIfNecessary(iMapIndex, iMirrorIndex, iMapX, iMapY, iMirrorX, iMirrorY);
     }
 
     AssignMirroredPlanetOwners();
 
     // Assign resources to buffer planets
     if (m_iBufferPlanetDepth > 0)
+    {
         AssignResources(NO_KEY,
                         m_iNumPlanetsPerEmpire * m_iNumNewEmpires,
                         m_iNumEdgePlanets * m_iBufferPlanetDepth);
-
-    return iErrCode;
+    }
 }
 
-int MirroredMapGenerator::CreateBufferPlanetsIfNecessary(int iOldIndex, int iMirrorIndex,
-                                                         int iOldX, int iOldY,
-                                                         int iMirrorX, int iMirrorY) {
-
-    int iErrCode = OK;
+void MirroredMapGenerator::CreateBufferPlanetsIfNecessary(int iOldIndex, int iMirrorIndex,
+                                                          int iOldX, int iOldY, int iMirrorX, int iMirrorY) {
 
     if (m_iBufferPlanetDepth > 0) {
 
@@ -254,16 +235,11 @@ int MirroredMapGenerator::CreateBufferPlanetsIfNecessary(int iOldIndex, int iMir
                     lLocation.AddLinkedPlanet(iMirrorIndex, m_cpMirroredEdge);
 
                 // Create a new buffer planet
-                iErrCode = CreatePlanet(SYSTEM, &lLocation);
-                if (iErrCode != OK)
-                    return iErrCode;
-
+                CreatePlanet(SYSTEM, &lLocation);
                 AdvanceCoordinates(iBufferX, iBufferY, &iBufferX, &iBufferY, m_cpMirroredEdge);
             }
         }
     }
-
-    return iErrCode;
 }
 
 void MirroredMapGenerator::AssignMirroredPlanetOwners() {
@@ -273,8 +249,10 @@ void MirroredMapGenerator::AssignMirroredPlanetOwners() {
 
     // Assign remaining empires as owners of the second set of planet chains
     unsigned int iPlanetCount = 0;
-    for (unsigned i = 0; i < iHalfNumEmpires; i ++) {
-        for (unsigned j = 0; j < m_iNumPlanetsPerEmpire; j ++) {
+    for (unsigned i = 0; i < iHalfNumEmpires; i ++)
+    {
+        for (unsigned j = 0; j < m_iNumPlanetsPerEmpire; j ++)
+        {
             unsigned int iEmpireKey = m_piNewEmpireKey[iHalfNumEmpires + i];
             m_ppvNewPlanetData[iHalfNumPlanets + iPlanetCount][GameMap::iOwner] = iEmpireKey;
             iPlanetCount ++;
@@ -344,12 +322,10 @@ int MirroredMapGenerator::MirrorLinks(int iOldLink, CardinalPoint cpEdge) {
     return iLink;
 }
 
-int MirroredMapGenerator::ReallocateMirroredMapIfNecessary() {
-
-    int iErrCode = OK;
-
-    if (m_iBufferPlanetDepth > 0) {
-
+void MirroredMapGenerator::ReallocateMirroredMapIfNecessary()
+{
+    if (m_iBufferPlanetDepth > 0)
+    {
         Assert(m_iNumEdgePlanets > 0);
         Assert(m_iNumNewPlanetsCreated == m_iNumPlanetsPerEmpire * m_iNumNewEmpires / 2);
 
@@ -357,18 +333,13 @@ int MirroredMapGenerator::ReallocateMirroredMapIfNecessary() {
         m_ppvNewPlanetData = NULL;
 
         unsigned int iNumBufferPlanets = m_iNumEdgePlanets * m_iBufferPlanetDepth;
-        if (!AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires + iNumBufferPlanets)) {
-            iErrCode = ERROR_OUT_OF_MEMORY;
-        }
-        else for (unsigned int i = 0; i < m_iNumNewPlanetsCreated; i ++) {
-
-            iErrCode = CopyPlanetData(ppvPreviousNewPlanetData[i], m_ppvNewPlanetData[i]);
-            if (iErrCode != OK)
-                break;
+        AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires + iNumBufferPlanets);
+        
+        for (unsigned int i = 0; i < m_iNumNewPlanetsCreated; i ++)
+        {
+            CopyPlanetData(ppvPreviousNewPlanetData[i], m_ppvNewPlanetData[i]);
         }
 
         FreePlanetData(ppvPreviousNewPlanetData);
     }
-
-    return iErrCode;
 }

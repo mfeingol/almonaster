@@ -43,11 +43,9 @@ Dijkstra::~Dijkstra() {
     delete [] m_pbVisited;
 }
 
-int Dijkstra::Run(unsigned int iSource, bool bTraverseHomeworlds) {
+void Dijkstra::Run(unsigned int iSource, bool bTraverseHomeworlds) {
 
-    int iErrCode = Initialize(iSource);
-    if (iErrCode != OK)
-        return iErrCode;
+    Initialize(iSource);
 
     unsigned int iCurrent = iSource;
     while(iCurrent != NO_KEY) {
@@ -60,8 +58,8 @@ int Dijkstra::Run(unsigned int iSource, bool bTraverseHomeworlds) {
         ENUMERATE_CARDINAL_POINTS(cp) {
         
             unsigned int iPlanet = GetPlanet(iCurrent, (CardinalPoint)cp);
-            if (iPlanet != NO_KEY) {
-
+            if (iPlanet != NO_KEY)
+            {
                 if (bTraverseHomeworlds || IsHomeWorld(iPlanet)) {
 
                     if (m_piDistance[iPlanet] > iCurrentDistance) {
@@ -74,8 +72,6 @@ int Dijkstra::Run(unsigned int iSource, bool bTraverseHomeworlds) {
 
         iCurrent = GetClosestUnvisitedPlanet();
     }
-
-    return OK;
 }
 
 unsigned int Dijkstra::GetShortestPathLength(unsigned int iDestination) {
@@ -104,19 +100,19 @@ unsigned int Dijkstra::GetClosestUnvisitedPlanet() {
     return iNext;
 }
 
-int Dijkstra::Initialize(unsigned int iSource) {
+void Dijkstra::Initialize(unsigned int iSource) {
 
-    if (m_piDistance == NULL) {
-
+    if (m_piDistance == NULL)
+    {
         m_piDistance = new unsigned int[m_iNumPlanets * 2];
+        Assert(m_piDistance);
         m_piPrevious = m_piDistance + m_iNumPlanets;
 
         m_pbVisited = new bool[m_iNumPlanets];
+        Assert(m_pbVisited);
 
-        bool bHt = m_htCoordinates.Initialize(m_iNumPlanets * 2); 
-
-        if (m_piDistance == NULL || m_piPrevious == NULL || m_pbVisited == NULL || !bHt)
-            return ERROR_OUT_OF_MEMORY;
+        bool bHt = m_htCoordinates.Initialize(m_iNumPlanets * 2);
+        Assert(bHt);
     }
 
     for (unsigned int i = 0; i < m_iNumPlanets; i ++) {
@@ -126,13 +122,11 @@ int Dijkstra::Initialize(unsigned int iSource) {
         m_pbVisited[i] = false;
 
         const char* pszCoord = m_ppvPlanetData[i][GameMap::iCoordinates].GetCharPtr();
-        if (!m_htCoordinates.Insert(pszCoord, i))
-            return ERROR_OUT_OF_MEMORY;
+        bool ret = m_htCoordinates.Insert(pszCoord, i);
+        Assert(ret);
     }
 
     m_piDistance[iSource] = 0;
-
-    return OK;
 }
 
 inline unsigned int Dijkstra::GetPlanet(unsigned int iIndex, CardinalPoint cp) {

@@ -39,7 +39,7 @@ private:
     unsigned int* m_piPrevious;
     bool* m_pbVisited;
 
-    int Initialize(unsigned int iSource);
+    void Initialize(unsigned int iSource);
 
     unsigned int GetPlanet(unsigned int iCurrent, CardinalPoint cp);
     bool IsHomeWorld(unsigned int iIndex);
@@ -51,6 +51,6 @@ public:
     Dijkstra(const Variant** ppvPlanetData, unsigned int iNumPlanets);
     ~Dijkstra();
 
-    int Run(unsigned int iSourceIndex, bool bTraverseHomeworlds);
+    void Run(unsigned int iSourceIndex, bool bTraverseHomeworlds);
     unsigned int GetShortestPathLength(unsigned int iDestination);
 };

@@ -32,7 +32,7 @@ class DefaultMapGenerator : public BaseMapGenerator
 private:
 
     virtual int CreatePlanetChains();
-    int AllocateDefaultPlanetData();
+    void AllocateDefaultPlanetData();
 
 public:
     DefaultMapGenerator(GameEngine* pGameEngine);

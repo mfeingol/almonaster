@@ -120,20 +120,20 @@ int BaseMapGenerator::CreatePlanets (
     }
 
     // Init hashtable
-    if (m_htCoordinates.IsInitialized()) {
+    if (m_htCoordinates.IsInitialized())
+    {
         m_htCoordinates.Clear();
-    } else {
+    }
+    else
+    {
         int iMaxNumNewPlanets = m_pvGameClassData[SystemGameClassData::iMaxNumPlanets].GetInteger();
-        if (!m_htCoordinates.Initialize(m_iNumExistingPlanets + iNumNewEmpires * iMaxNumNewPlanets))
-            return ERROR_OUT_OF_MEMORY;
+        bool ret = m_htCoordinates.Initialize(m_iNumExistingPlanets + iNumNewEmpires * iMaxNumNewPlanets);
+        Assert(ret);
     }
 
     // Read map configuration
     iErrCode = m_pGameEngine->GetMapConfiguration(&m_mcConfig);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Cache gameclass options
     m_iGameClassOptions = pvGameClassData[SystemGameClassData::iOptions].GetInteger();
@@ -142,16 +142,10 @@ int BaseMapGenerator::CreatePlanets (
     ComputeGameResources();
 
     // Insert any existing planets into the hash table cache
-    if (!InsertMapCoordinates())
-        return ERROR_OUT_OF_MEMORY;
+    InsertMapCoordinates();
 
     // Call the derived class to create all planet chains
-    iErrCode = CreatePlanetChains();
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
+    CreatePlanetChains();
     Assert(m_iTotalNumNewPlanets == m_iNumNewPlanetsCreated);
 
     // Set out parameters
@@ -215,21 +209,16 @@ int BaseMapGenerator::CreatePlanetChain(unsigned int iEmpireKey) {
 
         // This can fail
         int iErrCode = GetNewPlanetLocation(&lLocation);
-        if (iErrCode != OK) {
-            if (iErrCode == ERROR_NO_NEW_PLANETS_AVAILABLE) {
-                RestartPlanetChain();
-                continue;
-            }
-            else return iErrCode;
+        if (iErrCode == ERROR_NO_NEW_PLANETS_AVAILABLE)
+        {
+            RestartPlanetChain();
+            continue;
         }
+        RETURN_ON_ERROR(iErrCode);
 
         // Create new planet
-        iErrCode = CreatePlanet(iEmpireKey, &lLocation);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        CreatePlanet(iEmpireKey, &lLocation);
     }
-
     Assert(m_iNumChainPlanetsCreated == m_iNumPlanetsPerEmpire);
 
     // Finish off the chain
@@ -355,7 +344,8 @@ void BaseMapGenerator::AssignResources(unsigned int iHWIndex,
     ////////////////////////////
 
     unsigned int iNumNonHWPlanets = iNumPlanets;
-    if (iHWIndex != NO_KEY) {
+    if (iHWIndex != NO_KEY)
+    {
         m_ppvNewPlanetData[iHWIndex][GameMap::iAg] = m_pvGameData[GameData::iHWAg].GetInteger();
         m_ppvNewPlanetData[iHWIndex][GameMap::iMinerals] = m_pvGameData[GameData::iHWMin].GetInteger();
         m_ppvNewPlanetData[iHWIndex][GameMap::iFuel] = m_pvGameData[GameData::iHWFuel].GetInteger();
@@ -550,9 +540,9 @@ void BaseMapGenerator::ComputeGameResources() {
     }
 }
 
-int BaseMapGenerator::CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLocation) {
+void BaseMapGenerator::CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLocation) {
 
-    int iErrCode, iX, iY;
+    int iX, iY;
     unsigned int iNewPlanetIndex = m_iNumNewPlanetsCreated;
 
     // Set default values
@@ -588,25 +578,21 @@ int BaseMapGenerator::CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLo
             // Add link from old to new planet
             const unsigned int iPrevIndex = plLocation->piLinkPlanetIndex[i];
             if (iPrevIndex != NO_KEY)
+            {
                 AddLink(iPrevIndex, OPPOSITE_CARDINAL_POINT[cp]);
+            }
         }
     }
 
-    iErrCode = SetCoordinates(iNewPlanetIndex, iX, iY);
-    if (iErrCode != OK)
-        return iErrCode;
+    SetCoordinates(iNewPlanetIndex, iX, iY);
 
-    iErrCode = InsertIntoCoordinatesTable(iNewPlanetIndex);
-    if (iErrCode != OK)
-        return iErrCode;
+    InsertIntoCoordinatesTable(iNewPlanetIndex);
 
     m_iNumChainPlanetsCreated ++;
     m_iNumNewPlanetsCreated ++;
-
-    return OK;
 }
 
-int BaseMapGenerator::InsertIntoCoordinatesTable(unsigned int iPlanetIndex) {
+void BaseMapGenerator::InsertIntoCoordinatesTable(unsigned int iPlanetIndex) {
 
     const char* pszCoord = m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates].GetCharPtr();
 
@@ -614,22 +600,17 @@ int BaseMapGenerator::InsertIntoCoordinatesTable(unsigned int iPlanetIndex) {
     Assert(!m_htCoordinates.FindFirst(pszCoord, (Variant**) NULL));
 
     // Insert into coordinates hash table
-    if (!m_htCoordinates.Insert(pszCoord, m_ppvNewPlanetData[iPlanetIndex]))
-        return ERROR_OUT_OF_MEMORY;
-
-    return OK;
+    bool ret = m_htCoordinates.Insert(pszCoord, m_ppvNewPlanetData[iPlanetIndex]);
+    Assert(ret);
 }
 
-int BaseMapGenerator::SetCoordinates(unsigned int iPlanetIndex, int iX, int iY) {
+void BaseMapGenerator::SetCoordinates(unsigned int iPlanetIndex, int iX, int iY) {
 
     char pszCoord[MAX_COORDINATE_LENGTH + 1];
     GameEngine::GetCoordinates(iX, iY, pszCoord);
 
     m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates] = pszCoord;
-    if (m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates].GetCharPtr() == NULL)
-        return ERROR_OUT_OF_MEMORY;
-
-    return OK;
+    Assert(m_ppvNewPlanetData[iPlanetIndex][GameMap::iCoordinates].GetCharPtr());
 }
 
 void BaseMapGenerator::AddLink(unsigned int iPlanetIndex, CardinalPoint cp) {
@@ -672,16 +653,10 @@ int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
         int iErrCode, iUpdatesBeforeClose;
         unsigned int iNumEmpiresInGame;
         iErrCode = m_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpiresInGame);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = m_pGameEngine->GetNumUpdatesBeforeGameCloses (m_iGameClass, m_iGameNumber, &iUpdatesBeforeClose);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         // TODO - this is a guess - I think we can live with negative coordinates...
         if (iUpdatesBeforeClose > 1) {
@@ -700,12 +675,8 @@ int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
 
     Assert(iMaxCoordinate > 0);
 
-    plLocation->iX = Algorithm::GetRandomInteger (iMaxCoordinate) + 
-           iMapDeviation + Algorithm::GetRandomInteger (iMapDeviation);
-
-    plLocation->iY = Algorithm::GetRandomInteger (iMaxCoordinate) + 
-           iMapDeviation + Algorithm::GetRandomInteger (iMapDeviation);
-
+    plLocation->iX = Algorithm::GetRandomInteger (iMaxCoordinate) + iMapDeviation + Algorithm::GetRandomInteger (iMapDeviation);
+    plLocation->iY = Algorithm::GetRandomInteger (iMaxCoordinate) + iMapDeviation + Algorithm::GetRandomInteger (iMapDeviation);
     plLocation->cpDirectionFromCoordinates = NO_DIRECTION;
 
     return OK;
@@ -941,18 +912,13 @@ bool BaseMapGenerator::DoesPlanetExist (int iX, int iY) {
     return m_htCoordinates.FindFirst (pszCoord, (Variant**) NULL);
 }
 
-bool BaseMapGenerator::InsertMapCoordinates() {
-
-    unsigned int i;
-    
-    for (i = 0; i < m_iNumExistingPlanets; i ++) {
-        
-        if (!m_htCoordinates.Insert (m_ppvExistingPlanetData[i][GameMap::iCoordinates].GetCharPtr(), m_ppvExistingPlanetData[i])) {
-            return false;
-        }
+void BaseMapGenerator::InsertMapCoordinates()
+{
+    for (unsigned int i = 0; i < m_iNumExistingPlanets; i ++)
+    {
+        bool ret = m_htCoordinates.Insert (m_ppvExistingPlanetData[i][GameMap::iCoordinates].GetCharPtr(), m_ppvExistingPlanetData[i]);
+        Assert(ret);
     }
-
-    return true;
 }
 
 Variant* BaseMapGenerator::FindPlanet(int iX, int iY) {
@@ -970,36 +936,33 @@ Variant* BaseMapGenerator::FindPlanet(int iX, int iY) {
 bool BaseMapGenerator::IsPlanetInCurrentChain(const Variant* pvPlanetData) {
 
     // This is a bit of a hack.  We could optimize it by adding some more metadata somewhere...
-    for (unsigned int i = m_iNumNewPlanetsCreated - m_iNumChainPlanetsCreated; i < m_iNumNewPlanetsCreated; i ++) {
-
+    for (unsigned int i = m_iNumNewPlanetsCreated - m_iNumChainPlanetsCreated; i < m_iNumNewPlanetsCreated; i ++)
+    {
         if (m_ppvNewPlanetData[i] == pvPlanetData)
+        {
             return true;
+        }
     }
 
     return false;
 }
 
-bool BaseMapGenerator::AllocatePlanetData(unsigned int iNumPlanets) {
+void BaseMapGenerator::AllocatePlanetData(unsigned int iNumPlanets) {
 
     Assert(iNumPlanets > 0);
 
     m_iTotalNumNewPlanets = iNumPlanets;
     Variant* pvNewPlanetData = new Variant[iNumPlanets * GameData::NumColumns];
-    if (pvNewPlanetData == NULL)
-        return false;
+    Assert(pvNewPlanetData);
 
     Assert(m_ppvNewPlanetData == NULL);
     m_ppvNewPlanetData = new Variant*[iNumPlanets];
-    if (m_ppvNewPlanetData == NULL) {
-        delete [] pvNewPlanetData;
-        return false;
-    }
+    Assert(m_ppvNewPlanetData);
 
-    for (unsigned int i = 0; i < iNumPlanets; i ++) {
+    for (unsigned int i = 0; i < iNumPlanets; i ++)
+    {
         m_ppvNewPlanetData[i] = pvNewPlanetData + i * GameData::NumColumns;
     }
-
-    return true;
 }
 
 void BaseMapGenerator::GetCoordinates(const Variant* pvPlanetData, int* piX, int* piY) {
@@ -1007,17 +970,14 @@ void BaseMapGenerator::GetCoordinates(const Variant* pvPlanetData, int* piX, int
     GameEngine::GetCoordinates(pvPlanetData[GameMap::iCoordinates].GetCharPtr(), piX, piY);
 }
 
-int BaseMapGenerator::CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData) {
+void BaseMapGenerator::CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData) {
 
-    for (unsigned int i = 0; i < GameMap::NumColumns; i ++) {
-
+    for (unsigned int i = 0; i < GameMap::NumColumns; i ++)
+    {
         pvDestPlanetData[i] = pvSrcPlanetData[i];
-        if (pvSrcPlanetData[i].GetType() == V_STRING &&
-            pvSrcPlanetData[i].GetCharPtr() != NULL &&
-            pvDestPlanetData[i].GetCharPtr() == NULL) {
-            return ERROR_OUT_OF_MEMORY;
+        if (pvSrcPlanetData[i].GetType() == V_STRING && pvSrcPlanetData[i].GetCharPtr())
+        {
+            Assert(pvDestPlanetData[i].GetCharPtr());
         }
     }
-
-    return OK;
 }

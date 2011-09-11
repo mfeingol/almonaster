@@ -142,16 +142,16 @@ protected:
     bool DoesPlanetExist (int iX, int iY);
     bool IsPlanetInCurrentChain(const Variant* pvPlanetData);
 
-    bool InsertMapCoordinates();
+    void InsertMapCoordinates();
     Variant* FindPlanet(int iX, int iY);
 
-    bool AllocatePlanetData(unsigned int iNumPlanets);
+    void AllocatePlanetData(unsigned int iNumPlanets);
 
     void ResetNewPlanetChain();
     void RestartPlanetChain();
 
     int CreatePlanetChain(unsigned int iEmpireKey);
-    int CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLocation);
+    void CreatePlanet(unsigned int iEmpireKey, PlanetLocation* plLocation);
 
     int GetNewPlanetLocation(PlanetLocation* plLocation);
     int GetFirstPlanetLocation(PlanetLocation* plLocation);
@@ -165,13 +165,13 @@ protected:
 
     void AssignResources(unsigned int iHWIndex, unsigned int iStartIndex, unsigned int iNumPlanets);
 
-    int InsertIntoCoordinatesTable(unsigned int iPlanetIndex);
-    int SetCoordinates(unsigned int iPlanetIndex, int iX, int iY);
+    void InsertIntoCoordinatesTable(unsigned int iPlanetIndex);
+    void SetCoordinates(unsigned int iPlanetIndex, int iX, int iY);
     void AddLink(unsigned int iPlanetIndex, CardinalPoint cp);
     void AddLink(Variant* pvPlanetData, CardinalPoint cp);
 
     void GetCoordinates(const Variant* pvPlanetData, int* piX, int* piY);
-    int CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData);
+    void CopyPlanetData(const Variant* pvSrcPlanetData, Variant* pvDestPlanetData);
 
     virtual int CreatePlanetChains() = 0;
 

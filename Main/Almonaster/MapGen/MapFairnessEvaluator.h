@@ -44,8 +44,8 @@ private:
     LinkedList<PlanetClaim>* m_pllClaims;
     unsigned int* m_piEmpireResources;
 
-    int Initialize();
-    int EvaluateEmpireClaims(unsigned int iEmpireIndex);
+    void Initialize();
+    void EvaluateEmpireClaims(unsigned int iEmpireIndex);
     void ProcessClaims();
     unsigned int GetHomeWorldIndex(unsigned int iEmpireKey);
 
@@ -55,6 +55,6 @@ public:
                          const unsigned int* piEmpireKey, unsigned int iNumEmpires);
     ~MapFairnessEvaluator();
 
-    int Run();
+    void Run();
     unsigned int GetResourceClaim(unsigned int iEmpireKey);
 };

@@ -53,10 +53,10 @@ private:
 
     virtual int CreatePlanetChains();
 
-    int CompleteTwistedMap();
+    void CompleteTwistedMap();
     void CreateLinksBetweenTwists();
 
-    int BuildEdgeDescriptions();
+    void BuildEdgeDescriptions();
 
     void ComputeBestTwistedJoin();
     void ComputeBestTwistedJoinNorthSouth(CardinalPoint cpEdge);

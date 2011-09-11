@@ -34,14 +34,14 @@ protected:
     void AssertGameClassSettings();
     int CreateHalfMap();
     void ComputeBestMirroredEdge();
-    int CompleteMirror();
+    void CompleteMirror();
 
-    int CreateBufferPlanetsIfNecessary(int iOldIndex, int iMirrorIndex,
-                                       int iOldX, int iOldY,
-                                       int iMirrorX, int iMirrorY);
+    void CreateBufferPlanetsIfNecessary(int iOldIndex, int iMirrorIndex,
+                                        int iOldX, int iOldY,
+                                        int iMirrorX, int iMirrorY);
 
     void AssignMirroredPlanetOwners();
-    int ReallocateMirroredMapIfNecessary();
+    void ReallocateMirroredMapIfNecessary();
 
     void MirrorPlanet(int iOldX, int iOldY, int iOldLink, CardinalPoint cpEdge, int* piX, int* piY, int* piLink);
     int MirrorLinks(int iOldLink, CardinalPoint cpEdge);

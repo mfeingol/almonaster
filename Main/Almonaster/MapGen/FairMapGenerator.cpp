@@ -53,23 +53,23 @@ int FairMapGenerator::CreatePlanets(
 
     bool bEnforce;
     int iErrCode = CheckEnforceFairness(iGameClass, iGameNumber, &bEnforce);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
-    if (!bEnforce) {
-        return m_pInner->CreatePlanets(iGameClass, iGameNumber, piNewEmpireKey, iNumNewEmpires,
-                                       ppvExistingPlanetData, iNumExistingPlanets,
-                                       pvGameClassData, pvGameData,
-                                       pppvNewPlanetData,
-                                       piNumNewPlanets);
+    if (!bEnforce)
+    {
+        iErrCode = m_pInner->CreatePlanets(iGameClass, iGameNumber, piNewEmpireKey, iNumNewEmpires,
+                                           ppvExistingPlanetData, iNumExistingPlanets,
+                                           pvGameClassData, pvGameData, pppvNewPlanetData, piNumNewPlanets);
+        RETURN_ON_ERROR(iErrCode);
+        return iErrCode;
     }
 
     unsigned int* piTotalEmpireKeys = NULL, iTotalNumEmpires = iNumNewEmpires;
     Algorithm::AutoDelete<unsigned int> autoDelKeys(piTotalEmpireKeys, true);
-    if (ppvExistingPlanetData != NULL) {
+    if (ppvExistingPlanetData != NULL)
+    {
         iErrCode = GetAllEmpireKeys(iGameClass, iGameNumber, &piTotalEmpireKeys, &iTotalNumEmpires);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
     }
 
     m_iStdDevPercentageOfMean = GetStandardDeviationPercentageOfMean(m_gfoFairness, iTotalNumEmpires);
@@ -82,25 +82,24 @@ int FairMapGenerator::CreatePlanets(
 
         iErrCode = m_pInner->CreatePlanets(iGameClass, iGameNumber, piNewEmpireKey, iNumNewEmpires,
                                            ppvExistingPlanetData, iNumExistingPlanets,
-                                           pvGameClassData, pvGameData,
-                                           pppvNewPlanetData,
-                                           piNumNewPlanets);
-        if (iErrCode != OK)
-            return iErrCode;
+                                           pvGameClassData, pvGameData, pppvNewPlanetData, piNumNewPlanets);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (ppvExistingPlanetData == NULL) {
-
+        if (ppvExistingPlanetData == NULL)
+        {
             iErrCode = EvaluateMap(iGameClass, iGameNumber,
                                    const_cast<const Variant**>(*pppvNewPlanetData), *piNumNewPlanets,
-                                   (unsigned int*)piNewEmpireKey, iNumNewEmpires, &bAcceptable);        
-        } else {
-
+                                   (unsigned int*)piNewEmpireKey, iNumNewEmpires, &bAcceptable);
+            RETURN_ON_ERROR(iErrCode);
+        }
+        else
+        {
             Assert(iNumNewEmpires == 1 && iTotalNumEmpires > iNumNewEmpires);
 
             unsigned int iTotalNumPlanets = iNumExistingPlanets + *piNumNewPlanets;
             Variant** ppvTotalMap = new Variant*[iTotalNumPlanets];
-            if (ppvTotalMap == NULL)
-                return ERROR_OUT_OF_MEMORY;
+            Assert(ppvTotalMap);
+            Algorithm::AutoDelete<Variant*> (ppvTotalMap, true);
 
             memcpy(ppvTotalMap, ppvExistingPlanetData, iNumExistingPlanets * sizeof(Variant*));
             memcpy(ppvTotalMap + iNumExistingPlanets, *pppvNewPlanetData, *piNumNewPlanets * sizeof(Variant*));
@@ -108,11 +107,8 @@ int FairMapGenerator::CreatePlanets(
             iErrCode = EvaluateMap(iGameClass, iGameNumber,
                                    const_cast<const Variant**>(ppvTotalMap), iTotalNumPlanets,
                                    piTotalEmpireKeys, iTotalNumEmpires, &bAcceptable);
-            delete [] ppvTotalMap;
+            RETURN_ON_ERROR(iErrCode);
         }
-
-        if (iErrCode != OK)
-            return iErrCode;
 
         iAttempts ++;
     }
@@ -144,12 +140,11 @@ int FairMapGenerator::EvaluateMap(int iGameClass, int iGameNumber,
 
     MapFairnessEvaluator mfeEval(pvNewPlanetData, iNumPlanets, piEmpireKey, iNumEmpires);
 
-    int iErrCode = mfeEval.Run();
-    if (iErrCode != OK)
-        return iErrCode;
+    mfeEval.Run();
 
     unsigned int* piResourceClaim = (unsigned int*)StackAlloc(iNumEmpires * sizeof(unsigned int));
-    for (unsigned int i = 0; i < iNumEmpires; i ++) {
+    for (unsigned int i = 0; i < iNumEmpires; i ++)
+    {
         piResourceClaim[i] = mfeEval.GetResourceClaim(piEmpireKey[i]);
     }
 
@@ -166,18 +161,19 @@ int FairMapGenerator::EvaluateMap(int iGameClass, int iGameNumber,
         *pbAcceptable = iPercentage < m_iStdDevPercentageOfMean;
     }
 
-    if (*pbAcceptable) {
-
+    int iErrCode = OK;
+    if (*pbAcceptable)
+    {
         // Record results for posterity
-        iErrCode = m_gameEngine.SetGameProperty(iGameClass, iGameNumber, 
-                                                GameData::MapFairnessStandardDeviationPercentageOfMean,
-                                                iPercentage);
+        iErrCode = m_gameEngine.SetGameProperty(iGameClass, iGameNumber, GameData::MapFairnessStandardDeviationPercentageOfMean, iPercentage);
+        RETURN_ON_ERROR(iErrCode);
 
-        for (unsigned int i = 0; i < iNumEmpires && iErrCode == OK; i ++) {
-
+        for (unsigned int i = 0; i < iNumEmpires; i ++)
+        {
             iErrCode = m_gameEngine.SetEmpireGameProperty(iGameClass, iGameNumber, piEmpireKey[i],
                                                           GameEmpireData::MapFairnessResourcesClaimed,
                                                           mfeEval.GetResourceClaim(piEmpireKey[i]));
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
@@ -192,17 +188,16 @@ int FairMapGenerator::CheckEnforceFairness(int iGameClass, int iGameNumber, bool
 
     // If more than 1 update has transpired already, don't try to keep things fair
     int iErrCode = OK;
-    bool bEnforce = false;
+    *pbEnforce = false;
 
-    if (m_gfoFairness != GAME_FAIRNESS_RANDOM) {
-
+    if (m_gfoFairness != GAME_FAIRNESS_RANDOM)
+    {
         int iNumUpdates;
-        int iErrCode = m_gameEngine.GetNumUpdates(iGameClass, iGameNumber, &iNumUpdates);
-        if (iErrCode == OK)
-            bEnforce = iNumUpdates < 2;
+        iErrCode = m_gameEngine.GetNumUpdates(iGameClass, iGameNumber, &iNumUpdates);
+        RETURN_ON_ERROR(iErrCode);
+        *pbEnforce = iNumUpdates < 2;
     }
 
-    *pbEnforce = bEnforce;
     return iErrCode;
 }
 
@@ -258,20 +253,18 @@ int FairMapGenerator::GetAllEmpireKeys(int iGameClass, int iGameNumber,
                                        unsigned int** ppiEmpireKey, unsigned int* piNumEmpires) {
 
     Variant* pvEmpireKey = NULL;
-    unsigned int* piTotalEmpireKey = NULL, iNumTotalEmpires;
+    AutoFreeData free(pvEmpireKey);
 
+    unsigned int iNumTotalEmpires;
     int iErrCode = m_gameEngine.GetEmpiresInGame(iGameClass, iGameNumber, &pvEmpireKey, &iNumTotalEmpires);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
-    piTotalEmpireKey = new unsigned int[iNumTotalEmpires];
-    if (piTotalEmpireKey == NULL) {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-    } else {
-        for (unsigned int i = 0; i < iNumTotalEmpires; i ++) {
-            piTotalEmpireKey[i] = pvEmpireKey[i].GetInteger();
-        }
-        t_pCache->FreeData(pvEmpireKey);
+    unsigned int* piTotalEmpireKey = new unsigned int[iNumTotalEmpires];
+    Assert(piTotalEmpireKey);
+
+    for (unsigned int i = 0; i < iNumTotalEmpires; i ++)
+    {
+        piTotalEmpireKey[i] = pvEmpireKey[i].GetInteger();
     }
 
     *piNumEmpires = iNumTotalEmpires;

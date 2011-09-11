@@ -42,24 +42,16 @@ MapFairnessEvaluator::~MapFairnessEvaluator() {
     delete [] m_piEmpireResources;
 }
 
-int MapFairnessEvaluator::Run() {
+void MapFairnessEvaluator::Run() {
 
-    int iErrCode;
-
-    iErrCode = Initialize();
-    if (iErrCode != OK)
-        return iErrCode;
+    Initialize();
     
-    for (unsigned int i = 0; i < m_iNumEmpires; i ++) {
-        
-        iErrCode = EvaluateEmpireClaims(i);
-        if (iErrCode != OK)
-            return iErrCode;
+    for (unsigned int i = 0; i < m_iNumEmpires; i ++)
+    {
+        EvaluateEmpireClaims(i);
     }
 
     ProcessClaims();
-
-    return OK;
 }
 
 unsigned int MapFairnessEvaluator::GetResourceClaim(unsigned int iEmpireKey) {
@@ -67,35 +59,30 @@ unsigned int MapFairnessEvaluator::GetResourceClaim(unsigned int iEmpireKey) {
     for (unsigned int i = 0; i < m_iNumEmpires; i ++) {
 
         if (m_piEmpireKey[i] == iEmpireKey)
+        {
             return m_piEmpireResources[i];
+        }
     }
 
-    Assert(false);
+    Assert(!"Should never get here");
     return 0;
 }
 
-int MapFairnessEvaluator::Initialize() {
+void MapFairnessEvaluator::Initialize() {
 
     m_pllClaims = new LinkedList<PlanetClaim>[m_iNumPlanets];
     m_piEmpireResources = new unsigned int[m_iNumEmpires];
-
-    if (m_pllClaims == NULL || m_piEmpireResources == NULL)
-        return ERROR_OUT_OF_MEMORY;
-
+    Assert(m_pllClaims && m_piEmpireResources);
     memset(m_piEmpireResources, 0, m_iNumEmpires * sizeof(unsigned int));
-
-    return OK;    
 }
 
-int MapFairnessEvaluator::EvaluateEmpireClaims(unsigned int iEmpireIndex) {
+void MapFairnessEvaluator::EvaluateEmpireClaims(unsigned int iEmpireIndex) {
 
     unsigned int iHWIndex = GetHomeWorldIndex(m_piEmpireKey[iEmpireIndex]);
     Assert(iHWIndex != NO_KEY);
 
     // Analyze map for this empire
-    int iErrCode = m_dijkstra.Run(iHWIndex, false);
-    if (iErrCode != OK)
-        return iErrCode;
+    m_dijkstra.Run(iHWIndex, false);
 
     for (unsigned int i = 0; i < m_iNumPlanets; i ++) {
 
@@ -112,8 +99,6 @@ int MapFairnessEvaluator::EvaluateEmpireClaims(unsigned int iEmpireIndex) {
             }
         }
     }
-
-    return OK;
 }
 
 // Rules of thumb:
@@ -122,8 +107,8 @@ int MapFairnessEvaluator::EvaluateEmpireClaims(unsigned int iEmpireIndex) {
 // Resources per planet are given out as an inverse factor of slightly supra-linear distance
 // Claims that have no realistic relevance to the empire (e.g. distance of 10 to one empire, and distance of 2 to another) are discarded
 
-void MapFairnessEvaluator::ProcessClaims() {
-
+void MapFairnessEvaluator::ProcessClaims()
+{
     for (unsigned int i = 0; i < m_iNumPlanets; i ++) {
 
         const LinkedList<PlanetClaim>& list = m_pllClaims[i];
@@ -139,8 +124,8 @@ void MapFairnessEvaluator::ProcessClaims() {
             int iTotalResources = (int) ((double)iAg * 1.25 + iMin + iFuel);
 
             unsigned int iMinDistance = UINT_MAX;
-            while(list.GetNextIterator(&iter)) {
-
+            while(list.GetNextIterator(&iter))
+            {
                 PlanetClaim claim = iter.GetData();
                 if (claim.iDistance < iMinDistance)
                     iMinDistance = claim.iDistance;
@@ -177,13 +162,15 @@ void MapFairnessEvaluator::ProcessClaims() {
 
 unsigned int MapFairnessEvaluator::GetHomeWorldIndex(unsigned int iEmpireKey) {
 
-    for (unsigned int i = 0; i < m_iNumPlanets; i ++) {
-
+    for (unsigned int i = 0; i < m_iNumPlanets; i ++)
+    {
         const Variant* pvPlanetData = m_ppvPlanetData[i];
 
         if (pvPlanetData[GameMap::iHomeWorld].GetInteger() == HOMEWORLD &&
             (unsigned int)pvPlanetData[GameMap::iOwner].GetInteger() == iEmpireKey)
+        {
             return i;
+        }
     }
 
     return NO_KEY;

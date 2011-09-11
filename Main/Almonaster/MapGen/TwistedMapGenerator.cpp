@@ -33,8 +33,8 @@ TwistedMapGenerator::~TwistedMapGenerator()
     }
 }
 
-int TwistedMapGenerator::CreatePlanetChains() {
-
+int TwistedMapGenerator::CreatePlanetChains()
+{
     // Initialize
     memset(m_ed, 0, sizeof(m_ed));
 
@@ -47,22 +47,17 @@ int TwistedMapGenerator::CreatePlanetChains() {
     // 3) Find the location for the second half-map that maximizes connectivity, without
     // joining a planet with itself
 
-    int iErrCode = OK;
-
     AssertGameClassSettings();
 
     // Allocate memory for the entire map
-    if (!AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires))
-        return ERROR_OUT_OF_MEMORY;
+    AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires);
 
     // Create half the map, one side of the mirror
     CreateHalfMap();
 
     // Build data structures that represent the surface of each edge
     // Planets inside those surfaces don't matter for the purpose of matching
-    iErrCode = BuildEdgeDescriptions();
-    if (iErrCode != OK)
-        return iErrCode;
+    BuildEdgeDescriptions();
 
     // Run the numbers and find a good join
     ComputeBestTwistedJoin();
@@ -70,13 +65,11 @@ int TwistedMapGenerator::CreatePlanetChains() {
     // Complete the twist
     CompleteTwistedMap();
 
-    return iErrCode;
+    return OK;
 }
 
-int TwistedMapGenerator::CompleteTwistedMap() {
-
-    int iErrCode = OK;
-
+void TwistedMapGenerator::CompleteTwistedMap()
+{
     const unsigned int iHalfNumPlanets = m_iNumNewPlanetsCreated;
     Assert(iHalfNumPlanets > 0);
     Assert(m_cpChosenEdge != NO_DIRECTION);
@@ -87,9 +80,7 @@ int TwistedMapGenerator::CompleteTwistedMap() {
 
         const unsigned int iTwistIndex = iHalfNumPlanets + iMapIndex;
 
-        iErrCode = CopyPlanetData(m_ppvNewPlanetData[iMapIndex], m_ppvNewPlanetData[iTwistIndex]);
-        if (iErrCode != OK)
-            return iErrCode;
+        CopyPlanetData(m_ppvNewPlanetData[iMapIndex], m_ppvNewPlanetData[iTwistIndex]);
 
         // Execute the transform
         int iMapX, iMapY;
@@ -104,24 +95,18 @@ int TwistedMapGenerator::CompleteTwistedMap() {
         m_ppvNewPlanetData[iTwistIndex][GameMap::iLink] = iTwistLink;
 
         // Set mirrored coordinates
-        iErrCode = SetCoordinates(iTwistIndex, iTwistX, iTwistY);
-        if (iErrCode != OK)
-            return iErrCode;
+        SetCoordinates(iTwistIndex, iTwistX, iTwistY);
 
         // Add to lookup table
-        iErrCode = InsertIntoCoordinatesTable(iTwistIndex);
-        if (iErrCode != OK)
-            return iErrCode;
+        InsertIntoCoordinatesTable(iTwistIndex);
     }
 
     AssignMirroredPlanetOwners();
     CreateLinksBetweenTwists();
-
-    return iErrCode;
 }
 
-int TwistedMapGenerator::BuildEdgeDescriptions() {
-
+void TwistedMapGenerator::BuildEdgeDescriptions()
+{
     GetCoordinates(m_ppvNewPlanetData[0], m_piExtreme + EAST, m_piExtreme + NORTH);
     m_piExtreme[WEST] = m_piExtreme[EAST];
     m_piExtreme[SOUTH] = m_piExtreme[NORTH];
@@ -149,10 +134,10 @@ int TwistedMapGenerator::BuildEdgeDescriptions() {
     m_ed[EAST].iLength = m_ed[WEST].iLength = m_piExtreme[NORTH] - m_piExtreme[SOUTH] + 1;
 
     int cp;
-    ENUMERATE_CARDINAL_POINTS(cp) {
+    ENUMERATE_CARDINAL_POINTS(cp)
+    {
         m_ed[cp].pcEdgePlanet = new PlanetCoordinates[m_ed[cp].iLength];
-        if (m_ed[cp].pcEdgePlanet == NULL)
-            return ERROR_OUT_OF_MEMORY;
+        Assert(m_ed[cp].pcEdgePlanet);
     }
 
     // Initialize descriptions
@@ -216,8 +201,6 @@ int TwistedMapGenerator::BuildEdgeDescriptions() {
             m_ed[WEST].pcEdgePlanet[iEWIndex].bHW = bHW;
         }
     }
-
-    return OK;
 }
 
 void TwistedMapGenerator::ComputeBestTwistedJoin() {

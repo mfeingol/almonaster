@@ -29,33 +29,26 @@ DefaultMapGenerator::DefaultMapGenerator(GameEngine* pGameEngine)
 
 int DefaultMapGenerator::CreatePlanetChains() {
 
-    int iErrCode = AllocateDefaultPlanetData();
-    if (iErrCode != OK)
-        return iErrCode;
+    AllocateDefaultPlanetData();
 
     // The default map generator algorithm is as follows:
     // 1) Create a planet chain for each empire
     // 2) There is no step 2...
-    for (unsigned int i = 0; i < m_iNumNewEmpires; i ++) {
-
+    int iErrCode = OK;
+    for (unsigned int i = 0; i < m_iNumNewEmpires; i ++)
+    {
         iErrCode = CreatePlanetChain(m_piNewEmpireKey[i]);
-        if (iErrCode != OK) {
-            Assert(false);
-            break;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
 }
 
-int DefaultMapGenerator::AllocateDefaultPlanetData() {
+void DefaultMapGenerator::AllocateDefaultPlanetData() {
 
     // Allocate data for all new planets
     Assert(m_iNumPlanetsPerEmpire > 0);
     Assert(m_iNumNewEmpires > 0);
 
-    if (!AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires))
-        return ERROR_OUT_OF_MEMORY;
-
-    return OK;
+    AllocatePlanetData(m_iNumPlanetsPerEmpire * m_iNumNewEmpires);
 }
