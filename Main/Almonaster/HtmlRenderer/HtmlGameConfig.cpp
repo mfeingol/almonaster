@@ -18,9 +18,8 @@
 
 #include "HtmlRenderer.h"
 
-
-void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTournamentKey) {
-    
+int HtmlRenderer::RenderGameConfiguration(int iGameClass, unsigned int iTournamentKey)
+{
     int iHrsUD, iMinUD, iSecUD, iMaxNumEmpires, iBridier, iErrCode, iFilterIP = 0, iFilterId = 0;
     
     Variant vNumUpdatesBeforeGameCloses = 1;
@@ -59,17 +58,13 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
 
     unsigned int iNumBlocks = 0;
 
-    iErrCode = GetSystemOptions (&iSystemOptions);
-    if (iErrCode != OK) {
-        goto OnError;
-    }
+    iErrCode = GetSystemOptions(&iSystemOptions);
+    RETURN_ON_ERROR(iErrCode);
 
     if (iGameClass != NO_KEY) {
 
         iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
     } else {
 
@@ -78,18 +73,14 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
     
     // MaxUpdatesBeforeGameCloses
     iErrCode = GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxUpdatesBeforeGameCloses);
-    if (iErrCode != OK) {
-        goto OnError;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // MaxNumEmpires
     if (iGameClass == NO_KEY) {
         iMaxNumEmpires = 2;
     } else {
         iErrCode = GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // MapGenAlgo
@@ -177,9 +168,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
             vNumUpdatesBeforeGameCloses = pHttpForm->GetIntValue();
         } else {
             iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vNumUpdatesBeforeGameCloses);
-            if (iErrCode != OK) {
-                goto OnError;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
         
         // RestrictAlmonaster
@@ -502,9 +491,7 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         mgSupportedMapGen = MAPGEN_ALL;
     } else {
         iErrCode = GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     OutputText("<tr><td>Map generation:</td><td>");
@@ -601,13 +588,11 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         "<textarea rows=\"3\" cols=\"50\" wrap=\"virtual\" name=\"EnterGameMessage\">"
         );
     
-    if (pszMessage != NULL) {
-        
+    if (pszMessage != NULL)
+    {
         String strFilter;
-        
-        if (HTMLFilter (pszMessage, &strFilter, 0, false) == OK) {
-            m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
-        }
+        HTMLFilter(pszMessage, &strFilter, 0, false);
+        m_pHttpResponse->WriteText(strFilter.GetCharPtr(), strFilter.GetLength());
     }
     
     OutputText ("</textarea></td></tr>");
@@ -1135,7 +1120,9 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
 
                     // Make sure empire exists
                     iErrCode = LookupEmpireByName(pszName, &iFilterEmpireKey, &vRealName, NULL);
-                    if (iErrCode == OK && iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
+                    RETURN_ON_ERROR(iErrCode);
+
+                    if (iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
                     {
                         sprintf(pszFormIP, "FilterEmpireIP%i", i);
                         sprintf(pszFormID, "FilterEmpireID%i", i);
@@ -1188,18 +1175,11 @@ void HtmlRenderer::RenderGameConfiguration (int iGameClass, unsigned int iTourna
         
     OutputText ("</table><p>");
     
-    return;
-    
-OnError:
-    
-    OutputText ("Error ");
-    m_pHttpResponse->WriteText (iErrCode);
-    OutputText (" occurred while processing this page");
+    return iErrCode;
 }
 
-int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey,
-                                               const Variant* pvGameClassInfo, GameOptions* pgoOptions) {
-    
+int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey, const Variant* pvGameClassInfo, GameOptions* pgoOptions)
+{
     int iErrCode, iTemp, iGameClassOptions, iMaxNumEmpires;
     Variant vMaxUpdatesBeforeGameCloses;
 
@@ -1214,15 +1194,14 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     pgoOptions->pszPassword = NULL;
 
     // Check for refresh requests
-    if (WasButtonPressed (BID_BLOCK)) {
+    if (WasButtonPressed(BID_BLOCK))
+    {
         return WARNING;
     }
     
     // MaxUpdatesBeforeGameCloses
     iErrCode = GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxUpdatesBeforeGameCloses);
-    if (iErrCode != OK) {
-        goto OnError;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     if (iGameClass == NO_KEY) {
 
@@ -1237,19 +1216,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         Assert(pvGameClassInfo == NULL);
 
         iErrCode = GetGameClassUpdatePeriod (iGameClass, &sUpdatePeriod);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetGameClassOptions (iGameClass, &iGameClassOptions);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetMaxNumEmpires (iGameClass, &iMaxNumEmpires);
-        if (iErrCode != OK) {
-            goto OnError;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
     
     // NumUpdatesForClose
@@ -1257,7 +1230,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumUpdatesForClose")) == NULL) {
             AddMessage ("Missing NumUpdatesForClose form");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         pgoOptions->iNumUpdatesBeforeGameCloses = pHttpForm->GetIntValue();
     
@@ -1268,25 +1241,25 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     
     if (pgoOptions->iNumUpdatesBeforeGameCloses > vMaxUpdatesBeforeGameCloses.GetInteger()) {
         AddMessage ("The number of updates before the game closes is too high");
-        return ERROR_FAILURE;
+        return WARNING;
     }
     
     // FirstUpdateDelay
     if ((pHttpForm = m_pHttpRequest->GetForm ("HoursUD")) == NULL) {
         AddMessage ("Missing HoursUD form");
-        return ERROR_FAILURE;
+        return ERROR_MISSING_FORM;
     }
     pgoOptions->sFirstUpdateDelay = 60 * 60 * pHttpForm->GetIntValue();
     
     if ((pHttpForm = m_pHttpRequest->GetForm ("MinsUD")) == NULL) {
         AddMessage ("Missing MinsUD form");
-        return ERROR_FAILURE;
+        return ERROR_MISSING_FORM;
     }
     pgoOptions->sFirstUpdateDelay += 60 * pHttpForm->GetIntValue();
     
     if ((pHttpForm = m_pHttpRequest->GetForm ("SecsUD")) == NULL) {
         AddMessage ("Missing SecsUD form");
-        return ERROR_FAILURE;
+        return ERROR_MISSING_FORM;
     }
     pgoOptions->sFirstUpdateDelay += pHttpForm->GetIntValue();
 
@@ -1299,7 +1272,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             mgMapGen != MAPGEN_MIRRORED &&
             mgMapGen != MAPGEN_TWISTED) {
             AddMessage ("Wrong MapGenAlgo option");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
     } else {
         mgMapGen = MAPGEN_STANDARD;
@@ -1318,14 +1291,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     } else {
 
         iErrCode = GetSupportedMapGenerationTypes(iGameClass, &mgSupportedMapGen);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     if (!(mgMapGen & mgSupportedMapGen)) {
         AddMessage ("The game type does not support the selected map generation algorithm");
-        return ERROR_FAILURE;
+        return ERROR_MISSING_FORM;
     }
 
     if (mgMapGen == MAPGEN_MIRRORED) {
@@ -1347,7 +1318,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             gfoFairness != GAME_FAIRNESS_VERY_UNFAIR
             ) {
             AddMessage ("Wrong MapFairness option");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
     } else {
         gfoFairness = GAME_FAIRNESS_RANDOM;
@@ -1360,7 +1331,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
         if ((pHttpForm = m_pHttpRequest->GetForm ("NamesListed")) == NULL) {
             AddMessage ("Missing NamesListed form");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         if (pHttpForm->GetIntValue() != 0) {
             pgoOptions->iOptions |= GAME_NAMES_LISTED;
@@ -1385,12 +1356,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     // First update delay
     if (pgoOptions->sFirstUpdateDelay < 0) {
         AddMessage ("Invalid first update delay");
-        return ERROR_FAILURE;
+        return WARNING;
     }
     
     if (pgoOptions->sFirstUpdateDelay > sUpdatePeriod * MAX_NUM_UPDATE_PERIODS_FOR_FIRST_DELAY) {
         AddMessage ("The first update delay is too large");
-        return ERROR_FAILURE;
+        return WARNING;
     }
     
     // Bridier
@@ -1409,7 +1380,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
     // EnterGameMessage
     if ((pHttpForm = m_pHttpRequest->GetForm ("EnterGameMessage")) == NULL) {
         AddMessage ("Missing EnterGameMessage form");
-        return ERROR_FAILURE;
+        return ERROR_MISSING_FORM;
     }
     
     pgoOptions->pszEnterGameMessage = pHttpForm->GetValue();
@@ -1417,7 +1388,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         
         if (strlen (pgoOptions->pszEnterGameMessage) > MAX_ENTER_GAME_MESSAGE_LENGTH) {
             AddMessage ("The message sent to players entering the game is too long");
-            return ERROR_FAILURE;
+            return WARNING;
         }
     }
 
@@ -1426,7 +1397,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         // Password
         if ((pHttpForm = m_pHttpRequest->GetForm ("GamePassword")) == NULL) {
             AddMessage ("Missing GamePassword form");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         
         pszPassword = pHttpForm->GetValue();
@@ -1436,23 +1407,23 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             
             if (stLen > MAX_PASSWORD_LENGTH) {
                 AddMessage ("The game password was too long");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             if ((pHttpForm = m_pHttpRequest->GetForm ("GamePassword2")) == NULL) {
                 AddMessage ("Missing GamePassword2 form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StrCmp (pszPassword, pHttpForm->GetValue()) != 0) {
                 AddMessage ("The game password was not properly confirmed");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             // Check password
             if (VerifyPassword (pszPassword) != OK) {
                 AddMessage ("The game password contained an invalid character");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             pgoOptions->pszPassword = pszPassword;
@@ -1461,13 +1432,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         // FilterIP
         if ((pHttpForm = m_pHttpRequest->GetForm ("FilterIP")) == NULL) {
             AddMessage ("Missing FilterIP form");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         iTemp = pHttpForm->GetIntValue();
         
         if (((iTemp & ~GAME_WARN_ON_DUPLICATE_IP_ADDRESS) & ~GAME_BLOCK_ON_DUPLICATE_IP_ADDRESS) != 0) {
             AddMessage ("Incorrect FilterIP value");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         
         pgoOptions->iOptions |= iTemp;
@@ -1475,13 +1446,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         // FilterId
         if ((pHttpForm = m_pHttpRequest->GetForm ("FilterId")) == NULL) {
             AddMessage ("Missing FilterId form");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         iTemp = pHttpForm->GetIntValue();
         
         if (((iTemp & ~GAME_WARN_ON_DUPLICATE_SESSION_ID) & ~GAME_BLOCK_ON_DUPLICATE_SESSION_ID) != 0) {
             AddMessage ("Incorrect FilterId value");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
 
         pgoOptions->iOptions |= iTemp;
@@ -1489,7 +1460,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         // FilterIdle
         if ((pHttpForm = m_pHttpRequest->GetForm ("FilterIdle")) == NULL) {
             AddMessage ("Missing FilterIdle form");
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         if (pHttpForm->GetIntValue() != 0) {
             pgoOptions->iOptions |= GAME_RESTRICT_IDLE_EMPIRES;
@@ -1507,13 +1478,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Min
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictAlmonasterMin")) == NULL) {
                 AddMessage ("Missing RestrictAlmonasterMin form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             fMin = pHttpForm->GetFloatValue();
             
             if (fMin < ALMONASTER_MIN_SCORE || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                 AddMessage ("Invalid minimum Almonaster Score");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             if (fMin != ALMONASTER_MIN_SCORE) {
@@ -1524,7 +1495,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Max
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictAlmonasterMax")) == NULL) {
                 AddMessage ("Missing RestrictAlmonasterMax form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1533,12 +1504,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 
                 if (fMin > fMax) {
                     AddMessage ("Invalid Almonaster Score restrictions");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (fMax > ALMONASTER_MAX_SCORE || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                     AddMessage ("Invalid maximum Almonaster Score");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 pgoOptions->iOptions |= GAME_RESTRICT_MAX_ALMONASTER_SCORE;
@@ -1554,7 +1525,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Min
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictClassicMin")) == NULL) {
                 AddMessage ("Missing RestrictClassicMin form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
@@ -1565,7 +1536,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 
                 if (fMin < CLASSIC_MIN_SCORE || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                     AddMessage ("Invalid minimum Classic Score");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (fMin != CLASSIC_MIN_SCORE) {
@@ -1577,7 +1548,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Max
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictClassicMax")) == NULL) {
                 AddMessage ("Missing RestrictClassicMax form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1586,12 +1557,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 
                 if (fMin > fMax) {
                     AddMessage ("Invalid Classic Score restrictions");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (fMax > CLASSIC_MAX_SCORE || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                     AddMessage ("Invalid maximum Classic Score");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 pgoOptions->iOptions |= GAME_RESTRICT_MAX_CLASSIC_SCORE;
@@ -1607,13 +1578,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Min
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierRankMin")) == NULL) {
                 AddMessage ("Missing RestrictBridierRankMin form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             iMin = pHttpForm->GetIntValue();
             
             if (iMin < BRIDIER_MIN_RANK || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                 AddMessage ("Invalid minimum Bridier Rank");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             if (iMin != BRIDIER_MIN_RANK) {
@@ -1624,7 +1595,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Max
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierRankMax")) == NULL) {
                 AddMessage ("Missing RestrictBridierRankMax form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1633,12 +1604,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 
                 if (iMin > iMax) {
                     AddMessage ("Invalid Bridier Rank restrictions");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (iMax > BRIDIER_MAX_RANK || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                     AddMessage ("Invalid maximum Bridier Rank");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 pgoOptions->iOptions |= GAME_RESTRICT_MAX_BRIDIER_RANK;
@@ -1654,13 +1625,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Min
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierIndexMin")) == NULL) {
                 AddMessage ("Missing RestrictBridierIndexMin form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             iMin = pHttpForm->GetIntValue();
             
             if (iMin < BRIDIER_MIN_INDEX || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                 AddMessage ("Invalid minimum Bridier Index");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             if (iMin != BRIDIER_MIN_INDEX) {
@@ -1671,7 +1642,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Max
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierIndexMax")) == NULL) {
                 AddMessage ("Missing RestrictBridierIndexMax form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1680,12 +1651,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 
                 if (iMin > iMax) {
                     AddMessage ("Invalid Bridier Index restrictions");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (iMax > BRIDIER_MAX_INDEX || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                     AddMessage ("Invalid maximum Bridier Index");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 pgoOptions->iOptions |= GAME_RESTRICT_MAX_BRIDIER_INDEX;
@@ -1703,13 +1674,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 // Min
                 if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierRankGainMin")) == NULL) {
                     AddMessage ("Missing RestrictBridierRankGainMin form");
-                    return ERROR_FAILURE;
+                    return ERROR_MISSING_FORM;
                 }
                 iMin = pHttpForm->GetIntValue();
                 
                 if (iMin < BRIDIER_MIN_RANK_GAIN || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                     AddMessage ("Invalid minimum Bridier Rank Gain");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (iMin != BRIDIER_MIN_RANK_GAIN) {
@@ -1720,7 +1691,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 // Max
                 if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierRankGainMax")) == NULL) {
                     AddMessage ("Missing RestrictBridierRankGainMax form");
-                    return ERROR_FAILURE;
+                    return ERROR_MISSING_FORM;
                 }
                 
                 if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1729,12 +1700,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                     
                     if (iMin > iMax) {
                         AddMessage ("Invalid Bridier Rank Gain restrictions");
-                        return ERROR_FAILURE;
+                        return WARNING;
                     }
                     
                     if (iMax > BRIDIER_MAX_RANK_GAIN || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                         AddMessage ("Invalid maximum Bridier Rank Gain");
-                        return ERROR_FAILURE;
+                        return WARNING;
                     }
                     
                     pgoOptions->iOptions |= GAME_RESTRICT_MAX_BRIDIER_RANK_GAIN;
@@ -1750,13 +1721,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 // Min
                 if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierRankLossMin")) == NULL) {
                     AddMessage ("Missing RestrictBridierRankLossMin form");
-                    return ERROR_FAILURE;
+                    return ERROR_MISSING_FORM;
                 }
                 iMin = pHttpForm->GetIntValue();
                 
                 if (iMin < BRIDIER_MIN_RANK_LOSS || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                     AddMessage ("Invalid minimum Bridier Rank Gain");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (iMin != BRIDIER_MIN_RANK_LOSS) {
@@ -1767,7 +1738,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 // Max
                 if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictBridierRankLossMax")) == NULL) {
                     AddMessage ("Missing RestrictBridierRankLossMax form");
-                    return ERROR_FAILURE;
+                    return ERROR_MISSING_FORM;
                 }
                 
                 if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1776,12 +1747,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                     
                     if (iMin > iMax) {
                         AddMessage ("Invalid Bridier Rank Loss restrictions");
-                        return ERROR_FAILURE;
+                        return WARNING;
                     }
                     
                     if (iMax > BRIDIER_MAX_RANK_LOSS || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                         AddMessage ("Invalid maximum Bridier Rank Loss");
-                        return ERROR_FAILURE;
+                        return WARNING;
                     }
                     
                     pgoOptions->iOptions |= GAME_RESTRICT_MAX_BRIDIER_RANK_LOSS;
@@ -1798,13 +1769,13 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Min
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictWinsMin")) == NULL) {
                 AddMessage ("Missing RestrictWinsMin form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             iMin = pHttpForm->GetIntValue();
             
             if (iMin < MIN_NUM_WINS || String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) == 0) {
                 AddMessage ("Invalid minimum Wins");
-                return ERROR_FAILURE;
+                return WARNING;
             }
             
             if (iMin != MIN_NUM_WINS) {
@@ -1815,7 +1786,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             // Max
             if ((pHttpForm = m_pHttpRequest->GetForm ("RestrictWinsMax")) == NULL) {
                 AddMessage ("Missing RestrictWinsMax form");
-                return ERROR_FAILURE;
+                return ERROR_MISSING_FORM;
             }
             
             if (String::StriCmp (pHttpForm->GetValue(), HIGHEST_STRING) != 0) {
@@ -1824,12 +1795,12 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
                 
                 if (iMin > iMax) {
                     AddMessage ("Invalid Wins restrictions");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 if (iMax > MAX_NUM_WINS || String::StriCmp (pHttpForm->GetValue(), LOWEST_STRING) == 0) {
                     AddMessage ("Invalid maximum Wins");
-                    return ERROR_FAILURE;
+                    return WARNING;
                 }
                 
                 pgoOptions->iOptions |= GAME_RESTRICT_MAX_WINS;
@@ -1845,11 +1816,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             if (iNumBlocks > 1 || iNumBlocks == 1 && pHttpForm->GetValue() != NULL) {
 
                 pgoOptions->pSecurity = new GameSecurityEntry [iNumBlocks];
-                if (pgoOptions->pSecurity == NULL) {
-                    AddMessage ("The server is out of memory");
-                    return ERROR_OUT_OF_MEMORY;
-                }
-
+                Assert(pgoOptions->pSecurity);
     #ifdef _DEBUG
                 memset (pgoOptions->pSecurity, 0xde, iNumBlocks * sizeof (GameSecurityEntry));
     #endif
@@ -1867,7 +1834,9 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
                         // Make sure empire exists
                         iErrCode = LookupEmpireByName(pszName, &iFilterEmpireKey, NULL, &iSecretKey);
-                        if (iErrCode == OK && iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
+                        RETURN_ON_ERROR(iErrCode);
+
+                        if (iFilterEmpireKey != NO_KEY && iFilterEmpireKey != m_iEmpireKey)
                         {
                             bool bAlready = false;
 
@@ -1942,11 +1911,5 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         pgoOptions->iNumSecurityEntries = 0;
     }
 
-    return OK;
-    
-OnError:
-    
-    AddMessage ("Error reading gameclass data");
-    
     return iErrCode;
 }

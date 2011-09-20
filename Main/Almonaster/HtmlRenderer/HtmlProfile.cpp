@@ -380,8 +380,8 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
     
     // Real Name
     OutputText ("</td></tr><tr><td><strong>Real Name:</strong></td><td>");
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strHtml, 0, false);
-    if (iErrCode == OK && !strHtml.IsBlank()) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strHtml, 0, false);
+    if (!strHtml.IsBlank()) {
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
     }
     
@@ -457,8 +457,8 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
 
     // Location
     OutputText ("</td></tr><tr><td><strong>Location:</strong></td><td>");
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iLocation].GetCharPtr(), &strHtml, 0, false);
-    if (iErrCode == OK && !strHtml.IsBlank()) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iLocation].GetCharPtr(), &strHtml, 0, false);
+    if (!strHtml.IsBlank()) {
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
     }
     
@@ -469,8 +469,8 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
     // Email address
     OutputText ("</td></tr><tr><td><strong>Email Address:</strong></td><td>");
     
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iEmail].GetCharPtr(), &strHtml, 0, false);
-    if (iErrCode == OK && !strHtml.IsBlank()) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iEmail].GetCharPtr(), &strHtml, 0, false);
+    if (!strHtml.IsBlank()) {
         OutputText ("<a href=\"mailto:");
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
         OutputText ("\">");
@@ -480,8 +480,8 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
     
     if (m_iPrivilege >= ADMINISTRATOR || m_iEmpireKey == iTargetEmpireKey) {
         
-        iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iPrivateEmail].GetCharPtr(), &strHtml, 0, false);
-        if (iErrCode == OK && !strHtml.IsBlank()) {
+        HTMLFilter (pvEmpireData[SystemEmpireData::iPrivateEmail].GetCharPtr(), &strHtml, 0, false);
+        if (!strHtml.IsBlank()) {
             OutputText (" [<a href=\"mailto:");
             m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
             OutputText ("\">");
@@ -497,8 +497,8 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
     // Instant Messenger
     OutputText ("</td></tr><tr><td><strong>Instant Messenger:</strong></td><td>");
 
-    iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iIMId].GetCharPtr(), &strHtml, 0, false);
-    if (iErrCode == OK && !strHtml.IsBlank()) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iIMId].GetCharPtr(), &strHtml, 0, false);
+    if (!strHtml.IsBlank()) {
         m_pHttpResponse->WriteText (strHtml.GetCharPtr(), strHtml.GetLength());
     }
     
@@ -632,12 +632,8 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
         OutputText ("<p><table width=\"60%\"><tr><td><font face=\"" DEFAULT_QUOTE_FONT "\">");
 
         String strQuote;
-        iErrCode = HTMLFilter (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr(), &strQuote, 0, true);
-        if (iErrCode == OK) {
-            m_pHttpResponse->WriteText (strQuote.GetCharPtr());
-        } else {
-            OutputText ("The server is out of memory");
-        }
+        HTMLFilter (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr(), &strQuote, 0, true);
+        m_pHttpResponse->WriteText (strQuote.GetCharPtr());
         
         OutputText ("</td></tr></table>");
     }

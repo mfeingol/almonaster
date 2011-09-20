@@ -25,7 +25,7 @@ static const char* const g_pszColumns[] = {
     "Fleet",
 };
 
-void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
+int HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
 
     int iErrCode;
     Variant vTemp;
@@ -35,68 +35,61 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
     Algorithm::AutoDelete<BuildLocation> autopblBuildLocation (pblBuildLocation, true);
 
     int iTechDevs, iTechUndevs, iBR, iNumTechs, iOneTech = 0;
-    bool bBuilder;
 
     const char* pszTableColor;
     size_t stTableColorLen;
 
     // Make sure planet is a builder
+    bool bBuilder;
     iErrCode = IsPlanetBuilder (m_iGameClass, m_iGameNumber, m_iEmpireKey, iPlanetKey, &bBuilder);
-    if (iErrCode != OK || !bBuilder) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Check BR
     iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iBR < 1) {
-        goto Cleanup;
+    if (iBR < 1)
+    {
+        return OK;
     }
 
     // Check ship limits
     iErrCode = GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxNumShips, &vTemp);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (vTemp.GetInteger() != INFINITE_SHIPS) {
 
         int iNumShips;
         iErrCode = GetNumShips (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumShips);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
-        if (iNumShips >= vTemp.GetInteger()) {
-            goto Cleanup;
+        if (iNumShips >= vTemp.GetInteger())
+        {
+            return OK;
         }
     }
 
     // Get empire data
     iErrCode = GetDevelopedTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iTechDevs, &iTechUndevs);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vTemp);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     iMaxNumShipsBuiltAtOnce = vTemp.GetInteger();
 
     iNumTechs = 0;
-    ENUMERATE_SHIP_TYPES (i) {
-        if (iTechDevs & TECH_BITS[i]) {
+    ENUMERATE_SHIP_TYPES (i)
+    {
+        if (iTechDevs & TECH_BITS[i])
+        {
             iNumTechs ++;
             iOneTech = i;
         }
     }
 
-    if (iNumTechs == 0) {
-        goto Cleanup;
+    if (iNumTechs == 0)
+    {
+        return OK;
     }
 
     iErrCode = GetBuildLocations (
@@ -108,9 +101,7 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
         &iNumLocations
         );
 
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Row
     iLimit = sizeof (g_pszColumns) / sizeof (g_pszColumns[0]);
@@ -304,13 +295,9 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
                     &vFleetName
                     );
 
-                if (iErrCode != OK) {
-                    goto Cleanup;
-                }
+                RETURN_ON_ERROR(iErrCode);
 
-                if (HTMLFilter (vFleetName.GetCharPtr(), &strFleetName, 0, false) != OK) {
-                    strFleetName.Clear();
-                }
+                HTMLFilter(vFleetName.GetCharPtr(), &strFleetName, 0, false);
 
                 m_pHttpResponse->WriteText (strFleetName.GetCharPtr(), strFleetName.GetLength());
 
@@ -322,17 +309,15 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
                     &iNumShips,
                     NULL
                     );
-
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
                    
-                    OutputText (" (");
-                    m_pHttpResponse->WriteText (iNumShips);
-                    OutputText (" ship");
-                    if (iNumShips != 1) {
-                        OutputText ("s");
-                    }
-                    OutputText (")");
+                OutputText (" (");
+                m_pHttpResponse->WriteText (iNumShips);
+                OutputText (" ship");
+                if (iNumShips != 1) {
+                    OutputText ("s");
                 }
+                OutputText (")");
 
                 break;
             }
@@ -361,17 +346,10 @@ void HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
         "</td></tr>"
         );
 
-Cleanup:
-
-    if (iErrCode != OK) {
-        OutputText ("Error ");
-        m_pHttpResponse->WriteText (iErrCode);
-        OutputText (" occurred in RenderMiniBuild");
-    }        
+    return iErrCode;
 }
 
-
-void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
+int HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
 
     int iErrCode, iType, iNumber, iBR, iNumShipsBuilt, iX, iY;
     unsigned int iFleet = NO_KEY;
@@ -388,7 +366,7 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
     snprintf (pszForm, sizeof (pszForm), "MiniType%d", iPlanetKey);
     pHttpForm = m_pHttpRequest->GetForm (pszForm);
     if (pHttpForm == NULL) {
-        goto Cleanup;
+        return OK;
     }
     iType = pHttpForm->GetIntValue();
 
@@ -396,19 +374,19 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
     snprintf (pszForm, sizeof (pszForm), "MiniNumber%d", iPlanetKey);
     pHttpForm = m_pHttpRequest->GetForm (pszForm);
     if (pHttpForm == NULL) {
-        goto Cleanup;
+        return OK;
     }
     iNumber = pHttpForm->GetIntValue();
 
     if (iNumber == 0) {
-        goto Cleanup;
+        return OK;
     }
 
     // Get BR
     snprintf (pszForm, sizeof (pszForm), "MiniBR%d", iPlanetKey);
     pHttpForm = m_pHttpRequest->GetForm (pszForm);
     if (pHttpForm == NULL) {
-        goto Cleanup;
+        return OK;
     }
     iBR = pHttpForm->GetIntValue();
 
@@ -420,11 +398,8 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
         iFleet = pHttpForm->GetUIntValue();
         if (iFleet == FLEET_NEWFLEETKEY)
         {
-            iErrCode = HtmlCreateRandomFleet (iPlanetKey, &iFleet);
-            if (iErrCode != OK)
-            {
-                goto Cleanup;
-            }
+            iErrCode = HtmlCreateRandomFleet(iPlanetKey, &iFleet);
+            RETURN_ON_ERROR(iErrCode);
         }
     }
 
@@ -437,24 +412,12 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
         &iY
         );
 
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = GetPlanetName (
-        m_iGameClass, 
-        m_iGameNumber, 
-        iPlanetKey, 
-        &vPlanetName
-        );
+    iErrCode = GetPlanetName(m_iGameClass, m_iGameNumber, iPlanetKey, &vPlanetName);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    if (HTMLFilter (vPlanetName.GetCharPtr(), &strPlanetName, 0, false) != OK) {
-        strPlanetName.Clear();
-    }
+    HTMLFilter(vPlanetName.GetCharPtr(), &strPlanetName, 0, false);
 
     if (iFleet == NO_KEY) {
 
@@ -471,13 +434,9 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
             &vFleetName
             );
 
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
-        if (HTMLFilter (vFleetName.GetCharPtr(), &strFleetName, 0, false) != OK) {
-            strFleetName.Clear();
-        }
+        HTMLFilter (vFleetName.GetCharPtr(), &strFleetName, 0, false);
     }
 
     iErrCode = BuildNewShips (
@@ -494,7 +453,7 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
         &bBuildReduced
         );
 
-    AddBuildNewShipsMessage (
+    iErrCode = HandleBuildNewShipsResult(
         iErrCode,
         iNumShipsBuilt,
         iBR,
@@ -506,8 +465,9 @@ void HtmlRenderer::HandleMiniBuild (unsigned int iPlanetKey) {
         bBuildReduced
         );
 
-Cleanup:
-;
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 
@@ -524,28 +484,19 @@ int HtmlRenderer::HtmlCreateRandomFleet(unsigned int iPlanetKey, unsigned int* p
         piFleetKey
         );
 
-    if (iErrCode == OK) {
-
-        if (GetFleetProperty (
-            m_iGameClass,
-            m_iGameNumber,
-            m_iEmpireKey,
-            *piFleetKey,
-            GameEmpireFleets::Name,
-            &vName
-            ) == OK) {
-
-            pszFleetName = vName.GetCharPtr();
-        }
+    if (iErrCode == OK)
+    {
+        iErrCode = GetFleetProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, *piFleetKey, GameEmpireFleets::Name, &vName);
+        RETURN_ON_ERROR(iErrCode);
     }
 
-    AddCreateNewFleetMessage (iErrCode, pszFleetName);
-    
+    iErrCode = HandleCreateNewFleetResult(iErrCode, pszFleetName);
+    RETURN_ON_ERROR(iErrCode);
+
     return iErrCode;
 }
 
-
-void HtmlRenderer::AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, int iBR, int iTechKey,
+int HtmlRenderer::HandleBuildNewShipsResult(int iErrCode, int iNumShipsBuilt, int iBR, int iTechKey,
                                             const char* pszPlanetName, int iX, int iY, const char* pszFleetName,
                                             bool bBuildReduced) {
     switch (iErrCode) {
@@ -659,35 +610,24 @@ void HtmlRenderer::AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, in
         break;
 
     default:
-
-        AddMessage ("Error ");
-        AppendMessage (iErrCode);
-        AppendMessage (" occurred attempting to build ships");
-        break;
+        return iErrCode;
     }
+
+    return OK;
 }
 
-void HtmlRenderer::AddCreateNewFleetMessage (int iErrCode, const char* pszFleetName) {
+int HtmlRenderer::HandleCreateNewFleetResult(int iErrCode, const char* pszFleetName) {
 
     String strFilter;
 
     switch (iErrCode) {
     case OK:
     
-        if (HTMLFilter (
-            pszFleetName, 
-            &strFilter,
-            0,
-            false
-            ) == OK) {
+        HTMLFilter(pszFleetName, &strFilter, 0, false);
 
-            AddMessage ("Fleet ");
-            AppendMessage (strFilter.GetCharPtr());
-            AppendMessage (" was created");
-        
-        } else {
-            AddMessage ("The fleet was created");
-        }
+        AddMessage("Fleet ");
+        AppendMessage(strFilter.GetCharPtr());
+        AppendMessage(" was created");
 
         break;
 
@@ -707,10 +647,8 @@ void HtmlRenderer::AddCreateNewFleetMessage (int iErrCode, const char* pszFleetN
         break;
 
     default:
-
-        AddMessage ("Error ");
-        AppendMessage (iErrCode);
-        AppendMessage (" occurred attempting to create a fleet");
-        break;
+        return iErrCode;
     }
+
+    return OK;
 }

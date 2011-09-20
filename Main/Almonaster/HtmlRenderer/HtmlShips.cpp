@@ -532,11 +532,7 @@ void HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsign
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen);
             OutputText ("\">Orders</th></tr>");
             
-            iErrCode = HTMLFilter (pvFleetData[GameEmpireFleets::iName].GetCharPtr(), &strHtml, 0, false);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            HTMLFilter (pvFleetData[GameEmpireFleets::iName].GetCharPtr(), &strHtml, 0, false);
             
             OutputText ("<tr align=\"left\"><td>");
 
@@ -1262,10 +1258,7 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
     m_pHttpResponse->WriteText (iIndex);
     
     String strHtml;
-    iErrCode = HTMLFilter (pvShipData[GameEmpireShips::iName].GetCharPtr(), &strHtml, 0, false);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    HTMLFilter (pvShipData[GameEmpireShips::iName].GetCharPtr(), &strHtml, 0, false);
     
     OutputText ("\" value=\"");
     m_pHttpResponse->WriteText (strHtml, strHtml.GetLength());

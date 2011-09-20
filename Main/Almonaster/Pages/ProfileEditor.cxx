@@ -2170,13 +2170,12 @@ case 0:
     }
 
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strFilter, 0, false) == OK) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strFilter, 0, false);
 
-        %><tr><td align="left">Real name:</td><%
-        %><td><input type="text" name="RealName" size="40" maxlength="<% 
-            Write (MAX_REAL_NAME_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %>"></td></tr><%
-    }
+    %><tr><td align="left">Real name:</td><%
+    %><td><input type="text" name="RealName" size="40" maxlength="<% 
+        Write (MAX_REAL_NAME_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
+    %>"></td></tr><%
 
 
     // Age
@@ -2218,53 +2217,36 @@ case 0:
     }
     %></select></td></tr><%
 
-
     // Location
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iLocation].GetCharPtr(), &strFilter, 0, false) == OK) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iLocation].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">Location:</td><%
+    %><td><input type="text" name="Location" size="40" maxlength="<% 
+        Write (MAX_LOCATION_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
+    %>"></td></tr><%
 
-        %><tr><td align="left">Location:</td><%
-        %><td><input type="text" name="Location" size="40" maxlength="<% 
-            Write (MAX_LOCATION_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %>"></td></tr><%
-    }
-
-
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iEmail].GetCharPtr(), &strFilter, 0, false) == OK) {
-
-        %><tr><td align="left">E-mail address:</td><%
-        %><td><input type="text" name="Email" size="40" maxlength="<%
-
+    HTMLFilter (pvEmpireData[SystemEmpireData::iEmail].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">E-mail address:</td><%
+    %><td><input type="text" name="Email" size="40" maxlength="<%
         Write (MAX_EMAIL_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %>"></td></tr><% 
-    }
+    %>"></td></tr><% 
 
-
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iPrivateEmail].GetCharPtr(), &strFilter, 0, false) == OK) {
-
-        %><tr><td align="left">Private e-mail address (<i>only visible to administrators</em>):</td><%
-        %><td><input type="text" name="PrivEmail" size="40" maxlength="<%
-
+    HTMLFilter (pvEmpireData[SystemEmpireData::iPrivateEmail].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">Private e-mail address (<i>only visible to administrators</em>):</td><%
+    %><td><input type="text" name="PrivEmail" size="40" maxlength="<%
         Write (MAX_EMAIL_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %>"></td></tr><% 
-    }
+    %>"></td></tr><% 
 
+    HTMLFilter (pvEmpireData[SystemEmpireData::iIMId].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">Instant Messenger:</td><%
+    %><td><input type="text" name="IMId" size="40" maxlength="<% 
+        Write (MAX_IMID_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
+    %>"></td></tr><%
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iIMId].GetCharPtr(), &strFilter, 0, false) == OK) {
-
-        %><tr><td align="left">Instant Messenger:</td><%
-        %><td><input type="text" name="IMId" size="40" maxlength="<% 
-            Write (MAX_IMID_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %>"></td></tr><%
-    }
-
-
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iWebPage].GetCharPtr(), &strFilter, 0, false) == OK) {
-
-        %><tr><td align="left">Webpage:</td><%
-        %><td><input type="text" name="WebPage" size="60" maxlength="<% 
-            Write (MAX_WEB_PAGE_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %>"></td></tr><%
-    }
+    HTMLFilter (pvEmpireData[SystemEmpireData::iWebPage].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">Webpage:</td><%
+    %><td><input type="text" name="WebPage" size="60" maxlength="<% 
+        Write (MAX_WEB_PAGE_LENGTH); %>" value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength());
+    %>"></td></tr><%
 
     %><tr><td>Tournaments joined:</td><%
     %><td><%
@@ -3017,21 +2999,17 @@ case 0:
     %><tr><td align="center" colspan="2">&nbsp;</td></tr><%
     %><tr><td align="center" colspan="2"><h3>Text:</h3></td></tr><%
 
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr(), &strFilter, 0, false) == OK) {
+    HTMLFilter (pvEmpireData[SystemEmpireData::iQuote].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">Quote:<br>(<em>Visible to everyone from your profile</em>)</td><%
+    %><td><textarea name="Quote" cols="50" rows="6" wrap="virtual"><%
+    Write (strFilter.GetCharPtr(), strFilter.GetLength());
+    %></textarea></td></tr><%
 
-        %><tr><td align="left">Quote:<br>(<em>Visible to everyone from your profile</em>)</td><%
-        %><td><textarea name="Quote" cols="50" rows="6" wrap="virtual"><%
-        Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %></textarea></td></tr><%
-    }
-
-    if (HTMLFilter (pvEmpireData[SystemEmpireData::iVictorySneer].GetCharPtr(), &strFilter, 0, false) == OK) {
-
-        %><tr><td align="left">Victory Sneer:<br>(<em>Sent to your opponents when you nuke them</em>)</td><%
-        %><td><textarea name="VictorySneer" cols="50" rows="4" wrap="virtual"><%
-        Write (strFilter.GetCharPtr(), strFilter.GetLength());
-        %></textarea></td></tr><%
-    }
+    HTMLFilter (pvEmpireData[SystemEmpireData::iVictorySneer].GetCharPtr(), &strFilter, 0, false);
+    %><tr><td align="left">Victory Sneer:<br>(<em>Sent to your opponents when you nuke them</em>)</td><%
+    %><td><textarea name="VictorySneer" cols="50" rows="4" wrap="virtual"><%
+    Write (strFilter.GetCharPtr(), strFilter.GetLength());
+    %></textarea></td></tr><%
 
     %></table><p><%
 
@@ -3041,26 +3019,24 @@ case 0:
 
         %><tr><%
 
-        if (HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false);
 
-            %><td><% Write (SHIP_TYPE_STRING[i]); %>:</td><%
-            %><td><%
-            %><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
-            %>name="ShipName<% Write (i); %>" <%
-            %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
-            %></td><%
-        }
+        %><td><% Write (SHIP_TYPE_STRING[i]); %>:</td><%
+        %><td><%
+        %><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
+        %>name="ShipName<% Write (i); %>" <%
+        %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
+        %></td><%
 
         j = i + NUM_SHIP_TYPES / 2;
 
-        if (HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[j]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[j]].GetCharPtr(), &strFilter, 0, false);
 
-            %><td><% Write (SHIP_TYPE_STRING[j]); %>:</td><%
-            %><td><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
-            %>name="ShipName<% Write (j); %>" <%
-            %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
-            %></td><%
-        }
+        %><td><% Write (SHIP_TYPE_STRING[j]); %>:</td><%
+        %><td><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
+        %>name="ShipName<% Write (j); %>" <%
+        %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
+        %></td><%
 
         %></tr><%
     }

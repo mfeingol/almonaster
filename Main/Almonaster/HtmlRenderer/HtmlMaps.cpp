@@ -611,9 +611,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
             }
         }
         
-        if (HTMLFilter (pvPlanetData[GameMap::iName].GetCharPtr(), &strFilter, 0, false) != OK) {
-            strFilter.Clear();
-        }
+        HTMLFilter (pvPlanetData[GameMap::iName].GetCharPtr(), &strFilter, 0, false);
         
         // Put planet on grid, record planet index
         ppstrGrid[iGridLocX][iGridLocY] =
@@ -1337,9 +1335,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     
     OutputText ("</td>");
     
-    if (HTMLFilter (pvPlanetData[GameMap::iName].GetCharPtr(), &strFilter, 0, false) != OK) {
-        return ERROR_OUT_OF_MEMORY;
-    }
+    HTMLFilter (pvPlanetData[GameMap::iName].GetCharPtr(), &strFilter, 0, false);
     
     if (iOwner != SYSTEM && iOwner == iEmpireKey && !bAdmin) {
         

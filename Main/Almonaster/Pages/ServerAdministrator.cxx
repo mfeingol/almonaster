@@ -1438,26 +1438,24 @@ case 0:
 
         %><tr><%
 
-        if (HTMLFilter(pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        HTMLFilter(pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false);
 
-            %><td><% Write (SHIP_TYPE_STRING[i]); %>:</td><%
-            %><td><%
-            %><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
-            %>name="ShipName<% Write (i); %>" <%
-            %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
-            %></td><%
-        }
+        %><td><% Write (SHIP_TYPE_STRING[i]); %>:</td><%
+        %><td><%
+        %><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
+        %>name="ShipName<% Write (i); %>" <%
+        %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
+        %></td><%
 
         j = i + NUM_SHIP_TYPES / 2;
 
-        if (HTMLFilter(pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[j]].GetCharPtr(), &strFilter, 0, false) == OK) {
+        HTMLFilter(pvServerData[SYSTEM_DATA_SHIP_NAME_COLUMN_INDEX[j]].GetCharPtr(), &strFilter, 0, false);
 
-            %><td><% Write (SHIP_TYPE_STRING[j]); %>:</td><%
-            %><td><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
-            %>name="ShipName<% Write (j); %>" <%
-            %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
-            %></td><%
-        }
+        %><td><% Write (SHIP_TYPE_STRING[j]); %>:</td><%
+        %><td><input type="text" size="12" maxlength="<% Write (MAX_SHIP_NAME_LENGTH); %>" <%
+        %>name="ShipName<% Write (j); %>" <%
+        %>value="<% Write (strFilter.GetCharPtr(), strFilter.GetLength()); %>"><%
+        %></td><%
 
         %></tr><%
     }

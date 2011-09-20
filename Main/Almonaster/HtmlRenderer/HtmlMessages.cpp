@@ -87,8 +87,7 @@ int HtmlRenderer::WriteGameMessages()
             }
             else
             {
-                iErrCode = HTMLFilter(ppvMessage[i][GameEmpireMessages::iText].GetCharPtr(), &strFiltered, MAX_NUM_SPACELESS_CHARS, true);
-                Assert(iErrCode == OK);
+                HTMLFilter(ppvMessage[i][GameEmpireMessages::iText].GetCharPtr(), &strFiltered, MAX_NUM_SPACELESS_CHARS, true);
                 pszMessage = strFiltered.GetCharPtr();
             }
             
@@ -403,12 +402,8 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
                 OutputText ("sent");
             }
             
-            pszMessage = HTMLFilter (
-                pvMessage[SystemEmpireMessages::iText].GetCharPtr(), 
-                &strFiltered, 
-                MAX_NUM_SPACELESS_CHARS,
-                true
-                ) == OK ? strFiltered.GetCharPtr() : "The server is out of memory";
+            HTMLFilter(pvMessage[SystemEmpireMessages::iText].GetCharPtr(), &strFiltered, MAX_NUM_SPACELESS_CHARS, true);
+            pszMessage = strFiltered.GetCharPtr();
         }
         
         // Normal message stuff

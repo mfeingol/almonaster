@@ -1324,16 +1324,15 @@ case 0:
 
             if (iErrCode == OK) {
 
-                if (HTMLFilter (pszPlanetName, &strFilter, 0, false) == OK) {
+                HTMLFilter (pszPlanetName, &strFilter, 0, false);
 
-                    %><option <%
-                    if ((unsigned int) iValue == piBuilderKey[i]) {
-                        %>selected <%
-                    }
-                    %>value="<% Write (piBuilderKey[i]); %>"><%
-
-                    Write (strFilter.GetCharPtr(), strFilter.GetLength()); %></option><%
+                %><option <%
+                if ((unsigned int) iValue == piBuilderKey[i]) {
+                    %>selected <%
                 }
+                %>value="<% Write (piBuilderKey[i]); %>"><%
+
+                Write (strFilter.GetCharPtr(), strFilter.GetLength()); %></option><%
             }
         }
 

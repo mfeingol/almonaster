@@ -384,7 +384,7 @@ EndPartialMaps:
             // Build click
             if (WasButtonPressed (BID_MINIBUILD)) {
 
-                HandleMiniBuild (iUpdatePlanetKey);
+                GameCheck(HandleMiniBuild (iUpdatePlanetKey));
 
                 //iClickedPlanetKey = iUpdatePlanetKey;
                 //iMapSubPage = 1;
@@ -702,7 +702,7 @@ case 1:
 
         // Render build
         if (m_iGameOptions & BUILD_ON_MAP_SCREEN) {  
-            RenderMiniBuild (iClickedPlanetKey, true);
+            GameCheck(RenderMiniBuild(iClickedPlanetKey, true));
         }
 
         if (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) {

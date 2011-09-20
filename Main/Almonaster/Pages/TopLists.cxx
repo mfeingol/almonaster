@@ -284,21 +284,19 @@ case 1:
 
             %></td><td align="center"><%
 
-            iErrCode = HTMLFilter(pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
-            if (iErrCode == OK && !strName.IsBlank()) {
+            HTMLFilter(pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
+            if (!strName.IsBlank()) {
 
-                iErrCode = HTMLFilter(pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
-                if (iErrCode == OK) {
+                HTMLFilter(pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
 
-                    if (!strEmail.IsBlank()) {
-                        %><a href="mailto:<% Write (strEmail.GetCharPtr(), strEmail.GetLength()); %>"><%
-                    }
+                if (!strEmail.IsBlank()) {
+                    %><a href="mailto:<% Write (strEmail.GetCharPtr(), strEmail.GetLength()); %>"><%
+                }
 
-                    Write (strName.GetCharPtr(), strName.GetLength());
+                Write (strName.GetCharPtr(), strName.GetLength());
 
-                    if (!strEmail.IsBlank()) {
-                        %></a><%
-                    }
+                if (!strEmail.IsBlank()) {
+                    %></a><%
                 }
             }
 

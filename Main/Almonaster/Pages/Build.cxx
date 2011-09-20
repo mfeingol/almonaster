@@ -211,9 +211,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     continue;
                 }
 
-                if (HTMLFilter (vPlanetName.GetCharPtr(), &strPlanetName, 0, false) != OK) {
-                    strPlanetName.Clear();
-                }
+                HTMLFilter (vPlanetName.GetCharPtr(), &strPlanetName, 0, false);
 
                 if (iFleetKey == NO_KEY) {
 
@@ -234,9 +232,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         continue;
                     }
 
-                    if (HTMLFilter (vFleetName.GetCharPtr(), &strFleetName, 0, false) != OK) {
-                        strFleetName.Clear();
-                    }
+                    HTMLFilter (vFleetName.GetCharPtr(), &strFleetName, 0, false);
                 }
 
                 iErrCode = BuildNewShips (
@@ -253,7 +249,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     &bBuildReduced
                     );
 
-                AddBuildNewShipsMessage (
+                GameCheck(HandleBuildNewShipsResult(
                     iErrCode,
                     iNumShipsBuilt,
                     iShipBR,
@@ -263,7 +259,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     iY,
                     vFleetName.GetCharPtr(),
                     bBuildReduced
-                    );
+                    ));
             }
         }
 
@@ -299,7 +295,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         &iDontCare
                         );
 
-                    AddCreateNewFleetMessage (iErrCode, pszTemp);
+                    GameCheck(HandleCreateNewFleetResult(iErrCode, pszTemp));
                 }
             }
         }
@@ -577,17 +573,13 @@ if (iNumTechs > 0) {
                 m_iEmpireKey, 
                 i, 
                 &vDefaultShipName
-                ) != OK ||
-
-                HTMLFilter (
-                    vDefaultShipName.GetCharPtr(), 
-                    &strFilter,
-                    0,
-                    false
-                    ) != OK) {
-                
+                ) != OK)
+            {
                 continue;
             }
+
+            HTMLFilter(vDefaultShipName.GetCharPtr(), &strFilter, 0, false);
+
             %><input type="hidden" name="TechKey<% Write (iNumBuildableTechs); %>"<%
             %> value="<% Write (i); %>"><%
 

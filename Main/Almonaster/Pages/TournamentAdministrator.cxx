@@ -1689,7 +1689,7 @@ case 7:
             %><input type="hidden" name="Advanced<% Write(iGameClassKey); %>" value="1"><%
             %><h3>Advanced game creation options:</h3><p><%
 
-            RenderGameConfiguration (iGameClassKey, m_iTournamentKey);
+            Check(RenderGameConfiguration(iGameClassKey, m_iTournamentKey));
         }
 
         %><p><%

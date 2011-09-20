@@ -588,7 +588,7 @@ public:
 
     unsigned int GetEmpireNameHashValue (const char* pszEmpireName);
 
-    int HTMLFilter (const char* pszSource, String* pstrFiltered, size_t stNumChars, bool bAddMarkups);
+    void HTMLFilter (const char* pszSource, String* pstrFiltered, size_t stNumChars, bool bAddMarkups);
 
     bool VerifyGIF (const char* pszFileName);
     int CopyUploadedIcon (const char* pszFileName, const char* pszUploadDir, int iKey1, int iKey2);
@@ -693,8 +693,8 @@ public:
 
     int WriteRatiosString (RatioInformation* pratInfo);
 
-    int RenderUnsafeHyperText (const char* pszText, const char* pszUrl);
-    int RenderHyperText (const char* pszText, const char* pszUrl);
+    void RenderUnsafeHyperText (const char* pszText, const char* pszUrl);
+    void RenderHyperText (const char* pszText, const char* pszUrl);
 
     void WriteServerRules();
     void WriteFaq();
@@ -772,15 +772,15 @@ public:
     bool VerifyEmpireNameHash (int iEmpireKey, unsigned int iHash);
     
     // Build
-    void RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar);
-    void HandleMiniBuild (unsigned int iPlanetKey);
+    int RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar);
+    int HandleMiniBuild (unsigned int iPlanetKey);
 
     int HtmlCreateRandomFleet (unsigned int iPlanetKey, unsigned int* piFleetKey);
 
-    void AddBuildNewShipsMessage (int iErrCode, int iNumShipsBuilt, int iBR, int iTechKey,
-        const char* pszPlanetName, int iX, int iY, const char* pszFleetName, bool bBuildReduced);
+    int HandleBuildNewShipsResult(int iErrCode, int iNumShipsBuilt, int iBR, int iTechKey, const char* pszPlanetName, 
+                                  int iX, int iY, const char* pszFleetName, bool bBuildReduced);
 
-    void AddCreateNewFleetMessage (int iErrCode, const char* pszFleetName);
+    int HandleCreateNewFleetResult(int iErrCode, const char* pszFleetName);
 
     // New button system
     bool IsLegalButtonId (ButtonId bidButton);
@@ -817,7 +817,7 @@ public:
     void RenderEmpireInformation (int iGameClass, int iGameNumber, bool bAdmin);
 
     // Game entry confirmation
-    void RenderGameConfiguration (int iGameClass, unsigned int iTournamentKey);
+    int RenderGameConfiguration (int iGameClass, unsigned int iTournamentKey);
 
     int ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey, 
         const Variant* pvGameClassInfo, GameOptions* pgoOptions);

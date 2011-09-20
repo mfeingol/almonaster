@@ -162,7 +162,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     m_bRedirectTest = false;
 
                     // Do build
-                    HandleMiniBuild (iUpdatePlanetKey);
+                    GameCheck(HandleMiniBuild (iUpdatePlanetKey));
                 }
             }
         }
@@ -318,7 +318,7 @@ if (bMapGenerated) {
             }
 
             if (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) {  
-                RenderMiniBuild (pvPlanetKey[i].GetInteger(), false);
+                GameCheck(RenderMiniBuild (pvPlanetKey[i].GetInteger(), false));
             }
 
             %></table><%

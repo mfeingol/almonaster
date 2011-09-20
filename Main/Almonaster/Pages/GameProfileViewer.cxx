@@ -416,10 +416,13 @@ if (m_bOwnPost && !m_bRedirection) {
             InitGameOptions (&goOptions);
 
             iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
-            if (iErrCode != OK) {
+            if (iErrCode == WARNING)
+            {
+                iErrCode = OK;
                 iProfilePage = 4;
                 break;
             }
+            RETURN_ON_ERROR(iErrCode);
 
             // Release game read lock
             goOptions.iNumEmpires = 1;
@@ -558,7 +561,7 @@ case 4:
 
     %></h3><p><%
 
-    RenderGameConfiguration (iGameClassKey, NO_KEY);
+    GameCheck(RenderGameConfiguration (iGameClassKey, NO_KEY));
 
     %><p><%
 

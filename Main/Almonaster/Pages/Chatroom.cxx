@@ -89,12 +89,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iInChatroom == CHATROOM_IN) {
 
                     String strFilter;
-                    iErrCode = HTMLFilter (pszMessage, &strFilter, MAX_NUM_SPACELESS_CHARS, false);
-                    if (iErrCode == OK) {
-                        pChatroom->PostMessage (m_vEmpireName.GetCharPtr(), strFilter, 0);
-                    } else {
-                        AddMessage ("Not enough memory to post your message");
-                    }
+                    HTMLFilter (pszMessage, &strFilter, MAX_NUM_SPACELESS_CHARS, false);
+                    pChatroom->PostMessage (m_vEmpireName.GetCharPtr(), strFilter, 0);
                 }
 
             } else {

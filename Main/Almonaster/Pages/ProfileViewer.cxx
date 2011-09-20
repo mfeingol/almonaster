@@ -488,10 +488,12 @@ SearchResults:
                 iGameClassKey = pHttpForm->GetIntValue();
 
                 iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
-                if (iErrCode != OK) {
+                if (iErrCode == WARNING)
+                {
                     iProfileViewerPage = 6;
                     break;
                 }
+                RETURN_ON_ERROR(iErrCode);
 
                 goOptions.iNumEmpires = 1;
                 goOptions.piEmpireKey = &m_iEmpireKey;
@@ -632,7 +634,7 @@ case 6:
 
     %></h3><p><%
 
-    RenderGameConfiguration (iGameClassKey, NO_KEY);
+    Check(RenderGameConfiguration (iGameClassKey, NO_KEY));
 
     %><p><%
 

@@ -475,8 +475,9 @@ void HtmlRenderer::WriteContactLine() {
     int iErrCode = GetSystemProperty (SystemData::AdminEmail, &vEmail);
     
     if (iErrCode == OK && 
-        !String::IsBlank(vEmail.GetCharPtr()) &&
-        HTMLFilter(vEmail.GetCharPtr(), &strFilter, 0, false) == OK) {
+        !String::IsBlank(vEmail.GetCharPtr()))
+    {
+        HTMLFilter(vEmail.GetCharPtr(), &strFilter, 0, false);
         
         size_t i;
         const size_t cLength = strFilter.GetLength();
@@ -798,14 +799,14 @@ bool HtmlRenderer::NotifiedTournamentJoinRequest() {
     return m_pHttpRequest->GetForm ("HintTournamentJoinRequest") != NULL;
 }
 
-int HtmlRenderer::HTMLFilter (const char* pszSource, String* pstrFiltered, size_t stNumChars, bool bAddMarkups) {
+void HtmlRenderer::HTMLFilter (const char* pszSource, String* pstrFiltered, size_t stNumChars, bool bAddMarkups) {
     
     *pstrFiltered = "";
-    if (!String::IsBlank (pszSource)) {
-        return String::AtoHtml (pszSource, pstrFiltered, stNumChars, bAddMarkups) != NULL ? OK : ERROR_OUT_OF_MEMORY;
+    if (!String::IsBlank (pszSource))
+    {
+        char* pszRet = String::AtoHtml(pszSource, pstrFiltered, stNumChars, bAddMarkups);
+        Assert(pszRet);
     }
-    
-    return OK;
 }
 
 unsigned int HtmlRenderer::GetEmpireNameHashValue (const char* pszEmpireName) {
@@ -1220,16 +1221,14 @@ void HtmlRenderer::WriteCreateGameClassString (int iEmpireKey, unsigned int iTou
         bSelDisconnectedMaps;
 
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassName")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strName, 0, false) != OK) {
-            strName = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassName")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strName, 0, false);
     }
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassDescription")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strDesc, 0, false) != OK) {
-            strDesc = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("GameClassDescription")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strDesc, 0, false);
     }
 
     if ((pHttpForm = m_pHttpRequest->GetForm ("SuperClassKey")) != NULL) {
@@ -3108,9 +3107,8 @@ int HtmlRenderer::ProcessCreateGameClassForms (unsigned int iOwnerKey, unsigned 
 }
 
 
-int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, int* piGameClass, int* piGameNumber, 
-                                                      bool* pbGameCreated) {
-    
+int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, int* piGameClass, int* piGameNumber, bool* pbGameCreated)
+{
     int iErrCode;
     
     Variant pvSubmitArray [SystemGameClassData::NumColumns];
@@ -3127,9 +3125,11 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
     }
     
     iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, &goOptions);
-    if (iErrCode != OK) {
-        goto Cleanup;
+    if (iErrCode == WARNING)
+    {
+        iErrCode = OK;
     }
+    RETURN_ON_ERROR(iErrCode);
     
     if (goOptions.sFirstUpdateDelay > pvSubmitArray[SystemGameClassData::iNumSecPerUpdate].GetInteger() * 10) {
         AddMessage ("The first update delay is too large");
@@ -4393,41 +4393,35 @@ Cleanup:
 }
 
 
-int HtmlRenderer::RenderUnsafeHyperText (const char* pszText, const char* pszUrl) {
-
-    int iErrCode;
-    String strHtml;
-
-    if (pszUrl == NULL || pszUrl[0] == '\0') {
-        return OK;
+void HtmlRenderer::RenderUnsafeHyperText (const char* pszText, const char* pszUrl)
+{
+    if (pszUrl != NULL && pszUrl[0] != '\0')
+    {
+        String strHtml;
+        HTMLFilter(pszUrl, &strHtml, 0, false);
+        if (!strHtml.IsBlank())
+        {
+            RenderHyperText (pszText, strHtml.GetCharPtr());
+        }
     }
-
-    iErrCode = HTMLFilter (pszUrl, &strHtml, 0, false);
-    if (iErrCode == OK && !strHtml.IsBlank()) {
-        iErrCode = RenderHyperText (pszText, strHtml.GetCharPtr());
-    }
-
-    return iErrCode;
 }
 
-int HtmlRenderer::RenderHyperText (const char* pszText, const char* pszUrl) {
-
-    if (pszUrl == NULL || pszUrl[0] == '\0') {
-        return OK;
-    }
-
-    OutputText ("<a href=\"");
+void HtmlRenderer::RenderHyperText (const char* pszText, const char* pszUrl)
+{
+    if (pszUrl != NULL && pszUrl[0] != '\0')
+    {
+        OutputText ("<a href=\"");
         
-    if (_strnicmp (pszUrl, "http://", sizeof ("http://") - 1) != 0) {
-        OutputText ("http://");
+        if (String::StrniCmp(pszUrl, "http://", sizeof ("http://") - 1) != 0)
+        {
+            OutputText ("http://");
+        }
+
+        m_pHttpResponse->WriteText (pszUrl);
+        OutputText ("\">");
+        m_pHttpResponse->WriteText (pszText);
+        OutputText ("</a>");
     }
-
-    m_pHttpResponse->WriteText (pszUrl);
-    OutputText ("\">");
-    m_pHttpResponse->WriteText (pszText);
-    OutputText ("</a>");
-
-    return OK;
 }
 
 int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
@@ -4795,12 +4789,8 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
         if (!String::IsBlank (pszGamePassword)) {
             
             String strFilter;
-            int iErrCode = HTMLFilter (pszGamePassword, &strFilter, 0, false);
-            if (iErrCode != OK) {
-                OutputText ("The server is out of memory");
-            } else {
-                m_pHttpResponse->WriteText (strFilter, strFilter.GetLength());
-            }
+            HTMLFilter (pszGamePassword, &strFilter, 0, false);
+            m_pHttpResponse->WriteText (strFilter, strFilter.GetLength());
         }
         OutputText ("</td>");
     }
@@ -6047,22 +6037,19 @@ void HtmlRenderer::WriteCreateTournament (int iEmpireKey) {
 
     String strName, strDesc, strUrl;
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("TournamentName")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strName, 0, false) != OK) {
-            strName = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("TournamentName")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strName, 0, false);
     }
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("TournamentDescription")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strDesc, 0, false) != OK) {
-            strDesc = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("TournamentDescription")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strDesc, 0, false);
     }
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("WebPageURL")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strUrl, 0, false) != OK) {
-            strUrl = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("WebPageURL")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strUrl, 0, false);
     }
 
     // Name

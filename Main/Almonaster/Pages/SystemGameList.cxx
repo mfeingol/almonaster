@@ -96,11 +96,13 @@ if (m_bOwnPost && !m_bRedirection) {
             iGameClassKey = pHttpForm->GetIntValue();
 
             iErrCode = ParseGameConfigurationForms (iGameClassKey, NO_KEY, NULL, &goOptions);
-            if (iErrCode != OK) {
+            if (iErrCode == WARNING)
+            {
                 ClearGameOptions (&goOptions);
                 iSystemGameListPage = 1;
                 break;
             }
+            RETURN_ON_ERROR(iErrCode);
 
         CreateGame:
             {
@@ -324,7 +326,7 @@ case 1:
 
     %></h3><p><%
 
-    RenderGameConfiguration (iGameClassKey, NO_KEY);
+    Check(RenderGameConfiguration (iGameClassKey, NO_KEY));
 
     %><p><%
 
@@ -349,7 +351,7 @@ case 2:
     %><p><%
     %><h3>Advanced Game Configuration</h3><%
 
-    RenderGameConfiguration (NO_KEY, NO_KEY);
+    Check(RenderGameConfiguration(NO_KEY, NO_KEY));
 
     %><p><%
 

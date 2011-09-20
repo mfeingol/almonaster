@@ -102,12 +102,9 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
         }
     }
 
-    if (HTMLFilter (pvData[SystemTournaments::iDescription].GetCharPtr(), &strDesc, 0, false) != OK ||
-        HTMLFilter (pvData[SystemTournaments::iWebPage].GetCharPtr(), &strUrl, 0, false) != OK ||
-        HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strNews, 0, false) != OK) {
-        OutputText ("<p><strong>The server is out of memory</strong>");
-        goto Cleanup;
-    }
+    HTMLFilter (pvData[SystemTournaments::iDescription].GetCharPtr(), &strDesc, 0, false);
+    HTMLFilter (pvData[SystemTournaments::iWebPage].GetCharPtr(), &strUrl, 0, false);
+    HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strNews, 0, false);
 
     OutputText ("<p>");
     WriteTournamentIcon (pvData[SystemTournaments::iIcon].GetInteger(), iTournamentKey, NULL, false);
@@ -522,11 +519,8 @@ void HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, u
         goto Cleanup;
     }
 
-    if (HTMLFilter (pvData[SystemTournamentTeams::iDescription].GetCharPtr(), &strDesc, 0, false) != OK ||
-        HTMLFilter (pvData[SystemTournamentTeams::iWebPage].GetCharPtr(), &strUrl, 0, false) != OK) {
-        OutputText ("<p><strong>The server is out of memory</strong>");
-        goto Cleanup;
-    }
+    HTMLFilter (pvData[SystemTournamentTeams::iDescription].GetCharPtr(), &strDesc, 0, false);
+    HTMLFilter (pvData[SystemTournamentTeams::iWebPage].GetCharPtr(), &strUrl, 0, false);
 
     OutputText ("<p>");
     WriteTournamentTeamIcon (pvData[SystemTournamentTeams::iIcon].GetInteger(), iTournamentKey, iTeamKey, NULL, false);
@@ -697,22 +691,19 @@ void HtmlRenderer::WriteCreateTournamentTeam (unsigned int iTournamentKey) {
 
     String strName, strDesc, strUrl;
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("TeamName")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strName, 0, false) != OK) {
-            strName = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("TeamName")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strName, 0, false);
     }
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("TeamDescription")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strDesc, 0, false) != OK) {
-            strDesc = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("TeamDescription")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strDesc, 0, false);
     }
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("TeamWebPageURL")) != NULL) {
-        if (HTMLFilter (pHttpForm->GetValue(), &strUrl, 0, false) != OK) {
-            strUrl = "";
-        }
+    if ((pHttpForm = m_pHttpRequest->GetForm ("TeamWebPageURL")) != NULL)
+    {
+        HTMLFilter (pHttpForm->GetValue(), &strUrl, 0, false);
     }
 
     // Name
@@ -985,13 +976,20 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     // Game options
     if (bAdvanced) {
         iErrCode = ParseGameConfigurationForms(iGameClass, iTournamentKey, NULL, &goOptions);
-    } else {
-        iErrCode = GetDefaultGameOptions (iGameClass, &goOptions);
+        if (iErrCode == WARNING)
+        {
+            AddMessage ("Could not process game options");
+            return OK;
+        }
+        RETURN_ON_ERROR(iErrCode);
     }
-
-    if (iErrCode != OK) {
-        AddMessage ("Could not process game options");
-        goto Cleanup;
+    else
+    {
+        iErrCode = GetDefaultGameOptions (iGameClass, &goOptions);
+        if (iErrCode != OK) {
+            AddMessage ("Could not process game options");
+            goto Cleanup;
+        }
     }
 
     if (iTeamOptions != 0) {
@@ -1693,13 +1691,10 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
     if (!String::IsBlank (pvData[SystemTournaments::iNews].GetCharPtr())) {
 
         String strFilter;
-        iErrCode = HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strFilter, 0, true);
-        if (iErrCode == OK) {
-
-            OutputText ("<p><h3>News:</h3><p><table width=\"75%\"><tr><td>");
-            m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
-            OutputText ("</td></tr></table>");
-        }
+        HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strFilter, 0, true);
+        OutputText ("<p><h3>News:</h3><p><table width=\"75%\"><tr><td>");
+        m_pHttpResponse->WriteText (strFilter.GetCharPtr(), strFilter.GetLength());
+        OutputText ("</td></tr></table>");
     }
 
     // Actions
