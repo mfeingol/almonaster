@@ -30,6 +30,7 @@
 
 enum PageId
 {
+    NO_PAGE = 0,
     MIN_PAGE_ID = 0,
     ACTIVE_GAME_LIST = 1,
     LOGIN = 2,
@@ -431,11 +432,10 @@ protected:
 
     void AddTechList (int iTechs, int iInitial);
 
-    void AddBridier (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
-        int iGameOptions, const Variant* pvMin, const Variant* pvMax, bool bDisplayGainLoss);
+    int AddBridier(int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, 
+                   int iGameOptions, const Variant* pvMin, const Variant* pvMax, bool bDisplayGainLoss);
 
-    void AddBridierGame (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, int iGameOptions, 
-        bool bDisplayGainLoss);
+    int AddBridierGame (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo, int iGameOptions, bool bDisplayGainLoss);
 
     void AddScore (int iGameOptions, const Variant* pvMin, const Variant* pvMax);
     void AddSecurity (int iGameOptions);
@@ -443,7 +443,7 @@ protected:
     int PostGamePageInformation();
 
     void WriteGameButtons();
-    void WriteGameNextUpdateString();
+    int WriteGameNextUpdateString();
 
     int WriteTextFile (bool bTextArea, const char* pszFile, const char* pszFileForm, const char* pszFileHashForm);
     int TryUpdateFile (const char* pszFile, const char* pszFileForm, const char* pszFileHashForm);
@@ -528,8 +528,8 @@ public:
     void WriteHorzSrc (int iThemeKey);
     void WriteVertSrc (int iThemeKey);
 
-    int GetHorzString (int iThemeKey, String* pstrString, bool bBlowup = true);
-    int GetVertString (int iThemeKey, String* pstrString, bool bBlowup = true);
+    void GetHorzString (int iThemeKey, String* pstrString, bool bBlowup = true);
+    void GetVertString (int iThemeKey, String* pstrString, bool bBlowup = true);
 
     void WriteButtonImageSrc (int iRealThemeKey, const char* pszButtonName);
     void WriteThemeDownloadSrc (int iRealThemeKey, const char* pszFileName);
@@ -590,11 +590,11 @@ public:
 
     void HTMLFilter (const char* pszSource, String* pstrFiltered, size_t stNumChars, bool bAddMarkups);
 
-    bool VerifyGIF (const char* pszFileName);
-    int CopyUploadedIcon (const char* pszFileName, const char* pszUploadDir, int iKey1, int iKey2);
+    int VerifyGIF(const char* pszFileName, bool* pbGoodGIF);
+    bool CopyUploadedIcon (const char* pszFileName, const char* pszUploadDir, int iKey1, int iKey2);
 
-    int CopyNewAlien (const char* pszFileName, int iAlienKey);
-    int DeleteAlien (int iAlienKey);
+    bool CopyNewAlien (const char* pszFileName, int iAlienKey);
+    bool DeleteAlien (int iAlienKey);
 
     void ReportLoginFailure (IReport* pReport, const char* pszEmpireName);
     void ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon);
@@ -604,17 +604,17 @@ public:
     void WriteSystemTitleString();
     void WriteSystemHeaders (bool bFileUpload);
 
-    void WriteSystemButtons(int iButtonKey, int iPrivilege);
+    int WriteSystemButtons(int iButtonKey, int iPrivilege);
     int WriteSystemMessages();
-    bool RenderSystemMessage (int iMessageKey, const Variant* pvMessage);
+    int RenderSystemMessage (int iMessageKey, const Variant* pvMessage, bool* pbMessageFromEmpire);
 
     void WriteBackupMessage();
 
-    int InitializeEmpireInGame(bool bAutoLogon);
-    int InitializeEmpire(bool bAutoLogon);
+    int InitializeEmpireInGame(bool bAutoLogon, bool* pbInitialized);
+    int InitializeEmpire(bool bAutoLogon, bool* pbInitialized);
     int InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCookie);
 
-    void CloseSystemPage();
+    int CloseSystemPage();
     void PostSystemPageInformation();
 
     void WriteActiveGameListHeader (const char* pszTableColor);
@@ -663,11 +663,11 @@ public:
 
     void CloseGamePage();
 
-    int InitializeGame (PageId* ppageRedirect);
+    int InitializeGame(PageId* ppageRedirect, bool* pbRedirected);
 
     int WriteGameMessages();
 
-    int GetDefaultSystemIcon();
+    int EnsureDefaultSystemIcon();
 
     void GetAlienPlanetButtonString (int iAlienKey, int iEmpireKey, bool bBorder, int iPlanetKey, int iProxyKey,
         const char* pszAlt, const char* pszExtraTag, String* pstrAlienButtonString);
@@ -743,7 +743,7 @@ public:
     int RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bool bAdmin,
         const PartialMapInfo* pPartialMapInfo, bool bSpectators);
 
-    void RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey);
+    int RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey);
     void RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, 
         unsigned int iDeadPlanetKey);
 
@@ -761,7 +761,7 @@ public:
     void SearchForDuplicateIPAddresses (int iGameClass, int iGameNumber);
     void SearchForDuplicateSessionIds (int iGameClass, int iGameNumber);
 
-    int HtmlLoginEmpire();
+    int HtmlLoginEmpire(bool* pbLoggedIn);
 
     void RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
         int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString,

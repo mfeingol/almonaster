@@ -206,6 +206,7 @@ if (pm_iTournamentKey != NULL) {
     t_pCache->FreeKeys (pm_iTournamentKey);
 }
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

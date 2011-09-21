@@ -18,20 +18,28 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpireInGame(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpireInGame(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 PageId pageRedirect;
-if (InitializeGame(&pageRedirect) != OK)
+bool bRedirected;
+iErrCode = InitializeGame(&pageRedirect, &bRedirected);
+RETURN_ON_ERROR(iErrCode);
+if (bRedirected)
 {
     return Redirect(pageRedirect);
 }
 
 IHttpForm* pHttpForm;
 
-int iErrCode, iProfilePage = 1, iTargetEmpireKey = NO_KEY, iGameClassKey = NO_KEY;
+int iProfilePage = 1, iTargetEmpireKey = NO_KEY, iGameClassKey = NO_KEY;
 
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
@@ -98,8 +106,16 @@ if (m_bOwnPost && !m_bRedirection) {
                 unsigned int iSwitch = pHttpForm->GetIntValue();
 
                 bool bAuth;
-                if (CheckAssociation (m_iEmpireKey, iSwitch, &bAuth) == OK && bAuth) {
+                iErrCode = CheckAssociation(m_iEmpireKey, iSwitch, &bAuth);
+                RETURN_ON_ERROR(iErrCode);
 
+                if (!bAuth)
+                {
+                    AddMessage ("Access denied");
+                    break;
+                }
+                else
+                {
                     m_iReserved = 0;
                     m_i64SecretKey = 0;
                     m_vPassword = 0;
@@ -107,21 +123,27 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     m_iEmpireKey = iSwitch;
 
-                    iErrCode = HtmlLoginEmpire();
-                    if (iErrCode == OK) {
-                        iErrCode = InitializeEmpire(false);
-                        if (iErrCode == OK)
-                        {
-                            return Redirect(ACTIVE_GAME_LIST);
-                        }
+                    bool bLoggedIn;
+                    iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    if (!bLoggedIn)
+                    {
+                        return Redirect(LOGIN);
                     }
 
-                    AddMessage ("Login failed: error ");
-                    AppendMessage (iErrCode);
+                    bool bInitialized;
+                    iErrCode = InitializeEmpire(false, &bInitialized);
+                    RETURN_ON_ERROR(iErrCode);
 
-                } else {
-
-                    AddMessage ("Access denied");
+                    if (!bInitialized)
+                    {
+                        return Redirect(LOGIN);
+                    }
+                    else
+                    {
+                        return Redirect(ACTIVE_GAME_LIST);
+                    }
                 }
             }
         }

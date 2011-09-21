@@ -20,6 +20,8 @@
 
 int HtmlRenderer::OpenSystemPage(bool bFileUpload)
 {
+    int iErrCode;
+
     m_pHttpResponse->WriteText("<html><head><title>");
 
     WriteSystemTitleString();
@@ -32,7 +34,8 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
 
     PostSystemPageInformation();
 
-    WriteSystemButtons(m_iButtonKey, m_iPrivilege);
+    iErrCode = WriteSystemButtons(m_iButtonKey, m_iPrivilege);
+    RETURN_ON_ERROR(iErrCode);
 
     if (m_bTimeDisplay)
     { 
@@ -45,9 +48,8 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
         } 
     } 
 
-    int iErrCode = WriteSystemMessages();
-    if (iErrCode != OK)
-        return iErrCode;
+    iErrCode = WriteSystemMessages();
+    RETURN_ON_ERROR(iErrCode);
 
     WriteSeparatorString(m_iSeparatorKey);
 
@@ -93,18 +95,6 @@ void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
     m_pHttpResponse->WriteText ((int) m_pgPageId);
     OutputText ("\">");
 
-
-
-
-    // TODOTODOTODO - HACKHACKHACK
-    OutputText("<p><strong><font size=\"3\">");
-    OutputText("Script time: ");
-    MilliSeconds msTime = GetTimerCount();
-    m_pHttpResponse->WriteText((int) msTime);
-    OutputText(" ms</font></strong>");
-
-
-
     const char* pszName = m_vEmpireName.GetCharPtr();
 
     WriteProfileAlienString (
@@ -121,7 +111,7 @@ void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
     OutputText(" <font size=\"+3\"><strong>");
     m_pHttpResponse->WriteText (pszName);
 
-    if (pszName [strlen (pszName) - 1] == 's')
+    if (pszName[strlen(pszName)-1] == 's')
     {
         OutputText ("' ");
     }
@@ -142,7 +132,7 @@ void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
 void HtmlRenderer::PostSystemPageInformation()
 {
     int64 i64PasswordHash = 0;
-    int iErrCode = GetPasswordHashForSystemPage (m_tNewSalt, &i64PasswordHash);
+    int iErrCode = GetPasswordHashForSystemPage(m_tNewSalt, &i64PasswordHash);
     Assert(iErrCode == OK);
 
     OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
@@ -154,8 +144,9 @@ void HtmlRenderer::PostSystemPageInformation()
     OutputText ("\">");
 }
 
-void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
-
+int HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege)
+{
+    int iErrCode = OK;
     unsigned int iNumber;
 
     // ActiveGameList
@@ -194,17 +185,25 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
     OutputText ("<br>");
 
     // Personal Game Classes
-    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES ||
-        (GetEmpirePersonalGameClasses(m_iEmpireKey, NULL, NULL, &iNumber) == OK && iNumber > 0))
+    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES)
     {
-        WriteButton (BID_PERSONALGAMECLASSES);
+        iErrCode = GetEmpirePersonalGameClasses(m_iEmpireKey, NULL, NULL, &iNumber);
+        RETURN_ON_ERROR(iErrCode);
+        if (iNumber > 0)
+        {
+            WriteButton (BID_PERSONALGAMECLASSES);
+        }
     }
 
     // Personal Tournaments
-    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_TOURNAMENTS ||
-        (GetOwnedTournaments (m_iEmpireKey, NULL, NULL, &iNumber) == OK && iNumber > 0))
+    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_TOURNAMENTS)
     {
-        WriteButton (BID_PERSONALTOURNAMENTS);
+        iErrCode = GetOwnedTournaments (m_iEmpireKey, NULL, NULL, &iNumber);
+        RETURN_ON_ERROR(iErrCode);
+        if (iNumber > 0)
+        {
+            WriteButton (BID_PERSONALTOURNAMENTS);
+        }
     }
 
     if (iPrivilege >= ADMINISTRATOR) {
@@ -229,6 +228,8 @@ void HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege) {
     }
 
     OutputText ("<p>");
+
+    return iErrCode;
 }
 
 int HtmlRenderer::OpenGamePage()
@@ -330,17 +331,17 @@ int HtmlRenderer::WriteGameHeaderString()
     }
 
     // Next update
-    WriteGameNextUpdateString();
+    iErrCode = WriteGameNextUpdateString();
+    RETURN_ON_ERROR(iErrCode);
 
     // Messages
     iErrCode = WriteGameMessages();
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     // Last separator
     WriteSeparatorString(m_iSeparatorKey);
 
-    return OK;
+    return iErrCode;
 }
 
 void HtmlRenderer::WriteGameButtons() {
@@ -405,8 +406,7 @@ void HtmlRenderer::WriteGameButtons() {
     OutputText ("</td></tr></table><p>");
 }
 
-
-void HtmlRenderer::WriteGameNextUpdateString()
+int HtmlRenderer::WriteGameNextUpdateString()
 {
     int iErrCode;
 
@@ -430,11 +430,8 @@ void HtmlRenderer::WriteGameNextUpdateString()
 
     unsigned int iNumEmpires;
     iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
-    if (iErrCode != OK) {
-        Assert(false);
-        return;
-    }
-    
+    RETURN_ON_ERROR(iErrCode);
+
     if (!(m_iGameOptions & COUNTDOWN) || (m_iGameState & PAUSED) || !(m_iGameState & STARTED)) {
         
         if (!(m_iGameState & STARTED)) {
@@ -442,10 +439,7 @@ void HtmlRenderer::WriteGameNextUpdateString()
             int iNumNeeded, iTotal, 
             
             iErrCode = GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
-            if (iErrCode != OK) {
-                Assert(false);
-                return;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
             iTotal = iNumNeeded - iNumEmpires;
             
@@ -520,10 +514,7 @@ void HtmlRenderer::WriteGameNextUpdateString()
 
         int iUpdated;
         iErrCode = GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdated);
-        if (iErrCode != OK) {
-            Assert(false);
-            return;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if (m_iGameOptions & COUNTDOWN) {
             OutputText (" ");
@@ -545,16 +536,15 @@ void HtmlRenderer::WriteGameNextUpdateString()
     }
     
     OutputText ("<p>");
-}
 
+    return iErrCode;
+}
 
 int HtmlRenderer::PostGamePageInformation()
 {
     int64 i64PasswordHash = 0;
     int iErrCode = GetPasswordHashForGamePage(m_tNewSalt, &i64PasswordHash);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
     m_pHttpResponse->WriteText (m_iEmpireKey);
@@ -570,7 +560,7 @@ int HtmlRenderer::PostGamePageInformation()
     m_pHttpResponse->WriteText (m_iNumNewUpdates);
     OutputText ("\"><input type=\"hidden\" name=\"Auto\" value=\"0\">");
 
-    return OK;
+    return iErrCode;
 }
 
 void HtmlRenderer::CloseGamePage()
@@ -579,7 +569,8 @@ void HtmlRenderer::CloseGamePage()
     WriteSeparatorString (m_iSeparatorKey);
     OutputText ("<p><strong><font size=\"3\">");
     
-    if (m_bRepeatedButtons) {
+    if (m_bRepeatedButtons)
+    {
         WriteGameButtons();
         OutputText ("<p>");
     }
@@ -607,14 +598,18 @@ void HtmlRenderer::CloseGamePage()
     OutputText (" ms</font></strong></center></form></body></html>");
 }
 
-int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
-    
-    int iErrCode;
+int HtmlRenderer::InitializeGame(PageId* ppageRedirect, bool* pbRedirected)
+{
+    int iErrCode = OK;
     bool bFlag;
+
+    *ppageRedirect = NO_PAGE;
+    *pbRedirected = false;
     
     PageId pgSrcPageId;
 
-    if (m_iPrivilege <= GUEST) {
+    if (m_iPrivilege <= GUEST)
+    {
         return ERROR_ACCESS_DENIED;
     }
 
@@ -628,79 +623,62 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         if (m_iGameClass == NO_KEY)
         {
             AddMessage ("Missing GameClass form");
-            *ppageRedirect = ACTIVE_GAME_LIST;
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         
         // Get game number
         if (m_iGameNumber == -1)
         {
             AddMessage ("Missing GameNumber form");
-            *ppageRedirect = ACTIVE_GAME_LIST;
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         
         // Get old update count
         if ((pHttpForm = m_pHttpRequest->GetForm ("Updates")) == NULL) {
             AddMessage ("Missing Updates form");
-            *ppageRedirect = ACTIVE_GAME_LIST;
-            return ERROR_FAILURE;
+            return ERROR_MISSING_FORM;
         }
         m_iNumOldUpdates = pHttpForm->GetIntValue();    
     }
 
     // Verify empire's presence in game
-    iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
-    if (iErrCode != OK || !bFlag) {
-
-        if (iErrCode == ERROR_GAME_DOES_NOT_EXIST) {
-            AddMessage ("That game no longer exists");
-        } else {
-            AddMessage ("You are no longer in that game");
-        }
+    iErrCode = IsEmpireInGame(m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+    if (iErrCode == ERROR_GAME_DOES_NOT_EXIST)
+    {
+        AddMessage("That game no longer exists");
         *ppageRedirect = ACTIVE_GAME_LIST;
-        return ERROR_FAILURE;
+        *pbRedirected = true;
+        return OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    if (!bFlag)
+    {
+        AddMessage ("You are no longer in that game");
+        *ppageRedirect = ACTIVE_GAME_LIST;
+        *pbRedirected = true;
+        return OK;
     }
     
-    // Set some variables if we're coming from a non-game page
-    if (pgSrcPageId == m_pgPageId || (pgSrcPageId != m_pgPageId && !IsGamePage (pgSrcPageId))) {
-
-        Variant vTemp;
-
+    // Set some member variables if we're coming from a non-game page
+    if (pgSrcPageId == m_pgPageId || (pgSrcPageId != m_pgPageId && !IsGamePage (pgSrcPageId)))
+    {
         // Get game options
-        iErrCode = GetEmpireOptions (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameOptions);
-        if (iErrCode != OK) {
-            AddMessage ("That empire no longer exists");
-            *ppageRedirect = LOGIN;
-            return ERROR_FAILURE;
-        }
+        iErrCode = GetEmpireOptions(m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameOptions);
+        RETURN_ON_ERROR(iErrCode);
 
         // Get gameclass name
-        iErrCode = GetGameClassName (m_iGameClass, m_pszGameClassName);
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            *ppageRedirect = ACTIVE_GAME_LIST;
-            return ERROR_FAILURE;
-        }
+        iErrCode = GetGameClassName(m_iGameClass, m_pszGameClassName);
+        RETURN_ON_ERROR(iErrCode);
 
         // Set some flags
         m_bRepeatedButtons = (m_iGameOptions & GAME_REPEATED_BUTTONS) != 0;
         m_bTimeDisplay = (m_iGameOptions & GAME_DISPLAY_TIME) != 0;
 
         // Get game ratios
-        iErrCode = GetEmpireGameProperty (
-            m_iGameClass,
-            m_iGameNumber,
-            m_iEmpireKey,
-            GameEmpireData::GameRatios,
-            &vTemp
-            );
-
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            *ppageRedirect = LOGIN;
-            return ERROR_FAILURE;
-        }
+        Variant vTemp;
+        iErrCode = GetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::GameRatios, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
 
         m_iGameRatios = vTemp.GetInteger();
     }
@@ -710,74 +688,70 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
     ///////////////////////
     
     bool bUpdate;
-    if (CheckGameForUpdates (m_iGameClass, m_iGameNumber, false, &bUpdate) != OK)
-    {
-        // Remove update message after update
-        if (bUpdate && m_strMessage.Equals ("You are now ready for an update")) {
-            m_strMessage.Clear();
-        }
-        
-        AddMessage ("The game ended");
-        *ppageRedirect = ACTIVE_GAME_LIST;
-        return ERROR_FAILURE;
-    }
-    
-    // Re-verify empire's presence in game
-    iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
-    if (iErrCode != OK || !bFlag) {
+    iErrCode = CheckGameForUpdates(m_iGameClass, m_iGameNumber, false, &bUpdate);
+    RETURN_ON_ERROR(iErrCode);
 
-        AddMessage ("You are no longer in that game");
-        *ppageRedirect = ACTIVE_GAME_LIST;
-        return ERROR_FAILURE;
+    if (bUpdate)
+    {
+        // Re-verify empire's presence in game
+        iErrCode = IsEmpireInGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
+        if (iErrCode == ERROR_GAME_DOES_NOT_EXIST)
+        {
+            AddMessage("That game no longer exists");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            *pbRedirected = true;
+            return OK;
+        }
+        RETURN_ON_ERROR(iErrCode);
+
+        if (!bFlag)
+        {
+            AddMessage ("You are no longer in that game");
+            *ppageRedirect = ACTIVE_GAME_LIST;
+            *pbRedirected = true;
+            return OK;
+        }
     }
-    
+
     // Verify not resigned
     iErrCode = HasEmpireResignedFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
-    if (iErrCode != OK || bFlag) {
-        
-        AddMessage ("Your empire has resigned from that game");
+    RETURN_ON_ERROR(iErrCode);
+
+    if (bFlag)
+    {
+        AddMessage("You have resigned from that game");
         *ppageRedirect = ACTIVE_GAME_LIST;
-        return ERROR_FAILURE;
+        *pbRedirected = true;
+        return OK;
     }
     
     // Log empire into game if not an auto submission
     IHttpForm* pHttpAuto = m_pHttpRequest->GetForm ("Auto");
-    if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIntoGame) {
-        
+    if (pHttpAuto == NULL || pHttpAuto->GetIntValue() == 0 && !m_bLoggedIntoGame)
+    {
         int iNumUpdatesIdle;
-        iErrCode = LogEmpireIntoGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumUpdatesIdle);       
-        if (iErrCode != OK) {
-            AddMessage ("Your empire could not be logged into the game");
-            *ppageRedirect = ACTIVE_GAME_LIST;
-            return ERROR_FAILURE;
-        }
+        iErrCode = LogEmpireIntoGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumUpdatesIdle);
+        RETURN_ON_ERROR(iErrCode);
 
         m_bLoggedIntoGame = true;
 
-        if (iNumUpdatesIdle > 0 && !WasButtonPressed (BID_EXIT)) {
-
+        if (iNumUpdatesIdle > 0 && !WasButtonPressed (BID_EXIT))
+        {
             // Check for all empires idle case
             bool bIdle;
             iErrCode = AreAllEmpiresIdle (m_iGameClass, m_iGameNumber, &bIdle);
-            if (iErrCode != OK) {
-                AddMessage ("That game no longer exists");
-                *ppageRedirect = ACTIVE_GAME_LIST;
-                return ERROR_FAILURE;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
-            if (bIdle) {
-
+            if (bIdle)
+            {
                 AddMessage ("All empires in the game are idle this update, including yours");
                 AddMessage ("Pausing, drawing and ending turn will not take effect until the next update");
 
-                if (m_iGameOptions & REQUEST_DRAW) {
-
+                if (m_iGameOptions & REQUEST_DRAW)
+                {
                     IHttpForm* pHttpForm;
-                    if (m_pgPageId != OPTIONS ||
-                        (pHttpForm = m_pHttpRequest->GetForm ("Draw")) == NULL ||
-                        pHttpForm->GetIntValue() != 0
-                        ) {
-
+                    if (m_pgPageId != OPTIONS || (pHttpForm = m_pHttpRequest->GetForm ("Draw")) == NULL || pHttpForm->GetIntValue() != 0)
+                    {
                         AddMessage ("Your empire is requesting draw, so the game may end in a draw next update");
                     }
                 }
@@ -785,57 +759,49 @@ int HtmlRenderer::InitializeGame (PageId* ppageRedirect) {
         }
     }
     
-    // Remove update message after update
-    if (bUpdate && m_strMessage.Equals ("You are now ready for an update")) {
+    // Remove ready for update message after update
+    if (bUpdate && m_strMessage.Equals("You are now ready for an update"))
+    {
         m_strMessage.Clear();
     }
     
     // Get game update information
-    if (GetGameUpdateData (
-        m_iGameClass, 
-        m_iGameNumber, 
-        &m_sSecondsSince, 
-        &m_sSecondsUntil, 
-        &m_iNumNewUpdates, 
-        &m_iGameState
-        ) != OK
-        ) {
-        
-        Assert(false);
-
-        AddMessage ("The game no longer exists");
-        *ppageRedirect = ACTIVE_GAME_LIST;
-        return ERROR_FAILURE;
-    }
+    iErrCode = GetGameUpdateData(m_iGameClass, m_iGameNumber, &m_sSecondsSince, &m_sSecondsUntil, &m_iNumNewUpdates, &m_iGameState);
+    RETURN_ON_ERROR(iErrCode);
 
     // Hack for when games update
-    if (bUpdate) {
+    if (bUpdate)
+    {
         m_iGameOptions &= ~UPDATED;
     }
     
-    return OK;
+    return iErrCode;
 }
 
 int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
 {
+    int iErrCode = OK;
+    *pbRedirected = false;
+    *ppageRedirect = NO_PAGE;
+
     if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
 
-        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE) {
-            *pbRedirected = false;
+        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE)
+        {
             return OK;
         }
 
-        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE) {
+        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE)
+        {
             *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
             *pbRedirected = true;
             return OK;
         }
-        *pbRedirected = false;
         return OK;
     }
 
-    if (m_bRedirection || WasButtonPressed (PageButtonId[m_pgPageId])) {
-        *pbRedirected = false;
+    if (m_bRedirection || WasButtonPressed (PageButtonId[m_pgPageId]))
+    {
         return OK;
     }
 
@@ -1017,13 +983,13 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
             {
                 unsigned int iResults;
                 int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
-                if (iErrCode != OK)
-                    return iErrCode;
+                RETURN_ON_ERROR(iErrCode);
 
                 if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
                 {
                     AddMessage("That empire no longer exists");
-                    *pbRedirected = false;
+                    *ppageRedirect = LOGIN;
+                    *pbRedirected = true;
                     return OK;
                 }
 
@@ -1037,7 +1003,7 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
 
     if (NotifiedTournamentInvitation()) {
 
-        int iErrCode, iMessageKey;
+        int iMessageKey;
         unsigned int iTournamentKey;
 
         pHttpForm = m_pHttpRequest->GetForm ("HintTournamentInvite");
@@ -1051,8 +1017,7 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
             }
 
             iErrCode = CacheTournamentTables(&iTournamentKey, 1);
-            if (iErrCode != OK)
-                return iErrCode;
+            RETURN_ON_ERROR(iErrCode);
 
             bool bAccept = WasButtonPressed (BID_ACCEPT);
             bool bDecline = bAccept ? false : WasButtonPressed (BID_DECLINE);
@@ -1081,7 +1046,10 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
                     {
                         AddMessage ("You have already responded to that message");
                     }
-                    else return iErrCode;
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                    }
                 }
             }
         }
@@ -1089,7 +1057,7 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
 
     if (NotifiedTournamentJoinRequest()) {
 
-        int iErrCode, iMessageKey;
+        int iMessageKey;
         unsigned int iTournamentKey;
 
         pHttpForm = m_pHttpRequest->GetForm("HintTournamentJoinRequest");
@@ -1134,28 +1102,32 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
                     {
                         AddMessage ("You have already responded to that message");
                     }
-                    else return iErrCode;
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                    }
                 }
             }
         }
     }
 
-    *pbRedirected = false;
-    return OK;
+    return iErrCode;
 }
 
-void HtmlRenderer::CloseSystemPage() {
-    
+int HtmlRenderer::CloseSystemPage()
+{
     String strFilter;
-    
-    int iButtonKey = m_iButtonKey, iPrivilege = m_iPrivilege;
+
+    int iErrCode = OK, iButtonKey = m_iButtonKey, iPrivilege = m_iPrivilege;
     
     OutputText ("<p>");
     WriteSeparatorString (m_iSeparatorKey);
     OutputText ("<p>");
     
-    if (m_bRepeatedButtons) {
-        WriteSystemButtons (iButtonKey, iPrivilege);
+    if (m_bRepeatedButtons)
+    {
+        iErrCode = WriteSystemButtons (iButtonKey, iPrivilege);
+        RETURN_ON_ERROR(iErrCode);
     }
     
     WriteContactLine();
@@ -1185,12 +1157,17 @@ void HtmlRenderer::CloseSystemPage() {
 
     OutputText("</center></form></body></html>");
     OnPageRender(msTime);
+
+    return iErrCode;
 }
 
 int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected)
 {
-    int iErrCode;
+    int iErrCode = OK;
     bool bFlag;
+
+    *ppageRedirect = NO_PAGE;
+    *pbRedirected = false;
     
     IHttpForm* pHttpForm;
 
@@ -1202,69 +1179,80 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
 
     if (!(m_iSystemOptions2 & EMPIRE_ACCEPTED_TOS)) {
 
-        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE) {
-            goto False;
+        if (m_bRedirection && m_pgPageId == SYSTEM_TERMS_OF_SERVICE)
+        {
+            return OK;
         }
 
-        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE) {
+        if (m_pgPageId != SYSTEM_TERMS_OF_SERVICE)
+        {
             *ppageRedirect = SYSTEM_TERMS_OF_SERVICE;
-            goto True;
+            *pbRedirected = true;
+            return OK;
         }
-        goto False;
+        return OK;
     }
 
-    if (m_bRedirection) {
-        goto False;
+    if (m_bRedirection)
+    {
+        return OK;
     }
 
     if (WasButtonPressed (BID_INFO)) {
         *ppageRedirect = INFO;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_BUILD)) {
         *ppageRedirect = BUILD;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_TECH)) {
         *ppageRedirect = TECH;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_OPTIONS)) {
         *ppageRedirect = OPTIONS;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_SHIPS)) {
         *ppageRedirect = SHIPS;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_PLANETS)) {
         *ppageRedirect = PLANETS;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_MAP)) {
         *ppageRedirect = MAP;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_DIPLOMACY)) {
         *ppageRedirect = DIPLOMACY;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_ENDTURN)) {
 
-        if (m_iNumNewUpdates == m_iNumOldUpdates) {
-        
+        if (m_iNumNewUpdates == m_iNumOldUpdates)
+        {
             // End turn
             iErrCode = SetEmpireReadyForUpdate(m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
-            if (iErrCode != OK)
-                return iErrCode;
+            RETURN_ON_ERROR(iErrCode);
             
             // Redirect to same page
             if (bFlag)
@@ -1272,14 +1260,14 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
                 AddMessage ("You are now ready for an update");
             }
             *ppageRedirect = m_pgPageId;
-            goto True;
-        
+            *pbRedirected = true;
+            return OK;
         }
         else
         {
             // Tell empire that his end turn didn't work
             AddMessage ("Your end turn was too late");
-            goto False;
+            return OK;
         }
     }
     
@@ -1289,64 +1277,73 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
         {
             // Unend turn
             iErrCode = SetEmpireNotReadyForUpdate(m_iGameClass, m_iGameNumber, m_iEmpireKey, &bFlag);
-            if (iErrCode != OK)
-                return iErrCode;
+            RETURN_ON_ERROR(iErrCode);
 
             // Redirect to same page
             if (bFlag)
             {
                 AddMessage ("You are no longer ready for an update");
             }
+    
             *ppageRedirect = m_pgPageId;
-            goto True;
+            *pbRedirected = true;
+            return OK;
 
         } else {
 
             // Tell empire that his end turn didn't work
             AddMessage ("Your unend turn was too late");
-            goto False;
+            return OK;
         }
     }
     
     if (WasButtonPressed (BID_EXIT)) {
         *ppageRedirect = ACTIVE_GAME_LIST;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_QUIT)) {
         m_iReserved = BID_QUIT;
         *ppageRedirect = QUIT;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_SERVERINFORMATION)) {
         *ppageRedirect = GAME_SERVER_INFORMATION;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_DOCUMENTATION)) {
         *ppageRedirect = GAME_DOCUMENTATION;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_SERVERNEWS)) {
         *ppageRedirect = GAME_NEWS;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
 
     if (WasButtonPressed (BID_CONTRIBUTIONS)) {
         *ppageRedirect = GAME_CONTRIBUTIONS;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (WasButtonPressed (BID_CREDITS)) {
         *ppageRedirect = GAME_CREDITS;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
 
     if (WasButtonPressed (BID_TOS)) {
         *ppageRedirect = GAME_TERMS_OF_SERVICE;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     pHttpForm = m_pHttpRequest->GetForm ("ProfileLink.x");
@@ -1354,7 +1351,8 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
     {
         m_iReserved = m_iEmpireKey;
         *ppageRedirect = GAME_PROFILE_VIEWER;
-        goto True;
+        *pbRedirected = true;
+        return OK;
     }
     
     if (NotifiedProfileLink()) {
@@ -1371,30 +1369,22 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
             if (sscanf(pszProfile, "ProfileLink.%d.%d.x", &iViewProfileEmpireKey, &iHash) == 2)
             {
                 unsigned int iResults;
-                int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
-                if (iErrCode != OK)
-                    return iErrCode;
+                iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
                 {
                     AddMessage("That empire no longer exists");
-                    goto False;
+                    return OK;
                 }
 
                 m_iReserved = iViewProfileEmpireKey;
                 *ppageRedirect = GAME_PROFILE_VIEWER;
-                goto True;
+                *pbRedirected = true;
+                return OK;
             }
         }
     }
 
-False:
-
-    *pbRedirected = false;
-    return OK;
-    
-True:
-    
-    *pbRedirected = true;
-    return OK;
+    return iErrCode;
 }

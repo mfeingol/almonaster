@@ -18,14 +18,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 IHttpForm* pHttpForm;
 
-int iErrCode, iSpectatorGamesPage = 0, iGameNumber = -1;
+int iSpectatorGamesPage = 0, iGameNumber = -1;
 unsigned int i, iGameClassKey = NO_KEY, iClickedPlanetKey = NO_KEY, iClickedProxyPlanetKey = NO_KEY;
 
 // Handle a submission
@@ -579,6 +584,7 @@ default:
     break;
 }
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

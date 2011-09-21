@@ -24,18 +24,20 @@ enum AutoLogonVars {
     MAYBE_AUTOLOGON = -2
 };
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 IHttpForm* pHttpForm;
 
-int i, iErrCode, iProfileEditorPage = 0, iInfoThemeKey = NO_KEY, iAlienSelect = 0, 
-    iNewButtonKey = m_iButtonKey;
+int i, iProfileEditorPage = 0, iInfoThemeKey = NO_KEY, iAlienSelect = 0, iNewButtonKey = m_iButtonKey, iAutoLogonSelected = MAYBE_AUTOLOGON;
 const char* pszGraphicsPath = NULL;
-
-int iAutoLogonSelected = MAYBE_AUTOLOGON;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -3599,6 +3601,7 @@ default:
     Assert(false);
 }
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

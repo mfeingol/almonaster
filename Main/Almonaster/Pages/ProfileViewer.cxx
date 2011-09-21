@@ -19,14 +19,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 IHttpForm* pHttpForm;
 
-int iErrCode, iProfileViewerPage = 0;
+int iProfileViewerPage = 0;
 unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
 
 RangeSearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
@@ -256,15 +261,30 @@ SearchResults:
                         m_iEmpireKey = iSwitch;
 
                         Check(CacheEmpire(iSwitch));
-                        Check(HtmlLoginEmpire());
-                        Check(InitializeEmpire(false));
-                        return Redirect (ACTIVE_GAME_LIST);
+
+                        bool bLoggedIn;
+                        iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                        RETURN_ON_ERROR(iErrCode);
+                        if (bLoggedIn)
+                        {
+                            bool bInitialized;
+                            iErrCode = InitializeEmpire(false, &bInitialized);
+                            RETURN_ON_ERROR(iErrCode);
+                            if (bInitialized)
+                            {
+                                // Yay!
+                                return Redirect(ACTIVE_GAME_LIST);
+                            }
+                        }
+
+                        AddMessage("Login failed");
                     }
                     else
                     {
-                        AddMessage ("Access denied");
+                        AddMessage("Access denied");
                     }
                 }
+                break;
             }
 
             }
@@ -656,6 +676,7 @@ default:
     Assert(false);
 }
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

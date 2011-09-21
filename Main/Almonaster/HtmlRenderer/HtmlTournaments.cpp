@@ -832,7 +832,8 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
     pvSubmitArray [SystemTournamentTeams::iWebPage] = pHttpForm->GetValue();
 
     // Icon
-    pvSubmitArray [SystemTournamentTeams::iIcon] = GetDefaultSystemIcon();
+    EnsureDefaultSystemIcon();
+    pvSubmitArray [SystemTournamentTeams::iIcon] = m_iDefaultSystemIcon;
 
     return OK;
 }

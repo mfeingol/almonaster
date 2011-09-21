@@ -19,13 +19,19 @@
 
 int iErrCode;
 
-if (InitializeEmpireInGame(false) != OK)
+bool bInitialized;
+iErrCode = InitializeEmpireInGame(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 PageId pageRedirect;
-if (InitializeGame(&pageRedirect) != OK)
+bool bRedirected;
+iErrCode = InitializeGame(&pageRedirect, &bRedirected);
+RETURN_ON_ERROR(iErrCode);
+if (bRedirected)
 {
     return Redirect(pageRedirect);
 }

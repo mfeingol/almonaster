@@ -81,7 +81,7 @@ void HtmlRenderer::WriteVertSrc (int iThemeKey) {
     }
 }
 
-int HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowup) {
+void HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowup) {
     
     switch (iThemeKey) {
         
@@ -120,14 +120,10 @@ int HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowup
         break;
     }
     
-    if (pstrString->GetCharPtr() == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-    
-    return OK;
+    Assert(pstrString->GetCharPtr());
 }
 
-int HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowup) {
+void HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowup) {
     
     switch (iThemeKey) {
         
@@ -165,11 +161,7 @@ int HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowup
         break;
     }
     
-    if (pstrString->GetCharPtr() == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-    
-    return OK;
+    Assert(pstrString->GetCharPtr());
 }
 
 int HtmlRenderer::GetUIData (int iThemeKey) {
@@ -180,32 +172,22 @@ int HtmlRenderer::GetUIData (int iThemeKey) {
     if (iThemeKey == INDIVIDUAL_ELEMENTS) {
         
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         m_iButtonKey = vValue.GetInteger();
         
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIBackground, &vValue);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         m_iBackgroundKey = vValue.GetInteger();
         
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UISeparator, &vValue);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         m_iSeparatorKey = vValue.GetInteger();
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetTextColorData (vValue.GetInteger());
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
     } else {
         
@@ -216,35 +198,25 @@ int HtmlRenderer::GetUIData (int iThemeKey) {
         if (iThemeKey == NULL_THEME) {
             
             iErrCode = GetTextColorData (NULL_THEME);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
         
         else if (iThemeKey == ALTERNATIVE_PATH) {
 
             iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
             iErrCode = GetTextColorData (vValue.GetInteger());
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &m_vLocalPath);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
         
         else {
             
             iErrCode = GetTextColorData (iThemeKey);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
     
@@ -254,7 +226,7 @@ int HtmlRenderer::GetUIData (int iThemeKey) {
 
 int HtmlRenderer::GetTextColorData (int iEmpireColorKey) {
     
-    int iErrCode;
+    int iErrCode = OK;
     
     switch (iEmpireColorKey) {
         
@@ -271,72 +243,48 @@ int HtmlRenderer::GetTextColorData (int iEmpireColorKey) {
     case CUSTOM_COLORS:
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &m_vTableColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &m_vTextColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &m_vGoodColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &m_vBadColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &m_vPrivateMessageColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &m_vBroadcastMessageColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         break;
         
     default:
         
         iErrCode = GetThemeTextColor (iEmpireColorKey, &m_vTextColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetThemeGoodColor (iEmpireColorKey, &m_vGoodColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetThemeBadColor (iEmpireColorKey, &m_vBadColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetThemePrivateMessageColor (iEmpireColorKey, &m_vPrivateMessageColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetThemeBroadcastMessageColor (iEmpireColorKey, &m_vBroadcastMessageColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetThemeTableColor (iEmpireColorKey, &m_vTableColor);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         break;
     }
     
-    return OK;
+    return iErrCode;
 }
 
 bool HtmlRenderer::IsColor (const char* pszColor) {
@@ -481,7 +429,8 @@ void HtmlRenderer::WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2,
         } else {
             
             // Render default icon
-            iIconKey = GetDefaultSystemIcon();
+            EnsureDefaultSystemIcon();
+            iIconKey = m_iDefaultSystemIcon;
             
             OutputText ("<img src=\"" BASE_RESOURCE_DIR BASE_ALIEN_DIR ALIEN_NAME);
         }
@@ -544,7 +493,8 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
             
             // Render default icon
             OutputText (BASE_ALIEN_DIR ALIEN_NAME);
-            m_pHttpResponse->WriteText (GetDefaultSystemIcon());
+            EnsureDefaultSystemIcon();
+            m_pHttpResponse->WriteText(m_iDefaultSystemIcon);
             OutputText (DEFAULT_IMAGE_EXTENSION);
         }
         
@@ -570,7 +520,7 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
     OutputText ("\">");
 }
 
-                                            struct GifHeader
+struct GifHeader
 {
   // Header
   char Signature[3];     // Header Signature (always "GIF")
@@ -583,90 +533,90 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
   char AspectRatio;      // Pixel Aspect Ratio
 };
 
-bool HtmlRenderer::VerifyGIF (const char* pszFileName) {
-
+int HtmlRenderer::VerifyGIF(const char* pszFileName, bool* pbGoodGIF)
+{
     int iErrCode;
+
+    *pbGoodGIF = false;
+
     File fGifFile;
-    
-    if (fGifFile.OpenRead (pszFileName) != OK) {
-        AddMessage ("The uploaded file could not be opened");
-        return false;
+    if (fGifFile.OpenRead (pszFileName) != OK)
+    {
+        AddMessage("The uploaded file cannot be opened");
+        return OK;
     }
     
     GifHeader header;
     size_t stNumBytes, stSize;
     
     // Read the gif header
-    iErrCode = fGifFile.Read (&header, sizeof (GifHeader), &stNumBytes);
+    iErrCode = fGifFile.Read(&header, sizeof(GifHeader), &stNumBytes);
     fGifFile.Close();
 
-    if (iErrCode != OK) {
-        AddMessage ("The uploaded file appears to be damaged");
-        return false;
+    if (iErrCode != OK)
+    {
+        AddMessage ("The uploaded file cannot be read");
+        return OK;
     }
 
-    if (stNumBytes != sizeof (GifHeader)) {
+    if (stNumBytes != sizeof (GifHeader))
+    {
         AddMessage ("The uploaded file is too small");
-        return false;
+        return OK;
     }
 
-    if (File::GetFileSize (pszFileName, &stSize) != OK) {
-        AddMessage ("The uploaded file could not be opened");
-        return false;
-    }
+    iErrCode = File::GetFileSize (pszFileName, &stSize);
+    RETURN_ON_ERROR(iErrCode);
     
     Variant vMaxIconSize;
     iErrCode = GetSystemProperty (SystemData::MaxIconSize, &vMaxIconSize);
-    if (iErrCode != OK) {
-        Assert(false);
-        AddMessage ("The max icon size could could not be read");
-        return false;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
-    if (stSize > (size_t) vMaxIconSize.GetInteger()) {
-        
-        char pszError [256];
+    if (stSize > (size_t)vMaxIconSize.GetInteger())
+    {
+        char pszError[256];
         sprintf (
             pszError, 
             "The uploaded file is larger than the upper limit (%i KB)", 
             (int) (vMaxIconSize.GetInteger() / 1024)
             );
         AddMessage (pszError);
-        return false;
+        return OK;
     }
-    
+
     // Ensure gif89a
     if (header.Signature[0] != 'G' ||
         header.Signature[1] != 'I' ||
         header.Signature[2] != 'F' ||
         header.Version[0] != '8' ||
         header.Version[1] != '9' ||
-        header.Version[2] != 'a'
-        ) {
-        AddMessage ("The uploaded file is not in GIF89a format");
-        return false;
+        header.Version[2] != 'a')
+    {
+        AddMessage("The uploaded file is not in GIF89a format");
+        return OK;
     }
     
     // Get size of image
-    if (header.ScreenWidth != ICON_WIDTH || header.ScreenHeight != ICON_HEIGHT) {
-        
-        char pszError [512];
+    if (header.ScreenWidth != ICON_WIDTH || header.ScreenHeight != ICON_HEIGHT)
+    {
+        char pszError[256];
         sprintf (
             pszError, 
-            "The uploaded GIF89a icon does not have the proper dimensions (%i x %i)",
+            "The uploaded GIF89a icon does not have the correct dimensions (%i x %i)",
             ICON_WIDTH,
             ICON_HEIGHT
             );
         
         AddMessage (pszError);
-        return false;
+        return OK;
     }
+
+    *pbGoodGIF = true;
     
-    return true;
+    return iErrCode;
 }
 
-
-int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUploadDir, int iKey1, int iKey2) {
+bool HtmlRenderer::CopyUploadedIcon(const char* pszFileName, const char* pszUploadDir, int iKey1, int iKey2) {
     
     int iErrCode;
     char pszDestFileName[OS::MaxFileNameLength];
@@ -697,25 +647,25 @@ int HtmlRenderer::CopyUploadedIcon (const char* pszFileName, const char* pszUplo
 
     // TODO:  need a better solution for this
     unsigned int iTries = 0;
-    while (iTries < 20) {
+    while (iTries < 20)
+    {
+        global.GetFileCache()->ReleaseFile(pszDestFileName);
         
-        global.GetFileCache()->ReleaseFile (pszDestFileName);
-        
-        iErrCode = File::CopyFile (pszFileName, pszDestFileName);
-        if (iErrCode == OK) {
-            return OK;
+        iErrCode = File::CopyFile(pszFileName, pszDestFileName);
+        if (iErrCode == OK)
+        {
+            return true;
         }
         
         iTries ++;
-        OS::Sleep (250);
+        OS::Sleep(100);
     }
 
-    Assert(false);
-    return ERROR_FAILURE;
+    return false;
 }
 
-int HtmlRenderer::CopyNewAlien (const char* pszFileName, int iAlienKey) {
-    
+bool HtmlRenderer::CopyNewAlien(const char* pszFileName, int iAlienKey)
+{
     char pszDestFileName[OS::MaxFileNameLength];
     
     sprintf (
@@ -727,11 +677,11 @@ int HtmlRenderer::CopyNewAlien (const char* pszFileName, int iAlienKey) {
     
     global.GetFileCache()->ReleaseFile (pszDestFileName);
     
-    return File::CopyFile (pszFileName, pszDestFileName);
+    return File::CopyFile (pszFileName, pszDestFileName) == OK;
 }
 
-int HtmlRenderer::DeleteAlien (int iAlienKey) {
-    
+bool HtmlRenderer::DeleteAlien (int iAlienKey)
+{
     char pszDestFileName[OS::MaxFileNameLength];
     
     sprintf (
@@ -743,23 +693,23 @@ int HtmlRenderer::DeleteAlien (int iAlienKey) {
     
     global.GetFileCache()->ReleaseFile (pszDestFileName);
     
-    return File::DeleteFile (pszDestFileName);
+    return File::DeleteFile (pszDestFileName) == OK;
 }
 
-int HtmlRenderer::GetDefaultSystemIcon() {
+int HtmlRenderer::EnsureDefaultSystemIcon()
+{
+    int iErrCode = OK;
 
-    if (m_iDefaultSystemIcon == NO_KEY) {
-
+    if (m_iDefaultSystemIcon == NO_KEY)
+    {
         int iErrCode;
         Variant vAlien;
 
-        iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vAlien);
-        if (iErrCode != OK) {
-            return 1;
-        }
+        iErrCode = GetSystemProperty(SystemData::DefaultAlien, &vAlien);
+        RETURN_ON_ERROR(iErrCode);
 
         m_iDefaultSystemIcon = vAlien.GetInteger();
     }
 
-    return m_iDefaultSystemIcon;
+    return iErrCode;
 }

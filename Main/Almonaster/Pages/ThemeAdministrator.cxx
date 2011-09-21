@@ -18,7 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
@@ -26,7 +31,6 @@ if (InitializeEmpire(false) != OK)
 IHttpForm* pHttpForm;
 Variant* pvThemeData;
 
-int iErrCode;
 unsigned int i;
 
 // Make sure that the unprivileged don't abuse this:
@@ -846,4 +850,7 @@ if (iNumThemes > 0) {
 WriteButton (BID_CANCEL);
 WriteButton (BID_CREATENEWTHEME);
 
-CloseSystemPage(); %>
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
+
+%>

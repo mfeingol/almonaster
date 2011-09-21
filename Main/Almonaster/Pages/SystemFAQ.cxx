@@ -19,7 +19,10 @@
 
 int iErrCode;
 
-if (InitializeEmpire(false) != OK)
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
@@ -40,6 +43,7 @@ Check(OpenSystemPage(false));
 // Individual page stuff starts here
 WriteFaq();
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

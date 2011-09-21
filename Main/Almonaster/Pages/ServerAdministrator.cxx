@@ -18,7 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
@@ -31,7 +36,7 @@ if (m_iPrivilege < ADMINISTRATOR) {
     return Redirect (LOGIN);
 }
 
-int i, iErrCode, iServerAdminPage = 0, iInfoThemeKey = NO_KEY;
+int i, iServerAdminPage = 0, iInfoThemeKey = NO_KEY;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -87,8 +92,12 @@ if (m_bOwnPost && !m_bRedirection) {
                             AddMessage ("You didn't upload a file");
                         } else {
 
-                            if (VerifyGIF (pszFileName)) {
+                            bool bGoodGIF;
+                            iErrCode = VerifyGIF(pszFileName, &bGoodGIF);
+                            RETURN_ON_ERROR(iErrCode);
 
+                            if (bGoodGIF)
+                            {
                                 // The gif was OK, so insert the key and copy it to its destination
                                 switch (CreateAlienIcon (iNewValue, pszNewValue)) {
 
@@ -1769,6 +1778,7 @@ default:
     Assert(false);
 }
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

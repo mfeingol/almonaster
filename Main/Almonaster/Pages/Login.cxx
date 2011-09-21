@@ -64,8 +64,19 @@ if (m_pHttpRequest->GetMethod() == GET) {
                 m_iEmpireKey = iAutoLogonKey;
                 m_bAutoLogon = true;
 
-                if (HtmlLoginEmpire() == OK && InitializeEmpire(true) == OK) {
-                    return Redirect (ACTIVE_GAME_LIST);
+                bool bLoggedIn;
+                iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                RETURN_ON_ERROR(iErrCode);
+                if (bLoggedIn)
+                {
+                    bool bInitialized;
+                    iErrCode = InitializeEmpire(true, &bInitialized);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (bInitialized)
+                    {
+                        // Yay!
+                        return Redirect(ACTIVE_GAME_LIST);
+                    }
                 }
 
                 AddMessage ("Login failed");
@@ -182,9 +193,19 @@ else if (!m_bRedirection)
             {
                 m_vPassword = pszPassword;
 
-                if (HtmlLoginEmpire() == OK && InitializeEmpire(false) == OK)
+                bool bLoggedIn;
+                iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                RETURN_ON_ERROR(iErrCode);
+                if (bLoggedIn)
                 {
-                    return Redirect(ACTIVE_GAME_LIST);
+                    bool bInitialized;
+                    iErrCode = InitializeEmpire(false, &bInitialized);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (bInitialized)
+                    {
+                        // Yay!
+                        return Redirect(ACTIVE_GAME_LIST);
+                    }
                 }
 
                 // Security?

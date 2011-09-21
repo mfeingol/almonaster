@@ -962,7 +962,8 @@ void HtmlRenderer::WriteServerRules() {
     }
 
     OutputText ("<li>The default icon for new empires is: ");
-    WriteEmpireIcon (GetDefaultSystemIcon(), NO_KEY, NULL, false);
+    EnsureDefaultSystemIcon();
+    WriteEmpireIcon(m_iDefaultSystemIcon, NO_KEY, NULL, false);
     OutputText ("</li>");
 
     iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);

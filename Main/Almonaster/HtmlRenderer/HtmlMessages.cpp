@@ -29,12 +29,14 @@ int HtmlRenderer::WriteGameMessages()
     }
     
     // Check for messages
-    Variant** ppvMessage;
-    unsigned int iNumMessages, i;
-    
+    Variant** ppvMessage = NULL;
+    unsigned int iNumMessages;
+
+    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage);
+    AutoFreeArrayOfData free_ppvMessage2(ppvMessage, iNumMessages);
+   
     int iErrCode = GetUnreadGameMessages(m_iGameClass, m_iGameNumber, m_iEmpireKey, &ppvMessage, &iNumMessages);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
     
     if (iNumMessages > 0)
     {
@@ -45,21 +47,17 @@ int HtmlRenderer::WriteGameMessages()
 
         // Cache empire tables of senders
         unsigned int* piEmpires = (unsigned int*)StackAlloc(iNumMessages * sizeof(unsigned int));
-        for (i = 0; i < iNumMessages; i ++)
+        for (unsigned int i = 0; i < iNumMessages; i ++)
         {
             piEmpires[i] = ppvMessage[i][GameEmpireMessages::iSourceKey].GetInteger();
         }
         
         iErrCode = CacheEmpires(piEmpires, iNumMessages);
-        if (iErrCode != OK)
-        {
-            OutputText("CacheEmpires failed");
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         OutputText ("<table width=\"55%\">");
         
-        for (i = 0; i < iNumMessages; i ++)
+        for (unsigned int i = 0; i < iNumMessages; i ++)
         {
             if (i > 0)
             {
@@ -100,19 +98,23 @@ int HtmlRenderer::WriteGameMessages()
             if (iFlags & MESSAGE_SYSTEM)
             {
                 iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vAlienKey);
-                if (iErrCode == OK)
-                {
-                    WriteIcon (vAlienKey.GetInteger(), NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
-                }
+                RETURN_ON_ERROR(iErrCode);
+
+                WriteIcon (vAlienKey.GetInteger(), NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
             }
             else
             {
                 Variant vSecretKey;
                 unsigned int iSrcEmpireKey = ppvMessage[i][GameEmpireMessages::iSourceKey].GetInteger();
-                if (GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) == OK &&
-                    vSecretKey.GetInteger64() == ppvMessage[i][GameEmpireMessages::iSourceSecret].GetInteger64() &&
-                    GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vAlienKey) == OK)
+                
+                iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (vSecretKey.GetInteger64() == ppvMessage[i][GameEmpireMessages::iSourceSecret].GetInteger64())
                 {
+                    iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
+                    RETURN_ON_ERROR(iErrCode);
+
                     sprintf(pszProfile, "View the profile of %s", pszSource);
 
                     WriteProfileAlienString(vAlienKey.GetInteger(), iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
@@ -174,25 +176,20 @@ int HtmlRenderer::WriteGameMessages()
             OutputText ("\">");
             WriteFormattedMessage (pszMessage);
             OutputText ("</font></td></tr>");
-            
-            t_pCache->FreeData(ppvMessage[i]);
-            
-        }   // End empire loop
+        }
 
         OutputText ("</table><p>");
         
         if (iNumMessagesFromPeople > 0) {
             NotifyProfileLink();
         }
-        
-        delete [] ppvMessage;
     }
 
-    return OK;
+    return iErrCode;
 }
 
-int HtmlRenderer::WriteSystemMessages() {
-    
+int HtmlRenderer::WriteSystemMessages()
+{
     if (!m_strMessage.IsBlank()) {
         OutputText ("<strong>");
         m_pHttpResponse->WriteText (m_strMessage);
@@ -203,15 +200,12 @@ int HtmlRenderer::WriteSystemMessages() {
     Variant** ppvMessage = NULL;
     unsigned int* piMessageKey = NULL, iNumMessages, i;
     
-    int iErrCode = GetUnreadSystemMessages (
-        m_iEmpireKey,
-        &ppvMessage,
-        &piMessageKey,
-        &iNumMessages
-        );
-    
-    if (iErrCode != OK)
-        return iErrCode;
+    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage);
+    AutoFreeArrayOfData free_ppvMessage2(ppvMessage, iNumMessages);
+    AutoFreeKeys free_piMessageKey(piMessageKey);
+
+    int iErrCode = GetUnreadSystemMessages(m_iEmpireKey, &ppvMessage, &piMessageKey, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
     
     if (iNumMessages > 0)
     {
@@ -225,11 +219,7 @@ int HtmlRenderer::WriteSystemMessages() {
         }
         
         iErrCode = CacheEmpires(piEmpires, iNumMessages);
-        if (iErrCode != OK)
-        {
-            OutputText("CacheEmpires failed");
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         OutputText ("<table width=\"55%\">");
         
@@ -251,11 +241,18 @@ int HtmlRenderer::WriteSystemMessages() {
                 OutputText ("<tr><td>&nbsp</td></tr>");
             }
 
-            if (RenderSystemMessage(piMessageKey[i], ppvMessage[i])) {
+            bool bMessageFromEmpire;
+            iErrCode = RenderSystemMessage(piMessageKey[i], ppvMessage[i], &bMessageFromEmpire);
+            if (iErrCode == WARNING)
+            {
+                iErrCode = OK;
+            }
+            RETURN_ON_ERROR(iErrCode);
+
+            if (bMessageFromEmpire)
+            {
                 iNumMessagesFromPeople ++;
             }
-
-            t_pCache->FreeData (ppvMessage[i]);    
         }
 
         OutputText ("</table><p>");
@@ -263,19 +260,17 @@ int HtmlRenderer::WriteSystemMessages() {
         if (iNumMessagesFromPeople > 0) {
             NotifyProfileLink();
         }
-        
-        delete [] ppvMessage;
-        t_pCache->FreeKeys (piMessageKey);
     }
 
-    return OK;
+    return iErrCode;
 }
 
-bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage)
+int HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage, bool* pbMessageFromEmpire)
 {
     int iErrCode = OK;
     unsigned int iSrcEmpireKey = NO_KEY, iAlienKey = NO_KEY;
-    bool bEmpireLink = false;
+    
+    *pbMessageFromEmpire = false;
 
     char pszDate [OS::MaxDateLength];
     
@@ -296,10 +291,7 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
     if (bSystem)
     {
         iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vTemp);
-        if (iErrCode != OK)
-        {
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
         iAlienKey = vTemp.GetInteger();
     }
     else
@@ -307,10 +299,13 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
         Variant vSecretKey;
         iSrcEmpireKey = pvMessage[SystemEmpireMessages::iSourceKey].GetInteger();
 
-        if (GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) == OK &&
-            vSecretKey.GetInteger64() == pvMessage[SystemEmpireMessages::iSourceSecret].GetInteger64() &&
-            GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vTemp) == OK)
+        iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+        RETURN_ON_ERROR(iErrCode);
+
+        if (vSecretKey.GetInteger64() == pvMessage[SystemEmpireMessages::iSourceSecret].GetInteger64())
         {
+            iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vTemp);
+            RETURN_ON_ERROR(iErrCode);
             iAlienKey = vTemp.GetInteger();
         }
         else
@@ -318,9 +313,6 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
             pszSource = "Unknown";
         }
     }
-
-    // No errors so far...
-    iErrCode = OK;
 
     //
     // Print header
@@ -341,7 +333,7 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
             
             Assert(iSrcEmpireKey != NO_KEY);
             WriteProfileAlienString(iAlienKey, iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
-            bEmpireLink  = true;
+            *pbMessageFromEmpire = true;
         }
 
         OutputText (" ");
@@ -438,26 +430,18 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
 
             unsigned int iSenderKey, iOwnerKey, iTournamentKey;
 
-            sscanf (pvMessage[SystemEmpireMessages::iData].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
+            sscanf(pvMessage[SystemEmpireMessages::iData].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
 
             OutputText ("invited you to join ");
 
-            iErrCode = GetTournamentName (iTournamentKey, &vName);
-            if (iErrCode != OK) {
-                OutputText ("a tournament that no longer exists");
-                goto Cleanup;
-            }
+            iErrCode = GetTournamentName(iTournamentKey, &vName);
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = GetTournamentOwner (iTournamentKey, &iOwnerKey);
-            if (iErrCode != OK) {
-                OutputText ("a tournament that no longer exists");
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             OutputText ("the <strong>");
-            
             m_pHttpResponse->WriteText (vName.GetCharPtr());
-            
             OutputText ("</strong> ");
 
             if (iOwnerKey == SYSTEM) {
@@ -501,26 +485,20 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
             Variant vName = NULL;
             unsigned int iTournamentKey, iSenderKey, iOwnerKey;
 
-            sscanf (pvMessage[SystemEmpireMessages::iData].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
+            sscanf(pvMessage[SystemEmpireMessages::iData].GetCharPtr(), "%i.%i", &iTournamentKey, &iSenderKey);
 
             OutputText ("requested permission to join ");
 
             iErrCode = GetTournamentName (iTournamentKey, &vName);
-            if (iErrCode != OK) {
-                OutputText ("a tournament that no longer exists");
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = GetTournamentOwner (iTournamentKey, &iOwnerKey);
-            if (iErrCode != OK) {
-                OutputText ("a tournament that no longer exists");
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
-            if (iOwnerKey != m_iEmpireKey && !(iOwnerKey == SYSTEM && m_iEmpireKey == global.GetRootKey())) {
-                iErrCode = ERROR_WRONG_TOURNAMENT_OWNER;
-                OutputText ("a tournament that you don't own");
-                goto Cleanup;
+            if (iOwnerKey != m_iEmpireKey && !(iOwnerKey == SYSTEM && m_iEmpireKey == global.GetRootKey()))
+            {
+                OutputText ("a tournament that you no longer own");
+                return WARNING;
             }
 
             OutputText ("the <strong>");
@@ -538,18 +516,11 @@ bool HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage
         break;
 
     default:
-
         Assert(false);
         break;
     }
 
-Cleanup:
-
     OutputText ("</td></tr>");
 
-    if (iErrCode != OK && iMessageKey != NO_KEY) {
-        DeleteSystemMessage (m_iEmpireKey, iMessageKey);
-    }
-
-    return bEmpireLink;
+    return iErrCode;
 }

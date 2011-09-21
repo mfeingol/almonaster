@@ -155,3 +155,84 @@ public:
         }
     }
 };
+
+template <class T> class AutoFreeArrayOfArrays
+{
+private:
+    T**& m_ppArray;
+    unsigned int& m_iSize;
+
+public:
+    AutoFreeArrayOfArrays(T**& ppArray, unsigned int& iSize) : m_ppArray(ppArray), m_iSize(iSize)
+    {
+    }
+
+    ~AutoFreeArrayOfArrays()
+    {
+        if (m_ppArray)
+        {
+            for (unsigned int i = 0; i < m_iSize; i ++)
+            {
+                if (m_ppArray[i])
+                {
+                    delete [] m_ppArray[i];
+                    m_ppArray[i] = NULL;
+                }
+            }
+        }
+    }
+};
+
+class AutoFreeArrayOfKeys
+{
+private:
+    unsigned int**& m_ppArray;
+    unsigned int& m_iSize;
+
+public:
+    AutoFreeArrayOfKeys(unsigned int**& ppArray, unsigned int& iSize) : m_ppArray(ppArray), m_iSize(iSize)
+    {
+    }
+
+    ~AutoFreeArrayOfKeys()
+    {
+        if (m_ppArray)
+        {
+            for (unsigned int i = 0; i < m_iSize; i ++)
+            {
+                if (m_ppArray[i])
+                {
+                    t_pCache->FreeKeys(m_ppArray[i]);
+                    m_ppArray[i] = NULL;
+                }
+            }
+        }
+    }
+};
+
+class AutoFreeArrayOfData
+{
+private:
+    Variant**& m_ppArray;
+    unsigned int& m_iSize;
+
+public:
+    AutoFreeArrayOfData(Variant**& ppArray, unsigned int& iSize) : m_ppArray(ppArray), m_iSize(iSize)
+    {
+    }
+
+    ~AutoFreeArrayOfData()
+    {
+        if (m_ppArray)
+        {
+            for (unsigned int i = 0; i < m_iSize; i ++)
+            {
+                if (m_ppArray[i])
+                {
+                    t_pCache->FreeData(m_ppArray[i]);
+                    m_ppArray[i] = NULL;
+                }
+            }
+        }
+    }
+};

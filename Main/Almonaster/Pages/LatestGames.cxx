@@ -19,7 +19,10 @@
 
 int iErrCode;
 
-if (InitializeEmpire(false) != OK)
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
@@ -202,6 +205,7 @@ else {
 }
 
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

@@ -18,24 +18,19 @@
 
 #include "HtmlRenderer.h"
 
-
-void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey) {
+int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey) {
 
     int iErrCode, iMapMinX = 0, iMapMaxX = 0, iMapMinY = 0, iMapMaxY = 0;
 
     unsigned int iNumHorz, iNumVert, i, j, iNumPlanets, iLivePlanetKey, iDeadPlanetKey, * piProxyKey = NULL;
-
-    MiniMapEntry* pMiniMapEntries = NULL;
-    MiniMapEntry** ppMiniMap = NULL;
+    AutoFreeKeys free_piProxyKey(piProxyKey);
 
     Variant* pvPlanetKey = NULL;
+    AutoFreeData free_pvPlanetKey(pvPlanetKey);
 
     // Get empire's preferences
-    iErrCode = GetEmpirePlanetIcons (iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    iErrCode = GetEmpirePlanetIcons(iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    RETURN_ON_ERROR(iErrCode);
 
     // Get map geography information
     iErrCode = GetMapLimits (
@@ -48,22 +43,17 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         &iMapMaxY
         );
     
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iNumHorz = iMapMaxX - iMapMinX + 1;
     iNumVert = iMapMaxY - iMapMinY + 1;
 
     // Allocate the memory for the grid
-    pMiniMapEntries = new MiniMapEntry [iNumHorz * iNumVert];
-    if (pMiniMapEntries == NULL) {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto Cleanup;
-    }
+    MiniMapEntry* pMiniMapEntries = new MiniMapEntry [iNumHorz * iNumVert];
+    Assert(pMiniMapEntries);
+    Algorithm::AutoDelete<MiniMapEntry> free_pMiniMapEntries(pMiniMapEntries);
 
-    ppMiniMap = (MiniMapEntry**) StackAlloc (iNumHorz * sizeof (MiniMapEntry*));
+    MiniMapEntry** ppMiniMap = (MiniMapEntry**) StackAlloc (iNumHorz * sizeof (MiniMapEntry*));
 
     // Initialize the grid
     for (i = 0; i < iNumHorz; i ++) {
@@ -88,10 +78,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         &iNumPlanets
         );
 
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     Assert(iNumPlanets > 0);
 
@@ -104,16 +91,10 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         Variant vValue;
 
         iErrCode = GetPlanetCoordinates (iGameClass, iGameNumber, iPlanetKey, &iX, &iY);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Owner, &vValue);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         Assert(iX >= iMapMinX && iX <= iMapMaxX);
         Assert(iY >= iMapMinY && iY <= iMapMaxY);
@@ -135,10 +116,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         case SYSTEM:
 
             iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Annihilated, &vValue);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             if (vValue.GetInteger() == NOT_ANNIHILATED) {
                 ppMiniMap[iIndexX][iIndexY].iiIcon = ICON_LIVEPLANET;
@@ -155,10 +133,7 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         default:
 
             iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienKey, &vValue);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             ppMiniMap[iIndexX][iIndexY].iiIcon = ICON_EMPIREPLANET;
             ppMiniMap[iIndexX][iIndexY].iAlienKey = vValue.GetInteger();
@@ -216,35 +191,18 @@ void HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsi
         m_pHttpResponse->WriteText (iMapMinX + i);
         OutputText ("</th>");
     }
+
     OutputText (
         "<td></td>"\
         "</tr>"\
         "</table>"
         );
 
-Cleanup:
-
-    if (pMiniMapEntries != NULL) {
-        delete [] pMiniMapEntries;
-    }
-
-    if (pvPlanetKey != NULL) {
-        t_pCache->FreeData (pvPlanetKey);
-    }
-
-    if (piProxyKey != NULL) {
-        t_pCache->FreeKeys (piProxyKey);
-    }
-    
-    if (iErrCode != OK) {
-        OutputText ("An error occurred while rendering the minimap. The error was ");
-        m_pHttpResponse->WriteText (iErrCode);
-    }
+    return iErrCode;
 }
 
-void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey,
-                                     unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey) {
-
+void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey)
+{
     String strPlanetString;
 
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
@@ -254,14 +212,12 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
 
     case ICON_LIVEPLANET:
 
-        GetLivePlanetButtonString (iLivePlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, 
-            pszCoord, "width=\"75%\"", &strPlanetString);
+        GetLivePlanetButtonString (iLivePlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
         break;
 
     case ICON_DEADPLANET:
 
-        GetLivePlanetButtonString (iDeadPlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, 
-            pszCoord, "width=\"75%\"", &strPlanetString);
+        GetLivePlanetButtonString (iDeadPlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
         break;
 
     case ICON_EMPIREPLANET:
@@ -281,8 +237,7 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
 
     case ICON_INDEPENDENT:
 
-        GetIndependentPlanetButtonString (mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, 
-            pszCoord, "width=\"75%\"", &strPlanetString);
+        GetIndependentPlanetButtonString (mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
         break;
     }
 

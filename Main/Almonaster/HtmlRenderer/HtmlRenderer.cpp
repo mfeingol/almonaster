@@ -4873,15 +4873,8 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
     
     String strHorz, strVert;
     
-    iErrCode = GetHorzString (NULL_THEME, &strHorz);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    
-    iErrCode = GetVertString (NULL_THEME, &strVert);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    GetHorzString(NULL_THEME, &strHorz);
+    GetVertString(NULL_THEME, &strVert);
     
     OutputText ("<table><tr>");
     for (i = 0; i < sizeof (ppszName) / sizeof (const char*); i ++) {
@@ -6196,7 +6189,8 @@ int HtmlRenderer::ParseCreateTournamentForms (Variant* pvSubmitArray, int iEmpir
     }
 
     // Icon
-    pvSubmitArray[SystemTournaments::iIcon] = GetDefaultSystemIcon();
+    EnsureDefaultSystemIcon();
+    pvSubmitArray[SystemTournaments::iIcon] = m_iDefaultSystemIcon;
 
     // News
     pvSubmitArray[SystemTournaments::iNews] = (const char*) NULL;
@@ -6429,48 +6423,53 @@ void HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* p
     }
 }
 
-int HtmlRenderer::HandleIconSelection (unsigned int* piIcon, const char* pszUploadDir, unsigned int iKey1, 
-                                       unsigned int iKey2) {
-
+int HtmlRenderer::HandleIconSelection (unsigned int* piIcon, const char* pszUploadDir, unsigned int iKey1, unsigned int iKey2)
+{
     IHttpForm* pHttpForm;
-
-    if ((pHttpForm = m_pHttpRequest->GetForm ("WhichAlien")) == NULL) {
+    if ((pHttpForm = m_pHttpRequest->GetForm ("WhichAlien")) == NULL)
+    {
         return ERROR_FAILURE;
     }
 
-    if (pHttpForm->GetUIntValue() == 1) {
-        
-        if (!WasButtonPressed (BID_CHOOSE)) {
+    if (pHttpForm->GetUIntValue() == 1)
+    {
+        if (!WasButtonPressed (BID_CHOOSE))
+        {
             return ERROR_FAILURE;
         }
             
         // Icon uploads
-        if ((pHttpForm = m_pHttpRequest->GetForm ("IconFile")) == NULL) {
+        if ((pHttpForm = m_pHttpRequest->GetForm ("IconFile")) == NULL)
+        {
             return ERROR_FAILURE;
         }
         
         const char* pszFileName = pHttpForm->GetValue();
         if (pszFileName == NULL) {
-            AddMessage ("You didn't upload a file");
+            AddMessage ("No file was selected");
             return ERROR_FAILURE;
         }
             
-        if (VerifyGIF (pszFileName)) {
-            
-            // The gif was OK, so get a unique key and copy it to its destination
-            if (CopyUploadedIcon (pszFileName, pszUploadDir, iKey1, iKey2) != OK) {
-            
-                AddMessage ("The file was uploaded, but could not be copied. Contact the administrator");
-                return ERROR_FAILURE;
-            }
-                
-            *piIcon = UPLOADED_ICON;
-            AddMessage ("Your new icon was uploaded successfully");
-
-            return OK;
+        bool bGoodGIF;
+        int iErrCode = VerifyGIF(pszFileName, &bGoodGIF);
+        RETURN_ON_ERROR(iErrCode);
+        
+        if (!bGoodGIF)
+        {
+            return ERROR_FAILURE;
         }
 
-        return ERROR_FAILURE;
+        // The gif was OK, so copy it to its destination
+        if (!CopyUploadedIcon(pszFileName, pszUploadDir, iKey1, iKey2))
+        {
+            AddMessage ("The file was uploaded, but could not be copied. Contact the administrator");
+            return ERROR_FAILURE;
+        }
+                
+        *piIcon = UPLOADED_ICON;
+        AddMessage ("Your new icon was uploaded successfully");
+
+        return OK;
     }
 
     const char* pszStart;

@@ -229,13 +229,15 @@ if (!m_bRedirection &&
                 case OK:
 
                     ReportEmpireCreation (global.GetReport(), pszEmpireName);
-                    SendWelcomeMessage (pszEmpireName);
+                    SendWelcomeMessage(pszEmpireName);
 
                     m_iEmpireKey = iEmpireKey;
                     m_iReserved = 0;
 
-                    iErrCode = HtmlLoginEmpire();
-                    if (iErrCode == OK)
+                    bool bLoggedIn;
+                    iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (bLoggedIn)
                     {
                         return Redirect(ACTIVE_GAME_LIST);
                     }
@@ -438,6 +440,7 @@ if (bRepost &&
 
 %></tr></table><%
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

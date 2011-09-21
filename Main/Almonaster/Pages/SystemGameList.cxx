@@ -18,7 +18,12 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
@@ -30,7 +35,6 @@ const char* pszPassword = NULL;
 
 // Handle a submission
 unsigned int i, j;
-int iErrCode;
 
 if (m_bOwnPost && !m_bRedirection) {
 
@@ -367,6 +371,7 @@ default:
     break;
 }
 
-CloseSystemPage();;
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

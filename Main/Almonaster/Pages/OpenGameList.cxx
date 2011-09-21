@@ -18,14 +18,18 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 IHttpForm* pHttpForm;
 
-int iErrCode;
 bool bConfirmPage = false;
 int iGameClassKey = NO_KEY, iGameNumber = NO_KEY;
 const char* pszPassword = NULL;
@@ -407,6 +411,7 @@ if (bConfirmPage) {
     }
 }
 
-CloseSystemPage();
+iErrCode = CloseSystemPage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

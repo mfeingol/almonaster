@@ -859,16 +859,10 @@ int HtmlRenderer::CacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache)
 {
     // Prefetch tables of interest
     int iErrCode = t_pCache->Cache(cache.GetData(), cache.GetNumElements());
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = g_pfxnAfterCachePage[pgPageId](this);
-    if (iErrCode != OK)
-    {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -893,6 +887,14 @@ int HtmlRenderer::Render()
         {
             iErrCode = global.TlsCommitTransaction();
         }
+        else
+        {
+            global.GetReport()->WriteReport("Render failed - aborting transaction");
+        }
+    }
+    else
+    {
+        global.GetReport()->WriteReport("CacheTables failed - aborting transaction");
     }
     global.TlsCloseConnection();
     
@@ -914,10 +916,11 @@ int HtmlRenderer::Redirect(PageId pageId)
     Vector<TableCacheEntry> cache;
     GatherCacheTables(pageId, cache);
     int iErrCode = CacheTables(pageId, cache);
-    if (iErrCode == OK)
-    {
-        // Render the page
-        iErrCode = g_pfxnRenderPage[m_pgPageId](this);
-    }
+    RETURN_ON_ERROR(iErrCode);
+
+    // Render the page
+    iErrCode = g_pfxnRenderPage[m_pgPageId](this);
+    RETURN_ON_ERROR(iErrCode);
+
     return iErrCode;
 }
