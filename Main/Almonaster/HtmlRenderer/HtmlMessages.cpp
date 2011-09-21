@@ -32,7 +32,7 @@ int HtmlRenderer::WriteGameMessages()
     Variant** ppvMessage = NULL;
     unsigned int iNumMessages;
 
-    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage);
+    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage, true);
     AutoFreeArrayOfData free_ppvMessage2(ppvMessage, iNumMessages);
    
     int iErrCode = GetUnreadGameMessages(m_iGameClass, m_iGameNumber, m_iEmpireKey, &ppvMessage, &iNumMessages);
@@ -200,7 +200,7 @@ int HtmlRenderer::WriteSystemMessages()
     Variant** ppvMessage = NULL;
     unsigned int* piMessageKey = NULL, iNumMessages, i;
     
-    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage);
+    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage, true);
     AutoFreeArrayOfData free_ppvMessage2(ppvMessage, iNumMessages);
     AutoFreeKeys free_piMessageKey(piMessageKey);
 

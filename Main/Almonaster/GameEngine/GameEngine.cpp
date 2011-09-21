@@ -316,7 +316,6 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
     return iErrCode;
 }
 
-
 // Return the system version string
 const char* GameEngine::GetSystemVersion()
 {
@@ -331,4 +330,18 @@ int GameEngine::GetNewSessionId (int64* pi64SessionId)
 
     *pi64SessionId = vSessionId.GetInteger64();
     return iErrCode;
+}
+
+void InitGameOptions(GameOptions* pgoOptions)
+{
+    memset(pgoOptions, 0, sizeof(GameOptions));
+    pgoOptions->iTournamentKey = NO_KEY;
+}
+
+void ClearGameOptions(GameOptions* pgoOptions)
+{
+    if (pgoOptions->pSecurity)
+    {
+        delete [] pgoOptions->pSecurity;
+    }
 }

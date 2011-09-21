@@ -168,12 +168,16 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszOldValue = pHttpForm->GetValue();
-            if (String::StrCmp (pszNewValue, pszOldValue) != 0) {
-
-                if (VerifyCategoryName ("Server", pszNewValue, MAX_SERVER_NAME_LENGTH, true) == OK) {
-                    if (SetSystemProperty (SystemData::ServerName, pszNewValue) == OK) {
+            if (String::StrCmp (pszNewValue, pszOldValue) != 0)
+            {
+                if (VerifyCategoryName ("Server", pszNewValue, MAX_SERVER_NAME_LENGTH, true))
+                {
+                    if (SetSystemProperty (SystemData::ServerName, pszNewValue) == OK)
+                    {
                         AddMessage ("The server name was updated");
-                    } else {
+                    }
+                    else
+                    {
                         AddMessage ("The server name could not be updated");
                     }
                 }
@@ -1024,13 +1028,13 @@ if (m_bOwnPost && !m_bRedirection) {
                     goto Redirection;
                 }
 
-                if (VerifyEmpireName (pszNewName) != OK || 
-                    StandardizeEmpireName (pszNewName, pszStandardizedName) != OK) {
+                if (!VerifyEmpireName(pszNewName) || !StandardizeEmpireName(pszNewName, pszStandardizedName))
+                {
                     iServerAdminPage = 7;
                     goto Redirection;
                 }
 
-                if (VerifyPassword (pszNewPass) != OK) {
+                if (!VerifyPassword (pszNewPass)) {
                     iServerAdminPage = 7;
                     goto Redirection;
                 }

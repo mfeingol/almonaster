@@ -134,9 +134,13 @@ SearchResults:
             const char* pszStart;
             if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("ViewProfile")) != NULL && 
                 (pszStart = pHttpForm->GetName()) != NULL &&
-                sscanf (pszStart, "ViewProfile.%d.%d", &iTargetEmpireKey, &iHash) == 2) {
+                sscanf (pszStart, "ViewProfile.%d.%d", &iTargetEmpireKey, &iHash) == 2)
+            {
+                bool bVerified;
+                iErrCode = VerifyEmpireNameHash(iTargetEmpireKey, iHash, &bVerified);
+                RETURN_ON_ERROR(iErrCode);
 
-                if (!VerifyEmpireNameHash (iTargetEmpireKey, iHash)) {
+                if (!bVerified) {
                     AddMessage ("That empire no longer exists");
                 } else {
                     iProfileViewerPage = 2;
@@ -619,7 +623,8 @@ case 4:
 
     %><input type="hidden" name="ProfileViewerPage" value="4"><% 
 
-    WritePersonalGameClasses (iTargetEmpireKey);
+    iErrCode = WritePersonalGameClasses (iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     }
 

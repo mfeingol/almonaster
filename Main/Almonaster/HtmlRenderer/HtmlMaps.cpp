@@ -48,7 +48,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     bool bPartialMapShortcut = false;
     
     String* pstrGrid = NULL, ** ppstrGrid, strPlanetString, strImage, strHorz, strVert, strFilter, strAltTag;
-    Algorithm::AutoDelete<String> free_pstrGrid(pstrGrid);
+    Algorithm::AutoDelete<String> free_pstrGrid(pstrGrid, true);
 
     char* pszHorz, * pszVert;
     const char* pszColor;
@@ -1551,7 +1551,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     if (iTotalNumShips > 0)
     {
         unsigned int* piOwnerData = NULL;
-        Algorithm::AutoDelete<unsigned int> free_piOwnerData(piOwnerData);
+        Algorithm::AutoDelete<unsigned int> free_piOwnerData(piOwnerData, true);
 
         iErrCode = GetPlanetShipOwnerData (
             m_iGameClass, 

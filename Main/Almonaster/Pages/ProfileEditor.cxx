@@ -109,7 +109,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("You submitted the same password");
                     }
                     
-                    else if (VerifyPassword (pszNewValue) == OK) {
+                    else if (VerifyPassword (pszNewValue)) {
 
                         iErrCode = ChangeEmpirePassword (m_iEmpireKey, pszNewValue);
                         if (iErrCode == ERROR_CANNOT_MODIFY_GUEST) {
@@ -1477,14 +1477,18 @@ Quote:
             {
 
             unsigned int iIcon;
+            bool bHandled;
+            iErrCode = HandleIconSelection (&iIcon, BASE_UPLOADED_ALIEN_DIR, m_iEmpireKey, NO_KEY, &bHandled);
+            RETURN_ON_ERROR(iErrCode);
 
-            iErrCode = HandleIconSelection (&iIcon, BASE_UPLOADED_ALIEN_DIR, m_iEmpireKey, NO_KEY);
-            if (iErrCode == OK) {
-
+            if (bHandled)
+            {
                 if (iIcon == UPLOADED_ICON) {
 
-                    if (m_iAlienKey != UPLOADED_ICON) {
-                        EmpireCheck (SetEmpireAlienKey (m_iEmpireKey, UPLOADED_ICON));
+                    if (m_iAlienKey != UPLOADED_ICON)
+                    {
+                        iErrCode = SetEmpireAlienKey (m_iEmpireKey, UPLOADED_ICON);
+                        RETURN_ON_ERROR(iErrCode);
                         m_iAlienKey = UPLOADED_ICON;
                     }
                 }
@@ -3083,7 +3087,8 @@ case 1:
     WriteEmpireIcon (vAlienKey.GetInteger(), m_iEmpireKey, "Your current icon", false);
     %><p><%
 
-    WriteIconSelection (iAlienSelect, vAlienKey.GetInteger(), "empire");
+    iErrCode = WriteIconSelection (iAlienSelect, vAlienKey.GetInteger(), "empire");
+    RETURN_ON_ERROR(iErrCode);
 
     }
     break;

@@ -634,7 +634,7 @@ recurse:
         
     public:
         
-        AutoDelete (T*& pPtr, bool bVector = false) : m_pPtr (pPtr) {
+        AutoDelete (T*& pPtr, bool bVector) : m_pPtr (pPtr) {
 
             m_bVector = bVector;
         }

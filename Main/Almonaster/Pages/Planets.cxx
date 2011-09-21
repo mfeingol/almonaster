@@ -384,6 +384,7 @@ Cleanup:
     %></table><%
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

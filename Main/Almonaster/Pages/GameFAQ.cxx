@@ -58,6 +58,7 @@ if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
 
 WriteFaq();
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

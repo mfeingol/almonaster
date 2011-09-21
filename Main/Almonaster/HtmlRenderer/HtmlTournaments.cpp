@@ -796,7 +796,8 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
         return ERROR_FAILURE;
     }
 
-    if (VerifyCategoryName ("Team", pHttpForm->GetValue(), MAX_TOURNAMENT_TEAM_NAME_LENGTH, true) != OK) {
+    if (!VerifyCategoryName("Team", pHttpForm->GetValue(), MAX_TOURNAMENT_TEAM_NAME_LENGTH, true))
+    {
         return ERROR_FAILURE;
     }
 
@@ -1602,7 +1603,9 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
             {
                 if ((unsigned int)pvEmpTeamKey[j].GetInteger() == piTeamKey[i])
                 {
-                    RenderEmpire (iTournamentKey, pvEmpireKey[j].GetInteger());
+                    iErrCode = RenderEmpire (iTournamentKey, pvEmpireKey[j].GetInteger());
+                    RETURN_ON_ERROR(iErrCode);
+
                     iEmpiresRendered ++;
                 }
             }
@@ -1676,7 +1679,8 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
         {
             if (pvEmpTeamKey[j].GetInteger() == NO_KEY)
             {
-                RenderEmpire (iTournamentKey, pvEmpireKey[j].GetInteger());
+                iErrCode = RenderEmpire (iTournamentKey, pvEmpireKey[j].GetInteger());
+                RETURN_ON_ERROR(iErrCode);
             }
         }
 

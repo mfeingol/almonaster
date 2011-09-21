@@ -885,8 +885,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 pszNewValue = pHttpForm->GetValue();
 
-                if (VerifyCategoryName ("SuperClass", pszNewValue, MAX_SUPER_CLASS_NAME_LENGTH, true) == OK) {
-
+                if (VerifyCategoryName("SuperClass", pszNewValue, MAX_SUPER_CLASS_NAME_LENGTH, true))
+                {
                     int iKey;
                     iErrCode = CreateSuperClass (pszNewValue, &iKey);
 
@@ -1167,9 +1167,15 @@ if (m_bOwnPost && !m_bRedirection) {
         case 2:
             {
 
-            if (WasButtonPressed (BID_CREATENEWGAMECLASS) &&
-                ProcessCreateGameClassForms (SYSTEM, NO_KEY) != OK) {
-                iGameAdminPage = 2;
+            if (WasButtonPressed (BID_CREATENEWGAMECLASS))
+            {
+                bool bProcessed;
+                iErrCode = ProcessCreateGameClassForms(SYSTEM, NO_KEY, &bProcessed);
+                RETURN_ON_ERROR(iErrCode);
+                if (!bProcessed)
+                {
+                    iGameAdminPage = 2;
+                }
             }
 
             }
@@ -1208,8 +1214,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 pszMessage = pHttpForm->GetValue();
 
-                if (!String::IsBlank (pszMessage) &&
-                    VerifyPassword (pszMessage) != OK) {
+                if (!String::IsBlank (pszMessage) && !VerifyPassword(pszMessage))
+                {
                     break;
                 }
 
@@ -1383,7 +1389,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 iGameAdminPage = 3;
                 m_bRedirectTest = false;
-                SearchForDuplicateIPAddresses (iGameClass, iGameNumber);
+                iErrCode = SearchForDuplicateEmpires(iGameClass, iGameNumber, IP_ADDRESS);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -1392,7 +1399,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 iGameAdminPage = 3;
                 m_bRedirectTest = false;
-                SearchForDuplicateSessionIds (iGameClass, iGameNumber);
+                iErrCode = SearchForDuplicateEmpires(iGameClass, iGameNumber, SESSION_ID);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -1607,9 +1615,9 @@ case 0:
     bool* pbGameClassHalted, * pbGameClassDeleted, bFlag;
     Check (GetSystemGameClassKeys (&piGameClassKey, &pbGameClassHalted, &pbGameClassDeleted, &iNumGameClasses));
 
-    Algorithm::AutoDelete<int> auto1 (piGameClassKey);
-    Algorithm::AutoDelete<bool> auto2 (pbGameClassHalted);
-    Algorithm::AutoDelete<bool> auto3 (pbGameClassDeleted);
+    Algorithm::AutoDelete<int> auto1 (piGameClassKey, true);
+    Algorithm::AutoDelete<bool> auto2 (pbGameClassHalted, true);
+    Algorithm::AutoDelete<bool> auto3 (pbGameClassDeleted, true);
 
     GameConfiguration gcConfig;
     MapConfiguration mcConfig;
@@ -2507,7 +2515,8 @@ case 1:
 
     %><input type="hidden" name="GameAdminPage" value="1"><%
 
-    WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, iNumOpenGames, iNumClosedGames, true);
+    iErrCode = WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, iNumOpenGames, iNumClosedGames, true);
+    RETURN_ON_ERROR(iErrCode);
 
     if (piGameClass != NULL) {
         delete [] piGameClass;
@@ -2524,7 +2533,8 @@ case 2:
 
     %><input type="hidden" name="GameAdminPage" value="2"><p><h3>Create a new GameClass:</h3><%
 
-    WriteCreateGameClassString (SYSTEM, NO_KEY, false);
+    iErrCode = WriteCreateGameClassString(SYSTEM, NO_KEY, false);
+    RETURN_ON_ERROR(iErrCode);
     %><p><%
 
     WriteButton (BID_CANCEL);
@@ -2535,7 +2545,8 @@ case 2:
 case 3:
 
     %><input type="hidden" name="GameAdminPage" value="3"><% 
-    WriteAdministerGame (iGameClass, iGameNumber, true);
+    iErrCode = WriteAdministerGame (iGameClass, iGameNumber, true);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><% WriteButton (BID_CANCEL);
 
@@ -2675,7 +2686,8 @@ case 7:
 
     Write (pszGameClassName); %> <% Write (iGameNumber); %>:<p><%
 
-    RenderEmpireInformation (iGameClass, iGameNumber, true);
+    iErrCode = RenderEmpireInformation (iGameClass, iGameNumber, true);
+    RETURN_ON_ERROR(iErrCode);
 
     WriteButton (BID_CANCEL);
 

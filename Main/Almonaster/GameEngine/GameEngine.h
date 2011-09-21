@@ -149,6 +149,25 @@ struct GameOptions
     GameSecurityEntry* pSecurity;
 };
 
+void InitGameOptions (GameOptions* pgoOptions);
+void ClearGameOptions(GameOptions* pgoOptions);
+
+class AutoClearGameOptions
+{
+private:
+    GameOptions& m_goOptions;
+public:
+
+    AutoClearGameOptions(GameOptions& goOptions) : m_goOptions(goOptions)
+    {
+    }
+
+    ~AutoClearGameOptions()
+    {
+        ClearGameOptions(&m_goOptions);
+    }
+};
+
 enum GameAction
 {
     VIEW_GAME,

@@ -496,7 +496,7 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
     // Hit the heap for stack safety
     piOriginalPlanetOwner = new unsigned int[iNumPlanets * 2];
     Assert(piOriginalPlanetOwner);
-    Algorithm::AutoDelete<unsigned int> auto_piOriginalPlanetOwner(piOriginalPlanetOwner);
+    Algorithm::AutoDelete<unsigned int> auto_piOriginalPlanetOwner(piOriginalPlanetOwner, true);
 
     piOriginalNumObliterations = piOriginalPlanetOwner + iNumPlanets;
 

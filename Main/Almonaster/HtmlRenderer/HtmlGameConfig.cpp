@@ -1421,7 +1421,8 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
             }
             
             // Check password
-            if (VerifyPassword (pszPassword) != OK) {
+            if (!VerifyPassword (pszPassword))
+            {
                 AddMessage ("The game password contained an invalid character");
                 return WARNING;
             }

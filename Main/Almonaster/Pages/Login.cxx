@@ -113,8 +113,8 @@ else if (!m_bRedirection)
     // Make sure the name is valid
     pszEmpireName = pHttpForm->GetValue();
 
-    if (VerifyEmpireName (pszEmpireName) != OK || 
-        StandardizeEmpireName (pszEmpireName, pszStandardizedName) != OK) {
+    if (!VerifyEmpireName (pszEmpireName) || !StandardizeEmpireName (pszEmpireName, pszStandardizedName))
+    {
         goto Text;
     }
 
@@ -128,8 +128,8 @@ else if (!m_bRedirection)
 
     // Make sure password is valid
     pszPassword = pHttpForm->GetValue();
-    iErrCode = VerifyPassword(pszPassword);
-    if (iErrCode != OK) {
+    if (!VerifyPassword(pszPassword))
+    {
         goto Text;
     }
 
@@ -318,15 +318,15 @@ if (m_iEmpireKey == NO_KEY) {
 }
 
 int iOptions;
-iErrCode = GetSystemOptions (&iOptions);
-if (iErrCode != OK) {
-    m_pHttpResponse->SetStatusCode (HTTP_500);
-    return iErrCode;
-}
+iErrCode = GetSystemOptions(&iOptions);
+RETURN_ON_ERROR(iErrCode);
 
 %><html><%
 %><head><%
-%><title><% WriteSystemTitleString(); %></title><%
+%><title><%
+iErrCode = WriteSystemTitleString();
+RETURN_ON_ERROR(iErrCode);
+%></title><%
 %></head><%
 
 WriteBodyString (-1);
@@ -416,7 +416,8 @@ if (!(iOptions & LOGINS_ENABLED)) {
 
 %><p><% WriteIntroLower (false);
 
-WriteContactLine();
+iErrCode = WriteContactLine();
+RETURN_ON_ERROR(iErrCode);
 
 %></td><%
 %></tr></table><%

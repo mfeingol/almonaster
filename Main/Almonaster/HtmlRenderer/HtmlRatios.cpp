@@ -29,14 +29,10 @@ int HtmlRenderer::WriteRatiosString (RatioInformation* pratInfo) {
     }
     
     iErrCode = GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetRatioInformation (m_iGameClass, m_iGameNumber, m_iEmpireKey, pratInfo);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     const char* pszGood = m_vGoodColor.GetCharPtr();
     const char* pszBad = m_vBadColor.GetCharPtr();
@@ -212,5 +208,5 @@ int HtmlRenderer::WriteRatiosString (RatioInformation* pratInfo) {
 
     WriteSeparatorString (m_iSeparatorKey);
 
-    return OK;
+    return iErrCode;
 }

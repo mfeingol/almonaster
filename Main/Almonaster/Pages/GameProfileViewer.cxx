@@ -558,7 +558,8 @@ case 3:
     %><input type="hidden" name="ProfilePage" value="3"><%
     %><input type="hidden" name="TargetEmpireKey" value="<% Write (iTargetEmpireKey); %>"><%
 
-    WritePersonalGameClasses (iTargetEmpireKey);
+    iErrCode = WritePersonalGameClasses (iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><% WriteButton (BID_CANCEL);
 
@@ -608,6 +609,7 @@ default:
     break;
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

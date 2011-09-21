@@ -165,8 +165,11 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             if (WasButtonPressed (BID_CREATENEWTOURNAMENT)) {
 
-                iErrCode = ProcessCreateTournament(iOwnerKey);
-                if (iErrCode == OK) {
+                bool bCreated;
+                iErrCode = ProcessCreateTournament(iOwnerKey, &bCreated);
+                RETURN_ON_ERROR(iErrCode);
+
+                if (bCreated) {
                     iTAdminPage = 0;
                 } else {
                     iTAdminPage = 1;    // Repaint form
@@ -548,9 +551,16 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             if (WasButtonPressed (BID_CREATENEWGAMECLASS)) {
 
                 m_bRedirectTest = false;
-                if (ProcessCreateGameClassForms (iOwnerKey, m_iTournamentKey) != OK) {
+
+                bool bProcessed;
+                iErrCode = ProcessCreateGameClassForms(iOwnerKey, m_iTournamentKey, &bProcessed);
+                RETURN_ON_ERROR(iErrCode);
+                if (!bProcessed)
+                {
                     iTAdminPage = 3;
-                } else {
+                }
+                else
+                {
                     // Back to administer page
                     iTAdminPage = 2;
                 }
@@ -871,9 +881,15 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             unsigned int iOldIcon, iIcon;
 
-            if (GetTournamentIcon (m_iTournamentKey, &iOldIcon) == OK &&
-                HandleIconSelection (&iIcon, BASE_UPLOADED_TOURNAMENT_ICON_DIR, m_iTournamentKey, NO_KEY) == OK) {
+            iErrCode = GetTournamentIcon (m_iTournamentKey, &iOldIcon);
+            RETURN_ON_ERROR(iErrCode);
 
+            bool bHandled;
+            iErrCode = HandleIconSelection (&iIcon, BASE_UPLOADED_TOURNAMENT_ICON_DIR, m_iTournamentKey, NO_KEY, &bHandled);
+            RETURN_ON_ERROR(iErrCode);
+
+            if (bHandled)
+            {
                 if (iIcon == UPLOADED_ICON) {
 
                     if (iOldIcon != UPLOADED_ICON) {
@@ -913,9 +929,15 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             unsigned int iOldIcon, iIcon;
 
-            if (GetTournamentTeamIcon (m_iTournamentKey, iTeamKey, &iOldIcon) == OK &&
-                HandleIconSelection (&iIcon, BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR, m_iTournamentKey, iTeamKey) == OK) {
+            iErrCode = GetTournamentTeamIcon (m_iTournamentKey, iTeamKey, &iOldIcon);
+            RETURN_ON_ERROR(iErrCode);
 
+            bool bHandled;
+            iErrCode = HandleIconSelection (&iIcon, BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR, m_iTournamentKey, iTeamKey, &bHandled);
+            RETURN_ON_ERROR(iErrCode);
+
+            if (bHandled)
+            {
                 if (iIcon == UPLOADED_ICON) {
 
                     if (iOldIcon != UPLOADED_ICON) {
@@ -1318,7 +1340,8 @@ case 0:
 
         %><input type="hidden" name="TournamentAdminPage" value="0"><%
 
-        WriteTournamentAdministrator (iOwnerKey);
+        iErrCode = WriteTournamentAdministrator (iOwnerKey);
+        RETURN_ON_ERROR(iErrCode);
         if (iOwnerKey != SYSTEM) {
             Assert(iOwnerKey == m_iEmpireKey);
             Check(WritePersonalTournaments());
@@ -1380,7 +1403,8 @@ case 3:
 
         %><h3>Create a new GameClass for the <% Write (vName.GetCharPtr()); %> tournament</h3><p><%
 
-        WriteCreateGameClassString (iOwnerKey, m_iTournamentKey, false);
+        iErrCode = WriteCreateGameClassString (iOwnerKey, m_iTournamentKey, false);
+        RETURN_ON_ERROR(iErrCode);
 
         %><p><%
         WriteButton (BID_CANCEL);
@@ -1791,7 +1815,8 @@ case 10:
         WriteTournamentIcon (iIcon, m_iTournamentKey, "The current tournament icon", false);
         %><p><%
 
-        WriteIconSelection (iIconSelect, iIcon, "tournament");
+        iErrCode = WriteIconSelection (iIconSelect, iIcon, "tournament");
+        RETURN_ON_ERROR(iErrCode);
 
         break;
 
@@ -1818,7 +1843,8 @@ case 11:
         WriteTournamentTeamIcon (iIcon, m_iTournamentKey, iTeamKey, "The current team icon", false);
         %><p><%
 
-        WriteIconSelection (iIconSelect, iIcon, "team");
+        iErrCode = WriteIconSelection (iIconSelect, iIcon, "team");
+        RETURN_ON_ERROR(iErrCode);
 
         break;
 
@@ -1855,7 +1881,8 @@ case 12:
 
         %> tournament active games:</h3><%
 
-        WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, 0, 0, false);
+        iErrCode = WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, 0, 0, false);
+        RETURN_ON_ERROR(iErrCode);
 
         if (piGameClass != NULL) {
             delete [] piGameClass;
@@ -1875,7 +1902,8 @@ case 13:
         %><input type="hidden" name="TournamentAdminPage" value="13"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
-        WriteAdministerGame (m_iGameClass, m_iGameNumber, false);
+        iErrCode = WriteAdministerGame (m_iGameClass, m_iGameNumber, false);
+        RETURN_ON_ERROR(iErrCode);
 
         %><p><% WriteButton (BID_CANCEL);
 
@@ -1928,7 +1956,8 @@ case 15:
 
         Write (pszGameClassName); %> <% Write (m_iGameNumber); %>:<p><%
 
-        RenderEmpireInformation (m_iGameClass, m_iGameNumber, true);
+        iErrCode = RenderEmpireInformation (m_iGameClass, m_iGameNumber, true);
+        RETURN_ON_ERROR(iErrCode);
 
         WriteButton (BID_CANCEL);
 

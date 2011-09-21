@@ -1654,6 +1654,7 @@ if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %> occurred processing the Diplomacy page<%
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

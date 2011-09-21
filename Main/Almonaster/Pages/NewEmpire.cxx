@@ -98,10 +98,8 @@ if (!m_bRedirection &&
     }
     pszTemp = pHttpForm->GetValue();
 
-    if (String::IsBlank (pszTemp) ||
-        VerifyEmpireName (pszTemp) != OK || 
-        StandardizeEmpireName (pszTemp, pszStandardizedName) != OK) {
-
+    if (String::IsBlank(pszTemp) || !VerifyEmpireName(pszTemp) || !StandardizeEmpireName(pszTemp, pszStandardizedName))
+    {
         AddMessage ("The empire name is invalid");
         return Redirect (LOGIN);
     }
@@ -123,7 +121,8 @@ if (!m_bRedirection &&
         AddMessage ("Missing Password form");
         return Redirect (LOGIN);
     }
-    if (VerifyPassword (pHttpForm->GetValue()) != OK) {
+    if (!VerifyPassword(pHttpForm->GetValue()))
+    {
         AddMessage ("The password is invalid");
         return Redirect (LOGIN);
     }
@@ -168,7 +167,7 @@ if (!m_bRedirection &&
             char pszStandardParentName [MAX_EMPIRE_NAME_LENGTH + 1];
             if (pszParentName != NULL) {
 
-                if (VerifyEmpireName(pszParentName) == OK && StandardizeEmpireName(pszParentName, pszStandardParentName) == OK)
+                if (VerifyEmpireName(pszParentName) && StandardizeEmpireName(pszParentName, pszStandardParentName))
                 {
                     if ((pHttpForm = m_pHttpRequest->GetForm ("ParentPassword")) == NULL)
                     {
@@ -176,7 +175,7 @@ if (!m_bRedirection &&
                         return Redirect (LOGIN);
                     }
 
-                    if (VerifyPassword(pHttpForm->GetValue()) == OK)
+                    if (VerifyPassword(pHttpForm->GetValue()))
                     {
                         iErrCode = LookupEmpireByName(pszStandardParentName, &iParentEmpireKey, NULL, NULL);
                         if (iErrCode != OK)
@@ -337,9 +336,15 @@ if (pHttpForm == NULL) {
 }
 m_iSeparatorKey = pHttpForm->GetUIntValue();
 
-%><html><head><title><% WriteSystemTitleString(); %></title></head><%
+%><html><%
+%><head><%
+%><title><%
+iErrCode = WriteSystemTitleString();
+RETURN_ON_ERROR(iErrCode);
+%></title><%
+%></head><%
 
-WriteBodyString (-1);
+WriteBodyString(-1);
 
 %><center><h1>Create a New Empire</h1><%
 %><p><%
@@ -428,7 +433,8 @@ const char* pszParentName;
 if (bRepost &&
     (pHttpForm = m_pHttpRequest->GetForm ("ParentEmpireName")) != NULL &&
     (pszParentName = pHttpForm->GetValue()) != NULL &&
-    VerifyEmpireName (pszParentName, false) == OK) {
+    VerifyEmpireName (pszParentName, false))
+{
     %> value="<% Write (pszParentName); %>"<%;
 }
 %>></td><%

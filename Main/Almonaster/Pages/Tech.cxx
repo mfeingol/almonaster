@@ -220,6 +220,7 @@ if (!(m_iGameState & STARTED)) {
     %></table><%
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

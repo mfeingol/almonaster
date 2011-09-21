@@ -409,6 +409,7 @@ if (iErrCode != OK) {
     %><p>Error <% Write (iErrCode); %>occurred reading from the database<%
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

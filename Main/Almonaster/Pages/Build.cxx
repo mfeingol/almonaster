@@ -783,6 +783,7 @@ if (iNumPlanets > 0) {
 
 Close:
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

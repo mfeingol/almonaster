@@ -24,7 +24,9 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
 
     m_pHttpResponse->WriteText("<html><head><title>");
 
-    WriteSystemTitleString();
+    iErrCode = WriteSystemTitleString();
+    RETURN_ON_ERROR(iErrCode);
+
     m_pHttpResponse->WriteText("</title></head>");
     WriteBodyString(-1);
 
@@ -56,7 +58,7 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
     return iErrCode;
 }
 
-void HtmlRenderer::WriteSystemTitleString() {
+int HtmlRenderer::WriteSystemTitleString() {
 
     if (m_pgPageId != LOGIN && m_pgPageId != NEW_EMPIRE)
     {
@@ -77,7 +79,9 @@ void HtmlRenderer::WriteSystemTitleString() {
 
     m_pHttpResponse->WriteText (PageName [m_pgPageId]);
     OutputText (": ");
-    WriteVersionString();
+    int iErrCode = WriteVersionString();
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
@@ -234,8 +238,11 @@ int HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege)
 
 int HtmlRenderer::OpenGamePage()
 {
+    int iErrCode;
+
     m_pHttpResponse->WriteText("<html><head><title>");
-    WriteGameTitleString();
+    iErrCode = WriteGameTitleString();
+    RETURN_ON_ERROR(iErrCode);
     m_pHttpResponse->WriteText("</title></head>");
 
     if (m_iGameState & PAUSED)
@@ -248,10 +255,13 @@ int HtmlRenderer::OpenGamePage()
     } 
 
     m_pHttpResponse->WriteText("<center>");
-    return WriteGameHeaderString();
+    iErrCode = WriteGameHeaderString();
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
-void HtmlRenderer::WriteGameTitleString()
+int HtmlRenderer::WriteGameTitleString()
 {
     const char* pszEmpireName = m_vEmpireName.GetCharPtr();
     m_pHttpResponse->WriteText(pszEmpireName);
@@ -266,7 +276,10 @@ void HtmlRenderer::WriteGameTitleString()
 
     m_pHttpResponse->WriteText(PageName[m_pgPageId]);
     OutputText (": ");
-    WriteVersionString();
+
+    int iErrCode = WriteVersionString();
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int HtmlRenderer::WriteGameHeaderString()
@@ -563,8 +576,10 @@ int HtmlRenderer::PostGamePageInformation()
     return iErrCode;
 }
 
-void HtmlRenderer::CloseGamePage()
+int HtmlRenderer::CloseGamePage()
 {
+    int iErrCode;
+
     OutputText ("<p>");
     WriteSeparatorString (m_iSeparatorKey);
     OutputText ("<p><strong><font size=\"3\">");
@@ -575,7 +590,8 @@ void HtmlRenderer::CloseGamePage()
         OutputText ("<p>");
     }
     
-    WriteContactLine();
+    iErrCode = WriteContactLine();
+    RETURN_ON_ERROR(iErrCode);
     
     WriteButton (BID_SERVERNEWS);
     WriteButton (BID_SERVERINFORMATION);
@@ -592,10 +608,15 @@ void HtmlRenderer::CloseGamePage()
     OnPageRender (msTime);
     
     OutputText ("<p>");
-    WriteVersionString();
+
+    iErrCode = WriteVersionString();
+    RETURN_ON_ERROR(iErrCode);
+
     OutputText ("<br>Script time: ");
     m_pHttpResponse->WriteText ((int) msTime);
     OutputText (" ms</font></strong></center></form></body></html>");
+
+    return iErrCode;
 }
 
 int HtmlRenderer::InitializeGame(PageId* ppageRedirect, bool* pbRedirected)
@@ -985,7 +1006,19 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
                 int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
+                if (iResults > 0)
+                {
+                    bool bVerified;
+                    iErrCode = VerifyEmpireNameHash(iViewProfileEmpireKey, iHash, &bVerified);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    if (!bVerified)
+                    {
+                        iResults = 0;
+                    }
+                }
+
+                if (iResults == 0)
                 {
                     AddMessage("That empire no longer exists");
                     *ppageRedirect = LOGIN;
@@ -1130,7 +1163,8 @@ int HtmlRenderer::CloseSystemPage()
         RETURN_ON_ERROR(iErrCode);
     }
     
-    WriteContactLine();
+    iErrCode = WriteContactLine();
+    RETURN_ON_ERROR(iErrCode);
     
     if (m_pgPageId != LOGIN && m_pgPageId != NEW_EMPIRE) {
         
@@ -1372,7 +1406,19 @@ int HtmlRenderer::RedirectOnSubmitGame(PageId* ppageRedirect, bool* pbRedirected
                 iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (iResults == 0 || !VerifyEmpireNameHash(iViewProfileEmpireKey, iHash))
+                if (iResults > 0)
+                {
+                    bool bVerified;
+                    iErrCode = VerifyEmpireNameHash(iViewProfileEmpireKey, iHash, &bVerified);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    if (!bVerified)
+                    {
+                        iResults = 0;
+                    }
+                }
+
+                if (iResults == 0)
                 {
                     AddMessage("That empire no longer exists");
                     return OK;

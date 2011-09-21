@@ -160,9 +160,13 @@ SearchResults:
             const char* pszStart;
             if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("ViewProfile")) != NULL && 
                 (pszStart = pHttpForm->GetName()) != NULL &&
-                sscanf (pszStart, "ViewProfile.%d.%d", &iTargetEmpireKey, &iHash) == 2) {
+                sscanf (pszStart, "ViewProfile.%d.%d", &iTargetEmpireKey, &iHash) == 2)
+            {
+                bool bVerified;
+                iErrCode = VerifyEmpireNameHash(iTargetEmpireKey, iHash, &bVerified);
+                RETURN_ON_ERROR(iErrCode);
 
-                if (!VerifyEmpireNameHash (iTargetEmpireKey, iHash)) {
+                if (!bVerified) {
                     AddMessage ("That empire no longer exists");
                 } else {
                     iEmpireAdminPage = 3;
@@ -225,7 +229,7 @@ SearchResults:
                     if (String::StrCmp (vOldPassword.GetCharPtr(), pszValue) == 0) {
                         AddMessage ("The new password was the same as the old one");
                     } else {
-                        if (VerifyPassword (pszValue) != OK) {
+                        if (!VerifyPassword(pszValue)) {
                             return Redirect (m_pgPageId);
                         }
 

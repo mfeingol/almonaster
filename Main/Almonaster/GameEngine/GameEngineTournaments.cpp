@@ -887,7 +887,7 @@ int GameEngine::GetTournamentEmpires(unsigned int iTournamentKey, Variant** ppvE
     Variant* pvEmpireKey = NULL, * pvTeamKey = NULL, * pvName = NULL;
     AutoFreeData free1(pvEmpireKey);
     AutoFreeData free2(pvTeamKey);
-    Algorithm::AutoDelete<Variant> del(pvName);
+    Algorithm::AutoDelete<Variant> del(pvName, true);
 
     if (ppvEmpireKey)
         *ppvEmpireKey = NULL;
@@ -973,7 +973,7 @@ int GameEngine::GetAvailableTournamentEmpires (unsigned int iTournamentKey, Vari
     Variant* pvName = NULL, * pvTeamKey = NULL, * pvEmpireKey = NULL;
     AutoFreeData free1(pvName);
     AutoFreeData free2(pvTeamKey);
-    Algorithm::AutoDelete<Variant> del(pvEmpireKey);
+    Algorithm::AutoDelete<Variant> del(pvEmpireKey, true);
 
     iErrCode = GetTournamentEmpires(
         iTournamentKey,

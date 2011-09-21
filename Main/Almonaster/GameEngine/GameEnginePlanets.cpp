@@ -175,8 +175,8 @@ int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKe
     AutoFreeKeys freeKeys(piPlanetKey);
 
     IMapGenerator* pMapGen = NULL, * pInner = NULL;
-    Algorithm::AutoDelete<IMapGenerator> auto1(pMapGen);
-    Algorithm::AutoDelete<IMapGenerator> auto2(pInner);
+    Algorithm::AutoDelete<IMapGenerator> auto1(pMapGen, false);
+    Algorithm::AutoDelete<IMapGenerator> auto2(pInner, false);
 
     // Read gameclass data
     iErrCode = t_pCache->ReadRow (SYSTEM_GAMECLASS_DATA, iGameClass, &pvGameClassData);

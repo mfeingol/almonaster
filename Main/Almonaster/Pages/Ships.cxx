@@ -127,6 +127,7 @@ if (!bMapGenerated) {
     }
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

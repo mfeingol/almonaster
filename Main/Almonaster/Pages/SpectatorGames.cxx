@@ -574,7 +574,8 @@ case 3:
 
     %><p><table width="90%"><%
 
-    RenderEmpireInformation (iGameClassKey, iGameNumber, false);
+    iErrCode = RenderEmpireInformation (iGameClassKey, iGameNumber, false);
+    RETURN_ON_ERROR(iErrCode);
 
     break;
 

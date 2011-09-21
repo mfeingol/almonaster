@@ -1023,7 +1023,7 @@ int GameEngine::SearchForDuplicates (int iGameClass, int iGameNumber, const char
     bool* pbDup, bListStarted;
 
     AutoFreeData free(pvEmpireKey);
-    Algorithm::AutoDelete<Variant> del(pvData);
+    Algorithm::AutoDelete<Variant> del(pvData, true);
 
     GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
 

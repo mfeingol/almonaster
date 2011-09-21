@@ -788,7 +788,8 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_SEARCHIPADDRESSES)) {
 
                 m_bRedirectTest = false;
-                SearchForDuplicateIPAddresses (m_iGameClass, m_iGameNumber);
+                iErrCode = SearchForDuplicateEmpires(m_iGameClass, m_iGameNumber, IP_ADDRESS);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -796,7 +797,8 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_SEARCHSESSIONIDS)) {
 
                 m_bRedirectTest = false;
-                SearchForDuplicateSessionIds (m_iGameClass, m_iGameNumber);
+                iErrCode = SearchForDuplicateEmpires(m_iGameClass, m_iGameNumber, SESSION_ID);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -1768,6 +1770,7 @@ default:
     break;
 }
 
-CloseGamePage();
+iErrCode = CloseGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %>

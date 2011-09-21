@@ -789,7 +789,7 @@ int GameEngine::QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey) {
 int GameEngine::DeleteEmpireMsg(AsyncTask* pMessage) {
 
     EmpireIdentity* pid = (EmpireIdentity*)pMessage->pArguments;
-    Algorithm::AutoDelete<EmpireIdentity> del(pid);
+    Algorithm::AutoDelete<EmpireIdentity> del(pid, false);
 
     GameEngine gameEngine;
     int iErrCode = gameEngine.DeleteEmpire(pid->iEmpireKey, &pid->i64SecretKey, false, false);

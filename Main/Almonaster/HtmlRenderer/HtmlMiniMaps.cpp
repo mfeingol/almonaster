@@ -51,7 +51,7 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
     // Allocate the memory for the grid
     MiniMapEntry* pMiniMapEntries = new MiniMapEntry [iNumHorz * iNumVert];
     Assert(pMiniMapEntries);
-    Algorithm::AutoDelete<MiniMapEntry> free_pMiniMapEntries(pMiniMapEntries);
+    Algorithm::AutoDelete<MiniMapEntry> free_pMiniMapEntries(pMiniMapEntries, true);
 
     MiniMapEntry** ppMiniMap = (MiniMapEntry**) StackAlloc (iNumHorz * sizeof (MiniMapEntry*));
 

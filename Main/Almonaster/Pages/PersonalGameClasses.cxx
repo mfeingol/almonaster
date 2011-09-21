@@ -271,7 +271,12 @@ if (m_bOwnPost && !m_bRedirection) {
                 WasButtonPressed (BID_CREATENEWGAMECLASS)) {
 
                 m_bRedirectTest = false;
-                if (ProcessCreateGameClassForms (m_iEmpireKey, NO_KEY) != OK) {
+
+                bool bProcessed;
+                iErrCode = ProcessCreateGameClassForms(m_iEmpireKey, NO_KEY, &bProcessed);
+                RETURN_ON_ERROR(iErrCode);
+                if (!bProcessed)
+                {
                     iPersonalGameClassesPage = 2;
                 }
                 goto Redirection;
@@ -626,7 +631,8 @@ case 2:
     %><input type="hidden" name="PersonalGameClassesPage" value="2"><%
 
     %><p><h3>Create a new GameClass:</h3><% 
-    WriteCreateGameClassString (m_iEmpireKey, NO_KEY, false);
+    iErrCode = WriteCreateGameClassString (m_iEmpireKey, NO_KEY, false);
+    RETURN_ON_ERROR(iErrCode);
     %><p><%
 
     WriteButton (BID_CANCEL);

@@ -115,7 +115,8 @@ if (m_bOwnPost && !m_bRedirection) {
             int iGameNumber;
 
             // Check password
-            if (!String::IsBlank (pszPassword) && VerifyPassword (pszPassword) != OK) {
+            if (!String::IsBlank (pszPassword) && !VerifyPassword (pszPassword))
+            {
                 ClearGameOptions (&goOptions);
                 AddMessage ("Your password contained an invalid character");
                 goto Redirection;
@@ -194,7 +195,7 @@ case 0:
     unsigned int iNumGameClasses, * piGameClassKey = NULL;
     Check (GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
 
-    Algorithm::AutoDelete<unsigned int> autoDelete (piGameClassKey);
+    Algorithm::AutoDelete<unsigned int> autoDelete (piGameClassKey, true);
 
     if (iNumGameClasses == 0) {
         %><h3>There are no system game classes on this server</h3><%
@@ -350,7 +351,8 @@ case 2:
     %>Choose the characteristics of your new personal game:<%
     %></td></tr></table><%
 
-    WriteCreateGameClassString (m_iEmpireKey, NO_KEY, true);
+    iErrCode = WriteCreateGameClassString (m_iEmpireKey, NO_KEY, true);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><%
     %><h3>Advanced Game Configuration</h3><%
