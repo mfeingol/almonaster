@@ -575,7 +575,7 @@ case 1:
 
     Assert(piSearchEmpireKey != NULL);
 
-    RenderSearchResults (
+    iErrCode = RenderSearchResults (
         sd,
         ppszFormName,
         ppszColName1,
@@ -587,6 +587,7 @@ case 1:
 
     t_pCache->FreeKeys (piSearchEmpireKey);
 
+    RETURN_ON_ERROR(iErrCode);
     }
 
     break;
@@ -601,7 +602,8 @@ case 0:
         bShowAdvanced = (m_iSystemOptions & SHOW_ADVANCED_SEARCH_INTERFACE) != 0;
     }
 
-    RenderSearchForms (bShowAdvanced);
+    iErrCode = RenderSearchForms(bShowAdvanced);
+    RETURN_ON_ERROR(iErrCode);
 
     }
 

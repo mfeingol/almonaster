@@ -56,7 +56,8 @@ if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
     GameCheck (WriteRatiosString (NULL));
 }
 
-WriteServerRules();
+iErrCode = WriteServerRules();
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = CloseGamePage();
 RETURN_ON_ERROR(iErrCode);

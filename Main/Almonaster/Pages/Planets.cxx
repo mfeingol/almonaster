@@ -310,7 +310,7 @@ if (bMapGenerated) {
                 simShipsInMap.iPlanetKey = pvPlanetKey[i].GetInteger();
 
                 // Render ships
-                RenderShips (
+                iErrCode = RenderShips (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -322,6 +322,7 @@ if (bMapGenerated) {
                     NULL,
                     NULL
                     );
+                RETURN_ON_ERROR(iErrCode);
             }
 
             if (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) {  

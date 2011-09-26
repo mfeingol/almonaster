@@ -39,7 +39,7 @@ if (m_bOwnPost && !m_bRedirection) {
         (pszStart = pHttpForm->GetName()) != NULL &&
         sscanf (pszStart, "Login%d.%d", &iGameClassKey, &iGameNumber) == 2)
     {
-        // Go to info screen!
+        // Go to info screen
         m_iGameClass = iGameClassKey;
         m_iGameNumber = iGameNumber;
 
@@ -51,54 +51,73 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Begin individual page
 unsigned int i, iNumGames;
-int* piGameClassKey, * piGameNumber;
-Check(GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
+int* piGameClassKey = NULL, * piGameNumber = NULL;
+Algorithm::AutoDelete<int> del_piGameClassKey(piGameClassKey, true);
+Algorithm::AutoDelete<int> del_piGameNumber(piGameNumber, true);
 
-// Check for updates in active games
-if (iNumGames > 0)
+// Check games for updates until no further updates are needed
+while (true)
 {
-    Check(CacheGameData(piGameClassKey, piGameNumber, m_iEmpireKey, iNumGames));
-
-    bool bUpdateOccurred, bReloadGameList = false;
-    for (i = 0; i < iNumGames; i ++)
-    {
-        iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred);
-        if (iErrCode != OK || (iErrCode == OK && bUpdateOccurred))
-        {
-            bReloadGameList = true;
-        }
-    }
-
-    if (bReloadGameList)
+    if (piGameClassKey)
     {
         delete [] piGameClassKey;
-        delete [] piGameNumber;
-
-        Check(GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames));
+        piGameClassKey = NULL;
     }
+
+    if (piGameNumber)
+    {
+        delete [] piGameNumber;
+        piGameNumber = NULL;
+    }
+
+    iErrCode = GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iNumGames > 0)
+    {
+        iErrCode = CacheGameData(piGameClassKey, piGameNumber, m_iEmpireKey, iNumGames);
+        RETURN_ON_ERROR(iErrCode);
+        for (i = 0; i < iNumGames; i ++)
+        {
+            bool bUpdateOccurred;
+            iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred);
+            RETURN_ON_ERROR(iErrCode);
+            if (bUpdateOccurred)
+            {
+                continue;
+            }
+        }
+    }
+    break;
 }
 
-if (iNumGames == 0) {
+if (iNumGames == 0)
+{
     %><p><h3>You are not in any games</h3><% 
-} else {
+}
+else
+{
+    unsigned int* piSuperClassKey = NULL, iSuperClassKey, iNumSuperClasses, iNumRenderGames = 0;
+    AutoFreeKeys free_piSuperClassKey(piSuperClassKey);
 
-    unsigned int* piSuperClassKey, iSuperClassKey, iNumSuperClasses, iNumRenderGames = 0;
+    iErrCode = GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
-
-    if (iNumSuperClasses > 0) {
-
+    if (iNumSuperClasses > 0)
+    {
         const unsigned int iNumAllocationSuperClasses = iNumSuperClasses + 2;
         const unsigned int iNumAllocationGames = iNumGames + 1;
 
@@ -110,8 +129,8 @@ if (iNumGames == 0) {
         int** ppiGameClass = ppiTable + iNumAllocationSuperClasses;
         int** ppiGameNumber = ppiGameClass + iNumAllocationSuperClasses;
 
-        for (i = 0; i < iNumAllocationSuperClasses; i ++) {
-
+        for (i = 0; i < iNumAllocationSuperClasses; i ++)
+        {
             ppiTable[i] = (int*) StackAlloc (iNumAllocationGames * 3 * sizeof (int));
             ppiTable[i][iNumGames] = 0;
 
@@ -125,35 +144,40 @@ if (iNumGames == 0) {
             bool bFlag;
 
             iErrCode = DoesGameExist (piGameClassKey[i], piGameNumber[i], &bFlag);
-            if (iErrCode != OK || !bFlag) {
+            RETURN_ON_ERROR(iErrCode);
+            if (!bFlag)
+            {
                 continue;
             }
 
             iErrCode = HasEmpireResignedFromGame (piGameClassKey[i], piGameNumber[i], m_iEmpireKey, &bFlag);
-            if (iErrCode != OK || bFlag) {
+            RETURN_ON_ERROR(iErrCode);
+            if (bFlag)
+            {
                 continue;
             }
 
             iErrCode = GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
-            if (iErrCode != OK) {
-                continue;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iNumRenderGames ++;
 
             int iSuperClassIndex = NO_KEY;
 
-            if (iSuperClassKey == TOURNAMENT) {
+            if (iSuperClassKey == TOURNAMENT)
+            {
                 iSuperClassIndex = ACTIVE_TOURNAMENT_GAMES;
             }
 
-            else if (iSuperClassKey == PERSONAL_GAME) {
+            else if (iSuperClassKey == PERSONAL_GAME)
+            {
                 iSuperClassIndex = ACTIVE_PERSONAL_GAMES;
             }
 
-            else for (unsigned int j = 0; j < iNumSuperClasses; j ++) {
-
-                if (piSuperClassKey[j] == iSuperClassKey) {
+            else for (unsigned int j = 0; j < iNumSuperClasses; j ++)
+            {
+                if (piSuperClassKey[j] == iSuperClassKey)
+                {
                     iSuperClassIndex = j;
                     break;
                 }
@@ -174,39 +198,42 @@ if (iNumGames == 0) {
 
         %><p><h3><%
 
-        if (iNumRenderGames == 0) {
+        if (iNumRenderGames == 0)
+        {
             %>You are not in any games</h3><% 
-        } else {
-
-            int iGameClass, iGameNumber, iBegin, iNumToSort, iCurrentGameClass;
-            Variant* pvGameClassInfo = NULL, vName;
-
-            Check(CacheGameData(piGameClassKey, piGameNumber, m_iEmpireKey, iNumGames));
+        }
+        else
+        {
+            iErrCode = CacheGameData(piGameClassKey, piGameNumber, m_iEmpireKey, iNumGames);
+            RETURN_ON_ERROR(iErrCode);
 
             %>You are in the following games:</h3><% 
 
             //
             // Display all games
             //
-            for (int iIndex = iNumAllocationSuperClasses - 1; iIndex >= 0; iIndex --) {
-
-                if (ppiTable[iIndex][iNumGames] == 0) continue;
+            for (int iIndex = iNumAllocationSuperClasses - 1; iIndex >= 0; iIndex --)
+            {
+                if (ppiTable[iIndex][iNumGames] == 0)
+                    continue;
 
                 %><p><h3><%
 
-                if (iIndex == ACTIVE_PERSONAL_GAMES) {
+                if (iIndex == ACTIVE_PERSONAL_GAMES)
+                {
                     %>Personal Games<%
                 }
-
-                else if (iIndex == ACTIVE_TOURNAMENT_GAMES) {
+                else if (iIndex == ACTIVE_TOURNAMENT_GAMES)
+                {
                     %>Tournament Games<%
                 }
-
-                else if (GetSuperClassName(piSuperClassKey[iIndex], &vName) == OK) { 
+                else
+                {
+                    Variant vName;
+                    iErrCode = GetSuperClassName(piSuperClassKey[iIndex], &vName);
+                    RETURN_ON_ERROR(iErrCode);
                     Write (vName.GetCharPtr());
                 }
-
-                else { %>Unknown SuperClass<% }
 
                 %>:</h3><%
 
@@ -215,7 +242,7 @@ if (iNumGames == 0) {
                 int j, iNumGamesInSuperClass = ppiTable[iIndex][iNumGames];
 
                 // Sort games by gameclass
-                Algorithm::QSortThreeAscending<int, int, int> (
+                Algorithm::QSortThreeAscending<int, int, int>(
                     ppiGameClass[iIndex],
                     ppiGameNumber[iIndex],
                     ppiTable[iIndex],
@@ -223,13 +250,12 @@ if (iNumGames == 0) {
                     );
 
                 // Sort games by gamenumber
-                iBegin = 0;
-                iCurrentGameClass = ppiGameClass[iIndex][0];
+                int iBegin = 0, iNumToSort, iCurrentGameClass = ppiGameClass[iIndex][0];
 
                 for (j = 1; j < iNumGamesInSuperClass; j ++) {
 
-                    if (ppiGameClass[iIndex][j] != iCurrentGameClass) {
-
+                    if (ppiGameClass[iIndex][j] != iCurrentGameClass)
+                    {
                         iNumToSort = j - iBegin;
                         if (iNumToSort > 1)
                         {
@@ -259,29 +285,22 @@ if (iNumGames == 0) {
 
                 for (j = 0; j < iNumGamesInSuperClass; j ++)
                 {
-                    iGameClass = ppiGameClass[iIndex][j];
-                    iGameNumber = ppiGameNumber[iIndex][j];
+                    int iGameClass = ppiGameClass[iIndex][j];
+                    int iGameNumber = ppiGameNumber[iIndex][j];
 
-                    if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK)
-                    {
-                        WriteActiveGameListData(iGameClass, iGameNumber, pvGameClassInfo);
-                    }
+                    Variant* pvGameClassInfo = NULL;
+                    AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                    if (pvGameClassInfo != NULL)
-                    {
-                        t_pCache->FreeData (pvGameClassInfo);
-                        pvGameClassInfo = NULL;
-                    }
+                    iErrCode = GetGameClassData (iGameClass, &pvGameClassInfo);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    iErrCode = WriteActiveGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                    RETURN_ON_ERROR(iErrCode);
                 }
                 %></table><% 
             }
         }
-
-        t_pCache->FreeKeys (piSuperClassKey);
     }
-
-    delete [] piGameClassKey;
-    delete [] piGameNumber;
 } 
 
 iErrCode = CloseSystemPage();

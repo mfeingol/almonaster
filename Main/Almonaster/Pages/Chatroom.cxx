@@ -65,10 +65,11 @@ if (m_bOwnPost && !m_bRedirection) {
         if (bBroadcast) {
 
             // Check for leave
-            if (WasButtonPressed (BID_LEAVETHECHATROOM)) {
+            if (WasButtonPressed (BID_LEAVETHECHATROOM))
+            {
                 pChatroom->ExitChatroom (m_vEmpireName.GetCharPtr());
                 AddMessage ("You left the chatroom");
-                return Redirect (ACTIVE_GAME_LIST);
+                return Redirect(ACTIVE_GAME_LIST);
             }
 
             // Check for speak
@@ -93,8 +94,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (iInChatroom == CHATROOM_IN) {
 
                     String strFilter;
-                    HTMLFilter (pszMessage, &strFilter, MAX_NUM_SPACELESS_CHARS, false);
-                    pChatroom->PostMessage (m_vEmpireName.GetCharPtr(), strFilter, 0);
+                    HTMLFilter(pszMessage, &strFilter, MAX_NUM_SPACELESS_CHARS, false);
+                    iErrCode = pChatroom->PostMessage(m_vEmpireName.GetCharPtr(), strFilter, 0);
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
             } else {
@@ -116,11 +118,22 @@ if (m_bRedirectTest)
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Enter the chatroom
-if (bBroadcast && iInChatroom == CHATROOM_UNCHECKED) {
-    iInChatroom = pChatroom->EnterChatroom (m_vEmpireName.GetCharPtr()) == OK ? CHATROOM_IN : CHATROOM_OUT;
+if (bBroadcast && iInChatroom == CHATROOM_UNCHECKED)
+{
+    iErrCode = pChatroom->EnterChatroom(m_vEmpireName.GetCharPtr());
+    if (iErrCode == ERROR_TOO_MANY_SPEAKERS)
+    {
+        iInChatroom = CHATROOM_OUT;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+        iInChatroom = CHATROOM_IN;
+    }
 }
 
 // Chatroom
@@ -130,7 +143,10 @@ if (iInChatroom == CHATROOM_OUT) {
 } else {
 
     ChatroomSpeaker* pcsSpeaker = NULL;
+    AutoFreeChatroomSpeakers free_pcsSpeaker(pcsSpeaker);
+
     ChatroomMessage* pcmMessage = NULL;
+    AutoFreeChatroomMessages free_pcmMessage(pcmMessage);
 
     char pszDate [OS::MaxDateLength];
 
@@ -138,18 +154,12 @@ if (iInChatroom == CHATROOM_OUT) {
 
     Assert(!bBroadcast || iInChatroom == CHATROOM_IN);
 
-    // Get speaket list
-    iErrCode = pChatroom->GetSpeakers (&pcsSpeaker, &iNumSpeakers);
-    if (iErrCode != OK) {
-        %><p>An error occurred reading the speaker list from the chatroom<%
-        goto Cleanup;
-    }
+    // Get speaker list
+    iErrCode = pChatroom->GetSpeakers(&pcsSpeaker, &iNumSpeakers);
+    RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = pChatroom->GetMessages (&pcmMessage, &iNumMessages);
-    if (iErrCode != OK) {
-        %><p>An error occurred reading the message list from the chatroom<%
-        goto Cleanup;
-    }
+    iErrCode = pChatroom->GetMessages(&pcmMessage, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
 
     if (!bBroadcast) {
         %><p><strong>You do not have the right to broadcast messages</strong><%
@@ -238,16 +248,6 @@ if (iInChatroom == CHATROOM_OUT) {
         %><p><%
 
         WriteButton (BID_CLEARMESSAGES);
-    }
-
-Cleanup:
-
-    if (pcsSpeaker != NULL) {
-        pChatroom->FreeSpeakers (pcsSpeaker);
-    }
-
-    if (pcmMessage != NULL) {
-        pChatroom->FreeMessages (pcmMessage);
     }
 }
 

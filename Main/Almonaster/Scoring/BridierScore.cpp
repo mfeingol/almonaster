@@ -36,14 +36,11 @@ int BridierObject::IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridi
     GET_GAME_DATA(pszGameData, iGameClass, iGameNumber);
 
     iErrCode = t_pCache->ReadData(pszGameData, GameData::Options, &vOptions);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     *pbBridier = (vOptions.GetInteger() & GAME_COUNT_FOR_BRIDIER) != 0;
 
-    return OK;
+    return iErrCode;
 }
 
 int BridierObject::CompareScores (const Variant* pvLeft, const Variant* pvRight) {
@@ -169,17 +166,11 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
         tNow
         );
     
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     // Get score
     iErrCode = GetEmpireScore (iEmpireKey, pvScore);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iOldRank = pvScore[BRIDIER_RANK].GetInteger();
     iOldIndex = pvScore[BRIDIER_INDEX].GetInteger();
@@ -212,10 +203,7 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
                 iNewRank
                 );
             
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (iNewIndex != iOldIndex) {
@@ -227,14 +215,9 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
                 iNewIndex
                 );
 
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
     }
-
-Cleanup:
 
     return iErrCode;
 }
@@ -246,18 +229,10 @@ int BridierObject::GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore)
     GET_SYSTEM_EMPIRE_DATA(strEmpires, iEmpireKey);
 
     iErrCode = t_pCache->ReadData(strEmpires, iEmpireKey, SystemEmpireData::BridierRank, pvScore + BRIDIER_RANK);
-    if (iErrCode != OK)
-    {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(strEmpires, iEmpireKey, SystemEmpireData::BridierIndex, pvScore + BRIDIER_INDEX);
-    if (iErrCode != OK)
-    {
-        goto Cleanup;
-    }
-
-Cleanup:
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -280,16 +255,22 @@ int BridierScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
     bool bBridier;
 
     iErrCode = IsBridierGame (iGameClass, iGameNumber, &bBridier);
-    if (iErrCode != OK || !bBridier) {
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
+    if (!bBridier)
+    {
+        return OK;
     }
 
-    return OnNukeInternal (iGameClass, iGameNumber, iEmpireNuker, iEmpireNuked, pscChanges);
+    iErrCode = OnNukeInternal (iGameClass, iGameNumber, iEmpireNuker, iEmpireNuked, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
-int BridierScore::OnSurrender (int iGameClass, int iGameNumber, int iWinner, int iLoser, ScoringChanges* pscChanges) {
-
-    return OnNuke (iGameClass, iGameNumber, iWinner, iLoser, pscChanges);
+int BridierScore::OnSurrender (int iGameClass, int iGameNumber, int iWinner, int iLoser, ScoringChanges* pscChanges)
+{
+    int iErrCode = OnNuke (iGameClass, iGameNumber, iWinner, iLoser, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLoser, ScoringChanges* pscChanges) {
@@ -298,20 +279,20 @@ int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLose
     bool bBridier;
 
     Variant* pvEmpireKey;
+    AutoFreeData free_pvEmpireKey(pvEmpireKey);
     unsigned int iNumEmpires;
 
     iErrCode = IsBridierGame (iGameClass, iGameNumber, &bBridier);
-    if (iErrCode != OK || !bBridier) {
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
+    if (!bBridier)
+    {
+        return OK;
     }
 
     GET_GAME_EMPIRES (pszEmpires, iGameClass, iGameNumber);
 
     iErrCode = t_pCache->ReadColumn(pszEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     Assert(iNumEmpires == 2);
 
@@ -322,8 +303,7 @@ int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLose
         iLoser,
         pscChanges
         );
-
-    t_pCache->FreeData (pvEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -375,37 +355,24 @@ int BridierScore::OnNukeInternal (int iGameClass, int iGameNumber, int iEmpireNu
 
     Variant pvNukerScore [NUM_BRIDIER_COLUMNS], pvNukedScore [NUM_BRIDIER_COLUMNS];
 
-    int iNukerRank, iNukerIndex, iNukedRank, iNukedIndex, iErrCode, iNukerRankChange, iNukerIndexChange,
-        iNukedRankChange, iNukedIndexChange;
+    int iNukerRank, iNukerIndex, iNukedRank, iNukedIndex, iErrCode, iNukerRankChange, iNukerIndexChange, iNukedRankChange, iNukedIndexChange;
 
     // Get scores for players at start of game
     GET_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireNuker);
 
     iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, pvNukerScore + BRIDIER_RANK);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierIndex, pvNukerScore + BRIDIER_INDEX);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     COPY_GAME_EMPIRE_DATA (pszEmpireData, iGameClass, iGameNumber, iEmpireNuked);
 
     iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierRank, pvNukedScore + BRIDIER_RANK);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::InitialBridierIndex, pvNukedScore + BRIDIER_INDEX);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iNukerRank = pvNukerScore[BRIDIER_RANK].GetInteger();
     iNukerIndex = pvNukerScore[BRIDIER_INDEX].GetInteger();
@@ -427,16 +394,10 @@ int BridierScore::OnNukeInternal (int iGameClass, int iGameNumber, int iEmpireNu
 
     // Update empires
     iErrCode = UpdateBridierScore (iEmpireNuker, iNukerRankChange, iNukerIndexChange);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = UpdateBridierScore (iEmpireNuked, iNukedRankChange, iNukedIndexChange);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Do accounting
     pscChanges->iFlags |= BRIDIER_SCORE_CHANGE;
@@ -448,8 +409,6 @@ int BridierScore::OnNukeInternal (int iGameClass, int iGameNumber, int iEmpireNu
     pscChanges->iBridierNukedRankChange = iNukedRankChange;
     pscChanges->iBridierNukedIndex = iNukedIndex;
     pscChanges->iBridierNukedIndexChange = iNukedIndexChange;
-
-Cleanup:
 
     return iErrCode;
 }

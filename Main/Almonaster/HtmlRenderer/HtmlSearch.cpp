@@ -54,19 +54,14 @@ const SearchField g_AdvancedSearchFields[] = {
     { false, NULL, "MaxMil", "LMaxMil", "RMaxMil", SystemEmpireData::MaxMil, SEARCHFIELD_INTEGER, GUEST },
 };
 
-
-void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
+int HtmlRenderer::RenderSearchForms (bool fAdvanced) {
 
     Assert(MAX_NUM_SEARCH_COLUMNS == countof (g_AdvancedSearchFields));
     Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns); 
     
     unsigned int iNumEmpires;
     int iErrCode = GetNumEmpiresOnServer(&iNumEmpires);
-    if (iErrCode != OK)
-    {
-        OutputText ("<p>Error reading empire count");
-        return;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     OutputText ("<p>There ");
     
@@ -109,6 +104,8 @@ void HtmlRenderer::RenderSearchForms (bool fAdvanced) {
     }
 
     WriteButton (BID_SEARCH);
+
+    return iErrCode;
 }
 
 
@@ -122,7 +119,8 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
     if (sfField.prvMinPriv > m_iPrivilege) return;
 
     const char* pszName = sfField.pszName;
-    if (pszName == NULL) {
+    if (pszName == NULL)
+    {
         Assert(sfField.pszSystemEmpireDataColumn != NULL);
         pszName = sfField.pszSystemEmpireDataColumn;
     }
@@ -283,7 +281,6 @@ void HtmlRenderer::RenderSearchField (const SearchField& sfField, bool fAdvanced
         break;
         
     default:
-        
         Assert(false);
         break;
     }
@@ -515,21 +512,21 @@ int HtmlRenderer::HandleSearchSubmission (RangeSearchDefinition& sd,
         piNumSearchEmpires,
         piLastKey
         );
+
+    RETURN_ON_ERROR(iErrCode);
     
     return iErrCode;
 }
 
-void HtmlRenderer::RenderSearchResults (RangeSearchDefinition& sd,
-
-                                        const char** pszFormName,
-                                        const char** pszColName1,
-                                        const char** pszColName2,
-
-                                        unsigned int* piSearchEmpireKey,
-                                        unsigned int iNumSearchEmpires,
-                                        unsigned int iLastKey
-                                        ) {
-    int iErrCode;
+int HtmlRenderer::RenderSearchResults(RangeSearchDefinition& sd,
+                                      const char** pszFormName,
+                                      const char** pszColName1,
+                                      const char** pszColName2,
+                                      unsigned int* piSearchEmpireKey,
+                                      unsigned int iNumSearchEmpires,
+                                      unsigned int iLastKey)
+{
+    int iErrCode = OK;
     unsigned int i, j, iNumSearchColumns = sd.iNumColumns, iNumEmpiresFoundSoFar = iNumSearchEmpires;
 
     IHttpForm* pHttpForm = m_pHttpRequest->GetForm ("EmpiresFoundSoFar");
@@ -594,80 +591,80 @@ void HtmlRenderer::RenderSearchResults (RangeSearchDefinition& sd,
 
     NotifyProfileLink();
     
-    for (i = 0; i < iNumSearchEmpires; i ++) {
+    for (i = 0; i < iNumSearchEmpires; i ++)
+    {
+        iErrCode = GetEmpireName (piSearchEmpireKey[i], &vName);
+        RETURN_ON_ERROR(iErrCode);
         
-        if (GetEmpireName (piSearchEmpireKey[i], &vName) == OK &&
-            GetEmpireProperty (piSearchEmpireKey[i], SystemEmpireData::AlienKey, &vAlien) == OK) {
+        iErrCode = GetEmpireProperty (piSearchEmpireKey[i], SystemEmpireData::AlienKey, &vAlien);
+        RETURN_ON_ERROR(iErrCode);
             
-            OutputText ("<tr><td align=\"center\"><strong>");
-            m_pHttpResponse->WriteText (vName.GetCharPtr());
-            OutputText ("</strong></td><td align=\"center\">");
+        OutputText ("<tr><td align=\"center\"><strong>");
+        m_pHttpResponse->WriteText (vName.GetCharPtr());
+        OutputText ("</strong></td><td align=\"center\">");
             
-            sprintf(pszProfile, "View the profile of %s", vName.GetCharPtr());
+        sprintf(pszProfile, "View the profile of %s", vName.GetCharPtr());
             
-            WriteProfileAlienString (
-                vAlien.GetInteger(), 
-                piSearchEmpireKey[i],
-                vName.GetCharPtr(),
-                0, 
-                "ViewProfile",
-                pszProfile,
-                true,
-                true
-                );
+        WriteProfileAlienString (
+            vAlien.GetInteger(), 
+            piSearchEmpireKey[i],
+            vName.GetCharPtr(),
+            0, 
+            "ViewProfile",
+            pszProfile,
+            true,
+            true
+            );
             
-            OutputText ("</td>");
+        OutputText ("</td>");
             
-            for (j = 0; j < iNumSearchColumns; j ++) {
+        for (j = 0; j < iNumSearchColumns; j ++) {
 
-                Variant vData;
+            Variant vData;
                 
-                RangeSearchColumnDefinition& sc = sd.pscColumns[j];
-                const char* pszCol = sc.pszColumn;
+            RangeSearchColumnDefinition& sc = sd.pscColumns[j];
+            const char* pszCol = sc.pszColumn;
 
-                if (pszCol != SystemEmpireData::Name) {
+            if (pszCol != SystemEmpireData::Name) {
                     
-                    OutputText ("<td align=\"center\">");
+                OutputText ("<td align=\"center\">");
                     
-                    if (pszCol == NULL) {
-                        m_pHttpResponse->WriteText (piSearchEmpireKey[i]);
-                    } else {
+                if (pszCol == NULL) {
+                    m_pHttpResponse->WriteText (piSearchEmpireKey[i]);
+                } else {
                         
-                        iErrCode = GetEmpireDataColumn (piSearchEmpireKey[i], pszCol, &vData);
-                        if (iErrCode == OK) {
-                            
-                            if (strcmp(pszCol, SystemEmpireData::Privilege) == 0)
-                            {
-                                m_pHttpResponse->WriteText (PRIVILEGE_STRING[vData.GetInteger()]);
-                            }
-                            else if (strcmp(pszCol, SystemEmpireData::WebPage) == 0)
-                            {
-                                RenderUnsafeHyperText (vData.GetCharPtr(), vData.GetCharPtr());
-                            }
-                            else if (strcmp(pszCol, SystemEmpireData::Gender) == 0)
-                            {
-                                Assert(vData.GetInteger() >= EMPIRE_GENDER_UNKNOWN && 
-                                        vData.GetInteger() <= EMPIRE_GENDER_FEMALE);
-                                m_pHttpResponse->WriteText(EMPIRE_GENDER_STRING[vData.GetInteger()]);
-                            }
-                            else if (strcmp(pszCol, SystemEmpireData::LastLoginTime) == 0 ||
-                                     strcmp(pszCol, SystemEmpireData::CreationTime) == 0 ||
-                                     strcmp(pszCol, SystemEmpireData::LastBridierActivity) == 0)
-                            {
-                                m_pHttpResponse->WriteDate(vData.GetInteger64());
-                            }
-                            else
-                            {
-                                m_pHttpResponse->WriteText (vData);
-                            }
-                        }
+                    iErrCode = GetEmpireDataColumn (piSearchEmpireKey[i], pszCol, &vData);
+                    RETURN_ON_ERROR(iErrCode);
+ 
+                    if (strcmp(pszCol, SystemEmpireData::Privilege) == 0)
+                    {
+                        m_pHttpResponse->WriteText (PRIVILEGE_STRING[vData.GetInteger()]);
                     }
-                    OutputText ("</td>");
+                    else if (strcmp(pszCol, SystemEmpireData::WebPage) == 0)
+                    {
+                        RenderUnsafeHyperText (vData.GetCharPtr(), vData.GetCharPtr());
+                    }
+                    else if (strcmp(pszCol, SystemEmpireData::Gender) == 0)
+                    {
+                        Assert(vData.GetInteger() >= EMPIRE_GENDER_UNKNOWN && 
+                                vData.GetInteger() <= EMPIRE_GENDER_FEMALE);
+                        m_pHttpResponse->WriteText(EMPIRE_GENDER_STRING[vData.GetInteger()]);
+                    }
+                    else if (strcmp(pszCol, SystemEmpireData::LastLoginTime) == 0 ||
+                                strcmp(pszCol, SystemEmpireData::CreationTime) == 0 ||
+                                strcmp(pszCol, SystemEmpireData::LastBridierActivity) == 0)
+                    {
+                        m_pHttpResponse->WriteDate(vData.GetInteger64());
+                    }
+                    else
+                    {
+                        m_pHttpResponse->WriteText (vData);
+                    }
                 }
+                OutputText ("</td>");
             }
-            
-            OutputText ("</tr>");
         }
+        OutputText ("</tr>");
     }
     
     OutputText ("</table>");
@@ -712,6 +709,8 @@ void HtmlRenderer::RenderSearchResults (RangeSearchDefinition& sd,
     
     OutputText ("<p>");
     WriteButton (BID_CANCEL);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RenderHiddenSearchVariant (const char* pszColumn, const char* pszColName, const Variant& vData) {

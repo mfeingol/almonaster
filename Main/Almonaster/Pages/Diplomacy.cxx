@@ -53,23 +53,12 @@ const char* pszRedrawMessage = NULL;
 
 // Read default message target
 int iDefaultMessageTarget;
-iErrCode = GetEmpireDefaultMessageTarget (
-    m_iGameClass,
-    m_iGameNumber,
-    m_iEmpireKey,
-    &iDefaultMessageTarget
-    );
-
-if (iErrCode != OK) {
-    Assert(false);
-    AddMessage ("Could not read default message target; error was ");
-    AppendMessage (iErrCode);
-    iDefaultMessageTarget = MESSAGE_TARGET_BROADCAST;
-}
+iErrCode = GetEmpireDefaultMessageTarget(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iDefaultMessageTarget);
+RETURN_ON_ERROR(iErrCode);
 Assert(iDefaultMessageTarget >= MESSAGE_TARGET_NONE && iDefaultMessageTarget <= MESSAGE_TARGET_LAST_USED);
 
-if (m_bOwnPost && !m_bRedirection) {
-
+if (m_bOwnPost && !m_bRedirection)
+{
     // Handle submissions
     int iOldValue, iNewValue;
 
@@ -103,10 +92,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 Assert(iNumTargets > 0);
 
                 iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
-                if (iErrCode != OK) {
-                    AddMessage ("An error occurred reading data from the database");
-                    goto Redirection;
-                }
+                RETURN_ON_ERROR(iErrCode);
 
                 unsigned int* piTargetKey = (unsigned int*) StackAlloc (iNumTargets * sizeof (unsigned int));
                 int* piDelayEmpireKey = (int*) StackAlloc (iNumEmpires * sizeof (int));
@@ -158,7 +144,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (bBroadcast)
                 {
-                    GameCheck(CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber));
+                    iErrCode = CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber);
+                    RETURN_ON_ERROR(iErrCode);
 
                     iErrCode = BroadcastGameMessage(
                         m_iGameClass, 
@@ -168,8 +155,8 @@ if (m_bOwnPost && !m_bRedirection) {
                         MESSAGE_BROADCAST
                         );
 
-                    switch (iErrCode) {
-
+                    switch (iErrCode)
+                    {
                     case OK:
                         AddMessage ("Your message was broadcast to everyone");
                         break;
@@ -183,18 +170,18 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("Your empire is not in that game");
                         break;
                     default:
-                        return iErrCode;
+                        RETURN_ON_ERROR(iErrCode);
                     }
-
-                } else {
-
+                    iErrCode = OK;
+                }
+                else
+                {
                     bool bDipFilter = bWar || bTruce || bTrade || bAlliance;
 
                     // Filter out empires on war, truce, trade, alliance lists
                     if (bDipFilter) {
 
-                        int iCurrent, iNumWar, iNumTruce, iNumTrade, iNumAlliance, 
-                            * piWar, * piTruce, * piTrade, * piAlliance;
+                        int iCurrent, iNumWar, iNumTruce, iNumTrade, iNumAlliance, * piWar, * piTruce, * piTrade, * piAlliance;
                         bool bDelete;
 
                         for (i = 0; i < iDelayEmpireKeys; i ++) {
@@ -210,13 +197,10 @@ if (m_bOwnPost && !m_bRedirection) {
                                 NULL
                                 );
 
-                            if (iErrCode != OK) {
-                                // Remove from list
-                                piDelayEmpireKey[i] = piDelayEmpireKey[-- iDelayEmpireKeys];
-                                continue;
-                            }
+                            RETURN_ON_ERROR(iErrCode);
 
-                            switch (iCurrent) {
+                            switch (iCurrent)
+                            {
                             case WAR:
                                 bDelete = bWar;
                                 break;
@@ -262,31 +246,29 @@ if (m_bOwnPost && !m_bRedirection) {
                             piAlliance,
                             &iNumAlliance
                             );
+                        RETURN_ON_ERROR(iErrCode);
 
-                        if (iErrCode == OK) {
-
-                            if (bWar) {
-                                for (i = 0; i < iNumWar; i ++) {
-                                    piDelayEmpireKey[iDelayEmpireKeys ++] = piWar[i];
-                                }
+                        if (bWar) {
+                            for (i = 0; i < iNumWar; i ++) {
+                                piDelayEmpireKey[iDelayEmpireKeys ++] = piWar[i];
                             }
+                        }
 
-                            if (bTruce) {
-                                for (i = 0; i < iNumTruce; i ++) {
-                                    piDelayEmpireKey[iDelayEmpireKeys ++] = piTruce[i];
-                                }
+                        if (bTruce) {
+                            for (i = 0; i < iNumTruce; i ++) {
+                                piDelayEmpireKey[iDelayEmpireKeys ++] = piTruce[i];
                             }
+                        }
 
-                            if (bTrade) {
-                                for (i = 0; i < iNumTrade; i ++) {
-                                    piDelayEmpireKey[iDelayEmpireKeys ++] = piTrade[i];
-                                }
+                        if (bTrade) {
+                            for (i = 0; i < iNumTrade; i ++) {
+                                piDelayEmpireKey[iDelayEmpireKeys ++] = piTrade[i];
                             }
+                        }
 
-                            if (bAlliance) {
-                                for (i = 0; i < iNumAlliance; i ++) {
-                                    piDelayEmpireKey[iDelayEmpireKeys ++] = piAlliance[i];
-                                }
+                        if (bAlliance) {
+                            for (i = 0; i < iNumAlliance; i ++) {
+                                piDelayEmpireKey[iDelayEmpireKeys ++] = piAlliance[i];
                             }
                         }
                     }
@@ -297,15 +279,12 @@ if (m_bOwnPost && !m_bRedirection) {
                     for (i = 0; i < iDelayEmpireKeys; i ++)
                     {
                         iErrCode = CacheEmpiresAndGameMessages(m_iGameClass, m_iGameNumber, (unsigned int*)piDelayEmpireKey, iDelayEmpireKeys);
-                        if (iErrCode != OK)
-                            return iErrCode;
+                        RETURN_ON_ERROR(iErrCode);
 
                         iErrCode = GetEmpireName (piDelayEmpireKey[i], &vTheEmpireName);
-                        if (iErrCode != OK) {
-                            continue;
-                        }
+                        RETURN_ON_ERROR(iErrCode);
 
-                        iErrCode = SendGameMessage (
+                        iErrCode = SendGameMessage(
                             m_iGameClass,
                             m_iGameNumber,
                             piDelayEmpireKey[i],
@@ -315,12 +294,14 @@ if (m_bOwnPost && !m_bRedirection) {
                             NULL_TIME
                             );
 
-                        if (iErrCode == ERROR_STRING_IS_TOO_LONG) {
-                            AddMessage ("Your message was too long");
+                        if (iErrCode == ERROR_STRING_IS_TOO_LONG)
+                        {
+                            AddMessage("Your message was too long");
                             break;
                         }
 
-                        switch (iErrCode) {
+                        switch (iErrCode)
+                        {
                         case OK:
                             if (strYes.IsBlank()) {
                                 strYes += vTheEmpireName.GetCharPtr();
@@ -333,7 +314,6 @@ if (m_bOwnPost && !m_bRedirection) {
                                 // Save last used
                                 piLastMessageTargetKeyArray[iNumLastUsed ++] = piDelayEmpireKey[i];
                             }
-
                             break;
 
                         case ERROR_EMPIRE_IS_IGNORING_SENDER:
@@ -347,12 +327,13 @@ if (m_bOwnPost && !m_bRedirection) {
                             break;
 
                         default:
-                            return iErrCode;
+                            RETURN_ON_ERROR(iErrCode);
                         }
+                        iErrCode = OK;
                     }
 
-                    if (i == iDelayEmpireKeys) {
-
+                    if (i == iDelayEmpireKeys)
+                    {
                         if (!strYes.IsBlank()) {
                             AddMessage ("Your message was sent to ");
                             AppendMessage (strYes);
@@ -377,22 +358,23 @@ if (m_bOwnPost && !m_bRedirection) {
                 // Update last used, if necessary
                 if (iDefaultMessageTarget == MESSAGE_TARGET_LAST_USED) {
 
-                    GameCheck(SetLastUsedMessageTarget (
+                    iErrCode = SetLastUsedMessageTarget (
                         m_iGameClass,
                         m_iGameNumber,
                         m_iEmpireKey,
                         iLastMessageTargetMask,
                         iNumLastUsed == 0 ? NULL : piLastMessageTargetKeyArray,
                         iNumLastUsed
-                        ));
+                        );
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
         }
     }
 
     // The gameengine accepts changes to diplomatic status only if they are legal at submission time
-    if (bGameStarted) {
-
+    if (bGameStarted)
+    {
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumKnownEmpires")) == NULL) {
             goto Redirection;
         }
@@ -422,9 +404,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 iOldValue = bIgnore ? 1:0;
 
-                if (iOldValue != iNewValue) {
-
-                    // Best effort
+                if (iOldValue != iNewValue)
+                {
                     iErrCode = SetEmpireIgnoreMessages (
                         m_iGameClass,
                         m_iGameNumber,
@@ -432,6 +413,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         iFoeKey,
                         iNewValue != 0
                         );
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
@@ -452,7 +434,8 @@ if (m_bOwnPost && !m_bRedirection) {
             // Only update if we changed the selected option
             if (iSelectedDip != iDipOffer)
             {
-                GameCheck(UpdateDiplomaticOffer(m_iGameClass, m_iGameNumber, m_iEmpireKey, iFoeKey, iDipOffer));
+                iErrCode = UpdateDiplomaticOffer(m_iGameClass, m_iGameNumber, m_iEmpireKey, iFoeKey, iDipOffer);
+                RETURN_ON_ERROR(iErrCode);
             }
         }
     }
@@ -463,224 +446,154 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
-
-if (m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+if (m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString (NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 %><p><%
 
 UTCTime tLastLogin, tCurrentTime;
-int iGameOptions, iNumUpdatesIdle, iEcon, iMil, iWins, iNukes, iNuked, iDraws, iMaxEcon, 
-    iMaxMil, iNumTruces, iNumTrades, iNumAlliances;
+int iGameOptions, iNumUpdatesIdle, iEcon, iMil, iWins, iNukes, iNuked, iDraws, iMaxEcon, iMaxMil, iNumTruces, iNumTrades, iNumAlliances;
 float fMil;
 Variant vIPAddress;
 
-Time::GetTime (&tCurrentTime);
+Time::GetTime(&tCurrentTime);
 
 Variant** ppvEmpireData = NULL;
-unsigned int* piProxyEmpireKey = NULL;
+AutoFreeData free_ppvEmpireData(ppvEmpireData);
 
-bool bSubjective = false;
+unsigned int* piProxyEmpireKey = NULL, iActiveEmpires;
+AutoFreeKeys free_piProxyEmpireKey(piProxyEmpireKey);
+
+bool bSubjective = false, bPrivateMessages;
 
 int piDipKey [NUM_DIP_LEVELS], iSelected = 0, iNumOptions = 0, iSelectedIndex, iWeOffer, 
     iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey,
     iRuins, iSec, iMin, iHour, iDay, iMonth, iYear, * piStatus = NULL, * piIndex = NULL, iIndex;
-unsigned int iActiveEmpires;
 
 DayOfWeek day;
 UTCTime tCreated;
 
 char pszCreated [OS::MaxDateLength];
 
-bool bPrivateMessages;
-
 Variant vKnownEmpireName, vTemp;
 
-GET_GAME_EMPIRE_DIPLOMACY (strGameEmpireDiplomacy, m_iGameClass, m_iGameNumber, m_iEmpireKey);
+GET_GAME_EMPIRE_DIPLOMACY(strGameEmpireDiplomacy, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
 const char* pszTableColor = m_vTableColor.GetCharPtr();
 const char* pszGood = m_vGoodColor.GetCharPtr();
 const char* pszBad = m_vBadColor.GetCharPtr();
 
-char pszProfile [MAX_EMPIRE_NAME_LENGTH + 128];
+char pszProfile[MAX_EMPIRE_NAME_LENGTH + 128];
 
 ICachedTable* pGameEmpireTable = NULL, * pSystemEmpireDataTable = NULL;
+AutoRelease<ICachedTable> release_pGameEmpireTable(pGameEmpireTable);
+AutoRelease<ICachedTable> release_pSystemEmpireDataTable(pSystemEmpireDataTable);
 
-GET_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
+GET_GAME_EMPIRE_DATA(pszEmpireData, m_iGameClass, m_iGameNumber, m_iEmpireKey);
 
-iErrCode = t_pCache->GetTable(
-    pszEmpireData, 
-    &pGameEmpireTable
-    );
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireTable);
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::LastLogin, &tLastLogin);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Options, &iGameOptions);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Econ, &iEcon);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTruces, &iNumTruces);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTrades, &iNumTrades);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumAlliances, &iNumAlliances);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
-
-SafeRelease (pGameEmpireTable);
+RETURN_ON_ERROR(iErrCode);
 
 GET_SYSTEM_EMPIRE_DATA(strEmpire, m_iEmpireKey);
 iErrCode = t_pCache->GetTable(strEmpire, &pSystemEmpireDataTable);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Wins, &iWins);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Nukes, &iNukes);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Nuked, &iNuked);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Draws, &iDraws);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::Ruins, &iRuins);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::CreationTime, &tCreated);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = pSystemEmpireDataTable->ReadData(m_iEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 sprintf(pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
 
-
 iMil = GetMilitaryValue (fMil);
 
-if (bGameStarted) {
-
+if (bGameStarted)
+{
     bool bVisible;
     int iMaxNumTruces, iMaxNumTrades, iMaxNumAlliances, m_iGameClassOptions, m_iGameClassDip;
 
     iErrCode = GetGameClassVisibleDiplomacy(m_iGameClass, &bVisible);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = DoesGameClassHaveSubjectiveViews (m_iGameClass, &bSubjective);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRUCE, &iMaxNumTruces);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, TRADE, &iMaxNumTrades);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, ALLIANCE, &iMaxNumAlliances);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetGameClassOptions (m_iGameClass, &m_iGameClassOptions);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetGameClassDiplomacyLevel (m_iGameClass, &m_iGameClassDip);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><table width="80%"><tr><%
 
@@ -852,7 +765,7 @@ WriteProfileAlienString (
 
 %><td align="center"><%
 
-WriteTime (Time::GetSecondDifference (tCurrentTime, tLastLogin));
+WriteTime(Time::GetSecondDifference (tCurrentTime, tLastLogin));
 
 %> ago<%
 
@@ -910,11 +823,11 @@ iErrCode = t_pCache->ReadColumns (
     &ppvEmpireData,
     (unsigned int*) &iNumKnownEmpires
     );
-
-if (iErrCode != OK && iErrCode != ERROR_DATA_NOT_FOUND) {
-    Assert(false);
-    goto Cleanup;
+if (iErrCode == ERROR_DATA_NOT_FOUND)
+{
+    iErrCode = OK;
 }
+RETURN_ON_ERROR(iErrCode);
 
 %><input type="hidden" name="NumKnownEmpires" value="<% Write (iNumKnownEmpires); %>"><%
 
@@ -928,8 +841,8 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
 }
 Algorithm::QSortTwoDescending<int, int> (piStatus, piIndex, iNumKnownEmpires);
 
-for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
-
+for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
+{
     i = piIndex [iIndex];
 
     // Get diplomacy data
@@ -948,10 +861,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         NULL
         );
 
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (bGameStarted) {
 
@@ -965,43 +875,27 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
             &iNumOptions
             );
 
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     COPY_GAME_EMPIRE_DATA (pszEmpireData, m_iGameClass, m_iGameNumber, iKnownEmpireKey)
 
     // Get empire data
+    SafeRelease(pGameEmpireTable);
     iErrCode = t_pCache->GetTable(pszEmpireData, &pGameEmpireTable);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pGameEmpireTable->ReadData(GameEmpireData::LastLogin, &tLastLogin);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Options, &iGameOptions);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumUpdatesIdle, &iNumUpdatesIdle);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (bSubjective) {
-
-        SafeRelease (pGameEmpireTable);
-
+    if (bSubjective)
+    {
         iErrCode = t_pCache->ReadData(
             strGameEmpireDiplomacy,
             piProxyEmpireKey[i],
@@ -1009,10 +903,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
             &vTemp
             );
 
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
         iEcon = vTemp.GetInteger();
 
         iErrCode = t_pCache->ReadData(
@@ -1021,25 +912,16 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
             GameEmpireDiplomacy::SubjectiveMil,
             &vTemp
             );
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
         iMil = vTemp.GetInteger();
 
     } else {
 
         iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Econ, &iEcon);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         SafeRelease (pGameEmpireTable);
 
@@ -1047,79 +929,43 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
     }
 
     GET_SYSTEM_EMPIRE_DATA(strKnownEmpire, iKnownEmpireKey);
+
+    SafeRelease(pSystemEmpireDataTable);
     iErrCode = t_pCache->GetTable(strKnownEmpire, &pSystemEmpireDataTable);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Name, &vKnownEmpireName);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::AlienKey, &iAlienKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Wins, &iWins);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Nukes, &iNukes);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Nuked, &iNuked);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Draws, &iDraws);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Ruins, &iRuins);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::MaxEcon, &iMaxEcon);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::MaxMil, &iMaxMil);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::CreationTime, &tCreated);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::IPAddress, &vIPAddress);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
-
-    SafeRelease (pSystemEmpireDataTable);
+    RETURN_ON_ERROR(iErrCode);
 
     Time::GetDate (tCreated, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
     sprintf(pszCreated, "%s %i %i", Time::GetAbbreviatedMonthName (iMonth), iDay, iYear);
@@ -1273,10 +1119,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
         iKnownEmpireKey, 
         &bIgnore
         );
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (bIgnore) {
         %><option value="0">Hear</option><%
@@ -1290,7 +1133,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 
     %><td align="center"><%
 
-    WriteTime (Time::GetSecondDifference (tCurrentTime, tLastLogin));
+    WriteTime(Time::GetSecondDifference(tCurrentTime, tLastLogin));
 
     %> ago <%
 
@@ -1362,17 +1205,11 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++) {
 // Messages
 //
 
-iErrCode = DoesGameClassAllowPrivateMessages (m_iGameClass, &bPrivateMessages);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+iErrCode = DoesGameClassAllowPrivateMessages(m_iGameClass, &bPrivateMessages);
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = GetNumEmpiresInGame(m_iGameClass, m_iGameNumber, &iActiveEmpires);
-if (iErrCode != OK) {
-    Assert(false);
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 if (iNumKnownEmpires > 0 || iActiveEmpires > 1) {
     %><tr><td colspan="11">&nbsp;</td></tr><%
@@ -1402,36 +1239,31 @@ if (iActiveEmpires > 1) {
                 &iTrade,
                 &iAlliance
                 );
+            RETURN_ON_ERROR(iErrCode);
 
-            if (iErrCode != OK) {
-                Assert(false);
-                iWar = iTruce = iTrade = iAlliance = iDipTargets = 0;
-            } else {
-
-                if (iWar > 0) {
-                    iExtra ++;
-                }
-
-                if (iTruce > 0) {
-                    iExtra ++;
-                }
-
-                if (iTrade > 0) {
-                    iExtra ++;
-                }
-
-                if (iAlliance > 0) {
-                    iExtra ++;
-                }
-
-                iDipTargets = iWar + iTruce + iTrade + iAlliance;
+            if (iWar > 0) {
+                iExtra ++;
             }
+
+            if (iTruce > 0) {
+                iExtra ++;
+            }
+
+            if (iTrade > 0) {
+                iExtra ++;
+            }
+
+            if (iAlliance > 0) {
+                iExtra ++;
+            }
+
+            iDipTargets = iWar + iTruce + iTrade + iAlliance;
         }
 
         // Array of bits for selected
         size_t stAlloc = (NUM_MESSAGE_TARGETS + iNumKnownEmpires) * sizeof (bool);
-        bool* pbSelected = (bool*) StackAlloc (stAlloc);
-        memset (pbSelected, 0, stAlloc);
+        bool* pbSelected = (bool*)StackAlloc(stAlloc);
+        memset(pbSelected, 0, stAlloc);
 
         switch (iDefaultMessageTarget) {
 
@@ -1443,12 +1275,12 @@ if (iActiveEmpires > 1) {
             break;
 
         case MESSAGE_TARGET_LAST_USED:
-
             {
 
             // Handle last used
             int iLastUsedMask;
             unsigned int* piLastUsedProxyKeyArray = NULL, iNumLastUsed;
+            AutoFreeKeys free_piLastUsedProxyKeyArray(piLastUsedProxyKeyArray);
 
             iErrCode = GetLastUsedMessageTarget (
                 m_iGameClass,
@@ -1458,60 +1290,53 @@ if (iActiveEmpires > 1) {
                 &piLastUsedProxyKeyArray,
                 &iNumLastUsed
                 );
+            RETURN_ON_ERROR(iErrCode);
 
-            // Best effort
-            Assert(iErrCode == OK);
+            // Process mask
+            if ((iLastUsedMask & (~MESSAGE_TARGET_INDIVIDUALS)) == 0) {
 
-            if (iErrCode == OK) {
+                // Default to broadcast if no last target
+                if (iNumLastUsed == 0) {
+                    pbSelected[MESSAGE_TARGET_BROADCAST] = true;
+                }
 
-                // Process mask
-                if ((iLastUsedMask & (~MESSAGE_TARGET_INDIVIDUALS)) == 0) {
+            } else {
 
-                    // Default to broadcast if no last target
-                    if (iNumLastUsed == 0) {
-                        pbSelected[MESSAGE_TARGET_BROADCAST] = true;
-                    }
+                if (iLastUsedMask & MESSAGE_TARGET_BROADCAST_MASK) {
+                    pbSelected[MESSAGE_TARGET_BROADCAST] = true;
+                }
 
-                } else {
+                if (iLastUsedMask & MESSAGE_TARGET_WAR_MASK) {
+                    pbSelected[MESSAGE_TARGET_WAR] = true;
+                }
 
-                    if (iLastUsedMask & MESSAGE_TARGET_BROADCAST_MASK) {
-                        pbSelected[MESSAGE_TARGET_BROADCAST] = true;
-                    }
+                if (iLastUsedMask & MESSAGE_TARGET_TRUCE_MASK) {
+                    pbSelected[MESSAGE_TARGET_TRUCE] = true;
+                }
 
-                    if (iLastUsedMask & MESSAGE_TARGET_WAR_MASK) {
-                        pbSelected[MESSAGE_TARGET_WAR] = true;
-                    }
+                if (iLastUsedMask & MESSAGE_TARGET_TRADE_MASK) {
+                    pbSelected[MESSAGE_TARGET_TRADE] = true;
+                }
 
-                    if (iLastUsedMask & MESSAGE_TARGET_TRUCE_MASK) {
-                        pbSelected[MESSAGE_TARGET_TRUCE] = true;
-                    }
+                if (iLastUsedMask & MESSAGE_TARGET_ALLIANCE_MASK) {
+                    pbSelected[MESSAGE_TARGET_ALLIANCE] = true;
+                }
+            }
 
-                    if (iLastUsedMask & MESSAGE_TARGET_TRADE_MASK) {
-                        pbSelected[MESSAGE_TARGET_TRADE] = true;
-                    }
+            // Process array
+            for (i = 0; i < (int)iNumLastUsed; i ++) {
 
-                    if (iLastUsedMask & MESSAGE_TARGET_ALLIANCE_MASK) {
-                        pbSelected[MESSAGE_TARGET_ALLIANCE] = true;
+                // Find order of empire
+                for (j = 0; j < iNumKnownEmpires; j ++) {
+
+                    if (piLastUsedProxyKeyArray[i] == (int) piProxyEmpireKey[j]) {
+                        break;
                     }
                 }
 
-                // Process array
-                for (i = 0; i < (int)iNumLastUsed; i ++) {
-
-                    // Find order of empire
-                    for (j = 0; j < iNumKnownEmpires; j ++) {
-
-                        if (piLastUsedProxyKeyArray[i] == (int) piProxyEmpireKey[j]) {
-                            break;
-                        }
-                    }
-
-                    if (j < iNumKnownEmpires) {
-                        pbSelected[NUM_MESSAGE_TARGETS + j] = true;
-                    }
+                if (j < iNumKnownEmpires) {
+                    pbSelected[NUM_MESSAGE_TARGETS + j] = true;
                 }
-
-                t_pCache->FreeKeys (piLastUsedProxyKeyArray);
             }
 
             }
@@ -1604,18 +1429,12 @@ if (iActiveEmpires > 1) {
                     m_iEmpireKey,
                     &bIgnore
                     );
-                if (iErrCode != OK) {
-                    Assert(false);
-                    goto Cleanup;
-                }
+                RETURN_ON_ERROR(iErrCode);
 
-                if (!bIgnore) {
-
+                if (!bIgnore)
+                {
                     iErrCode = GetEmpireName (iKnownEmpireKey, &vSendEmpireName);
-                    if (iErrCode != OK) {
-                        Assert(false);
-                        goto Cleanup;
-                    }
+                    RETURN_ON_ERROR(iErrCode);
 
                     %><option<%
                     if (pbSelected[NUM_MESSAGE_TARGETS + i] || (iNumKnownEmpires == 1 && !bBroadcast && bNoDipTargets)) {
@@ -1632,26 +1451,6 @@ if (iActiveEmpires > 1) {
 
         %></table><%
     }
-}
-
-Cleanup:
-
-if (piProxyEmpireKey != NULL) {
-    t_pCache->FreeKeys (piProxyEmpireKey);
-}
-
-if (ppvEmpireData != NULL) {
-    t_pCache->FreeData (ppvEmpireData);
-}
-
-if (pGameEmpireTable != NULL) {
-    pGameEmpireTable->Release();
-}
-
-SafeRelease(pSystemEmpireDataTable);
-
-if (iErrCode != OK) {
-    %><p>Error <% Write (iErrCode); %> occurred processing the Diplomacy page<%
 }
 
 iErrCode = CloseGamePage();

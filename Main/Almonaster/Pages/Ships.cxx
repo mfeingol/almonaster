@@ -105,7 +105,7 @@ if (!bMapGenerated) {
     }
 
     // Render ships
-    RenderShips (
+    iErrCode = RenderShips (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -117,11 +117,14 @@ if (!bMapGenerated) {
         NULL,
         NULL
         );
+    RETURN_ON_ERROR(iErrCode);
 
     int iNumBuilds;
-    GameCheck (GetNumBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumBuilds));
+    iErrCode = GetNumBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumBuilds);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iNumBuilds > 0) {
+    if (iNumBuilds > 0)
+    {
         %><p><%
         WriteButton (BID_CANCELALLBUILDS);
     }

@@ -29,28 +29,6 @@
 //
 // Return the keys of the fleets belonging a given empire
 
-class AutoFreeFleetOrders
-{
-private:
-    FleetOrder*& m_pfoOrders;
-    unsigned int& m_iMaxNumOrders;
-
-public:
-    AutoFreeFleetOrders(FleetOrder*& pfoOrders, unsigned int& iMaxNumOrders) : m_pfoOrders(pfoOrders), m_iMaxNumOrders(iMaxNumOrders)
-    {
-    }
-
-    ~AutoFreeFleetOrders()
-    {
-        if (m_pfoOrders)
-        {
-            GameEngine engine;
-            engine.FreeFleetOrders(m_pfoOrders, m_iMaxNumOrders);
-        }
-    }
-};
-
-
 int GameEngine::GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiFleetKeys, 
                                     int* piNumFleets) {
 

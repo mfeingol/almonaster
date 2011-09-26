@@ -29,13 +29,16 @@ void HtmlRenderer::WriteFaq() {
     char pszFileName[OS::MaxFileNameLength];
     sprintf(pszFileName, "%s/" FAQ_FILE, global.GetResourceDir());
     
-    ICachedFile* pcfFaq = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfFaq == NULL) {
-        OutputText ("<p><strong>The documentation file could not be found; please alert your system administrator</strong>");
-    } else {
+    ICachedFile* pcfFaq = global.GetFileCache()->GetFile(pszFileName);
+    AutoRelease<ICachedFile> release_pcfFaq(pcfFaq);
+    if (pcfFaq == NULL)
+    {
+        OutputText ("<p><strong>The documentation file could not be found; please alert the administrator</strong>");
+    }
+    else
+    {
         OutputText ("<p></center>");
-        m_pHttpResponse->WriteTextFile (pcfFaq);
-        pcfFaq->Release();
+        m_pHttpResponse->WriteTextFile(pcfFaq);
         OutputText ("<center>");
     }
 }
@@ -62,7 +65,7 @@ void HtmlRenderer::WriteServerNews() {
     m_pHttpResponse->WriteText (iYear);
     OutputText ("</th></tr></table><p>");
     
-    WriteServerNewsFile (false);
+    WriteServerNewsFile(false);
 }
 
 void HtmlRenderer::WriteContributions() {
@@ -71,16 +74,20 @@ void HtmlRenderer::WriteContributions() {
     sprintf(pszFileName, "%s/" CONTRIBUTIONS_FILE, global.GetResourceDir());
 
     ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfFile == NULL) {
-        OutputText ("<p><strong>The contributions file could not be found; please alert your system administrator</strong>");
-    } else {
+    AutoRelease<ICachedFile> release_pcfFile(pcfFile);
+
+    if (pcfFile == NULL)
+    {
+        OutputText ("<p><strong>The contributions file could not be found; please alert the administrator</strong>");
+    }
+    else
+    {
         m_pHttpResponse->WriteTextFile (pcfFile);
-        pcfFile->Release();
     }
 
     OutputText ("<p>");
 
-    WriteContributorsFile (false);
+    WriteContributorsFile(false);
 }
 
 void HtmlRenderer::WriteCredits() {
@@ -89,11 +96,15 @@ void HtmlRenderer::WriteCredits() {
     sprintf(pszFileName, "%s/" CREDITS_FILE, global.GetResourceDir());
 
     ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfFile == NULL) {
-        OutputText ("<p><strong>The credits file could not be found; please alert your system administrator</strong>");
-    } else {
+    AutoRelease<ICachedFile> release_pcfFile(pcfFile);
+
+    if (pcfFile == NULL)
+    {
+        OutputText ("<p><strong>The credits file could not be found; please alert the administrator</strong>");
+    }
+    else
+    {
         m_pHttpResponse->WriteTextFile (pcfFile);
-        pcfFile->Release();
     }
 }
 
@@ -103,11 +114,15 @@ void HtmlRenderer::WriteIntro() {
     sprintf(pszFileName, "%s/" INTRO_FILE, global.GetResourceDir());
     
     ICachedFile* pcfFile = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfFile == NULL) {
-        OutputText ("<p><strong>The intro file could not be found; please alert your system administrator</strong>");
-    } else {
+    AutoRelease<ICachedFile> release_pcfFile(pcfFile);
+
+    if (pcfFile == NULL)
+    {
+        OutputText ("<p><strong>The intro file could not be found; please alert the administrator</strong>");
+    }
+    else
+    {
         m_pHttpResponse->WriteTextFile (pcfFile);
-        pcfFile->Release();
     }
 }
 
@@ -131,9 +146,8 @@ void HtmlRenderer::WriteContributorsFile (bool bTextArea) {
     WriteTextFile (bTextArea, CONTRIBUTORS_FILE, "ContributorsText", "ContributorsHash");
 }
 
-int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile, 
-                                 const char* pszFileForm, const char* pszFileHashForm) {
-
+int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile, const char* pszFileForm, const char* pszFileHashForm)
+{
     int iErrCode = OK;
 
     char pszFileName[OS::MaxFileNameLength];
@@ -143,40 +157,40 @@ int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile,
 
     size_t cbFileSize = 0;
     ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfCachedFile != NULL) {
+    AutoRelease<ICachedFile> release_pcfCachedFile(pcfCachedFile);
 
+    if (pcfCachedFile != NULL)
+    {
         cbFileSize = pcfCachedFile->GetSize();
-        if (cbFileSize > 0) {
-
+        if (cbFileSize > 0)
+        {
             Crypto::HashMD5 hash;
 
             iErrCode = hash.HashData (pcfCachedFile->GetData(), cbFileSize);
-            if (iErrCode == OK) {
+            RETURN_ON_ERROR(iErrCode);
 
-                size_t cbHashLen;
-                iErrCode = hash.GetHashSize (&cbHashLen);
-                if (iErrCode == OK) {
+            size_t cbHashLen;
+            iErrCode = hash.GetHashSize (&cbHashLen);
+            RETURN_ON_ERROR(iErrCode);
 
-                    char* pbHashData = (char*) StackAlloc (cbHashLen);
-                    iErrCode = hash.GetHash (pbHashData, cbHashLen);
-                    if (iErrCode == OK) {
+            char* pbHashData = (char*) StackAlloc (cbHashLen);
+            iErrCode = hash.GetHash (pbHashData, cbHashLen);
+            RETURN_ON_ERROR(iErrCode);
 
-                        char pszBase64 [32];
-                        iErrCode = Algorithm::EncodeBase64 (pbHashData, cbHashLen, pszBase64, countof (pszBase64));
-                        if (iErrCode == OK) {
-                            OutputText ("<input type=\"hidden\" name=\"");
-                            m_pHttpResponse->WriteText (pszFileHashForm);
-                            OutputText ("\" value=\"");
-                            m_pHttpResponse->WriteText (pszBase64);
-                            OutputText ("\">");
-                        }
-                    }
-                }
-            }
+            char pszBase64 [32];
+            iErrCode = Algorithm::EncodeBase64 (pbHashData, cbHashLen, pszBase64, countof (pszBase64));
+            RETURN_ON_ERROR(iErrCode);
+
+            OutputText ("<input type=\"hidden\" name=\"");
+            m_pHttpResponse->WriteText (pszFileHashForm);
+            OutputText ("\" value=\"");
+            m_pHttpResponse->WriteText (pszBase64);
+            OutputText ("\">");
         }
     }
 
-    if (bTextArea) {
+    if (bTextArea)
+    {
         OutputText ("<textarea name=\"");
         m_pHttpResponse->WriteText (pszFileForm);
         OutputText ("\" rows=\"20\" cols=\"60\" wrap=\"virtual\">");
@@ -185,8 +199,6 @@ int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile,
     if (cbFileSize > 0) {
         m_pHttpResponse->WriteTextFile (pcfCachedFile);
     }
-
-    SafeRelease (pcfCachedFile);
 
     if (bTextArea) {
         OutputText ("</textarea>");
@@ -210,16 +222,25 @@ int HtmlRenderer::TryUpdateIntroLower() {
 int HtmlRenderer::TryUpdateServerNews() {
 
     int iErrCode = TryUpdateFile (NEWS_FILE, "ServerNewsText", "ServerNewsHash");
-    if (iErrCode == OK) {
-        Time::GetTime (&m_stServerNewsLastUpdate);
+    if (iErrCode == WARNING)
+    {
+        return iErrCode;
     }
+    RETURN_ON_ERROR(iErrCode);
 
+    Time::GetTime (&m_stServerNewsLastUpdate);
     return iErrCode;
 }
 
-int HtmlRenderer::TryUpdateContributors() {
-    
-    return TryUpdateFile (CONTRIBUTORS_FILE, "ContributorsText", "ContributorsHash");
+int HtmlRenderer::TryUpdateContributors()
+{
+    int iErrCode = TryUpdateFile (CONTRIBUTORS_FILE, "ContributorsText", "ContributorsHash");
+    if (iErrCode == WARNING)
+    {
+        return iErrCode;
+    }
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, const char* pszFileHashForm) {
@@ -227,8 +248,9 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
     int iErrCode;
     IHttpForm* pHttpForm;
 
-    pHttpForm = m_pHttpRequest->GetForm (pszFileForm);
-    if (pHttpForm == NULL) {
+    pHttpForm = m_pHttpRequest->GetForm(pszFileForm);
+    if (pHttpForm == NULL)
+    {
         return WARNING;
     }
     const char* pszText = pHttpForm->GetValue();
@@ -237,37 +259,34 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
     if (pHttpForm != NULL && pszText != NULL) {
 
         const char* pszBase64 = pHttpForm->GetValue();
-        if (pszBase64 != NULL) {
-
-            char pbOldHash [32];
+        if (pszBase64 != NULL)
+        {
+            char pbOldHash[32];
             size_t cbDecoded;
-            iErrCode = Algorithm::DecodeBase64 (pszBase64, pbOldHash, sizeof (pbOldHash), &cbDecoded);
-            if (iErrCode == OK) {
+            iErrCode = Algorithm::DecodeBase64(pszBase64, pbOldHash, sizeof(pbOldHash), &cbDecoded);
+            RETURN_ON_ERROR(iErrCode);
 
-                Crypto::HashMD5 hash;
+            Crypto::HashMD5 hash;
 
-                iErrCode = hash.HashData (pszText, strlen (pszText));
-                if (iErrCode == OK) {
+            iErrCode = hash.HashData (pszText, strlen (pszText));
+            RETURN_ON_ERROR(iErrCode);
 
-                    size_t cbHashLen;
-                    iErrCode = hash.GetHashSize (&cbHashLen);
-                    if (iErrCode == OK && cbHashLen == cbDecoded) {
+            size_t cbHashLen;
+            iErrCode = hash.GetHashSize (&cbHashLen);
+            RETURN_ON_ERROR(iErrCode);
 
-                        char* pbNewHash = (char*) StackAlloc (cbHashLen);
-                        iErrCode = hash.GetHash (pbNewHash, cbHashLen);
-                        if (iErrCode == OK) {
+            if (cbHashLen == cbDecoded)
+            {
+                char* pbNewHash = (char*) StackAlloc (cbHashLen);
+                iErrCode = hash.GetHash (pbNewHash, cbHashLen);
+                RETURN_ON_ERROR(iErrCode);
 
-                            if (memcmp (pbOldHash, pbNewHash, cbHashLen) == 0) {
-
-                                // No change
-                                return WARNING;
-                            }
-                        }
-                    }
+                if (memcmp (pbOldHash, pbNewHash, cbHashLen) == 0)
+                {
+                    // No change
+                    return WARNING;
                 }
             }
-
-            else Assert(iErrCode == ERROR_SMALL_BUFFER);
         }
     }
 
@@ -277,7 +296,12 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
 
     ms_mTextFileLock.WaitWriter();
     iErrCode = UpdateCachedFile (pszFileName, pszText);
+    if (iErrCode == WARNING)
+    {
+        return iErrCode;
+    }
     ms_mTextFileLock.SignalWriter();
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
@@ -290,40 +314,36 @@ int HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText
     File fCachedFile;
     
     ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfCachedFile == NULL || (stSize = pcfCachedFile->GetSize()) == 0) {
+    AutoRelease<ICachedFile> release_pcfCachedFile(pcfCachedFile);
 
-        if (pszText == NULL || *pszText == '\0') {
-            iErrCode =  WARNING;
-            goto Cleanup;
+    if (pcfCachedFile == NULL || (stSize = pcfCachedFile->GetSize()) == 0)
+    {
+        if (pszText == NULL || *pszText == '\0')
+        {
+            return WARNING;
         }
+    }
+    else
+    {
+        const char* pszData = (char*)pcfCachedFile->GetData();        
+        size_t stNewSize = String::StrLen(pszText);
 
-    } else {
-
-        const char* pszData = (char*) pcfCachedFile->GetData();        
-        size_t stNewSize = String::StrLen (pszText);
-
-        if (stSize == stNewSize && strncmp (pszText, pszData, stNewSize) == 0) {
-            iErrCode =  WARNING;
-            goto Cleanup;
+        if (stSize == stNewSize && strncmp (pszText, pszData, stNewSize) == 0)
+        {
+            return WARNING;
         }
     }
 
-    if (pcfCachedFile != NULL) {
-        global.GetFileCache()->ReleaseFile (pszFileName);
-        SafeRelease (pcfCachedFile);
+    if (pcfCachedFile)
+    {
+        global.GetFileCache()->ReleaseFile(pszFileName);
     }
 
     iErrCode = fCachedFile.OpenWrite (pszFileName);
-    if (iErrCode != OK) {
-        Assert(false);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     fCachedFile.Write (pszText == NULL ? "" : pszText);
     fCachedFile.Close();
-
-Cleanup:
-
-    SafeRelease (pcfCachedFile);
+    
     return iErrCode;
 }

@@ -396,6 +396,7 @@ public:
 
 extern __declspec(thread) IDatabaseConnection* t_pConn;
 extern __declspec(thread) ICachedTableCollection* t_pCache;
+extern __declspec(thread) Uuid t_uuidReq;
 
 class GameEngine
 {
@@ -1435,7 +1436,7 @@ public:
     int GetUnaffiliatedMobileShipsAtPlanet (unsigned int iGameClass, unsigned int iGameNumber,
         unsigned int iEmpireKey, unsigned int iPlanetKey, unsigned int** ppiShipKey, unsigned int* piNumShips);
 
-    void FreeShipOrders (ShipOrder* psoOrders, unsigned int iNumOrders);
+    static void FreeShipOrders (ShipOrder* psoOrders, unsigned int iNumOrders);
 
     // Fleets
     int GetEmpireFleetKeys (int iGameClass, int iGameNumber, int iEmpireKey, int** ppiFleetKeys, 
@@ -1456,7 +1457,7 @@ public:
         const GameConfiguration& gcConfig, FleetOrder** ppfoOrders, unsigned int* piNumOrders, 
         unsigned int* piSelected);
 
-    void FreeFleetOrders (FleetOrder* pfoOrders, unsigned int iNumOrders);
+    static void FreeFleetOrders (FleetOrder* pfoOrders, unsigned int iNumOrders);
 
     int UpdateFleetName (int iGameClass, int iGameNumber, int iEmpireKey, int iFleetKey, 
         const char* pszNewName);
@@ -1589,4 +1590,44 @@ public:
         PlanetData* pNewPlanetData,
         unsigned int iNumNewPlanets
         ) = 0;
+};
+
+class AutoFreeFleetOrders
+{
+private:
+    FleetOrder*& m_pfoOrders;
+    unsigned int& m_iMaxNumOrders;
+
+public:
+    AutoFreeFleetOrders(FleetOrder*& pfoOrders, unsigned int& iMaxNumOrders) : m_pfoOrders(pfoOrders), m_iMaxNumOrders(iMaxNumOrders)
+    {
+    }
+
+    ~AutoFreeFleetOrders()
+    {
+        if (m_pfoOrders)
+        {
+            GameEngine::FreeFleetOrders(m_pfoOrders, m_iMaxNumOrders);
+        }
+    }
+};
+
+class AutoFreeShipOrders
+{
+private:
+    ShipOrder*& m_pfoOrders;
+    unsigned int& m_iMaxNumOrders;
+
+public:
+    AutoFreeShipOrders(ShipOrder*& pfoOrders, unsigned int& iMaxNumOrders) : m_pfoOrders(pfoOrders), m_iMaxNumOrders(iMaxNumOrders)
+    {
+    }
+
+    ~AutoFreeShipOrders()
+    {
+        if (m_pfoOrders)
+        {
+            GameEngine::FreeShipOrders(m_pfoOrders, m_iMaxNumOrders);
+        }
+    }
 };

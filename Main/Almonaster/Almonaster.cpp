@@ -153,7 +153,6 @@ int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
     return iErrCode;
 }
 
-
 int Almonaster::OnFinalize() {
     
     IReport* pReport = global.GetReport();
@@ -169,7 +168,7 @@ int Almonaster::OnFinalize() {
     return OK;
 }
 
-int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+int Almonaster::OnAccessDenied(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 {
     HttpStatusReason rReason = pHttpResponse->GetStatusCodeReason();
 
@@ -217,15 +216,44 @@ int Almonaster::OnAccessDenied (IHttpRequest* pHttpRequest, IHttpResponse* pHttp
     return OK;
 }
 
-int Almonaster::OnError (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
+int Almonaster::OnInternalServerError(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+{
+    pHttpResponse->WriteText(
+        "<html>"\
+        "<head><title>Error 500</title></head>"\
+        "<body>"\
+        "<h2>Error 500: Internal Server Error.</h2>"\
+        "<p>General server error encountered while processing request ");
 
-    // We're only interested in 403 - forbidden errors
-    // These indicate another site leeching bandwidth from us
-    if (pHttpResponse->GetStatusCode() == HTTP_403) {
-        return OnAccessDenied (pHttpRequest, pHttpResponse);
-    }
+    Uuid uuidReqId;
+    global.GetRequestId(&uuidReqId);
+
+    char pszUuidReqId[OS::MaxUuidLength];
+    int err = OS::StringFromUuid(uuidReqId, pszUuidReqId);
+    Assert(err == OK);
+    
+    pHttpResponse->WriteText(pszUuidReqId);
+
+    pHttpResponse->WriteText(
+        "<p>Please contact the administrator"\
+        "</body>"\
+        "</html>");
 
     return OK;
+}
+
+int Almonaster::OnError(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
+{
+    switch (pHttpResponse->GetStatusCode())
+    {
+    // 403 forbidden errors indicate another site leeching image bandwidth from us
+    case HTTP_403:
+        return OnAccessDenied(pHttpRequest, pHttpResponse);
+    case HTTP_500:
+        return OnAccessDenied(pHttpRequest, pHttpResponse);
+    default:
+        return OK;
+    }
 }
 
 const char* Almonaster::GetAuthenticationRealm (IHttpRequest* pHttpRequest)

@@ -715,11 +715,21 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                     bAdvanced = true;
                 }
 
-                iErrCode = StartTournamentGame (m_iTournamentKey, iTeamOptions, bAdvanced);
-                if (iErrCode == OK || iErrCode == ERROR_GAMECLASS_IS_NOT_IN_TOURNAMENT) {
+                iErrCode = StartTournamentGame(m_iTournamentKey, iTeamOptions, bAdvanced);
+                switch (iErrCode)
+                {
+                case OK:
                     iTAdminPage = 2;
-                } else {
+                    break;
+                case ERROR_TOO_MANY_EMPIRES:
+                case ERROR_NOT_ENOUGH_EMPIRES:
+                case ERROR_ALLIANCE_LIMIT_EXCEEDED:
+                case ERROR_COULD_NOT_START_GAME:
                     iTAdminPage = 7;
+                    break;
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
                 goto Redirection;
             }
@@ -743,9 +753,16 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             if (WasButtonPressed (BID_CREATETEAM)) {
 
                 m_bRedirectTest = false;
-                if (ProcessCreateTournamentTeam (m_iTournamentKey) != OK) {
+                bool bCreated;
+                iErrCode = ProcessCreateTournamentTeam(m_iTournamentKey, &bCreated);
+                RETURN_ON_ERROR(iErrCode);
+
+                if (!bCreated)
+                {
                     iTAdminPage = 8;
-                } else {
+                }
+                else
+                {
                     // Back to administer page
                     iTAdminPage = 2;
                 }
@@ -1792,7 +1809,8 @@ case 9:
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
         %><input type="hidden" name="TeamKey" value="<% Write (iTeamKey); %>"><%
 
-        WriteAdministerTournamentTeam (m_iTournamentKey, iTeamKey);
+        iErrCode = WriteAdministerTournamentTeam (m_iTournamentKey, iTeamKey);
+        RETURN_ON_ERROR(iErrCode);
 
         break;
 

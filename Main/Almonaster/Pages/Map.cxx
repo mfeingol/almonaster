@@ -691,7 +691,7 @@ case 1:
             GameCheck (GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
 
             // Render ships
-            RenderShips (
+            iErrCode = RenderShips (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -703,6 +703,7 @@ case 1:
                 &iNumShipsRendered,
                 &iNumFleetsRendered
                 );
+            RETURN_ON_ERROR(iErrCode);
 
             %><input type="hidden" name="NumShips" value="<% Write (simShipsInMap.iCurrentShip); %>"><%
             %><input type="hidden" name="NumFleets" value="<% Write (simShipsInMap.iCurrentFleet); %>"><%

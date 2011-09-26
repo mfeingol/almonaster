@@ -35,7 +35,8 @@ struct ChatroomConfig {
     bool bPostSystemMessages;
 };
 
-struct ChatroomMessage {
+struct ChatroomMessage
+{
     String strMessageText;
     String strSpeaker;
     UTCTime tTime;
@@ -43,7 +44,8 @@ struct ChatroomMessage {
     unsigned int iKey;
 };
 
-struct ChatroomSpeaker {
+struct ChatroomSpeaker
+{
     String strName;
     UTCTime tTime;
 };
@@ -88,10 +90,10 @@ public:
     int Initialize(const ChatroomConfig& ccConf);
 
     int GetSpeakers(ChatroomSpeaker** ppcsSpeakers, unsigned int* piNumSpeakers);
-    void FreeSpeakers(ChatroomSpeaker* pcsSpeakers);
+    static void FreeSpeakers(ChatroomSpeaker* pcsSpeakers);
 
     int GetMessages(ChatroomMessage** ppcmMessages, unsigned int* piNumMessages);
-    void FreeMessages(ChatroomMessage* pcmMessages);
+    static void FreeMessages(ChatroomMessage* pcmMessages);
 
     int PostMessage(const char* pszSpeakerName, const char* pszMessage, int iFlags);
 
@@ -105,5 +107,44 @@ public:
     
     Seconds GetTimeOut();
 };
+
+class AutoFreeChatroomMessages
+{
+private:
+    ChatroomMessage*& m_pArray;
+
+public:
+    AutoFreeChatroomMessages(ChatroomMessage*& pArray) : m_pArray(pArray)
+    {
+    }
+
+    ~AutoFreeChatroomMessages()
+    {
+        if (m_pArray)
+        {
+            Chatroom::FreeMessages(m_pArray);
+        }
+    }
+};
+
+class AutoFreeChatroomSpeakers
+{
+private:
+    ChatroomSpeaker*& m_pArray;
+
+public:
+    AutoFreeChatroomSpeakers(ChatroomSpeaker*& pArray) : m_pArray(pArray)
+    {
+    }
+
+    ~AutoFreeChatroomSpeakers()
+    {
+        if (m_pArray)
+        {
+            Chatroom::FreeSpeakers(m_pArray);
+        }
+    }
+};
+
 
 #endif // !defined(AFX_CHATROOM_H__C33C0206_602F_11D1_9D22_0060083E8062__INCLUDED_)

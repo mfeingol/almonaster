@@ -33,6 +33,7 @@
 // Yes, not Linux-friendly. Sorry.
 __declspec(thread) IDatabaseConnection* t_pConn = NULL;
 __declspec(thread) ICachedTableCollection* t_pCache = NULL;
+__declspec(thread) Uuid t_uuidReq;
 
 Global global;
 
@@ -89,6 +90,31 @@ void Global::TlsCloseConnection()
 {
     t_pCache = NULL; // No reference held
     SafeRelease(t_pConn);
+}
+
+void Global::InitRequestId()
+{
+    int iErrCode = OS::CreateUuid(&t_uuidReq);
+    Assert(iErrCode == OK);
+}
+
+void Global::GetRequestId(Uuid* puuidReqId)
+{
+    *puuidReqId = t_uuidReq;
+}
+
+void TraceError(int iErrCode, const char* pszFile, int iLine)
+{
+    Uuid uuidReqId;
+    global.GetRequestId(&uuidReqId);
+
+    char pszUuidReqId[OS::MaxUuidLength];
+    int err = OS::StringFromUuid(uuidReqId, pszUuidReqId);
+    Assert(err == OK);
+
+    char pszError[512];
+    sprintf(pszError, "Request %s - Error %i occurred in %s line %i", pszUuidReqId, iErrCode, pszFile, iLine);
+    global.GetReport()->WriteReport(pszError);
 }
 
 int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl)

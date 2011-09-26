@@ -72,15 +72,13 @@ if (m_bOwnPost && !m_bRedirection) {
                     (pszString = pHttpForm->GetValue()) != NULL &&
                     *pszString != '\0') {
 
-                    iErrCode = SendMessageToAll (m_iEmpireKey, pszString);
+                    iErrCode = SendMessageToAll(m_iEmpireKey, pszString);
+                    RETURN_ON_ERROR(iErrCode);
 
-                    if (iErrCode == OK) {
-                        AddMessage ("Your message was broadcast to all empires");
-                    } else {
-                        AddMessage ("Your message could not be broadcast to all empires");
-                    }
-
-                } else {
+                    AddMessage ("Your message was broadcast to all empires");
+                }
+                else
+                {
                     AddMessage ("Your message was blank");
                 }
 
@@ -123,29 +121,18 @@ SearchResults:
                         // Fall through if 0 empires
 
                     case ERROR_DATA_NOT_FOUND:
-
                         AddMessage ("No empires matched your search criteria");
                         break;
 
-                    case ERROR_INVALID_ARGUMENT:
-
-                        // A form was missing
-                        goto Redirection;
-
                     case ERROR_INVALID_QUERY:
-
                         AddMessage ("You submitted an invalid query");
                         goto Redirection;
 
                     default:
-
-                        {
-                        char pszMessage [64];
-                        sprintf(pszMessage, "Error %i occurred", iErrCode);
-                        AddMessage (pszMessage);
-                        }
+                        RETURN_ON_ERROR(iErrCode);
                         break;
                     }
+                    iErrCode = OK;
                 }
             }
 
@@ -215,11 +202,20 @@ SearchResults:
                         return Redirect (m_pgPageId);
                     }
 
-                    if (GetEmpirePassword (iTargetEmpireKey, &vOldPassword) != OK ||
-                        GetEmpirePrivilege (iTargetEmpireKey, &iPrivilege) != OK) {
-                        AddMessage ("The empire no longer exists");
+                    bool bExists;
+                    iErrCode = DoesEmpireExist(iTargetEmpireKey, &bExists, NULL);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (!bExists)
+                    {
+                        AddMessage ("That empire no longer exists");
                         return Redirect (m_pgPageId);
                     }
+                    
+                    iErrCode = GetEmpirePassword (iTargetEmpireKey, &vOldPassword);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    iErrCode = GetEmpirePrivilege (iTargetEmpireKey, &iPrivilege);
+                    RETURN_ON_ERROR(iErrCode);
 
                     if (iPrivilege >= ADMINISTRATOR && m_iEmpireKey != global.GetRootKey()) {
                         AddMessage ("You cannot change an administrator's password");
@@ -234,18 +230,15 @@ SearchResults:
                         }
 
                         // Confirm
-                        if (strcmp (pszValue, pszValue2) != 0) {
+                        if (strcmp(pszValue, pszValue2) != 0) {
                             AddMessage ("The new password was not confirmed");
                             return Redirect (m_pgPageId);
                         }
 
                         iErrCode = SetEmpirePassword (iTargetEmpireKey, pszValue);
-                        if (iErrCode == OK) {
-                            AddMessage ("The empire's password was successfully changed");
-                        } else {
-                            AddMessage ("The empire's password could not be changed");
-                            return Redirect (m_pgPageId);
-                        }
+                        RETURN_ON_ERROR(iErrCode);
+
+                        AddMessage ("The empire's password was successfully changed");
                     }
                 }
             }
@@ -332,11 +325,10 @@ SearchResults:
 
                 else {
 
-                    if (SetEmpirePrivilege (iTargetEmpireKey, iValue) == OK) {
-                        AddMessage ("The empire's privilege level was successfully updated");
-                    } else {
-                        AddMessage ("The empire's privilege level could not be updated");
-                    }
+                    iErrCode = SetEmpirePrivilege (iTargetEmpireKey, iValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    
+                    AddMessage ("The empire's privilege level was successfully updated");
                 }
             }
 
@@ -367,11 +359,10 @@ SearchResults:
 
                 else {
 
-                    if (SetEmpireAlmonasterScore (iTargetEmpireKey, fValue) == OK) {
-                        AddMessage ("The empire's Almonaster score was successfully updated");
-                    } else {
-                        AddMessage ("The submitted Almonaster score was incorrect");
-                    }
+                    iErrCode = SetEmpireAlmonasterScore (iTargetEmpireKey, fValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    
+                    AddMessage ("The empire's Almonaster score was successfully updated");
                 }
             }
 
@@ -391,22 +382,19 @@ SearchResults:
                 if (iValue < 0) {
                     AddMessage ("The submitted Almonaster significance was invalid");
                 }
-
                 else if (iTargetEmpireKey == m_iEmpireKey) {
                     AddMessage ("You cannot change your own Almonaster significance");
                 }
-
                 else if (iTargetEmpireKey == global.GetRootKey()) {
                     AddMessage ("You cannot change " ROOT_NAME "'s Almonaster significance");
                 }
-
                 else if (iTargetEmpireKey == global.GetGuestKey()) {
                     AddMessage ("You cannot change " GUEST_NAME "'s Almonaster significance");
                 }
-
-                else {
-
-                    EmpireCheck (SetEmpireProperty (iTargetEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, iValue));
+                else
+                {
+                    iErrCode = SetEmpireProperty (iTargetEmpireKey, SystemEmpireData::AlmonasterScoreSignificance, iValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The empire's Almonaster significance was successfully updated");
                 }
             }
@@ -438,14 +426,13 @@ SearchResults:
 
                 else {
 
-                    if (SetEmpireOption (iTargetEmpireKey, CAN_BROADCAST, bValue) == OK) {
-                        if (bValue) {
-                            AddMessage ("The empire can now broadcast messages");
-                        } else {
-                            AddMessage ("The empire can no longer broadcast messages");
-                        }
+                    iErrCode = SetEmpireOption (iTargetEmpireKey, CAN_BROADCAST, bValue);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    if (bValue) {
+                        AddMessage ("The empire can now broadcast messages");
                     } else {
-                        AddMessage ("The empire does not exist");
+                        AddMessage ("The empire can no longer broadcast messages");
                     }
                 }
             }
@@ -453,12 +440,10 @@ SearchResults:
             if (WasButtonPressed (BID_RESET)) {
 
                 iErrCode = ResetEmpireSessionId (iTargetEmpireKey);
-                if (iErrCode == OK) {
-                    AddMessage ("The empire's session id will be reset on its next login");
-                } else {
-                    AddMessage ("The empire's session id could not be reset");
-                }
+                RETURN_ON_ERROR(iErrCode);
 
+                AddMessage ("The empire's session id will be reset on its next login");
+                
                 iEmpireAdminPage = 3;
                 m_bRedirectTest = false;
             }
@@ -492,8 +477,8 @@ SearchResults:
                     AddMessage ("You cannot obliterate " GUEST_NAME);
                 }
 
-                else {
-
+                else
+                {
                     iEmpireAdminPage = 4;
                 }
 
@@ -533,20 +518,17 @@ SearchResults:
                     AddMessage ("You cannot obliterate " GUEST_NAME);
                 }
 
-                else {
-
+                else
+                {
                     iErrCode = ObliterateEmpire (iTargetEmpireKey, i64TargetEmpireSecret, m_iEmpireKey);
-
-                    if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST) {
+                    if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST)
+                    {
                         AddMessage ("The empire no longer exists");
-                    } else {
-                        if (iErrCode == OK) {
-                            AddMessage ("The empire was successfully obliterated from the server");
-                        } else {
-                            char pszMessage [256];
-                            sprintf(pszMessage, "Error %i occurred while obliterating the empire", iErrCode);
-                            AddMessage (pszMessage);
-                        }
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                        AddMessage ("The empire was successfully obliterated from the server");
                     }
                 }
 
@@ -572,14 +554,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 switch (iEmpireAdminPage) {
 
@@ -588,7 +572,8 @@ case 0:
 
     %><input type="hidden" name="EmpireAdminPage" value="0"><%
 
-    RenderSearchForms (true);
+    iErrCode = RenderSearchForms(true);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p>Broadcast a message to all empires:<p><%
     %><textarea name="Message" rows="7" cols="60" wrap="virtual"></textarea><p><%
@@ -606,7 +591,7 @@ case 1:
 
     Assert(piSearchEmpireKey != NULL);
 
-    RenderSearchResults (
+    iErrCode = RenderSearchResults (
         sd,
         pszFormName,
         pszColName1,
@@ -616,8 +601,7 @@ case 1:
         iLastKey
         );
 
-    t_pCache->FreeKeys (piSearchEmpireKey);
-
+    RETURN_ON_ERROR(iErrCode);
     }
 
     break;
@@ -628,12 +612,21 @@ case 2:
     %><input type="hidden" name="EmpireAdminPage" value="2"><%
     %><input type="hidden" name="TargetEmpire" value="<% Write (iTargetEmpireKey); %>"><%
 
-    Variant vTargetPassword, vTargetName;
-    if (GetEmpirePassword (iTargetEmpireKey, &vTargetPassword) != OK ||
-        GetEmpireName (iTargetEmpireKey, &vTargetName) != OK) {
-        %><strong>The empire no longer exists</strong><%
-    } else {
-
+    bool bExists;
+    Variant vTargetName;
+    iErrCode = DoesEmpireExist(iTargetEmpireKey, &bExists, &vTargetName);
+    RETURN_ON_ERROR(iErrCode);
+    if (!bExists)
+    {
+        %>That empire no longer exists<%
+        %><p><% WriteButton (BID_CANCEL);
+    }
+    else
+    {
+        Variant vTargetPassword;
+        iErrCode = GetEmpirePassword (iTargetEmpireKey, &vTargetPassword);
+        RETURN_ON_ERROR(iErrCode);
+    
         %><p><strong>Change <% Write (vTargetName.GetCharPtr()); %>'s password:</strong><%
         %><p><table><tr><td><strong>New password</strong></td><td><%
         %><input type="password" name="NewPass" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); 
@@ -657,7 +650,8 @@ case 3:
     %><input type="hidden" name="EmpireAdminPage" value="3"><%
     %><input type="hidden" name="TargetEmpire" value="<% Write (iTargetEmpireKey); %>"><%
 
-    Check(WriteProfile(m_iEmpireKey, iTargetEmpireKey, true, false, false));
+    iErrCode = WriteProfile(m_iEmpireKey, iTargetEmpireKey, true, false, false);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><% 
 
@@ -665,8 +659,9 @@ case 3:
 
         int iTargetPrivilege;
         iErrCode = GetEmpirePrivilege (iTargetEmpireKey, &iTargetPrivilege);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (iErrCode == OK && iTargetPrivilege < ADMINISTRATOR || m_iEmpireKey == global.GetRootKey()) {
+        if (iTargetPrivilege < ADMINISTRATOR || m_iEmpireKey == global.GetRootKey()) {
 
             WriteButton (BID_CHANGEEMPIRESPASSWORD);
 
@@ -694,11 +689,22 @@ case 4:
 
     %><p><%
 
-    if (GetEmpireName (iTargetEmpireKey, &vEmpireName) != OK ||
-        GetEmpireProperty (iTargetEmpireKey, SystemEmpireData::SecretKey, &vSecretKey) != OK) {
+    bool bExists;
+    iErrCode = DoesEmpireExist(iTargetEmpireKey, &bExists, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    if (!bExists)
+    {
         %>That empire no longer exists<%
         %><p><% WriteButton (BID_CANCEL);
-    } else {
+    }
+    else
+    {
+        iErrCode = GetEmpireName (iTargetEmpireKey, &vEmpireName);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetEmpireProperty(iTargetEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+        RETURN_ON_ERROR(iErrCode);
+
         %><input type="hidden" name="TargetEmpireSecret" value="<% Write (vSecretKey.GetInteger64()); %>"><%
         %>Are you sure you want to obliterate the <% Write (vEmpireName.GetCharPtr()); %> empire?<%
         %><p><%
@@ -710,7 +716,6 @@ case 4:
     break;
 
 default:
-
     Assert(false);
     break;
 }

@@ -641,13 +641,13 @@ public:
     int ParseCreateTournamentForms (Variant* pvSubmitArray, int iEmpireKey, bool* pbParsed);
 
     void WriteCreateTournamentTeam (unsigned int iTournamentKey);
-    int ProcessCreateTournamentTeam (unsigned int iTournamentKey);
-    int ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsigned int iTournamentKey);
+    int ProcessCreateTournamentTeam (unsigned int iTournamentKey, bool* pbCreated);
+    int ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsigned int iTournamentKey, bool* pbParsed);
 
     int WriteTournamentAdministrator (int iEmpireKey);
     int WriteAdministerTournament(unsigned int iTournamentKey);
 
-    void WriteAdministerTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);
+    int WriteAdministerTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);
 
     int StartTournamentGame(unsigned int iTournamentKey, int iTeamOptions, bool bAdvanced);
 
@@ -694,7 +694,7 @@ public:
     void RenderUnsafeHyperText (const char* pszText, const char* pszUrl);
     void RenderHyperText (const char* pszText, const char* pszUrl);
 
-    void WriteServerRules();
+    int WriteServerRules();
     void WriteFaq();
     void WriteServerNews();
 
@@ -765,7 +765,7 @@ public:
 
     int HtmlLoginEmpire(bool* pbLoggedIn);
 
-    void RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
+    int RenderShips (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey,
         int iBR, float fMaintRatio, float fNextMaintRatio, ShipsInMapScreen* pShipsInMap, bool bShipString,
         unsigned int* piShips, unsigned int* piFleets);
 
@@ -802,9 +802,9 @@ public:
         unsigned int* piLastKey
         );
 
-    void RenderSearchForms (bool fAdvanced);
+    int RenderSearchForms (bool fAdvanced);
 
-    void RenderSearchResults (
+    int RenderSearchResults (
         RangeSearchDefinition& sd,
 
         const char** pszFormName,
@@ -835,7 +835,7 @@ public:
     // Tournaments
     int RenderTournaments(const Variant* pvTournamentKey, unsigned int iTournaments, bool bSingleOwner);
     int RenderTournaments(const unsigned int* piTournamentKey, unsigned int iTournaments, bool bSingleOwner);
-    void RenderTournamentSimple(unsigned int iTournamentKey, bool bSingleOwner);
+    int RenderTournamentSimple(unsigned int iTournamentKey, bool bSingleOwner);
     int RenderTournamentDetailed(unsigned int iTournamentKey);
 
     int RenderEmpire (unsigned int iTournamentKey, int iEmpireKey);

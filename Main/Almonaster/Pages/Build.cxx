@@ -44,6 +44,12 @@ unsigned int i, j;
 Variant vPlanetName;
 String strFilter;
 
+BuildLocation* pblBuildLocation = NULL;
+Algorithm::AutoDelete<BuildLocation> del_pblBuildLocation (pblBuildLocation, true);
+
+String* pstrLocationName = NULL;
+Algorithm::AutoDelete<String> del_pstrLocationName(pstrLocationName, true);
+
 bool bMapGenerated = (m_iGameState & GAME_MAP_GENERATED) != 0;
 
 struct NewFleetKey {
@@ -58,8 +64,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
     // Make sure cancel wasn't pressed
     // Discard submission if update counts don't match
-    if (bMapGenerated && !WasButtonPressed (BID_CANCEL) && m_iNumNewUpdates == m_iNumOldUpdates) {
-
+    if (bMapGenerated && !WasButtonPressed (BID_CANCEL) && m_iNumNewUpdates == m_iNumOldUpdates)
+    {
         int iNumShips, iTechKey, iShipBR, iLocationKey;
         unsigned int iFleetKey, iNumShipTypes, iPlanetKey;
         String strTechName;
@@ -75,7 +81,6 @@ if (m_bOwnPost && !m_bRedirection) {
         }
 
         int iNumShipsBuilt;
-        bool bBuildReduced;
         char pszForm [256];
         Variant vFleetName;
 
@@ -172,10 +177,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     if (iFleetKey == FLEET_NEWFLEETKEY)
                     {
-                        iErrCode = HtmlCreateRandomFleet (iPlanetKey, &iFleetKey);
-                        if (iErrCode != OK) {
-                            goto Redirection;
-                        }
+                        iErrCode = HtmlCreateRandomFleet(iPlanetKey, &iFleetKey);
+                        RETURN_ON_ERROR(iErrCode);
 
                         Assert(iNumNewFleets < NUM_SHIP_TYPES);
                         nfkNewFleet [iNumNewFleets].iPlanetKey = iPlanetKey;
@@ -184,39 +187,20 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
-                iErrCode = DoesPlanetExist (
-                    m_iGameClass, 
-                    m_iGameNumber, 
-                    iPlanetKey, 
-                    &bBuildReduced
-                    );
+                bool bBuildReduced;
+                iErrCode = DoesPlanetExist(m_iGameClass, m_iGameNumber, iPlanetKey, &bBuildReduced);
+                RETURN_ON_ERROR(iErrCode);
 
-                if (iErrCode != OK || !bBuildReduced) {
+                if (!bBuildReduced)
+                {
                     continue;
                 }
 
-                iErrCode = GetPlanetCoordinates(
-                    m_iGameClass, 
-                    m_iGameNumber, 
-                    iPlanetKey, 
-                    &iX,
-                    &iY
-                    );
+                iErrCode = GetPlanetCoordinates(m_iGameClass, m_iGameNumber, iPlanetKey, &iX, &iY);
+                RETURN_ON_ERROR(iErrCode);
 
-                if (iErrCode != OK) {
-                    continue;
-                }
-
-                iErrCode = GetPlanetName (
-                    m_iGameClass, 
-                    m_iGameNumber, 
-                    iPlanetKey, 
-                    &vPlanetName
-                    );
-
-                if (iErrCode != OK) {
-                    continue;
-                }
+                iErrCode = GetPlanetName(m_iGameClass, m_iGameNumber, iPlanetKey, &vPlanetName);
+                RETURN_ON_ERROR(iErrCode);
 
                 HTMLFilter (vPlanetName.GetCharPtr(), &strPlanetName, 0, false);
 
@@ -235,9 +219,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         &vFleetName
                         );
 
-                    if (iErrCode != OK) {
-                        continue;
-                    }
+                    RETURN_ON_ERROR(iErrCode);
 
                     HTMLFilter (vFleetName.GetCharPtr(), &strFleetName, 0, false);
                 }
@@ -256,7 +238,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     &bBuildReduced
                     );
 
-                GameCheck(HandleBuildNewShipsResult(
+                iErrCode = HandleBuildNewShipsResult(
                     iErrCode,
                     iNumShipsBuilt,
                     iShipBR,
@@ -266,7 +248,8 @@ if (m_bOwnPost && !m_bRedirection) {
                     iY,
                     vFleetName.GetCharPtr(),
                     bBuildReduced
-                    ));
+                    );
+                RETURN_ON_ERROR(iErrCode);
             }
         }
 
@@ -302,7 +285,8 @@ if (m_bOwnPost && !m_bRedirection) {
                         &iDontCare
                         );
 
-                    GameCheck(HandleCreateNewFleetResult(iErrCode, pszTemp));
+                    iErrCode = HandleCreateNewFleetResult(iErrCode, pszTemp);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
         }
@@ -321,31 +305,27 @@ if (m_bRedirectTest)
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 int iGameClassOptions;
-GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));
+iErrCode = GetGameClassOptions (m_iGameClass, &iGameClassOptions);
+RETURN_ON_ERROR(iErrCode);
 
 //
 // Individual page stuff starts here
 //
 
 int iBR;
-unsigned int* piFleetKey = NULL, iNumFleets = 0;
 
-BuildLocation* pblBuildLocation = NULL;
 unsigned int iNumLocations = 0, iNumTechs = 0;
 
 Variant vMaxNumShips, vTemp;
-String* pstrLocationName = NULL;
 
 char pszLocation [MAX_PLANET_NAME_WITH_COORDINATES_LENGTH + MAX_FLEET_NAME_LENGTH + 64];
 
-Algorithm::AutoDelete<BuildLocation> autopblBuildLocation (pblBuildLocation, true);
-Algorithm::AutoDelete<String> autostrLocationName (pstrLocationName, true);
-
-
-if (!bMapGenerated) {
+if (!bMapGenerated)
+{
     %><input type="hidden" name="NumTechs" value="0"><%
 
     if (iGameClassOptions & GENERATE_MAP_FIRST_UPDATE) {
@@ -357,42 +337,39 @@ if (!bMapGenerated) {
     goto Close;
 }
 
-if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
-
+if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS)
+{
     RatioInformation ratInfo;
-    GameCheck (WriteRatiosString (&ratInfo));
+    iErrCode = WriteRatiosString(&ratInfo);
+    RETURN_ON_ERROR(iErrCode);
 
     iBR = ratInfo.iBR;
-
-} else {
-
-    GameCheck (GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
+}
+else
+{
+    iErrCode = GetEmpireBR(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
+    RETURN_ON_ERROR(iErrCode);
 }
 
-if (iBR < 1) {
+if (iBR < 1)
+{
     %><p>You do not have the minimum tech level required to build ships<%
     %><input type="hidden" name="NumTechs" value="0"><%
     goto BuildFleet;
 }
 
 // Check ship limits
-GameCheck (GetGameClassProperty (
-    m_iGameClass,
-    SystemGameClassData::MaxNumShips,
-    &vMaxNumShips
-    ));
+iErrCode = GetGameClassProperty(m_iGameClass, SystemGameClassData::MaxNumShips, &vMaxNumShips);
+RETURN_ON_ERROR(iErrCode);
 
-if (vMaxNumShips.GetInteger() != INFINITE_SHIPS) {
-
+if (vMaxNumShips.GetInteger() != INFINITE_SHIPS)
+{
     int iNumShips;
-    GameCheck (GetNumShips (
-        m_iGameClass,
-        m_iGameNumber,
-        m_iEmpireKey,
-        &iNumShips
-        ));
+    iErrCode = GetNumShips(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumShips);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iNumShips >= vMaxNumShips.GetInteger()) {
+    if (iNumShips >= vMaxNumShips.GetInteger())
+    {
         %><p>You have reached the limit of ships that can be built in this game<%
         %><input type="hidden" name="NumTechs" value="0"><%
         goto BuildFleet;
@@ -400,16 +377,11 @@ if (vMaxNumShips.GetInteger() != INFINITE_SHIPS) {
 }
 
 // Get build locations
-GameCheck (GetBuildLocations (
-    m_iGameClass,
-    m_iGameNumber,
-    m_iEmpireKey,
-    NO_KEY,
-    &pblBuildLocation,
-    &iNumLocations
-    ));
+iErrCode = GetBuildLocations(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, &pblBuildLocation, &iNumLocations);
+RETURN_ON_ERROR(iErrCode);
 
-if (iNumLocations == 0) {
+if (iNumLocations == 0)
+{
     %><p>You have no planets capable of building ships<%
     %><input type="hidden" name="NumTechs" value="0"><%
     goto BuildFleet;
@@ -420,37 +392,38 @@ if (iNumLocations == 0) {
 // Get default builder planet
 int iValue, iRealPlanet;
 
-GameCheck (GetEmpireDefaultBuilderPlanet (
+iErrCode = GetEmpireDefaultBuilderPlanet (
     m_iGameClass,
     m_iGameNumber,
     m_iEmpireKey,
     &iValue,
     &iRealPlanet
-    ));
+    );
+RETURN_ON_ERROR(iErrCode);
 
 // Build location strings
-pstrLocationName = new String [iNumLocations];
-if (pstrLocationName == NULL) {
-    GameCheck (ERROR_OUT_OF_MEMORY);
-}
+pstrLocationName = new String[iNumLocations];
+Assert(pstrLocationName);
 
-for (i = 0; i < iNumLocations; i ++) {
-
+for (i = 0; i < iNumLocations; i ++)
+{
     int iX, iY;
     String strPlanetName, strFleetName;
 
     unsigned int iPlanetKey = pblBuildLocation[i].iPlanetKey;
     unsigned int iFleetKey  = pblBuildLocation[i].iFleetKey;
 
-    if (GetPlanetName (m_iGameClass, m_iGameNumber, iPlanetKey, &vTemp) != OK ||
-        String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL ||
-        GetPlanetCoordinates (m_iGameClass, m_iGameNumber, iPlanetKey, &iX, &iY) != OK
-        ) {
-        continue;
-    }
+    iErrCode = GetPlanetName(m_iGameClass, m_iGameNumber, iPlanetKey, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
+    
+    char* pszRet = String::AtoHtml(vTemp.GetCharPtr(), &strPlanetName, 0, false);
+    Assert(pszRet);
 
-    switch (iFleetKey) {
-            
+    iErrCode = GetPlanetCoordinates(m_iGameClass, m_iGameNumber, iPlanetKey, &iX, &iY);
+    RETURN_ON_ERROR(iErrCode);
+
+    switch (iFleetKey)
+    {
     case NO_KEY:
 
         snprintf (
@@ -477,12 +450,11 @@ for (i = 0; i < iNumLocations; i ++) {
     
     default:
 
-        if (GetFleetProperty (
-            m_iGameClass, m_iGameNumber, m_iEmpireKey, iFleetKey, 
-            GameEmpireFleets::Name, &vTemp) != OK ||
-            String::AtoHtml (vTemp.GetCharPtr(), &strFleetName, 0, false) == NULL) {
-            continue;
-        }
+        iErrCode = GetFleetProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, iFleetKey, GameEmpireFleets::Name, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        
+        char* pszRet = String::AtoHtml(vTemp.GetCharPtr(), &strFleetName, 0, false);
+        Assert(pszRet);
 
         snprintf (
             pszLocation,
@@ -497,9 +469,7 @@ for (i = 0; i < iNumLocations; i ++) {
     }
 
     pstrLocationName[i] = pszLocation;
-    if (pstrLocationName[i].GetCharPtr() == NULL) {
-        GameCheck (ERROR_OUT_OF_MEMORY);
-    }
+    Assert(pstrLocationName[i].GetCharPtr());
 
     %><input type="hidden" name="LocPlanetKey<% Write (i); %>" value="<% Write (iPlanetKey); %>"><%
     %><input type="hidden" name="LocFleetKey<% Write (i); %>" value="<% Write (iFleetKey); %>"><%
@@ -511,33 +481,23 @@ for (i = 0; i < iNumLocations; i ++) {
 int iTechDevs, iTechUndevs;
 unsigned int iMaxNumShipsBuiltAtOnce;
 
-if (GetDevelopedTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iTechDevs, &iTechUndevs) != OK ||
-    GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vTemp) != OK
-    ) {
+iErrCode = GetDevelopedTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iTechDevs, &iTechUndevs);
+RETURN_ON_ERROR(iErrCode);
 
-    if (iNumFleets > 0) {
-        t_pCache->FreeKeys (piFleetKey);
-    }
-    %><p>An error occurred rendering the Build page<%
-    goto Close;
-}
+iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vTemp);
+RETURN_ON_ERROR(iErrCode);
 
 iMaxNumShipsBuiltAtOnce = vTemp.GetInteger();
 iNumTechs = GetNumTechs (iTechDevs);
 
-if (iNumTechs > 0) {
-
+if (iNumTechs > 0)
+{
     %><input type="hidden" name="NumTechs" value="<% Write (iNumTechs); %>"><p><%
 
     bool bVisible = true;
 
-    if (GetGameClassVisibleBuilds (m_iGameClass, &bVisible) != OK) {
-        if (iNumFleets > 0) {
-            t_pCache->FreeKeys (piFleetKey);
-        }
-        %><p>An error occurred rendering the Build page<%
-        goto Close;
-    }
+    iErrCode = GetGameClassVisibleBuilds (m_iGameClass, &bVisible);
+    RETURN_ON_ERROR(iErrCode);
 
     if (bVisible) {
         %>Builds are <strong>visible</strong><%
@@ -576,14 +536,8 @@ if (iNumTechs > 0) {
 
         if (iTechDevs & TECH_BITS[i]) {
 
-            if (GetDefaultEmpireShipName (
-                m_iEmpireKey, 
-                i, 
-                &vDefaultShipName
-                ) != OK)
-            {
-                continue;
-            }
+            iErrCode = GetDefaultEmpireShipName(m_iEmpireKey, i, &vDefaultShipName);
+            RETURN_ON_ERROR(iErrCode);
 
             HTMLFilter(vDefaultShipName.GetCharPtr(), &strFilter, 0, false);
 
@@ -679,12 +633,12 @@ if (iNumTechs > 0) {
             if (iRealLocations == 1) {
             
                 Write (pstrLocationName[iOneLocIndex].GetCharPtr(), pstrLocationName[iOneLocIndex].GetLength());
-                %><input type="hidden" name="ShipLocation<% Write (iNumBuildableTechs); %>" <%
+                %><input type="hidden" name="ShipLocation<% Write(iNumBuildableTechs); %>" <%
                 %>value="<% Write (iOneLocIndex); %>"><%
             
             } else {
 
-                %><select name="ShipLocation<% Write (iNumBuildableTechs); %>" size="1"><%
+                %><select name="ShipLocation<% Write(iNumBuildableTechs); %>" size="1"><%
 
                 for (j = 0; j < iNumLocations; j ++) {
 
@@ -713,20 +667,15 @@ if (iNumTechs > 0) {
     %></table><p><%
 }
 
-if (piFleetKey != NULL) {
-    t_pCache->FreeKeys (piFleetKey);
-    piFleetKey = NULL;
-}
-
 BuildFleet:
 
 // Get fleet locations
 int* piPlanetKey, iNumPlanets;
-GameCheck (GetNewFleetLocations (m_iGameClass, m_iGameNumber, m_iEmpireKey, &piPlanetKey, 
-    &iNumPlanets));
+iErrCode = GetNewFleetLocations(m_iGameClass, m_iGameNumber, m_iEmpireKey, &piPlanetKey, &iNumPlanets);
+RETURN_ON_ERROR(iErrCode);
 
-if (iNumPlanets > 0) {
-
+if (iNumPlanets > 0)
+{
     String strPlanetName;
     Algorithm::AutoDelete<int> autopiPlanetKey (piPlanetKey, true);
 
@@ -745,14 +694,16 @@ if (iNumPlanets > 0) {
 
     int iX, iY;
 
-    if (iNumPlanets == 1) {
+    if (iNumPlanets == 1)
+    {
+        iErrCode = GetPlanetName (m_iGameClass, m_iGameNumber, piPlanetKey[0], &vTemp);
+        RETURN_ON_ERROR(iErrCode);
 
-        GameCheck (GetPlanetName (m_iGameClass, m_iGameNumber, piPlanetKey[0], &vTemp));
-        GameCheck (GetPlanetCoordinates (m_iGameClass, m_iGameNumber, piPlanetKey[0], &iX, &iY));
+        iErrCode = GetPlanetCoordinates (m_iGameClass, m_iGameNumber, piPlanetKey[0], &iX, &iY);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
-            GameCheck (ERROR_OUT_OF_MEMORY);
-        }
+        char* pszRet = String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false);
+        Assert(pszRet);
 
         Write (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
         %> (<% Write (iX); %>,<% Write (iY); %>)<%
@@ -763,12 +714,14 @@ if (iNumPlanets > 0) {
         %><select name="NewFleetLocation"><%
         for (i = 0; i < (unsigned int) iNumPlanets; i ++) {
 
-            GameCheck (GetPlanetName (m_iGameClass, m_iGameNumber, piPlanetKey[i], &vTemp));
-            GameCheck (GetPlanetCoordinates (m_iGameClass, m_iGameNumber, piPlanetKey[i], &iX, &iY));
-            
-            if (String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false) == NULL) {
-                GameCheck (ERROR_OUT_OF_MEMORY);
-            }
+            iErrCode = GetPlanetName (m_iGameClass, m_iGameNumber, piPlanetKey[i], &vTemp);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetPlanetCoordinates (m_iGameClass, m_iGameNumber, piPlanetKey[i], &iX, &iY);
+            RETURN_ON_ERROR(iErrCode);
+
+            char* pszRet = String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false);
+            Assert(pszRet);
 
             %><option value="<% Write (piPlanetKey[i]); %>"><%
             Write (strPlanetName.GetCharPtr(), strPlanetName.GetLength());

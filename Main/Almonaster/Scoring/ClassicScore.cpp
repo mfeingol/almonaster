@@ -37,9 +37,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
             CLASSIC_POINTS_FOR_NUKE
             );
         
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     if (iEmpireNuked != NO_KEY) {
@@ -52,9 +50,7 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
             CLASSIC_POINTS_FOR_NUKED
             );
         
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -63,20 +59,26 @@ int ClassicScore::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int
 int ClassicScore::OnSurrender (int iGameClass, int iGameNumber, int iWinner, int iLoser, ScoringChanges* pscChanges) {
 
     // Same as nuked
-    return OnNuke (iGameClass, iGameNumber, iWinner, iLoser, pscChanges);
+    int iErrCode = OnNuke (iGameClass, iGameNumber, iWinner, iLoser, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int ClassicScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLoser, ScoringChanges* pscChanges) {
 
     // Same as nuked, but no nuker yet
-    return OnNuke (iGameClass, iGameNumber, NO_KEY, iLoser, pscChanges);
+    int iErrCode = OnNuke (iGameClass, iGameNumber, NO_KEY, iLoser, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int ClassicScore::On30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey, 
                                                   int iPlanetKey, ScoringChanges* pscChanges) {
 
     // Same as nuked, but no nukee
-    return OnNuke (iGameClass, iGameNumber, iWinnerKey, NO_KEY, pscChanges);
+    int iErrCode = OnNuke (iGameClass, iGameNumber, iWinnerKey, NO_KEY, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int ClassicScore::OnGameEnd (int iGameClass, int iGameNumber) {
@@ -100,11 +102,7 @@ int ClassicScore::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
         CLASSIC_POINTS_FOR_WIN
         );
 
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }
 
@@ -121,11 +119,7 @@ int ClassicScore::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
         CLASSIC_POINTS_FOR_DRAW
         );
 
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }
 
@@ -143,11 +137,7 @@ int ClassicScore::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
         CLASSIC_POINTS_FOR_RUIN
         );
 
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
-
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }
 

@@ -61,8 +61,10 @@ void HtmlRenderer::WriteTOSFile() {
     sprintf(pszFileName, "%s/" TOS_FILE, global.GetResourceDir());
 
     ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
-    if (pcfCachedFile != NULL) {
+    AutoRelease<ICachedFile> release_pcfCachedFile(pcfCachedFile);
+
+    if (pcfCachedFile)
+    {
         m_pHttpResponse->WriteTextFile (pcfCachedFile);
-        pcfCachedFile->Release();
     }
 }

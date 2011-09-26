@@ -54,11 +54,9 @@ int TournamentScoring::IsTournamentGame (int iGameClass, int iGameNumber, unsign
         SystemGameClassData::TournamentKey,
         &vKey
         );
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode == OK) {
-        *piTournamentKey = vKey.GetInteger();
-    }
-
+    *piTournamentKey = vKey.GetInteger();
     return iErrCode;
 }
 
@@ -71,30 +69,22 @@ int TournamentScoring::OnEvent (unsigned int iTournamentKey, unsigned int iEmpir
     GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
 
     iErrCode = t_pCache->GetFirstKey(pszEmpires, SystemTournamentEmpires::EmpireKey, iEmpireKey, &iKey);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Update event count
     iErrCode = t_pCache->Increment(pszEmpires, iKey, s_pszEmpireColumn [event], 1);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     // Get team
     iErrCode = t_pCache->ReadData(pszEmpires, iKey, SystemTournamentEmpires::TeamKey, &vTeamKey);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (vTeamKey.GetInteger() != NO_KEY) {
 
         GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
 
         iErrCode = t_pCache->Increment(pszTeams, vTeamKey.GetInteger(), s_pszTeamColumn [event], 1);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -110,10 +100,7 @@ int TournamentScoring::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker
     unsigned int iTournamentKey;
     
     iErrCode = IsTournamentGame (iGameClass, iGameNumber, &iTournamentKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     if (iTournamentKey == NO_KEY) {
         return OK;
     }
@@ -123,19 +110,13 @@ int TournamentScoring::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker
     if (iEmpireNuker != NO_KEY) {
 
         iErrCode = OnEvent (iTournamentKey, iEmpireNuker, TOURNAMENT_NUKE);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     if (iEmpireNuked != NO_KEY) {
 
         iErrCode = OnEvent (iTournamentKey, iEmpireNuked, TOURNAMENT_NUKED);
-        if (iErrCode != OK) {
-            Assert(false);
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -144,20 +125,25 @@ int TournamentScoring::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker
 int TournamentScoring::OnSurrender (int iGameClass, int iGameNumber, int iWinner, int iLoser, ScoringChanges* pscChanges) {
 
     // Same as nuked
-    return OnNuke (iGameClass, iGameNumber, iWinner, iLoser, pscChanges);
+    int iErrCode = OnNuke (iGameClass, iGameNumber, iWinner, iLoser, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int TournamentScoring::On30StyleSurrender (int iGameClass, int iGameNumber, int iLoser, ScoringChanges* pscChanges) {
 
     // Same as nuke, but no nuker yet
-    return OnNuke (iGameClass, iGameNumber, NO_KEY, iLoser, pscChanges);
+    int iErrCode = OnNuke (iGameClass, iGameNumber, NO_KEY, iLoser, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
-int TournamentScoring::On30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey, 
-                                                       int iPlanetKey, ScoringChanges* pscChanges) {
-
+int TournamentScoring::On30StyleSurrenderColonization (int iGameClass, int iGameNumber, int iWinnerKey, int iPlanetKey, ScoringChanges* pscChanges)
+{
     // Same as nuke, but no nukee
-    return OnNuke (iGameClass, iGameNumber, iWinnerKey, NO_KEY, pscChanges);
+    int iErrCode = OnNuke (iGameClass, iGameNumber, iWinnerKey, NO_KEY, pscChanges);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int TournamentScoring::OnGameEnd (int iGameClass, int iGameNumber) {
@@ -172,37 +158,37 @@ int TournamentScoring::OnEvent (int iGameClass, int iGameNumber, int iEmpireKey,
     unsigned int iTournamentKey;
     
     iErrCode = IsTournamentGame (iGameClass, iGameNumber, &iTournamentKey);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
     if (iTournamentKey == NO_KEY) {
         return OK;
     }
 
     iErrCode = OnEvent (iTournamentKey, iEmpireKey, event);
-    if (iErrCode != OK) {
-        Assert(false);
-        return iErrCode;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
 
 int TournamentScoring::OnWin (int iGameClass, int iGameNumber, int iEmpireKey) {
 
-    return OnEvent (iGameClass, iGameNumber, iEmpireKey, TOURNAMENT_WIN);
+    int iErrCode = OnEvent (iGameClass, iGameNumber, iEmpireKey, TOURNAMENT_WIN);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int TournamentScoring::OnDraw (int iGameClass, int iGameNumber, int iEmpireKey) {
 
-    return OnEvent (iGameClass, iGameNumber, iEmpireKey, TOURNAMENT_DRAW);
+    int iErrCode = OnEvent (iGameClass, iGameNumber, iEmpireKey, TOURNAMENT_DRAW);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 
 int TournamentScoring::OnRuin (int iGameClass, int iGameNumber, int iEmpireKey) {
 
-    return OnEvent (iGameClass, iGameNumber, iEmpireKey, TOURNAMENT_RUIN);
+    int iErrCode = OnEvent (iGameClass, iGameNumber, iEmpireKey, TOURNAMENT_RUIN);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 bool TournamentScoring::IsValidScore (const Variant* pvScore) {

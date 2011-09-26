@@ -36,6 +36,7 @@ private:
     char* m_pszUri2;
 
     int OnAccessDenied(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
+    int OnInternalServerError(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
 
 public:
 

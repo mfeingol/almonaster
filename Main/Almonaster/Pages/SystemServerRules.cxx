@@ -41,7 +41,8 @@ if (m_bRedirectTest)
 Check(OpenSystemPage(false));
 
 // Individual page stuff starts here
-WriteServerRules();
+iErrCode = WriteServerRules();
+RETURN_ON_ERROR(iErrCode);
 
 iErrCode = CloseSystemPage();
 RETURN_ON_ERROR(iErrCode);

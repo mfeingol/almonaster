@@ -344,9 +344,13 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
     return iErrCode;
 }
 
-int GameEngine::GetTournamentData (unsigned int iTournamentKey, Variant** ppvTournamentData) {
-
-    return t_pCache->ReadRow (SYSTEM_TOURNAMENTS, iTournamentKey, ppvTournamentData);
+int GameEngine::GetTournamentData (unsigned int iTournamentKey, Variant** ppvTournamentData)
+{
+    int iErrCode = t_pCache->ReadRow (SYSTEM_TOURNAMENTS, iTournamentKey, ppvTournamentData);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        return ERROR_TOURNAMENT_DOES_NOT_EXIST;
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int GameEngine::GetTournamentName(unsigned int iTournamentKey, Variant* pvTournamentName)
@@ -1099,9 +1103,8 @@ int GameEngine::GetTournamentTeamEmpires (unsigned int iTournamentKey, unsigned 
 }
 
 
-int GameEngine::GetTournamentTeams (unsigned int iTournamentKey, unsigned int** ppiTeamKey, Variant** ppvName, 
-                                    unsigned int* piNumKeys) {
-
+int GameEngine::GetTournamentTeams (unsigned int iTournamentKey, unsigned int** ppiTeamKey, Variant** ppvName, unsigned int* piNumKeys)
+{
     int iErrCode;
 
     GET_SYSTEM_TOURNAMENT_TEAMS(pszTeams, iTournamentKey);
@@ -1243,12 +1246,16 @@ int GameEngine::SetEmpireTournamentTeam (unsigned int iTournamentKey, int iEmpir
     return iErrCode;
 }
 
-int GameEngine::GetTournamentTeamData (unsigned int iTournamentKey, unsigned int iTeamKey, 
-                                       Variant** ppvTournamentTeamData) {
-
+int GameEngine::GetTournamentTeamData (unsigned int iTournamentKey, unsigned int iTeamKey, Variant** ppvTournamentTeamData)
+{
     GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
-
-    return t_pCache->ReadRow (pszTeams, iTeamKey, ppvTournamentTeamData);
+    int iErrCode = t_pCache->ReadRow (pszTeams, iTeamKey, ppvTournamentTeamData);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+    {
+        return ERROR_TOURNAMENT_TEAM_DOES_NOT_EXIST;
+    }
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int GameEngine::GetTournamentEmpireData (unsigned int iTournamentKey, unsigned int iEmpireKey, Variant** ppvTournamentEmpireData)

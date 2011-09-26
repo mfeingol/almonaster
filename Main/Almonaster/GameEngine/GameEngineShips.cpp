@@ -515,34 +515,12 @@ int GameEngine::GetRatioInformation (int iGameClass, int iGameNumber, int iEmpir
 //
 // Returns the orders a given ship has, as well as which order was selected
 
-class AutoFreeShipOrders
-{
-private:
-    ShipOrder*& m_pfoOrders;
-    unsigned int& m_iMaxNumOrders;
-
-public:
-    AutoFreeShipOrders(ShipOrder*& pfoOrders, unsigned int& iMaxNumOrders) : m_pfoOrders(pfoOrders), m_iMaxNumOrders(iMaxNumOrders)
-    {
-    }
-
-    ~AutoFreeShipOrders()
-    {
-        if (m_pfoOrders)
-        {
-            GameEngine engine;
-            engine.FreeShipOrders(m_pfoOrders, m_iMaxNumOrders);
-        }
-    }
-};
-
-
-int GameEngine::GetShipOrders (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
-                               unsigned int iShipKey, const ShipOrderShipInfo* pShipInfo, 
-                               const ShipOrderGameInfo* pGameInfo, const ShipOrderPlanetInfo* pPlanetInfo, 
-                               const GameConfiguration& gcConfig,
-                               const BuildLocation* pblLocations, unsigned int iNumLocations,
-                               ShipOrder** ppsoOrder, unsigned int* piNumOrders, int* piSelectedOrder) {
+int GameEngine::GetShipOrders(unsigned int iGameClass, unsigned int iGameNumber, unsigned int iEmpireKey, 
+                              unsigned int iShipKey, const ShipOrderShipInfo* pShipInfo, 
+                              const ShipOrderGameInfo* pGameInfo, const ShipOrderPlanetInfo* pPlanetInfo, 
+                              const GameConfiguration& gcConfig,
+                              const BuildLocation* pblLocations, unsigned int iNumLocations,
+                              ShipOrder** ppsoOrder, unsigned int* piNumOrders, int* piSelectedOrder) {
 
     int iErrCode = OK;
 
@@ -1692,15 +1670,27 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
     case SHIP_ORDER_MOVE_PLANET:
         iErrCode = MoveShip(iGameClass, iGameNumber, iEmpireKey, iShipKey, soOrder.iKey, NO_KEY);
+        if (iErrCode == ERROR_SHIP_DOES_NOT_EXIST)
+        {
+            return iErrCode;
+        }
         RETURN_ON_ERROR(iErrCode);
         return iErrCode;
 
     case SHIP_ORDER_MOVE_FLEET:
         // We need the location of the destination fleet
         iErrCode = GetFleetProperty(iGameClass, iGameNumber, iEmpireKey, soOrder.iKey, GameEmpireFleets::CurrentPlanet, &vTemp);
+        if (iErrCode == ERROR_FLEET_DOES_NOT_EXIST)
+        {
+            return iErrCode;
+        }
         RETURN_ON_ERROR(iErrCode);
 
         iErrCode = MoveShip(iGameClass, iGameNumber, iEmpireKey, iShipKey, vTemp.GetInteger(), soOrder.iKey);
+        if (iErrCode == ERROR_SHIP_DOES_NOT_EXIST)
+        {
+            return iErrCode;
+        }
         RETURN_ON_ERROR(iErrCode);
         return iErrCode;
     }
@@ -1718,7 +1708,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
     iOldOrder = vTemp.GetInteger();
     if (iOldOrder == iNewShipOrder)
     {
-        return ERROR_SAME_SHIP_ORDER;
+        return OK;
     }
 
     // Get ship behavior

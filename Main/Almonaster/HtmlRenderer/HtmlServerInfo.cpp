@@ -18,26 +18,16 @@
 
 #include "HtmlRenderer.h"
 
-
-void HtmlRenderer::WriteServerRules() {
-    
+int HtmlRenderer::WriteServerRules()
+{
     int iErrCode, iNumActiveGames, iSystemOptions;
-
-    Variant vDefaultNumUpdatesForClose, vValue, vNumUpdatesDown, vSecondsForLongtermStatus, vNumNukesListed,
-        vAfterWeekendDelay, vUnlimitedEmpirePrivilege;
-    
-    float fValue;
-    
-    IDatabase* pDatabase = NULL;
-    
-    Seconds iUptime, iCpuTime, sBridierScanFrequency;
-    
-    size_t iTotalPhysicalMemory, iTotalFreePhysicalMemory, iTotalSwapMemory, iTotalFreeSwapMemory,
-        iTotalVirtualMemory, stFileCacheSize;
-    
-    char pszDateString [OS::MaxDateLength];
-    
     unsigned int iNumProcessors, iMHz, iNumFiles, iNumPages, iTimeSpent, iDBOptions, iNumOpenGames, iNumClosedGames;
+    float fValue;
+    Seconds iUptime, iCpuTime, sBridierScanFrequency;
+    size_t iTotalPhysicalMemory, iTotalFreePhysicalMemory, iTotalSwapMemory, iTotalFreeSwapMemory, iTotalVirtualMemory, stFileCacheSize;
+
+    Variant vDefaultNumUpdatesForClose, vValue, vNumUpdatesDown, vSecondsForLongtermStatus, vNumNukesListed, vAfterWeekendDelay, vUnlimitedEmpirePrivilege;
+    char pszDateString [OS::MaxDateLength];
     
     GameConfiguration gcConfig;
     MapConfiguration mcConfig;
@@ -50,49 +40,31 @@ void HtmlRenderer::WriteServerRules() {
     Time::GetTime (&tNow);
     
     iErrCode = GetGameConfiguration (&gcConfig);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetMapConfiguration (&mcConfig);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetSystemProperty (SystemData::NumUpdatesDownBeforeGameIsKilled, &vNumUpdatesDown);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetSystemProperty (SystemData::SecondsForLongtermStatus, &vSecondsForLongtermStatus);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetSystemProperty (SystemData::AfterWeekendDelay, &vAfterWeekendDelay);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetSystemProperty (SystemData::NumNukesListedInNukeHistories, &vNumNukesListed);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetSystemOptions (&iSystemOptions);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesForClose);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetBridierTimeBombScanFrequency (&sBridierScanFrequency);
-    if (iErrCode != OK) {
-        goto ErrorExit;
-    }
+    RETURN_ON_ERROR(iErrCode);
     
     OutputText ("<p><h2>Server information</h2></center><ul><li>The web server is <strong>");
     m_pHttpResponse->WriteText (global.GetHttpServer()->GetServerName());
@@ -127,28 +99,24 @@ void HtmlRenderer::WriteServerRules() {
         OutputText("s");
     OutputText (" in its thread pool</li>");
     
-    if (OS::GetProcessMemoryStatistics (&iTotalPhysicalMemory, &iTotalVirtualMemory) == OK) {
-        OutputText ("<li>The server process' working set size is <strong>");
-        m_pHttpResponse->WriteText ((int64) iTotalPhysicalMemory / 1024); 
-        OutputText (" KB</strong> and its virtual memory size is <strong>");
-        m_pHttpResponse->WriteText ((int64) iTotalVirtualMemory / 1024); 
-        OutputText (" KB</strong></li>");
-    } else {
-        OutputText ("<li>Process memory usage information is not available</li>");
-    }
+    iErrCode = OS::GetProcessMemoryStatistics(&iTotalPhysicalMemory, &iTotalVirtualMemory);
+    RETURN_ON_ERROR(iErrCode);
+
+    OutputText ("<li>The server process' working set size is <strong>");
+    m_pHttpResponse->WriteText ((int64) iTotalPhysicalMemory / 1024); 
+    OutputText (" KB</strong> and its virtual memory size is <strong>");
+    m_pHttpResponse->WriteText ((int64) iTotalVirtualMemory / 1024); 
+    OutputText (" KB</strong></li>");
     
-    if (OS::GetProcessTimeStatistics (&iUptime, &iCpuTime) == OK) {
-        
-        OutputText ("<li>The server process has been running for ");
-        WriteTime (iUptime);
-        OutputText (" and has used ");
-        WriteTime (iCpuTime);
-        OutputText (" of CPU time</li>");
-        
-    } else {
-        OutputText ("<li>Process time information is not available</li>");
-    }
+    iErrCode = OS::GetProcessTimeStatistics(&iUptime, &iCpuTime);
+    RETURN_ON_ERROR(iErrCode);
     
+    OutputText ("<li>The server process has been running for ");
+    WriteTime (iUptime);
+    OutputText (" and has used ");
+    WriteTime (iCpuTime);
+    OutputText (" of CPU time</li>");
+
     iNumFiles = global.GetFileCache()->GetNumFiles();
     stFileCacheSize = global.GetFileCache()->GetSize();
     
@@ -167,143 +135,137 @@ void HtmlRenderer::WriteServerRules() {
     
     // Stats
     iErrCode = global.GetHttpServer()->GetStatistics (&stats);
-    if (iErrCode == OK) {
+    RETURN_ON_ERROR(iErrCode);
         
-        OutputText ("<li>The server has handled <strong>");
-        m_pHttpResponse->WriteText (stats.NumRequests);
-        OutputText ("</strong> requests today, totalling <strong>");
-        m_pHttpResponse->WriteText((int64)stats.NumBytesReceived / 1024);
-        OutputText ("</strong> KB received and <strong>");
-        m_pHttpResponse->WriteText((int64)stats.NumBytesSent / 1024);
-        OutputText ("</strong> KB sent</li>");
-    }
+    OutputText ("<li>The server has handled <strong>");
+    m_pHttpResponse->WriteText (stats.NumRequests);
+    OutputText ("</strong> requests today, totalling <strong>");
+    m_pHttpResponse->WriteText((int64)stats.NumBytesReceived / 1024);
+    OutputText ("</strong> KB received and <strong>");
+    m_pHttpResponse->WriteText((int64)stats.NumBytesSent / 1024);
+    OutputText ("</strong> KB sent</li>");
     
-    pDatabase = global.GetDatabase();
+    IDatabase* pDatabase = global.GetDatabase(); // No refcount
     Assert(pDatabase != NULL);
 
     iDBOptions = pDatabase->GetOptions();
     iErrCode = pDatabase->GetStatistics (&dsStats);
-    Assert(iErrCode == OK);
-
-    if (iErrCode == OK) {
+    RETURN_ON_ERROR(iErrCode);
     
-        OutputText ("<li>The database is in ");
-        if (iDBOptions & DATABASE_WRITETHROUGH) {
-            OutputText ("write-through");
-        } else {
-            OutputText ("write-back");
-        }
-
-        OutputText (" mode. It contains <strong>");
-        m_pHttpResponse->WriteText (dsStats.iNumTables);
-        OutputText ("</strong> tables, <strong>");
-        m_pHttpResponse->WriteText (dsStats.iNumTemplates);
-        OutputText ("</strong> templates and occupies <strong>");
-        
-        m_pHttpResponse->WriteText ((int64)
-            (dsStats.fhsMetaStats.cbSize + 
-            dsStats.fhsTableStats.cbSize + 
-            dsStats.fhsTemplateStats.cbSize + 
-            dsStats.fhsVarlenStats.cbSize) / 1024
-            );
-
-        OutputText ("</strong> KB on disk");
-
-        if (m_iPrivilege >= ADMINISTRATOR) {
-
-            OutputText (
-                ":<ul>"\
-                "<li>Tables: <strong>"
-                );
-            
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumAllocatedBlocks);
-            OutputText ("</strong> allocated block");
-            if (dsStats.fhsTableStats.cNumAllocatedBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumFreeBlocks);
-            OutputText ("</strong> free block");
-            if (dsStats.fhsTableStats.cNumFreeBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumUsedBytes / 1024);
-            OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumSlackBytes / 1024);
-            OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((int64)
-                (dsStats.fhsTableStats.cbSize - 
-                dsStats.fhsTableStats.cbNumUsedBytes - 
-                dsStats.fhsTableStats.cbNumSlackBytes) / 1024
-                );
-            OutputText ("</strong> free KB</li>");
-
-
-            OutputText ("<li>Metadata: <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumAllocatedBlocks);
-            OutputText ("</strong> allocated block");
-            if (dsStats.fhsMetaStats.cNumAllocatedBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumFreeBlocks);
-            OutputText ("</strong> free block");
-            if (dsStats.fhsMetaStats.cNumFreeBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumUsedBytes / 1024);
-            OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumSlackBytes / 1024);
-            OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((int64)
-                (dsStats.fhsMetaStats.cbSize - 
-                dsStats.fhsMetaStats.cbNumUsedBytes - 
-                dsStats.fhsMetaStats.cbNumSlackBytes) / 1024
-                );
-            OutputText ("</strong> free KB</li>");
-
-
-            OutputText ("<li>Varlen data: <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumAllocatedBlocks);
-            OutputText ("</strong> allocated block");
-            if (dsStats.fhsVarlenStats.cNumAllocatedBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumFreeBlocks);
-            OutputText ("</strong> free block");
-            if (dsStats.fhsVarlenStats.cNumFreeBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumUsedBytes / 1024);
-            OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumSlackBytes / 1024);
-            OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((int64)
-                (dsStats.fhsVarlenStats.cbSize - 
-                dsStats.fhsVarlenStats.cbNumUsedBytes - 
-                dsStats.fhsVarlenStats.cbNumSlackBytes) / 1024
-                );
-            OutputText ("</strong> free KB</li>");
-
-
-            OutputText ("<li>Templates: <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumAllocatedBlocks);
-            OutputText ("</strong> allocated block");
-            if (dsStats.fhsTemplateStats.cNumAllocatedBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumFreeBlocks);
-            OutputText ("</strong> free block");
-            if (dsStats.fhsTemplateStats.cNumFreeBlocks != 1) OutputText ("s");
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumUsedBytes / 1024);
-            OutputText ("</strong> used KB, <strong>");
-            m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumSlackBytes / 1024);
-            OutputText ("</strong> slack KB, <strong>");
-            m_pHttpResponse->WriteText ((int64)
-                (dsStats.fhsTemplateStats.cbSize - 
-                dsStats.fhsTemplateStats.cbNumUsedBytes - 
-                dsStats.fhsTemplateStats.cbNumSlackBytes) / 1024
-                );
-            OutputText ("</strong> free KB</li>");
-
-
-            OutputText ("</ul>");
-        }
-
-        OutputText ("</li>");
+    OutputText ("<li>The database is in ");
+    if (iDBOptions & DATABASE_WRITETHROUGH) {
+        OutputText ("write-through");
+    } else {
+        OutputText ("write-back");
     }
+
+    OutputText (" mode. It contains <strong>");
+    m_pHttpResponse->WriteText (dsStats.iNumTables);
+    OutputText ("</strong> tables, <strong>");
+    m_pHttpResponse->WriteText (dsStats.iNumTemplates);
+    OutputText ("</strong> templates and occupies <strong>");
+        
+    m_pHttpResponse->WriteText ((int64)
+        (dsStats.fhsMetaStats.cbSize + 
+        dsStats.fhsTableStats.cbSize + 
+        dsStats.fhsTemplateStats.cbSize + 
+        dsStats.fhsVarlenStats.cbSize) / 1024
+        );
+
+    OutputText ("</strong> KB on disk");
+
+    if (m_iPrivilege >= ADMINISTRATOR) {
+
+        OutputText (
+            ":<ul>"\
+            "<li>Tables: <strong>"
+            );
+            
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumAllocatedBlocks);
+        OutputText ("</strong> allocated block");
+        if (dsStats.fhsTableStats.cNumAllocatedBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumFreeBlocks);
+        OutputText ("</strong> free block");
+        if (dsStats.fhsTableStats.cNumFreeBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumUsedBytes / 1024);
+        OutputText ("</strong> used KB, <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumSlackBytes / 1024);
+        OutputText ("</strong> slack KB, <strong>");
+        m_pHttpResponse->WriteText ((int64)
+            (dsStats.fhsTableStats.cbSize - 
+            dsStats.fhsTableStats.cbNumUsedBytes - 
+            dsStats.fhsTableStats.cbNumSlackBytes) / 1024
+            );
+        OutputText ("</strong> free KB</li>");
+
+
+        OutputText ("<li>Metadata: <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumAllocatedBlocks);
+        OutputText ("</strong> allocated block");
+        if (dsStats.fhsMetaStats.cNumAllocatedBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumFreeBlocks);
+        OutputText ("</strong> free block");
+        if (dsStats.fhsMetaStats.cNumFreeBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumUsedBytes / 1024);
+        OutputText ("</strong> used KB, <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumSlackBytes / 1024);
+        OutputText ("</strong> slack KB, <strong>");
+        m_pHttpResponse->WriteText ((int64)
+            (dsStats.fhsMetaStats.cbSize - 
+            dsStats.fhsMetaStats.cbNumUsedBytes - 
+            dsStats.fhsMetaStats.cbNumSlackBytes) / 1024
+            );
+        OutputText ("</strong> free KB</li>");
+
+
+        OutputText ("<li>Varlen data: <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumAllocatedBlocks);
+        OutputText ("</strong> allocated block");
+        if (dsStats.fhsVarlenStats.cNumAllocatedBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumFreeBlocks);
+        OutputText ("</strong> free block");
+        if (dsStats.fhsVarlenStats.cNumFreeBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumUsedBytes / 1024);
+        OutputText ("</strong> used KB, <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumSlackBytes / 1024);
+        OutputText ("</strong> slack KB, <strong>");
+        m_pHttpResponse->WriteText ((int64)
+            (dsStats.fhsVarlenStats.cbSize - 
+            dsStats.fhsVarlenStats.cbNumUsedBytes - 
+            dsStats.fhsVarlenStats.cbNumSlackBytes) / 1024
+            );
+        OutputText ("</strong> free KB</li>");
+
+
+        OutputText ("<li>Templates: <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumAllocatedBlocks);
+        OutputText ("</strong> allocated block");
+        if (dsStats.fhsTemplateStats.cNumAllocatedBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumFreeBlocks);
+        OutputText ("</strong> free block");
+        if (dsStats.fhsTemplateStats.cNumFreeBlocks != 1) OutputText ("s");
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumUsedBytes / 1024);
+        OutputText ("</strong> used KB, <strong>");
+        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumSlackBytes / 1024);
+        OutputText ("</strong> slack KB, <strong>");
+        m_pHttpResponse->WriteText ((int64)
+            (dsStats.fhsTemplateStats.cbSize - 
+            dsStats.fhsTemplateStats.cbNumUsedBytes - 
+            dsStats.fhsTemplateStats.cbNumSlackBytes) / 1024
+            );
+        OutputText ("</strong> free KB</li>");
+        OutputText ("</ul>");
+    }
+
+    OutputText ("</li>");
     
     aStats = m_sStats;
     iNumPages = aStats.NumPageScriptRenders;
@@ -382,80 +344,79 @@ void HtmlRenderer::WriteServerRules() {
     }
     OutputText (" ended</li></ul></li>");
     
-    if (GetNumOpenGames(&iNumOpenGames) == OK && GetNumClosedGames(&iNumClosedGames) == OK) {
+    iErrCode = GetNumOpenGames(&iNumOpenGames);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetNumClosedGames(&iNumClosedGames);
+    RETURN_ON_ERROR(iErrCode);
         
-        iNumActiveGames = iNumOpenGames + iNumClosedGames;
+    iNumActiveGames = iNumOpenGames + iNumClosedGames;
         
-        if (iNumActiveGames == 0) {
-            OutputText ("<li>No games are active on the server</li>");
+    if (iNumActiveGames == 0) {
+        OutputText ("<li>No games are active on the server</li>");
+    } else {
+        OutputText ("<li><strong>");
+        if (iNumActiveGames == 1) { 
+            OutputText ("1</strong> game is active");
         } else {
-            OutputText ("<li><strong>");
-            if (iNumActiveGames == 1) { 
-                OutputText ("1</strong> game is active");
-            } else {
-                m_pHttpResponse->WriteText (iNumActiveGames);
-                OutputText ("</strong> games are active");
-            }
-            OutputText (" on the server (<strong>");
-            m_pHttpResponse->WriteText (iNumOpenGames);
-            OutputText ("</strong> open, <strong>");
-            m_pHttpResponse->WriteText (iNumClosedGames);
-            OutputText ("</strong> closed)</li>");
+            m_pHttpResponse->WriteText (iNumActiveGames);
+            OutputText ("</strong> games are active");
+        }
+        OutputText (" on the server (<strong>");
+        m_pHttpResponse->WriteText (iNumOpenGames);
+        OutputText ("</strong> open, <strong>");
+        m_pHttpResponse->WriteText (iNumClosedGames);
+        OutputText ("</strong> closed)</li>");
 
-            unsigned int iNumGamingEmpires = m_siNumGamingEmpires;
+        unsigned int iNumGamingEmpires = m_siNumGamingEmpires;
+        if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60)
+        {
+            // More than a quarter of an hour has passed since the last game check
+            // Lock to ensure only one query is made
+            m_slockEmpiresInGames.Wait();
             if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60) {
 
-                // More than a quarter of an hour has passed since the last game check
-                // Lock to ensure only one query is made
-                m_slockEmpiresInGames.Wait();
-                if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60) {
+                m_stEmpiresInGamesCheck = tNow;
+                m_slockEmpiresInGames.Signal();
 
-                    m_stEmpiresInGamesCheck = tNow;
-                    m_slockEmpiresInGames.Signal();
+                // Yep, the people who lost the race will get the stale value until the query finishes
+                // That's just too bad...
 
-                    // Yep, the people who lost the race will get the stale value until the query finishes
-                    // That's just too bad...
+                iErrCode = GetNumEmpiresInGames(&iNumGamingEmpires);
+                RETURN_ON_ERROR(iErrCode);
+                m_siNumGamingEmpires = iNumGamingEmpires;
+                    
+            } else {
 
-                    iErrCode = GetNumEmpiresInGames (&iNumGamingEmpires);
-                    if (iErrCode == OK) {
-                        m_siNumGamingEmpires = iNumGamingEmpires;
-                    }
+                m_slockEmpiresInGames.Signal();
+            }
+        }
 
-                    else Assert(false);
-
-                } else {
-
-                    m_slockEmpiresInGames.Signal();
-                }
+        if (iNumGamingEmpires == 0) {
+            OutputText ("<li>No empires are in games on the server</li>");
+        } else {
+                
+            if (iNumGamingEmpires == 1) {
+                OutputText ("<li><strong>1</strong> empire is in games on the server</li>");
+            } else {
+                OutputText ("<li><strong>");
+                m_pHttpResponse->WriteText (iNumGamingEmpires);
+                OutputText ("</strong> empires are in games on the server</li>");
             }
 
+            iErrCode = GetNumRecentActiveEmpiresInGames(&iNumGamingEmpires);
+            RETURN_ON_ERROR(iErrCode);
+
             if (iNumGamingEmpires == 0) {
-                OutputText ("<li>No empires are in games on the server</li>");
-            } else {
-                
-                if (iNumGamingEmpires == 1) {
-                    OutputText ("<li><strong>1</strong> empire is in games on the server</li>");
-                } else {
-                    OutputText ("<li><strong>");
-                    m_pHttpResponse->WriteText (iNumGamingEmpires);
-                    OutputText ("</strong> empires are in games on the server</li>");
-                }
-
-                iErrCode = GetNumRecentActiveEmpiresInGames (&iNumGamingEmpires);
-                if (iErrCode == OK) {
-
-                    if (iNumGamingEmpires == 0) {
-                        OutputText ("<li>No empires have played recently on the server</li>");
-                    }
-                    else if (iNumGamingEmpires == 1) {
-                        OutputText ("<li><strong>1</strong> empire has played recently on the server</li>");
-                    }
-                    else {
-                        OutputText ("<li><strong>");
-                        m_pHttpResponse->WriteText (iNumGamingEmpires);
-                        OutputText ("</strong> empires have played recently on the server</li>");
-                    }
-                }
+                OutputText ("<li>No empires have played recently on the server</li>");
+            }
+            else if (iNumGamingEmpires == 1) {
+                OutputText ("<li><strong>1</strong> empire has played recently on the server</li>");
+            }
+            else {
+                OutputText ("<li><strong>");
+                m_pHttpResponse->WriteText (iNumGamingEmpires);
+                OutputText ("</strong> empires have played recently on the server</li>");
             }
         }
     }
@@ -463,86 +424,77 @@ void HtmlRenderer::WriteServerRules() {
     // Machine information
     OutputText ("</ul><p><center><h2>Machine information</h2></center><ul>");
     
-    iErrCode = Time::GetDateString (pszDateString);
-    if (iErrCode == OK) {
+    iErrCode = Time::GetDateString(pszDateString);
+    RETURN_ON_ERROR(iErrCode);
         
-        OutputText ("<li>The server's local time is <strong>");
-        m_pHttpResponse->WriteText (pszDateString);
+    OutputText ("<li>The server's local time is <strong>");
+    m_pHttpResponse->WriteText (pszDateString);
+    OutputText ("</strong>");
+        
+    int iBias;
+    char pszTimeZone[OS::MaxTimeZoneLength];
+        
+    if (Time::GetTimeZone (pszTimeZone, &iBias) == OK) {
+        OutputText (", <strong>");
+        m_pHttpResponse->WriteText (pszTimeZone);
         OutputText ("</strong>");
-        
-        int iBias;
-        char pszTimeZone[OS::MaxTimeZoneLength];
-        
-        if (Time::GetTimeZone (pszTimeZone, &iBias) == OK) {
-            OutputText (", <strong>");
-            m_pHttpResponse->WriteText (pszTimeZone);
-            OutputText ("</strong>");
             
-            if (iBias != 0) {
-                OutputText (" (<strong>");
-                if (iBias < 0) {
-                    OutputText ("GMT");
-                    m_pHttpResponse->WriteText (iBias / 60);
-                } else {
-                    OutputText ("GMT+");
-                    m_pHttpResponse->WriteText (iBias / 60);
-                }
-                OutputText ("</strong>)");
+        if (iBias != 0) {
+            OutputText (" (<strong>");
+            if (iBias < 0) {
+                OutputText ("GMT");
+                m_pHttpResponse->WriteText (iBias / 60);
+            } else {
+                OutputText ("GMT+");
+                m_pHttpResponse->WriteText (iBias / 60);
             }
+            OutputText ("</strong>)");
         }
-        
-        OutputText ("</li>");
     }
+        
+    OutputText ("</li>");
     
     OutputText ("<li>The server machine is running <strong>");
     
     char pszOSVersion[OS::MaxOSVersionLength];
     
     iErrCode = OS::GetOSVersion (pszOSVersion);
-    if (iErrCode == OK) {
-        m_pHttpResponse->WriteText (pszOSVersion);
-    } else {
-        OutputText ("Could not obtain OS version");
-    }
+    RETURN_ON_ERROR(iErrCode);
+    m_pHttpResponse->WriteText (pszOSVersion);
     
     char pszProcessorInformation[OS::MaxProcessorInfoLength];
     
-    if (OS::GetProcessorInformation (pszProcessorInformation, &iNumProcessors, &iMHz) == OK) {
+    iErrCode = OS::GetProcessorInformation(pszProcessorInformation, &iNumProcessors, &iMHz);
+    RETURN_ON_ERROR(iErrCode);
         
-        OutputText ("</strong></li><li>The server machine has <strong>");
-        m_pHttpResponse->WriteText (iNumProcessors);
-        OutputText (" ");
+    OutputText ("</strong></li><li>The server machine has <strong>");
+    m_pHttpResponse->WriteText (iNumProcessors);
+    OutputText (" ");
 
-        if (iMHz != CPU_SPEED_UNAVAILABLE) {
-            m_pHttpResponse->WriteText (iMHz);
-            OutputText (" MHz ");
-        }
-        m_pHttpResponse->WriteText (pszProcessorInformation);
-        OutputText ("</strong> processor");
-        
-        if (iNumProcessors != 1) {
-            OutputText ("s");
-        }
-        OutputText ("</li>");
+    if (iMHz != CPU_SPEED_UNAVAILABLE) {
+        m_pHttpResponse->WriteText (iMHz);
+        OutputText (" MHz ");
     }
+    m_pHttpResponse->WriteText (pszProcessorInformation);
+    OutputText ("</strong> processor");
+        
+    if (iNumProcessors != 1) {
+        OutputText ("s");
+    }
+    OutputText ("</li>");
     
-    if (OS::GetMemoryStatistics (
-        &iTotalPhysicalMemory, 
-        &iTotalFreePhysicalMemory, 
-        &iTotalSwapMemory, 
-        &iTotalFreeSwapMemory
-        ) == OK) {
-        
-        OutputText ("<li>The server machine has <strong>");
-        m_pHttpResponse->WriteText ((int64) iTotalPhysicalMemory / 1024);
-        OutputText (" KB</strong> of physical memory, of which <strong>");
-        m_pHttpResponse->WriteText ((int64) (iTotalPhysicalMemory - iTotalFreePhysicalMemory) / 1024);
-        OutputText (" KB</strong> are in use</li><li>The server machine has <strong>");
-        m_pHttpResponse->WriteText ((int64) iTotalSwapMemory / 1024);
-        OutputText (" KB</strong> of swap memory, of which <strong>");
-        m_pHttpResponse->WriteText ((int64) (iTotalSwapMemory - iTotalFreeSwapMemory) / 1024);
-        OutputText (" KB</strong> are in use</li>");
-    }
+    iErrCode = OS::GetMemoryStatistics(&iTotalPhysicalMemory, &iTotalFreePhysicalMemory, &iTotalSwapMemory, &iTotalFreeSwapMemory);
+    RETURN_ON_ERROR(iErrCode);
+    
+    OutputText ("<li>The server machine has <strong>");
+    m_pHttpResponse->WriteText ((int64) iTotalPhysicalMemory / 1024);
+    OutputText (" KB</strong> of physical memory, of which <strong>");
+    m_pHttpResponse->WriteText ((int64) (iTotalPhysicalMemory - iTotalFreePhysicalMemory) / 1024);
+    OutputText (" KB</strong> are in use</li><li>The server machine has <strong>");
+    m_pHttpResponse->WriteText ((int64) iTotalSwapMemory / 1024);
+    OutputText (" KB</strong> of swap memory, of which <strong>");
+    m_pHttpResponse->WriteText ((int64) (iTotalSwapMemory - iTotalFreeSwapMemory) / 1024);
+    OutputText (" KB</strong> are in use</li>");
     
     OutputText ("</ul><p><center><h2>Ships</h2></center><ul><li>Ships are not destroyed "\
         "if they perform special actions at costs that are beneath their full capacities</li>"\
@@ -962,16 +914,16 @@ void HtmlRenderer::WriteServerRules() {
     }
 
     OutputText ("<li>The default icon for new empires is: ");
-    EnsureDefaultSystemIcon();
+    iErrCode = EnsureDefaultSystemIcon();
+    RETURN_ON_ERROR(iErrCode);
     WriteEmpireIcon(m_iDefaultSystemIcon, NO_KEY, NULL, false);
     OutputText ("</li>");
 
     iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);
-    if (iErrCode == OK) {
-        OutputText ("<li>The icon used for system messages is: ");
-        WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
-        OutputText ("</li>");
-    }
+    RETURN_ON_ERROR(iErrCode);
+    OutputText ("<li>The icon used for system messages is: ");
+    WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
+    OutputText ("</li>");
     
     OutputText ("</ul><center><h2>Score</h2></center><ul><li>A win gives <strong>");
     
@@ -1026,36 +978,36 @@ void HtmlRenderer::WriteServerRules() {
 
     } else {
     
-        if (GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMES, &fValue) == OK) {
+        iErrCode = GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMES, &fValue);
+        RETURN_ON_ERROR(iErrCode);
             
-            OutputText ("<li>Empires with Almonaster scores greater than <strong>");
-            m_pHttpResponse->WriteText (fValue);    
-            OutputText ("</strong> are considered <strong>");
-            m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMES]);
-            OutputText ("</strong> and have the right to create their own personal games</li>");
-        }
+        OutputText ("<li>Empires with Almonaster scores greater than <strong>");
+        m_pHttpResponse->WriteText (fValue);    
+        OutputText ("</strong> are considered <strong>");
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMES]);
+        OutputText ("</strong> and have the right to create their own personal games</li>");
         
-        if (GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fValue) == OK &&
-            GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vValue) == OK) {
-            
-            OutputText ("<li>Empires with Almonaster scores greater than <strong>");
-            m_pHttpResponse->WriteText (fValue);
-            OutputText ("</strong> are considered <strong>");
-            m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMECLASSES]);
-            OutputText ("</strong> and have the right to create personal Tournaments and up to <strong>");
-            m_pHttpResponse->WriteText (vValue.GetInteger());
-            OutputText ("</strong> personal GameClasses</li>");
-        }
+        iErrCode = GetScoreForPrivilege(PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fValue);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetSystemProperty(SystemData::MaxNumPersonalGameClasses, &vValue);
+        RETURN_ON_ERROR(iErrCode);
+
+        OutputText ("<li>Empires with Almonaster scores greater than <strong>");
+        m_pHttpResponse->WriteText (fValue);
+        OutputText ("</strong> are considered <strong>");
+        m_pHttpResponse->WriteText (PRIVILEGE_STRING_PLURAL [PRIVILEGE_FOR_PERSONAL_GAMECLASSES]);
+        OutputText ("</strong> and have the right to create personal Tournaments and up to <strong>");
+        m_pHttpResponse->WriteText (vValue.GetInteger());
+        OutputText ("</strong> personal GameClasses</li>");
     }
 
-    if (GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege) == OK) {
+    iErrCode = GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege);
+    RETURN_ON_ERROR(iErrCode);
 
-        OutputText ("<li>Empires with a privilege level of <strong>");
-        m_pHttpResponse->WriteText (PRIVILEGE_STRING [vUnlimitedEmpirePrivilege.GetInteger()]);
-        OutputText ("</strong> or greater have the right to create games with an unlimited "\
-            "maximum number of empires");
-
-    }
+    OutputText ("<li>Empires with a privilege level of <strong>");
+    m_pHttpResponse->WriteText (PRIVILEGE_STRING [vUnlimitedEmpirePrivilege.GetInteger()]);
+    OutputText ("</strong> or greater have the right to create games with an unlimited maximum number of empires");
 
     OutputText (
         "</li>"\
@@ -1249,12 +1201,6 @@ void HtmlRenderer::WriteServerRules() {
         
         "</table>"
 */
-        
-        return;
-        
-ErrorExit:
-        
-        OutputText ("<p><strong>Error ");
-        m_pHttpResponse->WriteText (iErrCode);
-        OutputText (" occurred reading server configuration data</strong>");
+
+    return iErrCode;
 }

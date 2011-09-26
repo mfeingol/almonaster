@@ -57,9 +57,13 @@ private:
 public:
     Global();
 
+    // Thread-static
     void TlsOpenConnection();
     int TlsCommitTransaction();
     void TlsCloseConnection();
+
+    void InitRequestId();
+    void GetRequestId(Uuid* puuidReqId);
 
     int Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl);
     void Close();
@@ -83,10 +87,10 @@ public:
 
 extern Global global;
 
+void TraceError(int iErrCode, const char* pszFile, int iLine);
+
 #define TRACE_ERROR(iErrCode)                                                               \
-    char* pszError = (char*)StackAlloc(512 * sizeof(char));                                 \
-    sprintf(pszError, "Error %i occurred in %s line %i", iErrCode, __FILE__, __LINE__);     \
-    global.GetReport()->WriteReport(pszError);
+    TraceError(iErrCode, __FILE__, __LINE__);
 
 #define GOTO_CLEANUP_ON_ERROR(iErrCode)                                                     \
     if (iErrCode != OK)                                                                     \
