@@ -971,19 +971,13 @@ int GameEngine::SetMaxNumSecsPerUpdateForSystemGameClass (int iMaxNumSecsPerUpda
     return iErrCode;
 }
 
-int GameEngine::SetMaxNumEmpiresForSystemGameClass (int iMaxNumEmpires) {
-
-    if (iMaxNumEmpires < 0) {
-        return ERROR_INVALID_ARGUMENT;
-    }
+int GameEngine::SetMaxNumEmpiresForSystemGameClass (int iMaxNumEmpires)
+{
     return t_pCache->WriteData(SYSTEM_DATA, SystemData::SystemMaxNumEmpires, iMaxNumEmpires);
 }
 
-int GameEngine::SetMaxNumPlanetsForSystemGameClass (int iMaxNumPlanets) {
-
-    if (iMaxNumPlanets < 0) {
-        return ERROR_INVALID_ARGUMENT;
-    }
+int GameEngine::SetMaxNumPlanetsForSystemGameClass (int iMaxNumPlanets)
+{
     return t_pCache->WriteData(SYSTEM_DATA, SystemData::SystemMaxNumPlanets, iMaxNumPlanets);
 }
 

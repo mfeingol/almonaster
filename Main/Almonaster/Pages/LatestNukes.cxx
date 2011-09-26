@@ -31,30 +31,30 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 int iNumNukes;
-Variant** ppvNukeData;
+Variant** ppvNukeData = NULL;
+AutoFreeData free_ppvNukeData(ppvNukeData);
 
-if (GetSystemNukeHistory (&iNumNukes, &ppvNukeData) != OK) {
+iErrCode = GetSystemNukeHistory(&iNumNukes, &ppvNukeData);
+RETURN_ON_ERROR(iErrCode);
 
-    %><p><strong>The latest nukes could not be read</strong><%
-}
-
-else if (iNumNukes == 0) {
-
+if (iNumNukes == 0)
+{
     %><p><h3>No nukes have been recorded on this server</h3><%
 }
-
-else {
-
+else
+{
     int i;
 
     NotifyProfileLink();
@@ -100,8 +100,8 @@ else {
     %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center"><%
     %>Time</th></tr><%
 
-    for (i = 0; i < iNumNukes; i ++) {
-
+    for (i = 0; i < iNumNukes; i ++)
+    {
         %><tr><%
 
         %><td align="center"><strong><%
@@ -157,16 +157,9 @@ else {
 
         %><td align="center"><%
 
-        iErrCode = Time::GetDateString (
-            ppvData[i][SystemNukeList::iTimeStamp].GetInteger64(), 
-            pszDateString
-            );
-
-        if (iErrCode == OK) {
-            m_pHttpResponse->WriteText (pszDateString);
-        } else {
-            OutputText ("Unknown");
-        }
+        iErrCode = Time::GetDateString(ppvData[i][SystemNukeList::iTimeStamp].GetInteger64(), pszDateString);
+        Assert(iErrCode == OK);
+        m_pHttpResponse->WriteText (pszDateString);
 
         %></td><%
 
@@ -174,8 +167,6 @@ else {
     }
 
     %></table><%
-
-    t_pCache->FreeData (ppvNukeData);
 }
 
 

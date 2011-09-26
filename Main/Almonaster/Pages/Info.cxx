@@ -40,41 +40,52 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 bool bGameStarted = (m_iGameState & STARTED) != 0, bIsOpen;
 
 // Individual page stuff starts here
 String strTime;
 Variant* pvEmpireData = NULL, vMaxAgRatio, vPopNeeded;
-int iNumShips, iBattleRank, iMilVal, iMin, iFuel, iAg, iUpdatedEmpires, iNextBattleRank, iRatio,
-    iMinUsed, iMaxNumShips;
+AutoFreeData free_pvEmpireData(pvEmpireData);
+
+int iNumShips, iBattleRank, iMilVal, iMin, iFuel, iAg, iUpdatedEmpires, iNextBattleRank, iRatio, iMinUsed, iMaxNumShips;
 unsigned int iActiveEmpires;
+float fTechDev, fMaintRatio, fFuelRatio, fAgRatio, fHypAgRatio, fHypMaintRatio, fHypFuelRatio, fNextTechIncrease, fNextTechLevel, fMaxTechDev;
 
-float fTechDev, fMaintRatio, fFuelRatio, fAgRatio, fHypAgRatio, fHypMaintRatio, fHypFuelRatio, 
-    fNextTechIncrease, fNextTechLevel, fMaxTechDev;
+iErrCode = GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdatedEmpires);
+RETURN_ON_ERROR(iErrCode);
 
-GameCheck (GetNumUpdatedEmpires (m_iGameClass, m_iGameNumber, &iUpdatedEmpires));
-GameCheck (GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires));
+iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iActiveEmpires);
+RETURN_ON_ERROR(iErrCode);
 
-GameCheck (GetEmpireGameInfo (m_iGameClass, m_iGameNumber, m_iEmpireKey, &pvEmpireData, &iNumShips,
+iErrCode = GetEmpireGameInfo (m_iGameClass, m_iGameNumber, m_iEmpireKey, &pvEmpireData, &iNumShips,
     &iBattleRank, &iMilVal, &fTechDev, &fMaintRatio, &fFuelRatio, &fAgRatio, &fHypMaintRatio, &fHypFuelRatio, 
-    &fHypAgRatio, &fNextTechIncrease, &iMaxNumShips));
+    &fHypAgRatio, &fNextTechIncrease, &iMaxNumShips);
+RETURN_ON_ERROR(iErrCode);
 
-GameCheck (GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev));
+iErrCode = GetGameClassMaxTechIncrease (m_iGameClass, &fMaxTechDev);
+RETURN_ON_ERROR(iErrCode);
 
-GameCheck (GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxAgRatio, &vMaxAgRatio));
-GameCheck (GetGameClassProperty (m_iGameClass, SystemGameClassData::BuilderPopLevel, &vPopNeeded));
+iErrCode = GetGameClassProperty (m_iGameClass, SystemGameClassData::MaxAgRatio, &vMaxAgRatio);
+RETURN_ON_ERROR(iErrCode);
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+iErrCode = GetGameClassProperty (m_iGameClass, SystemGameClassData::BuilderPopLevel, &vPopNeeded);
+RETURN_ON_ERROR(iErrCode);
+
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 %><p><font size="4"><strong>Game Information</strong></font><%
@@ -101,9 +112,7 @@ if (bGameStarted) {
     
     int iMinNumEmpires, iTotal;
     iErrCode = GetNumEmpiresRequiredForGameToStart (m_iGameClass, &iMinNumEmpires);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iTotal = iMinNumEmpires - iActiveEmpires;
     %>When <strong><font color="#<% Write (m_vBadColor.GetCharPtr()); %>"><% Write (iTotal); 
@@ -119,9 +128,7 @@ if (m_iGameOptions & UPDATED) {
 } %> for an update</td><td align="center"><%
 
 iErrCode = IsGameOpen (m_iGameClass, m_iGameNumber, &bIsOpen);
-if (iErrCode != OK) {
-    goto Cleanup;
-}
+RETURN_ON_ERROR(iErrCode);
 
 if (bIsOpen) {
     %>The game is <strong><font color=<% Write (m_vBadColor.GetCharPtr());%>>open</font></strong><% 
@@ -399,15 +406,6 @@ if (iMaxNumShips == INFINITE_SHIPS) {
 
 %></tr><%
 %></table><%
-
-
-Cleanup:
-
-t_pCache->FreeData(pvEmpireData);
-
-if (iErrCode != OK) {
-    %><p>Error <% Write (iErrCode); %>occurred reading from the database<%
-}
 
 iErrCode = CloseGamePage();
 RETURN_ON_ERROR(iErrCode);

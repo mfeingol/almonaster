@@ -1170,10 +1170,8 @@ public:
         AddMessage ("You could not enter the game because your Session Id was the same as an empire already playing the game");                                         \
         return Redirect (m_pgPageId);                       \
     default:                                                                                            \
-        AddMessage ("Error ");                                                      \
-        AppendMessage (iErrCode);                                                               \
-        AppendMessage (" occurred while creating a game");                                  \
-        return iErrCode;                       \
+        RETURN_ON_ERROR(iErrCode);                          \
+        return iErrCode;                                    \
     }
 
 #define HANDLE_ENTER_GAME_OUTPUT(iErrCode)                                                      \
@@ -1225,8 +1223,6 @@ public:
         AddMessage ("You could not enter the game because your Session Id was the same as an empire already playing the game");                                         \
         return Redirect (m_pgPageId);                                                           \
     default:                                                                                    \
-        AddMessage ("Unknown error ");                                                          \
-        AppendMessage (iErrCode);                                                               \
-        AppendMessage (" occurred while entering a game");                                      \
+        RETURN_ON_ERROR(iErrCode);                                                              \
         return iErrCode;                                                                        \
     }

@@ -40,20 +40,24 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 WriteContributions();

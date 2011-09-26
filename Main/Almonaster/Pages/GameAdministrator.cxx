@@ -94,47 +94,78 @@ if (m_bOwnPost && !m_bRedirection) {
 
             const char* pszNewValue;
 
-            Check (GetMinNumSecsPerUpdateForSystemGameClass (&iSystemMinNumSecsPerUpdate));
-            Check (GetMaxNumSecsPerUpdateForSystemGameClass (&iSystemMaxNumSecsPerUpdate));
-            Check (GetMaxNumEmpiresForSystemGameClass (&iSystemMaxNumEmpires));
-            Check (GetMaxNumPlanetsForSystemGameClass (&iSystemMaxNumPlanets));
+            iErrCode = GetMinNumSecsPerUpdateForSystemGameClass (&iSystemMinNumSecsPerUpdate);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxNumUpdatesBeforeClose));
-            Check (GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesBeforeClose));
+            iErrCode = GetMaxNumSecsPerUpdateForSystemGameClass (&iSystemMaxNumSecsPerUpdate);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetMinNumSecsPerUpdateForPersonalGameClass (&iPersonalMinNumSecsPerUpdate));
-            Check (GetMaxNumSecsPerUpdateForPersonalGameClass (&iPersonalMaxNumSecsPerUpdate));
-            Check (GetMaxNumEmpiresForPersonalGameClass (&iPersonalMaxNumEmpires));
-            Check (GetMaxNumPlanetsForPersonalGameClass (&iPersonalMaxNumPlanets));
+            iErrCode = GetMaxNumEmpiresForSystemGameClass (&iSystemMaxNumEmpires);
+            RETURN_ON_ERROR(iErrCode);
 
-            Variant vMaxResourcesPerPlanet, vMaxResourcesPerPlanetPersonal, vMaxInitialTechLevel, 
-                vMaxInitialTechLevelPersonal, vMaxTechDev, vMaxTechDevPersonal;
+            iErrCode = GetMaxNumPlanetsForSystemGameClass (&iSystemMaxNumPlanets);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet));
-            Check (GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanetPersonal));
+            iErrCode = GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxNumUpdatesBeforeClose);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemProperty (SystemData::MaxInitialTechLevel, &vMaxInitialTechLevel));
-            Check (GetSystemProperty (SystemData::MaxInitialTechLevelPersonal, &vMaxInitialTechLevelPersonal));
+            iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesBeforeClose);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemProperty (SystemData::MaxTechDev, &vMaxTechDev));
-            Check (GetSystemProperty (SystemData::MaxTechDevPersonal, &vMaxTechDevPersonal));
+            iErrCode = GetMinNumSecsPerUpdateForPersonalGameClass (&iPersonalMinNumSecsPerUpdate);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemProperty (SystemData::AfterWeekendDelay, &vDelay));
+            iErrCode = GetMaxNumSecsPerUpdateForPersonalGameClass (&iPersonalMaxNumSecsPerUpdate);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemOptions (&iSystemOptions));
+            iErrCode = GetMaxNumEmpiresForPersonalGameClass (&iPersonalMaxNumEmpires);
+            RETURN_ON_ERROR(iErrCode);
 
-            Check (GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege));
+            iErrCode = GetMaxNumPlanetsForPersonalGameClass (&iPersonalMaxNumPlanets);
+            RETURN_ON_ERROR(iErrCode);
+
+            Variant vMaxResourcesPerPlanet, vMaxResourcesPerPlanetPersonal, vMaxInitialTechLevel, vMaxInitialTechLevelPersonal, vMaxTechDev, vMaxTechDevPersonal;
+
+            iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanetPersonal);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::MaxInitialTechLevel, &vMaxInitialTechLevel);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::MaxInitialTechLevelPersonal, &vMaxInitialTechLevelPersonal);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::MaxTechDev, &vMaxTechDev);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::MaxTechDevPersonal, &vMaxTechDevPersonal);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::AfterWeekendDelay, &vDelay);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemOptions (&iSystemOptions);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege);
+            RETURN_ON_ERROR(iErrCode);
 
             GameConfiguration gcOldConfig, gcNewConfig;
             MapConfiguration mcOldConfig, mcNewConfig;
 
-            memset (&gcOldConfig, 0, sizeof (gcOldConfig));
-            memset (&gcNewConfig, 0, sizeof (gcNewConfig));
-            memset (&mcOldConfig, 0, sizeof (mcOldConfig));
-            memset (&mcNewConfig, 0, sizeof (mcNewConfig));
+            memset(&gcOldConfig, 0, sizeof (gcOldConfig));
+            memset(&gcNewConfig, 0, sizeof (gcNewConfig));
+            memset(&mcOldConfig, 0, sizeof (mcOldConfig));
+            memset(&mcNewConfig, 0, sizeof (mcNewConfig));
 
-            Check (GetGameConfiguration (&gcOldConfig));
-            Check (GetMapConfiguration (&mcOldConfig));
+            iErrCode = GetGameConfiguration (&gcOldConfig);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetMapConfiguration (&mcOldConfig);
+            RETURN_ON_ERROR(iErrCode);
 
             // Empires
             if ((pHttpForm = m_pHttpRequest->GetForm ("SMaxEmps")) == NULL) {
@@ -142,11 +173,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != iSystemMaxNumEmpires) {
-                if (SetMaxNumEmpiresForSystemGameClass (iNewValue) == OK) {
+            if (iNewValue != iSystemMaxNumEmpires)
+            {
+                if (iNewValue < 2)
+                {
+                   AddMessage ("Invalid maximum number of empires for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMaxNumEmpiresForSystemGameClass(iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The maximum number of empires for a System GameClass was updated");
-                } else {
-                    AddMessage ("Invalid maximum number of empires for a System GameClass");
                 }
             }
 
@@ -156,11 +193,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != iSystemMaxNumPlanets) {
-                if (SetMaxNumPlanetsForSystemGameClass (iNewValue) == OK) {
+            if (iNewValue != iSystemMaxNumPlanets)
+            {
+                if (iNewValue < 2)
+                {
+                   AddMessage ("Invalid maximum number of planets for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMaxNumPlanetsForSystemGameClass(iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The maximum number of planets for a System GameClass was updated");
-                } else {
-                    AddMessage ("Invalid maximum number of planets for a System GameClass");
                 }
             }
 
@@ -170,11 +213,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != vMaxNumUpdatesBeforeClose.GetInteger()) {
-                if (SetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, iNewValue) == OK) {
+            if (iNewValue != vMaxNumUpdatesBeforeClose.GetInteger())
+            {
+                if (iNewValue < 2)
+                {
+                   AddMessage ("Invalid maximum number of updates before closing");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::MaxNumUpdatesBeforeClose, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The maximum number of updates before closing was updated");
-                } else {
-                    AddMessage ("Invalid maximum number of updates before closing");
                 }
             }
 
@@ -184,11 +233,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != vDefaultNumUpdatesBeforeClose.GetInteger()) {
-                if (SetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, iNewValue) == OK) {
+            if (iNewValue != vDefaultNumUpdatesBeforeClose.GetInteger())
+            {
+                if (iNewValue < 1)
+                {
+                   AddMessage ("Invalid default number of updates before closing");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::DefaultNumUpdatesBeforeClose, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The default number of updates before closing was updated");
-                } else {
-                    AddMessage ("Invalid default number of updates before closing");
                 }
             }
 
@@ -198,12 +253,11 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != (iSystemOptions & DEFAULT_BRIDIER_GAMES)) {
-                if (SetSystemOption (DEFAULT_BRIDIER_GAMES, iNewValue != 0) == OK) {
-                    AddMessage ("The default Bridier configuration was updated");
-                } else {
-                    AddMessage ("The default Bridier configuration could not be updated");
-                }
+            if (iNewValue != (iSystemOptions & DEFAULT_BRIDIER_GAMES))
+            {
+                iErrCode = SetSystemOption(DEFAULT_BRIDIER_GAMES, iNewValue != 0);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default Bridier configuration was updated");
             }
 
             // DefaultNamesListed
@@ -212,12 +266,11 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != (iSystemOptions & DEFAULT_NAMES_LISTED)) {
-                if (SetSystemOption (DEFAULT_NAMES_LISTED, iNewValue != 0) == OK) {
-                    AddMessage ("The default names listed configuration was updated");
-                } else {
-                    AddMessage ("The default names listed configuration could not be updated");
-                }
+            if (iNewValue != (iSystemOptions & DEFAULT_NAMES_LISTED))
+            {
+                iErrCode = SetSystemOption (DEFAULT_NAMES_LISTED, iNewValue != 0);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default names listed configuration was updated");
             }
 
             // DefaultSpectator
@@ -226,12 +279,11 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != (iSystemOptions & DEFAULT_ALLOW_SPECTATORS)) {
-                if (SetSystemOption (DEFAULT_ALLOW_SPECTATORS, iNewValue != 0) == OK) {
-                    AddMessage ("The default spectator game setting was updated");
-                } else {
-                    AddMessage ("The default spectator game setting could not be updated");
-                }
+            if (iNewValue != (iSystemOptions & DEFAULT_ALLOW_SPECTATORS))
+            {
+                iErrCode = SetSystemOption (DEFAULT_ALLOW_SPECTATORS, iNewValue != 0);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default spectator game setting was updated");
             }
 
             // FilterIP
@@ -243,15 +295,19 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iNewValue != (iSystemOptions & (DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS | DEFAULT_BLOCK_ON_DUPLICATE_IP_ADDRESS))) {
 
                 if (iNewValue & DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS) {
-                    Check (SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS, true));
+                    iErrCode = SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS, true);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
-                    Check (SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS, false));
+                    iErrCode = SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_IP_ADDRESS, false);
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
                 if (iNewValue & DEFAULT_BLOCK_ON_DUPLICATE_IP_ADDRESS) {
-                    Check (SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_IP_ADDRESS, true));
+                    iErrCode = SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_IP_ADDRESS, true);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
-                    Check (SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_IP_ADDRESS, false));
+                    iErrCode = SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_IP_ADDRESS, false);
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
                 AddMessage ("The default IP Address filtering configuration was updated");
@@ -266,15 +322,19 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iNewValue != (iSystemOptions & (DEFAULT_WARN_ON_DUPLICATE_SESSION_ID | DEFAULT_BLOCK_ON_DUPLICATE_SESSION_ID))) {
 
                 if (iNewValue & DEFAULT_WARN_ON_DUPLICATE_SESSION_ID) {
-                    Check (SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_SESSION_ID, true));
+                    iErrCode = SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_SESSION_ID, true);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
-                    Check (SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_SESSION_ID, false));
+                    iErrCode = SetSystemOption (DEFAULT_WARN_ON_DUPLICATE_SESSION_ID, false);
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
                 if (iNewValue & DEFAULT_BLOCK_ON_DUPLICATE_SESSION_ID) {
-                    Check (SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_SESSION_ID, true));
+                    iErrCode = SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_SESSION_ID, true);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
-                    Check (SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_SESSION_ID, false));
+                    iErrCode = SetSystemOption (DEFAULT_BLOCK_ON_DUPLICATE_SESSION_ID, false);
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
                 AddMessage ("The default Session Id filtering configuration was updated");
@@ -288,7 +348,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != ((iSystemOptions & DEFAULT_RESTRICT_IDLE_EMPIRES) != 0)) {
             
-                Check (SetSystemOption (DEFAULT_RESTRICT_IDLE_EMPIRES, bNewValue));
+                iErrCode = SetSystemOption (DEFAULT_RESTRICT_IDLE_EMPIRES, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default idle empire blocking configuration was updated");
             }
 
@@ -298,11 +359,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != vMaxResourcesPerPlanet.GetInteger()) {
-                if (SetSystemProperty (SystemData::MaxResourcesPerPlanet, iNewValue) == OK) {
-                    AddMessage ("The maximum average resources per attribute per planet for a System GameClass was updated");
-                } else {
+            if (iNewValue != vMaxResourcesPerPlanet.GetInteger())
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid maximum average resources per attribute per planet for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty (SystemData::MaxResourcesPerPlanet, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum average resources per attribute per planet for a System GameClass was updated");
                 }
             }
 
@@ -312,11 +379,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             float fNewValue = pHttpForm->GetFloatValue();
 
-            if (fNewValue != vMaxInitialTechLevel.GetFloat()) {
-                if (SetSystemProperty (SystemData::MaxInitialTechLevel, fNewValue) == OK) {
-                    AddMessage ("The maximum initial tech level for a System GameClass was updated");
-                } else {
+            if (fNewValue != vMaxInitialTechLevel.GetFloat())
+            {
+                if (fNewValue < 1)
+                {
                     AddMessage ("Invalid maximum initial tech level for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty (SystemData::MaxInitialTechLevel, fNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum initial tech level for a System GameClass was updated");
                 }
             }
 
@@ -326,11 +399,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             fNewValue = pHttpForm->GetFloatValue();
 
-            if (fNewValue != vMaxTechDev.GetFloat()) {
-                if (SetSystemProperty (SystemData::MaxTechDev, fNewValue) == OK) {
-                    AddMessage ("The maximum tech development for a System GameClass was updated");
-                } else {
+            if (fNewValue != vMaxTechDev.GetFloat())
+            {
+                if (fNewValue < 0)
+                {
                     AddMessage ("Invalid maximum tech development for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty (SystemData::MaxTechDev, fNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum tech development for a System GameClass was updated");
                 }
             }
 
@@ -348,11 +427,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue += pHttpForm->GetIntValue();
 
-            if (iNewValue != iSystemMinNumSecsPerUpdate) {
-                if (SetMinNumSecsPerUpdateForSystemGameClass (iNewValue) == OK) {
-                    AddMessage ("The minimum update period for a System GameClass was updated");
-                } else {
+            if (iNewValue != iSystemMinNumSecsPerUpdate)
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid minimum update period for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMinNumSecsPerUpdateForSystemGameClass (iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The minimum update period for a System GameClass was updated");
                 }
             }
 
@@ -370,11 +455,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue += pHttpForm->GetIntValue();
 
-            if (iNewValue != iSystemMaxNumSecsPerUpdate) {
-                if (SetMaxNumSecsPerUpdateForSystemGameClass (iNewValue) == OK) {
-                    AddMessage ("The maximum update period for a System GameClass was updated");
-                } else {
+            if (iNewValue != iSystemMaxNumSecsPerUpdate)
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid maximum update period for a System GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMaxNumSecsPerUpdateForSystemGameClass (iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum update period for a System GameClass was updated");
                 }
             }
 
@@ -387,11 +478,17 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             iOldValue = pHttpForm->GetIntValue();
-            if (iNewValue != iOldValue && iNewValue >= 0) {
-                if (SetSystemProperty (SystemData::MaxNumPersonalGameClasses, iNewValue) == OK) {
+            if (iNewValue != iOldValue && iNewValue >= 0)
+            {
+                if (iNewValue < 0)
+                {
+                    AddMessage ("Invalid maximum number of personal GameClasses");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty (SystemData::MaxNumPersonalGameClasses, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The maximum number of personal GameClasses was updated");
-                } else {
-                    AddMessage ("The maximum number of personal GameClasses could not be updated");
                 }
             }
 
@@ -404,11 +501,17 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             iOldValue = pHttpForm->GetIntValue();
-            if (iNewValue != iOldValue && iNewValue >= 0) {
-                if (SetSystemProperty (SystemData::MaxNumPersonalTournaments, iNewValue) == OK) {
+            if (iNewValue != iOldValue && iNewValue >= 0)
+            {
+                if (iNewValue < 0)
+                {
+                    AddMessage ("Invalid maximum number of personal tournaments");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty (SystemData::MaxNumPersonalTournaments, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The maximum number of personal tournaments was updated");
-                } else {
-                    AddMessage ("The maximum number of personal tournaments could not be updated");
                 }
             }
 
@@ -421,11 +524,17 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             iOldValue = pHttpForm->GetIntValue();
-            if (iNewValue != iOldValue && iNewValue >= 0) {
-                if (SetSystemProperty (SystemData::MaxNumGameClassesPerPersonalTournament, iNewValue) == OK) {
+            if (iNewValue != iOldValue && iNewValue >= 0)
+            {
+                if (iNewValue < 1)
+                {
+                    AddMessage ("Invalid maximum number of GameClasses per personal tournament");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty (SystemData::MaxNumGameClassesPerPersonalTournament, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The maximum number of GameClasses per personal tournament was updated");
-                } else {
-                    AddMessage ("The maximum number of GameClasses per personal tournament could not be updated");
                 }
             }
 
@@ -435,11 +544,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != iPersonalMaxNumEmpires) {
-                if (SetMaxNumEmpiresForPersonalGameClass (iNewValue) == OK) {
-                    AddMessage ("The maximum number of empires for a personal GameClass was updated");
-                } else {
+            if (iNewValue != iPersonalMaxNumEmpires)
+            {
+                if (iNewValue < 2)
+                {
                     AddMessage ("Invalid maximum number of empires for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMaxNumEmpiresForPersonalGameClass(iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum number of empires for a personal GameClass was updated");
                 }
             }
 
@@ -449,11 +564,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != iPersonalMaxNumPlanets) {
-                if (SetMaxNumPlanetsForPersonalGameClass (iNewValue) == OK) {
-                    AddMessage ("The maximum number of planets for a personal GameClass was updated");
-                } else {
+            if (iNewValue != iPersonalMaxNumPlanets)
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid maximum number of planets for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMaxNumPlanetsForPersonalGameClass(iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum number of planets for a personal GameClass was updated");
                 }
             }
 
@@ -463,11 +584,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != vMaxResourcesPerPlanetPersonal.GetInteger()) {
-                if (SetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, iNewValue) == OK) {
-                    AddMessage ("The maximum average resources per attribute per planet for a personal GameClass was updated");
-                } else {
+            if (iNewValue != vMaxResourcesPerPlanetPersonal.GetInteger())
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid maximum average resources per attribute per planet for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::MaxResourcesPerPlanetPersonal, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum average resources per attribute per planet for a personal GameClass was updated");
                 }
             }
 
@@ -477,11 +604,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             fNewValue = pHttpForm->GetFloatValue();
 
-            if (fNewValue != vMaxInitialTechLevelPersonal.GetFloat()) {
-                if (SetSystemProperty (SystemData::MaxInitialTechLevelPersonal, fNewValue) == OK) {
-                    AddMessage ("The maximum initial tech level for a personal GameClass was updated");
-                } else {
+            if (fNewValue != vMaxInitialTechLevelPersonal.GetFloat())
+            {
+                if (fNewValue < 1)
+                {
                     AddMessage ("Invalid maximum initial tech level for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::MaxInitialTechLevelPersonal, fNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum initial tech level for a personal GameClass was updated");
                 }
             }
 
@@ -491,11 +624,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             fNewValue = pHttpForm->GetFloatValue();
 
-            if (fNewValue != vMaxTechDevPersonal.GetFloat()) {
-                if (SetSystemProperty (SystemData::MaxTechDevPersonal, fNewValue) == OK) {
-                    AddMessage ("The maximum tech development for a personal GameClass was updated");
-                } else {
+            if (fNewValue != vMaxTechDevPersonal.GetFloat())
+            {
+                if (fNewValue < 1)
+                {
                     AddMessage ("Invalid maximum tech development for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::MaxTechDevPersonal, fNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum tech development for a personal GameClass was updated");
                 }
             }
 
@@ -513,11 +652,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue += pHttpForm->GetIntValue();
 
-            if (iNewValue != iPersonalMinNumSecsPerUpdate) {
-                if (SetMinNumSecsPerUpdateForPersonalGameClass (iNewValue) == OK) {
-                    AddMessage ("The minimum update period for a personal GameClass was updated");
-                } else {
+            if (iNewValue != iPersonalMinNumSecsPerUpdate)
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid minimum update period for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMinNumSecsPerUpdateForPersonalGameClass(iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The minimum update period for a personal GameClass was updated");
                 }
             }
 
@@ -535,11 +680,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue += pHttpForm->GetIntValue();
 
-            if (iNewValue != iPersonalMaxNumSecsPerUpdate) {
-                if (SetMaxNumSecsPerUpdateForPersonalGameClass (iNewValue) == OK) {
-                    AddMessage ("The maximum update period for a personal GameClass was updated");
-                } else {
+            if (iNewValue != iPersonalMaxNumSecsPerUpdate)
+            {
+                if (iNewValue < 1)
+                {
                     AddMessage ("Invalid maximum update period for a personal GameClass");
+                }
+                else
+                {
+                    iErrCode = SetMaxNumSecsPerUpdateForPersonalGameClass(iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The maximum update period for a personal GameClass was updated");
                 }
             }
 
@@ -549,11 +700,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != vUnlimitedEmpirePrivilege.GetInteger()) {
-                if (SetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, iNewValue) == OK) {
-                    AddMessage ("The privilege level required to create games with unlimited empires was updated");
-                } else {
+            if (iNewValue != vUnlimitedEmpirePrivilege.GetInteger())
+            {
+                if (iNewValue < NOVICE || iNewValue > ADMINISTRATOR)
+                {
                     AddMessage ("The privilege level required to create games with unlimited empires could not be set");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::PrivilegeForUnlimitedEmpires, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The privilege level required to create games with unlimited empires was updated");
                 }
             }
             
@@ -563,9 +720,10 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             bNewValue = pHttpForm->GetIntValue() != 0;
 
-            if (bNewValue != ((iSystemOptions & PAUSE_GAMES_BY_DEFAULT) != 0)) {
-            
-                Check (SetSystemOption (PAUSE_GAMES_BY_DEFAULT, bNewValue));
+            if (bNewValue != ((iSystemOptions & PAUSE_GAMES_BY_DEFAULT) != 0))
+            {
+                iErrCode = SetSystemOption (PAUSE_GAMES_BY_DEFAULT, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default pause game setting was updated");
             }
 
@@ -585,19 +743,21 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iNewValue != vDelay.GetInteger()) {
 
-                if (iNewValue > MAX_AFTER_WEEKEND_DELAY) {
-
-                    AddMessage ("The after weekend delay was greater than ");
+                if (iNewValue < 0)
+                {
+                    AddMessage("Invalid after weekend delay");
+                }
+                else if (iNewValue > MAX_AFTER_WEEKEND_DELAY)
+                {
+                    AddMessage ("Invalid after weekend delay - must be less than ");
                     AppendMessage (MAX_AFTER_WEEKEND_DELAY / (60 * 60));
                     AppendMessage (" hours");
-
-                } else {
-
-                    if (SetSystemProperty (SystemData::AfterWeekendDelay, iNewValue) == OK) {
-                        AddMessage ("The after weekend delay was updated");
-                    } else {
-                        AddMessage ("The after weekend delay could not be updated");
-                    }
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::AfterWeekendDelay, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The after weekend delay was updated");
                 }
             }
 
@@ -814,10 +974,15 @@ if (m_bOwnPost && !m_bRedirection) {
             // Update game configuration?
             if (memcmp (&gcNewConfig, &gcOldConfig, sizeof (GameConfiguration)) != 0) {
 
-                if (SetGameConfiguration (gcNewConfig) == OK) {
+                iErrCode = SetGameConfiguration(gcNewConfig);
+                if (iErrCode == ERROR_INVALID_ARGUMENT)
+                {
+                    AddMessage("Invalid argument detected when updating the server's game configuration");
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The server's game configuration was updated");
-                } else {
-                    AddMessage ("The server's game configuration could not be updated");
                 }
             }
 
@@ -864,10 +1029,15 @@ if (m_bOwnPost && !m_bRedirection) {
             // Update map configuration?
             if (memcmp (&mcNewConfig, &mcOldConfig, sizeof (MapConfiguration)) != 0) {
 
-                if (SetMapConfiguration (mcNewConfig) == OK) {
+                iErrCode = SetMapConfiguration(mcNewConfig);
+                if (iErrCode == ERROR_INVALID_ARGUMENT)
+                {
+                    AddMessage("Invalid argument detected when updating the server's map configuration");
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The server's map configuration was updated");
-                } else {
-                    AddMessage ("The server's map configuration could not be updated");
                 }
             }
 
@@ -889,7 +1059,6 @@ if (m_bOwnPost && !m_bRedirection) {
                 {
                     int iKey;
                     iErrCode = CreateSuperClass (pszNewValue, &iKey);
-
                     switch (iErrCode) {
 
                     case OK:
@@ -905,8 +1074,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         break;
 
                     default:
-                        AddMessage ("The SuperClass could not be created. The error was ");
-                        AppendMessage (iErrCode);
+                        RETURN_ON_ERROR(iErrCode);
                         break;
                     }
                 }
@@ -922,19 +1090,12 @@ if (m_bOwnPost && !m_bRedirection) {
                     goto Redirection;
                 }
                 iErrCode = DeleteSuperClass (pHttpForm->GetIntValue(), &bFlag);
-
-                if (iErrCode == OK) {
-                    if (bFlag) {
-                        AddMessage ("The SuperClass was deleted");
-                    } else {
-                        AddMessage ("The SuperClass could not be deleted because it still has GameClasses");
-                    }
+                RETURN_ON_ERROR(iErrCode);
+                if (bFlag) {
+                    AddMessage ("The SuperClass was deleted");
                 } else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred deleting the SuperClass", iErrCode);
-                    AddMessage (pszMessage);
+                    AddMessage ("The SuperClass could not be deleted because it still has GameClasses");
                 }
-
                 break;
             }
 
@@ -952,25 +1113,25 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 iErrCode = RenameSuperClass (iKey, pHttpForm->GetValue());
-
-                if (iErrCode == OK) {
+                switch (iErrCode)
+                {
+                case OK:
                     AddMessage ("The SuperClass was renamed");
-                }
+                    break;
 
-                else if (iErrCode == ERROR_SUPERCLASS_DOES_NOT_EXIST) {
+                case ERROR_SUPERCLASS_DOES_NOT_EXIST:
+                    iErrCode = OK;
                     AddMessage ("The SuperClass does not exist");
-                }
+                    break;
 
-                else if (iErrCode == ERROR_INVALID_ARGUMENT) {
+                case ERROR_INVALID_ARGUMENT:
+                    iErrCode = OK;
                     AddMessage ("The new SuperClass name was invalid");
+                    break;
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
-
-                else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred renaming the SuperClass", iErrCode);
-                    AddMessage (pszMessage);
-                }
-
                 break;
             }
 
@@ -988,20 +1149,18 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 iErrCode = DeleteGameClass (pHttpForm->GetIntValue(), &bFlag);
-
-                if (iErrCode == OK) {
+                if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                {
+                    AddMessage ("The GameClass no longer exists");
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
                     if (bFlag) {
                         AddMessage ("The GameClass was deleted");
                     } else {
                         AddMessage ("The GameClass has been marked for deletion");
                     }
-                } else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                    AddMessage ("The GameClass no longer exists");
-                }
-                else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred deleting the gameclass", iErrCode);
-                    AddMessage (pszMessage);
                 }
                 break;
             }
@@ -1013,32 +1172,25 @@ if (m_bOwnPost && !m_bRedirection) {
                     goto Redirection;
                 }
 
-                iErrCode = UndeleteGameClass (pHttpForm->GetIntValue());
+                iErrCode = UndeleteGameClass(pHttpForm->GetIntValue());
                 switch (iErrCode) {
 
                 case OK:
-
                     AddMessage ("The GameClass was undeleted");
                     break;
 
                 case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
+                    iErrCode = OK;
                     AddMessage ("The GameClass no longer exists");
                     break;
 
                 case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
-
+                    iErrCode = OK;
                     AddMessage ("The GameClass was not marked for deletion");
                     break;
 
                 default:
-
-                    {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred undeleting the GameClass", iErrCode);
-                    AddMessage (pszMessage);
-                    }
-
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
                 break;
@@ -1050,17 +1202,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 if ((pHttpForm = m_pHttpRequest->GetForm ("HaltGC")) == NULL) {
                     goto Redirection;
                 }
-                iErrCode = HaltGameClass (pHttpForm->GetIntValue());
-                if (iErrCode == OK) {
+                iErrCode = HaltGameClass(pHttpForm->GetIntValue());
+                switch (iErrCode)
+                {
+                case OK:
                     AddMessage ("The GameClass was halted");
-                }
-                else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
+                    break;
+
+                case ERROR_GAMECLASS_DOES_NOT_EXIST:
+                    iErrCode = OK;
                     AddMessage ("The GameClass no longer exists");
-                }
-                else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred halting the GameClass", iErrCode);
-                    AddMessage (pszMessage);
+                    break;
+
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
                 break;
             }
@@ -1072,32 +1228,25 @@ if (m_bOwnPost && !m_bRedirection) {
                     goto Redirection;
                 }
 
-                iErrCode = UnhaltGameClass (pHttpForm->GetIntValue());
+                iErrCode = UnhaltGameClass(pHttpForm->GetIntValue());
                 switch (iErrCode) {
 
                 case OK:
-
                     AddMessage ("The GameClass is no longer halted");
                     break;
 
                 case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
+                    iErrCode = OK;
                     AddMessage ("The GameClass no longer exists");
                     break;
 
                 case ERROR_GAMECLASS_NOT_HALTED:
-
+                    iErrCode = OK;
                     AddMessage ("The GameClass was not halted");
                     break;
 
                 default:
-
-                    {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred unhalting the GameClass", iErrCode);
-                    AddMessage (pszMessage);
-                    }
-
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
                 break;
@@ -1107,42 +1256,21 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_PAUSEALLGAMES)) {
 
                 iErrCode = PauseAllGames();
-
-                if (iErrCode == OK) {
-                    AddMessage ("All games were paused");
-                } else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred pausing all games", iErrCode);
-                    AddMessage (pszMessage);
-                }
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Handle unpause all games
             if (WasButtonPressed (BID_UNPAUSEALLGAMES)) {
 
                 iErrCode = UnpauseAllGames();
-
-                if (iErrCode == OK) {
-                    AddMessage ("All games were unpaused");
-                } else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred unpausing all games", iErrCode);
-                    AddMessage (pszMessage);
-                }
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Handle reset update times on all games
             if (WasButtonPressed (BID_RESET)) {
 
                 iErrCode = ResetAllGamesUpdateTime();
-
-                if (iErrCode == OK) {
-                    AddMessage ("All game update times were reset");
-                } else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred resetting update times on all games", iErrCode);
-                    AddMessage (pszMessage);
-                }
+                RETURN_ON_ERROR(iErrCode);
             }
 
             }
@@ -1219,35 +1347,40 @@ if (m_bOwnPost && !m_bRedirection) {
                     break;
                 }
 
-                iErrCode = SetGamePassword (iGameClass, iGameNumber, pszMessage);
-                if (iErrCode == OK) {
+                iErrCode = SetGamePassword(iGameClass, iGameNumber, pszMessage);
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (String::IsBlank (pszMessage)) {
-                        AddMessage ("The game password was removed");
-                    } else {
-                        AddMessage ("The game password was updated");
-                    }
-                    iGameAdminPage = 3;
+                if (String::IsBlank (pszMessage)) {
+                    AddMessage ("The game password was removed");
                 } else {
-                    AddMessage ("The game no longer exists");
-                    iGameAdminPage = 1;
+                    AddMessage ("The game password was updated");
                 }
-
+                iGameAdminPage = 3;
                 break;
             }
 
             // Force update
             if (WasButtonPressed (BID_FORCEUPDATE)) {
 
-                if (ForceUpdate (iGameClass, iGameNumber) == OK) {
-                    AddMessage ("The game was forcibly updated");
-                } else {
-                    AddMessage ("The game no longer exists");
-                }
+                iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
 
-                if (DoesGameExist (iGameClass, iGameNumber, &bExist) == OK && bExist) {
+                if (bExist)
+                {
+                    iErrCode = ForceUpdate (iGameClass, iGameNumber);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The game was forcibly updated");
+                
+                    iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
+                    RETURN_ON_ERROR(iErrCode);
+                }
+                
+                if (bExist)
+                {
                     iGameAdminPage = 3;
-                } else {
+                }
+                else
+                {
                     iGameAdminPage = 1;
                 }
 
@@ -1258,16 +1391,20 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_RESET)) {
 
                 iErrCode = ResetGameUpdateTime (iGameClass, iGameNumber);
-                if (iErrCode == OK) {
-                    AddMessage ("The game's update time was reset");
-                } else if (iErrCode == ERROR_GAME_PAUSED) {
+                if (iErrCode == ERROR_GAME_PAUSED)
+                {
+                    iErrCode = OK;
                     AddMessage ("The game was paused and its update time could not be reset");
-                } else {
-                    AddMessage ("An error occurred: ");
-                    AppendMessage (iErrCode);
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The game's update time was reset");
                 }
 
-                if (DoesGameExist (iGameClass, iGameNumber, &bExist) == OK && bExist) {
+                iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
+                if (bExist) {
                     iGameAdminPage = 3;
                 } else {
                     iGameAdminPage = 1;
@@ -1284,7 +1421,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pHttpForm != NULL)
                 {
                     int iTargetEmpireKey = pHttpForm->GetIntValue();
-                    GameCheck(CacheAllGameTables(iGameClass, iGameNumber));
+                    iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+                    RETURN_ON_ERROR(iErrCode);
 
                     if (m_iGameState & STARTED)
                     {
@@ -1301,7 +1439,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             break;
 
                         default:
-                            return iErrCode;
+                            RETURN_ON_ERROR(iErrCode);
                         }
                     }
                     else
@@ -1331,14 +1469,19 @@ if (m_bOwnPost && !m_bRedirection) {
                                 break;
 
                             default:
-                               return iErrCode;
+                               RETURN_ON_ERROR(iErrCode);
+                               break;
                             }
+                            break;
+                        default:
+                            RETURN_ON_ERROR(iErrCode);
                             break;
                         }
                     }
                 }
 
-                Check(DoesGameExist(iGameClass, iGameNumber, &bExist));
+                iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
                 if (bExist)
                 {
                     iGameAdminPage = 3;
@@ -1363,18 +1506,15 @@ if (m_bOwnPost && !m_bRedirection) {
                     if (!(m_iGameState & STARTED)) {
 
                         iErrCode = UnresignEmpire (iGameClass, iGameNumber, iTargetEmpireKey, m_iEmpireKey);
-                        if (iErrCode == OK) {
-                            AddMessage ("The empire was restored");
-                        } else {
-                            char pszMessage [256];
-                            sprintf(pszMessage, "Error %i occurred restoring the empire", iErrCode);
-                            AddMessage (pszMessage);
-                        }
+                        RETURN_ON_ERROR(iErrCode);
+                        AddMessage ("The empire was restored");
                     }
                 }
 
                 bool bExist;
-                if (DoesGameExist (iGameClass, iGameNumber, &bExist) == OK && bExist) {
+                iErrCode = DoesGameExist (iGameClass, iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
+                if (bExist) {
                     iGameAdminPage = 3;
                 } else {
                     iGameAdminPage = 1;
@@ -1405,40 +1545,42 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Check for view empire info
-            if (WasButtonPressed (BID_VIEWEMPIREINFORMATION)) {
-
+            if (WasButtonPressed (BID_VIEWEMPIREINFORMATION))
+            {
                 iGameAdminPage = 7;
                 m_bRedirectTest = false;
                 break;
             }
 
             // Pause game
-            if (WasButtonPressed (BID_PAUSEGAME)) {
+            if (WasButtonPressed(BID_PAUSEGAME))
+            {
+                m_bRedirectTest = false;
 
                 // Flush remaining updates
-                bool bExists;
-                iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists);
+                bool bUpdated;
+                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdated);
+                RETURN_ON_ERROR(iErrCode);
 
                 // Best effort pause the game
-                if (iErrCode == OK) {
-                    
-                    if (bExists) {
-                        iErrCode = DoesGameExist (iGameClass, iGameNumber, &bExists);
-                        if (iErrCode == OK && !bExists) {
-                            iErrCode = ERROR_GAME_DOES_NOT_EXIST;
-                        }
+                if (bUpdated)
+                {
+                    bool bExists;
+                    iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExists);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (!bExists)
+                    {
+                        AddMessage ("The game no longer exists");
+                        iGameAdminPage = 1;
+                        break;
                     }
                 }
 
-                if (iErrCode == OK) {
-                    AddMessage ("The game is now paused");
-                    iGameAdminPage = 3;
-                } else {
-                    AddMessage ("The game no longer exists");
-                    iGameAdminPage = 1;
-                }
-
-                m_bRedirectTest = false;
+                iErrCode = PauseGame (iGameClass, iGameNumber, true, true);
+                RETURN_ON_ERROR(iErrCode);
+                
+                AddMessage ("The game is now paused");
+                iGameAdminPage = 3;
                 break;
             }
 
@@ -1446,14 +1588,10 @@ if (m_bOwnPost && !m_bRedirection) {
             if (WasButtonPressed (BID_UNPAUSEGAME))
             {
                 iErrCode = UnpauseGame (iGameClass, iGameNumber, true, true);
-                if (iErrCode == OK) {
-                    AddMessage ("The game is no longer paused");
-                    iGameAdminPage = 3;
-                } else {
-                    AddMessage ("The game no longer exists");
-                    iGameAdminPage = 1;
-                }
-
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The game is no longer paused");
+                iGameAdminPage = 3;
+                
                 m_bRedirectTest = false;
                 break;
             }
@@ -1468,19 +1606,13 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 const char* pszMessage = pHttpForm->GetValue();
 
-                Check(CacheGameTablesForBroadcast(iGameClass, iGameNumber));
+                iErrCode = CacheGameTablesForBroadcast(iGameClass, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
 
-                if ((iErrCode = BroadcastGameMessage (
-                    iGameClass,
-                    iGameNumber,
-                    pszMessage,
-                    m_iEmpireKey,
-                    MESSAGE_BROADCAST | MESSAGE_ADMINISTRATOR)
-                    ) == OK) {
-                    AddMessage ("Your message was broadcast to all empires in the game");
-                } else {
-                    AddMessage ("The game no longer exists");
-                }
+                iErrCode = BroadcastGameMessage(iGameClass, iGameNumber, pszMessage, m_iEmpireKey, MESSAGE_BROADCAST | MESSAGE_ADMINISTRATOR);
+                RETURN_ON_ERROR(iErrCode);
+                
+                AddMessage ("Your message was broadcast to all empires in the game");
 
                 iGameAdminPage = 3;
                 break;
@@ -1571,12 +1703,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 const char* pszMessage = pHttpForm->GetValue();
 
-                if (DeleteGame (iGameClass, iGameNumber, m_iEmpireKey, pszMessage, 0) == OK) {
-                    AddMessage ("The game was deleted");
-                } else {
-                    AddMessage ("The game no longer exists");
-                }
-
+                iErrCode = DeleteGame (iGameClass, iGameNumber, m_iEmpireKey, pszMessage, 0);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The game was deleted");
                 iGameAdminPage = 1;
             }
             break;
@@ -1593,84 +1722,133 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 switch (iGameAdminPage) {
 
 case 0:
     {
 
-    unsigned int* piSuperClassKey, iNumSuperClasses;
-    Variant* pvSuperClassName;
-    Check (GetSuperClassKeys (&piSuperClassKey, &pvSuperClassName, &iNumSuperClasses));
+    unsigned int* piSuperClassKey = NULL, iNumSuperClasses;
+    AutoFreeKeys free_piSuperClassKey(piSuperClassKey);
 
-    int *piGameClassKey, iNumGameClasses;
-    bool* pbGameClassHalted, * pbGameClassDeleted, bFlag;
-    Check (GetSystemGameClassKeys (&piGameClassKey, &pbGameClassHalted, &pbGameClassDeleted, &iNumGameClasses));
+    Variant* pvSuperClassName = NULL;
+    AutoFreeData free_pvSuperClassName(pvSuperClassName);
 
+    iErrCode = GetSuperClassKeys (&piSuperClassKey, &pvSuperClassName, &iNumSuperClasses);
+    RETURN_ON_ERROR(iErrCode);
+
+    int *piGameClassKey = NULL, iNumGameClasses;
     Algorithm::AutoDelete<int> auto1 (piGameClassKey, true);
+
+    bool* pbGameClassHalted = NULL, * pbGameClassDeleted = NULL, bFlag;
     Algorithm::AutoDelete<bool> auto2 (pbGameClassHalted, true);
     Algorithm::AutoDelete<bool> auto3 (pbGameClassDeleted, true);
 
+    iErrCode = GetSystemGameClassKeys (&piGameClassKey, &pbGameClassHalted, &pbGameClassDeleted, &iNumGameClasses);
+    RETURN_ON_ERROR(iErrCode);
+    
     GameConfiguration gcConfig;
     MapConfiguration mcConfig;
 
     unsigned int iNumActiveGames, iNumOpenGames, iNumClosedGames;
-    Variant vMaxNumUpdatesBeforeClose, vDefaultNumUpdatesBeforeClose, vMaxNumPersonalGameClasses, vDelay,
-        vMaxNumT, vMaxNumPersonalGameClassesT;
+    Variant vMaxNumUpdatesBeforeClose, vDefaultNumUpdatesBeforeClose, vMaxNumPersonalGameClasses, vDelay, vMaxNumT, vMaxNumPersonalGameClassesT;
 
-    Check (GetNumActiveGames (&iNumActiveGames));
-    Check (GetNumOpenGames (&iNumOpenGames));
-    Check (GetNumClosedGames (&iNumClosedGames));
+    iErrCode = GetNumActiveGames (&iNumActiveGames);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetNumOpenGames (&iNumOpenGames);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetNumClosedGames (&iNumClosedGames);
+    RETURN_ON_ERROR(iErrCode);
 
     int iSystemMinNumSecsPerUpdate, iSystemMaxNumSecsPerUpdate, iSystemMaxNumEmpires, iSystemMaxNumPlanets,
         iPersonalMinNumSecsPerUpdate, iPersonalMaxNumSecsPerUpdate, iPersonalMaxNumEmpires, 
         iPersonalMaxNumPlanets, iValue, iSystemOptions;
 
-    Check (GetMinNumSecsPerUpdateForSystemGameClass (&iSystemMinNumSecsPerUpdate));
-    Check (GetMaxNumSecsPerUpdateForSystemGameClass (&iSystemMaxNumSecsPerUpdate));
-    Check (GetMaxNumEmpiresForSystemGameClass (&iSystemMaxNumEmpires));
-    Check (GetMaxNumPlanetsForSystemGameClass (&iSystemMaxNumPlanets));
+    iErrCode = GetMinNumSecsPerUpdateForSystemGameClass (&iSystemMinNumSecsPerUpdate);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxNumUpdatesBeforeClose));
-    Check (GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesBeforeClose));
+    iErrCode = GetMaxNumSecsPerUpdateForSystemGameClass (&iSystemMaxNumSecsPerUpdate);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetMaxNumEmpiresForSystemGameClass (&iSystemMaxNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetMaxNumPlanetsForSystemGameClass (&iSystemMaxNumPlanets);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetMinNumSecsPerUpdateForPersonalGameClass (&iPersonalMinNumSecsPerUpdate));
-    Check (GetMaxNumSecsPerUpdateForPersonalGameClass (&iPersonalMaxNumSecsPerUpdate));
-    Check (GetMaxNumEmpiresForPersonalGameClass (&iPersonalMaxNumEmpires));
-    Check (GetMaxNumPlanetsForPersonalGameClass (&iPersonalMaxNumPlanets));
+    iErrCode = GetSystemProperty (SystemData::MaxNumUpdatesBeforeClose, &vMaxNumUpdatesBeforeClose);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetSystemProperty (SystemData::DefaultNumUpdatesBeforeClose, &vDefaultNumUpdatesBeforeClose);
+    RETURN_ON_ERROR(iErrCode);
 
-    Variant vMaxResourcesPerPlanet, vMaxResourcesPerPlanetPersonal, vMaxInitialTechLevel, 
-        vMaxInitialTechLevelPersonal, vMaxTechDev, vMaxTechDevPersonal, vUnlimitedEmpirePrivilege;
+    iErrCode = GetMinNumSecsPerUpdateForPersonalGameClass (&iPersonalMinNumSecsPerUpdate);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetMaxNumSecsPerUpdateForPersonalGameClass (&iPersonalMaxNumSecsPerUpdate);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetMaxNumEmpiresForPersonalGameClass (&iPersonalMaxNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetMaxNumPlanetsForPersonalGameClass (&iPersonalMaxNumPlanets);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet));
-    Check (GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanetPersonal));
+    Variant vMaxResourcesPerPlanet, vMaxResourcesPerPlanetPersonal, vMaxInitialTechLevel, vMaxInitialTechLevelPersonal, vMaxTechDev, vMaxTechDevPersonal, vUnlimitedEmpirePrivilege;
 
-    Check (GetSystemProperty (SystemData::MaxInitialTechLevel, &vMaxInitialTechLevel));
-    Check (GetSystemProperty (SystemData::MaxInitialTechLevelPersonal, &vMaxInitialTechLevelPersonal));
+    iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanet, &vMaxResourcesPerPlanet);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemProperty (SystemData::MaxTechDev, &vMaxTechDev));
-    Check (GetSystemProperty (SystemData::MaxTechDevPersonal, &vMaxTechDevPersonal));
+    iErrCode = GetSystemProperty (SystemData::MaxResourcesPerPlanetPersonal, &vMaxResourcesPerPlanetPersonal);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetGameConfiguration (&gcConfig));
-    Check (GetMapConfiguration (&mcConfig));
+    iErrCode = GetSystemProperty (SystemData::MaxInitialTechLevel, &vMaxInitialTechLevel);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetSystemProperty (SystemData::MaxInitialTechLevelPersonal, &vMaxInitialTechLevelPersonal);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemProperty (SystemData::AfterWeekendDelay, &vDelay));
+    iErrCode = GetSystemProperty (SystemData::MaxTechDev, &vMaxTechDev);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetSystemProperty (SystemData::MaxTechDevPersonal, &vMaxTechDevPersonal);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vMaxNumPersonalGameClasses));
-    Check (GetSystemProperty (SystemData::MaxNumPersonalTournaments, &vMaxNumT));
-    Check (GetSystemProperty (SystemData::MaxNumGameClassesPerPersonalTournament, &vMaxNumPersonalGameClassesT));
+    iErrCode = GetGameConfiguration (&gcConfig);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetMapConfiguration (&mcConfig);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemOptions (&iSystemOptions));
+    iErrCode = GetSystemProperty (SystemData::AfterWeekendDelay, &vDelay);
+    RETURN_ON_ERROR(iErrCode);
 
-    Check (GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege));
+    iErrCode = GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vMaxNumPersonalGameClasses);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetSystemProperty (SystemData::MaxNumPersonalTournaments, &vMaxNumT);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetSystemProperty (SystemData::MaxNumGameClassesPerPersonalTournament, &vMaxNumPersonalGameClassesT);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetSystemOptions (&iSystemOptions);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetSystemProperty (SystemData::PrivilegeForUnlimitedEmpires, &vUnlimitedEmpirePrivilege);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="GameAdminPage" value="0"><%
 
@@ -2507,24 +2685,25 @@ AllGames:
 case 1:
     {
 
-    int* piGameClass, * piGameNumber;
+    int* piGameClass = NULL, * piGameNumber = NULL;
+    Algorithm::AutoDelete<int> del_piGameClass(piGameClass, true);
+    Algorithm::AutoDelete<int> del_piGameNumber(piGameNumber, true);
+
     unsigned int iNumActiveGames, iNumOpenGames, iNumClosedGames;
-    Check(GetActiveGames(&piGameClass, &piGameNumber, &iNumActiveGames));
-    Check(GetNumOpenGames(&iNumOpenGames));
-    Check(GetNumClosedGames(&iNumClosedGames));
+
+    iErrCode = GetActiveGames(&piGameClass, &piGameNumber, &iNumActiveGames);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetNumOpenGames(&iNumOpenGames);
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetNumClosedGames(&iNumClosedGames);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="GameAdminPage" value="1"><%
 
     iErrCode = WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, iNumOpenGames, iNumClosedGames, true);
     RETURN_ON_ERROR(iErrCode);
-
-    if (piGameClass != NULL) {
-        delete [] piGameClass;
-    }
-
-    if (piGameNumber != NULL) {
-        delete [] piGameNumber;
-    }
 
     }
     break;
@@ -2558,11 +2737,10 @@ case 4:
     int iState;
 
     iErrCode = GetGameState (iGameClass, iGameNumber, &iState);
-    if (iErrCode != OK) {
-        goto AllGames;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (!(iState & GAME_MAP_GENERATED)) {
+    if (!(iState & GAME_MAP_GENERATED))
+    {
         goto AllGames;
     }
 
@@ -2570,7 +2748,8 @@ case 4:
     %><input type="hidden" name="GameClass" value="<% Write (iGameClass); %>"><%
     %><input type="hidden" name="GameNumber" value="<% Write (iGameNumber); %>"><%
 
-    RenderMap (iGameClass, iGameNumber, m_iEmpireKey, true, NULL, false);
+    iErrCode = RenderMap(iGameClass, iGameNumber, m_iEmpireKey, true, NULL, false);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><% WriteButton (BID_CANCEL);
 
@@ -2588,25 +2767,21 @@ case 6:
     bool bStarted, bFalse;
 
     Variant* pvPlanetData = NULL;
+    AutoFreeData free_pvPlanetData(pvPlanetData);
 
     GET_GAME_MAP (pszGameMap, iGameClass, iGameNumber);
 
     iErrCode = HasGameStarted (iGameClass, iGameNumber, &bStarted);
-    if (iErrCode != OK) {
-        AddMessage ("That game no longer exists");
-        goto AllGames;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
-    if (!bStarted) {
+    if (!bStarted)
+    {
         AddMessage ("The game hasn't started yet, so it has no map");
         goto AllGames;
     }
 
     iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
-    if (iErrCode != OK) {
-        AddMessage ("That game no longer exists");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetGoodBadResourceLimits (
         iGameClass,
@@ -2619,22 +2794,13 @@ case 6:
         &iBadFuel
         );
 
-    if (iErrCode != OK) {
-        AddMessage ("That game no longer exists");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vOptions);
-    if (iErrCode != OK) {
-        AddMessage ("That game no longer exists");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
-    if (iErrCode != OK) {
-        AddMessage ("That game no longer exists");
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     m_iGameState |= STARTED | GAME_MAP_GENERATED;
     m_iGameClass = iGameClass;
@@ -2646,20 +2812,10 @@ case 6:
 
     %><p><table width="90%"><%
 
-    // Best effort
-    WriteUpClosePlanetString (NO_KEY, iClickedPlanetKey, 
+    iErrCode = WriteUpClosePlanetString (NO_KEY, iClickedPlanetKey, 
         0, iLivePlanetKey, iDeadPlanetKey, 0, true, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,
         1.0, (vOptions.GetInteger() & INDEPENDENCE) != 0, true, false, pvPlanetData, &bFalse);
-
-Cleanup:
-
-    if (pvPlanetData != NULL) {
-        t_pCache->FreeData (pvPlanetData);
-    }
-
-    if (iErrCode != OK) {
-        goto AllGames;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     %></table><p><%
 
@@ -2674,9 +2830,7 @@ case 7:
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
     iErrCode = GetGameClassName (iGameClass, pszGameClassName);
-    if (iErrCode != OK) {
-        pszGameClassName[0] = '\0';
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="GameAdminPage" value="7"><%
     %><input type="hidden" name="GameClass" value="<% Write (iGameClass); %>"><%
@@ -2701,9 +2855,7 @@ case 8:
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
     iErrCode = GetGameClassName (iGameClass, pszGameClassName);
-    if (iErrCode != OK) {
-        goto AllGames;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="GameAdminPage" value="8"><%
     %><input type="hidden" name="GameClass" value="<% Write (iGameClass); %>"><%

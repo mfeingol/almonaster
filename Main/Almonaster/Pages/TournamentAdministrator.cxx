@@ -1216,7 +1216,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
                 pszMessage = pHttpForm->GetValue();
 
-                Check(CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber));
+                iErrCode = CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
 
                 if ((iErrCode = BroadcastGameMessage (
                     m_iGameClass,
@@ -1949,7 +1950,8 @@ case 14:
         %><input type="hidden" name="GameClass" value="<% Write (m_iGameClass); %>"><%
         %><input type="hidden" name="GameNumber" value="<% Write (m_iGameNumber); %>"><%
 
-        RenderMap (m_iGameClass, m_iGameNumber, NO_KEY, true, NULL, false);
+        iErrCode = RenderMap(m_iGameClass, m_iGameNumber, NO_KEY, true, NULL, false);
+        RETURN_ON_ERROR(iErrCode);
 
         %><p><% WriteButton (BID_CANCEL);
 
@@ -2055,10 +2057,10 @@ case 16:
 
         %><p><table width="90%"><%
 
-        // Best effort
-        WriteUpClosePlanetString (NO_KEY, iClickedPlanetKey, 
+        iErrCode = WriteUpClosePlanetString (NO_KEY, iClickedPlanetKey, 
             0, iLivePlanetKey, iDeadPlanetKey, 0, true, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,
             1.0, (vOptions.GetInteger() & INDEPENDENCE) != 0, true, false, pvPlanetData, &bFalse);
+        RETURN_ON_ERROR(iErrCode);
 
     Cleanup:
 

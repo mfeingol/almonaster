@@ -31,30 +31,30 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 int iNumGames;
 Variant** ppvGameData = NULL;
+AutoFreeData free_ppvGameData(ppvGameData);
 
-if (GetSystemLatestGames (&iNumGames, &ppvGameData) != OK) {
+iErrCode = GetSystemLatestGames (&iNumGames, &ppvGameData);
+RETURN_ON_ERROR(iErrCode);
 
-    %><p><strong>The latest games could not be read</strong><%
-}
-
-else if (iNumGames == 0) {
-
+if (iNumGames == 0)
+{
     %><p><h3>No games have been recorded on this server</h3><%
 }
-
-else {
-
+else
+{
     int i;
 
     UTCTime* ptTime = (UTCTime*) StackAlloc (iNumGames * sizeof (UTCTime));
@@ -200,8 +200,6 @@ else {
     }
 
     %></table><%
-
-    t_pCache->FreeData (ppvGameData);
 }
 
 

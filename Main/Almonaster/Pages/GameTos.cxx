@@ -50,13 +50,13 @@ if (m_bOwnPost && !m_bRedirection) {
     switch (iTosPageSubmit) {
     case 0:
 
-        if (WasButtonPressed (BID_TOS_ACCEPT)) {
+        if (WasButtonPressed (BID_TOS_ACCEPT))
+        {
+            iErrCode = SetEmpireOption2(m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true);
+            RETURN_ON_ERROR(iErrCode);
 
-            GameCheck (SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
             m_iSystemOptions2 |= EMPIRE_ACCEPTED_TOS;
-
             AddMessage ("You accepted the Terms of Service");
-
             return Redirect (INFO);
         }
 
@@ -68,10 +68,10 @@ if (m_bOwnPost && !m_bRedirection) {
 
     case 1:
 
-        if (WasButtonPressed (BID_TOS_DECLINE)) {
-            
-            // Best effort
-            DeleteEmpire (m_iEmpireKey, NULL, true, false);
+        if (WasButtonPressed (BID_TOS_DECLINE))
+        {
+            iErrCode = DeleteEmpire (m_iEmpireKey, NULL, true, false);
+            RETURN_ON_ERROR(iErrCode);
 
             return Redirect (LOGIN);
         }
@@ -88,21 +88,26 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
-GameCheck(OpenGamePage());
+
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 %><input type="hidden" name="TosPage" value="<% Write (iTosPage); %>"><%
 
 // Individual page stuff starts here
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 // Individual page stuff starts here

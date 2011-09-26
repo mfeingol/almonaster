@@ -159,36 +159,28 @@ if (m_bOwnPost && !m_bRedirection) {
             const char* pszMessage = pHttpForm->GetValue();
 
             Variant vSentName;
-            if (pszMessage != NULL) {
-
+            if (pszMessage != NULL)
+            {
                 iErrCode = SendSystemMessage (iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                 switch (iErrCode) {
 
                 case OK:
-
                     iErrCode = GetEmpireName (iTargetEmpireKey, &vSentName);
-                    if (iErrCode == OK) {
-                        sprintf(pszBuffer, "Your message was sent to %s", vSentName.GetCharPtr());
-                        AddMessage (pszBuffer);
-                    } else {
-                        AddMessage ("That empire no longer exists");
-                    }
+                    RETURN_ON_ERROR(iErrCode);
+                    sprintf(pszBuffer, "Your message was sent to %s", vSentName.GetCharPtr());
+                    AddMessage (pszBuffer);
                     break;
 
                 case ERROR_CANNOT_SEND_MESSAGE:
-
                     AddMessage ("You are not allowed to send system messages");
                     break;
 
                 case ERROR_EMPIRE_DOES_NOT_EXIST:
-
                     AddMessage ("That empire no longer exists");
                     break;
 
                 default:
-                    sprintf(pszBuffer, "Your message could not be sent due to error %i", iErrCode);
-                    AddMessage (pszBuffer);
-                    return iErrCode;
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
             } else {
@@ -241,18 +233,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             iErrCode = GetDefaultGameOptions (iGameClassKey, &goOptions);
-            if (iErrCode != OK) {
-                AddMessage ("Could not read default game options");
-                goto Redirection;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             goOptions.iNumEmpires = 1;
             goOptions.piEmpireKey = &m_iEmpireKey;
 
             // Create the game
             iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
-
-            HANDLE_CREATE_GAME_OUTPUT (iErrCode);
+            HANDLE_CREATE_GAME_OUTPUT(iErrCode);
         }
 
         else if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("DeleteGameClass")) != NULL && 
@@ -261,32 +249,20 @@ if (m_bOwnPost && !m_bRedirection) {
 
             unsigned int iOwnerKey;
             iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-            if (iErrCode == OK) {
+            RETURN_ON_ERROR(iErrCode);
 
-                if (m_iEmpireKey == iOwnerKey ||
-                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                    ) {
+            if (m_iEmpireKey == iOwnerKey || (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))) {
 
-                    iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
+                iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (iErrCode == OK) {
-                        if (bFlag) {
-                            AddMessage ("The GameClass was deleted");
-                        } else {
-                            AddMessage ("The GameClass has been marked for deletion");
-                        }
-                    }
-                    else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                        AddMessage ("The GameClass no longer exists");
-                    }
-                    else {
-                        char pszBuffer [256];
-                        sprintf(pszBuffer, "Error %i occurred deleting the gameclass", iErrCode);
-                        AddMessage (pszBuffer);
-                    }
+                if (bFlag) {
+                    AddMessage ("The GameClass was deleted");
+                } else {
+                    AddMessage ("The GameClass has been marked for deletion");
                 }
             }
-
+            
             iProfilePage = 3;
             m_bRedirectTest = false;
         }
@@ -297,39 +273,24 @@ if (m_bOwnPost && !m_bRedirection) {
 
             unsigned int iOwnerKey;
             iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-            if (iErrCode == OK) {
+            RETURN_ON_ERROR(iErrCode);
 
-                if (m_iEmpireKey == iOwnerKey ||
-                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                    ) {
+            if (m_iEmpireKey == iOwnerKey || (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey())))
+            {
+                iErrCode = UndeleteGameClass (iGameClassKey);
+                switch (iErrCode) {
 
-                    iErrCode = UndeleteGameClass (iGameClassKey);
-                    switch (iErrCode) {
+                case OK:
+                    AddMessage ("The GameClass was undeleted");
+                    break;
 
-                    case OK:
+                case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
+                    AddMessage ("The GameClass was not marked for deletion");
+                    break;
 
-                        AddMessage ("The GameClass was undeleted");
-                        break;
-
-                    case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
-                        AddMessage ("The GameClass no longer exists");
-                        break;
-
-                    case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
-
-                        AddMessage ("The GameClass was not marked for deletion");
-                        break;
-
-                    default:
-
-                        {
-                        char pszBuffer [256];
-                        sprintf(pszBuffer, "The gameclass could not be undeleted; the error was %i", iErrCode);
-                        AddMessage (pszBuffer);
-                        }
-                        break;
-                    }
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
             }
 
@@ -342,26 +303,21 @@ if (m_bOwnPost && !m_bRedirection) {
             sscanf (pszStart, "HaltGameClass%d", &iGameClassKey) == 1) {
 
             unsigned int iOwnerKey;
-            iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-            if (iErrCode == OK) {
+            iErrCode = GetGameClassOwner(iGameClassKey, &iOwnerKey);
+            RETURN_ON_ERROR(iErrCode);
 
-                if (m_iEmpireKey == iOwnerKey ||
-                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                    ) {
-
-                    iErrCode = HaltGameClass (iGameClassKey);
-
-                    if (iErrCode == OK) {
-                        AddMessage ("The GameClass was halted");
-                    }
-                    else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                        AddMessage ("The GameClass no longer exists");
-                    }
-                    else {
-                        char pszBuffer [256];
-                        sprintf(pszBuffer, "Error %i occurred halting the gameclass", iErrCode);
-                        AddMessage (pszBuffer);
-                    }
+            if (m_iEmpireKey == iOwnerKey || (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey())))
+            {
+                iErrCode = HaltGameClass (iGameClassKey);
+                if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                {
+                    iErrCode = OK;
+                    AddMessage ("The GameClass no longer exists");
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The GameClass was halted");
                 }
             }
 
@@ -375,40 +331,24 @@ if (m_bOwnPost && !m_bRedirection) {
 
             unsigned int iOwnerKey;
             iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-            if (iErrCode == OK) {
+            RETURN_ON_ERROR(iErrCode);
 
-                if (m_iEmpireKey == iOwnerKey ||
-                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                    ) {
+            if (m_iEmpireKey == iOwnerKey || (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey())))
+            {
+                iErrCode = UnhaltGameClass (iGameClassKey);
+                switch (iErrCode) {
 
-                    iErrCode = UnhaltGameClass (iGameClassKey);
-                    switch (iErrCode) {
+                case OK:
+                    AddMessage ("The GameClass was unhalted");
+                    break;
 
-                    case OK:
+                case ERROR_GAMECLASS_NOT_HALTED:
+                    AddMessage ("The GameClass was not halted");
+                    break;
 
-                        AddMessage ("The GameClass was unhalted");
-                        break;
-
-                    case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
-                        AddMessage ("The GameClass no longer exists");
-                        break;
-
-                    case ERROR_GAMECLASS_NOT_HALTED:
-
-                        AddMessage ("The GameClass was not halted");
-                        break;
-
-                    default:
-
-                        {
-                        char pszBuffer [256];
-                        sprintf(pszBuffer, "The gameclass could not be unhalted; the error was %i", iErrCode);
-                        AddMessage (pszBuffer);
-                        }
-
-                        break;
-                    }
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
             }
 
@@ -455,7 +395,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             ClearGameOptions (&goOptions);
 
-            HANDLE_CREATE_GAME_OUTPUT (iErrCode);
+            HANDLE_CREATE_GAME_OUTPUT(iErrCode);
         }
 
         break;
@@ -502,19 +442,22 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page starts here
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString (NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 switch (iProfilePage) {
@@ -526,13 +469,13 @@ case 1:
 
     bool bExists;
     iErrCode = DoesEmpireExist (iTargetEmpireKey, &bExists, NULL);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     if (!bExists) {
         %><p>That empire no longer exists<%
     } else {
-        Check(WriteProfile(m_iEmpireKey, iTargetEmpireKey, false, false, true)); 
+        iErrCode = WriteProfile(m_iEmpireKey, iTargetEmpireKey, false, false, true);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     }
@@ -546,7 +489,8 @@ case 2:
     %><input type="hidden" name="TargetEmpireKey" value="<% Write (iTargetEmpireKey); %>"><%
 
     Assert(iTargetEmpireKey != NO_KEY);
-    WriteNukeHistory (iTargetEmpireKey);
+    iErrCode = WriteNukeHistory (iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     }
     break;
@@ -571,8 +515,11 @@ case 4:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check(GetGameClassName (iGameClassKey, pszGameClassName));
-    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
+    iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetNextGameNumber (iGameClassKey, &iGameNumber);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ProfilePage" value="4"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
@@ -584,7 +531,8 @@ case 4:
 
     %></h3><p><%
 
-    GameCheck(RenderGameConfiguration (iGameClassKey, NO_KEY));
+    iErrCode = RenderGameConfiguration (iGameClassKey, NO_KEY);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><%
 
@@ -599,7 +547,8 @@ case 5:
     %><input type="hidden" name="TargetEmpireKey" value="<% Write (iTargetEmpireKey); %>"><%
 
     Assert(iTargetEmpireKey != NO_KEY);
-    Check(WritePersonalTournaments(iTargetEmpireKey));
+    iErrCode = WritePersonalTournaments(iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     break;
 
