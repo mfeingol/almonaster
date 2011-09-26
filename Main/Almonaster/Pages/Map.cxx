@@ -61,7 +61,7 @@ if (m_bOwnPost && !m_bRedirection) {
     case 0:
 
         const char* pszStart;
-        bool bPartialMaps, bFlag;
+        bool bPartialMaps;
         PartialMapInfo pmiPartialMapInfo;
         unsigned int iNewValue;
 
@@ -75,103 +75,64 @@ if (m_bOwnPost && !m_bRedirection) {
             &pmiPartialMapInfo.iYRadius
             );
 
-        if (iErrCode != OK) {
-            AddMessage ("Error reading partial map data");
-            break;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
-        if (bPartialMaps) {
-
+        if (bPartialMaps)
+        {
             int iMinX = MAX_COORDINATE, iMaxX = MAX_COORDINATE, iMinY = MAX_COORDINATE, 
                 iMaxY = MAX_COORDINATE, iCenterX = MAX_COORDINATE, iCenterY = MAX_COORDINATE;
 
             unsigned int iMaxRadius;
 
             pHttpForm = m_pHttpRequest->GetForm ("Center");
-            if (pHttpForm != NULL) {
-
+            if (pHttpForm != NULL)
+            {
                 iNewValue = pHttpForm->GetIntValue();
-                if (iNewValue != pmiPartialMapInfo.iCenterKey) {
-
-                    if (iNewValue != PARTIAL_MAP_NATURAL_CENTER) {
-
-                        iErrCode = HasEmpireVisitedPlanet (
-                            m_iGameClass,
-                            m_iGameNumber,
-                            m_iEmpireKey,
-                            iNewValue,
-                            &bFlag
-                            );
-
-                        if (iErrCode != OK || !bFlag) {
-                            AddMessage ("Your map center could not be updated");
-                            goto iXRadius;
-                        }
+                if (iNewValue != pmiPartialMapInfo.iCenterKey)
+                {
+                    bool bUpdate = true;
+                    if (iNewValue != PARTIAL_MAP_NATURAL_CENTER)
+                    {
+                        iErrCode = HasEmpireVisitedPlanet(m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue, &bUpdate);
+                        RETURN_ON_ERROR(iErrCode);
                     }
 
-                    iErrCode = SetEmpireGameProperty(
-                        m_iGameClass,
-                        m_iGameNumber,
-                        m_iEmpireKey,
-                        GameEmpireData::PartialMapCenter,
-                        iNewValue
-                        );
-
-                    if (iErrCode == OK) {
+                    if (bUpdate)
+                    {
+                        iErrCode = SetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::PartialMapCenter, iNewValue);
+                        RETURN_ON_ERROR(iErrCode);
                         AddMessage ("Your partial map center was updated");
-                    } else {
-                        AddMessage ("Your partial map center could not be updated");
+                    }
+                    else
+                    {
+                        AddMessage ("Invalid map center");
                     }
                 }
             }
 
-iXRadius:
-
             pHttpForm = m_pHttpRequest->GetForm ("iXRadius");
-            if (pHttpForm != NULL) {
-
+            if (pHttpForm != NULL)
+            {
                 iNewValue = pHttpForm->GetIntValue();
-                if (iNewValue != pmiPartialMapInfo.iXRadius) {
+                if (iNewValue != pmiPartialMapInfo.iXRadius)
+                {
+                    bool bUpdate = true;
+                    if (iNewValue != PARTIAL_MAP_UNLIMITED_RADIUS)
+                    {
+                        if (iMinX == MAX_COORDINATE)
+                        {
+                            iErrCode = GetMapLimits(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iMinX, &iMaxX, &iMinY, &iMaxY);
+                            RETURN_ON_ERROR(iErrCode);
 
-                    if (iNewValue != PARTIAL_MAP_UNLIMITED_RADIUS) {
-
-                        if (iMinX == MAX_COORDINATE) {
-
-                            iErrCode = GetMapLimits (
-                                m_iGameClass,
-                                m_iGameNumber,
-                                m_iEmpireKey,
-                                &iMinX,
-                                &iMaxX,
-                                &iMinY,
-                                &iMaxY
-                                );
-
-                            if (iErrCode != OK) {
-                                AddMessage ("Error reading map limits");
-                                break;
-                            } else {
-
-                                if (pmiPartialMapInfo.iCenterKey == PARTIAL_MAP_NATURAL_CENTER) {
-
-                                    iCenterX = iMinX + (iMaxX - iMinX) / 2;
-                                    iCenterY = iMinY + (iMaxY - iMinY) / 2;
-
-                                } else {
-
-                                    iErrCode = GetPlanetCoordinates (
-                                        m_iGameClass,
-                                        m_iGameNumber,
-                                        pmiPartialMapInfo.iCenterKey,
-                                        &iCenterX,
-                                        &iCenterY
-                                        );
-
-                                    if (iErrCode != OK) {
-                                        AddMessage ("Error reading map limits");
-                                        break;
-                                    }
-                                }
+                            if (pmiPartialMapInfo.iCenterKey == PARTIAL_MAP_NATURAL_CENTER)
+                            {
+                                iCenterX = iMinX + (iMaxX - iMinX) / 2;
+                                iCenterY = iMinY + (iMaxY - iMinY) / 2;
+                            }
+                            else
+                            {
+                                iErrCode = GetPlanetCoordinates(m_iGameClass, m_iGameNumber, pmiPartialMapInfo.iCenterKey, &iCenterX, &iCenterY);
+                                RETURN_ON_ERROR(iErrCode);
                             }
                         }
 
@@ -179,74 +140,49 @@ iXRadius:
                         Assert(iMinX != MAX_COORDINATE);
                         Assert(iMaxX != MAX_COORDINATE);
 
-                        iMaxRadius = max (iCenterX - iMinX, iMaxX - iCenterX);
-
-                        if (iNewValue < 1 || iNewValue > iMaxRadius) {
-                            AddMessage ("Invalid X radius");
-                            goto iYRadius;
+                        iMaxRadius = max(iCenterX - iMinX, iMaxX - iCenterX);
+                        if (iNewValue < 1 || iNewValue > iMaxRadius)
+                        {
+                            bUpdate = false;
                         }
                     }
 
-                    if ((iErrCode = SetEmpireGameProperty(
-                            m_iGameClass,
-                            m_iGameNumber,
-                            m_iEmpireKey,
-                            GameEmpireData::PartialMapXRadius,
-                            iNewValue)
-                            ) == OK) {
+                    if (bUpdate)
+                    {
+                        iErrCode = SetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::PartialMapXRadius, iNewValue);
+                        RETURN_ON_ERROR(iErrCode);
                         AddMessage ("Your X radius was updated");
-                    } else {
-                        AddMessage ("Your X radius could not be updated");
+                    }
+                    else
+                    {
+                        AddMessage ("Invalid X radius");
                     }
                 }
             }
 
-iYRadius:
             pHttpForm = m_pHttpRequest->GetForm ("iYRadius");
-            if (pHttpForm != NULL) {
-
+            if (pHttpForm != NULL)
+            {
                 iNewValue = pHttpForm->GetIntValue();
-                if (iNewValue != pmiPartialMapInfo.iYRadius) {
-
-                    if (iNewValue != PARTIAL_MAP_UNLIMITED_RADIUS) {
-
-                        if (iMinX == MAX_COORDINATE) {
-
-                            iErrCode = GetMapLimits (
-                                m_iGameClass,
-                                m_iGameNumber,
-                                m_iEmpireKey,
-                                &iMinX,
-                                &iMaxX,
-                                &iMinY,
-                                &iMaxY
-                                );
-
-                            if (iErrCode != OK) {
-                                AddMessage ("Error reading map limits");
-                                break;
-                            } else {
-
-                                if (pmiPartialMapInfo.iCenterKey == PARTIAL_MAP_NATURAL_CENTER) {
-
-                                    iCenterX = iMinX + (iMaxX - iMinX) / 2;
-                                    iCenterY = iMinY + (iMaxY - iMinY) / 2;
-
-                                } else {
-
-                                    iErrCode = GetPlanetCoordinates (
-                                        m_iGameClass,
-                                        m_iGameNumber,
-                                        pmiPartialMapInfo.iCenterKey,
-                                        &iCenterX,
-                                        &iCenterY
-                                        );
-
-                                    if (iErrCode != OK) {
-                                        AddMessage ("Error reading planet coordinates");
-                                        break;
-                                    }
-                                }
+                if (iNewValue != pmiPartialMapInfo.iYRadius)
+                {
+                    bool bUpdate = true;
+                    if (iNewValue != PARTIAL_MAP_UNLIMITED_RADIUS)
+                    {
+                        if (iMinX == MAX_COORDINATE)
+                        {
+                            iErrCode = GetMapLimits(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iMinX, &iMaxX, &iMinY, &iMaxY);
+                            RETURN_ON_ERROR(iErrCode);
+    
+                            if (pmiPartialMapInfo.iCenterKey == PARTIAL_MAP_NATURAL_CENTER)
+                            {
+                                iCenterX = iMinX + (iMaxX - iMinX) / 2;
+                                iCenterY = iMinY + (iMaxY - iMinY) / 2;
+                            }
+                            else
+                            {
+                                iErrCode = GetPlanetCoordinates(m_iGameClass, m_iGameNumber, pmiPartialMapInfo.iCenterKey, &iCenterX, &iCenterY);
+                                RETURN_ON_ERROR(iErrCode);
                             }
                         }
 
@@ -254,36 +190,33 @@ iYRadius:
                         Assert(iMinY != MAX_COORDINATE);
                         Assert(iMaxY != MAX_COORDINATE);
 
-                        iMaxRadius = max (iCenterY - iMinY, iMaxY - iCenterY);
+                        iMaxRadius = max(iCenterY - iMinY, iMaxY - iCenterY);
 
-                        if (iNewValue < 1 || iNewValue > iMaxRadius) {
-                            AddMessage ("Invalid Y radius");
-                            goto EndPartialMaps;
+                        if (iNewValue < 1 || iNewValue > iMaxRadius)
+                        {
+                            bUpdate = false;
                         }
                     }
 
-                    if ((iErrCode = SetEmpireGameProperty(
-                                m_iGameClass,
-                                m_iGameNumber,
-                                m_iEmpireKey,
-                                GameEmpireData::PartialMapYRadius,
-                                iNewValue)
-                                ) == OK) {
+                    if (bUpdate)
+                    {
+                        iErrCode = SetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::PartialMapYRadius, iNewValue);
+                        RETURN_ON_ERROR(iErrCode);
                         AddMessage ("Your Y radius was updated");
-                    } else {
-                        AddMessage ("Your Y radius could not be updated");
+                    }
+                    else
+                    {
+                        AddMessage ("Invalid Y radius");
                     }
                 }
             }
         }   // End if partial maps
 
-EndPartialMaps:
-
         // Planet click
         if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("Planet")) != NULL && 
             (pszStart = pHttpForm->GetName()) != NULL &&
-            sscanf (pszStart, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2) {
-
+            sscanf (pszStart, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2)
+        {
             iMapSubPage = 1;
             m_bRedirectTest = false;
             goto Redirection;
@@ -302,13 +235,10 @@ EndPartialMaps:
 
         {
 
-        if (bMapGenerated) {
-
+        if (bMapGenerated)
+        {
             iErrCode = HandleShipMenuSubmissions();
-            if (iErrCode != OK) {
-                AddMessage ("Error handling ship menu submissions");
-                break;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             // Get planet key
             if ((pHttpForm = m_pHttpRequest->GetForm ("KeyPlanet0")) == NULL) {
@@ -340,7 +270,7 @@ EndPartialMaps:
                         AddMessage ("The new planet name was too long");
                     } else {
 
-                        iErrCode = RenamePlanet (
+                        iErrCode = RenamePlanet(
                             m_iGameClass,
                             m_iGameNumber,
                             m_iEmpireKey,
@@ -348,10 +278,7 @@ EndPartialMaps:
                             pszNewPlanetName
                             );
 
-                        if (iErrCode != OK) {
-                            AddMessage ("Error renaming planet");
-                            break;
-                        }
+                        RETURN_ON_ERROR(iErrCode);
                     }
                 }
 
@@ -367,32 +294,18 @@ EndPartialMaps:
                 }
                 iNewMaxPop = pHttpForm->GetIntValue();
 
-                if (iOldMaxPop != iNewMaxPop) {
-
-                    iErrCode = SetPlanetMaxPop (
-                        m_iGameClass,
-                        m_iGameNumber,
-                        m_iEmpireKey, 
-                        iUpdatePlanetKey,
-                        iNewMaxPop
-                        );
-
-                    if (iErrCode != OK) {
-
-                        if (iErrCode == ERROR_PLANET_DOES_NOT_BELONG_TO_EMPIRE) {
-                            AddMessage ("Error setting planet pop: the planet does not belong to your empire");
-                        } else {
-                            AddMessage ("Error setting planet population");
-                        }
-                        break;
-                    }
+                if (iOldMaxPop != iNewMaxPop)
+                {
+                    iErrCode = SetPlanetMaxPop(m_iGameClass, m_iGameNumber, m_iEmpireKey, iUpdatePlanetKey, iNewMaxPop);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
             // Build click
             if (WasButtonPressed (BID_MINIBUILD)) {
 
-                GameCheck(HandleMiniBuild (iUpdatePlanetKey));
+                iErrCode = HandleMiniBuild(iUpdatePlanetKey);
+                RETURN_ON_ERROR(iErrCode);
 
                 //iClickedPlanetKey = iUpdatePlanetKey;
                 //iMapSubPage = 1;
@@ -453,32 +366,32 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 Variant vMiniMaps = MINIMAPS_NEVER;
-if (bMapGenerated && iMapSubPage == 0) {
-
-    GameCheck (GetEmpireGameProperty (
-        m_iGameClass,
-        m_iGameNumber,
-        m_iEmpireKey,
-        GameEmpireData::MiniMaps,
-        &vMiniMaps
-        ));
+if (bMapGenerated && iMapSubPage == 0)
+{
+    iErrCode = GetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::MiniMaps, &vMiniMaps);
+    RETURN_ON_ERROR(iErrCode);
         
-    if (!bForceFullMap && vMiniMaps.GetInteger() == MINIMAPS_PRIMARY) {
+    if (!bForceFullMap && vMiniMaps.GetInteger() == MINIMAPS_PRIMARY)
+    {
         iMapSubPage = 2;
     }
 }
@@ -486,15 +399,15 @@ if (bMapGenerated && iMapSubPage == 0) {
 //
 // Main switch
 //
-switch (iMapSubPage) {
-RenderWholeMap:
+switch (iMapSubPage)
+{
 case 0:
 
     %><input type="hidden" name="MapSubPage" value="0" ID="Hidden1"><%
 
     // Handle case where game hasn't started yet
-    if (!bMapGenerated) {
-
+    if (!bMapGenerated)
+    {
         // Draw fake intro map
         %><input type="hidden" name="MapSubPage" value="0"><%
         %><p>Click on a planet for a closer view:<%
@@ -505,7 +418,7 @@ case 0:
         %><td rowspan="3"><% 
 
         String strAlienButtonString;
-        GetAlienPlanetButtonString (m_iAlienKey, m_iEmpireKey, true, 0, 0, NULL, NULL, &strAlienButtonString);
+        GetAlienPlanetButtonString(m_iAlienKey, m_iEmpireKey, true, 0, 0, NULL, NULL, &strAlienButtonString);
 
         m_pHttpResponse->WriteText (strAlienButtonString.GetCharPtr(), strAlienButtonString.GetLength());
 
@@ -519,18 +432,19 @@ case 0:
         %></td><%
         %></tr><%
         %></table><%
-
-    } else {
-        
-        if (vMiniMaps.GetInteger() != MINIMAPS_NEVER) {
-            %><p><% WriteButton (BID_VIEWMINIMAP);
+    }
+    else
+    {
+        if (vMiniMaps.GetInteger() != MINIMAPS_NEVER)
+        {
+            %><p><% WriteButton(BID_VIEWMINIMAP);
         }
 
         // Get partial map info
         PartialMapInfo pmiPartialMapInfo;
         bool bPartialMaps = false;
 
-        GameCheck (GetEmpirePartialMapData (
+        iErrCode = GetEmpirePartialMapData (
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,
@@ -538,7 +452,8 @@ case 0:
             &pmiPartialMapInfo.iCenterKey,
             &pmiPartialMapInfo.iXRadius,
             &pmiPartialMapInfo.iYRadius
-            ));
+            );
+        RETURN_ON_ERROR(iErrCode);
 
         pmiPartialMapInfo.bDontShowPartialOptions = false;
 
@@ -550,11 +465,7 @@ case 0:
             bPartialMaps ? &pmiPartialMapInfo : NULL,
             false
             );
-
-        if (iErrCode != OK) {
-            AddMessage ("Error rendering map data. The error was ");
-            AppendMessage (iErrCode);
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     break;
@@ -567,14 +478,10 @@ case 1:
 
     unsigned int iLivePlanetKey, iDeadPlanetKey;
     iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode != OK) {
-        AddMessage ("Error reading empire's planet icons from database");
-        goto RenderWholeMap;
-    }
-
-    if (!bMapGenerated) {
-
+    if (!bMapGenerated)
+    {
         %><input type="hidden" name="MapSubPage" value="1"><%
 
         %><p><table width="90%"><%
@@ -583,77 +490,39 @@ case 1:
             m_iEmpireKey, NO_KEY, NO_KEY, iLivePlanetKey, iDeadPlanetKey, 0, false, 
             0, 0, 0, 0, 0, 0, 0.0, false, false, false, NULL, &bTrue
             );
-
-        if (iErrCode != OK) {
-            %>Error rendering up-close planet view. The error was <% Write (iErrCode);
-        }
-
-    } else {
-
-        int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
-        Variant* pvPlanetData = NULL;
-        float fAgRatio;
-
-        Variant vOptions;
-
+        RETURN_ON_ERROR(iErrCode);
+    }
+    else
+    {
         GET_GAME_MAP (pszGameMap, m_iGameClass, m_iGameNumber);
 
         // Make sure we've explored that planet
-        iErrCode = HasEmpireExploredPlanet (
-            m_iGameClass,
-            m_iGameNumber,
-            m_iEmpireKey, 
-            iClickedPlanetKey,
-            &bTrue
-            );
+        iErrCode = HasEmpireExploredPlanet(m_iGameClass, m_iGameNumber, m_iEmpireKey, iClickedPlanetKey, &bTrue);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (iErrCode != OK) {
-            AddMessage ("Error determining if empire has explored planet. The error was ");
-            AppendMessage (iErrCode);
-            goto RenderWholeMap;
-        }
-
-        if (!bTrue) {
+        if (!bTrue)
+        {
             AddMessage ("You have not explored that planet yet");
-            goto RenderWholeMap;
+            return Redirect(INFO);
         }
 
-        iErrCode = GetGoodBadResourceLimits (
-            m_iGameClass,
-            m_iGameNumber,
-            &iGoodAg,
-            &iBadAg,
-            &iGoodMin,
-            &iBadMin,
-            &iGoodFuel,
-            &iBadFuel
-            );
+        int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
+        iErrCode = GetGoodBadResourceLimits(m_iGameClass, m_iGameNumber, &iGoodAg, &iBadAg, &iGoodMin, &iBadMin, &iGoodFuel, &iBadFuel);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (iErrCode != OK) {
-            Assert(false);
-            AddMessage ("Error reading resource limits for good/bad colors. The error was ");
-            AppendMessage (iErrCode);
-            goto RenderWholeMap;
-        }
-
+        float fAgRatio;
         iErrCode = GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
-        if (iErrCode != OK) {
-            AddMessage ("Error reading empire's ag ratio. The error was ");
-            AppendMessage (iErrCode);
-            goto RenderWholeMap;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
+        Variant vOptions;
         iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
-        if (iErrCode != OK) {
-            AddMessage ("Database error "); AppendMessage (iErrCode);
-            goto RenderWholeMap;
-        }
+        RETURN_ON_ERROR(iErrCode);
+
+        Variant* pvPlanetData = NULL;
+        AutoFreeData free_pvPlanetData(pvPlanetData);
 
         iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
-        if (iErrCode != OK) {
-            AddMessage ("Database error "); AppendMessage (iErrCode);
-            goto RenderWholeMap;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="MapSubPage" value="1"><%
 
@@ -666,29 +535,29 @@ case 1:
             iBadFuel, fAgRatio, (vOptions.GetInteger() & INDEPENDENCE) != 0, false, false, pvPlanetData, 
             &bOurPlanet
             );
+        RETURN_ON_ERROR(iErrCode);
 
-        t_pCache->FreeData (pvPlanetData);
-
-        if (iErrCode != OK) {
-            %>Error rendering up-close planet view. The error was <% Write (iErrCode);
-            break;
-        }
-
-        if (!bOurPlanet) {
-            %><input type="hidden" name="KeyPlanet0" value="<% Write (iClickedPlanetKey); %>"><%
+        if (!bOurPlanet)
+        {
+            %><input type="hidden" name="KeyPlanet0" value="<% Write(iClickedPlanetKey); %>"><%
         }
 
         // Render ships
-        if (m_iGameOptions & SHIPS_ON_MAP_SCREEN) {
-
+        if (m_iGameOptions & SHIPS_ON_MAP_SCREEN)
+        {
             ShipsInMapScreen simShipsInMap = { iClickedPlanetKey, 0, 0 };
 
             int iBR;
             float fMaintRatio, fNextMaintRatio;
 
-            GameCheck (GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
-            GameCheck (GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
-            GameCheck (GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
+            iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
+            RETURN_ON_ERROR(iErrCode);
 
             // Render ships
             iErrCode = RenderShips (
@@ -710,8 +579,10 @@ case 1:
         }
 
         // Render build
-        if (m_iGameOptions & BUILD_ON_MAP_SCREEN) {  
-            GameCheck(RenderMiniBuild(iClickedPlanetKey, true));
+        if (m_iGameOptions & BUILD_ON_MAP_SCREEN)
+        {
+            iErrCode = RenderMiniBuild(iClickedPlanetKey, true);
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) {
@@ -722,19 +593,8 @@ case 1:
             // Render local map
             PartialMapInfo pmiPartialMapInfo = { iClickedPlanetKey, 1, 1, true };
 
-            iErrCode = RenderMap (
-                m_iGameClass,
-                m_iGameNumber,
-                m_iEmpireKey,
-                false,
-                &pmiPartialMapInfo,
-                false
-                );
-
-            if (iErrCode != OK) {
-                AddMessage ("Error rendering map data. The error was ");
-                AppendMessage (iErrCode);
-            }
+            iErrCode = RenderMap(m_iGameClass, m_iGameNumber, m_iEmpireKey, false, &pmiPartialMapInfo, false);
+            RETURN_ON_ERROR(iErrCode);
 
             %></td></tr><%
         }
@@ -742,9 +602,10 @@ case 1:
 
     %></table><p><%
 
-    if (bOurPlanet || iNumShipsRendered > 0 || iNumFleetsRendered > 0) {
-        WriteButton (BID_CANCEL);
-        WriteButton (BID_UPDATE);
+    if (bOurPlanet || iNumShipsRendered > 0 || iNumFleetsRendered > 0)
+    {
+        WriteButton(BID_CANCEL);
+        WriteButton(BID_UPDATE);
     }
 
     }
@@ -755,10 +616,12 @@ case 2:
     %><input type="hidden" name="MapSubPage" value="2"><%
     
     %><p><%
-    WriteButton (BID_VIEWMAP);
+    WriteButton(BID_VIEWMAP);
     %><p>Click on a planet for a closer view:<p><%
     
-    GameCheck(RenderMiniMap (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+    iErrCode = RenderMiniMap (m_iGameClass, m_iGameNumber, m_iEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
+
     break;
 
 default:

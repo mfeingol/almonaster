@@ -993,7 +993,7 @@ public:
         Variant pvRestrictionMin [NUM_ENTRY_SCORE_RESTRICTIONS], 
         Variant pvRestrictionMax [NUM_ENTRY_SCORE_RESTRICTIONS]);
 
-    int GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey, 
+    int GameAccessCheck(int iGameClass, int iGameNumber, int iEmpireKey, 
         const GameOptions* pgoGameOptions, GameAction gaAction, 
         bool* pbAccess, GameAccessDeniedReason* prAccessDeniedReason);
 

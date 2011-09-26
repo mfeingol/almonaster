@@ -193,7 +193,7 @@ case 0:
     %><input type="hidden" name="SystemGameListPage" value="0"><%
 
     unsigned int iNumGameClasses, * piGameClassKey = NULL;
-    Check (GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
+    Check(GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
 
     Algorithm::AutoDelete<unsigned int> autoDelete (piGameClassKey, true);
 
@@ -203,7 +203,7 @@ case 0:
 
         // Get superclass list
         unsigned int* piSuperClassKey, iNumSuperClasses = 0;
-        Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        Check(GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         bool bDraw = false;
         int** ppiTable = NULL;
@@ -319,8 +319,8 @@ case 1:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check (GetGameClassName (iGameClassKey, pszGameClassName));
-    Check (GetNextGameNumber (iGameClassKey, &iGameNumber));
+    Check(GetGameClassName (iGameClassKey, pszGameClassName));
+    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
 
     %><input type="hidden" name="SystemGameListPage" value="1"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%

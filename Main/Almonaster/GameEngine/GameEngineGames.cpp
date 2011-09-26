@@ -1468,7 +1468,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     if (bCheckSecurity)
     {
         GameAccessDeniedReason reason;
-        iErrCode = GameAccessCheck (iGameClass, iGameNumber, iEmpireKey, NULL, ENTER_GAME, &bFlag, &reason);
+        iErrCode = GameAccessCheck(iGameClass, iGameNumber, iEmpireKey, NULL, ENTER_GAME, &bFlag, &reason);
         RETURN_ON_ERROR(iErrCode);
 
         if (!bFlag)

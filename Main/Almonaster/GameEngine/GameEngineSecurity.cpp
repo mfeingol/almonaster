@@ -130,7 +130,7 @@ int GameEngine::GetGameEntryRestrictions (int iGameClass, int iGameNumber, int* 
     return iErrCode;
 }
 
-int GameEngine::GameAccessCheck (int iGameClass, int iGameNumber, int iEmpireKey, 
+int GameEngine::GameAccessCheck(int iGameClass, int iGameNumber, int iEmpireKey, 
                                  const GameOptions* pgoGameOptions, GameAction gaAction, 
                                  bool* pbAccess, GameAccessDeniedReason* prAccessDeniedReason) {
 

@@ -151,7 +151,7 @@ if (bConfirmPage) {
 
         unsigned int* piSuperClassKey, iNumSuperClasses, j;
         bool bDraw = false;
-        Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        Check(GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         if (iNumSuperClasses == 0)
         {
@@ -194,7 +194,7 @@ if (bConfirmPage) {
                     GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
 
                     GameAccessDeniedReason rReason;
-                    iErrCode = GameAccessCheck (iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
+                    iErrCode = GameAccessCheck(iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
                     if (iErrCode == OK) {
 
                         if (!bFlag) {

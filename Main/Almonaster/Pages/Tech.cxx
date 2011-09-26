@@ -86,7 +86,7 @@ if (!(m_iGameState & STARTED)) {
 
     int iTechDevs, iTechUndevs;
 
-    GameCheck (GetDevelopedTechs (
+    GameCheck(GetDevelopedTechs (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -95,7 +95,7 @@ if (!(m_iGameState & STARTED)) {
         ));
 
     int iNumAvailableTechs;
-    GameCheck (GetNumAvailableTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumAvailableTechs));
+    GameCheck(GetNumAvailableTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumAvailableTechs));
 
     int i, iNumDevKeys = 0, iNumUndevKeys = 0, piDevKey[NUM_SHIP_TYPES], piUndevKey[NUM_SHIP_TYPES];
 

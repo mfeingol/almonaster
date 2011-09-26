@@ -77,7 +77,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (String::StrCmp (pszNewValue, m_vEmpireName.GetCharPtr()) != 0) {
                 if (String::StriCmp (pszNewValue, m_vEmpireName.GetCharPtr()) == 0) {
 
-                    EmpireCheck (SetEmpireName (m_iEmpireKey, pszNewValue));
+                    EmpireCheck(SetEmpireName (m_iEmpireKey, pszNewValue));
                     AddMessage ("Your empire name was recased");
                     m_vEmpireName = pszNewValue;
 
@@ -156,7 +156,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::RealName, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::RealName, &vVerify));
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -177,13 +177,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, &vVerify));
             if (iNewValue != vVerify.GetInteger()) {
 
                 if (iNewValue < EMPIRE_AGE_MINIMUM && iNewValue != EMPIRE_AGE_UNKNOWN) {
                     AddMessage ("Your age is invalid");
                 } else {
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, iNewValue));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, iNewValue));
                     AddMessage ("Your age was changed");
                 }
             }
@@ -194,13 +194,13 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, &vVerify));
             if (iNewValue != vVerify.GetInteger()) {
 
                 if (iNewValue < EMPIRE_GENDER_UNKNOWN || iNewValue > EMPIRE_GENDER_FEMALE) {
                     AddMessage ("Your gender is invalid");
                 } else {
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, iNewValue));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, iNewValue));
                     AddMessage ("Your gender was changed");
                 }
             }
@@ -215,7 +215,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Location, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Location, &vVerify));
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -240,7 +240,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Email, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Email, &vVerify));
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -266,7 +266,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::PrivateEmail, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::PrivateEmail, &vVerify));
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -292,7 +292,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, &vVerify));
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -318,7 +318,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::WebPage, &vVerify));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::WebPage, &vVerify));
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -343,7 +343,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bValue = !(m_iSystemOptions2 & UNAVAILABLE_FOR_TOURNAMENTS);
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption2 (m_iEmpireKey, UNAVAILABLE_FOR_TOURNAMENTS, bValue));
+                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, UNAVAILABLE_FOR_TOURNAMENTS, bValue));
 
                 if (bValue) {
                     m_iSystemOptions2 |= UNAVAILABLE_FOR_TOURNAMENTS;
@@ -361,16 +361,16 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (GetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, &iVerify));
+            EmpireCheck(GetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, &iVerify));
 
             if (iNewValue != iVerify) {
 
-                EmpireCheck (GetSystemProperty (SystemData::MaxNumSystemMessages, &vValue));
+                EmpireCheck(GetSystemProperty (SystemData::MaxNumSystemMessages, &vValue));
 
                 if (iNewValue > vValue.GetInteger()) {
                     AddMessage ("Illegal maximum number of saved system messages");
                 } else {
-                    EmpireCheck (SetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, iNewValue));
+                    EmpireCheck(SetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, iNewValue));
                     AddMessage ("Your maximum number of saved messages was changed");
                 }
             }
@@ -381,14 +381,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vValue));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vValue));
 
             if (iNewValue != vValue.GetInteger()) {
 
                 if (iNewValue > 100) {
                     AddMessage ("Illegal maximum number of ships built at once");
                 } else {
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, iNewValue));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, iNewValue));
                     AddMessage ("Your maximum number of ships built at once was updated");
                 }
             }
@@ -399,7 +399,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (GetEmpireDefaultBuilderPlanet (m_iEmpireKey, &iVerify));
+            EmpireCheck(GetEmpireDefaultBuilderPlanet (m_iEmpireKey, &iVerify));
 
             if (iNewValue != iVerify) {
 
@@ -469,7 +469,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if ((iNewValue != 0) != bValue) {
 
-                EmpireCheck (SetEmpireOption2 (m_iEmpireKey, FLEETS_COLLAPSED_BY_DEFAULT, !bValue));
+                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, FLEETS_COLLAPSED_BY_DEFAULT, !bValue));
 
                 if (!bValue) {
                     m_iSystemOptions2 |= FLEETS_COLLAPSED_BY_DEFAULT;
@@ -488,7 +488,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if ((iNewValue != 0) != bValue) {
 
-                EmpireCheck (SetEmpireOption2 (m_iEmpireKey, BLOCK_UPLOADED_ICONS, !bValue));
+                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, BLOCK_UPLOADED_ICONS, !bValue));
 
                 if (!bValue) {
                     m_iSystemOptions2 |= BLOCK_UPLOADED_ICONS;
@@ -507,7 +507,7 @@ if (m_bOwnPost && !m_bRedirection) {
             bSessionId = (m_iSystemOptions & CONFIRM_IMPORTANT_CHOICES) != 0;
             if (bSessionId != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, CONFIRM_IMPORTANT_CHOICES, !bSessionId));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, CONFIRM_IMPORTANT_CHOICES, !bSessionId));
 
                 if (bSessionId) {
                     m_iSystemOptions |= CONFIRM_IMPORTANT_CHOICES;
@@ -677,8 +677,8 @@ Quote:
 
             if ((bNewValue != bValue) || (bNewValue2 != bValue2)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SYSTEM_REPEATED_BUTTONS, bNewValue));
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, GAME_REPEATED_BUTTONS, bNewValue2));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SYSTEM_REPEATED_BUTTONS, bNewValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, GAME_REPEATED_BUTTONS, bNewValue2));
 
                 if (bNewValue) {
                     m_iSystemOptions |= SYSTEM_REPEATED_BUTTONS;
@@ -727,8 +727,8 @@ Quote:
 
             if ((bNewValue != bValue) || (bNewValue2 != bValue2)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SYSTEM_DISPLAY_TIME, bNewValue));
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, GAME_DISPLAY_TIME, bNewValue2));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SYSTEM_DISPLAY_TIME, bNewValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, GAME_DISPLAY_TIME, bNewValue2));
 
                 if (bNewValue) {
                     m_iSystemOptions |= SYSTEM_DISPLAY_TIME;
@@ -772,7 +772,7 @@ Quote:
             bValue = (m_iSystemOptions & AUTO_REFRESH) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, AUTO_REFRESH, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, AUTO_REFRESH, !bValue));
                 AddMessage ("Refresh on update countdown is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~AUTO_REFRESH;
@@ -793,7 +793,7 @@ Quote:
             bValue = (m_iSystemOptions & COUNTDOWN) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, COUNTDOWN, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, COUNTDOWN, !bValue));
                 AddMessage ("Visual update countdown ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~COUNTDOWN;
@@ -814,7 +814,7 @@ Quote:
             bValue = (m_iSystemOptions & MAP_COLORING) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, MAP_COLORING, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, MAP_COLORING, !bValue));
                 AddMessage ("Map coloring by diplomatic status is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~MAP_COLORING;
@@ -835,7 +835,7 @@ Quote:
             bValue = (m_iSystemOptions & SHIP_MAP_COLORING) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SHIP_MAP_COLORING, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIP_MAP_COLORING, !bValue));
                 AddMessage ("Ship coloring by diplomatic status is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SHIP_MAP_COLORING;
@@ -856,7 +856,7 @@ Quote:
             bValue = (m_iSystemOptions & SHIP_MAP_HIGHLIGHTING) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, !bValue));
                 AddMessage ("Ship highlighting on the map screen is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SHIP_MAP_HIGHLIGHTING;
@@ -877,7 +877,7 @@ Quote:
             bValue = (m_iSystemOptions & SENSITIVE_MAPS) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SENSITIVE_MAPS, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SENSITIVE_MAPS, !bValue));
                 AddMessage ("Sensitive maps are ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SENSITIVE_MAPS;
@@ -898,7 +898,7 @@ Quote:
             bValue = (m_iSystemOptions & PARTIAL_MAPS) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, PARTIAL_MAPS, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, PARTIAL_MAPS, !bValue));
                 AddMessage ("Partial maps are ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~PARTIAL_MAPS;
@@ -918,7 +918,7 @@ Quote:
 
             bValue = (m_iSystemOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
             if (bValue != (iNewValue != 0)) {
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bValue));
                 AddMessage ("Local maps will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~LOCAL_MAPS_IN_UPCLOSE_VIEWS;
@@ -932,7 +932,7 @@ Quote:
 
             // Ratios
             Variant vTemp;
-            EmpireCheck (GetEmpireProperty (
+            EmpireCheck(GetEmpireProperty (
                 m_iEmpireKey,
                 SystemEmpireData::GameRatios,
                 &vTemp
@@ -947,7 +947,7 @@ Quote:
 
             if (iNewValue != iValue && iNewValue >= RATIOS_DISPLAY_NEVER && iNewValue <= RATIOS_DISPLAY_ALWAYS) {
 
-                EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::GameRatios, iNewValue));
+                EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::GameRatios, iNewValue));
                 AppendMessage ("Your game ratios line setting was updated");
             }
 
@@ -957,7 +957,7 @@ Quote:
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck (GetEmpireDefaultMessageTarget (m_iEmpireKey, &iValue));
+            EmpireCheck(GetEmpireDefaultMessageTarget (m_iEmpireKey, &iValue));
             if (iValue != iNewValue) {
                 iErrCode = SetEmpireDefaultMessageTarget (m_iEmpireKey, iNewValue);
                 if (iErrCode == OK) {
@@ -976,7 +976,7 @@ Quote:
 
             bValue = (m_iSystemOptions & SHOW_TECH_DESCRIPTIONS) != 0;
             if (bValue != (iNewValue != 0)) {
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SHOW_TECH_DESCRIPTIONS, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHOW_TECH_DESCRIPTIONS, !bValue));
                 AddMessage ("Ship type descriptions maps will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SHOW_TECH_DESCRIPTIONS;
@@ -998,7 +998,7 @@ Quote:
             bValue = (m_iSystemOptions & SHIPS_ON_MAP_SCREEN) != 0;
             if (bValue != ((iNewValue & SHIPS_ON_MAP_SCREEN) != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bValue));
                 AddMessage ("Ship menus will ");
                 if (!(iNewValue & SHIPS_ON_MAP_SCREEN)) {
                     m_iSystemOptions &= ~SHIPS_ON_MAP_SCREEN;
@@ -1013,7 +1013,7 @@ Quote:
             bValue = (m_iSystemOptions & SHIPS_ON_PLANETS_SCREEN) != 0;
             if (bValue != ((iNewValue & SHIPS_ON_PLANETS_SCREEN)!= 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bValue));
                 AddMessage ("Ship menus will ");
                 if (!(iNewValue & SHIPS_ON_PLANETS_SCREEN)) {
                     m_iSystemOptions &= ~SHIPS_ON_PLANETS_SCREEN;
@@ -1034,7 +1034,7 @@ Quote:
             bValue = (m_iSystemOptions & BUILD_ON_MAP_SCREEN) != 0;
             if (bValue != ((iNewValue & BUILD_ON_MAP_SCREEN)!= 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bValue));
                 AddMessage ("Build menus will ");
                 if (!(iNewValue & BUILD_ON_MAP_SCREEN)) {
                     m_iSystemOptions &= ~BUILD_ON_MAP_SCREEN;
@@ -1049,7 +1049,7 @@ Quote:
             bValue = (m_iSystemOptions & BUILD_ON_PLANETS_SCREEN) != 0;
             if (bValue != ((iNewValue & BUILD_ON_PLANETS_SCREEN)!= 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bValue));
                 AddMessage ("Build menus will ");
                 if (!(iNewValue & BUILD_ON_PLANETS_SCREEN)) {
                     m_iSystemOptions &= ~BUILD_ON_PLANETS_SCREEN;
@@ -1070,7 +1070,7 @@ Quote:
             bValue = (m_iSystemOptions2 & REFRESH_UNSTARTED_GAME_PAGES) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption2 (m_iEmpireKey, REFRESH_UNSTARTED_GAME_PAGES, !bValue));
+                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, REFRESH_UNSTARTED_GAME_PAGES, !bValue));
                 AddMessage ("Unstarted game screens will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions2 &= ~REFRESH_UNSTARTED_GAME_PAGES;
@@ -1091,7 +1091,7 @@ Quote:
             bValue = (m_iSystemOptions & DISPLACE_ENDTURN_BUTTON) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, !bValue));
                 AddMessage ("The End Turn button will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~DISPLACE_ENDTURN_BUTTON;
@@ -1112,7 +1112,7 @@ Quote:
             bValue = (m_iSystemOptions & FIXED_BACKGROUNDS) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, FIXED_BACKGROUNDS, !bValue));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, FIXED_BACKGROUNDS, !bValue));
                 AddMessage ("Fixed backgrounds are ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~FIXED_BACKGROUNDS;
@@ -1135,7 +1135,7 @@ Quote:
 
             if (bIPAddress != ((iNewValue & IP_ADDRESS_PASSWORD_HASHING) != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, IP_ADDRESS_PASSWORD_HASHING, !bIPAddress));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, IP_ADDRESS_PASSWORD_HASHING, !bIPAddress));
                 AddMessage ("Game screen password hashing with IP address is now ");
                 AppendMessage (bIPAddress ? "off" : "on");
 
@@ -1148,7 +1148,7 @@ Quote:
 
             if (bSessionId != ((iNewValue & SESSION_ID_PASSWORD_HASHING) != 0)) {
 
-                EmpireCheck (SetEmpireOption (m_iEmpireKey, SESSION_ID_PASSWORD_HASHING, !bSessionId));
+                EmpireCheck(SetEmpireOption (m_iEmpireKey, SESSION_ID_PASSWORD_HASHING, !bSessionId));
                 AddMessage ("Game screen password hashing with Session Id is now ");
                 AppendMessage (bIPAddress ? "off" : "on");
 
@@ -1169,7 +1169,7 @@ Quote:
                     bValue = (m_iSystemOptions & SHOW_ADVANCED_SEARCH_INTERFACE) != 0;
                     if (bValue != (iNewValue != 0)) {
 
-                        EmpireCheck (SetEmpireOption (m_iEmpireKey, SHOW_ADVANCED_SEARCH_INTERFACE, !bValue));
+                        EmpireCheck(SetEmpireOption (m_iEmpireKey, SHOW_ADVANCED_SEARCH_INTERFACE, !bValue));
                         AddMessage ("The advanced search interface will ");
                         if (iNewValue == 0) {
                             m_iSystemOptions &= ~SHOW_ADVANCED_SEARCH_INTERFACE;
@@ -1191,7 +1191,7 @@ Quote:
                 bValue = (m_iSystemOptions & DISPLAY_FATAL_UPDATE_MESSAGES) != 0;
                 if (bValue != (iNewValue != 0)) {
 
-                    EmpireCheck (SetEmpireOption (m_iEmpireKey, DISPLAY_FATAL_UPDATE_MESSAGES, !bValue));
+                    EmpireCheck(SetEmpireOption (m_iEmpireKey, DISPLAY_FATAL_UPDATE_MESSAGES, !bValue));
                     AddMessage ("Update messages when empire is nuked will ");
                     if (iNewValue == 0) {
                         m_iSystemOptions &= ~DISPLAY_FATAL_UPDATE_MESSAGES;
@@ -1212,7 +1212,7 @@ Quote:
                 bValue = (m_iSystemOptions & SEND_SCORE_MESSAGE_ON_NUKE) != 0;
                 if (bValue != (iNewValue != 0)) {
 
-                    EmpireCheck (SetEmpireOption (m_iEmpireKey, SEND_SCORE_MESSAGE_ON_NUKE, !bValue));
+                    EmpireCheck(SetEmpireOption (m_iEmpireKey, SEND_SCORE_MESSAGE_ON_NUKE, !bValue));
                     AddMessage ("Score change information will ");
                     if (iNewValue == 0) {
                         m_iSystemOptions &= ~SEND_SCORE_MESSAGE_ON_NUKE;
@@ -1258,7 +1258,7 @@ Quote:
 
                     } else {
 
-                        EmpireCheck (GetDefaultEmpireShipName (m_iEmpireKey, i, &vOldShipName));
+                        EmpireCheck(GetDefaultEmpireShipName (m_iEmpireKey, i, &vOldShipName));
 
                         if (strcmp (vOldShipName.GetCharPtr(), pszNewValue) != 0 &&
                             SetDefaultEmpireShipName (m_iEmpireKey, i, pszNewValue) == OK) {
@@ -1310,11 +1310,11 @@ Quote:
 
                 case NULL_THEME:
 
-                    EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey));
+                    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey));
                     if (vOldThemeKey.GetInteger() != NULL_THEME) {
 
-                        EmpireCheck (SetEmpireThemeKey (m_iEmpireKey, NULL_THEME));
-                        EmpireCheck (GetUIData (NULL_THEME));
+                        EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, NULL_THEME));
+                        EmpireCheck(GetUIData (NULL_THEME));
 
                         AddMessage ("You have selected the Null Theme");
                     }
@@ -1339,11 +1339,11 @@ Quote:
                         AddMessage ("That theme doesn't exist");
                     } else {
 
-                        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey));
+                        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey));
                         if (vOldThemeKey.GetInteger() != iNewValue) {
 
-                            EmpireCheck (SetEmpireThemeKey (m_iEmpireKey, iNewValue));
-                            EmpireCheck (GetUIData (iNewValue));
+                            EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, iNewValue));
+                            EmpireCheck(GetUIData (iNewValue));
 
                             AddMessage ("You have selected a new theme");
                         }
@@ -1665,8 +1665,8 @@ Quote:
             // Handle graphical theme updates
             bool bUpdate = false, bColorError = false;
 
-            EmpireCheck (GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
+            EmpireCheck(GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
             iColorKey = vValue.GetInteger();
 
             // Background
@@ -1676,7 +1676,7 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != m_iBackgroundKey) {
-                EmpireCheck (SetEmpireBackgroundKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireBackgroundKey (m_iEmpireKey, iNewValue));
                 m_iBackgroundKey = iNewValue;
                 bUpdate = true;
             }
@@ -1688,7 +1688,7 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iLivePlanetKey) {
-                EmpireCheck (SetEmpireLivePlanetKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireLivePlanetKey (m_iEmpireKey, iNewValue));
                 bUpdate = true;
             }
 
@@ -1699,7 +1699,7 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iDeadPlanetKey) {
-                EmpireCheck (SetEmpireDeadPlanetKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireDeadPlanetKey (m_iEmpireKey, iNewValue));
                 bUpdate = true;
             }
 
@@ -1710,7 +1710,7 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != m_iButtonKey) {
-                EmpireCheck (SetEmpireButtonKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireButtonKey (m_iEmpireKey, iNewValue));
                 iNewButtonKey = iNewValue;
                 bUpdate = true;
             }
@@ -1722,16 +1722,16 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != m_iSeparatorKey) {
-                EmpireCheck (SetEmpireSeparatorKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireSeparatorKey (m_iEmpireKey, iNewValue));
                 bUpdate = true;
             }
 
             // Get horz, vert keys
             unsigned int iHorzKey, iVertKey;
             
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue));
             iHorzKey = vValue.GetInteger();
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue));
             iVertKey = vValue.GetInteger();
 
             // Horz
@@ -1741,7 +1741,7 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iHorzKey) {
-                EmpireCheck (SetEmpireHorzKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireHorzKey (m_iEmpireKey, iNewValue));
                 bUpdate = true;
             }
 
@@ -1752,7 +1752,7 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iVertKey) {
-                EmpireCheck (SetEmpireVertKey (m_iEmpireKey, iNewValue));
+                EmpireCheck(SetEmpireVertKey (m_iEmpireKey, iNewValue));
                 bUpdate = true;
             }
 
@@ -1774,7 +1774,7 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vTableColor = pszNewValue;
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, m_vTableColor));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, m_vTableColor));
                 } else {
                     AddMessage ("You must submit a valid text color");
                     bColorError = true;
@@ -1788,7 +1788,7 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vGoodColor = pszNewValue;
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, m_vGoodColor));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, m_vGoodColor));
                 } else {
                     AddMessage ("You must submit a valid good color");
                     bColorError = true;
@@ -1802,7 +1802,7 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vBadColor = pszNewValue;
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, m_vBadColor));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, m_vBadColor));
                 } else {
                     AddMessage ("You must submit a valid bad color");
                     bColorError = true;
@@ -1816,7 +1816,7 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vPrivateMessageColor = pszNewValue;
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, m_vPrivateMessageColor));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, m_vPrivateMessageColor));
                 } else {
                     AddMessage ("You must submit a valid message color");
                     bColorError = true;
@@ -1830,7 +1830,7 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vBroadcastMessageColor = pszNewValue;
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, m_vBroadcastMessageColor));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, m_vBroadcastMessageColor));
                 } else {
                     AddMessage ("You must submit a valid broadcast color");
                     bColorError = true;
@@ -1844,26 +1844,26 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vTableColor = pszNewValue;
-                    EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, m_vTableColor));
+                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, m_vTableColor));
                 } else {
                     AddMessage ("You must submit a valid table color");
                     bColorError = true;
                 }
             }
 
-            EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue));
+            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue));
             iThemeKey = vValue.GetInteger();
 
             if (iNewValue != iColorKey) {
 
                 if (!bColorError) {
-                    EmpireCheck (SetEmpireColorKey (m_iEmpireKey, iNewValue));
+                    EmpireCheck(SetEmpireColorKey (m_iEmpireKey, iNewValue));
                     bUpdate = true;
                 } else {
 
                     // We need a color key from somewhere - use the previous theme
                     if (iThemeKey != INDIVIDUAL_ELEMENTS && iThemeKey != ALTERNATIVE_PATH) {
-                        EmpireCheck (SetEmpireColorKey (m_iEmpireKey, iThemeKey));
+                        EmpireCheck(SetEmpireColorKey (m_iEmpireKey, iThemeKey));
                     }
 
                     // No need for an else;  we'll keep using what we had before
@@ -1872,13 +1872,13 @@ Quote:
 
             if (bUpdate) {
                 if (iThemeKey != INDIVIDUAL_ELEMENTS) {
-                    EmpireCheck (SetEmpireThemeKey (m_iEmpireKey, INDIVIDUAL_ELEMENTS));
+                    EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, INDIVIDUAL_ELEMENTS));
                     AddMessage ("You are now using individual UI elements");
                 } else {
                     AddMessage ("Your individual UI elements have been updated");
                 }
                 
-                EmpireCheck (GetUIData (INDIVIDUAL_ELEMENTS));
+                EmpireCheck(GetUIData (INDIVIDUAL_ELEMENTS));
             }
 
             const char* pszStart;
@@ -1936,9 +1936,9 @@ Quote:
                     if (stLength > MAX_GRAPHICS_ALTERNATIVE_PATH_LENGTH) {
                         AddMessage ("Your alternative graphics path is too long");
                     } else {
-                        EmpireCheck (SetEmpireThemeKey (m_iEmpireKey, ALTERNATIVE_PATH));
-                        EmpireCheck (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, pszPath));
-                        EmpireCheck (GetUIData (ALTERNATIVE_PATH));
+                        EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, ALTERNATIVE_PATH));
+                        EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, pszPath));
+                        EmpireCheck(GetUIData (ALTERNATIVE_PATH));
                     }
                 }
             }
@@ -2007,7 +2007,7 @@ Quote:
 
         case 6:
 
-            EmpireCheck (BlankEmpireStatistics (m_iEmpireKey));
+            EmpireCheck(BlankEmpireStatistics (m_iEmpireKey));
             AddMessage ("Your empire's statistics have been blanked");
 
             char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
@@ -2133,8 +2133,8 @@ case 0:
 
     String strFilter;
 
-    EmpireCheck (GetEmpireData (m_iEmpireKey, &pvEmpireData, NULL));
-    EmpireCheck (GetJoinedTournaments (m_iEmpireKey, NULL, NULL, &iNumTournamentsJoined));
+    EmpireCheck(GetEmpireData (m_iEmpireKey, &pvEmpireData, NULL));
+    EmpireCheck(GetJoinedTournaments (m_iEmpireKey, NULL, NULL, &iNumTournamentsJoined));
 
     %><input type="hidden" name="ProfileEditorPage" value="0"><p><%
 
@@ -3081,7 +3081,7 @@ case 1:
     {
 
     Variant vAlienKey;
-    EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey));
+    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey));
 
     %><input type="hidden" name="ProfileEditorPage" value="1"><p><%
     WriteEmpireIcon (vAlienKey.GetInteger(), m_iEmpireKey, "Your current icon", false);
@@ -3101,7 +3101,7 @@ case 2:
     bool bSystem = false, bFound;
     const char* pszFontColor = NULL;
 
-    EmpireCheck (GetSavedSystemMessages (
+    EmpireCheck(GetSavedSystemMessages (
         m_iEmpireKey,
         &piMessageKey,
         &ppvMessage,
@@ -3235,20 +3235,20 @@ case 3:
     unsigned int iThemeKey, iLivePlanetKey, iDeadPlanetKey, iColorKey, iHorzKey, iVertKey, iBackgroundKey, iSeparatorKey,
         iButtonKey;
 
-    EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue));
+    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue));
     iThemeKey = vValue.GetInteger();
 
     switch (iThemeKey) {
 
     case INDIVIDUAL_ELEMENTS:
 
-        EmpireCheck (GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
+        EmpireCheck(GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
         
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue));
         iHorzKey = vValue.GetInteger();
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue));
         iVertKey = vValue.GetInteger();
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
         iColorKey = vValue.GetInteger();
 
         iBackgroundKey = m_iBackgroundKey;
@@ -3259,7 +3259,7 @@ case 3:
 
     case ALTERNATIVE_PATH:
 
-        EmpireCheck (GetDefaultUIKeys (
+        EmpireCheck(GetDefaultUIKeys (
             &iBackgroundKey,
             &iLivePlanetKey,
             &iDeadPlanetKey,
@@ -3293,14 +3293,14 @@ case 3:
         int iColorKey;
         Variant vTextColor, vGoodColor, vBadColor, vPrivateColor, vBroadcastColor, vCustomTableColor;
         
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &vTextColor));
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &vGoodColor));
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &vBadColor));
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &vPrivateColor));
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &vBroadcastColor));
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &vCustomTableColor));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &vTextColor));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &vGoodColor));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &vBadColor));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &vPrivateColor));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &vBroadcastColor));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &vCustomTableColor));
 
-        EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
+        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
         iColorKey = vValue.GetInteger();
         
         
@@ -3357,7 +3357,7 @@ case 4:
 
     Variant vPath;
     
-    EmpireCheck (GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &vPath));
+    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &vPath));
 
     %><p><input type="text" name="GraphicsPath" size="50" <%
     %>maxlength="<% Write (MAX_GRAPHICS_ALTERNATIVE_PATH_LENGTH); %>" value="<% Write (vPath.GetCharPtr()); %>"><%
@@ -3380,7 +3380,7 @@ case 4:
     WriteButton (BID_CHOOSE);
 
     unsigned int* piThemeKey, iNumThemes;
-    Check (GetThemeKeys (&piThemeKey, &iNumThemes));
+    Check(GetThemeKeys (&piThemeKey, &iNumThemes));
 
     if (iNumThemes == 0) {
         %><p>There are no themes available for download<%

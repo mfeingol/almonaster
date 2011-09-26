@@ -186,7 +186,7 @@ case 0:
         bool bDraw = false;
         int iGameClass, iGameNumber;
         unsigned int* piSuperClassKey, j, iNumSuperClasses;
-        Check (GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        Check(GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
 
         if (iNumSuperClasses == 0) {
             %><h3>There are no spectator games on this server</h3><% 

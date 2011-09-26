@@ -42,7 +42,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_ACCEPT)) {
 
-            EmpireCheck (SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
+            EmpireCheck(SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
             m_iSystemOptions2 |= EMPIRE_ACCEPTED_TOS;
 
             AddMessage ("You accepted the Terms of Service");

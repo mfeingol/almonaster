@@ -47,9 +47,9 @@ Variant vTemp;
 
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
-GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));
-GameCheck (GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires));
-GameCheck (GetGameClassDiplomacyLevel (m_iGameClass, &iDiplomacy));
+GameCheck(GetGameClassOptions (m_iGameClass, &iGameClassOptions));
+GameCheck(GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires));
+GameCheck(GetGameClassDiplomacyLevel (m_iGameClass, &iDiplomacy));
 
 if (m_bOwnPost && !m_bRedirection) {
 
@@ -489,7 +489,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iNewValue != m_iGameRatios && 
                 iNewValue >= RATIOS_DISPLAY_NEVER && iNewValue <= RATIOS_DISPLAY_ALWAYS) {
 
-                GameCheck (SetEmpireGameProperty (
+                GameCheck(SetEmpireGameProperty (
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
@@ -510,7 +510,7 @@ if (m_bOwnPost && !m_bRedirection) {
             iNewValue = pHttpForm->GetIntValue();
 
             int iRealPlanet;
-            GameCheck (GetEmpireDefaultBuilderPlanet (
+            GameCheck(GetEmpireDefaultBuilderPlanet (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -561,7 +561,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            GameCheck (GetEmpireDefaultMessageTarget (
+            GameCheck(GetEmpireDefaultMessageTarget (
                 m_iGameClass,
                 m_iGameNumber,
                 m_iEmpireKey,
@@ -637,14 +637,14 @@ if (m_bOwnPost && !m_bRedirection) {
                     iPause = pHttpForm->GetIntValue();
 
                     // Get selected dip option
-                    GameCheck (IsEmpireRequestingPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldPause));
+                    GameCheck(IsEmpireRequestingPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldPause));
 
                     // Only update if we changed the status
                     if ((iPause != 0) != bOldPause) {
 
                         if (iPause != 0) {
 
-                            GameCheck (RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                            GameCheck(RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                             if (m_iGameState & ADMIN_PAUSED) {
                                 AddMessage ("The game was already paused by an admin");
@@ -662,7 +662,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         } else {
 
-                            GameCheck (RequestNoPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                            GameCheck(RequestNoPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                             if (m_iGameState & ADMIN_PAUSED) {
                                 AddMessage ("The game has been paused by an administrator and will remain paused");
@@ -691,14 +691,14 @@ if (m_bOwnPost && !m_bRedirection) {
                         iDraw = pHttpForm->GetIntValue();
 
                         // Get selected dip option
-                        GameCheck (IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
+                        GameCheck(IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
 
                         // Only update if we changed the status
                         if ((iDraw != 0) != bOldDraw) {
 
                             if (iDraw != 0) {
 
-                                GameCheck (RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                                GameCheck(RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
 
                                 m_iGameOptions |= REQUEST_DRAW;
 
@@ -732,7 +732,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                             } else {
 
-                                GameCheck (RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+                                GameCheck(RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
                                 AddMessage ("You are no longer requesting a draw");
 
                                 m_iGameOptions &= ~REQUEST_DRAW;
@@ -1026,7 +1026,7 @@ bool bFlag;
 int j, iNumNames = 0, iValue;
 
 if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+    GameCheck(WriteRatiosString (NULL));
 }
 
 switch (iOptionPage) {
@@ -1158,7 +1158,7 @@ case 0:
     } %></select></td></tr><%
     
     
-    GameCheck (GetEmpireGameProperty (
+    GameCheck(GetEmpireGameProperty (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1249,7 +1249,7 @@ case 0:
     } %></select></td></tr><%
 
 
-    GameCheck (GetEmpireGameProperty (
+    GameCheck(GetEmpireGameProperty (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1282,7 +1282,7 @@ case 0:
     %><tr><td>Default builder planet:</td><td><select name="DefaultBuilderPlanet"><%
 
     int iRealPlanet;
-    GameCheck (GetEmpireDefaultBuilderPlanet (
+    GameCheck(GetEmpireDefaultBuilderPlanet (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1309,7 +1309,7 @@ case 0:
     %>value="<% Write (NO_DEFAULT_BUILDER_PLANET); %>">No default builder planet</option><%
 
     unsigned int* piBuilderKey = NULL, iNumBuilderKeys;
-    GameCheck (GetBuilderPlanetKeys (
+    GameCheck(GetBuilderPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1349,7 +1349,7 @@ case 0:
         piBuilderKey = NULL;
     }
 
-    GameCheck (GetEmpireDefaultMessageTarget (
+    GameCheck(GetEmpireDefaultMessageTarget (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -1433,7 +1433,7 @@ case 0:
 
     unsigned int iNumMessages;
 
-    GameCheck (GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages)); 
+    GameCheck(GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages)); 
     if (iNumMessages > 0) {
         Write (iNumMessages);
         %>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<%
@@ -1447,8 +1447,8 @@ case 0:
     
     Variant vMaxNumMessages;
 
-    GameCheck (GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages));
-    GameCheck (GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages));
+    GameCheck(GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages));
+    GameCheck(GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages));
     
     unsigned int iMaxNumMessages = vMaxNumMessages.GetInteger();
 
@@ -1503,7 +1503,7 @@ case 0:
 
         %></select><%
 
-        GameCheck (GetNumEmpiresRequestingPause (m_iGameClass, m_iGameNumber, &i));
+        GameCheck(GetNumEmpiresRequestingPause (m_iGameClass, m_iGameNumber, &i));
 
         %> <strong><% Write (i); %></strong> of <strong><% Write (iNumEmpires); %></strong> empire<%
 
@@ -1540,7 +1540,7 @@ case 0:
 
         %></select><%
 
-        GameCheck (GetNumEmpiresRequestingDraw (m_iGameClass, m_iGameNumber, &i));
+        GameCheck(GetNumEmpiresRequestingDraw (m_iGameClass, m_iGameNumber, &i));
 
         %> <strong><% Write (i); %></strong> of <strong><% Write (iNumEmpires); %></strong> empire<%
 
@@ -1564,7 +1564,7 @@ case 0:
 
 
     Variant vNotepad;
-    GameCheck (GetEmpireNotepad (m_iGameClass, m_iGameNumber, m_iEmpireKey, &vNotepad));
+    GameCheck(GetEmpireNotepad (m_iGameClass, m_iGameNumber, m_iEmpireKey, &vNotepad));
     Write (vNotepad.GetCharPtr());
     %></textarea></td><%
 

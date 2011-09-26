@@ -58,7 +58,7 @@ if (m_bOwnPost && !m_bRedirection) {
         // Handle planet name change or maxpop change submissions
         unsigned int iNumTestPlanets;
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumOurPlanets")) == NULL) {
-            GameCheck (GetNumVisitedPlanets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTestPlanets));
+            GameCheck(GetNumVisitedPlanets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTestPlanets));
         } else {
             iNumTestPlanets = pHttpForm->GetIntValue();
         }
@@ -193,10 +193,10 @@ GameCheck(OpenGamePage());
 // Individual page stuff starts here
 unsigned int iLivePlanetKey, iDeadPlanetKey, iNumPlanets;
 
-GameCheck (GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
+GameCheck(GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
 
 if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck (WriteRatiosString (NULL));
+    GameCheck(WriteRatiosString (NULL));
 }
 
 if (bMapGenerated) {
@@ -204,7 +204,7 @@ if (bMapGenerated) {
     Variant* pvPlanetKey;
     unsigned int* piProxyKey, iCounter = 0;
     bool bOurPlanet;
-    GameCheck (GetVisitedPlanetKeys (
+    GameCheck(GetVisitedPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,

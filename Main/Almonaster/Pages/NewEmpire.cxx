@@ -25,24 +25,27 @@ bool bVerified = false, bRepost = false;
 
 int iOptions;
 iErrCode = GetSystemOptions (&iOptions);
-if (iErrCode != OK || !(iOptions & NEW_EMPIRES_ENABLED)) {
+RETURN_ON_ERROR(iErrCode);
 
+if (!(iOptions & NEW_EMPIRES_ENABLED))
+{
     String strMessage = "New empires cannot be created on this server";
     Variant vReason;
 
-    iErrCode = GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason);
-    if (iErrCode == OK) {
+    iErrCode = GetSystemProperty(SystemData::NewEmpiresDisabledReason, &vReason);
+    RETURN_ON_ERROR(iErrCode);
 
-        const char* pszReason = vReason.GetCharPtr();
-        if (!String::IsBlank (pszReason)) {
-            strMessage += ". ";
-            strMessage += pszReason;
-        }
+    const char* pszReason = vReason.GetCharPtr();
+    if (!String::IsBlank(pszReason))
+    {
+        strMessage += ". ";
+        strMessage += pszReason;
     }
 
-    AddMessage (strMessage);
+    Assert(strMessage.GetCharPtr());
+    AddMessage(strMessage);
 
-    return Redirect (LOGIN);
+    return Redirect(LOGIN);
 }
 
 IHttpForm* pHttpForm;
@@ -79,8 +82,8 @@ m_vBadColor = pHttpForm->GetValue();
 // Handle submissions from NewEmpire page
 if (!m_bRedirection &&
     (pHttpForm = m_pHttpRequest->GetForm ("PageId")) != NULL &&
-    pHttpForm->GetIntValue() == m_pgPageId) {
-
+    pHttpForm->GetIntValue() == m_pgPageId)
+{
     const char* pszTemp;
     char pszStandardizedName [MAX_EMPIRE_NAME_LENGTH + 1];
 
@@ -105,10 +108,7 @@ if (!m_bRedirection &&
     }
 
     m_vEmpireName = pszTemp;
-    if (m_vEmpireName.GetCharPtr() == NULL) {
-        AddMessage ("Out of memory");
-        return Redirect (LOGIN);
-    }
+    Assert(m_vEmpireName.GetCharPtr());
 
     if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireProxy")) == NULL) {
         AddMessage ("Missing EmpireProxy form");
@@ -128,46 +128,53 @@ if (!m_bRedirection &&
     }
 
     m_vPassword = pHttpForm->GetValue();
-    if (m_vPassword.GetCharPtr() == NULL) {
-        AddMessage ("Out of memory");
-        return Redirect (LOGIN);
-    }
-
-    if (m_iButtonKey == INDIVIDUAL_ELEMENTS) {
+    Assert(m_vPassword.GetCharPtr());
     
+    if (m_iButtonKey == INDIVIDUAL_ELEMENTS)
+    {
         Variant vValue;
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
+        RETURN_ON_ERROR(iErrCode);
         m_iButtonKey = vValue.GetInteger();
     }
 
-    if (WasButtonPressed (BID_CREATEEMPIRE)) {
-
-        if ((pHttpForm = m_pHttpRequest->GetForm ("PasswordCopy")) == NULL) {
+    if (WasButtonPressed (BID_CREATEEMPIRE))
+    {
+        if ((pHttpForm = m_pHttpRequest->GetForm ("PasswordCopy")) == NULL)
+        {
             AddMessage ("Missing PasswordCopy form");
             return Redirect (LOGIN);
         }
 
-        if (String::StrCmp (m_vPassword.GetCharPtr(), pHttpForm->GetValue()) != 0) {
+        if (String::StrCmp (m_vPassword.GetCharPtr(), pHttpForm->GetValue()) != 0)
+        {
             AddMessage ("Your password wasn't verified correctly");
-        } else {
-
-            bVerified = true;
+        }
+        else
+        {
+            bVerified = false;
 
             // Get parent empire's name and password
-            if ((pHttpForm = m_pHttpRequest->GetForm ("ParentEmpireName")) == NULL) {
+            if ((pHttpForm = m_pHttpRequest->GetForm ("ParentEmpireName")) == NULL)
+            {
                 AddMessage ("Missing ParentEmpireName form");
                 return Redirect (LOGIN);
             }
 
             // Make sure the name is valid (if it was submitted)
             const char* pszParentName = pHttpForm->GetValue();
-            char pszStandardParentName [MAX_EMPIRE_NAME_LENGTH + 1];
-            if (pszParentName != NULL) {
-
-                if (VerifyEmpireName(pszParentName) && StandardizeEmpireName(pszParentName, pszStandardParentName))
+            if (!pszParentName)
+            {
+                bVerified = true;
+            }
+            else
+            {
+                char pszStandardParentName[MAX_EMPIRE_NAME_LENGTH + 1];
+                if (!VerifyEmpireName(pszParentName) || !StandardizeEmpireName(pszParentName, pszStandardParentName))
+                {
+                    AddMessage("The parent empire does not exist");
+                }
+                else
                 {
                     if ((pHttpForm = m_pHttpRequest->GetForm ("ParentPassword")) == NULL)
                     {
@@ -175,11 +182,14 @@ if (!m_bRedirection &&
                         return Redirect (LOGIN);
                     }
 
-                    if (VerifyPassword(pHttpForm->GetValue()))
+                    if (!VerifyPassword(pHttpForm->GetValue()))
+                    {
+                        AddMessage("That was the wrong password for the parent empire");
+                    }
+                    else
                     {
                         iErrCode = LookupEmpireByName(pszStandardParentName, &iParentEmpireKey, NULL, NULL);
-                        if (iErrCode != OK)
-                            return iErrCode;
+                        RETURN_ON_ERROR(iErrCode);
 
                         if (iParentEmpireKey == NO_KEY)
                         {
@@ -190,24 +200,24 @@ if (!m_bRedirection &&
                         else
                         {
                             iErrCode = IsPasswordCorrect(iParentEmpireKey, pHttpForm->GetValue());
-                            if (iErrCode != OK)
+                            if (iErrCode == ERROR_PASSWORD)
                             {
-                                AddMessage ("That was the wrong password for the parent empire");
+                                AddMessage("That was the wrong password for the parent empire");
+                            }
+                            else
+                            {
+                                RETURN_ON_ERROR(iErrCode);
+                                bVerified = true;
                             }
                         }
                     }
-
-                }
-                else
-                {
-                    AddMessage ("The parent empire does not exist");
                 }
             }
 
             const char* pszEmpireName, * pszPassword;
 
-            if (m_strMessage.IsBlank()) {
-
+            if (m_strMessage.IsBlank())
+            {
                 // Empire name
                 if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireName")) == NULL) {
                     AddMessage ("Missing EmpireName form");
@@ -226,9 +236,9 @@ if (!m_bRedirection &&
                 switch (iErrCode)
                 {
                 case OK:
-
-                    ReportEmpireCreation (global.GetReport(), pszEmpireName);
-                    SendWelcomeMessage(pszEmpireName);
+                    ReportEmpireCreation(global.GetReport(), pszEmpireName);
+                    iErrCode = SendWelcomeMessage(pszEmpireName);
+                    RETURN_ON_ERROR(iErrCode);
 
                     m_iEmpireKey = iEmpireKey;
                     m_iReserved = 0;
@@ -245,15 +255,12 @@ if (!m_bRedirection &&
                     return Redirect (LOGIN);
 
                 case ERROR_DISABLED:
-
                     {
-
                     String strMessage = "The server is denying all new empire creation attempts at this time. ";
                     Variant vReason;
 
-                    Check (
-                        GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason)
-                        );
+                    iErrCode = GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason);
+                    RETURN_ON_ERROR(iErrCode);
 
                     const char* pszReason = vReason.GetCharPtr();
                     if (pszReason == NULL || *pszReason == '\0') {
@@ -267,34 +274,27 @@ if (!m_bRedirection &&
                     break;
 
                 case ERROR_COULD_NOT_DELETE_EMPIRE:
-
                     AddMessage ("The parent empire is in at least one active game and could not be deleted");
                     break;
 
                 case ERROR_COULD_NOT_DELETE_ADMINISTRATOR:
-
                     AddMessage ("The parent empire is an administrator and cannot be inherited from");
                     break;
 
                 case ERROR_RESERVED_EMPIRE_NAME:
-
                     AddMessage ("The given empire name is reserved");
                     break;
 
                 case ERROR_EMPIRE_ALREADY_EXISTS:
-
                     AddMessage ("The given empire name is already in use");
                     break;
 
                 case ERROR_EMPIRE_DOES_NOT_EXIST:
-
                     AddMessage ("The parent empire does not exist");
                     break;
 
                 default:
-
-                    AddMessage ("An unknown error occurred creating the empire: ");
-                    AppendMessage (iErrCode);
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
             }

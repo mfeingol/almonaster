@@ -264,7 +264,7 @@ int HttpResponse::SetNoBuffering() {
 
     // Check to see if we need to send a chunk
     if (m_stLength >= CHUNK_SIZE) {
-        Check (SendChunkFromBuffer());
+        Check(SendChunkFromBuffer());
     }
 
     return OK;
@@ -291,11 +291,11 @@ int HttpResponse::Flush() {
 
     // Write headers if necessary
     if (!m_bHeadersSent) {
-        Check (Send());
+        Check(Send());
     }
 
     // Send remaining chunk
-    Check (SendChunkFromBuffer());
+    Check(SendChunkFromBuffer());
 
     return OK;
 }
@@ -312,7 +312,7 @@ int HttpResponse::SendChunkFromBuffer() {
 
     // Write headers if necessary
     if (!m_bHeadersSent) {
-        Check (Send());
+        Check(Send());
     }
 
     Assert (m_pszResponseData != NULL);
@@ -333,7 +333,7 @@ int HttpResponse::SendChunkFromBuffer() {
 
     size_t stSend = m_stLength + stLen + 4, stSent;
     
-    Check (m_pSocket->Send (pszBegin, stSend, &stSent));
+    Check(m_pSocket->Send (pszBegin, stSend, &stSent));
     Assert (stSend == stSent);
 
     m_stResponseLength += stSent;
@@ -359,13 +359,13 @@ int HttpResponse::SendChunk (const void* pData, size_t stDataLen) {
     pszChunkLength [stLen] = '\r';
     pszChunkLength [stLen + 1] = '\n';
 
-    Check (m_pSocket->Send (pszChunkLength, stLen + 2, &stSent));
+    Check(m_pSocket->Send (pszChunkLength, stLen + 2, &stSent));
     m_stResponseLength += stSent;
 
-    Check (m_pSocket->Send (pData, stDataLen, &stSent));
+    Check(m_pSocket->Send (pData, stDataLen, &stSent));
     m_stResponseLength += stSent;
 
-    Check (m_pSocket->Send ("\r\n", sizeof ("\r\n") - 1, &stSent));
+    Check(m_pSocket->Send ("\r\n", sizeof ("\r\n") - 1, &stSent));
     m_stResponseLength += stSent;
 
     return OK;
@@ -376,8 +376,8 @@ int HttpResponse::FlushChunkFromBuffer() {
     int iErrCode;
     size_t stSent;
 
-    Check (SendChunkFromBuffer());
-    Check (m_pSocket->Send ("0\r\n\r\n", sizeof ("0\r\n\r\n") - 1, &stSent));
+    Check(SendChunkFromBuffer());
+    Check(m_pSocket->Send ("0\r\n\r\n", sizeof ("0\r\n\r\n") - 1, &stSent));
 
     m_stResponseLength += stSent;
 
@@ -401,7 +401,7 @@ int HttpResponse::WriteText (const char* pszData, size_t stStrlen) {
 
     if (m_bNoBuffering && m_stLength + stStrlen >= CHUNK_SIZE){
 
-        Check (SendChunkFromBuffer());
+        Check(SendChunkFromBuffer());
 
         if (stStrlen > CHUNK_SIZE) {
             return SendChunk (pszData, stStrlen);
@@ -469,7 +469,7 @@ int HttpResponse::WriteData (const void* pszData, size_t stNumBytes) {
     m_rType = RESPONSE_BUFFER;
     
     if (m_bNoBuffering && m_stLength + stNumBytes >= CHUNK_SIZE){
-        Check (SendChunkFromBuffer());
+        Check(SendChunkFromBuffer());
 
         if (stNumBytes > CHUNK_SIZE) {
             return SendChunk (pszData, stNumBytes);
@@ -1021,7 +1021,7 @@ int HttpResponse::SendResponse() {
     if (m_sStatus == HTTP_200) {
 
         // Process method
-        Check (ProcessMethod());
+        Check(ProcessMethod());
     }
 
     // Handle GET filtering
@@ -1040,16 +1040,16 @@ int HttpResponse::SendResponse() {
     }
 
     // Handle page source error overrides
-    Check (ProcessErrors());
+    Check(ProcessErrors());
 
     // Check for response handling inconsistencies
-    Check (ProcessInconsistencies());
+    Check(ProcessInconsistencies());
 
     // Finish up
-    Check (Send());
+    Check(Send());
 
     if (m_bNoBuffering) {
-        Check (SendChunkFromBuffer());
+        Check(SendChunkFromBuffer());
     }
 
     return OK;
@@ -1449,7 +1449,7 @@ int HttpResponse::Send() {
 
     // Send
     size_t stSend = strlen (pszBuffer), stSent;
-    Check (m_pSocket->Send (pszBuffer, stSend, &stSent));
+    Check(m_pSocket->Send (pszBuffer, stSend, &stSent));
 
     m_stResponseLength += stSent;
 
@@ -1467,7 +1467,7 @@ int HttpResponse::Send() {
                 Assert (m_pCachedFile != NULL);
 
                 // Send data from file
-                Check (m_pSocket->Send (m_pCachedFile->GetData(), m_pCachedFile->GetSize(), &stSent));
+                Check(m_pSocket->Send (m_pCachedFile->GetData(), m_pCachedFile->GetSize(), &stSent));
 
                 m_stResponseLength += stSent;
                 break;
@@ -1475,7 +1475,7 @@ int HttpResponse::Send() {
             case RESPONSE_BUFFER:
                 
                 // Send data from response buffer
-                Check (m_pSocket->Send (m_pszResponseData, m_stLength, &stSent));
+                Check(m_pSocket->Send (m_pszResponseData, m_stLength, &stSent));
 
                 m_stResponseLength += stSent;
                 break;
@@ -1485,7 +1485,7 @@ int HttpResponse::Send() {
                 Assert (m_sStatus > HTTP_200 && m_sStatus < UNSUPPORTED_HTTP_STATUS);
 
                 // Send default error text
-                Check (m_pSocket->Send (HttpStatusErrorText[m_sStatus], HttpStatusErrorTextLength[m_sStatus], &stSent));
+                Check(m_pSocket->Send (HttpStatusErrorText[m_sStatus], HttpStatusErrorTextLength[m_sStatus], &stSent));
 
                 m_stResponseLength += stSent;
                 break;
@@ -1633,10 +1633,10 @@ int HttpResponse::RespondToTrace() {
     strcat (pszBuffer, String::UI64toA (stHeaderLength, pszInt, 10));
     strcat (pszBuffer, "\r\n\r\n");
 
-    Check (m_pSocket->Send (pszBuffer, strlen (pszBuffer), &stSent));
+    Check(m_pSocket->Send (pszBuffer, strlen (pszBuffer), &stSent));
     m_stResponseLength += stSent;
 
-    Check (m_pSocket->Send (m_pHttpRequest->GetHeaders(), stHeaderLength, &stSent))
+    Check(m_pSocket->Send (m_pHttpRequest->GetHeaders(), stHeaderLength, &stSent))
     m_stResponseLength += stSent;
 
     return OK;

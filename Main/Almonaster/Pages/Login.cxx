@@ -51,16 +51,26 @@ if (m_pHttpRequest->GetMethod() == GET) {
     if (iAutoLogonKey != NO_KEY && i64SubmittedPasswordHash != -1)
     {
         Variant vValue;
-        iErrCode = CacheEmpire(iAutoLogonKey);
-        if (iErrCode == OK &&
-            GetEmpirePassword(iAutoLogonKey, &m_vPassword) == OK &&
-            GetEmpireProperty(iAutoLogonKey, SystemEmpireData::SecretKey, &vValue) == OK)
+        unsigned int iResults;
+        iErrCode = CacheEmpire(iAutoLogonKey, &iResults);
+        RETURN_ON_ERROR(iErrCode);
+
+        if (iResults > 0)
         {
+            iErrCode = GetEmpirePassword(iAutoLogonKey, &m_vPassword);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetEmpireProperty(iAutoLogonKey, SystemEmpireData::SecretKey, &vValue);
+            RETURN_ON_ERROR(iErrCode);
+
             // Authenticate
             m_i64SecretKey = vValue.GetInteger64();
 
-            if (GetPasswordHashForAutologon (&i64RealPasswordHash) == OK && i64RealPasswordHash == i64SubmittedPasswordHash) {
-
+            iErrCode = GetPasswordHashForAutologon(&i64RealPasswordHash);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (i64RealPasswordHash == i64SubmittedPasswordHash)
+            {
                 m_iEmpireKey = iAutoLogonKey;
                 m_bAutoLogon = true;
 
@@ -78,8 +88,6 @@ if (m_pHttpRequest->GetMethod() == GET) {
                         return Redirect(ACTIVE_GAME_LIST);
                     }
                 }
-
-                AddMessage ("Login failed");
             }
         }
 
@@ -134,8 +142,7 @@ else if (!m_bRedirection)
     }
 
     iErrCode = LookupEmpireByName(pszStandardizedName, &m_iEmpireKey, NULL, NULL);
-    if (iErrCode != OK)
-        goto Text;
+    RETURN_ON_ERROR(iErrCode);
 
     if (m_pHttpRequest->GetFormBeginsWith("CreateEmpire"))
     {
@@ -163,18 +170,13 @@ else if (!m_bRedirection)
         }
 
         iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::Name, &m_vEmpireName);
-        if (iErrCode != OK)
-        {
-            AddMessage("GetEmpireProperty failed");
-            AppendMessage (iErrCode);
-            goto Text;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         if (m_iEmpireKey != NO_KEY)
         {
             // Check password
             iErrCode = IsPasswordCorrect(m_iEmpireKey, pszPassword);
-            if (iErrCode != OK)
+            if (iErrCode == ERROR_PASSWORD)
             {
                 char pszBuffer [128 + MAX_EMPIRE_NAME_LENGTH];
                 sprintf (
@@ -191,6 +193,7 @@ else if (!m_bRedirection)
             }
             else
             {
+                RETURN_ON_ERROR(iErrCode);
                 m_vPassword = pszPassword;
 
                 bool bLoggedIn;
@@ -212,22 +215,25 @@ else if (!m_bRedirection)
                 m_vEmpireName = (const char*) NULL;
                 m_vPassword = (const char*) NULL;
             }
-
-        } else {
-
+        }
+        else
+        {
             // Make sure access is allowed
             int iOptions;
-            iErrCode = GetSystemOptions (&iOptions);
-            if ((iErrCode != OK || !(iOptions & LOGINS_ENABLED)) && m_iPrivilege < ADMINISTRATOR) {
+            iErrCode = GetSystemOptions(&iOptions);
+            RETURN_ON_ERROR(iErrCode);
+
+            if (!(iOptions & LOGINS_ENABLED) && m_iPrivilege < ADMINISTRATOR) {
 
                 // Get reason
                 AddMessage ("Access is denied to the server at this time. ");
 
                 Variant vReason;
-                if (GetSystemProperty (SystemData::AccessDisabledReason, &vReason) == OK) {
-                    AppendMessage (vReason.GetCharPtr());
-                }
-
+                iErrCode = GetSystemProperty(SystemData::AccessDisabledReason, &vReason);
+                RETURN_ON_ERROR(iErrCode);
+                
+                AppendMessage (vReason.GetCharPtr());
+                
             } else {
 
                 // We're a new empire, so redirect to NewEmpire
@@ -243,8 +249,7 @@ else if (!m_bRedirection)
 
 Text:
 
-if (iErrCode != OK)
-    return iErrCode;
+Assert(iErrCode == OK);
 
 // Get a cookie for last empire used's graphics
 ICookie* pCookie = m_pHttpRequest->GetCookie (LAST_EMPIRE_USED_COOKIE);
@@ -254,8 +259,7 @@ if (pCookie != NULL && pCookie->GetValue() != NULL)
 
     unsigned int iResults;
     iErrCode = CacheEmpire(m_iEmpireKey, &iResults);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     if (iResults == 0)
     {
@@ -267,8 +271,8 @@ if (pCookie != NULL && pCookie->GetValue() != NULL)
     }
 }
 
-if (m_iEmpireKey == NO_KEY) {
-
+if (m_iEmpireKey == NO_KEY)
+{
     unsigned int iLivePlanetKey, iDeadPlanetKey, iHorz, iVert, iColor;
 
     iErrCode = GetDefaultUIKeys (
@@ -281,9 +285,10 @@ if (m_iEmpireKey == NO_KEY) {
         &iVert,
         &iColor
         );
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode != OK || iColor == NULL_THEME) {
-
+    if (iColor == NULL_THEME)
+    {
         m_vTextColor = DEFAULT_TEXT_COLOR;
         m_vGoodColor = DEFAULT_GOOD_COLOR;
         m_vBadColor = DEFAULT_BAD_COLOR;
@@ -291,30 +296,26 @@ if (m_iEmpireKey == NO_KEY) {
     } else {
 
         iErrCode = GetThemeTextColor (iColor, &m_vTextColor);
-        if (iErrCode != OK) {
-            m_vTextColor = DEFAULT_TEXT_COLOR;
-        }
-
+        RETURN_ON_ERROR(iErrCode);
+        m_vTextColor = DEFAULT_TEXT_COLOR;
+        
         iErrCode = GetThemeGoodColor (iColor, &m_vGoodColor);
-        if (iErrCode != OK) {
-            m_vGoodColor = DEFAULT_GOOD_COLOR;
-        }
-
+        RETURN_ON_ERROR(iErrCode);
+        m_vGoodColor = DEFAULT_GOOD_COLOR;
+        
         iErrCode = GetThemeBadColor (iColor, &m_vBadColor);
-        if (iErrCode != OK) {
-            m_vBadColor = DEFAULT_BAD_COLOR;
-        }
+        RETURN_ON_ERROR(iErrCode);
+        m_vBadColor = DEFAULT_BAD_COLOR;
     }
-
-} else {
-
+}
+else
+{
     Variant vValue;
     iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
-    if (iErrCode == OK) {
-        GetUIData (vValue.GetInteger());
-    } else {
-        GetUIData (NULL_THEME);
-    }
+    RETURN_ON_ERROR(iErrCode);
+    
+    iErrCode = GetUIData(vValue.GetInteger());
+    RETURN_ON_ERROR(iErrCode);
 }
 
 int iOptions;
@@ -329,7 +330,7 @@ RETURN_ON_ERROR(iErrCode);
 %></title><%
 %></head><%
 
-WriteBodyString (-1);
+WriteBodyString(-1);
 OpenForm();
 
 // POST graphics information to NewEmpire page
@@ -369,9 +370,8 @@ if (!(iOptions & LOGINS_ENABLED)) {
     const char* pszReason = NULL;
 
     iErrCode = GetSystemProperty (SystemData::LoginsDisabledReason, &vReason);
-    if (iErrCode == OK) {
-        pszReason = vReason.GetCharPtr();
-    }
+    RETURN_ON_ERROR(iErrCode);
+    pszReason = vReason.GetCharPtr();
 
     if (String::IsBlank (pszReason)) {
         %>Please try back later.<%

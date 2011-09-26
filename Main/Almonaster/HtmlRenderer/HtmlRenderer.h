@@ -1115,8 +1115,8 @@ public:
         /* Go to info screen! */                                                                \
         m_iGameClass = iGameClassKey;                                                           \
         m_iGameNumber = iGameNumber;                                                            \
-        Check (SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
-        Check (GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
+        Check(SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
+        Check(GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
         sprintf(pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                        \
         return Redirect (INFO);                                                                         \
@@ -1124,7 +1124,7 @@ public:
     case ERROR_DISABLED:                                                                                \
         {                                                                                               \
         Variant vReason;                                                                                \
-        Check (GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason));        \
+        Check(GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason));        \
         AddMessage ("New game creation is disabled on the server at this time. ");                      \
         if (String::IsBlank (vReason.GetCharPtr())) {                                                   \
             AppendMessage ("Please try back later.");                                                   \
@@ -1183,8 +1183,8 @@ public:
         /* Go to info screen! */                                                                \
         m_iGameClass = iGameClassKey;                                                           \
         m_iGameNumber = iGameNumber;                                                            \
-        Check (SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
-        Check (GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
+        Check(SetEnterGameIPAddress (iGameClassKey, iGameNumber, m_iEmpireKey, m_pHttpRequest->GetClientIP())); \
+        Check(GetGameClassName (iGameClassKey, m_pszGameClassName));                                \
         sprintf(pszMessage, "Welcome to %s %i, %s", m_pszGameClassName, iGameNumber, m_vEmpireName.GetCharPtr());  \
         AddMessage (pszMessage);                                                                \
         return Redirect (INFO);                                                                 \

@@ -410,8 +410,8 @@ case 0:
         }
     }
 
-    Check (GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vMaxNumPGC));
-    Check (GetEmpirePersonalGameClasses (m_iEmpireKey, &piGameClassKey, &pvName, &iNumGameClasses));
+    Check(GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vMaxNumPGC));
+    Check(GetEmpirePersonalGameClasses (m_iEmpireKey, &piGameClassKey, &pvName, &iNumGameClasses));
 
     if (iNumGameClasses == 0) {
 
@@ -605,8 +605,8 @@ case 1:
 
     int iGameNumber;
 
-    Check (GetGameClassName (iGameClassKey, pszGameClassName));
-    Check (GetNextGameNumber (iGameClassKey, &iGameNumber));
+    Check(GetGameClassName (iGameClassKey, pszGameClassName));
+    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
 
     %><input type="hidden" name="PersonalGameClassesPage" value="1"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
@@ -645,7 +645,7 @@ case 3:
     %><input type="hidden" name="PersonalGameClassesPage" value="3"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
 
-    Check (GetGameClassName (iGameClassKey, pszGameClassName));
+    Check(GetGameClassName (iGameClassKey, pszGameClassName));
 
     %><p>Are you sure you want to delete <strong><% Write (pszGameClassName); %></strong>?<%
 

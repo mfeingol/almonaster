@@ -581,7 +581,7 @@ Check(OpenSystemPage(false));
 
 // Individual page stuff starts here
 unsigned int* piThemeKey, iNumThemes;
-Check (GetThemeKeys (&piThemeKey, &iNumThemes));
+Check(GetThemeKeys (&piThemeKey, &iNumThemes));
 
 %><input type="hidden" name="NumThemes" value="<% Write (iNumThemes); %>"><p>There <% 
 if (iNumThemes == 1) { 

@@ -53,7 +53,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
     // Handle cancel all builds
     if (WasButtonPressed (BID_CANCELALLBUILDS)) {
-        GameCheck (CancelAllBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+        GameCheck(CancelAllBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey));
         m_bRedirectTest = false;
     }
 }
@@ -72,7 +72,7 @@ if (m_bRedirectTest)
 GameCheck(OpenGamePage());
 
 int iGameClassOptions;
-GameCheck (GetGameClassOptions (m_iGameClass, &iGameClassOptions));
+GameCheck(GetGameClassOptions (m_iGameClass, &iGameClassOptions));
 
 // Individual page stuff starts here
 if (!bMapGenerated) {
@@ -91,7 +91,7 @@ if (!bMapGenerated) {
     if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
 
         RatioInformation ratInfo;
-        GameCheck (WriteRatiosString (&ratInfo));
+        GameCheck(WriteRatiosString (&ratInfo));
 
         iBR = ratInfo.iBR;
         fMaintRatio = ratInfo.fMaintRatio;
@@ -99,9 +99,9 @@ if (!bMapGenerated) {
 
     } else {
 
-        GameCheck (GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
-        GameCheck (GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
-        GameCheck (GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
+        GameCheck(GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
+        GameCheck(GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
+        GameCheck(GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
     }
 
     // Render ships

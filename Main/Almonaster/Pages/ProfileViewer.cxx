@@ -187,7 +187,7 @@ SearchResults:
                     switch (iErrCode) {
 
                     case OK:
-                        Check (GetEmpireName (iTargetEmpireKey, &vSentName));
+                        Check(GetEmpireName (iTargetEmpireKey, &vSentName));
                         AddMessage ("Your message was sent to ");
                         AppendMessage (vSentName.GetCharPtr());
                         break;
@@ -649,8 +649,8 @@ case 6:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check (GetGameClassName (iGameClassKey, pszGameClassName));
-    Check (GetNextGameNumber (iGameClassKey, &iGameNumber));
+    Check(GetGameClassName (iGameClassKey, pszGameClassName));
+    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
 
     %><input type="hidden" name="ProfileViewerPage" value="6"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%

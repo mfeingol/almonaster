@@ -113,7 +113,7 @@ Page0:
     %><input type="hidden" name="TopListPage" value="0"><%
 
     unsigned int iNumEmpires;
-    Check (GetNumEmpiresOnServer (&iNumEmpires));
+    Check(GetNumEmpiresOnServer (&iNumEmpires));
 
     %><p>There <%
     if (iNumEmpires == 1) {

@@ -60,7 +60,7 @@ if (m_bOwnPost && !m_bRedirection) {
             const char* pszNewValue, * pszOldValue;
 
             int iSystemOptions;
-            Check (GetSystemOptions (&iSystemOptions));
+            Check(GetSystemOptions (&iSystemOptions));
 
             // Create alien
             if (WasButtonPressed (BID_CREATEALIENICON)) {
@@ -352,7 +352,7 @@ if (m_bOwnPost && !m_bRedirection) {
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
 
-                Check (SetSystemOption (LOGINS_ENABLED, bFlag));
+                Check(SetSystemOption (LOGINS_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("Empire logins are now enabled");
@@ -382,7 +382,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check (SetSystemOption (NEW_EMPIRES_ENABLED, bFlag));
+                Check(SetSystemOption (NEW_EMPIRES_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("New empire creation is now enabled");
@@ -411,7 +411,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check (SetSystemOption (NEW_GAMES_ENABLED, bFlag));
+                Check(SetSystemOption (NEW_GAMES_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("New game creation is now enabled");
@@ -440,7 +440,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check (SetSystemOption (ACCESS_ENABLED, bFlag));
+                Check(SetSystemOption (ACCESS_ENABLED, bFlag));
 
                 if (bFlag) {
                     AddMessage ("Server access for non-administrators is now enabled");
@@ -604,7 +604,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AppendMessage (" is illegal");
                 } else {
 
-                    Check (GetDefaultShipName (i, &vOldName));
+                    Check(GetDefaultShipName (i, &vOldName));
 
                     if (strcmp (pszNewValue, vOldName.GetCharPtr()) != 0) {
                         if (SetDefaultShipName (i, pszNewValue) == OK) {
@@ -759,7 +759,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             unsigned int iBackground, iLivePlanet, iDeadPlanet, iButtons, iSeparator, iHorz, iVert, iColor;
 
-            Check (GetDefaultUIKeys (
+            Check(GetDefaultUIKeys (
                 &iBackground,
                 &iLivePlanet,
                 &iDeadPlanet,
@@ -777,7 +777,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iBackground) {
-                Check (SetSystemProperty (SystemData::DefaultUIBackground, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUIBackground, iKey));
                 AddMessage ("The default background key was updated");
             }
 
@@ -787,7 +787,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iLivePlanet) {
-                Check (SetSystemProperty (SystemData::DefaultUILivePlanet, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUILivePlanet, iKey));
                 AddMessage ("The default live planet key was updated");
             }
 
@@ -797,7 +797,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iDeadPlanet) {
-                Check (SetSystemProperty (SystemData::DefaultUIDeadPlanet, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUIDeadPlanet, iKey));
                 AddMessage ("The default dead planet key was updated");
             }
 
@@ -807,7 +807,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iButtons) {
-                Check (SetSystemProperty (SystemData::DefaultUIButtons, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUIButtons, iKey));
                 AddMessage ("The default button key was updated");
             }
 
@@ -817,7 +817,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iSeparator) {
-                Check (SetSystemProperty (SystemData::DefaultUISeparator, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUISeparator, iKey));
                 AddMessage ("The default separator key was updated");
             }
 
@@ -827,7 +827,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iHorz) {
-                Check (SetSystemProperty (SystemData::DefaultUIHorz, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUIHorz, iKey));
                 AddMessage ("The default horizontal link bar was updated");
             }
 
@@ -837,7 +837,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iVert) {
-                Check (SetSystemProperty (SystemData::DefaultUIVert, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUIVert, iKey));
                 AddMessage ("The default vertical link bar was updated");
             }
 
@@ -847,7 +847,7 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iColor) {
-                Check (SetSystemProperty (SystemData::DefaultUIColor, iKey));
+                Check(SetSystemProperty (SystemData::DefaultUIColor, iKey));
                 AddMessage ("The default color scheme was updated");
             }
 
@@ -1150,7 +1150,7 @@ case 0:
 
     %><tr><td>Default alien icon:</td><td><%
 
-    Check (GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName));
+    Check(GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName));
 
     WriteAlienButtonString (
         pvServerData[SystemData::iDefaultAlien], 
@@ -1238,7 +1238,7 @@ case 0:
 
     %><tr><td>Alien icon for system messages:</td><td><%
 
-    Check (GetAlienAuthorName (
+    Check(GetAlienAuthorName (
         pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(), 
         &vAuthorName
         ));
@@ -1513,12 +1513,12 @@ case 1:
 
     Variant vAlien;
 
-    Check (GetSystemProperty (SystemData::DefaultAlien, &vAlien));
+    Check(GetSystemProperty (SystemData::DefaultAlien, &vAlien));
     int iAlien = vAlien.GetInteger();
 
     unsigned int iNumAliens;
     Variant** ppvAlienData;
-    Check (GetAlienKeys (&ppvAlienData, &iNumAliens));
+    Check(GetAlienKeys (&ppvAlienData, &iNumAliens));
     %><input type="hidden" name="ServerAdminPage" value="1"><%
 
     %><p><%
@@ -1624,7 +1624,7 @@ case 5:
     {
 
     unsigned int iNumEmpires;
-    Check (GetNumEmpiresOnServer (&iNumEmpires));
+    Check(GetNumEmpiresOnServer (&iNumEmpires));
     %><input type="hidden" name="ServerAdminPage" value="5"><%
 
     %><p>There <%
@@ -1686,12 +1686,12 @@ case 6:
     {
 
     Variant vAlien;
-    Check (GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien));
+    Check(GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien));
     int iAlien = vAlien.GetInteger();
 
     unsigned int iNumAliens;
     Variant** ppvAlienData;
-    Check (GetAlienKeys (&ppvAlienData, &iNumAliens));
+    Check(GetAlienKeys (&ppvAlienData, &iNumAliens));
     %><input type="hidden" name="ServerAdminPage" value="6"><%
 
     %><p><%
