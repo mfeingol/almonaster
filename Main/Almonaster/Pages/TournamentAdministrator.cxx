@@ -35,7 +35,9 @@ int iErrCode;
     }
 
     m_bRedirectTest = false;  // No warning
-    return Render_TournamentManager (SYSTEM);
+    iErrCode = Render_TournamentManager (SYSTEM);
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
@@ -65,8 +67,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
         // Simple security check
         iErrCode = GetTournamentOwner (m_iTournamentKey, &iRealOwner);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
 
         if (iRealOwner != iOwnerKey)
         {
@@ -89,8 +90,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             unsigned int iCheckTournament;
 
             iErrCode = GetGameClassTournament(m_iGameClass, &iCheckTournament);
-            if (iErrCode != OK)
-                return iErrCode;
+            RETURN_ON_ERROR(iErrCode);
             
             if (iCheckTournament != m_iTournamentKey) {
                 AddMessage ("Game ownership verification failed");
@@ -102,7 +102,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
         //
         switch (iTournamentAdminPageSubmit) {
 
-    case 0:
+        case 0:
 
             if (WasButtonPressed (BID_CREATENEWTOURNAMENT)) {
                 iTAdminPage = 1;
@@ -117,28 +117,26 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
 
                 iErrCode = DeleteTournament(iOwnerKey, pHttpForm->GetIntValue(), false);
-                switch (iErrCode) {
-
-            case OK:
+                switch (iErrCode)
+                {
+                case OK:
                     AddMessage ("The tournament was deleted");
                     break;
 
-            case ERROR_TOURNAMENT_HAS_GAMECLASSES:
+                case ERROR_TOURNAMENT_HAS_GAMECLASSES:
                     AddMessage ("You cannot delete a tournament while it has gameclasses");
                     break;
 
-            case ERROR_TOURNAMENT_HAS_GAMES:
+                case ERROR_TOURNAMENT_HAS_GAMES:
                     AddMessage ("You cannot delete a tournament while it has active games");
                     break;
 
-            case ERROR_ACCESS_DENIED:
+                case ERROR_ACCESS_DENIED:
                     AddMessage ("You do not have permission to delete that tournament");
                     break;
 
                 default:
-
-                    AddMessage ("The tournament could not be deleted. The error was ");
-                    AppendMessage (iErrCode);
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
 
@@ -161,7 +159,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             break;
 
-    case 1:
+        case 1:
 
             if (WasButtonPressed (BID_CREATENEWTOURNAMENT)) {
 
@@ -180,7 +178,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             }
             break;
 
-    case 2:
+        case 2:
             {
 
             Variant vOldString;
@@ -201,12 +199,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 String::StrCmp (vOldString.GetCharPtr(), pHttpForm->GetValue()) != 0) {
 
                 iErrCode = SetTournamentDescription (m_iTournamentKey, pHttpForm->GetValue());
-                if (iErrCode == OK) {
-                    AddMessage ("The tournament description was updated");
-                } else {
-                    AddMessage ("The tournament description could not be updated. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The tournament description was updated");
             }
 
             // Url
@@ -218,12 +212,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 String::StrCmp (vOldString.GetCharPtr(), pHttpForm->GetValue()) != 0) {
 
                 iErrCode = SetTournamentUrl(m_iTournamentKey, pHttpForm->GetValue());
-                if (iErrCode == OK) {
-                    AddMessage ("The tournament webpage was updated");
-                } else {
-                    AddMessage ("The tournament webpage could not be updated. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The tournament webpage was updated");
             }
 
             // News
@@ -248,16 +238,11 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
 
                 iErrCode = SetTournamentNews (m_iTournamentKey, pszBuffer);
-                if (iErrCode == OK) {
-                    AddMessage ("The tournament news was updated");
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The tournament news was updated");
 
-                    if (pszBuffer != pHttpForm->GetValue()) {
-                        AppendMessage (". Your news submission was truncated because it was too long");
-                    }
-
-                } else {
-                    AddMessage ("The tournament news could not be updated. The error was ");
-                    AppendMessage (iErrCode);
+                if (pszBuffer != pHttpForm->GetValue()) {
+                    AppendMessage (". Your news submission was truncated because it was too long");
                 }
             }
 
@@ -322,13 +307,9 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                     goto Redirection;
                 }
 
-                iErrCode = DeleteTournamentTeam (m_iTournamentKey, pHttpForm->GetIntValue());
-                if (iErrCode == OK) {
-                    AddMessage ("The team was deleted");
-                } else {
-                    AddMessage ("The team could not be deleted. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                iErrCode = DeleteTournamentTeam(m_iTournamentKey, pHttpForm->GetIntValue());
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The team was deleted");
 
                 iTAdminPage = 2;
                 m_bRedirectTest = false;
@@ -346,27 +327,26 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                 // Verify ownership
                 iErrCode = GetGameClassTournament (pHttpForm->GetIntValue(), &iRealTourney);
-                if (iErrCode != OK || iRealTourney != m_iTournamentKey) {
+                RETURN_ON_ERROR(iErrCode);
+                if (iRealTourney != m_iTournamentKey) {
                     AddMessage ("Gameclass ownership verification failed");
                     iTAdminPage = 1;
                     goto Redirection;
                 }
 
                 iErrCode = DeleteGameClass (pHttpForm->GetIntValue(), &bFlag);
-
-                if (iErrCode == OK) {
+                if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                {
+                    AddMessage ("The GameClass no longer exists");
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
                     if (bFlag) {
                         AddMessage ("The GameClass was deleted");
                     } else {
                         AddMessage ("The GameClass has been marked for deletion");
                     }
-                } else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                    AddMessage ("The GameClass no longer exists");
-                }
-                else {
-                    char pszMessage [128];
-                    sprintf(pszMessage, "Error %i occurred deleting the gameclass", iErrCode);
-                    AddMessage (pszMessage);
                 }
 
                 iTAdminPage = 2;
@@ -383,38 +363,30 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                 // Verify ownership
                 iErrCode = GetGameClassTournament (pHttpForm->GetIntValue(), &iRealTourney);
-                if (iErrCode != OK || iRealTourney != m_iTournamentKey) {
+                RETURN_ON_ERROR(iErrCode);
+                if (iRealTourney != m_iTournamentKey) {
                     AddMessage ("Gameclass ownership verification failed");
                     iTAdminPage = 1;
                     goto Redirection;
                 }
 
                 iErrCode = UndeleteGameClass (pHttpForm->GetIntValue());
-                switch (iErrCode) {
-
-            case OK:
-
+                switch (iErrCode)
+                {
+                case OK:
                     AddMessage ("The GameClass was undeleted");
                     break;
 
-            case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
+                case ERROR_GAMECLASS_DOES_NOT_EXIST:
                     AddMessage ("The GameClass no longer exists");
                     break;
 
-            case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
-
+                case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
                     AddMessage ("The GameClass was not marked for deletion");
                     break;
 
                 default:
-
-                    {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred undeleting the GameClass", iErrCode);
-                    AddMessage (pszMessage);
-                    }
-
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
 
@@ -433,23 +405,23 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             
                 // Verify ownership
                 iErrCode = GetGameClassTournament (pHttpForm->GetIntValue(), &iRealTourney);
-                if (iErrCode != OK || iRealTourney != m_iTournamentKey) {
+                RETURN_ON_ERROR(iErrCode);
+                if (iRealTourney != m_iTournamentKey)
+                {
                     AddMessage ("Gameclass ownership verification failed");
                     iTAdminPage = 1;
                     goto Redirection;
                 }
 
                 iErrCode = HaltGameClass (pHttpForm->GetIntValue());
-                if (iErrCode == OK) {
-                    AddMessage ("The GameClass was halted");
-                }
-                else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
+                if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                {
                     AddMessage ("The GameClass no longer exists");
                 }
-                else {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred halting the GameClass", iErrCode);
-                    AddMessage (pszMessage);
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The GameClass was halted");
                 }
 
                 iTAdminPage = 2;
@@ -467,38 +439,30 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                 // Verify ownership
                 iErrCode = GetGameClassTournament (pHttpForm->GetIntValue(), &iRealTourney);
-                if (iErrCode != OK || iRealTourney != m_iTournamentKey) {
+                RETURN_ON_ERROR(iErrCode);
+                if (iRealTourney != m_iTournamentKey) {
                     AddMessage ("Gameclass ownership verification failed");
                     iTAdminPage = 1;
                     goto Redirection;
                 }
 
                 iErrCode = UnhaltGameClass (pHttpForm->GetIntValue());
-                switch (iErrCode) {
-
-            case OK:
-
+                switch (iErrCode)
+                {
+                case OK:
                     AddMessage ("The GameClass is no longer halted");
                     break;
 
-            case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
+                case ERROR_GAMECLASS_DOES_NOT_EXIST:
                     AddMessage ("The GameClass no longer exists");
                     break;
 
-            case ERROR_GAMECLASS_NOT_HALTED:
-
+                case ERROR_GAMECLASS_NOT_HALTED:
                     AddMessage ("The GameClass was not halted");
                     break;
 
                 default:
-
-                    {
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Error %i occurred unhalting the GameClass", iErrCode);
-                    AddMessage (pszMessage);
-                    }
-
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
 
@@ -540,7 +504,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             }
             break;
 
-    case 3:
+        case 3:
 
             if (m_iTournamentKey == NO_KEY) {
                 iTAdminPage = 1;
@@ -575,7 +539,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             break;
 
-    case 4:
+        case 4:
 
             if (m_iTournamentKey == NO_KEY) {
                 iTAdminPage = 1;
@@ -591,18 +555,13 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
 
                 iErrCode = InviteEmpireIntoTournament (m_iTournamentKey, iOwnerKey, m_iEmpireKey, pHttpForm->GetIntValue());
-                if (iErrCode != OK)
+                if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT)
                 {
-                    if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
-                        AddMessage ("The empire is already in the tournament");
-                    }
-
-                    else {
-                        AddMessage ("The empire could not be invited");
-                        return iErrCode;
-                    }
-
-                } else {
+                    AddMessage ("The empire is already in the tournament");
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The invitation was sent to the empire");
                 }
             }
@@ -619,7 +578,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             break;
 
-    case 5:
+        case 5:
 
             if (m_iTournamentKey == NO_KEY) {
                 iTAdminPage = 1;
@@ -635,16 +594,20 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
 
                 iErrCode = DeleteEmpireFromTournament (m_iTournamentKey, pHttpForm->GetIntValue());
-                if (iErrCode == OK) {
+                switch (iErrCode)
+                {
+                case OK:
                     AddMessage ("The empire was deleted from the tournament");
-                } else if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT) {
+                    break;
+                case ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT:
                     AddMessage ("The empire is not longer in the tournament");
-                } else if (iErrCode == ERROR_EMPIRE_IS_IN_GAMES) {
+                    break;
+                case ERROR_EMPIRE_IS_IN_GAMES:
                     AddMessage ("The empire could not be deleted from the tournament because it is still in a tournament game");
-                } else {
-                    AddMessage ("The empire was not deleted from the tournament. The error was ");
-                    AppendMessage(iErrCode);
-                    return iErrCode;
+                    break;
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
             }
 
@@ -667,7 +630,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             break;
 
-    case 6:
+        case 6:
             {
 
             const char* pszStart;
@@ -693,7 +656,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             }
             break;
 
-    case 7:
+        case 7:
 
             if (m_iTournamentKey == NO_KEY) {
                 iTAdminPage = 1;
@@ -742,7 +705,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             break;
 
-    case 8:
+        case 8:
 
             if (m_iTournamentKey == NO_KEY) {
                 iTAdminPage = 1;
@@ -777,7 +740,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             break;
 
-    case 9:
+        case 9:
             {
 
             Variant vOldString;
@@ -797,16 +760,14 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 goto Redirection;
             }
 
-            if (GetTournamentTeamDescription (m_iTournamentKey, iTeamKey, &vOldString) == OK &&
-                String::StrCmp (vOldString.GetCharPtr(), pHttpForm->GetValue()) != 0) {
-
+            iErrCode = GetTournamentTeamDescription(m_iTournamentKey, iTeamKey, &vOldString);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (String::StrCmp (vOldString.GetCharPtr(), pHttpForm->GetValue()) != 0)
+            {
                 iErrCode = SetTournamentTeamDescription (m_iTournamentKey, iTeamKey, pHttpForm->GetValue());
-                if (iErrCode == OK) {
-                    AddMessage ("The team description was updated");
-                } else {
-                    AddMessage ("The team description could not be updated. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The team description was updated");
             }
 
             // Url
@@ -814,16 +775,14 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 goto Redirection;
             }
 
-            if (GetTournamentTeamUrl (m_iTournamentKey, iTeamKey, &vOldString) == OK &&
-                String::StrCmp (vOldString.GetCharPtr(), pHttpForm->GetValue()) != 0) {
+            iErrCode = GetTournamentTeamUrl (m_iTournamentKey, iTeamKey, &vOldString);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (String::StrCmp (vOldString.GetCharPtr(), pHttpForm->GetValue()) != 0) {
 
                 iErrCode = SetTournamentTeamUrl (m_iTournamentKey, iTeamKey, pHttpForm->GetValue());
-                if (iErrCode == OK) {
-                    AddMessage ("The team webpage was updated");
-                } else {
-                    AddMessage ("The team webpage could not be updated. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The team webpage was updated");
             }
 
             // Handle icon selection request
@@ -847,12 +806,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
 
                 iErrCode = SetEmpireTournamentTeam (m_iTournamentKey, pHttpForm->GetIntValue(), iTeamKey);
-                if (iErrCode == OK) {
-                    AddMessage ("The empire was added to the team");
-                } else {
-                    AddMessage ("The empire could not be added to the team. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The empire was added to the team");
 
                 m_bRedirectTest = false;
                 iTAdminPage = 9;
@@ -866,12 +821,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
 
                 iErrCode = SetEmpireTournamentTeam (m_iTournamentKey, pHttpForm->GetIntValue(), NO_KEY);
-                if (iErrCode == OK) {
-                    AddMessage ("The empire was deleted from the team");
-                } else {
-                    AddMessage ("The empire could not be deleted from the team. The error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The empire was deleted from the team");
 
                 m_bRedirectTest = false;
                 iTAdminPage = 9;
@@ -893,7 +844,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             }
             break;
 
-    case 10:
+        case 10:
             {
 
             unsigned int iOldIcon, iIcon;
@@ -907,27 +858,22 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
             if (bHandled)
             {
-                if (iIcon == UPLOADED_ICON) {
-
-                    if (iOldIcon != UPLOADED_ICON) {
+                if (iIcon == UPLOADED_ICON)
+                {
+                    if (iOldIcon != UPLOADED_ICON)
+                    {
                         iErrCode = SetTournamentIcon (m_iTournamentKey, UPLOADED_ICON);
-                        if (iErrCode != OK) {
-                            AddMessage ("The icon could not be set");
-                        }
+                        RETURN_ON_ERROR(iErrCode);
                     }
                 }
-
-                else if (iOldIcon != iIcon) {
-
+                else if (iOldIcon != iIcon)
+                {
                     iErrCode = SetTournamentIcon (m_iTournamentKey, iIcon);
-                    if (iErrCode == OK) {
-                        AddMessage ("The icon was updated");
-                    } else {
-                        AddMessage ("That icon no longer exists");
-                    }
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The icon was updated");
                 }
-
-                else {
+                else
+                {
                     AddMessage ("That was the same icon");
                 }
 
@@ -957,22 +903,18 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             {
                 if (iIcon == UPLOADED_ICON) {
 
-                    if (iOldIcon != UPLOADED_ICON) {
+                    if (iOldIcon != UPLOADED_ICON)
+                    {
                         iErrCode = SetTournamentTeamIcon (m_iTournamentKey, iTeamKey, UPLOADED_ICON);
-                        if (iErrCode != OK) {
-                            AddMessage ("The icon could not be set");
-                        }
+                        RETURN_ON_ERROR(iErrCode);
                     }
                 }
 
                 else if (iOldIcon != iIcon) {
 
                     iErrCode = SetTournamentTeamIcon (m_iTournamentKey, iTeamKey, iIcon);
-                    if (iErrCode == OK) {
-                        AddMessage ("The icon was updated");
-                    } else {
-                        AddMessage ("That icon no longer exists");
-                    }
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The icon was updated");
                 }
 
                 else {
@@ -1034,13 +976,14 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             // Force update
             if (WasButtonPressed (BID_FORCEUPDATE)) {
 
-                if (ForceUpdate (m_iGameClass, m_iGameNumber) == OK) {
-                    AddMessage ("The game was forcibly updated");
-                } else {
-                    AddMessage ("The game no longer exists");
-                }
-
-                if (DoesGameExist (m_iGameClass, m_iGameNumber, &bExist) == OK && bExist) {
+                iErrCode = ForceUpdate(m_iGameClass, m_iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The game was forcibly updated");
+                
+                iErrCode = DoesGameExist(m_iGameClass, m_iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bExist) {
                     iTAdminPage = 13;
                 } else {
                     iTAdminPage = 12;
@@ -1058,7 +1001,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 {
                     int iTargetEmpireKey = pHttpForm->GetIntValue();
 
-                    GameCheck(CacheAllGameTables(m_iGameClass, m_iGameNumber));
+                    iErrCode = CacheAllGameTables(m_iGameClass, m_iGameNumber);
+                    RETURN_ON_ERROR(iErrCode);
 
                     if (m_iGameState & STARTED)
                     {
@@ -1075,7 +1019,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                             break;
 
                         default:
-                            return iErrCode;
+                            RETURN_ON_ERROR(iErrCode);
+                            break;
                         }
                     }
                     else
@@ -1101,18 +1046,23 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                             case ERROR_EMPIRE_IS_NOT_IN_GAME:
                                 AddMessage("The empire is no longer in this game");
-                                iErrCode = OK;
                                 break;
 
                             default:
-                               return iErrCode;
+                               RETURN_ON_ERROR(iErrCode);
+                               break;
                             }
+                            break;
+
+                        default:
+                            RETURN_ON_ERROR(iErrCode);
                             break;
                         }
                     }
                 }
 
-                Check(DoesGameExist(m_iGameClass, m_iGameNumber, &bExist));
+                iErrCode = DoesGameExist(m_iGameClass, m_iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
                 if (bExist)
                 {
                     iTAdminPage = 13;
@@ -1137,17 +1087,15 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                     if (!(m_iGameState & STARTED)) {
 
                         iErrCode = UnresignEmpire (m_iGameClass, m_iGameNumber, iTargetEmpireKey, m_iEmpireKey);
-                        if (iErrCode == OK) {
-                            AddMessage ("The empire was restored");
-                        } else {
-                            char pszMessage [256];
-                            sprintf(pszMessage, "Error %i occurred restoring the empire", iErrCode);
-                            AddMessage (pszMessage);
-                        }
+                        RETURN_ON_ERROR(iErrCode);
+                        AddMessage ("The empire was restored");
                     }
                 }
 
-                if (DoesGameExist (m_iGameClass, m_iGameNumber, &bExist) == OK && bExist) {
+                iErrCode = DoesGameExist(m_iGameClass, m_iGameNumber, &bExist);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bExist) {
                     iTAdminPage = 13;
                 } else {
                     iTAdminPage = 12;
@@ -1169,19 +1117,27 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             if (WasButtonPressed (BID_PAUSEGAME)) {
 
                 // Flush remaining updates
-                bool bExists;
-                iErrCode = CheckGameForUpdates (m_iGameClass, m_iGameNumber, true, &bExists);
+                bool bUpdated, bExists = true;
+                iErrCode = CheckGameForUpdates(m_iGameClass, m_iGameNumber, true, &bUpdated);
+                RETURN_ON_ERROR(iErrCode);
 
-                // Best effort pause the game
-                if (iErrCode == OK)
+                if (bUpdated)
                 {
-                    iErrCode = PauseGame (m_iGameClass, m_iGameNumber, true, true);
+                    iErrCode = DoesGameExist(m_iGameClass, m_iGameNumber, &bExists);
+                    RETURN_ON_ERROR(iErrCode);
                 }
 
-                if (iErrCode == OK) {
+                if (bExists)
+                {
+                    // Best effort pause the game
+                    iErrCode = PauseGame(m_iGameClass, m_iGameNumber, true, true);
+                    RETURN_ON_ERROR(iErrCode);
+
                     AddMessage ("The game is now paused");
                     iTAdminPage = 13;
-                } else {
+                }
+                else
+                {
                     AddMessage ("The game no longer exists");
                     iTAdminPage = 12;
                 }
@@ -1193,14 +1149,10 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             // Unpause game
             if (WasButtonPressed (BID_UNPAUSEGAME)) {
 
-                iErrCode = UnpauseGame (m_iGameClass, m_iGameNumber, true, true);
-                if (iErrCode == OK) {
-                    AddMessage ("The game is no longer paused");
-                    iTAdminPage = 13;
-                } else {
-                    AddMessage ("The game no longer exists");
-                    iTAdminPage = 12;
-                }
+                iErrCode = UnpauseGame(m_iGameClass, m_iGameNumber, true, true);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The game is no longer paused");
+                iTAdminPage = 13;
 
                 m_bRedirectTest = false;
                 goto Redirection;
@@ -1219,17 +1171,9 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 iErrCode = CacheGameTablesForBroadcast(m_iGameClass, m_iGameNumber);
                 RETURN_ON_ERROR(iErrCode);
 
-                if ((iErrCode = BroadcastGameMessage (
-                    m_iGameClass,
-                    m_iGameNumber,
-                    pszMessage,
-                    m_iEmpireKey,
-                    MESSAGE_BROADCAST | MESSAGE_TOURNAMENT_ADMINISTRATOR)
-                    ) == OK) {
-                    AddMessage ("Your message was broadcast to all empires in the game");
-                } else {
-                    AddMessage ("The game no longer exists");
-                }
+                iErrCode = BroadcastGameMessage(m_iGameClass, m_iGameNumber, pszMessage, m_iEmpireKey, MESSAGE_BROADCAST | MESSAGE_TOURNAMENT_ADMINISTRATOR);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("Your message was broadcast to all empires in the game");
 
                 iTAdminPage = 13;
                 goto Redirection;
@@ -1303,18 +1247,16 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
     case 17:
 
             // Kill game
-            if (WasButtonPressed (BID_KILLGAME)) {
-
+            if (WasButtonPressed (BID_KILLGAME))
+            {
                 if ((pHttpForm = m_pHttpRequest->GetForm ("DoomMessage")) == NULL) {
                     break;
                 }
                 const char* pszMessage = pHttpForm->GetValue();
 
-                if (DeleteGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, pszMessage, 0) == OK) {
-                    AddMessage ("The game was deleted");
-                } else {
-                    AddMessage ("The game no longer exists");
-                }
+                iErrCode = DeleteGame(m_iGameClass, m_iGameNumber, m_iEmpireKey, pszMessage, 0);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The game was deleted");
 
                 m_bRedirectTest = false;
                 iTAdminPage = 12;
@@ -1330,7 +1272,6 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             break;
 
         default:
-
             Assert(false);
             break;
         }
@@ -1341,32 +1282,36 @@ Redirection:
     {
         bool bRedirected;
         PageId pageRedirect;
-        Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+        iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+        RETURN_ON_ERROR(iErrCode);
         if (bRedirected)
         {
             return Redirect(pageRedirect);
         }
     }
 
-    Check(OpenSystemPage((iTAdminPage == 10 || iTAdminPage == 11) && iIconSelect == 1));
+    iErrCode = OpenSystemPage((iTAdminPage == 10 || iTAdminPage == 11) && iIconSelect == 1);
+    RETURN_ON_ERROR(iErrCode);
 
     // Individual page stuff starts here
-    switch (iTAdminPage) {
-
+    switch (iTAdminPage)
+    {
     Start:
-case 0:
+    case 0:
 
         %><input type="hidden" name="TournamentAdminPage" value="0"><%
 
         iErrCode = WriteTournamentAdministrator (iOwnerKey);
         RETURN_ON_ERROR(iErrCode);
-        if (iOwnerKey != SYSTEM) {
+        if (iOwnerKey != SYSTEM)
+        {
             Assert(iOwnerKey == m_iEmpireKey);
-            Check(WritePersonalTournaments());
+            iErrCode = WritePersonalTournaments();
+            RETURN_ON_ERROR(iErrCode);
         }
         break;
 
-case 1:
+    case 1:
 
         %><input type="hidden" name="TournamentAdminPage" value="1"><%
 
@@ -1387,7 +1332,7 @@ case 1:
         break;
 
     Admin:
-case 2:
+    case 2:
 
         if (m_iTournamentKey == NO_KEY) {
             goto Start;
@@ -1397,31 +1342,27 @@ case 2:
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
         iErrCode = WriteAdministerTournament (m_iTournamentKey);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
         break;
 
-case 3:
+    case 3:
         {
 
+        if (m_iTournamentKey == NO_KEY)
+        {
+            goto Start;
+        }
+
         Variant vName;
-
-        if (m_iTournamentKey == NO_KEY) {
-            goto Start;
-        }
-
         iErrCode = GetTournamentName(m_iTournamentKey, &vName);
-        if (iErrCode != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="3"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
         %><h3>Create a new GameClass for the <% Write (vName.GetCharPtr()); %> tournament</h3><p><%
 
-        iErrCode = WriteCreateGameClassString (iOwnerKey, m_iTournamentKey, false);
+        iErrCode = WriteCreateGameClassString(iOwnerKey, m_iTournamentKey, false);
         RETURN_ON_ERROR(iErrCode);
 
         %><p><%
@@ -1431,7 +1372,7 @@ case 3:
         }
         break;
 
-case 4:
+    case 4:
         {
 
         unsigned int iInviteKey = NO_KEY;
@@ -1444,11 +1385,13 @@ case 4:
             {
                 iInviteKey = pHttpForm->GetIntValue();
                 iErrCode = GetEmpireName (iInviteKey, &vInviteName);
+                RETURN_ON_ERROR(iErrCode);
             }
         }
         else
         {
-            Check(LookupEmpireByName(pszInviteEmpire, &iInviteKey, &vInviteName, NULL));
+            iErrCode = LookupEmpireByName(pszInviteEmpire, &iInviteKey, &vInviteName, NULL);
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if (iInviteKey == NO_KEY) {
@@ -1470,21 +1413,19 @@ case 4:
         %><p><%
         WriteSeparatorString (m_iSeparatorKey);
 
-        Check(WriteProfile(m_iEmpireKey, iInviteKey, false, false, false));
+        iErrCode = WriteProfile(m_iEmpireKey, iInviteKey, false, false, false);
+        RETURN_ON_ERROR(iErrCode);
 
         }
         break;
 
-case 5:
+    case 5:
         {
 
         Variant vDeleteName;
 
         iErrCode = GetEmpireName (iDeleteEmpire, &vDeleteName);
-        if (iErrCode != OK) {
-            %><p><strong>That empire does not exist</strong><%
-            goto Start;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="5"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
@@ -1500,39 +1441,30 @@ case 5:
         %><p><%
         WriteSeparatorString (m_iSeparatorKey);
 
-        Check(WriteProfile(m_iEmpireKey, iDeleteEmpire, false, false, false));
+        iErrCode = WriteProfile(m_iEmpireKey, iDeleteEmpire, false, false, false);
+        RETURN_ON_ERROR(iErrCode);
 
         }
         break;
 
-case 6:
+    case 6:
         {
 
-        Variant* pvGameClassInfo = NULL, vName;
         unsigned int* piGameClassKey = NULL, iNumGameClasses;
+        AutoFreeKeys free_piGameClassKey(piGameClassKey);
 
-        iErrCode = GetTournamentGameClasses (
-            m_iTournamentKey,
-            &piGameClassKey,
-            NULL,
-            &iNumGameClasses
-            );
+        iErrCode = GetTournamentGameClasses(m_iTournamentKey, &piGameClassKey, NULL, &iNumGameClasses);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (iErrCode != OK) {
-            %><p><strong>The tournament does not exist</strong><%
-            goto Start;
-        }
-
-        if (iNumGameClasses == 0) {
+        if (iNumGameClasses == 0)
+        {
             %><p><strong>The tournament has no gameclasses</strong><%
             goto Start;
         }
 
+        Variant vName;
         iErrCode = GetTournamentName (m_iTournamentKey, &vName);
-        if (iErrCode != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="6"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
@@ -1541,48 +1473,68 @@ case 6:
 
         WriteSystemGameListHeader (m_vTableColor.GetCharPtr());
 
-        for (i = 0; i < iNumGameClasses; i ++) {
+        for (i = 0; i < iNumGameClasses; i ++)
+        {
+            Variant* pvGameClassInfo = NULL;
+            AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-            if (GetGameClassData (piGameClassKey[i], &pvGameClassInfo) == OK) {
+            iErrCode = GetGameClassData (piGameClassKey[i], &pvGameClassInfo);
+            RETURN_ON_ERROR(iErrCode);
 
-                // Best effort
-                iErrCode = WriteSystemGameListData (piGameClassKey[i], pvGameClassInfo);
-                t_pCache->FreeData (pvGameClassInfo);
-            }
+            iErrCode = WriteSystemGameListData (piGameClassKey[i], pvGameClassInfo);
+            RETURN_ON_ERROR(iErrCode);
         }
         %></table><%
 
         }
         break;
 
-case 7:
+    case 7:
         {
 
-        Variant vName, * pvEmpireName = NULL, * pvTeamName = NULL;
-
         int m_iGameNumber, iMaxNumEmpires, iGameClassOptions, iDipLevel;
-        unsigned int iNumEmpires, iNumTeams, * piTeamKey = NULL;
-        Variant* pvTeamEmpireKey = NULL, * pvEmpireKey = NULL;
+        unsigned int iNumEmpires;
 
         char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-        if (GetGameClassName (iGameClassKey, pszGameClassName) != OK ||
-            GetGameClassOptions (iGameClassKey, &iGameClassOptions) != OK ||
-            GetGameClassDiplomacyLevel (iGameClassKey, &iDipLevel) != OK ||
-            GetMaxNumEmpires (iGameClassKey, &iMaxNumEmpires) != OK ||
-            GetNextGameNumber (iGameClassKey, &m_iGameNumber) != OK) {
-            %><p><strong>That gameclass does not exist</strong><%
-            goto Start;
-        }
+        iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+        RETURN_ON_ERROR(iErrCode);
 
-        if (GetTournamentName (m_iTournamentKey, &vName) != OK ||
-            GetAvailableTournamentEmpires (m_iTournamentKey, &pvEmpireKey, &pvTeamEmpireKey, &pvEmpireName, &iNumEmpires) != OK ||
-            GetTournamentTeams (m_iTournamentKey, &piTeamKey, &pvTeamName, &iNumTeams) != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        iErrCode = GetGameClassOptions (iGameClassKey, &iGameClassOptions);
+        RETURN_ON_ERROR(iErrCode);
 
-        if ((unsigned int) iMaxNumEmpires > iNumEmpires) {
+        iErrCode = GetGameClassDiplomacyLevel (iGameClassKey, &iDipLevel);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetMaxNumEmpires (iGameClassKey, &iMaxNumEmpires);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetNextGameNumber (iGameClassKey, &m_iGameNumber);
+        RETURN_ON_ERROR(iErrCode);
+        
+        Variant vName;
+        iErrCode = GetTournamentName (m_iTournamentKey, &vName);
+        RETURN_ON_ERROR(iErrCode);
+        
+        Variant* pvTeamEmpireKey = NULL, * pvEmpireKey = NULL, * pvEmpireName = NULL;
+        AutoFreeData free_pvTeamEmpireKey(pvTeamEmpireKey);
+        AutoFreeData free_pvEmpireKey(pvEmpireKey);
+        Algorithm::AutoDelete<Variant> free_pvEmpireName(pvEmpireName, true);
+
+        iErrCode = GetAvailableTournamentEmpires (m_iTournamentKey, &pvEmpireKey, &pvTeamEmpireKey, &pvEmpireName, &iNumEmpires);
+        RETURN_ON_ERROR(iErrCode);
+        
+        Variant* pvTeamName = NULL;
+        AutoFreeData free_pvTeamName(pvTeamName);
+
+        unsigned int iNumTeams, * piTeamKey = NULL;
+        AutoFreeKeys free_piTeamKey(piTeamKey);
+
+        iErrCode = GetTournamentTeams(m_iTournamentKey, &piTeamKey, &pvTeamName, &iNumTeams);
+        RETURN_ON_ERROR(iErrCode);
+        
+        if ((unsigned int) iMaxNumEmpires > iNumEmpires)
+        {
             %><p><strong>The tournament does not have enough available empires to start the game</strong><%
             goto Admin;
         }
@@ -1736,58 +1688,34 @@ case 7:
             %><input type="hidden" name="Advanced<% Write(iGameClassKey); %>" value="1"><%
             %><h3>Advanced game creation options:</h3><p><%
 
-            Check(RenderGameConfiguration(iGameClassKey, m_iTournamentKey));
+            iErrCode = RenderGameConfiguration(iGameClassKey, m_iTournamentKey);
+            RETURN_ON_ERROR(iErrCode);
         }
 
         %><p><%
         WriteButton (BID_CANCEL);
         WriteButton (BID_START);
 
-        // Cleanup
-        if (pvEmpireKey != NULL) {
-            t_pCache->FreeData(pvEmpireKey);
-        }
-
-        if (pvTeamEmpireKey != NULL) {
-            t_pCache->FreeData(pvTeamEmpireKey);
-        }
-
-        if (pvEmpireName != NULL) {
-            delete [] pvEmpireName;
-        }
-
-        if (piTeamKey != NULL) {
-            t_pCache->FreeKeys (piTeamKey);
-        }
-
-        if (pvTeamName != NULL) {
-            t_pCache->FreeData (pvTeamName);
-        }
-
         }
         break;
 
-case 8:
+    case 8:
         {
-
-        Variant vName;
 
         if (m_iTournamentKey == NO_KEY) {
             goto Start;
         }
 
+        Variant vName;
         iErrCode = GetTournamentName (m_iTournamentKey, &vName);
-        if (iErrCode != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="8"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
         %><h3>Create a team for the <% Write (vName.GetCharPtr()); %> tournament</h3><p><%
 
-        WriteCreateTournamentTeam (m_iTournamentKey);
+        WriteCreateTournamentTeam(m_iTournamentKey);
 
         %><p><%
         WriteButton (BID_CANCEL);
@@ -1796,7 +1724,7 @@ case 8:
         }
         break;
 
-case 9:
+    case 9:
 
         if (m_iTournamentKey == NO_KEY) {
             goto Start;
@@ -1815,7 +1743,7 @@ case 9:
 
         break;
 
-case 10:
+    case 10:
 
         if (m_iTournamentKey == NO_KEY) {
             goto Start;
@@ -1823,10 +1751,7 @@ case 10:
 
         unsigned int iIcon;
         iErrCode = GetTournamentIcon (m_iTournamentKey, &iIcon);
-        if (iErrCode != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="10"><p><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
@@ -1839,7 +1764,7 @@ case 10:
 
         break;
 
-case 11:
+    case 11:
 
         if (m_iTournamentKey == NO_KEY) {
             goto Start;
@@ -1850,10 +1775,7 @@ case 11:
         }
 
         iErrCode = GetTournamentTeamIcon (m_iTournamentKey, iTeamKey, &iIcon);
-        if (iErrCode != OK) {
-            %><p><strong>That team does not exist</strong><%
-            goto Start;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="11"><p><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
@@ -1868,11 +1790,8 @@ case 11:
         break;
 
     AllGames:
-case 12:
+    case 12:
         {
-
-        int* piGameClass, * piGameNumber;
-        unsigned int iNumActiveGames;
 
         Variant vName;
 
@@ -1880,36 +1799,27 @@ case 12:
             goto Start;
         }
 
-        iErrCode = GetTournamentName (m_iTournamentKey, &vName);
-        if (iErrCode != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        iErrCode = GetTournamentName(m_iTournamentKey, &vName);
+        RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = GetTournamentGames (m_iTournamentKey, &piGameClass, &piGameNumber, &iNumActiveGames);
-        if (iErrCode != OK) {
-            %><p><strong>That tournament does not exist</strong><%
-            goto Start;
-        }
+        int* piGameClass = NULL, * piGameNumber = NULL;
+        Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
+        Algorithm::AutoDelete<int> free_piGameNumber(piGameNumber, true);
+        unsigned int iNumActiveGames;
+
+        iErrCode = GetTournamentGames(m_iTournamentKey, &piGameClass, &piGameNumber, &iNumActiveGames);
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="12"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
         %><p><h3><%
-        Write (vName.GetCharPtr());
+        Write(vName.GetCharPtr());
 
         %> tournament active games:</h3><%
 
-        iErrCode = WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, 0, 0, false);
+        iErrCode = WriteActiveGameAdministration(piGameClass, piGameNumber, iNumActiveGames, 0, 0, false);
         RETURN_ON_ERROR(iErrCode);
-
-        if (piGameClass != NULL) {
-            delete [] piGameClass;
-        }
-
-        if (piGameNumber != NULL) {
-            delete [] piGameNumber;
-        }
 
         %><p><% WriteButton (BID_CANCEL);
 
@@ -1935,13 +1845,11 @@ case 14:
         }
 
         bool bStarted;
-
         iErrCode = HasGameStarted (m_iGameClass, m_iGameNumber, &bStarted);
-        if (iErrCode != OK) {
-            goto AllGames;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
-        if (!bStarted) {
+        if (!bStarted)
+        {
             goto AllGames;
         }
 
@@ -1963,9 +1871,7 @@ case 15:
         char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
         iErrCode = GetGameClassName (m_iGameClass, pszGameClassName);
-        if (iErrCode != OK) {
-            pszGameClassName[0] = '\0';
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="15"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
@@ -1974,9 +1880,9 @@ case 15:
 
         %><p>Empire information for <%
 
-        Write (pszGameClassName); %> <% Write (m_iGameNumber); %>:<p><%
+        Write(pszGameClassName); %> <% Write(m_iGameNumber); %>:<p><%
 
-        iErrCode = RenderEmpireInformation (m_iGameClass, m_iGameNumber, true);
+        iErrCode = RenderEmpireInformation(m_iGameClass, m_iGameNumber, true);
         RETURN_ON_ERROR(iErrCode);
 
         WriteButton (BID_CANCEL);
@@ -1998,25 +1904,19 @@ case 16:
 
         bool bStarted, bFalse;
 
-        Variant* pvPlanetData = NULL;
         GET_GAME_MAP(pszGameMap, m_iGameClass, m_iGameNumber);
 
         iErrCode = HasGameStarted (m_iGameClass, m_iGameNumber, &bStarted);
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            goto AllGames;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
-        if (!bStarted) {
+        if (!bStarted)
+        {
             AddMessage ("The game hasn't started yet, so it has no map");
             goto AllGames;
         }
 
         iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetGoodBadResourceLimits (
             m_iGameClass,
@@ -2029,22 +1929,16 @@ case 16:
             &iBadFuel
             );
 
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
+
+        Variant* pvPlanetData = NULL;
+        AutoFreeData free_pvPlanetData(pvPlanetData);
 
         iErrCode = t_pCache->ReadRow (pszGameMap, iClickedPlanetKey, &pvPlanetData);
-        if (iErrCode != OK) {
-            AddMessage ("That game no longer exists");
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         m_iGameState |= STARTED | GAME_MAP_GENERATED;
         m_iGameClass = m_iGameClass;
@@ -2062,16 +1956,6 @@ case 16:
             1.0, (vOptions.GetInteger() & INDEPENDENCE) != 0, true, false, pvPlanetData, &bFalse);
         RETURN_ON_ERROR(iErrCode);
 
-    Cleanup:
-
-        if (pvPlanetData != NULL) {
-            t_pCache->FreeData (pvPlanetData);
-        }
-
-        if (iErrCode != OK) {
-            goto AllGames;
-        }
-
         %></table><p><%
 
         WriteButton (BID_VIEWMAP);
@@ -2086,9 +1970,7 @@ case 17:
         char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
         iErrCode = GetGameClassName (m_iGameClass, pszGameClassName);
-        if (iErrCode != OK) {
-            goto AllGames;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="17"><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
@@ -2109,12 +1991,10 @@ case 17:
         break;
 
     default:
-
         Assert(false);
         break;
     }
 
     iErrCode = CloseSystemPage();
     RETURN_ON_ERROR(iErrCode);
-
 %>

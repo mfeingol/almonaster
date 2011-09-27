@@ -63,7 +63,8 @@ if (m_bOwnPost && !m_bRedirection) {
         }
         else
         {
-            Check(CacheAllGameTables(iGameClassKey, iGameNumber));
+            iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+            RETURN_ON_ERROR(iErrCode);
 
             // Enter game!
             int iNumUpdatesTranspired;
@@ -88,17 +89,19 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
-if (bConfirmPage) {
-
+if (bConfirmPage)
+{
     //
     // Don't want a page switch system because guest empires would need to submit an extra form
     //
@@ -106,19 +109,22 @@ if (bConfirmPage) {
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
     iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
-    if (iErrCode != OK) {
+    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+    {
         AddMessage ("That game no longer exists");
         return Redirect (OPEN_GAME_LIST);
     }
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="Pass<% Write (iGameClassKey); %>.<% Write (iGameNumber); %>" value="<% 
-    if (pszPassword != NULL) {
-        Write (pszPassword);
+    if (pszPassword != NULL)
+    {
+        Write(pszPassword);
     } %>"><input type="hidden" name="Confirm" value="1"><%
 
     %><p>Are you sure that you want to enter <strong><%
-    Write (pszGameClassName);
-    %> <% Write (iGameNumber); %></strong>?<p><%
+    Write(pszGameClassName);
+    %> <% Write(iGameNumber); %></strong>?<p><%
     %>If you enter a game, you are responsible for updating until the game ends.<%
     %><p><%
 
@@ -133,14 +139,14 @@ if (bConfirmPage) {
 
     // Get open games
     unsigned int iNumOpenGames = 0;
-    int* piGameClass, * piGameNumber;
+    int* piGameClass = NULL, * piGameNumber = NULL;
+    Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
+    Algorithm::AutoDelete<int> free_piGameNumber(piGameNumber, true);
 
     iErrCode = GetOpenGames(&piGameClass, &piGameNumber, &iNumOpenGames);
-    if (iErrCode != OK)
-    {
-        %><h3>The open game list could not be read. The error was <% Write (iErrCode); %></h3><% 
-    }
-    else if (iNumOpenGames == 0)
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iNumOpenGames == 0)
     {
         %><h3>There are no open games on this server</h3><% 
     }
@@ -150,8 +156,10 @@ if (bConfirmPage) {
         int iGameClass, iGameNumber;
 
         unsigned int* piSuperClassKey, iNumSuperClasses, j;
+        AutoFreeKeys free_piSuperClassKey(piSuperClassKey);
         bool bDraw = false;
-        Check(GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        iErrCode = GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses);
+        RETURN_ON_ERROR(iErrCode);
 
         if (iNumSuperClasses == 0)
         {
@@ -179,7 +187,8 @@ if (bConfirmPage) {
             bool bFlag, bIdle = false;
 
             // Cache GameData for each game
-            Check(CacheGameData(piGameClass, piGameNumber, m_iEmpireKey, iNumOpenGames));
+            iErrCode = CacheGameData(piGameClass, piGameNumber, m_iEmpireKey, iNumOpenGames);
+            RETURN_ON_ERROR(iErrCode);
 
             for (i = 0; i < (int)iNumOpenGames; i ++)
             {
@@ -187,49 +196,67 @@ if (bConfirmPage) {
                 iGameNumber = piGameNumber[i];
 
                 // Check everything
-                if (CheckGameForUpdates (iGameClass, iGameNumber, false, &bFlag) == OK &&
-                    DoesGameExist (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
-                    IsGameOpen (iGameClass, iGameNumber, &bFlag) == OK && bFlag &&
-                    IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag) == OK && !bFlag &&
-                    GetGameClassSuperClassKey (iGameClass, &iSuperClassKey) == OK) {
+                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, false, &bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                iErrCode = DoesGameExist(iGameClass, iGameNumber, &bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bFlag)
+                {
+                    iErrCode = IsGameOpen (iGameClass, iGameNumber, &bFlag);
+                    RETURN_ON_ERROR(iErrCode);
+                    
+                    if (bFlag)
+                    {
+                        iErrCode = IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag);
+                        RETURN_ON_ERROR(iErrCode);
+                        
+                        if (!bFlag)
+                        {
+                            iErrCode = GetGameClassSuperClassKey (iGameClass, &iSuperClassKey);
+                            RETURN_ON_ERROR(iErrCode);
 
-                    GameAccessDeniedReason rReason;
-                    iErrCode = GameAccessCheck(iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
-                    if (iErrCode == OK) {
+                            GameAccessDeniedReason rReason;
+                            iErrCode = GameAccessCheck(iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
+                            RETURN_ON_ERROR(iErrCode);
 
-                        if (!bFlag) {
-
-                            if (rReason == ACCESS_DENIED_IDLE_EMPIRE) {
-                                bIdle = true;
-                            }
-
-                        } else {
-
-                            for (j = 0; j < iNumSuperClasses; j ++) {
-                                if (piSuperClassKey[j] == iSuperClassKey) {
-
-                                    // We found a match, so write down the game in question
-                                    ppiTable [j][ppiTable [j][iNumOpenGames]] = i;
-
-                                    ppiGameClass[j][ppiTable [j][iNumOpenGames]] = iGameClass;
-                                    ppiGameNumber[j][ppiTable [j][iNumOpenGames]] = iGameNumber;
-
-                                    ppiTable [j][iNumOpenGames] ++;
-                                    bDraw = true;
-                                    break;
+                            if (!bFlag)
+                            {
+                                if (rReason == ACCESS_DENIED_IDLE_EMPIRE)
+                                {
+                                    bIdle = true;
                                 }
                             }
+                            else
+                            {
+                                for (j = 0; j < iNumSuperClasses; j ++)
+                                {
+                                    if (piSuperClassKey[j] == iSuperClassKey)
+                                    {
+                                        // We found a match, so write down the game in question
+                                        ppiTable [j][ppiTable [j][iNumOpenGames]] = i;
 
-                            if (j == iNumSuperClasses) {
+                                        ppiGameClass[j][ppiTable [j][iNumOpenGames]] = iGameClass;
+                                        ppiGameNumber[j][ppiTable [j][iNumOpenGames]] = iGameNumber;
 
-                                // No superclass was found, so it must be a personal game
-                                ppiTable [iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = i;
+                                        ppiTable [j][iNumOpenGames] ++;
+                                        bDraw = true;
+                                        break;
+                                    }
+                                }
 
-                                ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameClass;
-                                ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameNumber;
+                                if (j == iNumSuperClasses)
+                                {
+                                    // No superclass was found, so it must be a personal game
+                                    ppiTable [iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = i;
 
-                                ppiTable [iNumSuperClasses][iNumOpenGames] ++;
-                                bDraw = true;
+                                    ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameClass;
+                                    ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameNumber;
+
+                                    ppiTable [iNumSuperClasses][iNumOpenGames] ++;
+                                    bDraw = true;
+                                }
                             }
                         }
                     }
@@ -248,14 +275,14 @@ if (bConfirmPage) {
             } else {
 
                 %><p><h3>Join an open game:</h3><%
-                Variant* pvGameClassInfo = NULL;
+
                 int iBegin, iCurrentGameClass, iNumToSort;
                 unsigned int iNumGamesInSuperClass;
 
-                if (ppiTable [iNumSuperClasses][iNumOpenGames] > 0) {
-
+                if (ppiTable [iNumSuperClasses][iNumOpenGames] > 0)
+                {
                     %><p><h3>Personal Games:</h3><%
-                    WriteOpenGameListHeader (m_vTableColor.GetCharPtr());
+                    WriteOpenGameListHeader(m_vTableColor.GetCharPtr());
 
                     iNumGamesInSuperClass = ppiTable[iNumSuperClasses][iNumOpenGames];
 
@@ -301,25 +328,20 @@ if (bConfirmPage) {
                             );
                     }
 
-                    for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumOpenGames]; j ++) {
-
+                    for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumOpenGames]; j ++)
+                    {
                         iGameClass = ppiGameClass[iNumSuperClasses][j];
                         iGameNumber = ppiGameNumber[iNumSuperClasses][j];
 
-                        if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                        Variant* pvGameClassInfo = NULL;
+                        AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                            // Best effort
-                            iErrCode = WriteOpenGameListData (
-                                iGameClass,
-                                iGameNumber, 
-                                pvGameClassInfo
-                                );
-                        }
+                        iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                        RETURN_ON_ERROR(iErrCode);
 
-                        if (pvGameClassInfo != NULL) {
-                            t_pCache->FreeData (pvGameClassInfo);
-                            pvGameClassInfo = NULL;
-                        }
+                        // Best effort
+                        iErrCode = WriteOpenGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                        RETURN_ON_ERROR(iErrCode);
                     }
 
                     %></table><%
@@ -328,11 +350,13 @@ if (bConfirmPage) {
                 Variant vName;
                 for (i = 0; i < iNumSuperClasses; i ++)
                 {
-                    if (ppiTable [i][iNumOpenGames] > 0 && 
-                        GetSuperClassName (piSuperClassKey[i], &vName) == OK)
+                    if (ppiTable [i][iNumOpenGames] > 0)
                     {
+                        iErrCode = GetSuperClassName(piSuperClassKey[i], &vName);
+                        RETURN_ON_ERROR(iErrCode);
+                        
                         %><p><h3><% Write (vName.GetCharPtr()); %>:</h3><%
-                        WriteOpenGameListHeader (m_vTableColor.GetCharPtr());
+                        WriteOpenGameListHeader(m_vTableColor.GetCharPtr());
 
                         iNumGamesInSuperClass = ppiTable[i][iNumOpenGames];
 
@@ -378,36 +402,26 @@ if (bConfirmPage) {
                                 );
                         }
 
-                        for (j = 0; j < iNumGamesInSuperClass; j ++) {
-
+                        for (j = 0; j < iNumGamesInSuperClass; j ++)
+                        {
                             iGameClass = ppiGameClass[i][j];
                             iGameNumber = ppiGameNumber[i][j];
 
-                            if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                            Variant* pvGameClassInfo = NULL;
+                            AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                                WriteOpenGameListData (
-                                    iGameClass, 
-                                    iGameNumber, 
-                                    pvGameClassInfo
-                                    );
-                            }
-
-                            if (pvGameClassInfo != NULL) {
-                                t_pCache->FreeData (pvGameClassInfo);
-                                pvGameClassInfo = NULL;
-                            }
+                            iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                            RETURN_ON_ERROR(iErrCode);
+                            
+                            iErrCode = WriteOpenGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                            RETURN_ON_ERROR(iErrCode);
                         }
 
                         %></table><%
                     }
                 }
             }
-
-            t_pCache->FreeKeys (piSuperClassKey);
         }
-
-        delete [] piGameClass;
-        delete [] piGameNumber;
     }
 }
 

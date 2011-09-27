@@ -95,14 +95,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 switch (iTopListPage) {
@@ -113,7 +115,8 @@ Page0:
     %><input type="hidden" name="TopListPage" value="0"><%
 
     unsigned int iNumEmpires;
-    Check(GetNumEmpiresOnServer (&iNumEmpires));
+    iErrCode = GetNumEmpiresOnServer (&iNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p>There <%
     if (iNumEmpires == 1) {
@@ -141,9 +144,7 @@ Page0:
 
     %></font></td><td>&nbsp;</td><td align="center"><% WriteButton (BID_ALMONASTERSCORE); %></td></tr><%
 
-
     %><tr><td colspan="3">&nbsp;</td></tr><%
-
 
     %><tr><td><font face="sans-serif" size="-1"><%
 
@@ -190,11 +191,14 @@ Page0:
 case 1:
     {
 
-    unsigned int* piEmpireKey, iNumEmpires;
+    unsigned int* piEmpireKey = NULL, iNumEmpires;
+    AutoFreeKeys free_piEmpireKey(piEmpireKey);
+
     const char* pszTableColor = m_vTableColor.GetCharPtr();
     unsigned int iDataColumn1 = -1, iDataColumn2 = -1;
 
-    Check(GetTopList(ssListType, &piEmpireKey, &iNumEmpires));
+    iErrCode = GetTopList(ssListType, &piEmpireKey, &iNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumEmpires == 0) {
         %><p><strong>No empires are currently on the <% Write (TOPLIST_NAME [ssListType]); %> list</strong><%
@@ -261,86 +265,82 @@ case 1:
     String strName, strEmail;
 
     iErrCode = CacheEmpireAndActiveGames(piEmpireKey, iNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
 
-    for (i = 0; iErrCode == OK && i < iNumEmpires; i ++)
+    for (i = 0; i < iNumEmpires; i ++)
     {
         unsigned int iNumActiveGames;
         Variant* pvEmpData = NULL;
-        if (GetEmpireData(piEmpireKey[i], &pvEmpData, &iNumActiveGames) == OK)
-        {
-            %><tr><td align="center"><strong><% Write (i + 1); %></strong></td><%
-            %><td align="center"><% Write (pvEmpData[SystemEmpireData::iName].GetCharPtr()); %></td><%
-            %><td align="center"><%
+        AutoFreeData free_pvEmpData(pvEmpData);
 
-            char pszProfile[128 + MAX_EMPIRE_NAME_LENGTH];
-            sprintf(pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::iName].GetCharPtr());
+        iErrCode = GetEmpireData(piEmpireKey[i], &pvEmpData, &iNumActiveGames);
+        RETURN_ON_ERROR(iErrCode);
 
-            WriteProfileAlienString (
-                pvEmpData[SystemEmpireData::iAlienKey].GetInteger(),
-                piEmpireKey[i],
-                pvEmpData[SystemEmpireData::iName].GetCharPtr(),
-                0,
-                "ProfileLink",
-                pszProfile,
-                true,
-                true
-                );
+        %><tr><td align="center"><strong><% Write (i + 1); %></strong></td><%
+        %><td align="center"><% Write (pvEmpData[SystemEmpireData::iName].GetCharPtr()); %></td><%
+        %><td align="center"><%
 
-            %></td><td align="center"><%
+        char pszProfile[128 + MAX_EMPIRE_NAME_LENGTH];
+        sprintf(pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::iName].GetCharPtr());
 
-            HTMLFilter(pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
-            if (!strName.IsBlank()) {
+        WriteProfileAlienString (
+            pvEmpData[SystemEmpireData::iAlienKey].GetInteger(),
+            piEmpireKey[i],
+            pvEmpData[SystemEmpireData::iName].GetCharPtr(),
+            0,
+            "ProfileLink",
+            pszProfile,
+            true,
+            true
+            );
 
-                HTMLFilter(pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
+        %></td><td align="center"><%
 
-                if (!strEmail.IsBlank()) {
-                    %><a href="mailto:<% Write (strEmail.GetCharPtr(), strEmail.GetLength()); %>"><%
-                }
+        HTMLFilter(pvEmpData[SystemEmpireData::iRealName].GetCharPtr(), &strName, 0, false);
+        if (!strName.IsBlank()) {
 
-                Write (strName.GetCharPtr(), strName.GetLength());
+            HTMLFilter(pvEmpData[SystemEmpireData::iEmail].GetCharPtr(), &strEmail, 0, false);
 
-                if (!strEmail.IsBlank()) {
-                    %></a><%
-                }
+            if (!strEmail.IsBlank()) {
+                %><a href="mailto:<% Write (strEmail.GetCharPtr(), strEmail.GetLength()); %>"><%
             }
 
-            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iWins].GetInteger());
-            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNukes].GetInteger());
-            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNuked].GetInteger());
-            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iDraws].GetInteger());
-            %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iRuins].GetInteger());
+            Write (strName.GetCharPtr(), strName.GetLength());
 
-            Assert(iDataColumn1 >= 0);
-            %></td><td align="center"><% Write (pvEmpData[iDataColumn1]);
-
-            switch (ssListType) {
-
-            case ALMONASTER_SCORE:
-                Assert(iDataColumn2 >= 0);
-                %></td><td align="center"><% Write (pvEmpData[iDataColumn2].GetInteger());
-                break;
-
-            case BRIDIER_SCORE:
-            case BRIDIER_SCORE_ESTABLISHED:
-                Assert(iDataColumn2 >= 0);
-                %></td><td align="center"><% Write(pvEmpData[iDataColumn2]);
-                break;
+            if (!strEmail.IsBlank()) {
+                %></a><%
             }
-            %></td><%
-            %></td><td align="center"><% Write(iNumActiveGames); %></td><%
-            %></tr><%
-
-            t_pCache->FreeData(pvEmpData);
         }
+
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iWins].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNukes].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iNuked].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iDraws].GetInteger());
+        %></td><td align="center"><% Write (pvEmpData[SystemEmpireData::iRuins].GetInteger());
+
+        Assert(iDataColumn1 >= 0);
+        %></td><td align="center"><% Write (pvEmpData[iDataColumn1]);
+
+        switch (ssListType) {
+
+        case ALMONASTER_SCORE:
+            Assert(iDataColumn2 >= 0);
+            %></td><td align="center"><% Write (pvEmpData[iDataColumn2].GetInteger());
+            break;
+
+        case BRIDIER_SCORE:
+        case BRIDIER_SCORE_ESTABLISHED:
+            Assert(iDataColumn2 >= 0);
+            %></td><td align="center"><% Write(pvEmpData[iDataColumn2]);
+            break;
+        }
+        %></td><%
+        %></td><td align="center"><% Write(iNumActiveGames); %></td><%
+        %></tr><%
     }
     %></table><%
 
     NotifyProfileLink();
-
-    t_pCache->FreeKeys(piEmpireKey);
-
-    if (iErrCode != OK)
-        return iErrCode;
 
     }
     break;

@@ -89,7 +89,7 @@ public:
 
     int Initialize(const ChatroomConfig& ccConf);
 
-    int GetSpeakers(ChatroomSpeaker** ppcsSpeakers, unsigned int* piNumSpeakers);
+    void GetSpeakers(ChatroomSpeaker** ppcsSpeakers, unsigned int* piNumSpeakers);
     static void FreeSpeakers(ChatroomSpeaker* pcsSpeakers);
 
     int GetMessages(ChatroomMessage** ppcmMessages, unsigned int* piNumMessages);

@@ -51,12 +51,11 @@ int Chatroom::Initialize(const ChatroomConfig& ccConf)
     return iErrCode;
 }
 
-int Chatroom::GetSpeakers(ChatroomSpeaker** ppcsSpeaker, unsigned int* piNumSpeakers)
+void Chatroom::GetSpeakers(ChatroomSpeaker** ppcsSpeaker, unsigned int* piNumSpeakers)
 {
     ChatroomSpeaker* pcsSpeaker = NULL;
     HashTableIterator<const char*, ChatroomSpeaker*> htiSpeaker;
     unsigned int iNumSpeakers = 0;
-    int iErrCode = OK;
 
     *ppcsSpeaker = NULL;
     *piNumSpeakers = 0;
@@ -64,42 +63,26 @@ int Chatroom::GetSpeakers(ChatroomSpeaker** ppcsSpeaker, unsigned int* piNumSpea
     m_rwSpeakerLock.WaitReader();
 
     int iAlloc = m_hSpeakerTable.GetNumElements();
-    if (iAlloc == 0) {
-        goto Cleanup;
-    }
-
-    pcsSpeaker = new ChatroomSpeaker [iAlloc];
-    if (pcsSpeaker == NULL) {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto Cleanup;
-    }
-
-    while (m_hSpeakerTable.GetNextIterator (&htiSpeaker))
+    if (iAlloc > 0)
     {
-        const String& strName = htiSpeaker.GetData()->strName;
+        pcsSpeaker = new ChatroomSpeaker [iAlloc];
+        Assert(pcsSpeaker);
 
-        pcsSpeaker[iNumSpeakers].strName = strName;
-        Assert(pcsSpeaker[iNumSpeakers].strName.GetCharPtr());
+        while (m_hSpeakerTable.GetNextIterator (&htiSpeaker))
+        {
+            const String& strName = htiSpeaker.GetData()->strName;
 
-        iNumSpeakers ++;
-    }
+            pcsSpeaker[iNumSpeakers].strName = strName;
+            Assert(pcsSpeaker[iNumSpeakers].strName.GetCharPtr());
 
-Cleanup:
-
-    m_rwSpeakerLock.SignalReader();
-
-    if (iErrCode == OK) {
+            iNumSpeakers ++;
+        }
 
         *ppcsSpeaker = pcsSpeaker;
         *piNumSpeakers = iNumSpeakers;
-    
-    }
-    else if (pcsSpeaker != NULL) {
-
-        delete [] pcsSpeaker;
     }
 
-    return iErrCode;
+    m_rwSpeakerLock.SignalReader();
 }
 
 void Chatroom::FreeSpeakers (ChatroomSpeaker* pcsSpeaker) {

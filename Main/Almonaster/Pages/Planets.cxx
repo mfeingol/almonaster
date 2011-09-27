@@ -50,15 +50,13 @@ if (m_bOwnPost && !m_bRedirection) {
     if (bMapGenerated) {
 
         iErrCode = HandleShipMenuSubmissions();
-        if (iErrCode != OK) {
-            AddMessage ("Error handling ship menu submissions");
-            goto Redirection;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         // Handle planet name change or maxpop change submissions
         unsigned int iNumTestPlanets;
         if ((pHttpForm = m_pHttpRequest->GetForm ("NumOurPlanets")) == NULL) {
-            GameCheck(GetNumVisitedPlanets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTestPlanets));
+            iErrCode = GetNumVisitedPlanets (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTestPlanets);
+            RETURN_ON_ERROR(iErrCode);
         } else {
             iNumTestPlanets = pHttpForm->GetIntValue();
         }
@@ -102,15 +100,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 } else {
 
                     // Best effort
-                    if (RenamePlanet (
-                        m_iGameClass,
-                        m_iGameNumber,
-                        m_iEmpireKey,
-                        iUpdatePlanetKey, 
-                        pszNewPlanetName
-                        ) != OK) {
-
-                    }
+                    iErrCode = RenamePlanet(m_iGameClass, m_iGameNumber, m_iEmpireKey, iUpdatePlanetKey, pszNewPlanetName);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
@@ -141,16 +132,14 @@ if (m_bOwnPost && !m_bRedirection) {
                     iUpdatePlanetKey = pHttpForm->GetIntValue();
                 }
 
-                if (SetPlanetMaxPop (
+                iErrCode = SetPlanetMaxPop(
                     m_iGameClass,
                     m_iGameNumber,
                     m_iEmpireKey,
                     iUpdatePlanetKey, 
                     iNewMaxPop
-                    ) != OK
-                    ) {
-                    AddMessage ("The planet's Max Pop could not be set");
-                }
+                    );
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Build
@@ -169,7 +158,8 @@ if (m_bOwnPost && !m_bRedirection) {
                     m_bRedirectTest = false;
 
                     // Do build
-                    GameCheck(HandleMiniBuild (iUpdatePlanetKey));
+                    iErrCode = HandleMiniBuild(iUpdatePlanetKey);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
         }
@@ -181,41 +171,51 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 unsigned int iLivePlanetKey, iDeadPlanetKey, iNumPlanets;
 
-GameCheck(GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
+iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+RETURN_ON_ERROR(iErrCode);
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck(WriteRatiosString (NULL));
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 if (bMapGenerated) {
 
     Variant* pvPlanetKey;
+    AutoFreeData free_pvPlanetKey(pvPlanetKey);
+
     unsigned int* piProxyKey, iCounter = 0;
+    AutoFreeKeys free_piProxyKey(piProxyKey);
+
     bool bOurPlanet;
-    GameCheck(GetVisitedPlanetKeys (
+    iErrCode = GetVisitedPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         &pvPlanetKey,
         &piProxyKey, 
-        &iNumPlanets)
+        &iNumPlanets
         );
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumPlanets > 0) {
 
-        GET_GAME_MAP (strGameMap, m_iGameClass, m_iGameNumber);
+        GET_GAME_MAP(strGameMap, m_iGameClass, m_iGameNumber);
         Variant vOptions;
 
         int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
@@ -225,17 +225,12 @@ if (bMapGenerated) {
         bool bShips = false;
         ShipsInMapScreen simShipsInMap = { NO_KEY, 0, 0 };
 
-        Variant* pvPlanetData = NULL;
-
         int iBR = 0;
         float fMaintRatio = 0.0, fNextMaintRatio = 0.0;
 
         // Visible builds?
         iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, m_iGameClass, SystemGameClassData::Options, &vOptions);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetGoodBadResourceLimits (
             m_iGameClass,
@@ -247,48 +242,32 @@ if (bMapGenerated) {
             &iGoodFuel,
             &iBadFuel
             );
-
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetEmpireAgRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fAgRatio);
-        if (iErrCode != OK) {
-            Assert(false);
-            goto Cleanup;
-        }
+        RETURN_ON_ERROR(iErrCode);
 
         bShips = (m_iGameOptions & SHIPS_ON_PLANETS_SCREEN) != 0;
 
         if (bShips) {
 
             iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             iErrCode = GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
         }
 
-        for (i = 0; i < iNumPlanets; i ++) {
+        for (i = 0; i < iNumPlanets; i ++)
+        {
+            Variant* pvPlanetData = NULL;
+            AutoFreeData free_pvPlanetData(pvPlanetData);
 
             iErrCode = t_pCache->ReadRow (strGameMap, pvPlanetKey[i].GetInteger(), &pvPlanetData);
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             %><p><table width="90%"><%
 
@@ -298,15 +277,11 @@ if (bMapGenerated) {
                 iBadFuel, fAgRatio, (vOptions.GetInteger() & INDEPENDENCE) != 0, false, false,
                 pvPlanetData, &bOurPlanet
                 );
-
-            if (iErrCode != OK) {
-                Assert(false);
-                goto Cleanup;
-            }
+            RETURN_ON_ERROR(iErrCode);
 
             // Render ships
-            if (bShips) {
-
+            if (bShips)
+            {
                 simShipsInMap.iPlanetKey = pvPlanetKey[i].GetInteger();
 
                 // Render ships
@@ -325,16 +300,16 @@ if (bMapGenerated) {
                 RETURN_ON_ERROR(iErrCode);
             }
 
-            if (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) {  
-                GameCheck(RenderMiniBuild (pvPlanetKey[i].GetInteger(), false));
+            if (m_iGameOptions & BUILD_ON_PLANETS_SCREEN)
+            {
+                iErrCode = RenderMiniBuild (pvPlanetKey[i].GetInteger(), false);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             %></table><%
 
-            t_pCache->FreeData (pvPlanetData);
-            pvPlanetData = NULL;
-
-            if (bOurPlanet) {
+            if (bOurPlanet)
+            {
                 iCounter ++;
             }
         }
@@ -343,45 +318,25 @@ if (bMapGenerated) {
 
         WriteButton (BID_CANCEL);
 
-Cleanup:
-
-        if (pvPlanetData != NULL) {
-            t_pCache->FreeData (pvPlanetData);
-        }
-
-        if (pvPlanetKey != NULL) {
-            t_pCache->FreeData (pvPlanetKey);
-        }
-
-        if (piProxyKey != NULL) {
-            t_pCache->FreeKeys ((unsigned int*) piProxyKey);
-        }
-
-        if (iErrCode != OK) {
-            %>Error rendering up-close planet view. The error was <% Write (iErrCode);
-        }
-        else if (bShips) {
+        if (bShips)
+        {
             %><input type="hidden" name="NumShips" value="<% Write (simShipsInMap.iCurrentShip); %>"><%
             %><input type="hidden" name="NumFleets" value="<% Write (simShipsInMap.iCurrentFleet); %>"><%
         }
     }
 
-    if (iErrCode == OK) {
-        %><input type="hidden" name="NumOurPlanets" value="<% Write (iCounter); %>"><%
-    }
+    %><input type="hidden" name="NumOurPlanets" value="<% Write (iCounter); %>"><%
 
 } else {
 
     %><p><table width="90%"><%
 
     bool bTrue;
-    iErrCode = WriteUpClosePlanetString (m_iEmpireKey, NO_KEY, NO_KEY, 
-        iLivePlanetKey, iDeadPlanetKey, 0, false, 0, 0, 0, 0, 0, 0, 0.0, false, false, false, NULL, &bTrue);
+    iErrCode = WriteUpClosePlanetString (m_iEmpireKey, NO_KEY, NO_KEY, iLivePlanetKey, iDeadPlanetKey, 0, false, 0, 0, 0, 0, 0, 0, 0.0, false, false, false, NULL, &bTrue);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode != OK) {
-        %>Error rendering up-close planet view. The error was <% Write (iErrCode);
-    }
-
+    %>Error rendering up-close planet view. The error was <% Write (iErrCode);
+    
     %></table><%
 }
 

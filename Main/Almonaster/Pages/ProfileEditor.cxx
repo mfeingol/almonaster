@@ -74,10 +74,12 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszNewValue = pHttpForm->GetValue();
 
-            if (String::StrCmp (pszNewValue, m_vEmpireName.GetCharPtr()) != 0) {
-                if (String::StriCmp (pszNewValue, m_vEmpireName.GetCharPtr()) == 0) {
-
-                    EmpireCheck(SetEmpireName (m_iEmpireKey, pszNewValue));
+            if (String::StrCmp (pszNewValue, m_vEmpireName.GetCharPtr()) != 0)
+            {
+                if (String::StriCmp (pszNewValue, m_vEmpireName.GetCharPtr()) == 0)
+                {
+                    iErrCode = SetEmpireName (m_iEmpireKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your empire name was recased");
                     m_vEmpireName = pszNewValue;
 
@@ -112,33 +114,34 @@ if (m_bOwnPost && !m_bRedirection) {
                     else if (VerifyPassword (pszNewValue)) {
 
                         iErrCode = ChangeEmpirePassword (m_iEmpireKey, pszNewValue);
-                        if (iErrCode == ERROR_CANNOT_MODIFY_GUEST) {
+                        if (iErrCode == ERROR_CANNOT_MODIFY_GUEST)
+                        {
                             AddMessage (GUEST_NAME "'s password can only be changed by an administrator");
-                        } else {
-
+                        }
+                        else
+                        {
+                            RETURN_ON_ERROR(iErrCode);
                             AddMessage ("Your password was changed");
                             m_vPassword = pszNewValue;
 
                             ICookie* pCookie = m_pHttpRequest->GetCookie (AUTOLOGON_EMPIREKEY_COOKIE);
-                            if (pCookie != NULL && pCookie->GetValue() != NULL) {
-
-                                if (pCookie->GetUIntValue() == m_iEmpireKey) {
-
+                            if (pCookie != NULL && pCookie->GetValue() != NULL)
+                            {
+                                if (pCookie->GetUIntValue() == m_iEmpireKey)
+                                {
                                     int64 i64Hash = 0;
                                     char pszText [128] = "";
                                     
                                     iErrCode = GetPasswordHashForAutologon (&i64Hash);
-                                    if (iErrCode != OK) {
-                                        AddMessage ("Autologon failed and will be disabled");
-                                    } else {
+                                    RETURN_ON_ERROR(iErrCode);
                                     
-                                        m_pHttpResponse->CreateCookie (
-                                            AUTOLOGON_PASSWORD_COOKIE,
-                                            String::I64toA (i64Hash, pszText, 10),
-                                            ONE_YEAR_IN_SECONDS,
-                                            NULL
-                                            );
-                                    }
+                                    iErrCode = m_pHttpResponse->CreateCookie (
+                                        AUTOLOGON_PASSWORD_COOKIE,
+                                        String::I64toA (i64Hash, pszText, 10),
+                                        ONE_YEAR_IN_SECONDS,
+                                        NULL
+                                        );
+                                    RETURN_ON_ERROR(iErrCode);
                                 }
                             }
                         }
@@ -156,18 +159,20 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::RealName, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::RealName, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
 
-            if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
-
-                if (strlen (pszNewValue) > MAX_REAL_NAME_LENGTH) {
+            if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0)
+            {
+                if (strlen (pszNewValue) > MAX_REAL_NAME_LENGTH)
+                {
                     AddMessage ("Your real name was too long");
                 }
-
-                else if (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::RealName, pszNewValue) == OK) {
+                else
+                {
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::RealName, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your real name was changed");
-                } else {
-                    AddMessage ("Your real name could not be changed");
                 }
             }
 
@@ -177,13 +182,15 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
             if (iNewValue != vVerify.GetInteger()) {
 
                 if (iNewValue < EMPIRE_AGE_MINIMUM && iNewValue != EMPIRE_AGE_UNKNOWN) {
                     AddMessage ("Your age is invalid");
                 } else {
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, iNewValue));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Age, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your age was changed");
                 }
             }
@@ -194,13 +201,15 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
             if (iNewValue != vVerify.GetInteger()) {
 
                 if (iNewValue < EMPIRE_GENDER_UNKNOWN || iNewValue > EMPIRE_GENDER_FEMALE) {
                     AddMessage ("Your gender is invalid");
                 } else {
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, iNewValue));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Gender, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your gender was changed");
                 }
             }
@@ -215,7 +224,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Location, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Location, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
@@ -223,10 +233,11 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("Your location was too long");
                 }
 
-                else if (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Location, pszNewValue) == OK) {
+                else
+                {
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Location, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your location was changed");
-                } else {
-                    AddMessage ("Your location could not be changed");
                 }
             }
 
@@ -240,21 +251,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Email, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Email, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
                 if (strlen (pszNewValue) > MAX_EMAIL_LENGTH) {
                     AddMessage ("Your e-mail address was too long");
                 }
-
-                else if (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Email, pszNewValue) == OK) {
+                else
+                {
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::Email, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your e-mail address was changed");
-                } else {
-                    AddMessage ("Your e-mail address could not be changed");
                 }
             }
-
 
             // Handle Private email change
             if ((pHttpForm = m_pHttpRequest->GetForm ("PrivEmail")) == NULL) {
@@ -266,21 +277,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::PrivateEmail, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::PrivateEmail, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
                 if (strlen (pszNewValue) > MAX_EMAIL_LENGTH) {
                     AddMessage ("Your private e-mail address was too long");
                 }
-
-                else if (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::PrivateEmail, pszNewValue) == OK) {
+                else
+                {
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::PrivateEmail, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your private e-mail address was changed");
-                } else {
-                    AddMessage ("Your private e-mail address could not be changed");
                 }
             }
-
 
             // Handle IMId change
             if ((pHttpForm = m_pHttpRequest->GetForm ("IMId")) == NULL) {
@@ -292,21 +303,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
                 if (strlen (pszNewValue) > MAX_IMID_LENGTH) {
                     AddMessage ("Your instant messenger id was too long");
                 }
-
-                else if (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, pszNewValue) == OK) {
+                else
+                {
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::IMId, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your instant messenger id was changed");
-                } else {
-                    AddMessage ("Your instant messenger id could not be changed");
                 }
             }
-
 
             // Handle WebPage change
             if ((pHttpForm = m_pHttpRequest->GetForm ("WebPage")) == NULL) {
@@ -318,21 +329,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 pszNewValue = "";
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::WebPage, &vVerify));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::WebPage, &vVerify);
+            RETURN_ON_ERROR(iErrCode);
 
             if (String::StrCmp (pszNewValue, vVerify.GetCharPtr()) != 0) {
 
                 if (strlen (pszNewValue) > MAX_WEB_PAGE_LENGTH) {
                     AddMessage ("Your real name was too long");
                 }
-
-                else if (SetEmpireProperty (m_iEmpireKey, SystemEmpireData::WebPage, pszNewValue) == OK) {
+                else
+                {
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::WebPage, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your webpage was changed");
-                } else {
-                    AddMessage ("Your webpage could not be changed");
                 }
             }
-
 
             // TourneyAvail
             if ((pHttpForm = m_pHttpRequest->GetForm ("TourneyAvail")) == NULL) {
@@ -343,7 +354,8 @@ if (m_bOwnPost && !m_bRedirection) {
             bValue = !(m_iSystemOptions2 & UNAVAILABLE_FOR_TOURNAMENTS);
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, UNAVAILABLE_FOR_TOURNAMENTS, bValue));
+                iErrCode = SetEmpireOption2 (m_iEmpireKey, UNAVAILABLE_FOR_TOURNAMENTS, bValue);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (bValue) {
                     m_iSystemOptions2 |= UNAVAILABLE_FOR_TOURNAMENTS;
@@ -361,16 +373,19 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck(GetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, &iVerify));
+            iErrCode = GetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, &iVerify);
+            RETURN_ON_ERROR(iErrCode);
 
             if (iNewValue != iVerify) {
 
-                EmpireCheck(GetSystemProperty (SystemData::MaxNumSystemMessages, &vValue));
+                iErrCode = GetSystemProperty (SystemData::MaxNumSystemMessages, &vValue);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (iNewValue > vValue.GetInteger()) {
                     AddMessage ("Illegal maximum number of saved system messages");
                 } else {
-                    EmpireCheck(SetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, iNewValue));
+                    iErrCode = SetEmpireMaxNumSavedSystemMessages (m_iEmpireKey, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your maximum number of saved messages was changed");
                 }
             }
@@ -381,14 +396,16 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vValue));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, &vValue);
+            RETURN_ON_ERROR(iErrCode);
 
             if (iNewValue != vValue.GetInteger()) {
 
                 if (iNewValue > 100) {
                     AddMessage ("Illegal maximum number of ships built at once");
                 } else {
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, iNewValue));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::MaxNumShipsBuiltAtOnce, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Your maximum number of ships built at once was updated");
                 }
             }
@@ -399,17 +416,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck(GetEmpireDefaultBuilderPlanet (m_iEmpireKey, &iVerify));
+            iErrCode = GetEmpireDefaultBuilderPlanet (m_iEmpireKey, &iVerify);
+            RETURN_ON_ERROR(iErrCode);
 
-            if (iNewValue != iVerify) {
-
+            if (iNewValue != iVerify)
+            {
                 iErrCode = SetEmpireDefaultBuilderPlanet (m_iEmpireKey, iNewValue);
-                if (iErrCode == OK) {
-                    AddMessage ("Your default builder planet was updated");
-                } else {
-                    AddMessage ("Your default builder planet could not be updated; the error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("Your default builder planet was updated");
             }
 
             // Handle IndependentGifts
@@ -423,17 +437,14 @@ if (m_bOwnPost && !m_bRedirection) {
             if ((iNewValue != 0) != bValue) {
 
                 iErrCode = SetEmpireOption (m_iEmpireKey, REJECT_INDEPENDENT_SHIP_GIFTS, !bValue);
-                if (iErrCode == OK) {
-                    if (!bValue) {
-                        m_iSystemOptions |= REJECT_INDEPENDENT_SHIP_GIFTS;
-                    } else {
-                        m_iSystemOptions &= ~REJECT_INDEPENDENT_SHIP_GIFTS;
-                    }
-                    AddMessage ("Your independent gift option was updated");
+                RETURN_ON_ERROR(iErrCode);
+
+                if (!bValue) {
+                    m_iSystemOptions |= REJECT_INDEPENDENT_SHIP_GIFTS;
                 } else {
-                    AddMessage ("Your independent gift option was not updated; the error was ");
-                    AppendMessage (iErrCode);
+                    m_iSystemOptions &= ~REJECT_INDEPENDENT_SHIP_GIFTS;
                 }
+                AddMessage ("Your independent gift option was updated");
             }
             
             // Handle DeleteEmptyFleets
@@ -447,17 +458,14 @@ if (m_bOwnPost && !m_bRedirection) {
             if ((iNewValue != 0) != bValue) {
 
                 iErrCode = SetEmpireOption2 (m_iEmpireKey, DISBAND_EMPTY_FLEETS_ON_UPDATE, !bValue);
-                if (iErrCode == OK) {
-                    if (!bValue) {
-                        m_iSystemOptions2 |= DISBAND_EMPTY_FLEETS_ON_UPDATE;
-                    } else {
-                        m_iSystemOptions2 &= ~DISBAND_EMPTY_FLEETS_ON_UPDATE;
-                    }
-                    AddMessage ("Your empty fleet disband option was updated");
+                RETURN_ON_ERROR(iErrCode);
+
+                if (!bValue) {
+                    m_iSystemOptions2 |= DISBAND_EMPTY_FLEETS_ON_UPDATE;
                 } else {
-                    AddMessage ("Your empty fleet disband option was not updated; the error was ");
-                    AppendMessage (iErrCode);
+                    m_iSystemOptions2 &= ~DISBAND_EMPTY_FLEETS_ON_UPDATE;
                 }
+                AddMessage ("Your empty fleet disband option was updated");
             }
 
             // Handle CollapseFleets
@@ -469,7 +477,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if ((iNewValue != 0) != bValue) {
 
-                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, FLEETS_COLLAPSED_BY_DEFAULT, !bValue));
+                iErrCode = SetEmpireOption2 (m_iEmpireKey, FLEETS_COLLAPSED_BY_DEFAULT, !bValue);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (!bValue) {
                     m_iSystemOptions2 |= FLEETS_COLLAPSED_BY_DEFAULT;
@@ -488,7 +497,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if ((iNewValue != 0) != bValue) {
 
-                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, BLOCK_UPLOADED_ICONS, !bValue));
+                iErrCode = SetEmpireOption2 (m_iEmpireKey, BLOCK_UPLOADED_ICONS, !bValue);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (!bValue) {
                     m_iSystemOptions2 |= BLOCK_UPLOADED_ICONS;
@@ -507,7 +517,8 @@ if (m_bOwnPost && !m_bRedirection) {
             bSessionId = (m_iSystemOptions & CONFIRM_IMPORTANT_CHOICES) != 0;
             if (bSessionId != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, CONFIRM_IMPORTANT_CHOICES, !bSessionId));
+                iErrCode = SetEmpireOption (m_iEmpireKey, CONFIRM_IMPORTANT_CHOICES, !bSessionId);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (bSessionId) {
                     m_iSystemOptions |= CONFIRM_IMPORTANT_CHOICES;
@@ -536,56 +547,45 @@ if (m_bOwnPost && !m_bRedirection) {
                     iAutoLogonSelected = NO_AUTOLOGON;
                     AddMessage ("Autologon is now off");
 
-                    m_pHttpResponse->DeleteCookie (AUTOLOGON_EMPIREKEY_COOKIE, NULL);
-                    m_pHttpResponse->DeleteCookie (AUTOLOGON_PASSWORD_COOKIE, NULL);
+                    iErrCode = m_pHttpResponse->DeleteCookie(AUTOLOGON_EMPIREKEY_COOKIE, NULL);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    iErrCode = m_pHttpResponse->DeleteCookie(AUTOLOGON_PASSWORD_COOKIE, NULL);
+                    RETURN_ON_ERROR(iErrCode);
 
                 } else {
 
-                    if (uiNewValue != m_iEmpireKey) {
+                    if (uiNewValue != m_iEmpireKey)
+                    {
                         AddMessage ("Invalid autologon submission");
-                        goto Quote;
                     }
-
-                    // Set cookies (expire in a year)
-                    char pszText [128];
-                    iErrCode = m_pHttpResponse->CreateCookie (
-                        AUTOLOGON_EMPIREKEY_COOKIE,
-                        String::UItoA (uiNewValue, pszText, 10),
-                        ONE_YEAR_IN_SECONDS,
-                        NULL
-                        );
-                        
-                    if (iErrCode != OK) {
-                        AddMessage ("An autologon cookie could not be created");
-                    } else {
+                    else
+                    {
+                        // Set cookies (expire in a year)
+                        char pszText [128];
+                        iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_EMPIREKEY_COOKIE, String::UItoA (uiNewValue, pszText, 10), ONE_YEAR_IN_SECONDS, NULL);
+                        RETURN_ON_ERROR(iErrCode);
                         
                         int64 i64Hash = 0;                        
                         iErrCode = GetPasswordHashForAutologon (&i64Hash);
-                        if (iErrCode != OK) {
-                            AddMessage ("An autologon hash could not be created");
-                        } else {
+                        RETURN_ON_ERROR(iErrCode);
 
-                            iErrCode = m_pHttpResponse->CreateCookie (
-                                AUTOLOGON_PASSWORD_COOKIE,
-                                String::I64toA (i64Hash, pszText, 10),
-                                ONE_YEAR_IN_SECONDS,
-                                NULL
-                                );
-                                
-                            if (iErrCode != OK) {
-                                AddMessage ("An autologon cookie could not be created");
-                            } else {
-                                AddMessage ("Autologon is now on for ");
-                                AppendMessage (m_vEmpireName.GetCharPtr());
+                        iErrCode = m_pHttpResponse->CreateCookie (
+                            AUTOLOGON_PASSWORD_COOKIE,
+                            String::I64toA (i64Hash, pszText, 10),
+                            ONE_YEAR_IN_SECONDS,
+                            NULL
+                            );
+                        RETURN_ON_ERROR(iErrCode);
 
-                                iAutoLogonSelected = m_iEmpireKey;
-                            }
-                        }
+                        AddMessage ("Autologon is now on for ");
+                        AppendMessage (m_vEmpireName.GetCharPtr());
+
+                        iAutoLogonSelected = m_iEmpireKey;
                     }
                 }
             }
 
-Quote:
             // Handle quote change
             const char* pszString;
             bool bTruncate;
@@ -600,7 +600,6 @@ Quote:
             }
 
             iErrCode = UpdateEmpireQuote (m_iEmpireKey, pszString, &bTruncate);
-
             switch (iErrCode) {
             case OK:
 
@@ -621,8 +620,7 @@ Quote:
                 break;
 
             default:
-                AddMessage ("Your quote could not be updated. The error was ");
-                AppendMessage (iErrCode);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -637,7 +635,6 @@ Quote:
             }
 
             iErrCode = UpdateEmpireVictorySneer (m_iEmpireKey, pszString, &bTruncate);
-
             switch (iErrCode) {
             case OK:
 
@@ -658,8 +655,7 @@ Quote:
                 break;
 
             default:
-                AddMessage ("Your victory sneer could not be updated - the error was ");
-                AppendMessage (iErrCode);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -677,8 +673,11 @@ Quote:
 
             if ((bNewValue != bValue) || (bNewValue2 != bValue2)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SYSTEM_REPEATED_BUTTONS, bNewValue));
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, GAME_REPEATED_BUTTONS, bNewValue2));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SYSTEM_REPEATED_BUTTONS, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
+
+                iErrCode = SetEmpireOption (m_iEmpireKey, GAME_REPEATED_BUTTONS, bNewValue2);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (bNewValue) {
                     m_iSystemOptions |= SYSTEM_REPEATED_BUTTONS;
@@ -727,8 +726,11 @@ Quote:
 
             if ((bNewValue != bValue) || (bNewValue2 != bValue2)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SYSTEM_DISPLAY_TIME, bNewValue));
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, GAME_DISPLAY_TIME, bNewValue2));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SYSTEM_DISPLAY_TIME, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
+
+                iErrCode = SetEmpireOption (m_iEmpireKey, GAME_DISPLAY_TIME, bNewValue2);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (bNewValue) {
                     m_iSystemOptions |= SYSTEM_DISPLAY_TIME;
@@ -772,7 +774,9 @@ Quote:
             bValue = (m_iSystemOptions & AUTO_REFRESH) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, AUTO_REFRESH, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, AUTO_REFRESH, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Refresh on update countdown is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~AUTO_REFRESH;
@@ -793,7 +797,7 @@ Quote:
             bValue = (m_iSystemOptions & COUNTDOWN) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, COUNTDOWN, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, COUNTDOWN, !bValue);
                 AddMessage ("Visual update countdown ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~COUNTDOWN;
@@ -814,7 +818,9 @@ Quote:
             bValue = (m_iSystemOptions & MAP_COLORING) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, MAP_COLORING, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, MAP_COLORING, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Map coloring by diplomatic status is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~MAP_COLORING;
@@ -835,7 +841,9 @@ Quote:
             bValue = (m_iSystemOptions & SHIP_MAP_COLORING) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIP_MAP_COLORING, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SHIP_MAP_COLORING, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Ship coloring by diplomatic status is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SHIP_MAP_COLORING;
@@ -856,7 +864,9 @@ Quote:
             bValue = (m_iSystemOptions & SHIP_MAP_HIGHLIGHTING) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Ship highlighting on the map screen is ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SHIP_MAP_HIGHLIGHTING;
@@ -877,7 +887,9 @@ Quote:
             bValue = (m_iSystemOptions & SENSITIVE_MAPS) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SENSITIVE_MAPS, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SENSITIVE_MAPS, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Sensitive maps are ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SENSITIVE_MAPS;
@@ -898,7 +910,9 @@ Quote:
             bValue = (m_iSystemOptions & PARTIAL_MAPS) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, PARTIAL_MAPS, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, PARTIAL_MAPS, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Partial maps are ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~PARTIAL_MAPS;
@@ -918,7 +932,9 @@ Quote:
 
             bValue = (m_iSystemOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
             if (bValue != (iNewValue != 0)) {
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bValue);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("Local maps will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~LOCAL_MAPS_IN_UPCLOSE_VIEWS;
@@ -932,11 +948,8 @@ Quote:
 
             // Ratios
             Variant vTemp;
-            EmpireCheck(GetEmpireProperty (
-                m_iEmpireKey,
-                SystemEmpireData::GameRatios,
-                &vTemp
-                ));
+            iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::GameRatios, &vTemp);
+            RETURN_ON_ERROR(iErrCode);
 
             iValue = vTemp.GetInteger();
 
@@ -947,7 +960,8 @@ Quote:
 
             if (iNewValue != iValue && iNewValue >= RATIOS_DISPLAY_NEVER && iNewValue <= RATIOS_DISPLAY_ALWAYS) {
 
-                EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::GameRatios, iNewValue));
+                iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::GameRatios, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 AppendMessage ("Your game ratios line setting was updated");
             }
 
@@ -957,15 +971,12 @@ Quote:
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            EmpireCheck(GetEmpireDefaultMessageTarget (m_iEmpireKey, &iValue));
+            iErrCode = GetEmpireDefaultMessageTarget (m_iEmpireKey, &iValue);
+            RETURN_ON_ERROR(iErrCode);
             if (iValue != iNewValue) {
                 iErrCode = SetEmpireDefaultMessageTarget (m_iEmpireKey, iNewValue);
-                if (iErrCode == OK) {
-                    AddMessage ("The default message target was updated");
-                } else {
-                    AddMessage ("The default message target could not be updated; the error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default message target was updated");
             }
 
             // TechDesc
@@ -976,7 +987,8 @@ Quote:
 
             bValue = (m_iSystemOptions & SHOW_TECH_DESCRIPTIONS) != 0;
             if (bValue != (iNewValue != 0)) {
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHOW_TECH_DESCRIPTIONS, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SHOW_TECH_DESCRIPTIONS, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Ship type descriptions maps will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~SHOW_TECH_DESCRIPTIONS;
@@ -998,7 +1010,8 @@ Quote:
             bValue = (m_iSystemOptions & SHIPS_ON_MAP_SCREEN) != 0;
             if (bValue != ((iNewValue & SHIPS_ON_MAP_SCREEN) != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Ship menus will ");
                 if (!(iNewValue & SHIPS_ON_MAP_SCREEN)) {
                     m_iSystemOptions &= ~SHIPS_ON_MAP_SCREEN;
@@ -1013,7 +1026,8 @@ Quote:
             bValue = (m_iSystemOptions & SHIPS_ON_PLANETS_SCREEN) != 0;
             if (bValue != ((iNewValue & SHIPS_ON_PLANETS_SCREEN)!= 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Ship menus will ");
                 if (!(iNewValue & SHIPS_ON_PLANETS_SCREEN)) {
                     m_iSystemOptions &= ~SHIPS_ON_PLANETS_SCREEN;
@@ -1034,7 +1048,8 @@ Quote:
             bValue = (m_iSystemOptions & BUILD_ON_MAP_SCREEN) != 0;
             if (bValue != ((iNewValue & BUILD_ON_MAP_SCREEN)!= 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Build menus will ");
                 if (!(iNewValue & BUILD_ON_MAP_SCREEN)) {
                     m_iSystemOptions &= ~BUILD_ON_MAP_SCREEN;
@@ -1049,7 +1064,8 @@ Quote:
             bValue = (m_iSystemOptions & BUILD_ON_PLANETS_SCREEN) != 0;
             if (bValue != ((iNewValue & BUILD_ON_PLANETS_SCREEN)!= 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Build menus will ");
                 if (!(iNewValue & BUILD_ON_PLANETS_SCREEN)) {
                     m_iSystemOptions &= ~BUILD_ON_PLANETS_SCREEN;
@@ -1070,7 +1086,8 @@ Quote:
             bValue = (m_iSystemOptions2 & REFRESH_UNSTARTED_GAME_PAGES) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption2 (m_iEmpireKey, REFRESH_UNSTARTED_GAME_PAGES, !bValue));
+                iErrCode = SetEmpireOption2 (m_iEmpireKey, REFRESH_UNSTARTED_GAME_PAGES, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Unstarted game screens will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions2 &= ~REFRESH_UNSTARTED_GAME_PAGES;
@@ -1091,7 +1108,8 @@ Quote:
             bValue = (m_iSystemOptions & DISPLACE_ENDTURN_BUTTON) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The End Turn button will ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~DISPLACE_ENDTURN_BUTTON;
@@ -1112,7 +1130,8 @@ Quote:
             bValue = (m_iSystemOptions & FIXED_BACKGROUNDS) != 0;
             if (bValue != (iNewValue != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, FIXED_BACKGROUNDS, !bValue));
+                iErrCode = SetEmpireOption (m_iEmpireKey, FIXED_BACKGROUNDS, !bValue);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Fixed backgrounds are ");
                 if (iNewValue == 0) {
                     m_iSystemOptions &= ~FIXED_BACKGROUNDS;
@@ -1135,7 +1154,8 @@ Quote:
 
             if (bIPAddress != ((iNewValue & IP_ADDRESS_PASSWORD_HASHING) != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, IP_ADDRESS_PASSWORD_HASHING, !bIPAddress));
+                iErrCode = SetEmpireOption (m_iEmpireKey, IP_ADDRESS_PASSWORD_HASHING, !bIPAddress);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Game screen password hashing with IP address is now ");
                 AppendMessage (bIPAddress ? "off" : "on");
 
@@ -1148,7 +1168,8 @@ Quote:
 
             if (bSessionId != ((iNewValue & SESSION_ID_PASSWORD_HASHING) != 0)) {
 
-                EmpireCheck(SetEmpireOption (m_iEmpireKey, SESSION_ID_PASSWORD_HASHING, !bSessionId));
+                iErrCode = SetEmpireOption (m_iEmpireKey, SESSION_ID_PASSWORD_HASHING, !bSessionId);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("Game screen password hashing with Session Id is now ");
                 AppendMessage (bIPAddress ? "off" : "on");
 
@@ -1169,7 +1190,8 @@ Quote:
                     bValue = (m_iSystemOptions & SHOW_ADVANCED_SEARCH_INTERFACE) != 0;
                     if (bValue != (iNewValue != 0)) {
 
-                        EmpireCheck(SetEmpireOption (m_iEmpireKey, SHOW_ADVANCED_SEARCH_INTERFACE, !bValue));
+                        iErrCode = SetEmpireOption (m_iEmpireKey, SHOW_ADVANCED_SEARCH_INTERFACE, !bValue);
+                        RETURN_ON_ERROR(iErrCode);
                         AddMessage ("The advanced search interface will ");
                         if (iNewValue == 0) {
                             m_iSystemOptions &= ~SHOW_ADVANCED_SEARCH_INTERFACE;
@@ -1191,7 +1213,8 @@ Quote:
                 bValue = (m_iSystemOptions & DISPLAY_FATAL_UPDATE_MESSAGES) != 0;
                 if (bValue != (iNewValue != 0)) {
 
-                    EmpireCheck(SetEmpireOption (m_iEmpireKey, DISPLAY_FATAL_UPDATE_MESSAGES, !bValue));
+                    iErrCode = SetEmpireOption (m_iEmpireKey, DISPLAY_FATAL_UPDATE_MESSAGES, !bValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Update messages when empire is nuked will ");
                     if (iNewValue == 0) {
                         m_iSystemOptions &= ~DISPLAY_FATAL_UPDATE_MESSAGES;
@@ -1212,7 +1235,8 @@ Quote:
                 bValue = (m_iSystemOptions & SEND_SCORE_MESSAGE_ON_NUKE) != 0;
                 if (bValue != (iNewValue != 0)) {
 
-                    EmpireCheck(SetEmpireOption (m_iEmpireKey, SEND_SCORE_MESSAGE_ON_NUKE, !bValue));
+                    iErrCode = SetEmpireOption (m_iEmpireKey, SEND_SCORE_MESSAGE_ON_NUKE, !bValue);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("Score change information will ");
                     if (iNewValue == 0) {
                         m_iSystemOptions &= ~SEND_SCORE_MESSAGE_ON_NUKE;
@@ -1258,10 +1282,13 @@ Quote:
 
                     } else {
 
-                        EmpireCheck(GetDefaultEmpireShipName (m_iEmpireKey, i, &vOldShipName));
+                        iErrCode = GetDefaultEmpireShipName (m_iEmpireKey, i, &vOldShipName);
+                        RETURN_ON_ERROR(iErrCode);
 
-                        if (strcmp (vOldShipName.GetCharPtr(), pszNewValue) != 0 &&
-                            SetDefaultEmpireShipName (m_iEmpireKey, i, pszNewValue) == OK) {
+                        if (strcmp (vOldShipName.GetCharPtr(), pszNewValue) != 0)
+                        {
+                            iErrCode = SetDefaultEmpireShipName (m_iEmpireKey, i, pszNewValue);
+                            RETURN_ON_ERROR(iErrCode);
                             iUpdate ++;
                         }
                     }
@@ -1310,11 +1337,16 @@ Quote:
 
                 case NULL_THEME:
 
-                    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey));
-                    if (vOldThemeKey.GetInteger() != NULL_THEME) {
+                    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey);
+                    RETURN_ON_ERROR(iErrCode);
 
-                        EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, NULL_THEME));
-                        EmpireCheck(GetUIData (NULL_THEME));
+                    if (vOldThemeKey.GetInteger() != NULL_THEME)
+                    {
+                        iErrCode = SetEmpireThemeKey (m_iEmpireKey, NULL_THEME);
+                        RETURN_ON_ERROR(iErrCode);
+
+                        iErrCode = GetUIData (NULL_THEME);
+                        RETURN_ON_ERROR(iErrCode);
 
                         AddMessage ("You have selected the Null Theme");
                     }
@@ -1335,15 +1367,20 @@ Quote:
 
                     bool bExist;
                     iErrCode = DoesThemeExist (iNewValue, &bExist);
-                    if (iErrCode != OK || !bExist) {
+                    RETURN_ON_ERROR(iErrCode);
+                    if (!bExist) {
                         AddMessage ("That theme doesn't exist");
                     } else {
 
-                        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey));
+                        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vOldThemeKey);
+                        RETURN_ON_ERROR(iErrCode);
                         if (vOldThemeKey.GetInteger() != iNewValue) {
 
-                            EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, iNewValue));
-                            EmpireCheck(GetUIData (iNewValue));
+                            iErrCode = SetEmpireThemeKey (m_iEmpireKey, iNewValue);
+                            RETURN_ON_ERROR(iErrCode);
+
+                            iErrCode = GetUIData (iNewValue);
+                            RETURN_ON_ERROR(iErrCode);
 
                             AddMessage ("You have selected a new theme");
                         }
@@ -1379,24 +1416,21 @@ Quote:
 
                 const char* pszReport = NULL;
 
-                switch (UndeleteEmpire (m_iEmpireKey)) {
-
+                switch (UndeleteEmpire (m_iEmpireKey))
+                {
                 case ERROR_CANNOT_UNDELETE_EMPIRE:
-
                     pszReport = "could not be undeleted";
                     AddMessage ("Your empire cannot be undeleted");
                     break;
 
                 case OK:
-
                     pszReport = "was successfully undeleted";
                     AddMessage ("Your empire is no longer marked for deletion"); 
                     m_iSystemOptions &= ~EMPIRE_MARKED_FOR_DELETION;
-
                     break;
 
                 default:
-
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("An unexpected error occurred");
                 }
 
@@ -1449,7 +1483,9 @@ Quote:
                 unsigned int iAssocKey = pHttpForm->GetIntValue();
                 if (IS_KEY(iAssocKey))
                 {
-                    Check(CacheEmpire(iAssocKey));
+                    iErrCode = CacheEmpire(iAssocKey);
+                    RETURN_ON_ERROR(iErrCode);
+
                     iErrCode = DeleteAssociation(m_iEmpireKey, iAssocKey);
                     switch (iErrCode)
                     {
@@ -1462,7 +1498,8 @@ Quote:
                         break;
 
                     default:
-                        return iErrCode;
+                        RETURN_ON_ERROR(iErrCode);
+                        break;
                     }
                 }
 
@@ -1495,12 +1532,10 @@ Quote:
 
                 else if (m_iAlienKey != iIcon) {
 
-                    if (SetEmpireAlienKey (m_iEmpireKey, iIcon) == OK) {
-                        m_iAlienKey = iIcon;
-                        AddMessage ("Your icon was updated");
-                    } else {
-                        AddMessage ("That icon no longer exists");
-                    }
+                    iErrCode = SetEmpireAlienKey (m_iEmpireKey, iIcon);
+                    RETURN_ON_ERROR(iErrCode);
+                    m_iAlienKey = iIcon;
+                    AddMessage ("Your icon was updated");
                 }
 
                 else {
@@ -1539,9 +1574,9 @@ Quote:
                     iMessageKey = pHttpForm->GetIntValue();
 
                     // Delete message
-                    if (DeleteSystemMessage (m_iEmpireKey, iMessageKey) == OK) {
-                        iDeletedMessages ++;
-                    }
+                    iErrCode = DeleteSystemMessage(m_iEmpireKey, iMessageKey);
+                    RETURN_ON_ERROR(iErrCode);
+                    iDeletedMessages ++;
                 }
 
             } else {
@@ -1565,9 +1600,9 @@ Quote:
                             iMessageKey = pHttpForm->GetIntValue();
 
                             // Delete message
-                            if (DeleteSystemMessage (m_iEmpireKey, iMessageKey) == OK) {
-                                iDeletedMessages ++;
-                            }
+                            iErrCode = DeleteSystemMessage(m_iEmpireKey, iMessageKey);
+                            RETURN_ON_ERROR(iErrCode);
+                            iDeletedMessages ++;
                         }
                     }
 
@@ -1589,20 +1624,13 @@ Quote:
                             }
                             iMessageKey = pHttpForm->GetIntValue();
 
-                            if (GetSystemMessageProperty(
-                                m_iEmpireKey,
-                                iMessageKey,
-                                SystemEmpireMessages::Flags,
-                                &vFlags
-                                ) == OK &&
-
-                                (vFlags.GetInteger() & MESSAGE_SYSTEM) &&
-
-                                DeleteSystemMessage (
-                                m_iEmpireKey,
-                                iMessageKey
-                                ) == OK) {
-
+                            iErrCode = GetSystemMessageProperty(m_iEmpireKey, iMessageKey, SystemEmpireMessages::Flags, &vFlags);
+                            RETURN_ON_ERROR(iErrCode);
+                            
+                            if ((vFlags.GetInteger() & MESSAGE_SYSTEM))
+                            {
+                                iErrCode = DeleteSystemMessage(m_iEmpireKey, iMessageKey);
+                                RETURN_ON_ERROR(iErrCode);
                                 iDeletedMessages ++;
                             }
                         }
@@ -1629,17 +1657,13 @@ Quote:
                                 }
                                 iMessageKey = pHttpForm->GetIntValue();
 
-                                if (GetSystemMessageProperty(
-                                    m_iEmpireKey,
-                                    iMessageKey,
-                                    SystemEmpireMessages::SourceName,
-                                    &vSource
-                                    ) == OK &&
-
-                                    String::StrCmp (vSource.GetCharPtr(), pszSrcEmpire) == 0 &&
-
-                                    DeleteSystemMessage (m_iEmpireKey, iMessageKey) == OK) {
-
+                                iErrCode = GetSystemMessageProperty(m_iEmpireKey, iMessageKey, SystemEmpireMessages::SourceName, &vSource);
+                                RETURN_ON_ERROR(iErrCode);
+                                
+                                if (String::StrCmp (vSource.GetCharPtr(), pszSrcEmpire) == 0)
+                                {
+                                    iErrCode = DeleteSystemMessage(m_iEmpireKey, iMessageKey);
+                                    RETURN_ON_ERROR(iErrCode);
                                     iDeletedMessages ++;
                                 }
                             }
@@ -1648,7 +1672,8 @@ Quote:
                 }
             }
 
-            if (iDeletedMessages > 0) {
+            if (iDeletedMessages > 0)
+            {
                 AddMessage (iDeletedMessages);
                 AppendMessage (" system message");
                 AppendMessage (iDeletedMessages == 1 ? " was deleted" : "s were deleted");
@@ -1665,8 +1690,12 @@ Quote:
             // Handle graphical theme updates
             bool bUpdate = false, bColorError = false;
 
-            EmpireCheck(GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
+            iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+            RETURN_ON_ERROR(iErrCode);
+
             iColorKey = vValue.GetInteger();
 
             // Background
@@ -1676,7 +1705,8 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != m_iBackgroundKey) {
-                EmpireCheck(SetEmpireBackgroundKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireBackgroundKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 m_iBackgroundKey = iNewValue;
                 bUpdate = true;
             }
@@ -1688,7 +1718,8 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iLivePlanetKey) {
-                EmpireCheck(SetEmpireLivePlanetKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireLivePlanetKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 bUpdate = true;
             }
 
@@ -1699,7 +1730,8 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iDeadPlanetKey) {
-                EmpireCheck(SetEmpireDeadPlanetKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireDeadPlanetKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 bUpdate = true;
             }
 
@@ -1710,7 +1742,8 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != m_iButtonKey) {
-                EmpireCheck(SetEmpireButtonKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireButtonKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 iNewButtonKey = iNewValue;
                 bUpdate = true;
             }
@@ -1722,16 +1755,20 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != m_iSeparatorKey) {
-                EmpireCheck(SetEmpireSeparatorKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireSeparatorKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 bUpdate = true;
             }
 
             // Get horz, vert keys
             unsigned int iHorzKey, iVertKey;
             
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue);
+            RETURN_ON_ERROR(iErrCode);
             iHorzKey = vValue.GetInteger();
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue));
+
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue);
+            RETURN_ON_ERROR(iErrCode);
             iVertKey = vValue.GetInteger();
 
             // Horz
@@ -1741,7 +1778,8 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iHorzKey) {
-                EmpireCheck(SetEmpireHorzKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireHorzKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 bUpdate = true;
             }
 
@@ -1752,7 +1790,8 @@ Quote:
             iNewValue = pHttpForm->GetUIntValue();
 
             if (iNewValue != iVertKey) {
-                EmpireCheck(SetEmpireVertKey (m_iEmpireKey, iNewValue));
+                iErrCode = SetEmpireVertKey (m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
                 bUpdate = true;
             }
 
@@ -1774,7 +1813,8 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vTableColor = pszNewValue;
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, m_vTableColor));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, m_vTableColor);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("You must submit a valid text color");
                     bColorError = true;
@@ -1788,7 +1828,8 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vGoodColor = pszNewValue;
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, m_vGoodColor));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, m_vGoodColor);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("You must submit a valid good color");
                     bColorError = true;
@@ -1802,7 +1843,8 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vBadColor = pszNewValue;
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, m_vBadColor));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, m_vBadColor);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("You must submit a valid bad color");
                     bColorError = true;
@@ -1816,7 +1858,8 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vPrivateMessageColor = pszNewValue;
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, m_vPrivateMessageColor));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, m_vPrivateMessageColor);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("You must submit a valid message color");
                     bColorError = true;
@@ -1830,7 +1873,8 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vBroadcastMessageColor = pszNewValue;
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, m_vBroadcastMessageColor));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, m_vBroadcastMessageColor);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("You must submit a valid broadcast color");
                     bColorError = true;
@@ -1844,26 +1888,30 @@ Quote:
 
                 if (IsColor (pszNewValue)) {
                     m_vTableColor = pszNewValue;
-                    EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, m_vTableColor));
+                    iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, m_vTableColor);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("You must submit a valid table color");
                     bColorError = true;
                 }
             }
 
-            EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue));
+            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
+            RETURN_ON_ERROR(iErrCode);
             iThemeKey = vValue.GetInteger();
 
             if (iNewValue != iColorKey) {
 
                 if (!bColorError) {
-                    EmpireCheck(SetEmpireColorKey (m_iEmpireKey, iNewValue));
+                    iErrCode = SetEmpireColorKey (m_iEmpireKey, iNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                     bUpdate = true;
                 } else {
 
                     // We need a color key from somewhere - use the previous theme
                     if (iThemeKey != INDIVIDUAL_ELEMENTS && iThemeKey != ALTERNATIVE_PATH) {
-                        EmpireCheck(SetEmpireColorKey (m_iEmpireKey, iThemeKey));
+                        iErrCode = SetEmpireColorKey (m_iEmpireKey, iThemeKey);
+                        RETURN_ON_ERROR(iErrCode);
                     }
 
                     // No need for an else;  we'll keep using what we had before
@@ -1872,13 +1920,15 @@ Quote:
 
             if (bUpdate) {
                 if (iThemeKey != INDIVIDUAL_ELEMENTS) {
-                    EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, INDIVIDUAL_ELEMENTS));
+                    iErrCode = SetEmpireThemeKey (m_iEmpireKey, INDIVIDUAL_ELEMENTS);
+                    RETURN_ON_ERROR(iErrCode);
                     AddMessage ("You are now using individual UI elements");
                 } else {
                     AddMessage ("Your individual UI elements have been updated");
                 }
                 
-                EmpireCheck(GetUIData (INDIVIDUAL_ELEMENTS));
+                iErrCode = GetUIData(INDIVIDUAL_ELEMENTS);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             const char* pszStart;
@@ -1936,9 +1986,14 @@ Quote:
                     if (stLength > MAX_GRAPHICS_ALTERNATIVE_PATH_LENGTH) {
                         AddMessage ("Your alternative graphics path is too long");
                     } else {
-                        EmpireCheck(SetEmpireThemeKey (m_iEmpireKey, ALTERNATIVE_PATH));
-                        EmpireCheck(SetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, pszPath));
-                        EmpireCheck(GetUIData (ALTERNATIVE_PATH));
+                        iErrCode = SetEmpireThemeKey (m_iEmpireKey, ALTERNATIVE_PATH);
+                        RETURN_ON_ERROR(iErrCode);
+                        
+                        iErrCode = SetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, pszPath);
+                        RETURN_ON_ERROR(iErrCode);
+
+                        iErrCode = GetUIData (ALTERNATIVE_PATH);
+                        RETURN_ON_ERROR(iErrCode);
                     }
                 }
             }
@@ -1955,23 +2010,18 @@ Quote:
             global.GetReport()->WriteReport (pszText);
 
             iErrCode = CacheEmpireForDeletion(m_iEmpireKey);
-            if (iErrCode != OK)
-                return iErrCode;
+            RETURN_ON_ERROR(iErrCode);
 
-            iErrCode = DeleteEmpire (m_iEmpireKey, NULL, true, false);
-            switch (iErrCode) {
-
+            iErrCode = DeleteEmpire(m_iEmpireKey, NULL, true, false);
+            switch (iErrCode)
+            {
             case OK:
-
                 AddMessage ("The empire ");
                 AppendMessage (m_vEmpireName.GetCharPtr());
                 AppendMessage (" was deleted");
                 return Redirect (LOGIN);
 
-                // The code in DeleteEmpire will report
-
             case ERROR_EMPIRE_IS_IN_GAMES:
-
                 AddMessage ("Your empire is still in at least one game. It will be deleted when it is no longer in any games");
                 AddMessage ("Your personal information has been cleared");
                 m_iSystemOptions |= EMPIRE_MARKED_FOR_DELETION;
@@ -1983,23 +2033,14 @@ Quote:
                 break;
 
             case ERROR_EMPIRE_DOES_NOT_EXIST:
-
                 AddMessage ("The empire ");
                 AppendMessage (m_vEmpireName.GetCharPtr());
                 AppendMessage (" no longer exists");
                 return Redirect (LOGIN);
 
             default:
-
-                Assert(false);
-                AddMessage ("An unexpected error occurred: ");
-                AppendMessage (iErrCode);
-                {
-                char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-                sprintf(pszText, "%s was not deleted: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
-                global.GetReport()->WriteReport (pszText);
-                }
-                return iErrCode;
+                RETURN_ON_ERROR(iErrCode);
+                break;
             }
 
             }
@@ -2007,7 +2048,8 @@ Quote:
 
         case 6:
 
-            EmpireCheck(BlankEmpireStatistics (m_iEmpireKey));
+            iErrCode = BlankEmpireStatistics (m_iEmpireKey);
+            RETURN_ON_ERROR(iErrCode);
             AddMessage ("Your empire's statistics have been blanked");
 
             char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
@@ -2087,7 +2129,8 @@ Quote:
                         break;
 
                     default:
-                        return iErrCode;
+                        RETURN_ON_ERROR(iErrCode);
+                        break;
                     }
                 }
             }
@@ -2105,7 +2148,8 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         m_iButtonKey = iNewButtonKey;
@@ -2115,7 +2159,8 @@ if (m_bRedirectTest)
 
 iNewButtonKey = m_iButtonKey;
 
-Check(OpenSystemPage(iProfileEditorPage == 1 && iAlienSelect == 1));
+iErrCode = OpenSystemPage(iProfileEditorPage == 1 && iAlienSelect == 1);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 switch (iProfileEditorPage) {
@@ -2123,9 +2168,10 @@ switch (iProfileEditorPage) {
 case 0:
     {
 
-    Variant* pvEmpireData, vMaxNumSystemMessages;
+    Variant* pvEmpireData = NULL, vMaxNumSystemMessages;
+    AutoFreeData free_pvEmpireData(pvEmpireData);
+
     int iOptions, iValue, j, iMaxNumSystemMessages;
-    unsigned int* piThemeKey, iNumThemes;
     bool bIP, bID, bFlag;
     size_t stLen;
 
@@ -2133,8 +2179,11 @@ case 0:
 
     String strFilter;
 
-    EmpireCheck(GetEmpireData (m_iEmpireKey, &pvEmpireData, NULL));
-    EmpireCheck(GetJoinedTournaments (m_iEmpireKey, NULL, NULL, &iNumTournamentsJoined));
+    iErrCode = GetEmpireData (m_iEmpireKey, &pvEmpireData, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetJoinedTournaments (m_iEmpireKey, NULL, NULL, &iNumTournamentsJoined);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ProfileEditorPage" value="0"><p><%
 
@@ -2155,7 +2204,6 @@ case 0:
 
     %><table width="90%"><%
 
-
     %><tr><td align="center" colspan="2"><h3>Empire Information:</h3></td></tr><%
 
     %><tr><td align="left">Recase empire name:</td><%
@@ -2174,7 +2222,6 @@ case 0:
         %><td align="left"><input type="password" name="VerifyPassword" size="20" maxlength="<% 
             Write (MAX_PASSWORD_LENGTH); %>" value="<% Write (INVALID_PASSWORD_STRING); %>"></td></tr><%
     }
-
 
     HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strFilter, 0, false);
 
@@ -2304,9 +2351,13 @@ case 0:
 
                 Variant vName;
                 iErrCode = GetEmpireName (iAutoLogonKey, &vName);
-                if (iErrCode != OK) {
+                if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST)
+                {
                     iAutoLogonKey = m_iEmpireKey;
-                } else {
+                }
+                else
+                {
+                    RETURN_ON_ERROR(iErrCode);
 
                     %><option selected value="<% Write (iAutoLogonKey); %>"><%
                     %>Use the <% Write (vName.GetCharPtr()); %> empire to autologon</option><%
@@ -2330,11 +2381,16 @@ case 0:
     WriteButton (BID_ADD_ASSOCIATION);
 
     Variant* pvAssoc = NULL;
+    AutoFreeData free_pvAssoc(pvAssoc);
+
     unsigned int iAssoc;
-    Check(GetAssociations(m_iEmpireKey, &pvAssoc, &iAssoc));
+    iErrCode = GetAssociations(m_iEmpireKey, &pvAssoc, &iAssoc);
+    RETURN_ON_ERROR(iErrCode);
+
     if (iAssoc > 0)
     {
-        Check(CacheEmpires(pvAssoc, iAssoc));
+        iErrCode = CacheEmpires(pvAssoc, iAssoc);
+        RETURN_ON_ERROR(iErrCode);
 
         char pszName[MAX_EMPIRE_NAME_LENGTH + 1];
 
@@ -2343,11 +2399,10 @@ case 0:
         if (iAssoc == 1)
         {
             iErrCode = GetEmpireName(pvAssoc[0].GetInteger(), pszName);
-            if (iErrCode == OK)
-            {
-                Write (pszName);
-                %><input type="hidden" name="Association" value="<% Write (pvAssoc[0].GetInteger()); %>"><%
-            }
+            RETURN_ON_ERROR(iErrCode);
+
+            Write (pszName);
+            %><input type="hidden" name="Association" value="<% Write (pvAssoc[0].GetInteger()); %>"><%
         }
         else
         {
@@ -2355,10 +2410,9 @@ case 0:
             for (unsigned int a = 0; a < iAssoc && iErrCode == OK; a ++)
             {
                 iErrCode = GetEmpireName(pvAssoc[a].GetInteger(), pszName);
-                if (iErrCode == OK)
-                {
-                    %><option value="<% Write (pvAssoc[a].GetInteger()); %>"><% Write (pszName); %></option><%
-                }
+                RETURN_ON_ERROR(iErrCode);
+                
+                %><option value="<% Write (pvAssoc[a].GetInteger()); %>"><% Write (pszName); %></option><%
             }
             %></select><%
         }
@@ -2366,11 +2420,6 @@ case 0:
         %> <%
 
         WriteButton(BID_REMOVE_ASSOCIATION);
-        t_pCache->FreeData(pvAssoc);
-        if (iErrCode != OK)
-        {
-            return iErrCode;
-        }
     }
 
     %></td></tr><%
@@ -2409,25 +2458,26 @@ case 0:
         %> selected<%
     } %> value="<% Write (NULL_THEME); %>">Null Theme</option><%
 
+    unsigned int* piThemeKey = NULL, iNumThemes;
+    AutoFreeKeys free_piThemeKey(piThemeKey);
+
     iErrCode = GetFullThemeKeys (&piThemeKey, &iNumThemes);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumThemes > 0) {
 
         Variant vThemeName;
-        for (i = 0; i < (int)iNumThemes; i ++) {
-            if (GetThemeName (piThemeKey[i], &vThemeName) == OK) {
-                %><option <%
-                if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == (int)piThemeKey[i]) {
-                    %> selected<%
-                }
-                %> value="<% Write (piThemeKey[i]); %>"><% Write (vThemeName.GetCharPtr()); %></option><%
+        for (i = 0; i < (int)iNumThemes; i ++)
+        {
+            iErrCode = GetThemeName (piThemeKey[i], &vThemeName);
+            RETURN_ON_ERROR(iErrCode);
+            
+            %><option <%
+            if (pvEmpireData[SystemEmpireData::iAlmonasterTheme].GetInteger() == (int)piThemeKey[i]) {
+                %> selected<%
             }
+            %> value="<% Write (piThemeKey[i]); %>"><% Write (vThemeName.GetCharPtr()); %></option><%
         }
-
-        t_pCache->FreeKeys (piThemeKey);
     }
     %></select> <%
 
@@ -2500,9 +2550,7 @@ case 0:
     %><tr><td>System messages saved:<td><%
 
     iErrCode = GetNumSystemMessages (m_iEmpireKey, &iNumSystemMessages);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumSystemMessages > 0) {
         Write (iNumSystemMessages);
@@ -2515,9 +2563,7 @@ case 0:
     %></tr><tr><td>Maximum saved system messages:</td><td><select name="MaxNumSavedMessages"><%
 
     iErrCode = GetSystemProperty (SystemData::MaxNumSystemMessages, &vMaxNumSystemMessages);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
     iMaxNumSystemMessages = vMaxNumSystemMessages.GetInteger();
 
     for (i = 0; i <= iMaxNumSystemMessages; i += 10) {
@@ -2730,8 +2776,7 @@ case 0:
 
     %><tr><td>Display ship menus in planet views:</td><td><select name="UpCloseShips"><%
 
-    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & 
-        (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN);
+    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN);
 
     %><option <% if (iOptions == (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN)) { %>selected <% }
     %>value="<% Write (SHIPS_ON_MAP_SCREEN | SHIPS_ON_PLANETS_SCREEN); %>"><%
@@ -2754,8 +2799,7 @@ case 0:
 
     %><tr><td>Display build menus in planet views:</td><td><select name="UpCloseBuilds"><%
 
-    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & 
-        (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN);
+    iOptions = pvEmpireData[SystemEmpireData::iOptions].GetInteger() & (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN);
 
     %><option <% if (iOptions == (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN)) { %>selected <% }
     %>value="<% Write (BUILD_ON_MAP_SCREEN | BUILD_ON_PLANETS_SCREEN); %>"><%
@@ -3021,8 +3065,8 @@ case 0:
 
     %><h3>Default Ship Names:</h3><p><table width="60%"><%
 
-    for (i = FIRST_SHIP; i < NUM_SHIP_TYPES / 2; i ++) {
-
+    for (i = FIRST_SHIP; i < NUM_SHIP_TYPES / 2; i ++)
+    {
         %><tr><%
 
         HTMLFilter(pvEmpireData[SYSTEM_EMPIRE_DATA_SHIP_NAME_COLUMN_INDEX[i]].GetCharPtr(), &strFilter, 0, false);
@@ -3064,15 +3108,8 @@ case 0:
         WriteButton (BID_UNDELETEEMPIRE);
     }
 
-Cleanup:
-
-    if (iErrCode != OK) {
-        %><p>Error <% Write (iErrCode); %> occurred rendering your profile<p><%
-    }
-
     %><p><% WriteButton (BID_CANCEL);
 
-    t_pCache->FreeData (pvEmpireData);
     }
 
     break;
@@ -3081,13 +3118,14 @@ case 1:
     {
 
     Variant vAlienKey;
-    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey));
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ProfileEditorPage" value="1"><p><%
     WriteEmpireIcon (vAlienKey.GetInteger(), m_iEmpireKey, "Your current icon", false);
     %><p><%
 
-    iErrCode = WriteIconSelection (iAlienSelect, vAlienKey.GetInteger(), "empire");
+    iErrCode = WriteIconSelection(iAlienSelect, vAlienKey.GetInteger(), "empire");
     RETURN_ON_ERROR(iErrCode);
 
     }
@@ -3096,17 +3134,15 @@ case 1:
 case 2:
     {
 
-    Variant** ppvMessage;
-    unsigned int* piMessageKey, iNumMessages, j, iNumNames = 0;
+    Variant** ppvMessage = NULL;
+    AutoFreeData free_ppvMessage(ppvMessage);
+    unsigned int* piMessageKey = NULL, iNumMessages, j, iNumNames = 0;
+    AutoFreeKeys free_piMessageKey(piMessageKey);
     bool bSystem = false, bFound;
     const char* pszFontColor = NULL;
 
-    EmpireCheck(GetSavedSystemMessages (
-        m_iEmpireKey,
-        &piMessageKey,
-        &ppvMessage,
-        &iNumMessages)
-        );
+    iErrCode = GetSavedSystemMessages(m_iEmpireKey, &piMessageKey, &ppvMessage, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ProfileEditorPage" value="2"><%
     if (iNumMessages == 0) {
@@ -3125,103 +3161,96 @@ case 2:
         Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
 
         // Display
-        String* pstrNameList = new String [iNumMessages];
-        if (pstrNameList == NULL) {
-            %><p>Server is out of memory<%
-        } else {
+        String* pstrNameList = new String[iNumMessages];
+        Assert(pstrNameList);
+        Algorithm::AutoDelete<String> autopstrNameList(pstrNameList, true);
 
-            Algorithm::AutoDelete<String> autopstrNameList (pstrNameList, true);
+        %><p>You have <strong><% Write (iNumMessages); %></strong> saved system message<%
 
-            %><p>You have <strong><% Write (iNumMessages); %></strong> saved system message<%
-
-            if (iNumMessages != 1) {
-                %>s<%
-            }
-
-            %>:<p><input type="hidden" name="NumSavedSystemMessages" value="<% Write (iNumMessages); %>"><%
-            %><table width="45%"><%
-
-            char pszDate [OS::MaxDateLength];
-
-            for (i = 0; i < (int) iNumMessages; i ++) {
-
-                int iFlags = ppvMessage[piIndex[i]][SystemEmpireMessages::iFlags].GetInteger();
-
-                const char* pszSender = ppvMessage[piIndex[i]][SystemEmpireMessages::iSourceName].GetCharPtr();
-
-                %><input type="hidden" name="MsgKey<% Write (i); %>" value ="<% Write (piMessageKey[piIndex[i]]); %>"><%
-                %><input type="hidden" name="MsgSrc<% Write (i); %>" value ="<% Write (pszSender); %>"><%
-
-                %><tr><td>Time: <% 
-
-                iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
-                if (iErrCode != OK) {
-                    %>Unknown date<%
-                } else {
-                    Write (pszDate);
-                }
-
-                 %><br>Sender: <% 
-
-                if (iFlags & MESSAGE_SYSTEM) {
-
-                    bSystem = true;
-                    %><strong><% Write (SYSTEM_MESSAGE_SENDER); %></strong><%
-
-                } else {
-
-                    %><strong><% Write (pszSender); %></strong><%
-
-                    // Find name in lists
-                    bFound = false;
-                    for (j = 0; j < iNumNames; j ++) {
-                        if (pstrNameList[j].Equals (pszSender)) {
-                            bFound = true;
-                            break;
-                        }
-                    }
-                    // Add name to list if not found
-                    if (!bFound) {
-                        pstrNameList[iNumNames] = pszSender;
-                        iNumNames ++;
-                    }
-                }
-
-                if (iFlags & MESSAGE_BROADCAST) {
-                    %> (broadcast)<%
-                    pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
-                } else {
-                    pszFontColor = m_vPrivateMessageColor.GetCharPtr();
-                }
-
-                %><br>Delete: <input type="checkbox" name="DelChBx<% Write (i); 
-                %>"></td></tr><tr><td><font size="<% Write (DEFAULT_MESSAGE_FONT_SIZE); 
-                %>" face="<% Write (DEFAULT_MESSAGE_FONT); %>" color="#<% Write (pszFontColor); %>"<%
-                %>><% 
-
-                WriteFormattedMessage (ppvMessage[piIndex[i]][SystemEmpireMessages::iText].GetCharPtr());
-                %></font></td></tr><tr><td>&nbsp;</td></tr><%
-            }
-
-            %></table><p>Delete messages:<p><% 
-
-            WriteButton (BID_ALL);
-            WriteButton (BID_SELECTION);
-
-            if (bSystem) {
-                WriteButton (BID_SYSTEM);
-            }
-            if (iNumNames > 0) {
-                WriteButton (BID_EMPIRE);
-                %><select name="SelectedEmpire"><%
-                for (j = 0; j < iNumNames; j ++) {
-                    %><option value="<% Write (pstrNameList[j]); %>"><% Write (pstrNameList[j]); %></option><%
-                } %></select><%
-            }
+        if (iNumMessages != 1) {
+            %>s<%
         }
 
-        t_pCache->FreeData (ppvMessage);
-        t_pCache->FreeKeys (piMessageKey);
+        %>:<p><input type="hidden" name="NumSavedSystemMessages" value="<% Write (iNumMessages); %>"><%
+        %><table width="45%"><%
+
+        char pszDate [OS::MaxDateLength];
+
+        for (i = 0; i < (int) iNumMessages; i ++) {
+
+            int iFlags = ppvMessage[piIndex[i]][SystemEmpireMessages::iFlags].GetInteger();
+
+            const char* pszSender = ppvMessage[piIndex[i]][SystemEmpireMessages::iSourceName].GetCharPtr();
+
+            %><input type="hidden" name="MsgKey<% Write (i); %>" value ="<% Write (piMessageKey[piIndex[i]]); %>"><%
+            %><input type="hidden" name="MsgSrc<% Write (i); %>" value ="<% Write (pszSender); %>"><%
+
+            %><tr><td>Time: <% 
+
+            iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
+            if (iErrCode != OK) {
+                %>Unknown date<%
+            } else {
+                Write (pszDate);
+            }
+
+                %><br>Sender: <% 
+
+            if (iFlags & MESSAGE_SYSTEM) {
+
+                bSystem = true;
+                %><strong><% Write (SYSTEM_MESSAGE_SENDER); %></strong><%
+
+            } else {
+
+                %><strong><% Write (pszSender); %></strong><%
+
+                // Find name in lists
+                bFound = false;
+                for (j = 0; j < iNumNames; j ++) {
+                    if (pstrNameList[j].Equals (pszSender)) {
+                        bFound = true;
+                        break;
+                    }
+                }
+                // Add name to list if not found
+                if (!bFound) {
+                    pstrNameList[iNumNames] = pszSender;
+                    iNumNames ++;
+                }
+            }
+
+            if (iFlags & MESSAGE_BROADCAST) {
+                %> (broadcast)<%
+                pszFontColor = m_vBroadcastMessageColor.GetCharPtr();
+            } else {
+                pszFontColor = m_vPrivateMessageColor.GetCharPtr();
+            }
+
+            %><br>Delete: <input type="checkbox" name="DelChBx<% Write (i); 
+            %>"></td></tr><tr><td><font size="<% Write (DEFAULT_MESSAGE_FONT_SIZE); 
+            %>" face="<% Write (DEFAULT_MESSAGE_FONT); %>" color="#<% Write (pszFontColor); %>"<%
+            %>><% 
+
+            WriteFormattedMessage (ppvMessage[piIndex[i]][SystemEmpireMessages::iText].GetCharPtr());
+            %></font></td></tr><tr><td>&nbsp;</td></tr><%
+        }
+
+        %></table><p>Delete messages:<p><% 
+
+        WriteButton (BID_ALL);
+        WriteButton (BID_SELECTION);
+
+        if (bSystem) {
+            WriteButton (BID_SYSTEM);
+        }
+        if (iNumNames > 0) {
+            WriteButton (BID_EMPIRE);
+            %><select name="SelectedEmpire"><%
+            for (j = 0; j < iNumNames; j ++) {
+                %><option value="<% Write (pstrNameList[j]); %>"><% Write (pstrNameList[j]); %></option><%
+            } %></select><%
+        }
     }
 
     }
@@ -3232,23 +3261,29 @@ case 3:
 
     Variant vValue;
 
-    unsigned int iThemeKey, iLivePlanetKey, iDeadPlanetKey, iColorKey, iHorzKey, iVertKey, iBackgroundKey, iSeparatorKey,
-        iButtonKey;
+    unsigned int iThemeKey, iLivePlanetKey, iDeadPlanetKey, iColorKey, iHorzKey, iVertKey, iBackgroundKey, iSeparatorKey, iButtonKey;
 
-    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue));
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
+    RETURN_ON_ERROR(iErrCode);
     iThemeKey = vValue.GetInteger();
 
     switch (iThemeKey) {
 
     case INDIVIDUAL_ELEMENTS:
 
-        EmpireCheck(GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey));
+        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        RETURN_ON_ERROR(iErrCode);
         
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue));
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue);
+        RETURN_ON_ERROR(iErrCode);
         iHorzKey = vValue.GetInteger();
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue));
+
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIVert, &vValue);
+        RETURN_ON_ERROR(iErrCode);
         iVertKey = vValue.GetInteger();
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
+
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+        RETURN_ON_ERROR(iErrCode);
         iColorKey = vValue.GetInteger();
 
         iBackgroundKey = m_iBackgroundKey;
@@ -3259,7 +3294,7 @@ case 3:
 
     case ALTERNATIVE_PATH:
 
-        EmpireCheck(GetDefaultUIKeys (
+        iErrCode = GetDefaultUIKeys (
             &iBackgroundKey,
             &iLivePlanetKey,
             &iDeadPlanetKey,
@@ -3268,14 +3303,13 @@ case 3:
             &iHorzKey,
             &iVertKey,
             &iColorKey
-            ));
+            );
+        RETURN_ON_ERROR(iErrCode);
 
         break;
 
     default:
-
-        iBackgroundKey = iSeparatorKey = iButtonKey = iLivePlanetKey = iDeadPlanetKey = iHorzKey = iVertKey = 
-            iColorKey = iThemeKey;
+        iBackgroundKey = iSeparatorKey = iButtonKey = iLivePlanetKey = iDeadPlanetKey = iHorzKey = iVertKey = iColorKey = iThemeKey;
         break;
     }
 
@@ -3283,65 +3317,71 @@ case 3:
 
     %><p>Choose your individual UI elements:<p><%
 
-    iErrCode = RenderThemeInfo (iBackgroundKey, iLivePlanetKey, 
-        iDeadPlanetKey, iSeparatorKey, iButtonKey, iHorzKey, iVertKey, iColorKey);
+    iErrCode = RenderThemeInfo (iBackgroundKey, iLivePlanetKey, iDeadPlanetKey, iSeparatorKey, iButtonKey, iHorzKey, iVertKey, iColorKey);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iErrCode != OK) {
-        %>Theme information could not be rendered. The error was <% Write (iErrCode); %><p><%
-    } else {
-
-        int iColorKey;
-        Variant vTextColor, vGoodColor, vBadColor, vPrivateColor, vBroadcastColor, vCustomTableColor;
+    Variant vTextColor, vGoodColor, vBadColor, vPrivateColor, vBroadcastColor, vCustomTableColor;
         
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &vTextColor));
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &vGoodColor));
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &vBadColor));
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &vPrivateColor));
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &vBroadcastColor));
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &vCustomTableColor));
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTextColor, &vTextColor);
+    RETURN_ON_ERROR(iErrCode);
 
-        EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue));
-        iColorKey = vValue.GetInteger();
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomGoodColor, &vGoodColor);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBadColor, &vBadColor);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomPrivateMessageColor, &vPrivateColor);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomBroadcastMessageColor, &vBroadcastColor);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::CustomTableColor, &vCustomTableColor);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+    RETURN_ON_ERROR(iErrCode);
+    iColorKey = vValue.GetInteger();
         
         
-        %><tr><td>Custom text colors</td><td>&nbsp;</td><%
-        %><td><%
+    %><tr><td>Custom text colors</td><td>&nbsp;</td><%
+    %><td><%
 
-        %>Text color:<br><input type="text" name="CustomTextColor" <%
-        %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
-        %>value="<% Write (vTextColor.GetCharPtr()); %>"><%
+    %>Text color:<br><input type="text" name="CustomTextColor" <%
+    %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
+    %>value="<% Write (vTextColor.GetCharPtr()); %>"><%
 
-        %><br>Good color:<br><input type="text" name="CustomGoodColor" <%
-        %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
-        %>value="<% Write (vGoodColor.GetCharPtr()); %>"><%
+    %><br>Good color:<br><input type="text" name="CustomGoodColor" <%
+    %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
+    %>value="<% Write (vGoodColor.GetCharPtr()); %>"><%
 
-        %><br>Bad color:<br><input type="text" name="CustomBadColor" <%
-        %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
-        %>value="<% Write (vBadColor.GetCharPtr()); %>"><%
+    %><br>Bad color:<br><input type="text" name="CustomBadColor" <%
+    %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
+    %>value="<% Write (vBadColor.GetCharPtr()); %>"><%
 
-        %><br>Message color:<br><input type="text" name="CustomMessageColor" <%
-        %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
-        %>value="<% Write (vPrivateColor.GetCharPtr()); %>"><%
+    %><br>Message color:<br><input type="text" name="CustomMessageColor" <%
+    %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
+    %>value="<% Write (vPrivateColor.GetCharPtr()); %>"><%
 
-        %><br>Broadcast color:<br><input type="text" name="CustomBroadcastColor" <%
-        %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
-        %>value="<% Write (vBroadcastColor.GetCharPtr()); %>"><%
+    %><br>Broadcast color:<br><input type="text" name="CustomBroadcastColor" <%
+    %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
+    %>value="<% Write (vBroadcastColor.GetCharPtr()); %>"><%
 
-        %><br>Table color:<br><input type="text" name="CustomTableColor" <%
-        %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
-        %>value="<% Write (vCustomTableColor.GetCharPtr()); %>"><%
+    %><br>Table color:<br><input type="text" name="CustomTableColor" <%
+    %>size="<% Write (MAX_COLOR_LENGTH); %>" maxlength="<% Write (MAX_COLOR_LENGTH); %>" <%
+    %>value="<% Write (vCustomTableColor.GetCharPtr()); %>"><%
 
-        %></td></tr><%
+    %></td></tr><%
 
-        %><tr><td>&nbsp;</td><td>&nbsp;</td><td bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" <%
-        %>align="center"><input<%
+    %><tr><td>&nbsp;</td><td>&nbsp;</td><td bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" <%
+    %>align="center"><input<%
 
-        if (iColorKey == CUSTOM_COLORS) {
-            %> checked<%
-        }
-        %> type="radio" name="Color" value="<% Write (CUSTOM_COLORS); %>"></td><%
-        %></tr><%
+    if (iColorKey == CUSTOM_COLORS) {
+        %> checked<%
     }
+    %> type="radio" name="Color" value="<% Write (CUSTOM_COLORS); %>"></td><%
+    %></tr><%
 
     %></table><p><% WriteButton (BID_CANCEL);
 
@@ -3356,8 +3396,8 @@ case 4:
     %><p>Enter a directory on your local disk or on a network where a full Almonaster theme can be found:<%
 
     Variant vPath;
-    
-    EmpireCheck(GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &vPath));
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &vPath);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><input type="text" name="GraphicsPath" size="50" <%
     %>maxlength="<% Write (MAX_GRAPHICS_ALTERNATIVE_PATH_LENGTH); %>" value="<% Write (vPath.GetCharPtr()); %>"><%
@@ -3379,25 +3419,26 @@ case 4:
     WriteButton (BID_CANCEL);
     WriteButton (BID_CHOOSE);
 
-    unsigned int* piThemeKey, iNumThemes;
-    Check(GetThemeKeys (&piThemeKey, &iNumThemes));
+    unsigned int* piThemeKey = NULL, iNumThemes;
+    AutoFreeKeys free_piThemeKey(piThemeKey);
+    iErrCode = GetThemeKeys (&piThemeKey, &iNumThemes);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iNumThemes == 0) {
+    if (iNumThemes == 0)
+    {
         %><p>There are no themes available for download<%
-    } else {
-
+    }
+    else
+    {
         %><p>You can download the following themes:<p><table><tr><td><ul><%
 
-        Variant* pvThemeData;
-        bool bElement;
+        for (i = 0; i < (int)iNumThemes; i ++)
+        {
+            Variant* pvThemeData = NULL;
+            AutoFreeData free_pvThemeData(pvThemeData);
 
-        int iOptions;
-
-        for (i = 0; i < (int)iNumThemes; i ++) {
-
-            if (GetThemeData (piThemeKey[i], &pvThemeData) != OK) {
-                continue;
-            }
+            iErrCode = GetThemeData (piThemeKey[i], &pvThemeData);
+            RETURN_ON_ERROR(iErrCode);
 
             %><li><a href="<%
 
@@ -3405,9 +3446,9 @@ case 4:
 
             %>"><% Write (pvThemeData[SystemThemes::iName].GetCharPtr()); %></a> (<%
 
-            iOptions = pvThemeData[SystemThemes::iOptions].GetInteger();
+            int iOptions = pvThemeData[SystemThemes::iOptions].GetInteger();
 
-            bElement = false;
+            bool bElement = false;
             if (iOptions & THEME_BACKGROUND) { bElement = true;
                 %>Background<%
             }
@@ -3455,13 +3496,9 @@ case 4:
             }
 
             %>)</li><%
-
-            t_pCache->FreeData (pvThemeData);
         }
 
         %></ul></td></tr></table><%
-
-        t_pCache->FreeKeys (piThemeKey);
 
         %><p>A complete theme has a Background, a Live Planet, a Dead Planet, a Separator, Buttons, <%
         %>a Horizontal Bar and a Vertical Bar</strong><p><%
@@ -3502,7 +3539,8 @@ case 7:
 
     %><input type="hidden" name="ProfileEditorPage" value="7"><%
 
-    DisplayThemeData (iInfoThemeKey);
+    iErrCode = DisplayThemeData(iInfoThemeKey);
+    RETURN_ON_ERROR(iErrCode);
 
     }
     break;
@@ -3535,11 +3573,11 @@ case 9:
 
     unsigned int iTournaments;
     Variant* pvTournamentKey = NULL;
+    AutoFreeData free_pvTournamentKey(pvTournamentKey);
 
     // List all joined tournaments
     iErrCode = GetJoinedTournaments (m_iEmpireKey, &pvTournamentKey, NULL, &iTournaments);
-    if (iErrCode != OK)
-        return iErrCode;
+    RETURN_ON_ERROR(iErrCode);
 
     if (iTournaments == 0)
     {
@@ -3548,15 +3586,14 @@ case 9:
     else
     {
         %><p>You are in <strong><% Write (iTournaments); %></strong> tournament<%
-        if (iTournaments != 1) {
+        if (iTournaments != 1)
+        {
             %>s<%
         }
         %>:</h3><%
 
         iErrCode = RenderTournaments(pvTournamentKey, iTournaments, false);
-        t_pCache->FreeData(pvTournamentKey);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
     }
 
     }

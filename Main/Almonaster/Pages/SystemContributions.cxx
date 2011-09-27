@@ -31,14 +31,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 WriteContributions();

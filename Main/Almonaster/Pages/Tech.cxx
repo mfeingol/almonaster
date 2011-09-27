@@ -52,11 +52,8 @@ if (m_bOwnPost && !m_bRedirection) {
         m_bRedirectTest = false;
 
         iErrCode = RegisterNewTechDevelopment (m_iGameClass, m_iGameNumber, m_iEmpireKey, iTechKey);
-        if (iErrCode == OK) {
-            AddMessage ("You have developed ");
-        } else {
-            AddMessage ("You could not develop ");
-        }
+        RETURN_ON_ERROR(iErrCode);
+        AddMessage ("You have developed ");
         AppendMessage (SHIP_TYPE_STRING[iTechKey]);
         AppendMessage (" technology");
     }
@@ -66,36 +63,42 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 if (!(m_iGameState & STARTED)) {
     %><p>You cannot develop new technologies before the game begins<%
 } else {
 
-    if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
-        WriteRatiosString (NULL);
+    if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS)
+    {
+        iErrCode = WriteRatiosString(NULL);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     int iTechDevs, iTechUndevs;
 
-    GameCheck(GetDevelopedTechs (
+    iErrCode = GetDevelopedTechs (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         &iTechDevs,
         &iTechUndevs
-        ));
+        );
+    RETURN_ON_ERROR(iErrCode);
 
     int iNumAvailableTechs;
-    GameCheck(GetNumAvailableTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumAvailableTechs));
+    iErrCode = GetNumAvailableTechs (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumAvailableTechs);
+    RETURN_ON_ERROR(iErrCode);
 
     int i, iNumDevKeys = 0, iNumUndevKeys = 0, piDevKey[NUM_SHIP_TYPES], piUndevKey[NUM_SHIP_TYPES];
 

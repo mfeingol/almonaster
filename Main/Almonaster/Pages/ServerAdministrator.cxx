@@ -31,7 +31,8 @@ if (!bInitialized)
 IHttpForm* pHttpForm;
 
 // Make sure that the unprivileged don't abuse this:
-if (m_iPrivilege < ADMINISTRATOR) {
+if (m_iPrivilege < ADMINISTRATOR)
+{
     AddMessage ("You are not authorized to view this page");
     return Redirect (LOGIN);
 }
@@ -60,7 +61,8 @@ if (m_bOwnPost && !m_bRedirection) {
             const char* pszNewValue, * pszOldValue;
 
             int iSystemOptions;
-            Check(GetSystemOptions (&iSystemOptions));
+            iErrCode = GetSystemOptions (&iSystemOptions);
+            RETURN_ON_ERROR(iErrCode);
 
             // Create alien
             if (WasButtonPressed (BID_CREATEALIENICON)) {
@@ -102,7 +104,7 @@ if (m_bOwnPost && !m_bRedirection) {
                                 switch (CreateAlienIcon (iNewValue, pszNewValue)) {
 
                                 case OK:
-                                    if (CopyNewAlien (pszFileName, iNewValue) != OK) {
+                                    if (CopyNewAlien (pszFileName, iNewValue)) {
                                         AddMessage ("The file was uploaded, but could not be copied");
                                     } else {
                                         AddMessage ("The alien icon was created successfully");
@@ -114,7 +116,7 @@ if (m_bOwnPost && !m_bRedirection) {
                                     break;
 
                                 default:
-                                    AddMessage ("An unknown error occurred creating the icon");
+                                    RETURN_ON_ERROR(iErrCode);
                                     break;
                                 }
                             }
@@ -153,7 +155,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         break;
 
                     default:
-                        AddMessage ("An unknown error occurred deleting the icon");
+                        RETURN_ON_ERROR(iErrCode);
                         break;
                     }
                 }
@@ -172,14 +174,9 @@ if (m_bOwnPost && !m_bRedirection) {
             {
                 if (VerifyCategoryName ("Server", pszNewValue, MAX_SERVER_NAME_LENGTH, true))
                 {
-                    if (SetSystemProperty (SystemData::ServerName, pszNewValue) == OK)
-                    {
-                        AddMessage ("The server name was updated");
-                    }
-                    else
-                    {
-                        AddMessage ("The server name could not be updated");
-                    }
+                    iErrCode = SetSystemProperty (SystemData::ServerName, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The server name was updated");
                 }
             }
 
@@ -197,12 +194,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (strlen (pszNewValue) > MAX_EMAIL_LENGTH) {
                     AddMessage ("The administrator e-mail address was too long");
                 } else {
-
-                    if (SetSystemProperty (SystemData::AdminEmail, pszNewValue) == OK) {
-                        AddMessage ("The administrator e-mail address was updated");
-                    } else {
-                        AddMessage ("The administrator e-mail address could not be updated");
-                    }
+                    iErrCode = SetSystemProperty(SystemData::AdminEmail, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
+                    AddMessage ("The administrator e-mail address was updated");
                 }
             }
 
@@ -215,18 +209,12 @@ if (m_bOwnPost && !m_bRedirection) {
             bOldValue = (iSystemOptions & DISABLE_PRIVILEGE_SCORE_ELEVATION) != 0;
 
             if (bNewValue != bOldValue) {
-                if (SetSystemOption (DISABLE_PRIVILEGE_SCORE_ELEVATION, bNewValue) == OK) {
-
-                    if (bNewValue) {
-                        AddMessage ("The Almonaster scoring system will no longer cause empire privilege changes");
-                    } else {
-                        AddMessage ("The Almonaster scoring system will now cause empire privilege changes");
-                    }
-
+                iErrCode = SetSystemOption(DISABLE_PRIVILEGE_SCORE_ELEVATION, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                if (bNewValue) {
+                    AddMessage ("The Almonaster scoring system will no longer cause empire privilege changes");
                 } else {
-
-                    AddMessage ("An error occurred setting the privilege change option: ");
-                    AppendMessage (iErrCode);
+                    AddMessage ("The Almonaster scoring system will now cause empire privilege changes");
                 }
             }
 
@@ -240,11 +228,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             fOldValue = pHttpForm->GetFloatValue();
             if (fNewValue != fOldValue) {
-                if (SetScoreForPrivilege (ADEPT, fNewValue) == OK) {
-                    AddMessage ("The score needed for adepthood was updated");
-                } else {
-                    AddMessage ("The score needed for adepthood could not be updated");
-                }
+                iErrCode = SetScoreForPrivilege(ADEPT, fNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The score needed for adepthood was updated");
             }
 
             // MaxNumSystemMessages
@@ -258,11 +244,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (SetSystemProperty (SystemData::MaxNumSystemMessages, iNewValue) == OK) {
-                    AddMessage ("The max number of saved system messages was updated");
-                } else {
-                    AddMessage ("The max number of saved system messages could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::MaxNumSystemMessages, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The max number of saved system messages was updated");
             }
 
             // MaxNumGameMessages
@@ -276,11 +260,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (SetSystemProperty (SystemData::MaxNumGameMessages, iNewValue) == OK) {
-                    AddMessage ("The max number of saved game messages was updated");
-                } else {
-                    AddMessage ("The max number of saved game messages could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::MaxNumGameMessages, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The max number of saved game messages was updated");
             }
 
             // DefaultMaxNumSystemMessages
@@ -294,11 +276,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (SetSystemProperty (SystemData::DefaultMaxNumSystemMessages, iNewValue) == OK) {
-                    AddMessage ("The default max number of saved system messages was updated");
-                } else {
-                    AddMessage ("The default max number of saved system messages could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::DefaultMaxNumSystemMessages, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default max number of saved system messages was updated");
             }
 
             // DefaultMaxNumGameMessages
@@ -312,11 +292,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
                 iNewValue = (iNewValue / 10) * 10;
-                if (SetSystemProperty (SystemData::DefaultMaxNumGameMessages, iNewValue) == OK) {
-                    AddMessage ("The default max number of saved game messages was updated");
-                } else {
-                    AddMessage ("The default max number of saved game messages could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::DefaultMaxNumGameMessages, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default max number of saved game messages was updated");
             }
 
             // MaxSizeIcons
@@ -329,11 +307,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (SetSystemProperty (SystemData::MaxIconSize, iNewValue) == OK) {
-                    AddMessage ("The max icon size was updated");
-                } else {
-                    AddMessage ("The max icon size could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::MaxIconSize, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The max icon size was updated");
             }
 
             // Logins enabled
@@ -349,11 +325,12 @@ if (m_bOwnPost && !m_bRedirection) {
 
             bFlag = (iSystemOptions & LOGINS_ENABLED) != 0;
 
-            if (bFlag != (iNewValue != 0)) {
+            if (bFlag != (iNewValue != 0))
+            {
                 bFlag = !bFlag;
 
-                Check(SetSystemOption (LOGINS_ENABLED, bFlag));
-
+                iErrCode = SetSystemOption (LOGINS_ENABLED, bFlag);
+                RETURN_ON_ERROR(iErrCode);
                 if (bFlag) {
                     AddMessage ("Empire logins are now enabled");
                 } else {
@@ -366,10 +343,20 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             pszValue = pHttpForm->GetValue();
 
-            if (GetSystemProperty (SystemData::LoginsDisabledReason, &vReason) == OK &&
-                String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                SetSystemProperty (SystemData::LoginsDisabledReason, pszValue) != OK) {
-                AddMessage ("The logins disabled reason was too long");
+            iErrCode = GetSystemProperty(SystemData::LoginsDisabledReason, &vReason);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (String::StrCmp(pszValue, vReason.GetCharPtr()) != 0)
+            {
+                if (strlen(pszValue) > MAX_REASON_LENGTH)
+                {
+                    AddMessage ("The logins disabled reason was too long");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::LoginsDisabledReason, pszValue);
+                    RETURN_ON_ERROR(iErrCode);
+                }
             }
 
             // New empire creation
@@ -382,8 +369,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check(SetSystemOption (NEW_EMPIRES_ENABLED, bFlag));
-
+                iErrCode = SetSystemOption (NEW_EMPIRES_ENABLED, bFlag);
+                RETURN_ON_ERROR(iErrCode);
                 if (bFlag) {
                     AddMessage ("New empire creation is now enabled");
                 } else {
@@ -395,10 +382,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszValue = pHttpForm->GetValue();
-            if (GetSystemProperty (SystemData::NewEmpiresDisabledReason, &vReason) == OK &&
-                String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                SetSystemProperty (SystemData::NewEmpiresDisabledReason, pszValue) != OK) {
-                AddMessage ("The new empire creation disabled reason was too long");
+
+            iErrCode = GetSystemProperty(SystemData::NewEmpiresDisabledReason, &vReason);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (String::StrCmp(pszValue, vReason.GetCharPtr()) != 0)
+            {
+                if (strlen(pszValue) > MAX_REASON_LENGTH)
+                {
+                    AddMessage ("The new empire creation disabled reason was too long");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::NewEmpiresDisabledReason, pszValue);
+                    RETURN_ON_ERROR(iErrCode);
+                }
             }
 
             // New empire creation
@@ -411,7 +409,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check(SetSystemOption (NEW_GAMES_ENABLED, bFlag));
+                iErrCode = SetSystemOption (NEW_GAMES_ENABLED, bFlag);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (bFlag) {
                     AddMessage ("New game creation is now enabled");
@@ -424,10 +423,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszValue = pHttpForm->GetValue();
-            if (GetSystemProperty (SystemData::NewGamesDisabledReason, &vReason) == OK &&
-                String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                SetSystemProperty (SystemData::NewGamesDisabledReason, pszValue) != OK) {
-                AddMessage ("The new game creation disabled reason was too long");
+            
+            iErrCode = GetSystemProperty(SystemData::NewGamesDisabledReason, &vReason);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (String::StrCmp(pszValue, vReason.GetCharPtr()) != 0)
+            {
+                if (strlen(pszValue) > MAX_REASON_LENGTH)
+                {
+                    AddMessage ("The new game creation disabled reason was too long");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::NewGamesDisabledReason, pszValue);
+                    RETURN_ON_ERROR(iErrCode);
+                }
             }
 
             // AccessEnabled
@@ -440,8 +450,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bFlag != (iNewValue != 0)) {
                 bFlag = !bFlag;
-                Check(SetSystemOption (ACCESS_ENABLED, bFlag));
-
+                iErrCode = SetSystemOption (ACCESS_ENABLED, bFlag);
+                RETURN_ON_ERROR(iErrCode);
                 if (bFlag) {
                     AddMessage ("Server access for non-administrators is now enabled");
                 } else {
@@ -453,10 +463,21 @@ if (m_bOwnPost && !m_bRedirection) {
                 goto Redirection;
             }
             pszValue = pHttpForm->GetValue();
-            if (GetSystemProperty (SystemData::AccessDisabledReason, &vReason) == OK &&
-                String::StrCmp (pszValue, vReason.GetCharPtr()) != 0 &&
-                SetSystemProperty (SystemData::AccessDisabledReason, pszValue) != OK) {
-                AddMessage ("The access disabled reason was too long");
+            
+            iErrCode = GetSystemProperty(SystemData::AccessDisabledReason, &vReason);
+            RETURN_ON_ERROR(iErrCode);
+            
+            if (String::StrCmp(pszValue, vReason.GetCharPtr()) != 0)
+            {
+                if (strlen(pszValue) > MAX_REASON_LENGTH)
+                {
+                    AddMessage ("The access disabled reason was too long");
+                }
+                else
+                {
+                    iErrCode = SetSystemProperty(SystemData::AccessDisabledReason, pszValue);
+                    RETURN_ON_ERROR(iErrCode);
+                }
             }
 
             // Number of nukes listed
@@ -469,11 +490,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (SetSystemProperty (SystemData::NumNukesListedInNukeHistories, iNewValue) == OK) {
-                    AddMessage ("The number of nukes listed in nuke histories was updated");
-                } else {
-                    AddMessage ("The number of nukes listed in nuke histories could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::NumNukesListedInNukeHistories, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The number of nukes listed in nuke histories was updated");
             }
 
             // Number of system nukes listed
@@ -486,11 +505,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (SetSystemProperty (SystemData::NumNukesListedInSystemNukeList, iNewValue) == OK) {
-                    AddMessage ("The number of nukes listed in the latest nukes screen was updated");
-                } else {
-                    AddMessage ("The number of nukes listed in the latest nukes screen could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::NumNukesListedInSystemNukeList, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The number of nukes listed in the latest nukes screen was updated");
             }
 
             // Number of games listed
@@ -503,11 +520,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (SetSystemProperty (SystemData::NumGamesInLatestGameList, iNewValue) == OK) {
-                    AddMessage ("The number of games listed in the latest games screen was updated");
-                } else {
-                    AddMessage ("The number of games listed in the latest games screen could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::NumGamesInLatestGameList, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The number of games listed in the latest games screen was updated");
             }
 
             // Updates down
@@ -520,11 +535,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
             if (iNewValue != iOldValue) {
-                if (SetSystemProperty (SystemData::NumUpdatesDownBeforeGameIsKilled, iNewValue) == OK) {
-                    AddMessage ("The number of updates down before a game will be killed was updated");
-                } else {
-                    AddMessage ("The number of updates down before a game will be killed was updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::NumUpdatesDownBeforeGameIsKilled, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The number of updates down before a game will be killed was updated");
             }
 
             // SecondsForLongtermStatus
@@ -547,11 +560,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iNewValue != iOldValue) {
-                if (SetSystemProperty (SystemData::SecondsForLongtermStatus, iNewValue) == OK) {
-                    AddMessage ("The update period for a game to be considered a longterm was updated");
-                } else {
-                    AddMessage ("The update period for a game to be considered a longterm could not be updated");
-                }
+                iErrCode = SetSystemProperty(SystemData::SecondsForLongtermStatus, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The update period for a game to be considered a longterm was updated");
             }
 
             // BridierTimeBombScanFrequency
@@ -574,11 +585,9 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iNewValue != iOldValue) {
-                if (SetBridierTimeBombScanFrequency (iNewValue) == OK) {
-                    AddMessage ("The Bridier idle index decrease scan frequency was updated");
-                } else {
-                    AddMessage ("The Bridier idle index decrease scan frequency could not be updated");
-                }
+                iErrCode = SetBridierTimeBombScanFrequency (iNewValue);
+                AddMessage ("The Bridier idle index decrease scan frequency was updated");
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Default ship names
@@ -598,23 +607,27 @@ if (m_bOwnPost && !m_bRedirection) {
                     pszNewValue = "";
                 }
 
-                if (!ShipOrFleetNameFilter (pszNewValue)) {
+                if (!ShipOrFleetNameFilter (pszNewValue))
+                {
                     AddMessage ("The new ship name for ");
                     AppendMessage (SHIP_TYPE_STRING[i]);
                     AppendMessage (" is illegal");
-                } else {
-
-                    Check(GetDefaultShipName (i, &vOldName));
-
-                    if (strcmp (pszNewValue, vOldName.GetCharPtr()) != 0) {
-                        if (SetDefaultShipName (i, pszNewValue) == OK) {
-                            iNumNames ++;
-                        }
+                }
+                else
+                {
+                    iErrCode = GetDefaultShipName (i, &vOldName);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (strcmp (pszNewValue, vOldName.GetCharPtr()) != 0)
+                    {
+                        iErrCode = SetDefaultShipName(i, pszNewValue);
+                        RETURN_ON_ERROR(iErrCode);
+                        iNumNames ++;
                     }
                 }
             }
 
-            switch (iNumNames) {
+            switch (iNumNames)
+            {
             case 0:
                 break;
             case 1:
@@ -630,14 +643,14 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iErrCode == OK ) {
                 AddMessage ("The text above the login form was updated");
             } else if (iErrCode != WARNING) {
-                AddMessage ("The text above the login form could not be updated");
+                RETURN_ON_ERROR(iErrCode);
             }
 
             iErrCode = TryUpdateIntroLower();
             if (iErrCode == OK) {
                 AddMessage ("The text below the login form was updated");
             } else if (iErrCode != WARNING) {
-                AddMessage ("The text below the login form could not be updated");
+                RETURN_ON_ERROR(iErrCode);
             }
 
             iErrCode = TryUpdateServerNews();
@@ -645,15 +658,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("The server news text was updated");
             }
             else if (iErrCode != WARNING) {
-                AddMessage ("The server news text could not be updated: ");
-                AppendMessage (iErrCode);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             iErrCode = TryUpdateContributors();
             if (iErrCode == OK) {
                 AddMessage ("The contributors text was updated");
             } else if (iErrCode != WARNING) {
-                AddMessage ("The contributors text could not be updated");
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Create empire?
@@ -731,6 +743,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 Variant vDefAlien;
                 iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vDefAlien);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (i != vDefAlien.GetInteger()) {
 
@@ -739,8 +752,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("The default alien icon was updated");
                         break;
                     default:
-                        AddMessage ("Error ");
-                        AppendMessage (iErrCode);
+                        RETURN_ON_ERROR(iErrCode);
                         break;
                     }
 
@@ -759,7 +771,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             unsigned int iBackground, iLivePlanet, iDeadPlanet, iButtons, iSeparator, iHorz, iVert, iColor;
 
-            Check(GetDefaultUIKeys (
+            iErrCode = GetDefaultUIKeys (
                 &iBackground,
                 &iLivePlanet,
                 &iDeadPlanet,
@@ -768,7 +780,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 &iHorz,
                 &iVert,
                 &iColor
-                ));
+                );
+            RETURN_ON_ERROR(iErrCode);
 
             // Background
             unsigned int iKey;
@@ -777,7 +790,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iBackground) {
-                Check(SetSystemProperty (SystemData::DefaultUIBackground, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUIBackground, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default background key was updated");
             }
 
@@ -787,7 +801,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iLivePlanet) {
-                Check(SetSystemProperty (SystemData::DefaultUILivePlanet, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUILivePlanet, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default live planet key was updated");
             }
 
@@ -797,7 +812,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iDeadPlanet) {
-                Check(SetSystemProperty (SystemData::DefaultUIDeadPlanet, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUIDeadPlanet, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default dead planet key was updated");
             }
 
@@ -807,7 +823,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iButtons) {
-                Check(SetSystemProperty (SystemData::DefaultUIButtons, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUIButtons, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default button key was updated");
             }
 
@@ -817,7 +834,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iSeparator) {
-                Check(SetSystemProperty (SystemData::DefaultUISeparator, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUISeparator, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default separator key was updated");
             }
 
@@ -827,7 +845,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iHorz) {
-                Check(SetSystemProperty (SystemData::DefaultUIHorz, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUIHorz, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default horizontal link bar was updated");
             }
 
@@ -837,7 +856,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iVert) {
-                Check(SetSystemProperty (SystemData::DefaultUIVert, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUIVert, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default vertical link bar was updated");
             }
 
@@ -847,7 +867,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iKey = pHttpForm->GetUIntValue();
             if (iKey != iColor) {
-                Check(SetSystemProperty (SystemData::DefaultUIColor, iKey));
+                iErrCode = SetSystemProperty (SystemData::DefaultUIColor, iKey);
+                RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The default color scheme was updated");
             }
 
@@ -917,18 +938,12 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
 
                     iErrCode = PurgeDatabase (m_iEmpireKey, iCriteria);
+                    RETURN_ON_ERROR(iErrCode);
 
-                    if (iErrCode == OK) {
-
-                        if (iCriteria & TEST_PURGE_ONLY) {
-                            AddMessage ("The database is being test purged");
-                        } else {
-                            AddMessage ("The database is being purged");
-                        }
-
+                    if (iCriteria & TEST_PURGE_ONLY) {
+                        AddMessage ("The database is being test purged");
                     } else {
-                        AddMessage ("An error occurred while requesting a purge: ");
-                        AppendMessage (iErrCode);
+                        AddMessage ("The database is being purged");
                     }
                 }
             }
@@ -946,6 +961,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 Variant vSysMsgAlien;
                 iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vSysMsgAlien);
+                RETURN_ON_ERROR(iErrCode);
 
                 if (i != vSysMsgAlien.GetInteger()) {
 
@@ -954,8 +970,7 @@ if (m_bOwnPost && !m_bRedirection) {
                         AddMessage ("The alien icon for system messages was updated");
                         break;
                     default:
-                        AddMessage ("Error ");
-                        AppendMessage (iErrCode);
+                        RETURN_ON_ERROR(iErrCode);
                         break;
                     }
 
@@ -1040,7 +1055,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 // Test empire existence
-                Check(LookupEmpireByName(pszStandardizedName, &iNewEmpireKey, NULL, NULL));
+                iErrCode = LookupEmpireByName(pszStandardizedName, &iNewEmpireKey, NULL, NULL);
+                RETURN_ON_ERROR(iErrCode);
                 if (iNewEmpireKey != NO_KEY)
                 {
                     AddMessage ("That empire already exists");
@@ -1060,31 +1076,25 @@ if (m_bOwnPost && !m_bRedirection) {
                 switch (iErrCode) {
 
                 case OK:
-
                     AddMessage ("The new empire was created");
                     break;
 
                 case ERROR_RESERVED_EMPIRE_NAME:
-
                     AddMessage ("The given empire name is reserved");
                     break;
 
                 case ERROR_EMPIRE_ALREADY_EXISTS:
-
                     AddMessage ("The given empire name is already in use");
                     break;
 
                 default:
-
-                    AddMessage ("An error occurred creating the empire: ");
-                    AppendMessage (iErrCode);
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
             }
             break;
 
         default:
-
             Assert(false);
             break;
         }
@@ -1096,14 +1106,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(iServerAdminPage == 0));
+iErrCode = OpenSystemPage(iServerAdminPage == 0);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 switch (iServerAdminPage) {
@@ -1117,15 +1129,11 @@ case 0:
     String strFilter;
     Variant vAuthorName;
 
-    IDatabase* pDatabase = NULL;
-    IDatabaseBackupEnumerator* pBackupEnumerator = NULL;
-
     Variant* pvServerData = NULL;
+    AutoFreeData free_pvServerData(pvServerData);
 
     iErrCode = t_pCache->ReadRow(SYSTEM_DATA, NO_KEY, &pvServerData);
-    if (iErrCode != OK) {
-        goto Cancel;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ServerAdminPage" value="0"><%
 
@@ -1150,7 +1158,8 @@ case 0:
 
     %><tr><td>Default alien icon:</td><td><%
 
-    Check(GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName));
+    iErrCode = GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName);
+    RETURN_ON_ERROR(iErrCode);
 
     WriteAlienButtonString (
         pvServerData[SystemData::iDefaultAlien], 
@@ -1166,7 +1175,7 @@ case 0:
         %><td width="75" height="75" bgcolor="#000000">&nbsp;</td><% 
     } else { 
         %><td><input type="image" border="0" width="75" height="75" src="<%
-        WriteBackgroundImageSrc (pvServerData[SystemData::iDefaultUIBackground].GetInteger());
+        WriteBackgroundImageSrc(pvServerData[SystemData::iDefaultUIBackground].GetInteger());
         %>" name="ChooseUI"></td><% 
     }
     %><td><% 
@@ -1238,10 +1247,11 @@ case 0:
 
     %><tr><td>Alien icon for system messages:</td><td><%
 
-    Check(GetAlienAuthorName (
+    iErrCode = GetAlienAuthorName (
         pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(), 
         &vAuthorName
-        ));
+        );
+    RETURN_ON_ERROR(iErrCode);
 
     WriteAlienButtonString (
         pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(),
@@ -1493,16 +1503,7 @@ case 0:
 
     %></table><p><%
 
-Cancel:
-
     WriteButton(BID_CANCEL);
-
-    if (pvServerData != NULL) {
-        t_pCache->FreeData (pvServerData);
-    }
-
-    SafeRelease(pBackupEnumerator);
-    SafeRelease(pDatabase);
 
     }
 
@@ -1513,12 +1514,16 @@ case 1:
 
     Variant vAlien;
 
-    Check(GetSystemProperty (SystemData::DefaultAlien, &vAlien));
+    iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vAlien);
+    RETURN_ON_ERROR(iErrCode);
     int iAlien = vAlien.GetInteger();
 
     unsigned int iNumAliens;
-    Variant** ppvAlienData;
-    Check(GetAlienKeys (&ppvAlienData, &iNumAliens));
+    Variant** ppvAlienData = NULL;
+    AutoFreeData free_ppvAlienData(ppvAlienData);
+
+    iErrCode = GetAlienKeys(&ppvAlienData, &iNumAliens);
+    RETURN_ON_ERROR(iErrCode);
     %><input type="hidden" name="ServerAdminPage" value="1"><%
 
     %><p><%
@@ -1538,10 +1543,6 @@ case 1:
             %> <%
     }
 
-    if (iNumAliens > 0) {
-        t_pCache->FreeData (ppvAlienData);
-    }
-
     %></td></tr></table><%
     %><p><% WriteButton (BID_CANCEL);
     }
@@ -1553,19 +1554,17 @@ case 2:
 
     int iB, iL, iD, iS, iT, iH, iV, iC;
 
-    ICachedTable* pSystemData;
-    Variant* pvData;
+    ICachedTable* pSystemData = NULL;
+    AutoRelease<ICachedTable> release_pSystemData(pSystemData);
 
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystemData);
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
+
+    Variant* pvData = NULL;
+    AutoFreeData free_pvData(pvData);
 
     iErrCode = pSystemData->ReadRow(&pvData);
-    if (iErrCode != OK) {
-        SafeRelease(pSystemData);
-        goto Cleanup;
-    }
+    RETURN_ON_ERROR(iErrCode);
 
     iB = pvData[SystemData::iDefaultUIBackground].GetInteger();
     iL = pvData[SystemData::iDefaultUILivePlanet].GetInteger();
@@ -1576,32 +1575,14 @@ case 2:
     iV = pvData[SystemData::iDefaultUIVert].GetInteger();
     iC = pvData[SystemData::iDefaultUIColor].GetInteger();
 
-    t_pCache->FreeData(pvData);
-    SafeRelease(pSystemData);
-
     %><input type="hidden" name="ServerAdminPage" value="2"><p>Choose the server's default UI elements:<p><%
 
-    iErrCode = RenderThemeInfo (
-        iB,
-        iL,
-        iD,
-        iS,
-        iT,
-        iH,
-        iV,
-        iC
-        );
+    iErrCode = RenderThemeInfo(iB, iL, iD, iS, iT, iH, iV, iC);
+    RETURN_ON_ERROR(iErrCode);
 
     %></table><p><%
 
-    if (iErrCode != OK) {
-        %>Error <% Write (iErrCode); %> occurred rendering theme info<p><%
-    }
-
     WriteButton (BID_CANCEL);
-
-Cleanup:
-    ;
 
     }
     break;
@@ -1611,7 +1592,8 @@ case 3:
 
     %><input type="hidden" name="ServerAdminPage" value="3"><%
 
-    DisplayThemeData (iInfoThemeKey);
+    iErrCode = DisplayThemeData (iInfoThemeKey);
+    RETURN_ON_ERROR(iErrCode);
 
     }
     break;
@@ -1624,7 +1606,9 @@ case 5:
     {
 
     unsigned int iNumEmpires;
-    Check(GetNumEmpiresOnServer (&iNumEmpires));
+    iErrCode = GetNumEmpiresOnServer (&iNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
+
     %><input type="hidden" name="ServerAdminPage" value="5"><%
 
     %><p>There <%
@@ -1686,17 +1670,22 @@ case 6:
     {
 
     Variant vAlien;
-    Check(GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien));
+    iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien);
+    RETURN_ON_ERROR(iErrCode);
     int iAlien = vAlien.GetInteger();
 
     unsigned int iNumAliens;
-    Variant** ppvAlienData;
-    Check(GetAlienKeys (&ppvAlienData, &iNumAliens));
+    Variant** ppvAlienData = NULL;
+    AutoFreeData free_ppvAlienData(ppvAlienData);
+
+    iErrCode = GetAlienKeys (&ppvAlienData, &iNumAliens);
+    RETURN_ON_ERROR(iErrCode);
+
     %><input type="hidden" name="ServerAdminPage" value="6"><%
 
     %><p><%
 
-    WriteIcon (iAlien, NO_KEY, NO_KEY, "The current alien icon for system messages", NULL, false);
+    WriteIcon(iAlien, NO_KEY, NO_KEY, "The current alien icon for system messages", NULL, false);
 
     %><p>Choose a new alien icon for system messages:<p><table width="75%"><tr><td><%
 
@@ -1711,10 +1700,6 @@ case 6:
             %> <%
     }
 
-    if (iNumAliens > 0) {
-        t_pCache->FreeData (ppvAlienData);
-    }
-
     %></td></tr></table><%
     %><p><% WriteButton (BID_CANCEL);
     }
@@ -1727,7 +1712,6 @@ case 7:
     %><input type="hidden" name="ServerAdminPage" value="7"><%
 
     %><p>Create a new empire:<%
-
     %><p><table width="60%"><%
 
     %><tr><%
@@ -1778,7 +1762,6 @@ case 7:
     break;
 
 default:
-
     Assert(false);
 }
 

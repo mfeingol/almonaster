@@ -155,8 +155,7 @@ if (iInChatroom == CHATROOM_OUT) {
     Assert(!bBroadcast || iInChatroom == CHATROOM_IN);
 
     // Get speaker list
-    iErrCode = pChatroom->GetSpeakers(&pcsSpeaker, &iNumSpeakers);
-    RETURN_ON_ERROR(iErrCode);
+    pChatroom->GetSpeakers(&pcsSpeaker, &iNumSpeakers);
 
     iErrCode = pChatroom->GetMessages(&pcmMessage, &iNumMessages);
     RETURN_ON_ERROR(iErrCode);

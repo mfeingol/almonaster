@@ -17,14 +17,19 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-if (InitializeEmpire(false) != OK)
+int iErrCode;
+
+bool bInitialized;
+iErrCode = InitializeEmpire(false, &bInitialized);
+RETURN_ON_ERROR(iErrCode);
+if (!bInitialized)
 {
     return Redirect(LOGIN);
 }
 
 IHttpForm* pHttpForm;
 
-int iErrCode, iTournamentPage = 0;
+int iTournamentPage = 0;
 
 if (m_iReserved != NO_KEY)
 {
@@ -70,56 +75,53 @@ if (m_bOwnPost && !m_bRedirection) {
         if (WasButtonPressed (BID_JOIN)) {
 
             iErrCode = InviteSelfIntoTournament (m_iTournamentKey, m_iEmpireKey);
-            if (iErrCode == OK) {
-                AddMessage ("A request to join the tournament was sent to the tournament owner");
-
-                // Figure out where to redirect next
-                unsigned int iTourneyOwner;
-                iErrCode = GetTournamentOwner (m_iTournamentKey, &iTourneyOwner);
-                if (iErrCode == OK) {
-                    
-                    if (iTourneyOwner == m_iEmpireKey) {
-                        return Redirect (PERSONAL_TOURNAMENTS);
-                    }
-                }
-
-            } else if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT) {
+            if (iErrCode == ERROR_EMPIRE_IS_ALREADY_IN_TOURNAMENT)
+            {
                 AddMessage ("You are already in the tournament");
-            } else if (iErrCode == ERROR_TOURNAMENT_DOES_NOT_EXIST) {
+            }
+            else if (iErrCode == ERROR_TOURNAMENT_DOES_NOT_EXIST)
+            {
                 AddMessage ("That tournament no longer exists");
-            } else {
-                AddMessage ("Error ");
-                AppendMessage (iErrCode);
-                AppendMessage (" occurred");
+            }
+            else
+            {
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("A request to join the tournament was sent to the tournament owner");
+            }
+
+            // Figure out where to redirect next
+            unsigned int iTourneyOwner;
+            iErrCode = GetTournamentOwner (m_iTournamentKey, &iTourneyOwner);
+            RETURN_ON_ERROR(iErrCode);
+                    
+            if (iTourneyOwner == m_iEmpireKey)
+            {
+                return Redirect(PERSONAL_TOURNAMENTS);
             }
 
             iTournamentPage = 1;
             m_bRedirectTest = false;
         }
 
-        if (WasButtonPressed (BID_QUIT)) {
-
+        if (WasButtonPressed (BID_QUIT))
+        {
             iErrCode = DeleteEmpireFromTournament (m_iTournamentKey, m_iEmpireKey);
-            if (iErrCode == OK) {
-                AddMessage ("Your empire was deleted from the tournament");
-
-                // Figure out where to redirect next
-                unsigned int iTourneyOwner;
-                iErrCode = GetTournamentOwner (m_iTournamentKey, &iTourneyOwner);
-                if (iErrCode == OK) {
-                    
-                    if (iTourneyOwner == m_iEmpireKey) {
-                        return Redirect (PERSONAL_TOURNAMENTS);
-                    }
-                }
-
-            } else if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT) {
+            if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_TOURNAMENT) {
                 AddMessage ("Your empire was no longer in the tournament");
             } else if (iErrCode == ERROR_EMPIRE_IS_IN_GAMES) {
                 AddMessage ("Your empire could not be deleted from the tournament because it is still in a tournament game");
             } else {
-                AddMessage ("Your empire could not be deleted from the tournament. The error was ");
-                AppendMessage (iErrCode);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("Your empire was deleted from the tournament");
+
+                // Figure out where to redirect next
+                unsigned int iTourneyOwner;
+                iErrCode = GetTournamentOwner(m_iTournamentKey, &iTourneyOwner);
+                RETURN_ON_ERROR(iErrCode);
+                    
+                if (iTourneyOwner == m_iEmpireKey) {
+                    return Redirect(PERSONAL_TOURNAMENTS);
+                }
             }
 
             iTournamentPage = 1;
@@ -138,45 +140,48 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
-unsigned int* pm_iTournamentKey = NULL, iTournaments = 0;
+unsigned int* piTournamentKey = NULL, iTournaments = 0;
+AutoFreeKeys free_piTournamentKey(piTournamentKey);
 
-switch (iTournamentPage) {
-
+switch (iTournamentPage)
+{
 case 0:
 
     %><input type="hidden" name="TournamentsPage" value="0"><%
 
     // List all system tournaments
-    iErrCode = GetOwnedTournaments (SYSTEM, &pm_iTournamentKey, NULL, &iTournaments);
-    if (iErrCode == OK)
+    iErrCode = GetOwnedTournaments (SYSTEM, &piTournamentKey, NULL, &iTournaments);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iTournaments == 0)
     {
-        if (iTournaments == 0)
-        {
-            %><p><h3>There are no system tournaments</h3><%
-        }
-        else
-        {
-            %><p>There <% Write (iTournaments == 1 ? "is" : "are"); %> <strong><%
-            Write (iTournaments); %></strong> system tournament<%
+        %><p><h3>There are no system tournaments</h3><%
+    }
+    else
+    {
+        %><p>There <% Write (iTournaments == 1 ? "is" : "are"); %> <strong><%
+        Write (iTournaments); %></strong> system tournament<%
 
-            if (iTournaments != 1)
-            {
-                %>s<%
-            }
-            %>:</h3><%
-
-            iErrCode = RenderTournaments (pm_iTournamentKey, iTournaments, true);
+        if (iTournaments != 1)
+        {
+            %>s<%
         }
+        %>:</h3><%
+
+        iErrCode = RenderTournaments(piTournamentKey, iTournaments, true);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     break;
@@ -187,23 +192,13 @@ case 1:
     %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
     iErrCode = RenderTournamentDetailed (m_iTournamentKey);
+    RETURN_ON_ERROR(iErrCode);
 
     break;
 
 default:
-
     Assert(false);
     break;
-}
-
-
-// Cleanup
-
-if (iErrCode != OK)
-    return iErrCode;
-
-if (pm_iTournamentKey != NULL) {
-    t_pCache->FreeKeys (pm_iTournamentKey);
 }
 
 iErrCode = CloseSystemPage();

@@ -42,7 +42,7 @@ if (m_bOwnPost && !m_bRedirection) {
     const char* pszStart;
 
     GameOptions goOptions;
-    InitGameOptions (&goOptions);
+    InitGameOptions(&goOptions);
 
     if ((pHttpForm = m_pHttpRequest->GetForm ("SystemGameListPage")) == NULL) {
         goto Redirection;
@@ -74,11 +74,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
             }
 
-            iErrCode = GetDefaultGameOptions (iGameClassKey, &goOptions);
-            if (iErrCode != OK) {
-                AddMessage ("Could not read default game options");
-                goto Redirection;
-            }
+            iErrCode = GetDefaultGameOptions(iGameClassKey, &goOptions);
+            RETURN_ON_ERROR(iErrCode);
 
             goto CreateGame;
         }
@@ -106,10 +103,12 @@ if (m_bOwnPost && !m_bRedirection) {
                 iSystemGameListPage = 1;
                 break;
             }
-            RETURN_ON_ERROR(iErrCode);
+            else
+            {
+                RETURN_ON_ERROR(iErrCode);
+            }
 
         CreateGame:
-            {
 
             // Test for entry into gameclass
             int iGameNumber;
@@ -127,14 +126,9 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Create the game
             iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
-
             ClearGameOptions (&goOptions);
-
             HANDLE_CREATE_GAME_OUTPUT (iErrCode);
-            }
-
         }
-
         break;
 
     case 2:
@@ -146,16 +140,14 @@ if (m_bOwnPost && !m_bRedirection) {
             int iGameClassKey, iGameNumber;
             bool bGameCreated;
 
-            iErrCode = ProcessCreateDynamicGameClassForms (
-                m_iEmpireKey,
-                &iGameClassKey,
-                &iGameNumber,
-                &bGameCreated
-                );
-
-            if (bGameCreated) {
-                HANDLE_CREATE_GAME_OUTPUT (iErrCode);
-            } else {
+            iErrCode = ProcessCreateDynamicGameClassForms(m_iEmpireKey, &iGameClassKey, &iGameNumber, &bGameCreated);
+            RETURN_ON_ERROR(iErrCode);
+            if (bGameCreated)
+            {
+                HANDLE_CREATE_GAME_OUTPUT(iErrCode);
+            }
+            else
+            {
                 iSystemGameListPage = 2;
             }
         }
@@ -164,7 +156,6 @@ if (m_bOwnPost && !m_bRedirection) {
         break;
 
     default:
-
         Assert(false);
         break;
     }
@@ -175,14 +166,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 switch (iSystemGameListPage) {
@@ -193,17 +186,21 @@ case 0:
     %><input type="hidden" name="SystemGameListPage" value="0"><%
 
     unsigned int iNumGameClasses, * piGameClassKey = NULL;
-    Check(GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses));
-
     Algorithm::AutoDelete<unsigned int> autoDelete (piGameClassKey, true);
+
+    iErrCode = GetStartableSystemGameClassKeys (&piGameClassKey, &iNumGameClasses);
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumGameClasses == 0) {
         %><h3>There are no system game classes on this server</h3><%
     } else {
 
         // Get superclass list
-        unsigned int* piSuperClassKey, iNumSuperClasses = 0;
-        Check(GetSuperClassKeys (&piSuperClassKey, &iNumSuperClasses));
+        unsigned int* piSuperClassKey = NULL, iNumSuperClasses = 0;
+        AutoFreeKeys free_piSuperClassKey(piSuperClassKey);
+
+        iErrCode = GetSuperClassKeys(&piSuperClassKey, &iNumSuperClasses);
+        RETURN_ON_ERROR(iErrCode);
 
         bool bDraw = false;
         int** ppiTable = NULL;
@@ -240,24 +237,23 @@ case 0:
             {
                 unsigned int iSuperClassKey;
                 iErrCode = GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    for (j = 0; j < iNumSuperClasses; j ++) {
-                        if (piSuperClassKey[j] == iSuperClassKey) {
-                            ppiTable [j][ppiTable[j][iNumGameClasses]] = piGameClassKey[i];
-                            ppiTable [j][iNumGameClasses] ++;
-                            bDraw = true;
-                            break;
-                        }
+                for (j = 0; j < iNumSuperClasses; j ++) {
+                    if (piSuperClassKey[j] == iSuperClassKey) {
+                        ppiTable [j][ppiTable[j][iNumGameClasses]] = piGameClassKey[i];
+                        ppiTable [j][iNumGameClasses] ++;
+                        bDraw = true;
+                        break;
                     }
+                }
 
-                    if (j == iNumSuperClasses) {
-                        // No superclass was found, so something went wrong
-                        AddMessage ("Error: GameClass ");
-                        AppendMessage (piGameClassKey[i]);
-                        AppendMessage (" does not have a SuperClass");
-                        Redirect (m_pgPageId);
-                    }
+                if (j == iNumSuperClasses) {
+                    // No superclass was found, so something went wrong
+                    AddMessage ("Error: GameClass ");
+                    AppendMessage (piGameClassKey[i]);
+                    AppendMessage (" does not have a SuperClass");
+                    Redirect (m_pgPageId);
                 }
             }
         }
@@ -270,44 +266,35 @@ case 0:
                 %><h3>Start a new game:</h3><%
             }
 
-            Variant* pvGameClassInfo = NULL, vName;
-            int iGameClass;
-
-            for (i = 0; i < iNumSuperClasses; i ++) {
-
-                if (ppiTable [i][iNumGameClasses] > 0 &&
-                    GetSuperClassName (piSuperClassKey[i], &vName) == OK) {
+            for (i = 0; i < iNumSuperClasses; i ++)
+            {
+                if (ppiTable [i][iNumGameClasses] > 0)
+                {
+                    Variant vName;
+                    iErrCode = GetSuperClassName(piSuperClassKey[i], &vName);
+                    RETURN_ON_ERROR(iErrCode);
 
                     %><p><h3><% Write (vName.GetCharPtr()); %>:</h3><%
 
                     WriteSystemGameListHeader (m_vTableColor.GetCharPtr());
 
-                    for (j = 0; j < (unsigned int)ppiTable[i][iNumGameClasses]; j ++) {
+                    for (j = 0; j < (unsigned int)ppiTable[i][iNumGameClasses]; j ++)
+                    {
+                        int iGameClass = ppiTable[i][j];
 
-                        iGameClass = ppiTable[i][j];
+                        Variant* pvGameClassInfo = NULL;
+                        AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
                         // Read game class data
-                        if (GetGameClassData (iGameClass, &pvGameClassInfo) == OK) {
+                        iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                        RETURN_ON_ERROR(iErrCode);
 
-                            // Best effort
-                            iErrCode = WriteSystemGameListData (
-                                iGameClass,
-                                pvGameClassInfo
-                                );
-                        }
-                        if (pvGameClassInfo != NULL) {
-                            t_pCache->FreeData (pvGameClassInfo);
-                            pvGameClassInfo = NULL;
-                        }
+                        iErrCode = WriteSystemGameListData(iGameClass, pvGameClassInfo);
+                        RETURN_ON_ERROR(iErrCode);
                     }
                     %></table><%
                 } 
             }
-        }
-
-        // Clean up
-        if (iNumSuperClasses > 0) {
-            t_pCache->FreeKeys (piSuperClassKey);
         }
     }
 
@@ -319,8 +306,11 @@ case 1:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check(GetGameClassName (iGameClassKey, pszGameClassName));
-    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
+    iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetNextGameNumber (iGameClassKey, &iGameNumber);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="SystemGameListPage" value="1"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
@@ -331,7 +321,8 @@ case 1:
 
     %></h3><p><%
 
-    Check(RenderGameConfiguration (iGameClassKey, NO_KEY));
+    iErrCode = RenderGameConfiguration (iGameClassKey, NO_KEY);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><%
 
@@ -351,13 +342,14 @@ case 2:
     %>Choose the characteristics of your new personal game:<%
     %></td></tr></table><%
 
-    iErrCode = WriteCreateGameClassString (m_iEmpireKey, NO_KEY, true);
+    iErrCode = WriteCreateGameClassString(m_iEmpireKey, NO_KEY, true);
     RETURN_ON_ERROR(iErrCode);
 
     %><p><%
     %><h3>Advanced Game Configuration</h3><%
 
-    Check(RenderGameConfiguration(NO_KEY, NO_KEY));
+    iErrCode = RenderGameConfiguration(NO_KEY, NO_KEY);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><%
 
@@ -368,7 +360,6 @@ case 2:
     break;
 
 default:
-
     Assert(false);
     break;
 }

@@ -42,8 +42,8 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
     PageId pageRedirect = OPTIONS;
 
-    if (WasButtonPressed (BID_CANCEL)) {
-
+    if (WasButtonPressed (BID_CANCEL))
+    {
         // Cancelled - redirect to options
         return Redirect (OPTIONS);
     }
@@ -55,40 +55,38 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
         } else {
 
             // Resign
-            iErrCode = ResignEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey);
-            if (iErrCode != OK) {
-                AddMessage ("You could not resign from the game; the error was ");
-                AppendMessage (iErrCode);
-            } else {
+            iErrCode = ResignEmpireFromGame(m_iGameClass, m_iGameNumber, m_iEmpireKey);
+            RETURN_ON_ERROR(iErrCode);
 
-                pageRedirect = ACTIVE_GAME_LIST;
-                AddMessage ("You resigned from ");
-                AppendMessage (m_pszGameClassName);
-                AppendMessage (" ");
-                AppendMessage (m_iGameNumber);
+            pageRedirect = ACTIVE_GAME_LIST;
+            AddMessage ("You resigned from ");
+            AppendMessage (m_pszGameClassName);
+            AppendMessage (" ");
+            AppendMessage (m_iGameNumber);
 
-                // Add to report
-                char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
-                sprintf(pszReport, "%s resigned from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
-                global.GetReport()->WriteReport (pszReport);
+            // Add to report
+            char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
+            sprintf(pszReport, "%s resigned from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
+            global.GetReport()->WriteReport (pszReport);
 
-                // Make sure we still exist after quitting
-                bool bFlag;
-                iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
-                if (iErrCode != OK || !bFlag) {
-                    pageRedirect = LOGIN;
-                    AddMessage ("The empire ");
-                    AppendMessage (m_vEmpireName.GetCharPtr());
-                    AppendMessage ("has been deleted");
-                }
+            // Make sure we still exist after quitting
+            bool bFlag;
+            iErrCode = DoesEmpireExist(m_iEmpireKey, &bFlag, NULL);
+            RETURN_ON_ERROR(iErrCode);
+            if (!bFlag)
+            {
+                pageRedirect = LOGIN;
+                AddMessage ("The empire ");
+                AppendMessage (m_vEmpireName.GetCharPtr());
+                AppendMessage ("has been deleted");
             }
 
-            // Check game for updates - redirect will handle error
-            bool bFlag;
+            // Check game for updates
             iErrCode = CheckGameForUpdates (m_iGameClass, m_iGameNumber, true, &bFlag);
+            RETURN_ON_ERROR(iErrCode);
         }
 
-        return Redirect (pageRedirect);
+        return Redirect(pageRedirect);
     }
 
     else if (WasButtonPressed (BID_QUIT)) {
@@ -100,7 +98,9 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
         else
         {
             // Quit
-            GameCheck(CacheAllGameTables(m_iGameClass, m_iGameNumber));
+            iErrCode = CacheAllGameTables(m_iGameClass, m_iGameNumber);
+            RETURN_ON_ERROR(iErrCode);
+
             iErrCode = QuitEmpireFromGame(m_iGameClass, m_iGameNumber, m_iEmpireKey);
             switch (iErrCode)
             {
@@ -125,7 +125,8 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
                 // Make sure we still exist after quitting
                 bool bFlag;
-                GameCheck(DoesEmpireExist(m_iEmpireKey, &bFlag, NULL));
+                iErrCode = DoesEmpireExist(m_iEmpireKey, &bFlag, NULL);
+                RETURN_ON_ERROR(iErrCode);
                 if (!bFlag)
                 {
                     pageRedirect = LOGIN;
@@ -136,7 +137,8 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
                 return Redirect(ACTIVE_GAME_LIST);
 
             default:
-                return iErrCode;
+                RETURN_ON_ERROR(iErrCode);
+                break;
             }
         }
     }
@@ -148,14 +150,16 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
         int iOptions;
         iErrCode = GetGameClassOptions (m_iGameClass, &iOptions);
-        if (iErrCode != OK || !(iOptions & USE_SC30_SURRENDERS)) {
-
+        RETURN_ON_ERROR(iErrCode);
+        if (!(iOptions & USE_SC30_SURRENDERS))
+        {
             // See if two empires are left - otherwise, we've been lied to
             unsigned int iNumEmpires;
             iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
-            if (iErrCode != OK || iNumEmpires != 2)
+            RETURN_ON_ERROR(iErrCode);
+            if (iNumEmpires != 2)
             {
-                return Redirect (OPTIONS);
+                return Redirect(OPTIONS);
             }
 
             sType = NORMAL_SURRENDER;
@@ -167,27 +171,24 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
             // Surrender
             iErrCode = SurrenderEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, sType);
-            if (iErrCode != OK) {
-                AddMessage ("You could not surrender from the game; the error was ");
-                AppendMessage (iErrCode);
-            } else {
+            RETURN_ON_ERROR(iErrCode);
 
-                pageRedirect = ACTIVE_GAME_LIST;
-                AddMessage ("You surrendered from ");
-                AppendMessage (m_pszGameClassName);
-                AppendMessage (" ");
-                AppendMessage (m_iGameNumber);
+            pageRedirect = ACTIVE_GAME_LIST;
+            AddMessage ("You surrendered from ");
+            AppendMessage (m_pszGameClassName);
+            AppendMessage (" ");
+            AppendMessage (m_iGameNumber);
 
-                // Make sure we still exist after surrendering
-                bool bFlag;
-                iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
-
-                if (iErrCode != OK || !bFlag) {
-                    pageRedirect = LOGIN;
-                    AddMessage ("The empire ");
-                    AppendMessage (m_vEmpireName.GetCharPtr());
-                    AppendMessage (" has been deleted");
-                }
+            // Make sure we still exist after surrendering
+            bool bFlag;
+            iErrCode = DoesEmpireExist (m_iEmpireKey, &bFlag, NULL);
+            RETURN_ON_ERROR(iErrCode);
+            if (!bFlag)
+            {
+                pageRedirect = LOGIN;
+                AddMessage ("The empire ");
+                AppendMessage (m_vEmpireName.GetCharPtr());
+                AppendMessage (" has been deleted");
             }
         }
 
@@ -207,14 +208,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page starts here
 

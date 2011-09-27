@@ -42,7 +42,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_ACCEPT)) {
 
-            EmpireCheck(SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true));
+            iErrCode = SetEmpireOption2 (m_iEmpireKey, EMPIRE_ACCEPTED_TOS, true);
+            RETURN_ON_ERROR(iErrCode);
             m_iSystemOptions2 |= EMPIRE_ACCEPTED_TOS;
 
             AddMessage ("You accepted the Terms of Service");
@@ -68,8 +69,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (WasButtonPressed (BID_TOS_DECLINE)) {
             
-            // Best effort
-            DeleteEmpire (m_iEmpireKey, NULL, true, false);
+            iErrCode = DeleteEmpire(m_iEmpireKey, NULL, true, false);
+            RETURN_ON_ERROR(iErrCode);
             return Redirect (LOGIN);
         }
 
@@ -85,14 +86,16 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 %><input type="hidden" name="TosPage" value="<% Write (iTosPage); %>"><%
 
@@ -100,12 +103,10 @@ Check(OpenSystemPage(false));
 switch (iTosPage) {
 
 case 0:
-
     WriteTOS();
     break;
 
 case 1:
-
     WriteConfirmTOSDecline();
     break;
 }

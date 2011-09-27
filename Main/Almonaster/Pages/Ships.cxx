@@ -43,17 +43,17 @@ bool bMapGenerated = (m_iGameState & GAME_MAP_GENERATED) != 0;
 if (m_bOwnPost && !m_bRedirection) {
 
     // Make sure the game has started and cancel wasn't pressed
-    if (bMapGenerated && !WasButtonPressed (BID_CANCEL)) {
-
+    if (bMapGenerated && !WasButtonPressed (BID_CANCEL))
+    {
         iErrCode = HandleShipMenuSubmissions();
-        if (iErrCode != OK) {
-            AddMessage ("Error handling ship menu submissions");
-        }
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // Handle cancel all builds
-    if (WasButtonPressed (BID_CANCELALLBUILDS)) {
-        GameCheck(CancelAllBuilds (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+    if (WasButtonPressed (BID_CANCELALLBUILDS))
+    {
+        iErrCode = CancelAllBuilds(m_iGameClass, m_iGameNumber, m_iEmpireKey);
+        RETURN_ON_ERROR(iErrCode);
         m_bRedirectTest = false;
     }
 }
@@ -62,17 +62,20 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 int iGameClassOptions;
-GameCheck(GetGameClassOptions (m_iGameClass, &iGameClassOptions));
+iErrCode = GetGameClassOptions(m_iGameClass, &iGameClassOptions);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 if (!bMapGenerated) {
@@ -91,7 +94,8 @@ if (!bMapGenerated) {
     if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
 
         RatioInformation ratInfo;
-        GameCheck(WriteRatiosString (&ratInfo));
+        iErrCode = WriteRatiosString (&ratInfo);
+        RETURN_ON_ERROR(iErrCode);
 
         iBR = ratInfo.iBR;
         fMaintRatio = ratInfo.fMaintRatio;
@@ -99,9 +103,14 @@ if (!bMapGenerated) {
 
     } else {
 
-        GameCheck(GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR));
-        GameCheck(GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio));
-        GameCheck(GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio));
+        iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetEmpireMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fMaintRatio);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetEmpireNextMaintenanceRatio (m_iGameClass, m_iGameNumber, m_iEmpireKey, &fNextMaintRatio);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // Render ships

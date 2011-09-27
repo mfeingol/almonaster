@@ -71,27 +71,24 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
-
-                        if (iErrCode == OK) {
-                            if (bFlag) {
-                                AddMessage ("The GameClass was deleted");
-                            } else {
-                                AddMessage ("The GameClass has been marked for deletion");
-                            }
-                        }
-                        else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                            AddMessage ("The GameClass no longer exists");
-                        }
-                        else {
-                            AddMessage ("The gameclass could not be deleted; the error was ");
-                            AppendMessage (iErrCode);
+                    iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
+                    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                    {
+                        AddMessage ("The GameClass no longer exists");
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                        if (bFlag) {
+                            AddMessage ("The GameClass was deleted");
+                        } else {
+                            AddMessage ("The GameClass has been marked for deletion");
                         }
                     }
                 }
@@ -113,27 +110,22 @@ if (m_bOwnPost && !m_bRedirection) {
                         ) {
 
                         iErrCode = UndeleteGameClass (iGameClassKey);
-                        switch (iErrCode) {
-
+                        switch (iErrCode)
+                        {
                         case OK:
-
                             AddMessage ("The GameClass was undeleted");
                             break;
 
                         case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
                             AddMessage ("The GameClass no longer exists");
                             break;
 
                         case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
-
                             AddMessage ("The GameClass was not marked for deletion");
                             break;
 
                         default:
-
-                            AddMessage ("The gameclass could not be undeleted; the error was ");
-                            AppendMessage (iErrCode);
+                            RETURN_ON_ERROR(iErrCode);
                             break;
                         }
                     }
@@ -150,24 +142,21 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = HaltGameClass (iGameClassKey);
-
-                        if (iErrCode == OK) {
-                            AddMessage ("The GameClass was halted");
-                        }
-                        else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                            AddMessage ("The GameClass no longer exists");
-                        }
-                        else {
-                            AddMessage ("The gameclass could not be halted; the error was ");
-                            AppendMessage (iErrCode);
-                        }
+                    iErrCode = HaltGameClass (iGameClassKey);
+                    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                    {
+                        AddMessage ("The GameClass no longer exists");
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                        AddMessage ("The GameClass was halted");
                     }
                 }
 
@@ -182,36 +171,30 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = UnhaltGameClass (iGameClassKey);
-                        switch (iErrCode) {
+                    iErrCode = UnhaltGameClass (iGameClassKey);
+                    switch (iErrCode) {
 
-                        case OK:
+                    case OK:
+                        AddMessage ("The GameClass was unhalted");
+                        break;
 
-                            AddMessage ("The GameClass was unhalted");
-                            break;
+                    case ERROR_GAMECLASS_DOES_NOT_EXIST:
+                        AddMessage ("The GameClass no longer exists");
+                        break;
 
-                        case ERROR_GAMECLASS_DOES_NOT_EXIST:
+                    case ERROR_GAMECLASS_NOT_HALTED:
+                        AddMessage ("The GameClass was not halted");
+                        break;
 
-                            AddMessage ("The GameClass no longer exists");
-                            break;
-
-                        case ERROR_GAMECLASS_NOT_HALTED:
-
-                            AddMessage ("The GameClass was not halted");
-                            break;
-
-                        default:
-
-                            AddMessage ("The gameclass could not be unhalted; the error was ");
-                            AppendMessage (iErrCode);
-                            break;
-                        }
+                    default:
+                        RETURN_ON_ERROR(iErrCode);
+                        break;
                     }
                 }
 
@@ -237,23 +220,18 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 GameOptions goOptions;
                 iErrCode = GetDefaultGameOptions (iGameClassKey, &goOptions);
-                if (iErrCode != OK) {
-
-                    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                        AddMessage ("That gameclass no longer exists");
-                    } else {
-                        AddMessage ("Could not read default game options; the error was ");
-                        AppendMessage (iErrCode);
-                    }
+                if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                {
+                    AddMessage ("That gameclass no longer exists");
                     goto Redirection;
                 }
+                RETURN_ON_ERROR(iErrCode);
 
                 goOptions.iNumEmpires = 1;
                 goOptions.piEmpireKey = &m_iEmpireKey;
 
                 // Create the game
                 iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
-
                 HANDLE_CREATE_GAME_OUTPUT (iErrCode);
             }
 
@@ -294,27 +272,23 @@ if (m_bOwnPost && !m_bRedirection) {
                 iGameClassKey = pHttpForm->GetUIntValue();
 
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
-
-                        if (iErrCode == OK) {
-                            if (bFlag) {
-                                AddMessage ("The GameClass was deleted");
-                            } else {
-                                AddMessage ("The GameClass has been marked for deletion");
-                            }
-                        }
-                        else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                            AddMessage ("The GameClass no longer exists");
-                        }
-                        else {
-                            AddMessage ("The gameclass could not be deleted; the error was ");
-                            AppendMessage (iErrCode);
+                    iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
+                    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
+                        AddMessage ("The GameClass no longer exists");
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                        if (bFlag) {
+                            AddMessage ("The GameClass was deleted");
+                        } else {
+                            AddMessage ("The GameClass has been marked for deletion");
                         }
                     }
                 }
@@ -348,17 +322,14 @@ if (m_bOwnPost && !m_bRedirection) {
                 goOptions.piEmpireKey = &m_iEmpireKey;
 
                 // Create the game
-                iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
-
-                ClearGameOptions (&goOptions);
-
-                HANDLE_CREATE_GAME_OUTPUT (iErrCode);
+                iErrCode = CreateGame(iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
+                ClearGameOptions(&goOptions);
+                HANDLE_CREATE_GAME_OUTPUT(iErrCode);
             }
 
             break;
 
         default:
-
             Assert(false);
             break;
         }
@@ -370,24 +341,27 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 switch (iPersonalGameClassesPage) {
 
 case 0:
-
     {
-
     unsigned int iNumGameClasses, * piGameClassKey = NULL;
+    AutoFreeKeys free_piGameClassKey(piGameClassKey);
+
     int* piOptions;
     Variant* pvName = NULL, vMaxNumPGC;
+    AutoFreeData free_pvName(pvName);
 
     unsigned int iNumHalted = 0, iNumUnhalted = 0, iNumMarkedForDeletion = 0;
 
@@ -400,21 +374,24 @@ case 0:
         %> to create personal GameClasses</h3><%
 
         float fScore;
-        if (GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fScore) == OK) {
+        iErrCode = GetScoreForPrivilege (PRIVILEGE_FOR_PERSONAL_GAMECLASSES, &fScore);
+        RETURN_ON_ERROR(iErrCode);
 
-            %><p>(To reach <strong><%
-            Write (PRIVILEGE_STRING [PRIVILEGE_FOR_PERSONAL_GAMECLASSES]);
-            %></strong> status, you need an <em>Almonaster</em> score of <strong><%
-            Write (fScore);
-            %></strong>)<%
-        }
+        %><p>(To reach <strong><%
+        Write (PRIVILEGE_STRING [PRIVILEGE_FOR_PERSONAL_GAMECLASSES]);
+        %></strong> status, you need an <em>Almonaster</em> score of <strong><%
+        Write (fScore);
+        %></strong>)<%
     }
 
-    Check(GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vMaxNumPGC));
-    Check(GetEmpirePersonalGameClasses (m_iEmpireKey, &piGameClassKey, &pvName, &iNumGameClasses));
+    iErrCode = GetSystemProperty (SystemData::MaxNumPersonalGameClasses, &vMaxNumPGC);
+    RETURN_ON_ERROR(iErrCode);
 
-    if (iNumGameClasses == 0) {
+    iErrCode = GetEmpirePersonalGameClasses (m_iEmpireKey, &piGameClassKey, &pvName, &iNumGameClasses);
+    RETURN_ON_ERROR(iErrCode);
 
+    if (iNumGameClasses == 0)
+    {
         if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES) {
 
             %><p>You have <strong>0</strong> personal GameClasses<%
@@ -445,19 +422,16 @@ case 0:
         for (i = 0; i < iNumGameClasses; i ++) {
 
             iErrCode = GetGameClassOptions (piGameClassKey[i], piOptions + i);
-            if (iErrCode != OK) {
-                piOptions[i] = 0;
+            RETURN_ON_ERROR(iErrCode);
+
+            if (piOptions[i] & GAMECLASS_HALTED) {
+                iNumHalted ++;
             } else {
+                iNumUnhalted ++;
+            }
 
-                if (piOptions[i] & GAMECLASS_HALTED) {
-                    iNumHalted ++;
-                } else {
-                    iNumUnhalted ++;
-                }
-
-                if (piOptions[i] & GAMECLASS_MARKED_FOR_DELETION) {
-                    iNumMarkedForDeletion ++;
-                }
+            if (piOptions[i] & GAMECLASS_MARKED_FOR_DELETION) {
+                iNumMarkedForDeletion ++;
             }
         }
 
@@ -571,31 +545,21 @@ case 0:
 
         %><p><h3>Start a new game:</h3><%
 
-        Variant* pvGameClassInfo = NULL;
-
         WriteSystemGameListHeader (m_vTableColor.GetCharPtr());
-        for (i = 0; i < iNumGameClasses; i ++) {
+        for (i = 0; i < iNumGameClasses; i ++)
+        {
+            Variant* pvGameClassInfo = NULL;
+            AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
             // Read game class data
-            if (GetGameClassData (piGameClassKey[i], &pvGameClassInfo) == OK) {
+            iErrCode = GetGameClassData (piGameClassKey[i], &pvGameClassInfo);
+            RETURN_ON_ERROR(iErrCode);
 
-                // Best effort
-                iErrCode = WriteSystemGameListData (
-                    piGameClassKey[i], 
-                    pvGameClassInfo
-                    );
-            }
-
-            if (pvGameClassInfo != NULL) {
-                t_pCache->FreeData (pvGameClassInfo);
-                pvGameClassInfo = NULL;
-            }
+            iErrCode = WriteSystemGameListData(piGameClassKey[i], pvGameClassInfo);
+            RETURN_ON_ERROR(iErrCode);
         }
 
         %></table><%
-
-        t_pCache->FreeKeys (piGameClassKey);
-        t_pCache->FreeData (pvName);
     }
 
     }
@@ -605,8 +569,11 @@ case 1:
 
     int iGameNumber;
 
-    Check(GetGameClassName (iGameClassKey, pszGameClassName));
-    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
+    iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetNextGameNumber (iGameClassKey, &iGameNumber);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="PersonalGameClassesPage" value="1"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
@@ -617,7 +584,8 @@ case 1:
 
     %></h3><p><%
 
-    Check(RenderGameConfiguration(iGameClassKey, NO_KEY));
+    iErrCode = RenderGameConfiguration(iGameClassKey, NO_KEY);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><%
 
@@ -645,7 +613,8 @@ case 3:
     %><input type="hidden" name="PersonalGameClassesPage" value="3"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
 
-    Check(GetGameClassName (iGameClassKey, pszGameClassName));
+    iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p>Are you sure you want to delete <strong><% Write (pszGameClassName); %></strong>?<%
 
@@ -657,7 +626,6 @@ case 3:
     break;
 
 default:
-
     Assert(false);
     break;
 }

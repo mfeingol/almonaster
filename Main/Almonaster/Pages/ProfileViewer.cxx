@@ -33,6 +33,7 @@ IHttpForm* pHttpForm;
 
 int iProfileViewerPage = 0;
 unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
+AutoFreeKeys free_piSearchEmpireKey(piSearchEmpireKey);
 
 RangeSearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
 RangeSearchDefinition sd;
@@ -64,10 +65,9 @@ if (m_bOwnPost && !m_bRedirection) {
         case 0:
             {
 
-            if (WasButtonPressed (BID_SEARCH)) {
-
+            if (WasButtonPressed (BID_SEARCH))
+            {
 SearchResults:
-
                 iErrCode = HandleSearchSubmission (
                     sd,
                     ppszFormName,
@@ -78,16 +78,15 @@ SearchResults:
                     &iLastKey
                     );
 
-                switch (iErrCode) {
-
+                switch (iErrCode)
+                {
                 case OK:
                 case ERROR_TOO_MANY_HITS:
 
-                    if (iNumSearchEmpires > 0) {
-
+                    if (iNumSearchEmpires > 0)
+                    {
                         if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
                             iTargetEmpireKey = piSearchEmpireKey[0];
-                            t_pCache->FreeKeys (piSearchEmpireKey);
                             iProfileViewerPage = 2;
                         } else {
                             iProfileViewerPage = 1;
@@ -98,27 +97,15 @@ SearchResults:
                     // Fall through if 0 empires
 
                 case ERROR_DATA_NOT_FOUND:
-
                     AddMessage ("No empires matched your search criteria");
                     break;
 
-                case ERROR_INVALID_ARGUMENT:
-
-                    // A form was missing
-                    goto Redirection;
-
                 case ERROR_INVALID_QUERY:
-
                     AddMessage ("You submitted an invalid query");
                     goto Redirection;
 
                 default:
-
-                    {
-                    char pszMessage [64];
-                    sprintf(pszMessage, "Error %i occurred", iErrCode);
-                    AddMessage (pszMessage);
-                    }
+                    RETURN_ON_ERROR(iErrCode);
                     break;
                 }
             }
@@ -180,36 +167,33 @@ SearchResults:
                 if (pszMessage != NULL && pszTargetEmpire != NULL)
                 {
                     iErrCode = CacheEmpireAndMessages(iTargetEmpireKey);
-                    if (iErrCode != OK)
-                        return iErrCode;
+                    RETURN_ON_ERROR(iErrCode);
 
                     iErrCode = SendSystemMessage(iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                     switch (iErrCode) {
 
                     case OK:
-                        Check(GetEmpireName (iTargetEmpireKey, &vSentName));
-                        AddMessage ("Your message was sent to ");
-                        AppendMessage (vSentName.GetCharPtr());
+                        iErrCode = GetEmpireName(iTargetEmpireKey, &vSentName);
+                        RETURN_ON_ERROR(iErrCode);
+                        AddMessage("Your message was sent to ");
+                        AppendMessage(vSentName.GetCharPtr());
                         break;
 
                     case ERROR_CANNOT_SEND_MESSAGE:
-
-                        AddMessage ("You are not allowed to send system messages");
+                        AddMessage("You are not allowed to send system messages");
                         break;
 
                     case ERROR_EMPIRE_DOES_NOT_EXIST:
-
-                        AddMessage ("That empire no longer exists");
+                        AddMessage("That empire no longer exists");
                         break;
 
                     default:
-                        AddMessage ("Your message could not be sent due to error ");
-                        AppendMessage (iErrCode);
-                        return iErrCode;
+                        RETURN_ON_ERROR(iErrCode);
+                        break;
                     }
-
-                } else {
-
+                }
+                else
+                {
                     AddMessage ("Your message was blank");
                 }
 
@@ -255,8 +239,13 @@ SearchResults:
                     unsigned int iSwitch = pHttpForm->GetIntValue();
 
                     bool bAuth;
-                    Check(CheckAssociation(m_iEmpireKey, iSwitch, &bAuth));
-                    if (bAuth)
+                    iErrCode = CheckAssociation(m_iEmpireKey, iSwitch, &bAuth);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (!bAuth)
+                    {
+                        AddMessage("Access denied");
+                    }
+                    else
                     {
                         m_iReserved = 0;
                         m_i64SecretKey = 0;
@@ -264,7 +253,8 @@ SearchResults:
                         m_vEmpireName = (const char*)NULL;
                         m_iEmpireKey = iSwitch;
 
-                        Check(CacheEmpire(iSwitch));
+                        iErrCode = CacheEmpire(iSwitch);
+                        RETURN_ON_ERROR(iErrCode);
 
                         bool bLoggedIn;
                         iErrCode = HtmlLoginEmpire(&bLoggedIn);
@@ -282,10 +272,6 @@ SearchResults:
                         }
 
                         AddMessage("Login failed");
-                    }
-                    else
-                    {
-                        AddMessage("Access denied");
                     }
                 }
                 break;
@@ -320,18 +306,14 @@ SearchResults:
                 }
 
                 iErrCode = GetDefaultGameOptions (iGameClassKey, &goOptions);
-                if (iErrCode != OK) {
-                    AddMessage ("Could not read default game options");
-                    goto Redirection;
-                }
+                RETURN_ON_ERROR(iErrCode);
 
                 goOptions.iNumEmpires = 1;
                 goOptions.piEmpireKey = &m_iEmpireKey;
 
                 // Create the game
                 iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
-
-                HANDLE_CREATE_GAME_OUTPUT (iErrCode);
+                HANDLE_CREATE_GAME_OUTPUT(iErrCode);
             }
 
             // Test for gameclass deletions and undeletions
@@ -343,27 +325,24 @@ SearchResults:
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = DeleteGameClass (iGameClassKey, &bFlag);
-
-                        if (iErrCode == OK) {
-                            if (bFlag) {
-                                AddMessage ("The GameClass was deleted");
-                            } else {
-                                AddMessage ("The GameClass has been marked for deletion");
-                            }
-                        }
-                        else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                            AddMessage ("The GameClass no longer exists");
-                        }
-                        else {
-                            AddMessage ("An error occurred deleting the gameclass: ");
-                            AppendMessage (iErrCode);
+                    iErrCode = DeleteGameClass(iGameClassKey, &bFlag);
+                    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                    {
+                        AddMessage ("The GameClass no longer exists");
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                        if (bFlag) {
+                            AddMessage ("The GameClass was deleted");
+                        } else {
+                            AddMessage ("The GameClass has been marked for deletion");
                         }
                     }
                 }
@@ -375,36 +354,30 @@ SearchResults:
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = UndeleteGameClass (iGameClassKey);
-                        switch (iErrCode) {
+                    iErrCode = UndeleteGameClass (iGameClassKey);
+                    switch (iErrCode)
+                    {
+                    case OK:
+                        AddMessage ("The GameClass was undeleted");
+                        break;
 
-                        case OK:
+                    case ERROR_GAMECLASS_DOES_NOT_EXIST:
+                        AddMessage ("The GameClass no longer exists");
+                        break;
 
-                            AddMessage ("The GameClass was undeleted");
-                            break;
+                    case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
+                        AddMessage ("The GameClass was not marked for deletion");
+                        break;
 
-                        case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
-                            AddMessage ("The GameClass no longer exists");
-                            break;
-
-                        case ERROR_GAMECLASS_NOT_MARKED_FOR_DELETION:
-
-                            AddMessage ("The GameClass was not marked for deletion");
-                            break;
-
-                        default:
-
-                            AddMessage ("An error occurred undeleting the gameclass: ");
-                            AppendMessage (iErrCode);
-                            break;
-                        }
+                    default:
+                        RETURN_ON_ERROR(iErrCode);
+                        break;
                     }
                 }
 
@@ -417,24 +390,21 @@ SearchResults:
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = HaltGameClass (iGameClassKey);
-
-                        if (iErrCode == OK) {
-                            AddMessage ("The GameClass was halted");
-                        }
-                        else if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST) {
-                            AddMessage ("The GameClass no longer exists");
-                        }
-                        else {
-                            AddMessage ("An error occurred halting the gameclass: ");
-                            AppendMessage (iErrCode);
-                        }
+                    iErrCode = HaltGameClass (iGameClassKey);
+                    if (iErrCode == ERROR_GAMECLASS_DOES_NOT_EXIST)
+                    {
+                        AddMessage ("The GameClass no longer exists");
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                        AddMessage ("The GameClass was halted");
                     }
                 }
 
@@ -447,36 +417,30 @@ SearchResults:
 
                 unsigned int iOwnerKey;
                 iErrCode = GetGameClassOwner (iGameClassKey, &iOwnerKey);
-                if (iErrCode == OK) {
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (m_iEmpireKey == iOwnerKey ||
-                        (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
-                        ) {
+                if (m_iEmpireKey == iOwnerKey ||
+                    (m_iPrivilege == ADMINISTRATOR && (iOwnerKey != global.GetRootKey() || m_iEmpireKey == global.GetRootKey()))
+                    ) {
 
-                        iErrCode = UnhaltGameClass (iGameClassKey);
-                        switch (iErrCode) {
+                    iErrCode = UnhaltGameClass (iGameClassKey);
+                    switch (iErrCode)
+                    {
+                    case OK:
+                        AddMessage ("The GameClass was unhalted");
+                        break;
 
-                        case OK:
+                    case ERROR_GAMECLASS_DOES_NOT_EXIST:
+                        AddMessage ("The GameClass no longer exists");
+                        break;
 
-                            AddMessage ("The GameClass was unhalted");
-                            break;
+                    case ERROR_GAMECLASS_NOT_HALTED:
+                        AddMessage ("The GameClass was not halted");
+                        break;
 
-                        case ERROR_GAMECLASS_DOES_NOT_EXIST:
-
-                            AddMessage ("The GameClass no longer exists");
-                            break;
-
-                        case ERROR_GAMECLASS_NOT_HALTED:
-
-                            AddMessage ("The GameClass was not halted");
-                            break;
-
-                        default:
-
-                            AddMessage ("An error occurred unhalting the gameclass: ");
-                            AppendMessage (iErrCode);
-                            break;
-                        }
+                    default:
+                        RETURN_ON_ERROR(iErrCode);
+                        break;
                     }
                 }
 
@@ -523,11 +487,9 @@ SearchResults:
                 goOptions.piEmpireKey = &m_iEmpireKey;
 
                 // Create the game
-                iErrCode = CreateGame (iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
-
-                ClearGameOptions (&goOptions);
-
-                HANDLE_CREATE_GAME_OUTPUT (iErrCode);
+                iErrCode = CreateGame(iGameClassKey, m_iEmpireKey, goOptions, &iGameNumber);
+                ClearGameOptions(&goOptions);
+                HANDLE_CREATE_GAME_OUTPUT(iErrCode);
             }
 
             break;
@@ -535,7 +497,6 @@ SearchResults:
         case 7:
             {
             const char* pszStart = NULL;
-
             if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("ViewTourneyInfo")) != NULL && 
                 (pszStart = pHttpForm->GetName()) != NULL &&
                 sscanf (pszStart, "ViewTourneyInfo%d", &m_iReserved) == 1) {
@@ -547,23 +508,26 @@ SearchResults:
 
         default:
             Assert(false);
+            break;
         }
     }
-} 
+}
 
 Redirection:
 if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 switch (iProfileViewerPage) {
@@ -585,8 +549,6 @@ case 1:
         iLastKey
         );
 
-    t_pCache->FreeKeys (piSearchEmpireKey);
-
     RETURN_ON_ERROR(iErrCode);
     }
 
@@ -598,7 +560,8 @@ case 0:
     %><input type="hidden" name="ProfileViewerPage" value="0"><%
 
     bool bShowAdvanced = m_iPrivilege >= PRIVILEGE_FOR_ADVANCED_SEARCH;
-    if (bShowAdvanced) {
+    if (bShowAdvanced)
+    {
         bShowAdvanced = (m_iSystemOptions & SHOW_ADVANCED_SEARCH_INTERFACE) != 0;
     }
 
@@ -613,7 +576,8 @@ case 2:
     {
 
     %><input type="hidden" name="ProfileViewerPage" value="2"><%
-    Check(WriteProfile(m_iEmpireKey, iTargetEmpireKey, false, true, true)); 
+    iErrCode = WriteProfile(m_iEmpireKey, iTargetEmpireKey, false, true, true);
+    RETURN_ON_ERROR(iErrCode);
     %><p><%
 
     }
@@ -638,7 +602,8 @@ case 5:
     %><input type="hidden" name="ProfileViewerPage" value="5"><%
 
     Assert(iTargetEmpireKey != NO_KEY);
-    WriteNukeHistory (iTargetEmpireKey);
+    iErrCode = WriteNukeHistory (iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     }
 
@@ -649,8 +614,11 @@ case 6:
     int iGameNumber;
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-    Check(GetGameClassName (iGameClassKey, pszGameClassName));
-    Check(GetNextGameNumber (iGameClassKey, &iGameNumber));
+    iErrCode = GetGameClassName (iGameClassKey, pszGameClassName);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetNextGameNumber (iGameClassKey, &iGameNumber);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ProfileViewerPage" value="6"><%
     %><input type="hidden" name="GameClassKey" value="<% Write (iGameClassKey); %>"><%
@@ -661,7 +629,8 @@ case 6:
 
     %></h3><p><%
 
-    Check(RenderGameConfiguration (iGameClassKey, NO_KEY));
+    iErrCode = RenderGameConfiguration (iGameClassKey, NO_KEY);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p><%
 
@@ -675,7 +644,8 @@ case 7:
     %><input type="hidden" name="ProfileViewerPage" value="7"><%
 
     Assert(iTargetEmpireKey != NO_KEY);
-    Check(WritePersonalTournaments(iTargetEmpireKey));
+    iErrCode = WritePersonalTournaments(iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
 
     break;
 

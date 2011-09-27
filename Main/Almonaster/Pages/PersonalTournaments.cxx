@@ -29,6 +29,7 @@ if (!bInitialized)
 }
 
 m_bRedirectTest = false;  // No warning
-Render_TournamentManager(m_iEmpireKey);
+iErrCode = Render_TournamentManager(m_iEmpireKey);
+RETURN_ON_ERROR(iErrCode);
 
 %>

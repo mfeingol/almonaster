@@ -47,12 +47,17 @@ Variant vTemp;
 
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
-GameCheck(GetGameClassOptions (m_iGameClass, &iGameClassOptions));
-GameCheck(GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires));
-GameCheck(GetGameClassDiplomacyLevel (m_iGameClass, &iDiplomacy));
+iErrCode = GetGameClassOptions (m_iGameClass, &iGameClassOptions);
+RETURN_ON_ERROR(iErrCode);
 
-if (m_bOwnPost && !m_bRedirection) {
+iErrCode = GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpires);
+RETURN_ON_ERROR(iErrCode);
 
+iErrCode = GetGameClassDiplomacyLevel (m_iGameClass, &iDiplomacy);
+RETURN_ON_ERROR(iErrCode);
+
+if (m_bOwnPost && !m_bRedirection)
+{
     // Handle submissions
     if ((pHttpForm = m_pHttpRequest->GetForm ("OptionPage")) == NULL) {
         goto Redirection;
@@ -85,17 +90,15 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 bUpdate = iNewValue != 0;
 
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, AUTO_REFRESH, bUpdate) == OK) {
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, AUTO_REFRESH, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (bUpdate) {
-                        m_iGameOptions |= AUTO_REFRESH;
-                        AddMessage ("Refresh on update countdown is now enabled");
-                    } else {
-                        m_iGameOptions &= ~AUTO_REFRESH;
-                        AddMessage ("Refresh on update countdown is now disabled");
-                    }
+                if (bUpdate) {
+                    m_iGameOptions |= AUTO_REFRESH;
+                    AddMessage ("Refresh on update countdown is now enabled");
                 } else {
-                    AddMessage ("Your autorefresh setting could not be updated");
+                    m_iGameOptions &= ~AUTO_REFRESH;
+                    AddMessage ("Refresh on update countdown is now disabled");
                 }
             }
 
@@ -113,19 +116,17 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_REPEATED_BUTTONS, bUpdate) == OK) {
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_REPEATED_BUTTONS, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
+                
+                m_bRepeatedButtons = bUpdate;
 
-                    m_bRepeatedButtons = bUpdate;
-
-                    if (bUpdate) {
-                        m_iGameOptions |= GAME_REPEATED_BUTTONS;
-                        AddMessage ("Your command buttons are now repeated");
-                    } else {
-                        m_iGameOptions &= ~GAME_REPEATED_BUTTONS;
-                        AddMessage ("Your command buttons are no longer repeated");
-                    }
+                if (bUpdate) {
+                    m_iGameOptions |= GAME_REPEATED_BUTTONS;
+                    AddMessage ("Your command buttons are now repeated");
                 } else {
-                    AddMessage ("Your command buttons setting could not be updated");
+                    m_iGameOptions &= ~GAME_REPEATED_BUTTONS;
+                    AddMessage ("Your command buttons are no longer repeated");
                 }
             }
 
@@ -143,19 +144,17 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_DISPLAY_TIME, bUpdate) == OK) {
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, GAME_DISPLAY_TIME, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
+                
+                m_bTimeDisplay = bUpdate;
 
-                    m_bTimeDisplay = bUpdate;
-
-                    if (bUpdate) {
-                        m_iGameOptions |= GAME_DISPLAY_TIME;
-                        AddMessage ("Server time display is now enabled");
-                    } else {
-                        m_iGameOptions &= ~GAME_DISPLAY_TIME;
-                        AddMessage ("Server time display is no longer enabled");
-                    }
+                if (bUpdate) {
+                    m_iGameOptions |= GAME_DISPLAY_TIME;
+                    AddMessage ("Server time display is now enabled");
                 } else {
-                    AddMessage ("Your server time display setting could not be updated");
+                    m_iGameOptions &= ~GAME_DISPLAY_TIME;
+                    AddMessage ("Server time display is no longer enabled");
                 }
             }
 
@@ -173,17 +172,15 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, bUpdate) == OK) {
-
-                    if (bUpdate) {
-                        m_iGameOptions |= DISPLACE_ENDTURN_BUTTON;
-                        AddMessage ("The End Turn button is now displaced");
-                    } else {
-                        m_iGameOptions &= ~DISPLACE_ENDTURN_BUTTON;
-                        AddMessage ("The End Turn button is no longer displaced");
-                    }
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, DISPLACE_ENDTURN_BUTTON, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bUpdate) {
+                    m_iGameOptions |= DISPLACE_ENDTURN_BUTTON;
+                    AddMessage ("The End Turn button is now displaced");
                 } else {
-                    AddMessage ("The End Turn button displacement setting could not be updated");
+                    m_iGameOptions &= ~DISPLACE_ENDTURN_BUTTON;
+                    AddMessage ("The End Turn button is no longer displaced");
                 }
             }
 
@@ -201,17 +198,15 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, COUNTDOWN, bUpdate) == OK) {
-
-                    if (bUpdate) {
-                        m_iGameOptions |= COUNTDOWN;
-                        AddMessage ("Update countdown is now enabled");
-                    } else {
-                        m_iGameOptions &= ~COUNTDOWN;
-                        AddMessage ("Update countdown is now disabled");
-                    }
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, COUNTDOWN, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bUpdate) {
+                    m_iGameOptions |= COUNTDOWN;
+                    AddMessage ("Update countdown is now enabled");
                 } else {
-                    AddMessage ("Your update countdown setting could not be updated");
+                    m_iGameOptions &= ~COUNTDOWN;
+                    AddMessage ("Update countdown is now disabled");
                 }
             }
 
@@ -228,17 +223,15 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iOldValue != iNewValue) {
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, MAP_COLORING, bUpdate) == OK) {
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, MAP_COLORING, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (bUpdate) {
-                        m_iGameOptions |= MAP_COLORING;
-                        AddMessage ("Map coloring by diplomatic status is now enabled");
-                    } else {
-                        m_iGameOptions &= ~MAP_COLORING;
-                        AddMessage ("Map coloring by diplomatic status is now disabled");
-                    }
+                if (bUpdate) {
+                    m_iGameOptions |= MAP_COLORING;
+                    AddMessage ("Map coloring by diplomatic status is now enabled");
                 } else {
-                    AddMessage ("Your map coloring setting could not be updated");
+                    m_iGameOptions &= ~MAP_COLORING;
+                    AddMessage ("Map coloring by diplomatic status is now disabled");
                 }
             }
 
@@ -256,17 +249,15 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_COLORING, bUpdate) == OK) {
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_COLORING, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
 
-                    if (bUpdate) {
-                        m_iGameOptions |= SHIP_MAP_COLORING;
-                        AddMessage ("Ship coloring by diplomatic status is now enabled");
-                    } else {
-                        m_iGameOptions &= ~SHIP_MAP_COLORING;
-                        AddMessage ("Ship coloring by diplomatic status is now disabled");
-                    }
+                if (bUpdate) {
+                    m_iGameOptions |= SHIP_MAP_COLORING;
+                    AddMessage ("Ship coloring by diplomatic status is now enabled");
                 } else {
-                    AddMessage ("Your ship coloring setting could not be updated");
+                    m_iGameOptions &= ~SHIP_MAP_COLORING;
+                    AddMessage ("Ship coloring by diplomatic status is now disabled");
                 }
             }
 
@@ -284,17 +275,15 @@ if (m_bOwnPost && !m_bRedirection) {
             if (iOldValue != iNewValue) {
 
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, bUpdate) == OK) {
-
-                    if (bUpdate) {
-                        m_iGameOptions |= SHIP_MAP_HIGHLIGHTING;
-                        AddMessage ("Ship highlighting on the map screen is now enabled");
-                    } else {
-                        m_iGameOptions &= ~SHIP_MAP_HIGHLIGHTING;
-                        AddMessage ("Ship highlighting on the map screen is now disabled");
-                    }
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIP_MAP_HIGHLIGHTING, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bUpdate) {
+                    m_iGameOptions |= SHIP_MAP_HIGHLIGHTING;
+                    AddMessage ("Ship highlighting on the map screen is now enabled");
                 } else {
-                    AddMessage ("Your ship highlighting setting could not be updated");
+                    m_iGameOptions &= ~SHIP_MAP_HIGHLIGHTING;
+                    AddMessage ("Ship highlighting on the map screen is now disabled");
                 }
             }
 
@@ -311,17 +300,15 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (iOldValue != iNewValue) {
                 bUpdate = iNewValue != 0;
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SENSITIVE_MAPS, bUpdate) == OK) {
-
-                    if (bUpdate) {
-                        m_iGameOptions |= SENSITIVE_MAPS;
-                        AddMessage ("Sensitive maps are now enabled");
-                    } else {
-                        m_iGameOptions &= ~SENSITIVE_MAPS;
-                        AddMessage ("Sensitive maps are now disabled");
-                    }
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, SENSITIVE_MAPS, bUpdate);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (bUpdate) {
+                    m_iGameOptions |= SENSITIVE_MAPS;
+                    AddMessage ("Sensitive maps are now enabled");
                 } else {
-                    AddMessage ("Your sensitive maps setting could not be updated");
+                    m_iGameOptions &= ~SENSITIVE_MAPS;
+                    AddMessage ("Sensitive maps are now disabled");
                 }
             }
 
@@ -332,19 +319,17 @@ if (m_bOwnPost && !m_bRedirection) {
             iNewValue = pHttpForm->GetIntValue();
 
             bFlag = (m_iGameOptions & PARTIAL_MAPS) != 0;
-            if (bFlag != (iNewValue != 0)) {
-
-                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, PARTIAL_MAPS, !bFlag)) == OK) {
-                    if (!bFlag) {
-                        m_iGameOptions |= PARTIAL_MAPS;
-                        AddMessage ("Partial maps are now enabled");
-                    } else {
-                        m_iGameOptions &= ~PARTIAL_MAPS;
-                        AddMessage ("Partial maps are now disabled");
-                    }
+            if (bFlag != (iNewValue != 0))
+            {
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, PARTIAL_MAPS, !bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (!bFlag) {
+                    m_iGameOptions |= PARTIAL_MAPS;
+                    AddMessage ("Partial maps are now enabled");
                 } else {
-                    AddMessage ("Your partial maps setting could not be updated: the error code was ");
-                    AppendMessage (iErrCode);
+                    m_iGameOptions &= ~PARTIAL_MAPS;
+                    AddMessage ("Partial maps are now disabled");
                 }
             }
             
@@ -359,22 +344,11 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
 
-            if (iNewValue != iOldValue && iNewValue >= MINIMAPS_NEVER && iNewValue <= MINIMAPS_PRIMARY) {
-
-                if ((iErrCode = SetEmpireGameProperty(
-                    m_iGameClass, 
-                    m_iGameNumber, 
-                    m_iEmpireKey, 
-                    GameEmpireData::MiniMaps, 
-                    iNewValue)
-                    ) == OK) {
-                    
-                    AddMessage ("Your mini-maps setting was updated");
-                    
-                } else {
-                    AddMessage ("Your mini-maps setting could not be updated: the error code was ");
-                    AppendMessage (iErrCode);
-                }
+            if (iNewValue != iOldValue && iNewValue >= MINIMAPS_NEVER && iNewValue <= MINIMAPS_PRIMARY)
+            {
+                iErrCode = SetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::MiniMaps, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("Your mini-maps setting was updated");
             }
 
             // UpCloseShips
@@ -386,34 +360,30 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & SHIPS_ON_MAP_SCREEN) != 0;
             if (bFlag != ((iNewValue & SHIPS_ON_MAP_SCREEN) != 0)) {
 
-                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bFlag)) == OK) {
-                    if (!bFlag) {
-                        m_iGameOptions |= SHIPS_ON_MAP_SCREEN;
-                        AddMessage ("Ship menus will now be displayed on map screen planet views");
-                    } else {
-                        m_iGameOptions &= ~SHIPS_ON_MAP_SCREEN;
-                        AddMessage ("Ship menus will no longer be displayed on map screen planet views");
-                    }
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_MAP_SCREEN, !bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (!bFlag) {
+                    m_iGameOptions |= SHIPS_ON_MAP_SCREEN;
+                    AddMessage ("Ship menus will now be displayed on map screen planet views");
                 } else {
-                    AddMessage ("Your map screen ship menu setting could not be changed: the error code was ");
-                    AppendMessage (iErrCode);
+                    m_iGameOptions &= ~SHIPS_ON_MAP_SCREEN;
+                    AddMessage ("Ship menus will no longer be displayed on map screen planet views");
                 }
             }
 
             bFlag = (m_iGameOptions & SHIPS_ON_PLANETS_SCREEN) != 0;
             if (bFlag != ((iNewValue & SHIPS_ON_PLANETS_SCREEN) != 0)) {
 
-                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bFlag)) == OK) {
-                    if (!bFlag) {
-                        m_iGameOptions |= SHIPS_ON_PLANETS_SCREEN;
-                        AddMessage ("Ship menus will now be displayed on the planets screen");
-                    } else {
-                        m_iGameOptions &= ~SHIPS_ON_PLANETS_SCREEN;
-                        AddMessage ("Ship menus will no longer be displayed on the planets screen");
-                    }
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, SHIPS_ON_PLANETS_SCREEN, !bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (!bFlag) {
+                    m_iGameOptions |= SHIPS_ON_PLANETS_SCREEN;
+                    AddMessage ("Ship menus will now be displayed on the planets screen");
                 } else {
-                    AddMessage ("Your planet screen ship menu setting could not be changed: the error code was ");
-                    AppendMessage (iErrCode);
+                    m_iGameOptions &= ~SHIPS_ON_PLANETS_SCREEN;
+                    AddMessage ("Ship menus will no longer be displayed on the planets screen");
                 }
             }
 
@@ -426,34 +396,30 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & BUILD_ON_MAP_SCREEN) != 0;
             if (bFlag != ((iNewValue & BUILD_ON_MAP_SCREEN) != 0)) {
 
-                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bFlag)) == OK) {
-                    if (!bFlag) {
-                        m_iGameOptions |= BUILD_ON_MAP_SCREEN;
-                        AddMessage ("Build menus will now be displayed on map screen planet views");
-                    } else {
-                        m_iGameOptions &= ~BUILD_ON_MAP_SCREEN;
-                        AddMessage ("Build menus will no longer be displayed on map screen planet views");
-                    }
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_MAP_SCREEN, !bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (!bFlag) {
+                    m_iGameOptions |= BUILD_ON_MAP_SCREEN;
+                    AddMessage ("Build menus will now be displayed on map screen planet views");
                 } else {
-                    AddMessage ("Your map screen build menu setting could not be changed: the error code was ");
-                    AppendMessage (iErrCode);
+                    m_iGameOptions &= ~BUILD_ON_MAP_SCREEN;
+                    AddMessage ("Build menus will no longer be displayed on map screen planet views");
                 }
             }
 
             bFlag = (m_iGameOptions & BUILD_ON_PLANETS_SCREEN) != 0;
             if (bFlag != ((iNewValue & BUILD_ON_PLANETS_SCREEN) != 0)) {
 
-                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bFlag)) == OK) {
-                    if (!bFlag) {
-                        m_iGameOptions |= BUILD_ON_PLANETS_SCREEN;
-                        AddMessage ("Build menus will now be displayed on the planets screen");
-                    } else {
-                        m_iGameOptions &= ~BUILD_ON_PLANETS_SCREEN;
-                        AddMessage ("Build menus will no longer be displayed on the planets screen");
-                    }
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, BUILD_ON_PLANETS_SCREEN, !bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (!bFlag) {
+                    m_iGameOptions |= BUILD_ON_PLANETS_SCREEN;
+                    AddMessage ("Build menus will now be displayed on the planets screen");
                 } else {
-                    AddMessage ("Your planet screen ship menu setting could not be changed: the error code was ");
-                    AppendMessage (iErrCode);
+                    m_iGameOptions &= ~BUILD_ON_PLANETS_SCREEN;
+                    AddMessage ("Build menus will no longer be displayed on the planets screen");
                 }
             }
 
@@ -466,17 +432,15 @@ if (m_bOwnPost && !m_bRedirection) {
             bFlag = (m_iGameOptions & LOCAL_MAPS_IN_UPCLOSE_VIEWS) != 0;
             if (bFlag != (iNewValue != 0)) {
 
-                if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bFlag)) == OK) {
-                    if (!bFlag) {
-                        m_iGameOptions |= LOCAL_MAPS_IN_UPCLOSE_VIEWS;
-                        AddMessage ("Local maps will now be displayed in up-close map views");
-                    } else {
-                        m_iGameOptions &= ~LOCAL_MAPS_IN_UPCLOSE_VIEWS;
-                        AddMessage ("Local maps will no longer be displayed in up-close map views");
-                    }
+                iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, LOCAL_MAPS_IN_UPCLOSE_VIEWS, !bFlag);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (!bFlag) {
+                    m_iGameOptions |= LOCAL_MAPS_IN_UPCLOSE_VIEWS;
+                    AddMessage ("Local maps will now be displayed in up-close map views");
                 } else {
-                    AddMessage ("Your local map setting could not be changed: the error code was ");
-                    AppendMessage (iErrCode);
+                    m_iGameOptions &= ~LOCAL_MAPS_IN_UPCLOSE_VIEWS;
+                    AddMessage ("Local maps will no longer be displayed in up-close map views");
                 }
             }
 
@@ -487,21 +451,14 @@ if (m_bOwnPost && !m_bRedirection) {
             iNewValue = pHttpForm->GetIntValue();
 
             if (iNewValue != m_iGameRatios && 
-                iNewValue >= RATIOS_DISPLAY_NEVER && iNewValue <= RATIOS_DISPLAY_ALWAYS) {
-
-                GameCheck(SetEmpireGameProperty (
-                    m_iGameClass,
-                    m_iGameNumber,
-                    m_iEmpireKey,
-                    GameEmpireData::GameRatios,
-                    iNewValue
-                    ));
+                iNewValue >= RATIOS_DISPLAY_NEVER && iNewValue <= RATIOS_DISPLAY_ALWAYS)
+            {
+                iErrCode = SetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::GameRatios, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
 
                 m_iGameRatios = iNewValue;
-
                 AddMessage ("Your game ratios line setting was updated");
             }
-
 
             // Handle DefaultBuilderPlanet
             if ((pHttpForm = m_pHttpRequest->GetForm ("DefaultBuilderPlanet")) == NULL) {
@@ -510,23 +467,14 @@ if (m_bOwnPost && !m_bRedirection) {
             iNewValue = pHttpForm->GetIntValue();
 
             int iRealPlanet;
-            GameCheck(GetEmpireDefaultBuilderPlanet (
-                m_iGameClass,
-                m_iGameNumber,
-                m_iEmpireKey,
-                &iOldValue,
-                &iRealPlanet
-                ));
+            iErrCode = GetEmpireDefaultBuilderPlanet(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iOldValue, &iRealPlanet);
+            RETURN_ON_ERROR(iErrCode);
 
             if (iNewValue != iOldValue) {
 
                 iErrCode = SetEmpireDefaultBuilderPlanet (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
-                if (iErrCode == OK) {
-                    AddMessage ("The default builder planet was updated");
-                } else {
-                    AddMessage ("The default builder planet could not be updated; the error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default builder planet was updated");
             }
 
             // Handle IndependentGifts
@@ -540,17 +488,15 @@ if (m_bOwnPost && !m_bRedirection) {
                 bFlag = (m_iGameOptions & REJECT_INDEPENDENT_SHIP_GIFTS) != 0;
                 if (bFlag != (iNewValue != 0)) {
 
-                    if ((iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, REJECT_INDEPENDENT_SHIP_GIFTS, !bFlag)) == OK) {
-                        if (!bFlag) {
-                            m_iGameOptions |= REJECT_INDEPENDENT_SHIP_GIFTS;
-                            AddMessage ("Independent ship gifts will now be rejected");
-                        } else {
-                            m_iGameOptions &= ~REJECT_INDEPENDENT_SHIP_GIFTS;
-                            AddMessage ("Independent ship gifts will now be accepted");
-                        }
+                    iErrCode = SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, REJECT_INDEPENDENT_SHIP_GIFTS, !bFlag);
+                    RETURN_ON_ERROR(iErrCode);
+                    
+                    if (!bFlag) {
+                        m_iGameOptions |= REJECT_INDEPENDENT_SHIP_GIFTS;
+                        AddMessage ("Independent ship gifts will now be rejected");
                     } else {
-                        AddMessage ("Your independent ship setting could not be changed: the error code was ");
-                        AppendMessage (iErrCode);
+                        m_iGameOptions &= ~REJECT_INDEPENDENT_SHIP_GIFTS;
+                        AddMessage ("Independent ship gifts will now be accepted");
                     }
                 }
             }
@@ -561,22 +507,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetIntValue();
 
-            GameCheck(GetEmpireDefaultMessageTarget (
-                m_iGameClass,
-                m_iGameNumber,
-                m_iEmpireKey,
-                &iOldValue
-                ));
+            iErrCode = GetEmpireDefaultMessageTarget(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iOldValue);
+            RETURN_ON_ERROR(iErrCode);
 
-            if (iNewValue != iOldValue) {
-
+            if (iNewValue != iOldValue)
+            {
                 iErrCode = SetEmpireDefaultMessageTarget (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
-                if (iErrCode == OK) {
-                    AddMessage ("The default message target was updated");
-                } else {
-                    AddMessage ("The default message target could not be updated; the error was ");
-                    AppendMessage (iErrCode);
-                }
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage ("The default message target was updated");
             }
 
             // MaxSavedMessages
@@ -590,16 +528,14 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iOldValue = pHttpForm->GetIntValue();
 
-            if (iOldValue != iNewValue) {
-                if (SetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, 
-                    iNewValue) == OK) {
-
-                    char pszMessage [256];
-                    sprintf(pszMessage, "Up to %i game messages will be saved", iNewValue);
-                    AddMessage (pszMessage);
-                } else {
-                    AddMessage ("Your max saved game messages setting could not be updated");
-                }
+            if (iOldValue != iNewValue)
+            {
+                iErrCode = SetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, iNewValue);
+                RETURN_ON_ERROR(iErrCode);
+                
+                char pszMessage [256];
+                sprintf(pszMessage, "Up to %i game messages will be saved", iNewValue);
+                AddMessage (pszMessage);
             }
 
             // Ignore
@@ -614,16 +550,15 @@ if (m_bOwnPost && !m_bRedirection) {
             iOldValue = pHttpForm->GetIntValue();
 
             if (iOldValue != iNewValue) {
-                if (SetEmpireOption (m_iGameClass, m_iGameNumber, m_iEmpireKey, IGNORE_BROADCASTS, iNewValue != 0) == OK) {
-                    if (iNewValue != 0) {
-                        m_iGameOptions |= IGNORE_BROADCASTS;
-                        AddMessage ("You will now ignore all broadcasts");
-                    } else {
-                        m_iGameOptions &= ~IGNORE_BROADCASTS;
-                        AddMessage ("You will no longer ignore all broadcasts");
-                    }
+                iErrCode = SetEmpireOption(m_iGameClass, m_iGameNumber, m_iEmpireKey, IGNORE_BROADCASTS, iNewValue != 0);
+                RETURN_ON_ERROR(iErrCode);
+                
+                if (iNewValue != 0) {
+                    m_iGameOptions |= IGNORE_BROADCASTS;
+                    AddMessage ("You will now ignore all broadcasts");
                 } else {
-                    AddMessage ("Your ignore broadcast setting be updated");
+                    m_iGameOptions &= ~IGNORE_BROADCASTS;
+                    AddMessage ("You will no longer ignore all broadcasts");
                 }
             }
 
@@ -637,14 +572,16 @@ if (m_bOwnPost && !m_bRedirection) {
                     iPause = pHttpForm->GetIntValue();
 
                     // Get selected dip option
-                    GameCheck(IsEmpireRequestingPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldPause));
+                    iErrCode = IsEmpireRequestingPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldPause);
+                    RETURN_ON_ERROR(iErrCode);
 
                     // Only update if we changed the status
                     if ((iPause != 0) != bOldPause) {
 
                         if (iPause != 0) {
 
-                            GameCheck(RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                            iErrCode = RequestPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState);
+                            RETURN_ON_ERROR(iErrCode);
 
                             if (m_iGameState & ADMIN_PAUSED) {
                                 AddMessage ("The game was already paused by an admin");
@@ -662,7 +599,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                         } else {
 
-                            GameCheck(RequestNoPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                            iErrCode = RequestNoPause (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState);
+                            RETURN_ON_ERROR(iErrCode);
 
                             if (m_iGameState & ADMIN_PAUSED) {
                                 AddMessage ("The game has been paused by an administrator and will remain paused");
@@ -691,14 +629,16 @@ if (m_bOwnPost && !m_bRedirection) {
                         iDraw = pHttpForm->GetIntValue();
 
                         // Get selected dip option
-                        GameCheck(IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw));
+                        iErrCode = IsEmpireRequestingDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bOldDraw);
+                        RETURN_ON_ERROR(iErrCode);
 
                         // Only update if we changed the status
                         if ((iDraw != 0) != bOldDraw) {
 
                             if (iDraw != 0) {
 
-                                GameCheck(RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState));
+                                iErrCode = RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState);
+                                RETURN_ON_ERROR(iErrCode);
 
                                 m_iGameOptions |= REQUEST_DRAW;
 
@@ -711,20 +651,18 @@ if (m_bOwnPost && !m_bRedirection) {
                                     bool bEndGame = false;
 
                                     // Try to end the game
-                                    iErrCode = CheckGameForEndConditions (
-                                        m_iGameClass,
-                                        m_iGameNumber,
-                                        NULL,
-                                        &bEndGame
-                                        );
+                                    iErrCode = CheckGameForEndConditions(m_iGameClass, m_iGameNumber, NULL, &bEndGame);
+                                    RETURN_ON_ERROR(iErrCode);
 
                                     // Did the game end because of us?
-                                    if (iErrCode == OK && bEndGame) {
+                                    if (bEndGame)
+                                    {
                                         return Redirect (ACTIVE_GAME_LIST);
                                     }
 
                                     // Refresh game state
-                                    GameCheck(GetGameState (m_iGameClass, m_iGameNumber, &m_iGameState));
+                                    iErrCode = GetGameState(m_iGameClass, m_iGameNumber, &m_iGameState);
+                                    RETURN_ON_ERROR(iErrCode);
 
                                     // Proceed...
                                     AddMessage ("You are now requesting a draw");
@@ -732,7 +670,8 @@ if (m_bOwnPost && !m_bRedirection) {
 
                             } else {
 
-                                GameCheck(RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey));
+                                iErrCode = RequestNoDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey);
+                                RETURN_ON_ERROR(iErrCode);
                                 AddMessage ("You are no longer requesting a draw");
 
                                 m_iGameOptions &= ~REQUEST_DRAW;
@@ -771,9 +710,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
 
             default:
-
-                AddMessage ("Your notepad could not be updated. The error was ");
-                AppendMessage (iErrCode);
+                RETURN_ON_ERROR(iErrCode);
                 break;
             }
 
@@ -860,9 +797,9 @@ if (m_bOwnPost && !m_bRedirection) {
                     iMessageKey = pHttpForm->GetIntValue();
 
                     // Delete message
-                    if (DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey) == OK) {
-                        iDeletedMessages ++;
-                    }
+                    iErrCode = DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey);
+                    RETURN_ON_ERROR(iErrCode);
+                    iDeletedMessages ++;
                 }
 
             } else {
@@ -886,9 +823,9 @@ if (m_bOwnPost && !m_bRedirection) {
                             iMessageKey = pHttpForm->GetIntValue();
 
                             // Delete message
-                            if (DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey) == OK) {
-                                iDeletedMessages ++;
-                            }
+                            iErrCode = DeleteGameMessage (m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey);
+                            RETURN_ON_ERROR(iErrCode);
+                            iDeletedMessages ++;
                         }
                     }
 
@@ -909,24 +846,20 @@ if (m_bOwnPost && !m_bRedirection) {
                             }
                             iMessageKey = pHttpForm->GetIntValue();
 
-                            if (GetGameMessageProperty(
+                            iErrCode = GetGameMessageProperty(
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
                                 iMessageKey,
                                 GameEmpireMessages::Flags,
                                 &vFlags
-                                ) == OK &&
-
-                                (vFlags.GetInteger() & MESSAGE_SYSTEM) &&
-
-                                DeleteGameMessage (
-                                m_iGameClass,
-                                m_iGameNumber,
-                                m_iEmpireKey,
-                                iMessageKey
-                                ) == OK) {
-
+                                );
+                            RETURN_ON_ERROR(iErrCode);
+                            
+                            if (vFlags.GetInteger() & MESSAGE_SYSTEM)
+                            {
+                                iErrCode = DeleteGameMessage(m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey);
+                                RETURN_ON_ERROR(iErrCode);
                                 iDeletedMessages ++;
                             }
                         }
@@ -953,24 +886,20 @@ if (m_bOwnPost && !m_bRedirection) {
                                 }
                                 iMessageKey = pHttpForm->GetIntValue();
 
-                                if (GetGameMessageProperty(
+                                iErrCode = GetGameMessageProperty(
                                     m_iGameClass,
                                     m_iGameNumber,
                                     m_iEmpireKey,
                                     iMessageKey,
                                     GameEmpireMessages::SourceName,
                                     &vSource
-                                    ) == OK &&
+                                    );
+                                RETURN_ON_ERROR(iErrCode);
 
-                                    String::StrCmp (vSource.GetCharPtr(), pszSrcEmpire) == 0 &&
-
-                                    DeleteGameMessage (
-                                    m_iGameClass,
-                                    m_iGameNumber,
-                                    m_iEmpireKey,
-                                    iMessageKey
-                                    ) == OK) {
-
+                                if (String::StrCmp(vSource.GetCharPtr(), pszSrcEmpire) == 0)
+                                {
+                                    iErrCode = DeleteGameMessage(m_iGameClass, m_iGameNumber, m_iEmpireKey, iMessageKey);
+                                    RETURN_ON_ERROR(iErrCode);
                                     iDeletedMessages ++;
                                 }
                             }
@@ -979,16 +908,10 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
             }
 
-            if (iDeletedMessages > 0) {
-
+            if (iDeletedMessages > 0)
+            {
                 char pszMessage [256];
-                sprintf (
-                    pszMessage,
-                    "%i game message%s deleted", 
-                    iDeletedMessages,
-                    iDeletedMessages == 1 ? " was" : "s were"
-                    );
-
+                sprintf(pszMessage, "%i game message%s deleted", iDeletedMessages, iDeletedMessages == 1 ? " was" : "s were");
                 AddMessage (pszMessage);
             }
 
@@ -1001,8 +924,8 @@ if (m_bOwnPost && !m_bRedirection) {
         break;
 
     default:
-
         Assert(false);
+        break;
     }
 }
 
@@ -1011,22 +934,26 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect (pageRedirect);
     }
 }
 
-GameCheck(OpenGamePage());
+iErrCode = OpenGamePage();
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 
 bool bFlag;
 int j, iNumNames = 0, iValue;
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS) {
-    GameCheck(WriteRatiosString (NULL));
+if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
 }
 
 switch (iOptionPage) {
@@ -1158,13 +1085,8 @@ case 0:
     } %></select></td></tr><%
     
     
-    GameCheck(GetEmpireGameProperty (
-        m_iGameClass,
-        m_iGameNumber,
-        m_iEmpireKey,
-        GameEmpireData::MiniMaps,
-        &vTemp
-        ));
+    iErrCode = GetEmpireGameProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, GameEmpireData::MiniMaps, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="OldMiniMaps" value="<% Write (vTemp.GetInteger()); %>"><%
     %><tr><td>Mini-maps:</td><td><select name="MiniMaps"><%
@@ -1249,13 +1171,14 @@ case 0:
     } %></select></td></tr><%
 
 
-    GameCheck(GetEmpireGameProperty (
+    iErrCode = GetEmpireGameProperty (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         GameEmpireData::GameRatios,
         &vTemp
-        ));
+        );
+    RETURN_ON_ERROR(iErrCode);
 
     int iGameRatios = vTemp.GetInteger();
 
@@ -1282,13 +1205,14 @@ case 0:
     %><tr><td>Default builder planet:</td><td><select name="DefaultBuilderPlanet"><%
 
     int iRealPlanet;
-    GameCheck(GetEmpireDefaultBuilderPlanet (
+    iErrCode = GetEmpireDefaultBuilderPlanet (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         &iValue,
         &iRealPlanet
-        ));
+        );
+    RETURN_ON_ERROR(iErrCode);
 
     %><option <%
     if (iValue == HOMEWORLD_DEFAULT_BUILDER_PLANET) {
@@ -1309,13 +1233,15 @@ case 0:
     %>value="<% Write (NO_DEFAULT_BUILDER_PLANET); %>">No default builder planet</option><%
 
     unsigned int* piBuilderKey = NULL, iNumBuilderKeys;
-    GameCheck(GetBuilderPlanetKeys (
+    AutoFreeKeys free_piBuilderKey(piBuilderKey);
+    iErrCode = GetBuilderPlanetKeys (
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
         &piBuilderKey,
         &iNumBuilderKeys
-        ));
+        );
+    RETURN_ON_ERROR(iErrCode);
 
     if (iNumBuilderKeys > 0) {
 
@@ -1330,31 +1256,22 @@ case 0:
                 piBuilderKey[i],
                 pszPlanetName
                 );
+            RETURN_ON_ERROR(iErrCode);
 
-            if (iErrCode == OK) {
+            HTMLFilter (pszPlanetName, &strFilter, 0, false);
 
-                HTMLFilter (pszPlanetName, &strFilter, 0, false);
-
-                %><option <%
-                if ((unsigned int) iValue == piBuilderKey[i]) {
-                    %>selected <%
-                }
-                %>value="<% Write (piBuilderKey[i]); %>"><%
-
-                Write (strFilter.GetCharPtr(), strFilter.GetLength()); %></option><%
+            %><option <%
+            if ((unsigned int) iValue == piBuilderKey[i]) {
+                %>selected <%
             }
-        }
+            %>value="<% Write (piBuilderKey[i]); %>"><%
 
-        t_pCache->FreeKeys (piBuilderKey);
-        piBuilderKey = NULL;
+            Write (strFilter.GetCharPtr(), strFilter.GetLength()); %></option><%
+        }
     }
 
-    GameCheck(GetEmpireDefaultMessageTarget (
-        m_iGameClass,
-        m_iGameNumber,
-        m_iEmpireKey,
-        &iValue
-        ));
+    iErrCode = GetEmpireDefaultMessageTarget(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iValue);
+    RETURN_ON_ERROR(iErrCode);
 
     %></select></td></tr><%
 
@@ -1433,7 +1350,8 @@ case 0:
 
     unsigned int iNumMessages;
 
-    GameCheck(GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages)); 
+    iErrCode = GetNumGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
     if (iNumMessages > 0) {
         Write (iNumMessages);
         %>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<%
@@ -1447,8 +1365,11 @@ case 0:
     
     Variant vMaxNumMessages;
 
-    GameCheck(GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages));
-    GameCheck(GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages));
+    iErrCode = GetEmpireMaxNumSavedGameMessages (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetSystemProperty (SystemData::MaxNumGameMessages, &vMaxNumMessages);
+    RETURN_ON_ERROR(iErrCode);
     
     unsigned int iMaxNumMessages = vMaxNumMessages.GetInteger();
 
@@ -1503,7 +1424,8 @@ case 0:
 
         %></select><%
 
-        GameCheck(GetNumEmpiresRequestingPause (m_iGameClass, m_iGameNumber, &i));
+        iErrCode = GetNumEmpiresRequestingPause (m_iGameClass, m_iGameNumber, &i);
+        RETURN_ON_ERROR(iErrCode);
 
         %> <strong><% Write (i); %></strong> of <strong><% Write (iNumEmpires); %></strong> empire<%
 
@@ -1540,7 +1462,8 @@ case 0:
 
         %></select><%
 
-        GameCheck(GetNumEmpiresRequestingDraw (m_iGameClass, m_iGameNumber, &i));
+        iErrCode = GetNumEmpiresRequestingDraw (m_iGameClass, m_iGameNumber, &i);
+        RETURN_ON_ERROR(iErrCode);
 
         %> <strong><% Write (i); %></strong> of <strong><% Write (iNumEmpires); %></strong> empire<%
 
@@ -1558,13 +1481,12 @@ case 0:
         %></td></tr><%
     }
 
-
     %><tr><td align="top">Keep game notes here:<%
     %></td><td><textarea name="Notepad" rows="8" cols="50" wrap="virtual"><%
 
-
     Variant vNotepad;
-    GameCheck(GetEmpireNotepad (m_iGameClass, m_iGameNumber, m_iEmpireKey, &vNotepad));
+    iErrCode = GetEmpireNotepad (m_iGameClass, m_iGameNumber, m_iEmpireKey, &vNotepad);
+    RETURN_ON_ERROR(iErrCode);
     Write (vNotepad.GetCharPtr());
     %></textarea></td><%
 
@@ -1584,7 +1506,7 @@ case 0:
 
         if ((iGameClassOptions & USE_SC30_SURRENDERS) ||
 
-            ((GameAllowsDiplomacy (iDiplomacy, SURRENDER) ||
+            ((GameAllowsDiplomacy(iDiplomacy, SURRENDER) ||
              (iGameClassOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES)) &&
              iNumEmpires == 2)) {
 
@@ -1618,9 +1540,13 @@ case 1:
 
     {
     unsigned int* piMessageKey = NULL, iNumMessages;
-    Variant** ppvMessage = NULL;
+    AutoFreeKeys free_piMessageKey(piMessageKey);
 
-    GameCheck(GetSavedGameMessages(m_iGameClass, m_iGameNumber, m_iEmpireKey, &piMessageKey, &ppvMessage, &iNumMessages));
+    Variant** ppvMessage = NULL;
+    AutoFreeData free_ppvMessage(ppvMessage);
+
+    iErrCode = GetSavedGameMessages(m_iGameClass, m_iGameNumber, m_iEmpireKey, &piMessageKey, &ppvMessage, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="OptionPage" value="1"><%
 
@@ -1756,16 +1682,12 @@ case 1:
 
             %></select><%
         }
-
-        t_pCache->FreeData (ppvMessage);
-        t_pCache->FreeKeys (piMessageKey);
     }
 
     break;
     }
 
 default:
-
     Assert(false);
     break;
 }

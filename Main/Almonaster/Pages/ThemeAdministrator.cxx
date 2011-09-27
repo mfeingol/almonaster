@@ -29,12 +29,12 @@ if (!bInitialized)
 }
 
 IHttpForm* pHttpForm;
-Variant* pvThemeData;
 
 unsigned int i;
 
 // Make sure that the unprivileged don't abuse this:
-if (m_iPrivilege < ADMINISTRATOR) {
+if (m_iPrivilege < ADMINISTRATOR)
+{
     AddMessage ("You are not authorized to view this page");
     return Redirect (LOGIN);
 }
@@ -70,7 +70,8 @@ if (m_bOwnPost && !m_bRedirection) {
             // Check for delete
             sprintf(pszForm, "DeleteTheme%i", i);
             iErrCode = GetButtonName (pszForm, m_iButtonKey, &strButtonName);
-            if (iErrCode == OK && m_pHttpRequest->GetForm (strButtonName) != NULL) {
+            RETURN_ON_ERROR(iErrCode);
+            if (m_pHttpRequest->GetForm (strButtonName) != NULL) {
 
                 m_bRedirectTest = false;
 
@@ -83,15 +84,16 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Get theme data
-            iErrCode = GetThemeData (iThemeKey, &pvThemeData);
-            if (iErrCode != OK) {
-                continue;
-            }
+            Variant* pvThemeData = NULL;
+            AutoFreeData free_pvThemeData(pvThemeData);
+
+            iErrCode = GetThemeData(iThemeKey, &pvThemeData);
+            RETURN_ON_ERROR(iErrCode);
 
             // Name
             sprintf(pszForm, "Name%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                t_pCache->FreeData (pvThemeData);  goto Redirection;
+                goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -100,13 +102,13 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("You submitted an invalid theme name");
                 } else {
                     iErrCode = SetThemeName (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
             // Version
             sprintf(pszForm, "Version%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                t_pCache->FreeData (pvThemeData);
                 goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
@@ -116,13 +118,13 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("You submitted an invalid theme version");
                 } else {
                     iErrCode = SetThemeVersion (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
             // FileName
             sprintf(pszForm, "File%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                t_pCache->FreeData (pvThemeData);
                 goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
@@ -132,13 +134,14 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("You submitted an invalid theme file name");
                 } else {
                     iErrCode = SetThemeFileName (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
             // Author's Name
             sprintf(pszForm, "AName%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                t_pCache->FreeData (pvThemeData);  goto Redirection;
+                goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -147,13 +150,14 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("You submitted an invalid author name");
                 } else {
                     iErrCode = SetThemeAuthorName (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
             // Author's Email
             sprintf(pszForm, "AEmail%i", i);
             if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
-                t_pCache->FreeData (pvThemeData);  goto Redirection;
+                goto Redirection;
             }
             pszNewValue = pHttpForm->GetValue();
 
@@ -162,6 +166,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("You submitted an invalid theme author email");
                 } else {
                     iErrCode = SetThemeAuthorEmail (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
 
@@ -172,6 +177,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeBackground (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Live Planet
@@ -181,6 +187,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeLivePlanet (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Dead Planet
@@ -190,6 +197,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeDeadPlanet (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Separator
@@ -199,6 +207,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeSeparator (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Buttons
@@ -208,6 +217,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeButtons (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Horz
@@ -217,6 +227,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeHorz (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
             // Vert
@@ -226,6 +237,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if (bNewValue != bOldValue) {
                 iErrCode = SetThemeVert (iThemeKey, bNewValue);
+                RETURN_ON_ERROR(iErrCode);
             }
 
 
@@ -240,6 +252,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = SetThemeTextColor (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("The submitted text color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -258,6 +271,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = SetThemeGoodColor (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("The submitted good color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -276,6 +290,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = SetThemeBadColor (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("The submitted bad color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -294,6 +309,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = SetThemePrivateMessageColor (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("The submitted private color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -312,6 +328,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = SetThemeBroadcastMessageColor (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("The submitted broadcast color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -330,6 +347,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (IsColor (pszNewValue)) { 
                     iErrCode = SetThemeTableColor (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 } else {
                     AddMessage ("The submitted table color for theme ");
                     AppendMessage (pvThemeData[SystemThemes::iName].GetCharPtr());
@@ -351,10 +369,9 @@ if (m_bOwnPost && !m_bRedirection) {
                     AppendMessage (" was invalid");
                 } else {
                     iErrCode = SetThemeDescription (iThemeKey, pszNewValue);
+                    RETURN_ON_ERROR(iErrCode);
                 }
             }
-
-            t_pCache->FreeData (pvThemeData);
         }
 
         ///////////////
@@ -570,18 +587,23 @@ if (m_bRedirectTest)
 {
     bool bRedirected;
     PageId pageRedirect;
-    Check(RedirectOnSubmit(&pageRedirect, &bRedirected));
+    iErrCode = RedirectOnSubmit(&pageRedirect, &bRedirected);
+    RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
     {
         return Redirect(pageRedirect);
     }
 }
 
-Check(OpenSystemPage(false));
+iErrCode = OpenSystemPage(false);
+RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
-unsigned int* piThemeKey, iNumThemes;
-Check(GetThemeKeys (&piThemeKey, &iNumThemes));
+unsigned int* piThemeKey = NULL, iNumThemes;
+AutoFreeKeys free_piThemeKey(piThemeKey);
+
+iErrCode = GetThemeKeys (&piThemeKey, &iNumThemes);
+RETURN_ON_ERROR(iErrCode);
 
 %><input type="hidden" name="NumThemes" value="<% Write (iNumThemes); %>"><p>There <% 
 if (iNumThemes == 1) { 
@@ -594,16 +616,17 @@ if (iNumThemes > 0) {
     %>:<p><table width="90%"><%
 
     int iOptions;
-    Variant* pvThemeData;
 
     char pszDeleteTheme [256];
 
-    for (i = 0; i < iNumThemes; i ++) {
+    for (i = 0; i < iNumThemes; i ++)
+    {
+        Variant* pvThemeData = NULL;
+        AutoFreeData free_pvThemeData(pvThemeData);
 
-        if (GetThemeData (piThemeKey[i], &pvThemeData) != OK) {
-            continue;
-        }
-
+        iErrCode = GetThemeData (piThemeKey[i], &pvThemeData);
+        RETURN_ON_ERROR(iErrCode);
+        
         %><tr><%
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="left">Key</th><%
         %><th bgcolor="<% Write (m_vTableColor.GetCharPtr()); %>" align="center">Theme Name</th><%
@@ -758,12 +781,8 @@ if (iNumThemes > 0) {
 
         // Space between themes
         %></tr><tr><td>&nbsp;</td></tr><%
-
-        t_pCache->FreeData (pvThemeData);
     }
     %></table><%
-
-    t_pCache->FreeKeys (piThemeKey);
 }
 
 %><p><h3>Create a new theme:</h3><%
