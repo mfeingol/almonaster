@@ -21,7 +21,6 @@
 static const TableCacheEntry systemData = { { SYSTEM_DATA, NO_KEY, 0, NULL }, NULL, NULL };
 static const TableCacheEntry systemThemes = { { SYSTEM_THEMES, NO_KEY, 0, NULL }, NULL, NULL };
 static const TableCacheEntry systemGameClassData = { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemSystemGameClassData = { { SYSTEM_SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL };
 static const TableCacheEntry systemSuperClassData = { { SYSTEM_SUPERCLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL };
 static const TableCacheEntry systemActiveGames = { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL };
 static const TableCacheEntry systemLatestGames = { { SYSTEM_LATEST_GAMES, NO_KEY, 0, NULL }, NULL, NULL };
@@ -40,7 +39,6 @@ void HtmlRenderer::GatherCacheTablesForSystemPage(Vector<TableCacheEntry>& cache
     Cache(cache, systemData);
     Cache(cache, systemThemes);
     Cache(cache, systemGameClassData);
-    Cache(cache, systemSystemGameClassData);
     Cache(cache, systemSuperClassData);
     Cache(cache, systemTournaments);
 

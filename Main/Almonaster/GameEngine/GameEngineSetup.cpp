@@ -205,16 +205,6 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     if (!bGoodDatabase)
         goto Cleanup;
 
-    // SystemSystemGameClassData
-    Assert(countof(SystemSystemGameClassData::Types) == SystemSystemGameClassData::NumColumns);
-    Assert(countof(SystemSystemGameClassData::Sizes) == SystemSystemGameClassData::NumColumns);
-    Assert(countof(SystemSystemGameClassData::ColumnNames) == SystemSystemGameClassData::NumColumns);
-
-    pszTable = SYSTEM_SYSTEM_GAMECLASS_DATA;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
-    if (!bGoodDatabase)
-        goto Cleanup;
-    
     // SystemSuperClassData
     Assert(countof(SystemSuperClassData::Types) == SystemSuperClassData::NumColumns);
     Assert(countof(SystemSuperClassData::Sizes) == SystemSuperClassData::NumColumns);
@@ -967,10 +957,6 @@ int GameEngine::CreateDefaultSystemTables() {
 
     // Create SystemGameClassData table
     iErrCode = t_pCache->CreateTable(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template);
-    RETURN_ON_ERROR(iErrCode);
-
-    // Create SystemSystemGameClassData table
-    iErrCode = t_pCache->CreateTable(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::Template);
     RETURN_ON_ERROR(iErrCode);
 
     // Create SystemActiveGames table

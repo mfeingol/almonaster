@@ -1314,50 +1314,6 @@ namespace SystemAlienIcons {
     };
 };
 
-
-///////////////////////////////
-// SystemSystemGameClassData //
-///////////////////////////////
-
-#define SYSTEM_SYSTEM_GAMECLASS_DATA "SystemSystemGameClassData"
-
-namespace SystemSystemGameClassData {
-
-    static const char* const GameClass = "GameClass";
-
-    /*enum Columns {
-        GameClass
-    };*/
-
-    static const char* const ColumnNames[] = {
-        GameClass
-    };
-
-    static const VariantType Types[] = {
-        V_INT
-    };
-
-    static const unsigned int Sizes[] = {
-        0
-    };
-
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
-
-    static const TemplateDescription Template = {
-        "SystemSystemGameClassData",
-        NumColumns,
-        (char**)ColumnNames,
-        (VariantType*)Types,
-        (unsigned int*)Sizes,
-        false,
-        0,
-        NULL,
-        30,
-        NULL,
-    };
-};
-
-
 //////////////////////////
 // SystemSuperClassData //
 //////////////////////////

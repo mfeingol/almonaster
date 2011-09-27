@@ -204,14 +204,9 @@ int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted) {
 
         if (vOwner.GetInteger() == SYSTEM)
         {
-            unsigned int iKey;
-            
             // Decrement super class counter
             Variant vSuperClassKey;
             iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, &vSuperClassKey);
-            RETURN_ON_ERROR(iErrCode);
-
-            iErrCode = t_pCache->GetFirstKey(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::GameClass, iGameClass, &iKey);
             RETURN_ON_ERROR(iErrCode);
 
             Assert(vSuperClassKey.GetInteger() != NO_KEY && vSuperClassKey.GetInteger() != TOURNAMENT && vSuperClassKey.GetInteger() != PERSONAL_GAME);
@@ -219,10 +214,6 @@ int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted) {
             iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, vSuperClassKey.GetInteger(), SystemSuperClassData::NumGameClasses, -1);
             RETURN_ON_ERROR(iErrCode);
             
-            // Delete row
-            iErrCode = t_pCache->DeleteRow(SYSTEM_SYSTEM_GAMECLASS_DATA, iKey);
-            RETURN_ON_ERROR(iErrCode);
-
             *pbDeleted = true;
         }
 
@@ -447,14 +438,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     iErrCode = t_pCache->InsertRow(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template, pvGameClassData, &iGameClass);
     RETURN_ON_ERROR(iErrCode);
 
-    if (pvGameClassData[SystemGameClassData::iOwner].GetInteger() == SYSTEM)
-    {
-        // Add row to SystemSystemGameClassData
-        Variant vKey = iGameClass;
-        iErrCode = t_pCache->InsertRow(SYSTEM_SYSTEM_GAMECLASS_DATA, SystemSystemGameClassData::Template, &vKey, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-
     *piGameClass = iGameClass;
 
     return iErrCode;
@@ -503,69 +486,53 @@ int GameEngine::UndeleteGameClass (int iGameClass) {
 //
 // Return the integer keys corresponding to each system gameclass, including those which have been halted
 
-int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** ppbDeleted, int* piNumKeys) {
-
+int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** ppbDeleted, int* piNumKeys)
+{
     int iErrCode;
-    ICachedTable* pSystemGameClassData = NULL;
-    AutoRelease<ICachedTable> release(pSystemGameClassData);
-
-    Variant* pvData;
-    AutoFreeData free(pvData);
 
     *ppiKey = NULL;
     *ppbHalted = NULL;
     *ppbDeleted = NULL;
     *piNumKeys = 0;
 
-    iErrCode = t_pCache->ReadColumn(
-        SYSTEM_SYSTEM_GAMECLASS_DATA, 
-        SystemSystemGameClassData::GameClass, 
-        NULL, 
-        &pvData, 
-        (unsigned int*) piNumKeys
-        );
-    
+    Variant* pvOptions = NULL;
+    AutoFreeData free_pvOptions(pvOptions);
+
+    unsigned int* piGameClassKey = NULL, iNumGameClasses;
+    AutoFreeKeys free_piGameClassKey(piGameClassKey);
+
+    iErrCode = t_pCache->ReadColumnWhereEqual(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Owner, SYSTEM,
+                                              SystemGameClassData::Options, &piGameClassKey, &pvOptions, &iNumGameClasses);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        return OK;
+        iErrCode = OK;
     }
-
-    if (*piNumKeys > 0)
+    else
     {
-        bool* pbHalted = new bool[*piNumKeys];
-        Assert(pbHalted);
-        Algorithm::AutoDelete<bool>(pbHalted, true);
-
-        bool* pbDeleted = new bool[*piNumKeys];
-        Assert(pbDeleted);
-        Algorithm::AutoDelete<bool>(pbDeleted, true);
-
-        int* piKey = new int[*piNumKeys];
-        Assert(piKey);
-        Algorithm::AutoDelete<int>(piKey, true);
-
-        iErrCode = t_pCache->GetTable(SYSTEM_GAMECLASS_DATA, &pSystemGameClassData);
         RETURN_ON_ERROR(iErrCode);
 
-        Variant vOptions;
+        bool* pbHalted = new bool[iNumGameClasses];
+        Assert(pbHalted);
+
+        bool* pbDeleted = new bool[iNumGameClasses];
+        Assert(pbDeleted);
+
+        int* piKey = new int[iNumGameClasses];
+        Assert(piKey);
+
         for (int i = 0; i < *piNumKeys; i ++)
         {
-            iErrCode = pSystemGameClassData->ReadData(pvData[i].GetInteger(), SystemGameClassData::Options, &vOptions);
-            RETURN_ON_ERROR(iErrCode);
+            int iOptions = pvOptions[i].GetInteger();
 
-            pbHalted[i] = (vOptions.GetInteger() & GAMECLASS_HALTED) != 0;
-            pbDeleted[i] = (vOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION) != 0;
-            piKey[i] = pvData[i].GetInteger();
+            pbHalted[i] = (iOptions & GAMECLASS_HALTED) != 0;
+            pbDeleted[i] = (iOptions & GAMECLASS_MARKED_FOR_DELETION) != 0;
+            piKey[i] = piGameClassKey[i];
         }
 
         *ppbHalted = pbHalted;
-        pbHalted = NULL;
-
         *ppbDeleted = pbDeleted;
-        pbDeleted = NULL;
-
         *ppiKey = piKey;
-        piKey = NULL;
+        *piNumKeys = iNumGameClasses;
     }
 
     return iErrCode;
@@ -580,29 +547,18 @@ int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** p
 int GameEngine::GetStartableSystemGameClassKeys(unsigned int** ppiKey, unsigned int* piNumKeys)
 {
     int iErrCode;
-    unsigned int i, iNumGameClasses;
-    Variant* pvGameClassKey = NULL;
-    AutoFreeData free(pvGameClassKey);
-
-    ICachedTable* pSystemSystemGameClassData = NULL;
-    ICachedTable* pSystemGameClassData = NULL;
-
-    AutoRelease<ICachedTable> release1(pSystemSystemGameClassData);
-    AutoRelease<ICachedTable> release2(pSystemGameClassData);
 
     *ppiKey = NULL;
     *piNumKeys = 0;
 
-    iErrCode = t_pCache->GetTable(SYSTEM_SYSTEM_GAMECLASS_DATA, &pSystemSystemGameClassData);
-    RETURN_ON_ERROR(iErrCode);
+    Variant* pvOptions = NULL;
+    AutoFreeData free_pvOptions(pvOptions);
 
-    iErrCode = pSystemSystemGameClassData->ReadColumn(
-        SystemSystemGameClassData::GameClass,
-        NULL,
-        &pvGameClassKey,
-        &iNumGameClasses
-        );
+    unsigned int* piGameClassKey = NULL, iNumGameClasses;
+    AutoFreeKeys free_piGameClassKey(piGameClassKey);
 
+    iErrCode = t_pCache->ReadColumnWhereEqual(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Owner, SYSTEM,
+                                              SystemGameClassData::Options, &piGameClassKey, &pvOptions, &iNumGameClasses);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         iErrCode = OK;
@@ -613,28 +569,21 @@ int GameEngine::GetStartableSystemGameClassKeys(unsigned int** ppiKey, unsigned 
 
         unsigned int* piKey = new unsigned int[iNumGameClasses];
         Assert(piKey);
-        Algorithm::AutoDelete<unsigned int> del(piKey, true);
-
-        iErrCode = t_pCache->GetTable(SYSTEM_GAMECLASS_DATA, &pSystemGameClassData);
-        RETURN_ON_ERROR(iErrCode);
-
-        *piNumKeys = 0;
 
         // Filter halted gameclasses
-        for (i = 0; i < iNumGameClasses; i ++)
+        unsigned int iNumKeys = 0;
+        for (unsigned int i = 0; i < iNumGameClasses; i ++)
         {
-            int iOptions;
-            iErrCode = pSystemGameClassData->ReadData(pvGameClassKey[i].GetInteger(), SystemGameClassData::Options, &iOptions);
-            RETURN_ON_ERROR(iErrCode);
-
+            int iOptions = pvOptions[i].GetInteger();
             if (!(iOptions & GAMECLASS_HALTED) && !(iOptions & GAMECLASS_MARKED_FOR_DELETION))
             {
-                piKey[(*piNumKeys) ++] = pvGameClassKey[i].GetInteger();
+                piKey[iNumKeys] = piGameClassKey[i];
+                iNumKeys ++;
             }
         }
 
         *ppiKey = piKey;
-        piKey = NULL;
+        *piNumKeys = iNumKeys;
     }
 
     return iErrCode;

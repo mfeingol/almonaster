@@ -426,7 +426,8 @@ int GameEngine::AddDiplomaticOption (int iGameClass, int iGameNumber, int iTarge
         
         if (iMaxCount == UNRESTRICTED_DIPLOMACY)
         {
-            piDipOptKey[(*piNumOptions) ++] = iDiplomacyLevel;
+            piDipOptKey[*piNumOptions] = iDiplomacyLevel;
+            (*piNumOptions) ++;
         }
         else
         {
