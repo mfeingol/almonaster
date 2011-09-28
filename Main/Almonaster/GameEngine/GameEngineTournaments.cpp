@@ -1058,10 +1058,10 @@ int GameEngine::GetTournamentTeamEmpires (unsigned int iTournamentKey, unsigned 
     RETURN_ON_ERROR(iErrCode);
 
     int* piEmpireKey = NULL;
-    Algorithm::AutoDelete<int>(piEmpireKey, true);
+    Algorithm::AutoDelete<int> free_piEmpireKey(piEmpireKey, true);
 
     Variant* pvName = NULL;
-    Algorithm::AutoDelete<Variant>(pvName, true);
+    Algorithm::AutoDelete<Variant> free_pvName(pvName, true);
 
     if (ppiEmpireKey)
     {

@@ -476,7 +476,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                         pszColor = NULL;
                     } else {
                         
-                        iErrCode = GetDiplomaticStatus (
+                        iErrCode = GetVisibleDiplomaticStatus(
                             iGameClass,
                             iGameNumber,
                             iEmpireKey,
@@ -1141,7 +1141,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     iCurrent = TRUCE;
                 } else {
                     
-                    iErrCode = GetDiplomaticStatus(
+                    iErrCode = GetVisibleDiplomaticStatus(
                         m_iGameClass, 
                         m_iGameNumber, 
                         iEmpireKey, 
@@ -1702,7 +1702,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                             iDip = TRUCE;
                         } else {
                             
-                            iErrCode = GetDiplomaticStatus (
+                            iErrCode = GetVisibleDiplomaticStatus(
                                 m_iGameClass, 
                                 m_iGameNumber, 
                                 iEmpireKey, 

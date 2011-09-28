@@ -53,8 +53,8 @@ HttpServer::HttpServer() {
     m_pSslContext = NULL;
     m_pSslSocket = NULL;
 
-    m_pszServerName = "Alajar 1.82";
-    m_stServerNameLength = countof ("Alajar 1.82") - 1;
+    m_pszServerName = "Alajar 1.8.3";
+    m_stServerNameLength = countof ("Alajar 1.8.3") - 1;
 
     Time::GetTime (&m_tLogDate);
 

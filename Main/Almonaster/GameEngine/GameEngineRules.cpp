@@ -436,63 +436,37 @@ int GameEngine::GetMaxPop (int iMin, int iFuel) {
     return iMaxPop;
 }
 
-int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel,
-                                            int* piMaxNumPartners) {
-
-    int iErrCode = OK;
+int GameEngine::GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel, unsigned int* piMaxNumPartners)
+{
+    int iErrCode;
     Variant vMax;
 
-    Assert(iDiplomacyLevel != WAR);
-    
-    switch (iDiplomacyLevel) {
-
+    switch (iDiplomacyLevel)
+    {
     case TRUCE:
-        
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::MaxNumTruces, 
-            &vMax
-            );
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumTruces, &vMax);
         RETURN_ON_ERROR(iErrCode);
         break;
 
     case TRADE:
-        
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::MaxNumTrades, 
-            &vMax
-            );
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumTrades, &vMax);
         RETURN_ON_ERROR(iErrCode);
         break;
 
     case ALLIANCE:
-        
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA, 
-            iGameClass, 
-            SystemGameClassData::MaxNumAlliances, 
-            &vMax
-            );
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MaxNumAlliances, &vMax);
         RETURN_ON_ERROR(iErrCode);
         break;
 
     default:
         Assert(false);
         return ERROR_INVALID_ARGUMENT;
-    }   
+    }
 
-    if (vMax.GetInteger() == FAIR_DIPLOMACY) {
-
+    if (vMax.GetInteger() == FAIR_DIPLOMACY)
+    {
         GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
-
-        iErrCode = t_pCache->ReadData(
-            pszGameData, 
-            GameData::MaxNumEmpires, 
-            &vMax
-            );
+        iErrCode = t_pCache->ReadData(pszGameData, GameData::MaxNumEmpires, &vMax);
         RETURN_ON_ERROR(iErrCode);
 
         *piMaxNumPartners = (int) ((double) (vMax.GetInteger() - 2) / 2);

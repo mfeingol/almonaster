@@ -64,6 +64,7 @@ void HtmlRenderer::GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache)
     Cache(cache, systemData);
     Cache(cache, systemThemes);
     Cache(cache, systemGameClassData);
+    Cache(cache, systemActiveGames);
 
     if (m_iEmpireKey != NO_KEY)
     {
@@ -171,6 +172,8 @@ void HtmlRenderer::RegisterCache_EmpireAdministrator(Vector<TableCacheEntry>& ca
 
 void HtmlRenderer::RegisterCache_GameAdministrator(Vector<TableCacheEntry>& cache)
 {
+    // Needed to insert a row when entering a game
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_ThemeAdministrator(Vector<TableCacheEntry>& cache)
@@ -179,6 +182,12 @@ void HtmlRenderer::RegisterCache_ThemeAdministrator(Vector<TableCacheEntry>& cac
 
 void HtmlRenderer::RegisterCache_PersonalGameClasses(Vector<TableCacheEntry>& cache)
 {
+    // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
+    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    Cache(cache, systemEmpireActiveGamesN);
+
+    // Needed to insert a row when entering a game
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_Chatroom(Vector<TableCacheEntry>& cache)
@@ -481,9 +490,6 @@ void HtmlRenderer::RegisterCache_GameProfileViewer(Vector<TableCacheEntry>& cach
 
 void HtmlRenderer::RegisterCache_Quit(Vector<TableCacheEntry>& cache)
 {
-    // Might need to remove the game from active games
-    Cache(cache, systemActiveGames);
-    
     TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
 }

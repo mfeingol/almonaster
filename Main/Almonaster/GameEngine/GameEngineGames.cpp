@@ -329,19 +329,26 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
 
         // Loser list
         iErrCode = t_pCache->ReadColumn(strGameDeadEmpires, GameNukedEmpires::Name, NULL, &pvEmpireName, &iNumEmpires);
-        RETURN_ON_ERROR(iErrCode);
-
-        for (unsigned int i = 0; i < iNumEmpires; i ++)
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
-            if (!strList.IsBlank())
-            {
-                strList += ", ";
-            }
-            strList += pvEmpireName[i].GetCharPtr();
+            iErrCode = OK;
         }
+        else
+        {
+            RETURN_ON_ERROR(iErrCode);
 
-        pvLatestGame[SystemLatestGames::iLosers] = strList;
-        Assert(pvLatestGame[SystemLatestGames::iLosers].GetCharPtr());
+            for (unsigned int i = 0; i < iNumEmpires; i ++)
+            {
+                if (!strList.IsBlank())
+                {
+                    strList += ", ";
+                }
+                strList += pvEmpireName[i].GetCharPtr();
+            }
+
+            pvLatestGame[SystemLatestGames::iLosers] = strList;
+            Assert(pvLatestGame[SystemLatestGames::iLosers].GetCharPtr());
+        }
 
         iErrCode = AddToLatestGames(pvLatestGame);
         RETURN_ON_ERROR(iErrCode);
@@ -1135,26 +1142,27 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
 
         if (goGameOptions.iTeamOptions & TEAM_PREARRANGED_ALLIANCES)
         {
-            Variant vDipLevel;
-            int iMaxAlliances = 0, iDipLevel;
-
+            int iDipLevel;
             iErrCode = GetGameClassDiplomacyLevel(iGameClass, &iDipLevel);
             RETURN_ON_ERROR(iErrCode);
 
+            Variant vDipLevel;
             iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MapsShared, &vDipLevel);
             RETURN_ON_ERROR(iErrCode);
 
             bool bShared = vDipLevel.GetInteger() == ALLIANCE;
 
-            if (iDipLevel & ALLIANCE) {
+            if (iDipLevel & ALLIANCE)
+            {
+                unsigned int iMaxAlliances = 0;
 
                 // Set each empire to alliance in teammate's diplomacy table
-                for (i = 0; i < goGameOptions.iNumPrearrangedTeams; i ++) {
-
+                for (i = 0; i < goGameOptions.iNumPrearrangedTeams; i ++)
+                {
                     const PrearrangedTeam& aTeam = goGameOptions.paPrearrangedTeam[i];
-                    unsigned int iKey, iNumAtAlliance = aTeam.iNumEmpires - 1;
+                    unsigned int iKey;
 
-                    if (iNumAtAlliance > (unsigned int) iMaxAlliances)
+                    if (aTeam.iNumEmpires - 1 > (unsigned int) iMaxAlliances)
                     {
                         iMaxAlliances = aTeam.iNumEmpires - 1;
                     }
@@ -1162,15 +1170,6 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
                     for (j = 0; j < aTeam.iNumEmpires; j ++)
                     {
                         GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, *piGameNumber, aTeam.piEmpireKey[j]);
-
-                        iErrCode = t_pCache->WriteData(strGameEmpireData, GameEmpireData::NumTruces, (int)iNumAtAlliance);
-                        RETURN_ON_ERROR(iErrCode);
-
-                        iErrCode = t_pCache->WriteData(strGameEmpireData, GameEmpireData::NumTrades, (int)iNumAtAlliance);
-                        RETURN_ON_ERROR(iErrCode);
-
-                        iErrCode = t_pCache->WriteData(strGameEmpireData, GameEmpireData::NumAlliances, (int)iNumAtAlliance);
-                        RETURN_ON_ERROR(iErrCode);
 
                         for (k = j + 1; k < aTeam.iNumEmpires; k ++)
                         {
@@ -1185,7 +1184,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
                             iErrCode = t_pCache->WriteData(strDip1, iKey, GameEmpireDiplomacy::CurrentStatus, ALLIANCE);
                             RETURN_ON_ERROR(iErrCode);
 
-                            iErrCode = t_pCache->WriteData(strDip1, iKey, GameEmpireDiplomacy::VirtualStatus, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(strDip1, iKey, GameEmpireDiplomacy::DipOfferLastUpdate, ALLIANCE);
                             RETURN_ON_ERROR(iErrCode);
 
                             iErrCode = t_pCache->WriteOr(strDip1, iKey, GameEmpireDiplomacy::State, ONCE_ALLIED_WITH);
@@ -1202,7 +1201,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
                             iErrCode = t_pCache->WriteData(strDip2, iKey, GameEmpireDiplomacy::CurrentStatus, ALLIANCE);
                             RETURN_ON_ERROR(iErrCode);
 
-                            iErrCode = t_pCache->WriteData(strDip2, iKey, GameEmpireDiplomacy::VirtualStatus, ALLIANCE);
+                            iErrCode = t_pCache->WriteData(strDip2, iKey, GameEmpireDiplomacy::DipOfferLastUpdate, ALLIANCE);
                             RETURN_ON_ERROR(iErrCode);
 
                             iErrCode = t_pCache->WriteOr(strDip2, iKey, GameEmpireDiplomacy::State, ONCE_ALLIED_WITH);
@@ -1246,8 +1245,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
                     }
                 }
                 
-                int iAllianceLimit;
-
+                unsigned int iAllianceLimit;
                 iErrCode = GetMaxNumDiplomacyPartners (iGameClass, *piGameNumber, ALLIANCE, &iAllianceLimit);
                 RETURN_ON_ERROR(iErrCode);
 
@@ -1852,9 +1850,6 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     pvGameEmpireData[GameEmpireData::iNextTotalPop] = 0;             // iNextTotalPop
     pvGameEmpireData[GameEmpireData::iNextMin] = 0;                  // NextMin
     pvGameEmpireData[GameEmpireData::iNextFuel] = 0;                 // NextFuel
-    pvGameEmpireData[GameEmpireData::iNumTruces] = 0;
-    pvGameEmpireData[GameEmpireData::iNumTrades] = 0;
-    pvGameEmpireData[GameEmpireData::iNumAlliances] = 0;
     pvGameEmpireData[GameEmpireData::iLastMessageTargetMask] = 0;
 
     // Select default message target
@@ -1923,7 +1918,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     pvGameEmpireData[GameEmpireData::iLastBuilderPlanet] = NO_KEY;
     pvGameEmpireData[GameEmpireData::iMaxEcon] = 0;
     pvGameEmpireData[GameEmpireData::iMaxMil] = 0;
-    pvGameEmpireData[GameEmpireData::iNumAlliancesLeaked] = 0;
+    pvGameEmpireData[GameEmpireData::iNumNukedAllies] = 0;
 
     if (vGameOptions.GetInteger() & GAME_COUNT_FOR_BRIDIER) {
 
@@ -2187,6 +2182,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
             {
                 if (pvEmpireKey[i].GetInteger() != iEmpireKey)
                 {
+                    pvDiplomacy[GameEmpireDiplomacy::iEmpireKey] = iEmpireKey;
                     pvDiplomacy[GameEmpireDiplomacy::iReferenceEmpireKey] = pvEmpireKey[i];
                     
                     // Insert iterated player into empire's table
@@ -3409,7 +3405,7 @@ int GameEngine::GetResignedEmpiresInGame (int iGameClass, int iGameNumber, unsig
     // Output
     unsigned int* piEmpireKey = new unsigned int[iNumEmpires];
     Assert(piEmpireKey);
-    Algorithm::AutoDelete<unsigned int>(piEmpireKey, true);
+    Algorithm::AutoDelete<unsigned int> free_piEmpireKey(piEmpireKey, true);
 
     unsigned int iNumResigned = 0;
     for (i = 0; i < iNumEmpires; i ++)
@@ -3458,8 +3454,12 @@ int GameEngine::GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber
 
     Assert(iNumEmpires <= 2);
 
+    unsigned int iFirstKey;
+    iErrCode = t_pCache->GetNextKey(pszGameEmpires, NO_KEY, &iFirstKey);
+    RETURN_ON_ERROR(iErrCode);
+
     // Read 1st empire
-    iErrCode = t_pCache->ReadData(pszGameEmpires, 0, GameEmpires::EmpireKey, &v0Key);
+    iErrCode = t_pCache->ReadData(pszGameEmpires, iFirstKey, GameEmpires::EmpireKey, &v0Key);
     RETURN_ON_ERROR(iErrCode);
 
     if (iNumEmpires == 1 && v0Key.GetInteger() == iEmpireKey)
@@ -3492,7 +3492,11 @@ int GameEngine::GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber
     // Read 2nd empire
     if (iNumEmpires == 2)
     {
-        iErrCode = t_pCache->ReadData(pszGameEmpires, 1, GameEmpires::EmpireKey, &v1Key);
+        unsigned int iNextKey;
+        iErrCode = t_pCache->GetNextKey(pszGameEmpires, iFirstKey, &iNextKey);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = t_pCache->ReadData(pszGameEmpires, iNextKey, GameEmpires::EmpireKey, &v1Key);
         RETURN_ON_ERROR(iErrCode);
 
         if (v0Key.GetInteger() != iEmpireKey && v1Key.GetInteger() != iEmpireKey) {

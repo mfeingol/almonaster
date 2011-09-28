@@ -1558,6 +1558,9 @@ if (m_bOwnPost && !m_bRedirection) {
                 m_bRedirectTest = false;
 
                 // Flush remaining updates
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+                
                 bool bUpdated;
                 iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdated);
                 RETURN_ON_ERROR(iErrCode);
@@ -1703,8 +1706,12 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 const char* pszMessage = pHttpForm->GetValue();
 
-                iErrCode = DeleteGame (iGameClass, iGameNumber, m_iEmpireKey, pszMessage, 0);
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
                 RETURN_ON_ERROR(iErrCode);
+
+                iErrCode = DeleteGame(iGameClass, iGameNumber, m_iEmpireKey, pszMessage, 0);
+                RETURN_ON_ERROR(iErrCode);
+
                 AddMessage ("The game was deleted");
                 iGameAdminPage = 1;
             }
@@ -2671,11 +2678,6 @@ case 0:
     %></table><%
 
     WriteButton (BID_CANCEL);
-
-    if (iNumSuperClasses > 0) {
-        t_pCache->FreeKeys (piSuperClassKey);
-        t_pCache->FreeData (pvSuperClassName);
-    }
 
     }
 

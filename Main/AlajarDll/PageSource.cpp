@@ -876,6 +876,14 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
         return ERROR_FAILURE;
     }
 
+    // Override500
+    if (m_pcfConfig->GetParameter ("Override500", &pszRhs) == OK && pszRhs != NULL) {
+        m_pbOverrideError[HTTP_500] = atoi (pszRhs) != 0;
+    } else {
+        *pstrErrorMessage = "The Override500 value could not be read";
+        return ERROR_FAILURE;
+    }
+
     // AllowDirectoryBrowsing
     if (m_pcfConfig->GetParameter ("AllowDirectoryBrowsing", &pszRhs) == OK && pszRhs != NULL) {
         m_bBrowsingAllowed = atoi (pszRhs) != 0;

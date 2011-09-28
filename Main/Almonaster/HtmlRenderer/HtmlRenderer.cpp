@@ -6267,6 +6267,9 @@ int HtmlRenderer::WriteActiveGameAdministration(int* piGameClass, int* piGameNum
 
     char pszAdmin [192];
 
+    iErrCode = CacheGameData(piGameClass, piGameNumber, NO_KEY, iNumActiveGames);
+    RETURN_ON_ERROR(iErrCode);
+
     for (i = 0; i < iNumActiveGames; i ++)
     {
         bool bUpdate;
@@ -6349,8 +6352,11 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
 
     char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
+    iErrCode = CacheGameData(&iGameClass, &iGameNumber, NO_KEY, 1);
+    RETURN_ON_ERROR(iErrCode);
+
     bool bUpdate;
-    iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bUpdate);
+    iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdate);
     RETURN_ON_ERROR(iErrCode);
 
     if (bUpdate)

@@ -152,6 +152,7 @@ int HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege)
 {
     int iErrCode = OK;
     unsigned int iNumber;
+    bool bShow;
 
     // ActiveGameList
     WriteButton (BID_ACTIVEGAMELIST);
@@ -189,25 +190,29 @@ int HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege)
     OutputText ("<br>");
 
     // Personal Game Classes
-    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES)
+    bShow = iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMECLASSES;
+    if (!bShow)
     {
         iErrCode = GetEmpirePersonalGameClasses(m_iEmpireKey, NULL, NULL, &iNumber);
         RETURN_ON_ERROR(iErrCode);
-        if (iNumber > 0)
-        {
-            WriteButton (BID_PERSONALGAMECLASSES);
-        }
+        bShow = iNumber > 0;
+    }
+    if (bShow)
+    {
+        WriteButton (BID_PERSONALGAMECLASSES);
     }
 
     // Personal Tournaments
-    if (iPrivilege >= PRIVILEGE_FOR_PERSONAL_TOURNAMENTS)
+    bShow = iPrivilege >= PRIVILEGE_FOR_PERSONAL_TOURNAMENTS;
+    if (!bShow)
     {
         iErrCode = GetOwnedTournaments (m_iEmpireKey, NULL, NULL, &iNumber);
         RETURN_ON_ERROR(iErrCode);
-        if (iNumber > 0)
-        {
-            WriteButton (BID_PERSONALTOURNAMENTS);
-        }
+        bShow = iNumber > 0;
+    }
+    if (bShow)
+    {
+        WriteButton (BID_PERSONALTOURNAMENTS);
     }
 
     if (iPrivilege >= ADMINISTRATOR) {

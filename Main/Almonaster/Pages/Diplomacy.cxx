@@ -186,7 +186,7 @@ if (m_bOwnPost && !m_bRedirection)
 
                         for (i = 0; i < iDelayEmpireKeys; i ++) {
 
-                            iErrCode = GetDiplomaticStatus (
+                            iErrCode = GetVisibleDiplomaticStatus(
                                 m_iGameClass,
                                 m_iGameNumber,
                                 m_iEmpireKey,
@@ -467,7 +467,7 @@ if (m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
 %><p><%
 
 UTCTime tLastLogin, tCurrentTime;
-int iGameOptions, iNumUpdatesIdle, iEcon, iMil, iWins, iNukes, iNuked, iDraws, iMaxEcon, iMaxMil, iNumTruces, iNumTrades, iNumAlliances;
+int iGameOptions, iNumUpdatesIdle, iEcon, iMil, iWins, iNukes, iNuked, iDraws, iMaxEcon, iMaxMil;
 float fMil;
 Variant vIPAddress;
 
@@ -524,13 +524,8 @@ RETURN_ON_ERROR(iErrCode);
 iErrCode = pGameEmpireTable->ReadData(GameEmpireData::Mil, &fMil);
 RETURN_ON_ERROR(iErrCode);
 
-iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTruces, &iNumTruces);
-RETURN_ON_ERROR(iErrCode);
-
-iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumTrades, &iNumTrades);
-RETURN_ON_ERROR(iErrCode);
-
-iErrCode = pGameEmpireTable->ReadData(GameEmpireData::NumAlliances, &iNumAlliances);
+unsigned int iNumTruces, iNumTrades, iNumAlliances, iNumFormerAlliances;
+iErrCode = GetDiplomacyCountsForLimits(m_iGameClass, m_iGameNumber, m_iEmpireKey, &iNumTruces, &iNumTrades, &iNumAlliances, &iNumFormerAlliances);
 RETURN_ON_ERROR(iErrCode);
 
 GET_SYSTEM_EMPIRE_DATA(strEmpire, m_iEmpireKey);
@@ -572,7 +567,8 @@ iMil = GetMilitaryValue (fMil);
 if (bGameStarted)
 {
     bool bVisible;
-    int iMaxNumTruces, iMaxNumTrades, iMaxNumAlliances, m_iGameClassOptions, m_iGameClassDip;
+    unsigned int iMaxNumTruces, iMaxNumTrades, iMaxNumAlliances;
+    int iGameClassOptions, iGameClassDip;
 
     iErrCode = GetGameClassVisibleDiplomacy(m_iGameClass, &bVisible);
     RETURN_ON_ERROR(iErrCode);
@@ -589,26 +585,26 @@ if (bGameStarted)
     iErrCode = GetMaxNumDiplomacyPartners (m_iGameClass, m_iGameNumber, ALLIANCE, &iMaxNumAlliances);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = GetGameClassOptions (m_iGameClass, &m_iGameClassOptions);
+    iErrCode = GetGameClassOptions(m_iGameClass, &iGameClassOptions);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = GetGameClassDiplomacyLevel (m_iGameClass, &m_iGameClassDip);
+    iErrCode = GetGameClassDiplomacyLevel(m_iGameClass, &iGameClassDip);
     RETURN_ON_ERROR(iErrCode);
 
     %><p><table width="80%"><tr><%
 
     %><th bgcolor="<% Write (pszTableColor); %>">Diplomatic Settings</th><%
     %><th bgcolor="<% Write (pszTableColor); %>">Econ and Mil views</th><%
-    if (m_iGameClassDip & TRUCE) {
+    if (iGameClassDip & TRUCE) {
         %><th bgcolor="<% Write (pszTableColor); %>">Truces</th><%
     }
-    if (m_iGameClassDip & TRADE) {
+    if (iGameClassDip & TRADE) {
         %><th bgcolor="<% Write (pszTableColor); %>">Trades</th><%
     }
-    if (m_iGameClassDip & ALLIANCE) {
+    if (iGameClassDip & ALLIANCE) {
         %><th bgcolor="<% Write (pszTableColor); %>">Alliances</th><%
     }
-    if (m_iGameClassDip & SURRENDER) {
+    if (iGameClassDip & SURRENDER) {
         %><th bgcolor="<% Write (pszTableColor); %>">Surrenders</th><%
     }
 
@@ -630,93 +626,96 @@ if (bGameStarted)
     }
     %></td><%
 
-    if (m_iGameClassDip & TRUCE) {
-
+    if (iGameClassDip & TRUCE)
+    {
         %><td align="center"><%
-        switch (iMaxNumTruces) {
-
+        switch (iMaxNumTruces)
+        {
         case UNRESTRICTED_DIPLOMACY:
-
             %>Unrestricted<%
             break;
 
         case FAIR_DIPLOMACY:
-
             %>Fair truces<%
             break;
 
         default:
-
             %>Limit of <strong><% Write (iMaxNumTruces); %></strong> truce<%
             if (iMaxNumTruces != 1) { %>s<% }
             break;
         }
-        %> (<% Write (iNumTruces); %>)</td><%
+        %> (<% Write(iNumTruces + iNumTrades + iNumAlliances); %>)</td><%
     }
 
-    if (m_iGameClassDip & TRADE) {
-
+    if (iGameClassDip & TRADE)
+    {
         %><td align="center"><%
-        switch (iMaxNumTrades) {
-
+        switch (iMaxNumTrades)
+        {
         case UNRESTRICTED_DIPLOMACY:
-
             %>Unrestricted<%
             break;
 
         case FAIR_DIPLOMACY:
-
             %>Fair trades<%
             break;
 
         default:
-
             %>Limit of <strong><% Write (iMaxNumTrades); %></strong> trade<%
             if (iMaxNumTrades != 1) { %>s<% }
             break;
         }
-        %> (<% Write (iNumTrades); %>)</td><%
+        %> (<% Write(iNumTrades + iNumAlliances); %>)</td><%
     }
 
-    if (m_iGameClassDip & ALLIANCE) {
+    if (iGameClassDip & ALLIANCE) {
 
         %><td align="center"><%
-        switch (iMaxNumAlliances) {
-
+        switch (iMaxNumAlliances)
+        {
         case UNRESTRICTED_DIPLOMACY:
-
             %>Unrestricted<%
             break;
 
         case FAIR_DIPLOMACY:
-
             %>Fair alliances<%
             break;
 
         default:
-
             %>Limit of <strong><% Write (iMaxNumAlliances); %></strong> alliance<%
             if (iMaxNumAlliances != 1) { %>s<% }
             break;
         }
-        %> (<% Write (iNumAlliances); %>)<%
+        %> (<% 
+            Write(iNumAlliances + iNumFormerAlliances);
+            if (iNumAlliances > 0 && iNumFormerAlliances > 0)
+            {
+                Write(", ");
+                Write(iNumFormerAlliances);
+                Write(" previous");
+            }
+            else if (iNumFormerAlliances > 0)
+            {
+                Write(" previous");
+            }
+        %>)<%
 
-        if (m_iGameClassOptions & UNBREAKABLE_ALLIANCES) {
+        if (iGameClassOptions & UNBREAKABLE_ALLIANCES) {
             %><br>Unbreakable<%
         }
 
-        if (m_iGameClassOptions & PERMANENT_ALLIANCES) {
+        if (iGameClassOptions & PERMANENT_ALLIANCES) {
             %><br>Count for entire game<%
         }
 
         %></td><%
     }
 
-    if (m_iGameClassDip & SURRENDER) {
+    if (iGameClassDip & SURRENDER) {
 
         %><td align="center"><%
 
-        if (m_iGameClassOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES) {
+        if (iGameClassOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES) {
             %>When 2 empires remain<%
         } else {
             %>Allowed<%
@@ -850,7 +849,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
     iWeOffer = ppvEmpireData[i][1].GetInteger();
     iCurrentStatus = ppvEmpireData[i][2].GetInteger();
 
-    iErrCode = GetDiplomaticStatus (
+    iErrCode = GetVisibleDiplomaticStatus(
         m_iGameClass,
         m_iGameNumber,
         m_iEmpireKey,
@@ -863,9 +862,9 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
 
     RETURN_ON_ERROR(iErrCode);
 
-    if (bGameStarted) {
-
-        iErrCode = GetDiplomaticOptions (
+    if (bGameStarted)
+    {
+        iErrCode = GetDiplomaticOptions(
             m_iGameClass,
             m_iGameNumber,
             m_iEmpireKey,

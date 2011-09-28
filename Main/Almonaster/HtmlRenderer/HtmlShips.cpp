@@ -407,7 +407,6 @@ int HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigne
             } else {
                 Assert(piNumShipsInFleet[i] == iNumShipsInFleet);
             }
-            Assert(iNumShipsInFleet == (unsigned int) pvFleetData[GameEmpireFleets::iNumShips].GetInteger());
 #endif
             if (piNumShipsInFleet == NULL) {
                 iNumShipsInFleet = 0;

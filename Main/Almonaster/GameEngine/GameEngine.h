@@ -676,16 +676,10 @@ private:
     static int THREAD_CALL PurgeDatabaseMsg (AsyncTask* pMessage);
 
     // Diplomacy
-    int AddDiplomaticOption (int iGameClass, int iGameNumber, int iTargetEmpireKey,
-        const char* pszEmpireData, const char* pszEmpireDiplomacy, const char* pszEmpireDataColumn, 
-        int iDiplomacyLevel, int iCurrentDiplomacyLevel, int piDipOptKey[], int* piNumOptions);
+    int AddDiplomaticOption(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyProxyKey,
+                            int iDiplomacyLevel, int iCurrentDiplomacyLevel, int piDipOptKey[], int* piNumOptions);
 
     int BuildDuplicateList (int* piDuplicateKeys, unsigned int iNumDuplicates, String* pstrDuplicateList);
-
-    int GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNumber, int iEmpireKey, 
-        int* piNumTruces, int* piNumTrades, int* piNumAlliances);
-
-    int CheckTruceTradeAllianceCounts (int iGameClass, int iGameNumber, int iEmpireKey);
 
     int ProcessSubjectiveViews (int iGameClass, int iGameNumber,
         unsigned int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, 
@@ -783,7 +777,10 @@ public:
     int CheckTargetPop (int iGameClass, int iGameNumber, int iEmpireKey);
 #endif
 
-    int GetMaxNumDiplomacyPartners (int iGameClass, int iGameNumber, int iDiplomacyLevel, int* piMaxNumPartners);
+    int GetMaxNumDiplomacyPartners(int iGameClass, int iGameNumber, int iDiplomacyLevel, unsigned int* piMaxNumPartners);
+    int GetCumulativeDiplomacyCountForLimits(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyLevel, unsigned int* piCount);
+    int GetDiplomacyCountsForLimits(int iGameClass, int iGameNumber, int iEmpireKey,
+                                    unsigned int* piNumTruces, unsigned int* piNumTrades, unsigned int* piNumAlliances, unsigned int* piNumFormerAlliances);
 
     void CalculateTradeBonuses (int iNumTrades, int iTotalAg, int iTotalMin, int iTotalFuel,
         int iPercentFirstTradeIncrease, int iPercentNextTradeIncrease, 
@@ -1072,11 +1069,12 @@ public:
 
     enum GameCacheEntryFlags
     {
-        EMPTY_GAME_EMPIRE_DIPLOMACY = 0x00000001,
-        EMPTY_GAME_EMPIRE_MAP       = 0x00000002,
-        EMPTY_GAME_EMPIRE_SHIPS     = 0x00000004,
-        EMPTY_GAME_EMPIRE_MESSAGES  = 0x00000008,
-        EMPTY_GAME_EMPIRE_FLEETS    = 0x00000010,
+        EMPTY_GAME_EMPIRE_DIPLOMACY  = 0x00000001,
+        EMPTY_GAME_EMPIRE_MAP        = 0x00000002,
+        EMPTY_GAME_EMPIRE_SHIPS      = 0x00000004,
+        EMPTY_GAME_EMPIRE_MESSAGES   = 0x00000008,
+        EMPTY_GAME_EMPIRE_FLEETS     = 0x00000010,
+        EMPTY_SYSTEM_EMPIRE_MESSAGES = 0x00000020,
     };
 
     int CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyKey, int eFlags);
@@ -1319,16 +1317,13 @@ public:
     int DoesEmpireHaveDuplicates (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszSystemEmpireDataColumn,
         int** ppiDuplicateKeys, unsigned int* piNumDuplicates);
 
-    int GetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int* piMessageTarget);
-    int SetEmpireDefaultMessageTarget (int iGameClass, int iGameNumber, int iEmpireKey, int iMessageTarget);
+    int GetEmpireDefaultMessageTarget(int iGameClass, int iGameNumber, int iEmpireKey, int* piMessageTarget);
+    int SetEmpireDefaultMessageTarget(int iGameClass, int iGameNumber, int iEmpireKey, int iMessageTarget);
 
     // Diplomacy
-    int GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpireKey, 
-        int* piNumEmpires);
-    int GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
-        int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet);
-    int GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
-        int piDipOptKey[], int* piSelected, int* piNumOptions);
+    int GetKnownEmpireKeys (int iGameClass, int iGameNumber, int iEmpireKey, Variant** ppvEmpireKey, int* piNumEmpires);
+    int GetVisibleDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet);
+    int GetDiplomaticOptions (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int piDipOptKey[], int* piSelected, int* piNumOptions);
     int UpdateDiplomaticOffer (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int iDipOffer);
 
     int RequestPause (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);

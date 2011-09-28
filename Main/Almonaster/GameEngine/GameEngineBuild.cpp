@@ -304,14 +304,6 @@ int GameEngine::BuildNewShips (int iGameClass, int iGameNumber, int iEmpireKey, 
         iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::MaxStrength, fMil);
         RETURN_ON_ERROR(iErrCode);
 
-        // Increment number of buildships
-        iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::BuildShips, iNumShips);
-        RETURN_ON_ERROR(iErrCode);
-
-        // Increment number of ships
-        iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::NumShips, iNumShips);
-        RETURN_ON_ERROR(iErrCode);
-
         // Set the fleet to stand by
         iErrCode = t_pCache->WriteData(strEmpireFleets, iFleetKey, GameEmpireFleets::Action, STAND_BY);
         RETURN_ON_ERROR(iErrCode);

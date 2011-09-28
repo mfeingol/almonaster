@@ -3161,12 +3161,9 @@ namespace GameEmpireData
     static const char* const NextTotalPop = "NextTotalPop";
     static const char* const NextMin = "NextMin";
     static const char* const NextFuel = "NextFuel";
-    static const char* const NumAlliances = "NumAlliances";
-    static const char* const NumTruces = "NumTruces";
     static const char* const MaxNumGameMessages = "MaxNumGameMessages";
     static const char* const TechDevs = "TechDevs";
     static const char* const TechUndevs = "TechUndevs";
-    static const char* const NumTrades = "NumTrades";
     static const char* const PartialMapXRadius = "PartialMapXRadius";
     static const char* const PartialMapYRadius = "PartialMapYRadius";
     static const char* const Notepad = "Notepad";
@@ -3174,7 +3171,7 @@ namespace GameEmpireData
     static const char* const LastBuilderPlanet = "LastBuilderPlanet";
     static const char* const MaxEcon = "MaxEcon";
     static const char* const MaxMil = "MaxMil";
-    static const char* const NumAlliancesLeaked = "NumAlliancesLeaked";
+    static const char* const NumNukedAllies = "NumNukedAllies";
     static const char* const DefaultMessageTarget = "DefaultMessageTarget";
     static const char* const LastMessageTargetMask = "LastMessageTargetMask";
     static const char* const InitialBridierRank = "InitialBridierRank";
@@ -3221,12 +3218,9 @@ namespace GameEmpireData
         iNextTotalPop,
         iNextMin,
         iNextFuel,
-        iNumAlliances,
-        iNumTruces,
         iMaxNumGameMessages,
         iTechDevs,
         iTechUndevs,
-        iNumTrades,
         iPartialMapXRadius,
         iPartialMapYRadius,
         iNotepad,
@@ -3234,7 +3228,7 @@ namespace GameEmpireData
         iLastBuilderPlanet,
         iMaxEcon,
         iMaxMil,
-        iNumAlliancesLeaked,
+        iNumNukedAllies,
         iDefaultMessageTarget,
         iLastMessageTargetMask,
         iInitialBridierRank,
@@ -3282,12 +3276,9 @@ namespace GameEmpireData
         NextTotalPop,
         NextMin,
         NextFuel,
-        NumAlliances,
-        NumTruces,
         MaxNumGameMessages,
         TechDevs,
         TechUndevs,
-        NumTrades,
         PartialMapXRadius,
         PartialMapYRadius,
         Notepad,
@@ -3295,7 +3286,7 @@ namespace GameEmpireData
         LastBuilderPlanet,
         MaxEcon,
         MaxMil,
-        NumAlliancesLeaked,
+        NumNukedAllies,
         DefaultMessageTarget,
         LastMessageTargetMask,
         InitialBridierRank,
@@ -3326,9 +3317,6 @@ namespace GameEmpireData
         V_INT,
         V_INT,
         V_FLOAT,
-        V_INT,
-        V_INT,
-        V_INT,
         V_INT,
         V_INT,
         V_INT,
@@ -3382,9 +3370,6 @@ namespace GameEmpireData
         0,
         0,
         MAX_IP_ADDRESS_LENGTH,
-        0,
-        0,
-        0,
         0,
         0,
         0,
@@ -3665,7 +3650,7 @@ namespace GameEmpireDiplomacy
     static const char* const ReferenceEmpireKey = "ReferenceEmpireKey";
     static const char* const DipOffer = "DipOffer";
     static const char* const CurrentStatus = "CurrentStatus";
-    static const char* const VirtualStatus = "VirtualStatus";
+    static const char* const DipOfferLastUpdate = "DipOfferLastUpdate";
     static const char* const State = "State";
     static const char* const SubjectiveEcon = "SubjectiveEcon";
     static const char* const SubjectiveMil = "SubjectiveMil";
@@ -3679,7 +3664,7 @@ namespace GameEmpireDiplomacy
         iReferenceEmpireKey,
         iDipOffer,
         iCurrentStatus,
-        iVirtualStatus,
+        iDipOfferLastUpdate,
         iState,
         iSubjectiveEcon,
         iSubjectiveMil,
@@ -3694,7 +3679,7 @@ namespace GameEmpireDiplomacy
         ReferenceEmpireKey,
         DipOffer,
         CurrentStatus,
-        VirtualStatus,
+        DipOfferLastUpdate,
         State,
         SubjectiveEcon,
         SubjectiveMil,
@@ -3907,12 +3892,10 @@ namespace GameEmpireFleets
     static const char* const GameNumber = "GameNumber";
     static const char* const EmpireKey = "EmpireKey";
     static const char* const Name = "Name";
-    static const char* const NumShips = "NumShips";
     static const char* const CurrentStrength = "CurrentStrength";
     static const char* const MaxStrength = "MaxStrength";
     static const char* const CurrentPlanet = "CurrentPlanet";
     static const char* const Action = "Action";
-    static const char* const BuildShips = "BuildShips";
     static const char* const Flags = "Flags";
 
     enum Columns
@@ -3921,12 +3904,10 @@ namespace GameEmpireFleets
         iGameNumber,
         iEmpireKey,
         iName,
-        iNumShips,
         iCurrentStrength,
         iMaxStrength,
         iCurrentPlanet,
         iAction,
-        iBuildShips,
         iFlags,
     };
 
@@ -3936,12 +3917,10 @@ namespace GameEmpireFleets
         GameNumber,
         EmpireKey,
         Name,
-        NumShips,
         CurrentStrength,
         MaxStrength,
         CurrentPlanet,
         Action,
-        BuildShips,
         Flags,
     };
     
@@ -3951,10 +3930,8 @@ namespace GameEmpireFleets
         V_INT,
         V_INT,
         V_STRING,
-        V_INT,
         V_FLOAT,
         V_FLOAT,
-        V_INT,
         V_INT,
         V_INT,
         V_INT,
@@ -3964,9 +3941,7 @@ namespace GameEmpireFleets
     {
         0,
         0,
-        0,
         MAX_FLEET_NAME_LENGTH,
-        0,
         0,
         0,
         0,

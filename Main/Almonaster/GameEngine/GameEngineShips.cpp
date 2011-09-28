@@ -111,21 +111,6 @@ int GameEngine::DeleteShip (int iGameClass, int iGameNumber, int iEmpireKey, int
             - fMaxMil
             );
         RETURN_ON_ERROR(iErrCode);
-
-        // Reduce number of ships
-        iErrCode = t_pCache->Increment(
-            strEmpireFleets, 
-            iFleetKey, 
-            GameEmpireFleets::NumShips, 
-            -1
-            );
-        RETURN_ON_ERROR(iErrCode);
-
-        // Decrement number of "BuildShips" if necessary
-        if (vCancelBuild.GetInteger() != 0) {
-            iErrCode = t_pCache->Increment(strEmpireFleets, iFleetKey, GameEmpireFleets::BuildShips, -1);
-            RETURN_ON_ERROR(iErrCode);
-        }
     }
 
     GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
@@ -1776,15 +1761,7 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                     
                 iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::MaxStrength, -fMil);
                 RETURN_ON_ERROR(iErrCode);
-                    
-                // Decrement number of "BuildShips"
-                iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::BuildShips, -1);
-                RETURN_ON_ERROR(iErrCode);
 
-                // Decrement number of ships
-                iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::NumShips, -1);
-                RETURN_ON_ERROR(iErrCode);
-                    
                 // Set no fleet key
                 iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, (int)NO_KEY);
                 RETURN_ON_ERROR(iErrCode);
@@ -1817,14 +1794,6 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
 
             iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::MaxStrength, -fMil);
             RETURN_ON_ERROR(iErrCode);
-
-            // Decrement number of "BuildShips"
-            iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::BuildShips, -1);
-            RETURN_ON_ERROR(iErrCode);
-
-            // Decrement number of ships
-            iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::NumShips, -1);
-            RETURN_ON_ERROR(iErrCode);
         }
                 
         // Increase power of new fleet
@@ -1833,43 +1802,17 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 
         iErrCode = t_pCache->Increment(strEmpireFleets, iNewShipOrder, GameEmpireFleets::MaxStrength, fMil);
         RETURN_ON_ERROR(iErrCode);
-                
-        // Increment number of "buildships"
-        iErrCode = t_pCache->Increment(strEmpireFleets, iNewShipOrder, GameEmpireFleets::BuildShips, 1);
-        RETURN_ON_ERROR(iErrCode);
 
-        // Increment number of ships
-        iErrCode = t_pCache->Increment(strEmpireFleets, iNewShipOrder, GameEmpireFleets::NumShips, 1);
-        RETURN_ON_ERROR(iErrCode);
-                
         // Set action to be "build in fleet"
-        iErrCode = t_pCache->WriteData(
-            strEmpireShips, 
-            iShipKey, 
-            GameEmpireShips::Action, 
-            iNewShipOrder
-            );
-
+        iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::Action, iNewShipOrder);
         RETURN_ON_ERROR(iErrCode);
                 
         // Set ship fleet
-        iErrCode = t_pCache->WriteData(
-            strEmpireShips, 
-            iShipKey, 
-            GameEmpireShips::FleetKey, 
-            iNewShipOrder
-            );
-
+        iErrCode = t_pCache->WriteData(strEmpireShips, iShipKey, GameEmpireShips::FleetKey, iNewShipOrder);
         RETURN_ON_ERROR(iErrCode);
 
         // Set the fleet to stand by
-        iErrCode = t_pCache->WriteData(
-            strEmpireFleets, 
-            iNewShipOrder, 
-            GameEmpireFleets::Action, 
-            STAND_BY
-            );
-
+        iErrCode = t_pCache->WriteData(strEmpireFleets, iNewShipOrder, GameEmpireFleets::Action, STAND_BY);
         RETURN_ON_ERROR(iErrCode);
 
         return iErrCode;
@@ -1921,9 +1864,6 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
         iErrCode = t_pCache->Increment(strEmpireFleets, iNewShipOrder, GameEmpireFleets::MaxStrength, fMaxMil);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = t_pCache->Increment(strEmpireFleets, iNewShipOrder, GameEmpireFleets::NumShips, 1);
-        RETURN_ON_ERROR(iErrCode);
-        
         // Remove ship from old fleet
         if (iOldFleetKey != NO_KEY) {
             
@@ -1932,9 +1872,6 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
             RETURN_ON_ERROR(iErrCode);
             
             iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::MaxStrength, -fMaxMil);
-            RETURN_ON_ERROR(iErrCode);
-
-            iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::NumShips, -1);
             RETURN_ON_ERROR(iErrCode);
         }
 
@@ -1989,9 +1926,6 @@ int GameEngine::UpdateShipOrders (unsigned int iGameClass, unsigned int iGameNum
                 fCurrentMil = vMaxBR.GetFloat() * vMaxBR.GetFloat();
                 
                 iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::MaxStrength, -fCurrentMil);
-                RETURN_ON_ERROR(iErrCode);
-
-                iErrCode = t_pCache->Increment(strEmpireFleets, iOldFleetKey, GameEmpireFleets::NumShips, -1);
                 RETURN_ON_ERROR(iErrCode);
 
                 // Set ship to no fleet

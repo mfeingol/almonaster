@@ -544,6 +544,23 @@ int TableCacheCollection::GetEqualKeys(const char* pszCacheTableName, const char
     return iErrCode;
 }
 
+int TableCacheCollection::GetEqualKeys(const char* pszCacheTableName, const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns,
+                                       unsigned int** ppiKey, unsigned int* piNumKeys)
+{
+    if (ppiKey)
+        *ppiKey = NULL;
+    *piNumKeys = 0;
+
+    CachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->GetEqualKeys(ppszColumn, pvData, iNumColumns, ppiKey, piNumKeys);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
 int TableCacheCollection::GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
     *ppiKey = NULL;

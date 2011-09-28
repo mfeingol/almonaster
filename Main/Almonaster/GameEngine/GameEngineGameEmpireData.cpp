@@ -55,7 +55,6 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     RETURN_ON_ERROR(iErrCode);
 
     bool bIndependence = (vGameClassOptions.GetInteger() & INDEPENDENCE) != 0;
-    bool bPermanentAlliances = (vGameClassOptions.GetInteger() & PERMANENT_ALLIANCES) != 0;
 
     // Get game state
     iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vGameState);
@@ -140,7 +139,6 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
         if (iEmpireKey == pvEmpireKey[i].GetInteger())
             continue;
 
-        Variant vDipOffer, vDipStatus, vState;
         GET_GAME_EMPIRE_DIPLOMACY(strOtherEmpireDip, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
             
         unsigned int iDiplomacyKey;
@@ -153,83 +151,20 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
 
         GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
                 
-        // Collect info for dip counts
-        iErrCode = t_pCache->ReadData(strOtherEmpireDip, iDiplomacyKey, GameEmpireDiplomacy::DipOffer, &vDipOffer);
-        RETURN_ON_ERROR(iErrCode);
-
+        Variant vDipStatus;
         iErrCode = t_pCache->ReadData(strOtherEmpireDip, iDiplomacyKey, GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = t_pCache->ReadData(strOtherEmpireDip, iDiplomacyKey, GameEmpireDiplomacy::State, &vState);
-        RETURN_ON_ERROR(iErrCode);
+        // Add to the nuked ally count
+        if (vDipStatus.GetInteger() == ALLIANCE)
+        {
+            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumNukedAllies, 1);
+            RETURN_ON_ERROR(iErrCode);
+        }
 
         // Nuke the row
         iErrCode = t_pCache->DeleteRow(strOtherEmpireDip, iDiplomacyKey);
         RETURN_ON_ERROR(iErrCode);
-
-        int iDipCountStatus;
-        if (vDipOffer.GetInteger() > vDipStatus.GetInteger() && vDipOffer.GetInteger() <= ALLIANCE)
-        {
-            iDipCountStatus = vDipOffer.GetInteger();
-        }
-        else
-        {
-            iDipCountStatus = vDipStatus.GetInteger();
-        }
-
-        // Reduce diplomatic counts
-        switch (iDipCountStatus)
-        {
-        case WAR:
-            break;
-
-        case ALLIANCE:
-
-            if (!bPermanentAlliances)
-            {
-                // Decrement, since alliances aren't permanent
-                iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
-                RETURN_ON_ERROR(iErrCode);
-            }
-                    
-            else if (vDipStatus.GetInteger() == ALLIANCE)
-            {
-                // Increment leaked count
-                iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliancesLeaked, 1);
-                RETURN_ON_ERROR(iErrCode);
-            }
-            else
-            {
-                // If we weren't once allied with this empire, decrement
-                if (!(vState.GetInteger() & ONCE_ALLIED_WITH))
-                {
-                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
-                    RETURN_ON_ERROR(iErrCode);
-                }
-            }
-
-            // Always fall through...
-
-        case TRADE:
-
-            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, -1);
-            RETURN_ON_ERROR(iErrCode);
-            // Fall through...
-
-        case TRUCE:
-
-            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
-            RETURN_ON_ERROR(iErrCode);
-#ifdef _DEBUG
-            iErrCode = CheckTruceTradeAllianceCounts (iGameClass, iGameNumber, pvEmpireKey[i].GetInteger());
-            Assert(iErrCode == OK);
-#endif
-            break;
-
-        default:
-            Assert(false);
-            break;
-        }
     }
     
     // Delete row from GameEmpires

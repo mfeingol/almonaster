@@ -38,6 +38,7 @@ public:
     int GetFirstKey(const char* pszColumn, const Variant& vData, unsigned int* piKey);
     int GetNextKey(unsigned int iKey, unsigned int* piNextKey);
     int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys);
+    int GetEqualKeys(const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns, unsigned int** ppiKey, unsigned int* piNumKeys);
     int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys);
 
     int ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows);

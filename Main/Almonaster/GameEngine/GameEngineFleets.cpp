@@ -322,12 +322,10 @@ int GameEngine::CreateNewFleet (int iGameClass, int iGameNumber, int iEmpireKey,
         iGameNumber,
         iEmpireKey,
         pszFleetName,
-        0,
         (float) 0.0,
         (float) 0.0,
         iPlanetKey,
         STAND_BY,
-        0,
         iFleetOptions,
     };
     Assert(pvColVal[GameEmpireFleets::iName].GetCharPtr());
@@ -419,7 +417,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
     // Add moves if fleet has no build ships //
     ///////////////////////////////////////////
 
-    iErrCode = GetNumShipsInFleet (iGameClass, iGameNumber, iEmpireKey, iFleetKey, &iNumShips, &iNumBuildShips);
+    iErrCode = GetNumShipsInFleet(iGameClass, iGameNumber, iEmpireKey, iFleetKey, &iNumShips, &iNumBuildShips);
     RETURN_ON_ERROR(iErrCode);
     Assert(iNumBuildShips >= 0);
 
@@ -1384,10 +1382,11 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
         if (iOrderKey == MOVE_NORTH - (int) i)
         {
             // Make sure we have no build ships
-            iErrCode = t_pCache->ReadData(strEmpireFleets, iFleetKey, GameEmpireFleets::BuildShips, &vTemp);
+            unsigned int iBuildShips;
+            iErrCode = GetNumShipsInFleet(iGameClass, iGameNumber, iEmpireKey, iFleetKey, NULL, &iBuildShips);
             RETURN_ON_ERROR(iErrCode);
 
-            if (vTemp.GetInteger() > 0)
+            if (iBuildShips > 0)
             {
                 return ERROR_CANNOT_MOVE;
             }
@@ -1458,25 +1457,29 @@ int GameEngine::GetNumShipsInFleet (int iGameClass, int iGameNumber, int iEmpire
 {
     Assert(piNumShips != NULL || piNumBuildShips != NULL);
 
-    int iErrCode;
-
-    ICachedTable* pFleets = NULL;
-    AutoRelease<ICachedTable> release(pFleets);
-
-    GET_GAME_EMPIRE_FLEETS (pszFleets, iGameClass, iGameNumber, iEmpireKey);
-
-    iErrCode = t_pCache->GetTable(pszFleets, &pFleets);
-    RETURN_ON_ERROR(iErrCode);
+    int iErrCode = OK;
+    GET_GAME_EMPIRE_SHIPS(strShips, iGameClass, iGameNumber, iEmpireKey);
 
     if (piNumShips)
     {
-        iErrCode = pFleets->ReadData(iFleetKey, GameEmpireFleets::NumShips, (int*) piNumShips);
+        iErrCode = t_pCache->GetEqualKeys(strShips, GameEmpireShips::FleetKey, iFleetKey, NULL, piNumShips);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
         RETURN_ON_ERROR(iErrCode);
     }
 
     if (piNumBuildShips)
     {
-        iErrCode = pFleets->ReadData(iFleetKey, GameEmpireFleets::BuildShips, (int*) piNumBuildShips);
+        const char* ppszColumns[] = { GameEmpireShips::FleetKey, GameEmpireShips::BuiltThisUpdate };
+        const Variant pvEquals[] = { iFleetKey, 1 };
+
+        iErrCode = t_pCache->GetEqualKeys(strShips, ppszColumns, pvEquals, countof(pvEquals), NULL, piNumBuildShips);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
         RETURN_ON_ERROR(iErrCode);
     }
 
@@ -1553,25 +1556,15 @@ int GameEngine::MergeFleets(unsigned int iGameClass, int iGameNumber, unsigned i
     }
     else
     {
-        // Careful - we can only do this if the source fleet is a build fleet
-        int iSrcShips;
-        iErrCode = pFleets->ReadData(iSrcKey, GameEmpireFleets::NumShips, &iSrcShips);
+        // Careful - we can only move a fleet between planets if the source fleet is empty or only contains ships being built this update
+        unsigned int iSrcShips, iSrcBuildShips;
+        iErrCode = GetNumShipsInFleet(iGameClass, iGameNumber, iEmpireKey, iSrcKey, &iSrcShips, &iSrcBuildShips);
         RETURN_ON_ERROR(iErrCode);
 
-        Assert(iSrcShips >= 0);
-        if (iSrcShips > 0)
+        Assert(iSrcShips >= iSrcBuildShips);
+        if (iSrcShips > 0 && iSrcShips > iSrcBuildShips)
         {
-            int iSrcBuildShips;
-            iErrCode = pFleets->ReadData(iSrcKey, GameEmpireFleets::BuildShips, &iSrcBuildShips);
-            RETURN_ON_ERROR(iErrCode);
-
-            Assert(iSrcBuildShips >= 0);
-            Assert(iSrcShips >= iSrcBuildShips);
-
-            if (iSrcShips > iSrcBuildShips)
-            {
-                return ERROR_INVALID_FLEET_ORDER;
-            }
+            return ERROR_INVALID_FLEET_ORDER;
         }
     }
 

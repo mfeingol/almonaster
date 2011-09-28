@@ -187,7 +187,7 @@ if (bConfirmPage)
             bool bFlag, bIdle = false;
 
             // Cache GameData for each game
-            iErrCode = CacheGameData(piGameClass, piGameNumber, m_iEmpireKey, iNumOpenGames);
+            iErrCode = CacheGameData(piGameClass, piGameNumber, NO_KEY, iNumOpenGames);
             RETURN_ON_ERROR(iErrCode);
 
             for (i = 0; i < (int)iNumOpenGames; i ++)

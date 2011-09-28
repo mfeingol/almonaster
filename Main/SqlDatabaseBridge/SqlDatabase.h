@@ -190,6 +190,7 @@ public:
     virtual int GetFirstKey(const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
     virtual int GetNextKey(unsigned int iKey, unsigned int* piNextKey) = 0;
     virtual int GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetEqualKeys(const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
     virtual int GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
 
     virtual int ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;
@@ -257,6 +258,7 @@ public:
     virtual int GetFirstKey(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey) = 0;
     virtual int GetNextKey(const char* pszCacheTableName, unsigned int iKey, unsigned int* piNextKey) = 0;
     virtual int GetEqualKeys(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
+    virtual int GetEqualKeys(const char* pszCacheTableName, const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns, unsigned int** ppiKey, unsigned int* piNumKeys) = 0;
     virtual int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumRows) = 0;
 
     virtual int ReadColumn(const char* pszCacheTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows) = 0;

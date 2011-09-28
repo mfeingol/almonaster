@@ -728,7 +728,7 @@ int GameEngine::UpdateEmpireString(int iEmpireKey, const char* pszColumn, const 
     else
     {
         char* pszNew = NULL;
-        Algorithm::AutoDelete<char>(pszNew, true);
+        Algorithm::AutoDelete<char> free_pszNew(pszNew, true);
 
         if (strlen (pszString) >= stMaxLen)
         {
@@ -1288,7 +1288,8 @@ int GameEngine::CheckAllGamesForUpdatesMsg(AsyncTask* pMessage)
 {
     const TableCacheEntry entries[] =
     {
-        { SYSTEM_ACTIVE_GAMES, NULL, NO_KEY, 0, NULL },
+        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL },
+        { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL }
     };
 
     int iErrCode = t_pCache->Cache(entries, countof(entries));

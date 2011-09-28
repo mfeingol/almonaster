@@ -1157,7 +1157,7 @@ int HttpResponse::Send() {
     strcat (pszBuffer, HttpStatusText[m_sStatus]);
 
     // Date, server name, connection
-    strcat (pszBuffer, "\r\nServer: Alajar/1.82\r\nDate: ");
+    strcat (pszBuffer, "\r\nServer: Alajar/1.8.3\r\nDate: ");
     strcat (pszBuffer, pszGMTDateString);
 
     //////////////////////////////////

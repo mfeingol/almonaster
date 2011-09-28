@@ -125,6 +125,8 @@ int Almonaster::OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 // so we need to reply with some page or other
 int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
 {
+    global.InitRequestId();
+
     int iErrCode;
     PageId pageId = LOGIN;
 
@@ -222,8 +224,8 @@ int Almonaster::OnInternalServerError(IHttpRequest* pHttpRequest, IHttpResponse*
         "<html>"\
         "<head><title>Error 500</title></head>"\
         "<body>"\
-        "<h2>Error 500: Internal Server Error.</h2>"\
-        "<p>General server error encountered while processing request ");
+        "<h2>Error 500: Internal Server Error</h2>"\
+        "<p>There was an internal server error processing request ");
 
     Uuid uuidReqId;
     global.GetRequestId(&uuidReqId);
@@ -235,7 +237,7 @@ int Almonaster::OnInternalServerError(IHttpRequest* pHttpRequest, IHttpResponse*
     pHttpResponse->WriteText(pszUuidReqId);
 
     pHttpResponse->WriteText(
-        "<p>Please contact the administrator"\
+        ".<p>Please contact the administrator"\
         "</body>"\
         "</html>");
 
@@ -250,7 +252,7 @@ int Almonaster::OnError(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse
     case HTTP_403:
         return OnAccessDenied(pHttpRequest, pHttpResponse);
     case HTTP_500:
-        return OnAccessDenied(pHttpRequest, pHttpResponse);
+        return OnInternalServerError(pHttpRequest, pHttpResponse);
     default:
         return OK;
     }

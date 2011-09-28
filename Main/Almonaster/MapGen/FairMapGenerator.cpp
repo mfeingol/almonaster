@@ -99,7 +99,7 @@ int FairMapGenerator::CreatePlanets(
             unsigned int iTotalNumPlanets = iNumExistingPlanets + *piNumNewPlanets;
             Variant** ppvTotalMap = new Variant*[iTotalNumPlanets];
             Assert(ppvTotalMap);
-            Algorithm::AutoDelete<Variant*> (ppvTotalMap, true);
+            Algorithm::AutoDelete<Variant*> free_ppvTotalMap(ppvTotalMap, true);
 
             memcpy(ppvTotalMap, ppvExistingPlanetData, iNumExistingPlanets * sizeof(Variant*));
             memcpy(ppvTotalMap + iNumExistingPlanets, *pppvNewPlanetData, *piNumNewPlanets * sizeof(Variant*));

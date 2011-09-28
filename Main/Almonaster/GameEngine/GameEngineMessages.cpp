@@ -723,7 +723,7 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
 
     Variant** ppvMessage = new Variant*[iNumMessages];
     Assert(ppvMessage);
-    Algorithm::AutoDelete<Variant*>(ppvMessage, true);
+    Algorithm::AutoDelete<Variant*> free_ppvMessage(ppvMessage, true);
     memset(ppvMessage, 0, iNumMessages * sizeof(Variant*));
 
     UTCTime* ptTime = (UTCTime*)StackAlloc(iNumMessages * sizeof(UTCTime));
@@ -731,12 +731,12 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     for (i = 0; i < iNumMessages; i ++)
     {
         iErrCode = pMessages->ReadRow(piKey[i], ppvMessage + i);
-        GOTO_CLEANUP_ON_ERROR(iErrCode);
+        RETURN_ON_ERROR(iErrCode);
 
         ptTime[i] = ppvMessage[i][GameEmpireMessages::iTimeStamp].GetInteger64();
 
         iErrCode = pMessages->WriteData(piKey[i], GameEmpireMessages::Unread, MESSAGE_READ);
-        GOTO_CLEANUP_ON_ERROR(iErrCode);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     // Sort the read messages oldest to newest
@@ -745,31 +745,17 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     // All messages have been read, so we need to make sure that if we have more saved messages 
     // than the max, we delete the oldest messages (best effort)
     iErrCode = pMessages->GetNumCachedRows(&iTotalNumMessages);
-    GOTO_CLEANUP_ON_ERROR(iErrCode);
+    RETURN_ON_ERROR(iErrCode);
     Assert(iTotalNumMessages >= iNumMessages);
 
     // Delete stale messages
     iErrCode = DeleteOverflowMessages(pMessages, GameEmpireMessages::TimeStamp, GameEmpireMessages::Unread, iTotalNumMessages, 0, iMaxNumMessages, false);
-    GOTO_CLEANUP_ON_ERROR(iErrCode);
-
-    *piNumMessages = iNumMessages;
+    RETURN_ON_ERROR(iErrCode);
 
     *pppvMessage = ppvMessage;
     ppvMessage = NULL;
 
-Cleanup:
-
-    if (ppvMessage)
-    {
-        for (i = 0; i < iNumMessages; i ++) {
-
-            if (ppvMessage[i] != NULL)
-            {
-                t_pCache->FreeData(ppvMessage[i]);
-                ppvMessage[i] = NULL;
-            }
-        }
-    }
+    *piNumMessages = iNumMessages;
 
     return iErrCode;
 }
@@ -916,7 +902,7 @@ int GameEngine::SendFatalUpdateMessage (int iGameClass, int iGameNumber, int iEm
 
     char* pszFullMessage = new char[strUpdateMessage.GetLength() + MAX_FULL_GAME_CLASS_NAME_LENGTH + 256];
     Assert(pszFullMessage);
-    Algorithm::AutoDelete<char>(pszFullMessage, true);
+    Algorithm::AutoDelete<char> free_pszFullMessage(pszFullMessage, true);
 
     sprintf (
         pszFullMessage,

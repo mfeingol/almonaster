@@ -1430,7 +1430,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
 
     unsigned int* piShipOwnerData = new unsigned int[iSlotsAllocated];
     Assert(piShipOwnerData);
-    Algorithm::AutoDelete<unsigned int>(piShipOwnerData, true);
+    Algorithm::AutoDelete<unsigned int> free_piShipOwnerData(piShipOwnerData, true);
 
     piShipOwnerData[0] = 0;
     unsigned int iCounter = 1;

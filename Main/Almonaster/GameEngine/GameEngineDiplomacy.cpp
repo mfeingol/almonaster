@@ -65,8 +65,7 @@ int GameEngine::GetKnownEmpireKeys(int iGameClass, int iGameNumber, int iEmpireK
 //
 // Return diplomatic status between two empires
 
-int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, 
-                                     int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet) {
+int GameEngine::GetVisibleDiplomaticStatus(int iGameClass, int iGameNumber, int iEmpireKey, int iFoeKey, int* piWeOffer, int* piTheyOffer, int* piCurrent, bool* pbMet) {
 
     int iErrCode = OK;
 
@@ -150,7 +149,7 @@ int GameEngine::GetDiplomaticStatus (int iGameClass, int iGameNumber, int iEmpir
 
         if (!(vOptions.GetInteger() & VISIBLE_DIPLOMACY))
         {
-            iErrCode = pTable->ReadData(iKey, GameEmpireDiplomacy::VirtualStatus, piTheyOffer);   
+            iErrCode = pTable->ReadData(iKey, GameEmpireDiplomacy::DipOfferLastUpdate, piTheyOffer);   
             RETURN_ON_ERROR(iErrCode);
         }
         else
@@ -245,8 +244,7 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
         // Add truce?
         if (GameAllowsDiplomacy (iLevel, TRUCE))
         {
-            iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iKey, strGameEmpireData, strDip,
-                                           GameEmpireData::NumTruces, TRUCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
+            iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iEmpireKey, iKey, TRUCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
             RETURN_ON_ERROR(iErrCode);
 
         }
@@ -255,16 +253,15 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
             // Add trade?
             if (GameAllowsDiplomacy (iLevel, TRADE))
             {
-                iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iKey, strGameEmpireData, strDip, 
-                                               GameEmpireData::NumTrades, TRADE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
+                iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iEmpireKey, iKey, TRADE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
                 RETURN_ON_ERROR(iErrCode);
             }
             else
             {
                 // Alliance
-                if (GameAllowsDiplomacy (iLevel, ALLIANCE)) {
-                    iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iKey, strGameEmpireData, strDip, 
-                                                   GameEmpireData::NumAlliances, ALLIANCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
+                if (GameAllowsDiplomacy (iLevel, ALLIANCE))
+                {
+                    iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iEmpireKey, iKey, ALLIANCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
                     RETURN_ON_ERROR(iErrCode);
                 }
             }
@@ -281,9 +278,7 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
         // Trade
         if (GameAllowsDiplomacy (iLevel, TRADE))
         {
-            iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iKey, strGameEmpireData, strDip,
-                                           GameEmpireData::NumTrades, TRADE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
-
+            iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iEmpireKey, iKey, TRADE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
             RETURN_ON_ERROR(iErrCode);
 
         } else {
@@ -291,8 +286,7 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
             // Alliance         
             if (GameAllowsDiplomacy (iLevel, ALLIANCE))
             {
-                iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iKey, strGameEmpireData, strDip,
-                                               GameEmpireData::NumAlliances, ALLIANCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
+                iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iEmpireKey, iKey, ALLIANCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
                 RETURN_ON_ERROR(iErrCode);
             }
         }
@@ -315,10 +309,9 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
         piDipOptKey[(*piNumOptions) ++] = TRADE;
         
         // Alliance?
-        if (GameAllowsDiplomacy (iLevel, ALLIANCE)) {
-
-            iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iKey, strGameEmpireData, strDip,
-                                           GameEmpireData::NumAlliances, ALLIANCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
+        if (GameAllowsDiplomacy (iLevel, ALLIANCE))
+        {
+            iErrCode = AddDiplomaticOption(iGameClass, iGameNumber, iEmpireKey, iKey, ALLIANCE, vWeOffer.GetInteger(), piDipOptKey, piNumOptions);
             RETURN_ON_ERROR(iErrCode);
         }
 
@@ -407,82 +400,58 @@ int GameEngine::GetDiplomaticOptions(int iGameClass, int iGameNumber, int iEmpir
     return iErrCode;
 }
 
-int GameEngine::AddDiplomaticOption (int iGameClass, int iGameNumber, int iTargetEmpireKey,
-                                     const char* pszEmpireData, const char* pszEmpireDiplomacy, 
-                                     const char* pszEmpireDataColumn, int iDiplomacyLevel, 
-                                     int iCurrentDiplomacyLevel, int piDipOptKey[], int* piNumOptions) {
-
+int GameEngine::AddDiplomaticOption(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyProxyKey,
+                                    int iDiplomacyLevel, int iCurrentDiplomacyLevel, int piDipOptKey[], int* piNumOptions)
+{
     int iErrCode = OK;
+    bool bAdd = true;
 
-    if (iDiplomacyLevel == iCurrentDiplomacyLevel)
+    if (iDiplomacyLevel != iCurrentDiplomacyLevel)
     {
-        piDipOptKey[(*piNumOptions) ++] = iDiplomacyLevel;
-    }
-    else
-    {
-        int iMaxCount;
-        iErrCode = GetMaxNumDiplomacyPartners (iGameClass, iGameNumber, iDiplomacyLevel, &iMaxCount);
+        // Either upgrading or downgrading diplomacy levels...
+        unsigned int iMaxCount;
+        iErrCode = GetMaxNumDiplomacyPartners(iGameClass, iGameNumber, iDiplomacyLevel, &iMaxCount);
         RETURN_ON_ERROR(iErrCode);
         
-        if (iMaxCount == UNRESTRICTED_DIPLOMACY)
+        if (iMaxCount != UNRESTRICTED_DIPLOMACY)
         {
-            piDipOptKey[*piNumOptions] = iDiplomacyLevel;
-            (*piNumOptions) ++;
-        }
-        else
-        {
-            Variant vValue;
-            iErrCode = t_pCache->ReadData(pszEmpireData, pszEmpireDataColumn, &vValue);
+            // Diplomacy is restricted...
+            unsigned int iCount;
+            iErrCode = GetCumulativeDiplomacyCountForLimits(iGameClass, iGameNumber, iEmpireKey, iDiplomacyLevel, &iCount);
             RETURN_ON_ERROR(iErrCode);
 
-            Assert(vValue.GetInteger() >= 0);
-            
-            if (vValue.GetInteger() < iMaxCount) {
-            
-                piDipOptKey[(*piNumOptions) ++] = iDiplomacyLevel;
-            
-            } else {
-                
-                // If permanent alliances are set and we have the once allied bit set, add the option
-                if (iDiplomacyLevel == ALLIANCE) {
-                    
-                    iErrCode = t_pCache->ReadData(
-                        SYSTEM_GAMECLASS_DATA,
-                        iGameClass,
-                        SystemGameClassData::Options,
-                        &vValue
-                        );
-                    
+            Assert(iCount >= 0 && iCount <= iMaxCount);
+            if (iCount == iMaxCount)
+            {
+                bAdd = false;
+
+                // However, if permanent alliances are set and we have the once allied bit set, it's okay
+                if (iDiplomacyLevel == ALLIANCE)
+                {                    
+                    Variant vValue;
+                    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, &vValue);
                     RETURN_ON_ERROR(iErrCode);
                     
-                    if (vValue.GetInteger() & PERMANENT_ALLIANCES) {
-                        
-                        iErrCode = t_pCache->ReadData(
-                            pszEmpireDiplomacy,
-                            iTargetEmpireKey,
-                            GameEmpireDiplomacy::State,
-                            &vValue
-                            );
-                        
+                    if (vValue.GetInteger() & PERMANENT_ALLIANCES)
+                    {
+                        GET_GAME_EMPIRE_DIPLOMACY(strDiplomacy, iGameClass, iGameNumber, iEmpireKey);
+                        iErrCode = t_pCache->ReadData(strDiplomacy, iDiplomacyProxyKey, GameEmpireDiplomacy::State, &vValue);
                         RETURN_ON_ERROR(iErrCode);
                         
-                        if (vValue.GetInteger() & ONCE_ALLIED_WITH) {               
-#ifdef _DEBUG
-                            // Make sure we have at least one leaked alliance
-                            iErrCode = t_pCache->ReadData(
-                                pszEmpireData, 
-                                GameEmpireData::NumAlliancesLeaked,
-                                &vValue
-                                );
-
-                            Assert(iErrCode == OK && vValue.GetInteger() > 0);
-#endif
-                            piDipOptKey[(*piNumOptions) ++] = ALLIANCE;
+                        if (vValue.GetInteger() & ONCE_ALLIED_WITH)
+                        {
+                            bAdd = true;
                         }
                     }
                 }
             }
         }
+    }
+
+    if (bAdd)
+    {
+        piDipOptKey[*piNumOptions] = iDiplomacyLevel;
+        (*piNumOptions) ++;
     }
 
     return iErrCode;
@@ -505,20 +474,15 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
     
     // Make sure empires are still in game and have met
     unsigned int iKey;
-    iErrCode = t_pCache->GetFirstKey(
-        strGameEmpireDiplomacy, 
-        GameEmpireDiplomacy::ReferenceEmpireKey, 
-        iFoeKey, 
-        &iKey
-        );
+    iErrCode = t_pCache->GetFirstKey(strGameEmpireDiplomacy, GameEmpireDiplomacy::ReferenceEmpireKey, iFoeKey, &iKey);
     RETURN_ON_ERROR(iErrCode);
 
     // Get current status and current offering
-    Variant vStatus, vOffering;
-
+    Variant vStatus;
     iErrCode = t_pCache->ReadData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::CurrentStatus, &vStatus);
     RETURN_ON_ERROR(iErrCode);
 
+    Variant vOffering;
     iErrCode = t_pCache->ReadData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::DipOffer, &vOffering);
     RETURN_ON_ERROR(iErrCode);
 
@@ -534,39 +498,22 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
     // Verify offer //
     //////////////////
 
-    Variant vDipLevel, vOptions;
-
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::DiplomacyLevel, 
-        &vDipLevel
-        );
-    
+    Variant vDipLevel;
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::DiplomacyLevel, &vDipLevel);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA,
-        iGameClass,
-        SystemGameClassData::Options,
-        &vOptions
-        );
-    
+    int iOptions;
+    iErrCode = GetGameClassOptions(iGameClass, &iOptions);
     RETURN_ON_ERROR(iErrCode);
-
-    bool bPermanentAlliances = (vOptions.GetInteger() & PERMANENT_ALLIANCES) != 0;
 
     // Get game state
     int iGameState;
-    iErrCode = GetGameState (iGameClass, iGameNumber, &iGameState);
+    iErrCode = GetGameState(iGameClass, iGameNumber, &iGameState);
     RETURN_ON_ERROR(iErrCode);
 
     // If alliances are unbreakable, don't allow any changes
-    if ((vOptions.GetInteger() & UNBREAKABLE_ALLIANCES) && 
-        vStatus.GetInteger() == ALLIANCE &&
-        iDipOffer != ALLIANCE
-        ) {
-
+    if ((iOptions & UNBREAKABLE_ALLIANCES) && vStatus.GetInteger() == ALLIANCE && iDipOffer != ALLIANCE)
+    {
         return ERROR_UNBREAKABLE_ALLIANCE;
     }
 
@@ -596,13 +543,12 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
             break;
         }
 
-    } else if (iDipOffer == SURRENDER || iDipOffer == ACCEPT_SURRENDER) {
-        
-        if (GameAllowsDiplomacy (iDipLevel, SURRENDER) && 
-            vStatus.GetInteger() == WAR &&
-            !(vOptions.GetInteger() & ONLY_SURRENDER_WITH_TWO_EMPIRES) &&
-            !(iGameState & STILL_OPEN)) {
-
+    }
+    else if (iDipOffer == SURRENDER || iDipOffer == ACCEPT_SURRENDER)
+    {
+        if (GameAllowsDiplomacy (iDipLevel, SURRENDER) && vStatus.GetInteger() == WAR &&
+            !(iOptions & ONLY_SURRENDER_WITH_TWO_EMPIRES) && !(iGameState & STILL_OPEN))
+        {
             // Allow surrenders?
             unsigned int iNumEmps;
             GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
@@ -610,24 +556,17 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
             iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmps);
             RETURN_ON_ERROR(iErrCode);
             
-            if (iNumEmps > 2) {
-
+            if (iNumEmps > 2)
+            {
                 // Make sure not allied before
                 Variant vState;
-                
-                iErrCode = t_pCache->ReadData(
-                    strGameEmpireDiplomacy, 
-                    iKey, 
-                    GameEmpireDiplomacy::State, 
-                    &vState
-                    );
-                
+                iErrCode = t_pCache->ReadData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::State, &vState);
                 RETURN_ON_ERROR(iErrCode);
                 
-                if (!(vState.GetInteger() & ONCE_ALLIED_WITH)) {
-                
-                    if (iDipOffer == SURRENDER) {
-                        
+                if (!(vState.GetInteger() & ONCE_ALLIED_WITH))
+                {
+                    if (iDipOffer == SURRENDER)
+                    {
                         unsigned int iNumSurrendering;
                         iErrCode = t_pCache->GetEqualKeys(
                             strGameEmpireDiplomacy,
@@ -652,105 +591,61 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                 }
             }
         }
-        
-    } else {
-        
-        bool bLimited = false;
+    }
+    else
+    {
+        bUpdate = true;
 
         // Make sure that we are under the limit if we're trying to upgrade
-        if (iDipOffer > vStatus.GetInteger()) {
+        if (iDipOffer > vStatus.GetInteger())
+        {
+            unsigned int iMax;
+            iErrCode = GetMaxNumDiplomacyPartners(iGameClass, iGameNumber, iDipOffer, &iMax);
+            RETURN_ON_ERROR(iErrCode);
 
-            int iMax;
-            iErrCode = GetMaxNumDiplomacyPartners (iGameClass, iGameNumber, iDipOffer, &iMax);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
+            if (iMax != UNRESTRICTED_DIPLOMACY)
+            {
+                unsigned int iCount;
+                iErrCode = GetCumulativeDiplomacyCountForLimits(iGameClass, iGameNumber, iEmpireKey, iDipOffer, &iCount);
+                RETURN_ON_ERROR(iErrCode);
+                Assert(iCount <= iMax);
 
-            if (iMax != UNRESTRICTED_DIPLOMACY) {
-
-                Variant vCount;
-                const char* pszColumn;
-
-                switch (iDipOffer) {    
-                case TRUCE:
-                    pszColumn = GameEmpireData::NumTruces;
-                    break;
-                case TRADE:
-                    pszColumn = GameEmpireData::NumTrades;
-                    break;
-                case ALLIANCE:
-                    pszColumn = GameEmpireData::NumAlliances;
-                    break;
-                default:
-                    return ERROR_INVALID_ARGUMENT;
-                }
-                
-                iErrCode = t_pCache->ReadData(strGameEmpireData, pszColumn, &vCount);
-                if (iErrCode != OK) {
-                    return iErrCode;
-                }
-
-                Assert(vCount.GetInteger() >= 0);
-                
-                bLimited = vCount.GetInteger() >= iMax;
-                
-                if (bLimited && iDipOffer == ALLIANCE) {
+                if (iCount == iMax)
+                {
+                    bUpdate = false;
                     
-                    // Allow if once allied bit is set
-                    iErrCode = t_pCache->ReadData(
-                        SYSTEM_GAMECLASS_DATA,
-                        iGameClass,
-                        SystemGameClassData::Options,
-                        &vCount
-                        );
-                    
-                    RETURN_ON_ERROR(iErrCode);
-                    
-                    if (vCount.GetInteger() & PERMANENT_ALLIANCES) {
+                     // However, if permanent alliances are set and we have the once allied bit set, it's okay
+                    if (iDipOffer == ALLIANCE)
+                    {
+                        if (iOptions & PERMANENT_ALLIANCES)
+                        {
+                            Variant vState;
+                            iErrCode = t_pCache->ReadData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::State, &vState);
+                            RETURN_ON_ERROR(iErrCode);
                         
-                        iErrCode = t_pCache->ReadData(
-                            strGameEmpireDiplomacy,
-                            iKey,
-                            GameEmpireDiplomacy::State,
-                            &vCount
-                            );
-                        
-                        RETURN_ON_ERROR(iErrCode);
-                        
-                        if (vCount.GetInteger() & ONCE_ALLIED_WITH) {
-#ifdef _DEBUG
-                            // Make sure we have at least one leaked alliance
-                            iErrCode = t_pCache->ReadData(
-                                strGameEmpireData, 
-                                GameEmpireData::NumAlliancesLeaked,
-                                &vCount
-                                );
-                            
-                            Assert(iErrCode == OK && vCount.GetInteger() > 0);
-#endif
-                            bLimited = false;
+                            if (vState.GetInteger() & ONCE_ALLIED_WITH)
+                            {
+                                bUpdate = true;
+                            }
                         }
                     }
-
                 }
             }
         }
 
-        if (bLimited) {
-            bUpdate = false;
-        } else {
-
+        if (bUpdate)
+        {
             // Validate with gameclass diplomacy type
             switch (iDipOffer) {
                 
             case TRUCE:
                 
-                Assert(GameAllowsDiplomacy (iDipLevel, TRUCE));
+                Assert(GameAllowsDiplomacy(iDipLevel, TRUCE));
 
                 switch (vStatus.GetInteger()) {
                     
                 case WAR:
-                    bUpdate = GameAllowsDiplomacy (iDipLevel, TRUCE);
+                    bUpdate = GameAllowsDiplomacy(iDipLevel, TRUCE);
                     break;
                     
                 case TRUCE:
@@ -758,12 +653,11 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                     break;
                     
                 case TRADE:
-                    bUpdate = GameAllowsDiplomacy (iDipLevel, TRADE);
+                    bUpdate = GameAllowsDiplomacy(iDipLevel, TRADE);
                     break;
                     
                 case ALLIANCE:
-                    bUpdate = GameAllowsDiplomacy (iDipLevel, ALLIANCE) && 
-                              !GameAllowsDiplomacy (iDipLevel, TRADE);
+                    bUpdate = GameAllowsDiplomacy(iDipLevel, ALLIANCE) && !GameAllowsDiplomacy (iDipLevel, TRADE);
                     break;
                 }
                 break;
@@ -797,25 +691,21 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
                 switch (vStatus.GetInteger()) {
                     
                 case WAR:
-                    
                     bUpdate = GameAllowsDiplomacy (iDipLevel, ALLIANCE) && 
                               !GameAllowsDiplomacy (iDipLevel, TRADE) && 
                               !GameAllowsDiplomacy (iDipLevel, TRUCE);
                     break;
                     
                 case TRUCE:
-                    
                     bUpdate = GameAllowsDiplomacy (iDipLevel, TRUCE) && 
                               !GameAllowsDiplomacy (iDipLevel, TRADE);
                     break;
                     
                 case TRADE:
-                    
                     bUpdate = GameAllowsDiplomacy (iDipLevel, TRADE);
                     break;
                     
                 case ALLIANCE:
-                    
                     bUpdate = true;
                     break;
                 }
@@ -830,171 +720,11 @@ int GameEngine::UpdateDiplomaticOffer(int iGameClass, int iGameNumber, int iEmpi
     }
 
     // After all this, update the setting
-    if (bUpdate) {
-
+    if (bUpdate)
+    {
         // Write the new offer
-        iErrCode = t_pCache->WriteData(
-            strGameEmpireDiplomacy, 
-            iKey, 
-            GameEmpireDiplomacy::DipOffer, 
-            iDipOffer
-            );
-
+        iErrCode = t_pCache->WriteData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::DipOffer, iDipOffer);
         RETURN_ON_ERROR(iErrCode);
-
-        // Adjust non-diplomatic settings for counts
-        if (iDipOffer > ALLIANCE) {
-            iDipOffer = WAR;
-        }
-
-        if (vOffering.GetInteger() > ALLIANCE) {
-            vOffering = vStatus.GetInteger();
-        }
-        
-        if (iDipOffer > vOffering.GetInteger()) {
-            
-            if (iDipOffer != vStatus.GetInteger()) {
-                
-                // Increase new offering count
-                switch (iDipOffer) {
-                
-                case TRUCE:
-
-                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, 1);
-                    RETURN_ON_ERROR(iErrCode);
-                    
-                    break;
-                
-                case TRADE:
-                    
-                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, 1);
-                    RETURN_ON_ERROR(iErrCode);
-
-                    if (!GameAllowsDiplomacy(iDipLevel, TRUCE))
-                    {
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, 1);
-                        RETURN_ON_ERROR(iErrCode);
-                    }
-
-                    break;
-                
-                case ALLIANCE:
-                    {
-
-                    bool bIncrement = true;
-
-                    // If permanent alliances and we once allied, don't increment
-                    if (bPermanentAlliances) {
-                        
-                        Variant vState;
-                        iErrCode = t_pCache->ReadData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::State, &vState);
-                        RETURN_ON_ERROR(iErrCode);
-
-                        if (vState.GetInteger() & ONCE_ALLIED_WITH) {
-                            bIncrement = false;
-                        }
-                    }
-
-                    if (bIncrement)
-                    {
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, 1);
-                        RETURN_ON_ERROR(iErrCode);
-                    }
-
-                    if (!GameAllowsDiplomacy (iDipLevel, TRADE))
-                    {
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, 1);
-                        RETURN_ON_ERROR(iErrCode);
-                        
-                        if (!GameAllowsDiplomacy (iDipLevel, TRUCE))
-                        {
-                            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, 1);
-                            RETURN_ON_ERROR(iErrCode);
-                        }
-                    }
-
-                    }   // Scope
-                    break;
-                }
-#ifdef _DEBUG
-                iErrCode = CheckTruceTradeAllianceCounts (iGameClass, iGameNumber, iEmpireKey);
-                Assert(iErrCode == OK);
-#endif
-            }
-            
-        } else {
-            
-            if (vOffering.GetInteger() != vStatus.GetInteger()) {
-                
-                // Decrease old offering
-                switch (vOffering.GetInteger()) {
-                
-                case TRUCE:
-                    
-                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
-                    RETURN_ON_ERROR(iErrCode);
-                    break;
-
-                case TRADE:
-                    
-                    iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, -1);
-                    RETURN_ON_ERROR(iErrCode);
-
-                    if (!GameAllowsDiplomacy (iDipLevel, TRUCE))
-                    {
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
-                        RETURN_ON_ERROR(iErrCode);
-                    }
-
-                    break;
-                
-                case ALLIANCE:
-
-                    {
-
-                    bool bIncrement = true;
-
-                    // If permanent alliances and we once allied, don't increment
-                    if (bPermanentAlliances) {
-                        
-                        Variant vState;
-                        
-                        iErrCode = t_pCache->ReadData(strGameEmpireDiplomacy, iKey, GameEmpireDiplomacy::State, &vState);
-                        RETURN_ON_ERROR(iErrCode);
-
-                        if (vState.GetInteger() & ONCE_ALLIED_WITH)
-                        {
-                            bIncrement = false;
-                        }
-                    }
-                
-                    if (bIncrement)
-                    {
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumAlliances, -1);
-                        RETURN_ON_ERROR(iErrCode);
-                    }
-
-                    if (!GameAllowsDiplomacy(iDipLevel, TRADE))
-                    {
-                        iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTrades, -1);
-                        RETURN_ON_ERROR(iErrCode);
-                        
-                        if (!GameAllowsDiplomacy(iDipLevel, TRUCE))
-                        {
-                            iErrCode = t_pCache->Increment(strGameEmpireData, GameEmpireData::NumTruces, -1);
-                            RETURN_ON_ERROR(iErrCode);
-                        }
-                    }
-
-                    }   // Scope
-                    break;
-                }
-#ifdef _DEBUG
-                iErrCode = CheckTruceTradeAllianceCounts (iGameClass, iGameNumber, iEmpireKey);
-                Assert(iErrCode == OK);
-#endif
-            }
-        }
     }
 
     return iErrCode;
@@ -1234,9 +964,144 @@ int GameEngine::BuildDuplicateList(int* piDuplicateKeys, unsigned int iNumDuplic
     return iErrCode;
 }
 
-int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNumber, int iEmpireKey,
-                                                    int* piNumTruces, int* piNumTrades, int* piNumAlliances) {
-    
+int GameEngine::GetCumulativeDiplomacyCountForLimits(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyLevel, unsigned int* piCount)
+{
+     unsigned int iNumTruces, iNumTrades, iNumAlliances, iNumFormerAlliances;
+
+     *piCount = 0;
+
+     int iErrCode = GetDiplomacyCountsForLimits(iGameClass, iGameNumber, iEmpireKey, &iNumTruces, &iNumTrades, &iNumAlliances, &iNumFormerAlliances);
+     RETURN_ON_ERROR(iErrCode);
+
+     // We only count former alliances towards limits when you're actually trying to ally.
+     // So you can have your only ally nuked in a permanent alliance game, and then go up to trade with someone else...
+     switch (iDiplomacyLevel)
+     {
+     case TRUCE:
+         *piCount = iNumTruces + iNumTrades + iNumAlliances;
+         break;
+     case TRADE:
+         *piCount = iNumTrades + iNumAlliances;
+         break;
+     case ALLIANCE:
+         *piCount = iNumAlliances + iNumFormerAlliances;
+         break;
+     }
+
+     return iErrCode;
+}
+
+int GameEngine::GetDiplomacyCountsForLimits(int iGameClass, int iGameNumber, int iEmpireKey,
+                                            unsigned int* piNumTruces, unsigned int* piNumTrades, unsigned int* piNumAlliances, unsigned int* piNumFormerAlliances)
+{
+    int iErrCode;
+    GET_GAME_EMPIRE_DIPLOMACY(strGameEmpireDip, iGameClass, iGameNumber, iEmpireKey);
+
+    *piNumTruces = *piNumTrades = *piNumAlliances = *piNumFormerAlliances = 0;
+
+    const char* pszColumns[] = { GameEmpireDiplomacy::CurrentStatus, GameEmpireDiplomacy::DipOffer, GameEmpireDiplomacy::State };
+
+    unsigned int iNumRows;
+    Variant** ppvData = NULL;
+    AutoFreeData free_ppvData(ppvData);
+
+    iErrCode = t_pCache->ReadColumns(strGameEmpireDip, countof(pszColumns), pszColumns, NULL, &ppvData, &iNumRows);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    int iOptions;
+    iErrCode = GetGameClassOptions(iGameClass, &iOptions);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iOptions & PERMANENT_ALLIANCES)
+    {
+        // Count allies of ours who were nuked as former alliances
+        GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
+        Variant vNukedAllies;
+        iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::NumNukedAllies, &vNukedAllies);
+        RETURN_ON_ERROR(iErrCode);
+
+        (*piNumFormerAlliances) += vNukedAllies.GetInteger();
+    }
+
+    for (unsigned int i = 0; i < iNumRows; i ++)
+    {
+        int iCurrentStatus = ppvData[i][0].GetInteger();
+        int iDipOffer = ppvData[i][1].GetInteger();
+        int iState = ppvData[i][2].GetInteger();
+
+        if ((iOptions & PERMANENT_ALLIANCES) && (iState & ONCE_ALLIED_WITH) && iCurrentStatus != ALLIANCE && iDipOffer != ALLIANCE)
+        {
+            // Count alliances we broke off as former alliances
+            (*piNumFormerAlliances) ++;
+        }
+
+        // Take the greater of the status and the offer
+        switch (iCurrentStatus)
+        {
+        case WAR:
+            switch (iDipOffer)
+            {
+            case TRUCE:
+                (*piNumTruces) ++;
+                break;
+            case TRADE:
+                (*piNumTrades) ++;
+                break;
+            case ALLIANCE:
+                (*piNumAlliances) ++;
+                break;
+            }
+            break;
+
+        case TRUCE:
+            switch (iDipOffer)
+            {
+            case WAR:
+            case TRUCE:
+                (*piNumTruces) ++;
+                break;
+            case TRADE:
+                (*piNumTrades) ++;
+                break;
+            case ALLIANCE:
+                (*piNumAlliances) ++;
+                break;
+            }
+            break;
+
+        case TRADE:
+            switch (iDipOffer)
+            {
+            case WAR:
+            case TRUCE:
+            case TRADE:
+                (*piNumTrades) ++;
+                break;
+            case ALLIANCE:
+                (*piNumAlliances) ++;
+                break;
+            }
+            break;
+
+        case ALLIANCE:
+            (*piNumAlliances) ++;
+            break;
+
+        default:
+            Assert(false);
+            break;
+        }
+    }
+
+    return iErrCode;
+}
+
+int GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNumber, int iEmpireKey, unsigned int* piNumTruces, unsigned int* piNumTrades, unsigned int* piNumAlliances)
+{
     int iErrCode;
 
     unsigned int iNumTruces, iNumTrades, iNumAlliances, i, * piOfferingKey, iNumOffering;
@@ -1401,9 +1266,8 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
         
         RETURN_ON_ERROR(iErrCode);
         
-        // In permanent alliance games, don't count an alliance if it wasleaked
-        if (!(vOptions.GetInteger() & PERMANENT_ALLIANCES) || 
-            !(vState.GetInteger() & ONCE_ALLIED_WITH)) {
+        // In permanent alliance games, don't count an alliance if it was leaked
+        if (!(vOptions.GetInteger() & PERMANENT_ALLIANCES) || !(vState.GetInteger() & ONCE_ALLIED_WITH)) {
             
             if (vStatus.GetInteger() < ALLIANCE) {
                 iNumAlliances ++;
@@ -1427,64 +1291,9 @@ int GameEngine::GetCorrectTruceTradeAllianceCounts (int iGameClass, int iGameNum
     return iErrCode;
 }
 
-int GameEngine::CheckTruceTradeAllianceCounts (int iGameClass, int iGameNumber, int iEmpireKey)
-{
-    int iNumTruces, iNumTrades, iNumAlliances, iNumRealTruces, iNumRealTrades, iNumRealAlliances, iNumAlliancesLeaked, iErrCode;
-
-    ICachedTable* pGameEmpireData = NULL;
-    AutoRelease<ICachedTable> release(pGameEmpireData);
-
-    GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
-
-    // Look for dip count bugs;
-    iErrCode = t_pCache->GetTable(strGameEmpireData, &pGameEmpireData);
-    RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumTruces, &iNumTruces);
-    RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumTrades, &iNumTrades);
-    RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumAlliances, &iNumAlliances);
-    RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = pGameEmpireData->ReadData(GameEmpireData::NumAlliancesLeaked, &iNumAlliancesLeaked);
-    RETURN_ON_ERROR(iErrCode);
-    
-    // Adjust for leaked alliances
-    iNumAlliances -= iNumAlliancesLeaked;
-
-    iErrCode = GetCorrectTruceTradeAllianceCounts (
-        iGameClass,
-        iGameNumber,
-        iEmpireKey,
-        &iNumRealTruces,
-        &iNumRealTrades,
-        &iNumRealAlliances
-        );
-
-    RETURN_ON_ERROR(iErrCode);
-    
-    Assert(iNumTruces == iNumRealTruces);
-    Assert(iNumTrades == iNumRealTrades);
-    Assert(iNumAlliances == iNumRealAlliances);
-        
-    if (iNumTruces != iNumRealTruces ||
-        iNumTrades != iNumRealTrades ||
-        iNumAlliances != iNumRealAlliances
-        ) {
-            
-        iErrCode = ERROR_FAILURE;
-    }
-
-    return iErrCode;
-}
-
 int GameEngine::GetNumEmpiresAtDiplomaticStatusNextUpdate (int iGameClass, int iGameNumber, int iEmpireKey, 
-                                                           int* piWar, int* piTruce, int* piTrade, 
-                                                           int* piAlliance) {
-
+                                                           int* piWar, int* piTruce, int* piTrade, int* piAlliance)
+{
     const char* ppszColumns[] = {
         GameEmpireDiplomacy::ReferenceEmpireKey, 
         GameEmpireDiplomacy::DipOffer,
@@ -1524,11 +1333,11 @@ int GameEngine::GetNumEmpiresAtDiplomaticStatusNextUpdate (int iGameClass, int i
         int iStatus = ppvData[i][2].GetInteger();
 
         int iTheyOffer;
-        iErrCode = GetDiplomaticStatus (iGameClass, iGameNumber, iEmpireKey, iFoeKey, NULL, &iTheyOffer, NULL, NULL);
+        iErrCode = GetVisibleDiplomaticStatus(iGameClass, iGameNumber, iEmpireKey, iFoeKey, NULL, &iTheyOffer, NULL, NULL);
         GOTO_CLEANUP_ON_ERROR(iErrCode);
 
-        switch (GetNextDiplomaticStatus (iWeOffer, iTheyOffer, iStatus)) {
-
+        switch (GetNextDiplomaticStatus(iWeOffer, iTheyOffer, iStatus))
+        {
         case WAR:
             iWar ++;
             break;

@@ -105,8 +105,12 @@ int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 
 int CachedTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
-    System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: GetEqualKeys :: {0} :: {1}", m_result->TableName, columnName);
+    return GetEqualKeys(&pszColumn, &vData, 1, ppiKey, piNumKeys);
+}
+
+int CachedTable::GetEqualKeys(const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns, unsigned int** ppiKey, unsigned int* piNumKeys)
+{
+    Trace("CachedTable :: GetEqualKeys :: {0}", m_result->TableName);
 
     if (ppiKey)
         *ppiKey = NULL;
@@ -116,13 +120,17 @@ int CachedTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsig
 
     for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
     {
-        System::Object^ value = row[columnName];
-        Variant vValue;
-        Convert(value, &vValue);
-        if (vValue == vData)
+        for (unsigned int i = 0; i < iNumColumns; i ++)
         {
-            System::Object^ id = row[m_ID_COLUMN_NAME];
-            vectKeys.Add((unsigned int)(int64)id);
+            System::String^ columnName = gcnew System::String(ppszColumn[i]);
+            System::Object^ value = row[columnName];
+            Variant vValue;
+            Convert(value, &vValue);
+            if (vValue == pvData[i])
+            {
+                System::Object^ id = row[m_ID_COLUMN_NAME];
+                vectKeys.Add((unsigned int)(int64)id);
+            }
         }
     }
 

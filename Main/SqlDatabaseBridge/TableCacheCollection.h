@@ -65,6 +65,7 @@ public:
     int GetFirstKey(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int* piKey);
     int GetNextKey(const char* pszCacheTableName, unsigned int iKey, unsigned int* piNextKey);
     int GetEqualKeys(const char* pszCacheTableName, const char* pszColumn, const Variant& vData, unsigned int** ppiKey, unsigned int* piNumRows);
+    int GetEqualKeys(const char* pszCacheTableName, const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns, unsigned int** ppiKey, unsigned int* piNumKeys);
     int GetAllKeys(const char* pszCacheTableName, unsigned int** ppiKey, unsigned int* piNumRows);
 
     int ReadColumn(const char* pszCacheTableName, const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);

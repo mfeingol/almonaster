@@ -112,8 +112,11 @@ void TraceError(int iErrCode, const char* pszFile, int iLine)
     int err = OS::StringFromUuid(uuidReqId, pszUuidReqId);
     Assert(err == OK);
 
+    Thread thread;
+    Thread::GetCurrentThread(&thread);
+
     char pszError[512];
-    sprintf(pszError, "Request %s - Error %i occurred in %s line %i", pszUuidReqId, iErrCode, pszFile, iLine);
+    sprintf(pszError, "Thread %d - Request %s - Error %i occurred in %s line %i", thread.GetThreadId(), pszUuidReqId, iErrCode, pszFile, iLine);
     global.GetReport()->WriteReport(pszError);
 }
 
