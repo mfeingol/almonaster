@@ -21,11 +21,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{98AF9BC4-B62A-4237-A539-103D0426D6BD}</ProjectGuid>
     <RootNamespace>Alajar</RootNamespace>
-    <SccProjectName>"$/622/Alajar", NFRAAAAA</SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
+    <SccProjectName>$/almonaster/622/Final/Alajar</SccProjectName>
+    <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -846,12 +846,8 @@ int SslSocket::DecryptMessageWrapper(BYTE* pbData, size_t cbCypherData, size_t* 
         break;
 
     case SEC_I_RENEGOTIATE:
-        // Not supported
-        Assert(false);
+        // Not supported yet
     default:
-
-        // printf("DecryptMessage returned 0x%x\n", ss);
-
         iErrCode = ERROR_FAILURE;
         break;
     }

@@ -21,11 +21,10 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}</ProjectGuid>
     <RootNamespace>AlmonasterHook</RootNamespace>
-    <SccProjectName>"$/622/AlmonasterHook", ICTAAAAA</SccProjectName>
-    <SccAuxPath>
-    </SccAuxPath>
+    <SccProjectName>$/almonaster/622/Final/AlmonasterHook</SccProjectName>
+    <SccAuxPath>https://tfs.codeplex.com/tfs/tfs29</SccAuxPath>
     <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProvider>{4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}</SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
