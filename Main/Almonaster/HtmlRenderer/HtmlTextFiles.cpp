@@ -153,7 +153,7 @@ int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile, const char
     char pszFileName[OS::MaxFileNameLength];
     sprintf(pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
 
-    ms_mTextFileLock.WaitReader();
+    AutoReadLock lock(&ms_mTextFileLock);
 
     size_t cbFileSize = 0;
     ICachedFile* pcfCachedFile = global.GetFileCache()->GetFile (pszFileName);
@@ -203,8 +203,6 @@ int HtmlRenderer::WriteTextFile (bool bTextArea, const char* pszFile, const char
     if (bTextArea) {
         OutputText ("</textarea>");
     }
-
-    ms_mTextFileLock.SignalReader();
 
     return iErrCode;
 }
@@ -294,15 +292,13 @@ int HtmlRenderer::TryUpdateFile (const char* pszFile, const char* pszFileForm, c
     char pszFileName[OS::MaxFileNameLength];
     sprintf(pszFileName, "%s/%s", global.GetResourceDir(), pszFile);
 
-    ms_mTextFileLock.WaitWriter();
+    AutoWriteLock lock(&ms_mTextFileLock);
     iErrCode = UpdateCachedFile (pszFileName, pszText);
     if (iErrCode == WARNING)
     {
         return iErrCode;
     }
-    ms_mTextFileLock.SignalWriter();
     RETURN_ON_ERROR(iErrCode);
-
     return iErrCode;
 }
 
@@ -337,6 +333,7 @@ int HtmlRenderer::UpdateCachedFile (const char* pszFileName, const char* pszText
     if (pcfCachedFile)
     {
         global.GetFileCache()->ReleaseFile(pszFileName);
+        SafeRelease(pcfCachedFile);
     }
 
     iErrCode = fCachedFile.OpenWrite (pszFileName);

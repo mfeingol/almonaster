@@ -76,14 +76,6 @@ int GameEngine::ReloadDatabase()
     global.GetReport()->WriteReport("GameEngine setup successfully verified system data");
 
     //
-    // Gameclasses
-    //
-
-    iErrCode = VerifyGameClasses();
-    RETURN_ON_ERROR(iErrCode);
-    global.GetReport()->WriteReport("GameEngine setup successfully verified gameclasses");
-
-    //
     // Games
     //
 
@@ -174,6 +166,16 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     {
         bNewDatabase = true;
     }
+
+    // SystemAvailability
+    Assert(countof(SystemAvailability::Types) == SystemAvailability::NumColumns);
+    Assert(countof(SystemAvailability::Sizes) == SystemAvailability::NumColumns);
+    Assert(countof(SystemAvailability::ColumnNames) == SystemAvailability::NumColumns);
+
+    pszTable = SYSTEM_AVAILABILITY;
+    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    if (!bGoodDatabase)
+        goto Cleanup;
     
     // SystemEmpireData
     Assert(countof(SystemEmpireData::Types) == SystemEmpireData::NumColumns);
@@ -518,31 +520,6 @@ int GameEngine::VerifySystem() {
     return iErrCode;
 }
 
-int GameEngine::VerifyGameClasses() {
-
-    int iErrCode;
-    unsigned int* piGameClassKey = NULL, iNumGameClasses = 0, i;
-    AutoFreeKeys free(piGameClassKey);
-
-    iErrCode = t_pCache->GetAllKeys(SYSTEM_GAMECLASS_DATA, &piGameClassKey, &iNumGameClasses);
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
-    {
-        return OK;
-    }
-    RETURN_ON_ERROR(iErrCode);
-
-    for (i = 0; i < iNumGameClasses; i ++)
-    {
-        // TODOTODO - why?
-        // Set number of active games in gameclass to 0
-        iErrCode = t_pCache->WriteData(SYSTEM_GAMECLASS_DATA, piGameClassKey[i], SystemGameClassData::NumActiveGames, (int)0);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    return iErrCode;
-}
-
-
 int GameEngine::VerifyMarkedGameClasses() {
 
     int iErrCode;
@@ -596,337 +573,208 @@ int GameEngine::VerifyMarkedGameClasses() {
 
 int GameEngine::VerifyActiveGames()
 {
-    return OK;
+    int iErrCode;
 
-    // TODOTODO - verify none of this is necessary
+    UTCTime tCurrentTime;
+    Time::GetTime(&tCurrentTime);
 
-//    int iErrCode, iNumUpdatesDownBeforeGameIsKilled;
-//    unsigned int i, iNumGames;
-//    Seconds sSecondsForLongtermStatus;
-//    bool bUpdate;
-//
-//    Variant* pvGame = NULL, * pvEmpireKey = NULL, vTemp;
-//
-//    UTCTime tNewTime, tCurrentTime;
-//    Time::GetTime(&tCurrentTime);
-//
-//    iErrCode = t_pCache->ReadColumn(SYSTEM_ACTIVE_GAMES, SystemActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
-//    if (iErrCode == ERROR_DATA_NOT_FOUND) {
-//        return OK;
-//    }
-//
-//    if (iErrCode != OK)
-//        goto Cleanup;
-//
-//    // Read some system data
-//    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
-//    if (iErrCode != OK)
-//        goto Cleanup;
-//    sSecondsForLongtermStatus = vTemp.GetInteger();
-//
-//    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
-//    if (iErrCode != OK)
-//        goto Cleanup;
-//    iNumUpdatesDownBeforeGameIsKilled = vTemp.GetInteger();
-//
-//    // Loop through all games
-//    for (i = 0; i < iNumGames; i ++)
-//    {
-//        char pszBuffer [512];
-//
-//        Seconds sPeriod, sConsumedTime, sElapsedTime;
-//        UTCTime tLastUpdateTime, tLastCheckTime;
-//
-//        bool bPasswordProtected, bPaused, bStarted;
-//        unsigned int j, iNumEmpires, iNumPaused;
-//
-//        int iGameClass, iGameNumber, iState;
-//        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
-//
-//        GET_GAME_DATA(strGameData, iGameClass, iGameNumber);
-//        GET_GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
-//
-//        // Increment number of games in gameclass
-//        iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
-//        if (iErrCode != OK)
-//            goto Cleanup;
-//        
-//        // Get game update period
-//        iErrCode = t_pCache->ReadData(
-//            SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//        sPeriod = vTemp.GetInteger();
-//        
-//        // Get game state
-//        iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vTemp);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//        iState = vTemp.GetInteger();
-//
-//        bPaused =(iState & PAUSED) ||(iState & ADMIN_PAUSED);
-//        bStarted =(iState & STARTED) != 0;
-//
-//        // Get game last update check time
-//        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateCheck, &vTemp);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//        tLastCheckTime = vTemp.GetInteger64();
-//        
-//        // Reset state
-//        iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_BUSY);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//        
-//        // Get num empires
-//        iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//
-//        // Is password protected?
-//        iErrCode = IsGamePasswordProtected(iGameClass, iGameNumber, &bPasswordProtected);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//
-//        // Get last update time
-//        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//        tLastUpdateTime = vTemp.GetInteger64();
-//
-//        // If started and not paused, reset last update time to current time minus 
-//        //(last shutdown time minus last update time)
-//        if (bStarted && !bPaused) {
-//            
-//            sConsumedTime = Time::GetSecondDifference(tLastCheckTime, tLastUpdateTime);
-//            if (sConsumedTime < 0) {
-//                Assert(false);
-//                sConsumedTime = 0;
-//            }
-//
-//            // Write final update time to database
-//            Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
-//
-//            iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateTime, tNewTime);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                goto Cleanup;
-//            }
-//        }
-//        
-//        // Update empires' last login settings
-//        iErrCode = t_pCache->ReadColumn(
-//            strGameEmpires, 
-//            GameEmpires::EmpireKey, 
-//            NULL,
-//            &pvEmpireKey, 
-//            &iNumEmpires
-//            );
-//
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//
-//        // Loop through all empires in game
-//        iNumPaused = 0;
-//
-//        for (j = 0; j < iNumEmpires; j ++) {
-//
-//            UTCTime tLastLoginTime;
-//            int iOptions;
-//            unsigned int iEmpireKey = pvEmpireKey[j].GetInteger();
-//
-//            GET_GAME_EMPIRE_DATA(strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-//
-//            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::LastLogin, &vTemp);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                goto Cleanup;
-//            }
-//            tLastLoginTime = vTemp.GetInteger64();
-//            
-//            sConsumedTime = Time::GetSecondDifference(tLastCheckTime, tLastLoginTime);
-//            if (sConsumedTime < 0) {
-//                sConsumedTime = 0;
-//            }
-//            tLastLoginTime = vTemp.GetInteger64();
-//            
-//            Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
-//            
-//            iErrCode = t_pCache->WriteData(strEmpireData, GameEmpireData::LastLogin, tNewTime);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                t_pCache->FreeData(pvEmpireKey);
-//                goto Cleanup;
-//            }
-//            
-//            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::Options, &vTemp);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                t_pCache->FreeData(pvEmpireKey);
-//                goto Cleanup;
-//            }
-//            iOptions = vTemp.GetInteger();
-//
-//            if (iOptions & REQUEST_PAUSE) {
-//                iNumPaused ++;
-//            }
-//        }
-//
-//        // Update num paused
-//        iErrCode = t_pCache->WriteData(strGameData, GameData::NumRequestingPause, iNumPaused);
-//        if (iErrCode != OK) {
-//            Assert(false);
-//            goto Cleanup;
-//        }
-//        
-//        // Set paused status
-//        if (iNumPaused == iNumEmpires) {
-//            
-//            if (!bPaused) {
-//
-//                bool bIdle;
-//                iErrCode = AreAllEmpiresIdle(iGameClass, iGameNumber, &bIdle);
-//                if (iErrCode != OK) {
-//                    Assert(false);
-//                    goto Cleanup;
-//                }
-//
-//                if (!bIdle) {
-//
-//                    iErrCode = PauseGame(iGameClass, iGameNumber, false, true);
-//                    if (iErrCode != OK) {
-//                        Assert(false);
-//                        goto Cleanup;
-//                    }
-//                }
-//            }
-//            
-//        } else {
-//            
-//            if (bPaused && !(iState & ADMIN_PAUSED)) {
-//
-//                iErrCode = UnpauseGame(iGameClass, iGameNumber, false, true);
-//                if (iErrCode != OK) {
-//                    Assert(false);
-//                    goto Cleanup;
-//                }
-//            }
-//        }
-//
-//        // Delete the game if it's in an 'interrupted' state
-//        if ((iState & GAME_BUSY) && !(iState & GAME_WAITING_TO_UPDATE)) {
-//
-//            int iReason = iState & ~GAME_DELETION_REASON_MASK;
-//            Assert(iReason != 0);
-//
-//            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", iReason);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                goto Cleanup;
-//            }
-//
-//            sprintf(
-//                pszBuffer,
-//                "GameEngine setup deleted game %i of gameclass %i because it was in "\
-//                "inconsistent state %i",
-//                iGameNumber,
-//                iGameClass,
-//                iReason
-//                );
-//
-//            global.GetReport()->WriteReport(pszBuffer);
-//            continue;
-//        }
-//
-//        // Game should be killed if it's not paused and it's not a longterm and 
-//        // more than x updates have transpired while the server was down
-//        sElapsedTime = Time::GetSecondDifference(tCurrentTime, tLastCheckTime);
-//
-//        if (!bPaused &&
-//            sPeriod < sSecondsForLongtermStatus && 
-//            sElapsedTime > sPeriod * iNumUpdatesDownBeforeGameIsKilled) {
-//
-//            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                goto Cleanup;
-//            }
-//                
-//            sprintf(
-//                pszBuffer,
-//                "GameEngine setup deleted game %i of gameclass %i "\
-//                "because it grew stale during a system shutdown",
-//                iGameNumber,
-//                iGameClass
-//                );
-//
-//            global.GetReport()->WriteReport(pszBuffer);
-//            continue;
-//        }
-//
-//        // If game hasn't started and is password protected and has only one empire, kill it                    
-//        if (!(iState & STARTED) && bPasswordProtected && iNumEmpires == 1) {
-//            
-//            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED);
-//            if (iErrCode != OK) {
-//                Assert(false);
-//                goto Cleanup;
-//            }
-//
-//            sprintf(
-//                pszBuffer,
-//                "GameEngine setup deleted game %i of gameclass %i "\
-//                "because it was password protected and only contained one empire",
-//                iGameNumber,
-//                iGameClass
-//                );
-//                
-//            global.GetReport()->WriteReport(pszBuffer);
-//            continue;
-//        }
-//
-//        // Update the game
-//        iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdate);
-//        if (iErrCode != OK) {
-//            goto Cleanup;
-//        }
-//    }
-//    
-//Cleanup:
-//
-//    if (pvGame != NULL) {
-//        t_pCache->FreeData(pvGame);
-//    }
-//
-//    if (pvEmpireKey != NULL) {
-//        t_pCache->FreeData(pvEmpireKey);
-//    }
-//
-//    return iErrCode;
+    Variant* pvGame = NULL;
+    AutoFreeData free_pvGame(pvGame);
+
+    unsigned int iNumGames;
+    iErrCode = t_pCache->ReadColumn(SYSTEM_ACTIVE_GAMES, SystemActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    // Read some system data
+    Variant vTemp;
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::SecondsForLongtermStatus, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
+    Seconds sSecondsForLongtermStatus = vTemp.GetInteger();
+
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::NumUpdatesDownBeforeGameIsKilled, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
+    int iNumUpdatesDownBeforeGameIsKilled = vTemp.GetInteger();
+
+    // Get game last update check time
+    iErrCode = t_pCache->ReadData(SYSTEM_AVAILABILITY, SystemAvailability::LastAvailableTime, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
+    UTCTime tLastAvailableTime = vTemp.GetInteger64();
+
+    // Loop through all games
+    for (unsigned int i = 0; i < iNumGames; i ++)
+    {
+        int iGameClass, iGameNumber;
+        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
+
+        // We could be a bit more selective here, but it's okay for now
+        iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+        RETURN_ON_ERROR(iErrCode);
+
+        GET_GAME_DATA(strGameData, iGameClass, iGameNumber);
+        GET_GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
+
+        // Get game update period
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumSecPerUpdate, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        Seconds sPeriod = vTemp.GetInteger();
+        
+        // Get game state
+        iErrCode = t_pCache->ReadData(strGameData, GameData::State, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        int iState = vTemp.GetInteger();
+
+        bool bPaused = (iState & PAUSED) ||(iState & ADMIN_PAUSED);
+        bool bStarted = (iState & STARTED) != 0;
+        
+        // Reset state
+        iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_BUSY);
+        RETURN_ON_ERROR(iErrCode);
+        
+        // Get num empires
+        unsigned int iNumEmpires;
+        iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
+        RETURN_ON_ERROR(iErrCode);
+
+        // Is password protected?
+        bool bPasswordProtected;
+        iErrCode = IsGamePasswordProtected(iGameClass, iGameNumber, &bPasswordProtected);
+        RETURN_ON_ERROR(iErrCode);
+
+        // Get last update time
+        iErrCode = t_pCache->ReadData(strGameData, GameData::LastUpdateTime, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        UTCTime tLastUpdateTime = vTemp.GetInteger64();
+
+        // If started and not paused, reset last update time to current time minus (last available time minus last update time)
+        if (bStarted && !bPaused)
+        {
+            // Write a new last update time
+            Seconds sConsumedTime = Time::GetSecondDifference(tLastAvailableTime, tLastUpdateTime);
+            if (sConsumedTime > 0)
+            {
+                UTCTime tNewTime;
+                Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
+
+                iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateTime, tNewTime);
+                RETURN_ON_ERROR(iErrCode);
+            }
+        }
+        
+        //
+        // Update empires' last login settings
+        //
+
+        Variant* pvEmpireKey = NULL;
+        AutoFreeData free_pvEmpireKey(pvEmpireKey);
+
+        iErrCode = t_pCache->ReadColumn(strGameEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+        RETURN_ON_ERROR(iErrCode);
+
+        for (unsigned int j = 0; j < iNumEmpires; j ++)
+        {
+            unsigned int iEmpireKey = pvEmpireKey[j].GetInteger();
+            GET_GAME_EMPIRE_DATA(strEmpireData, iGameClass, iGameNumber, iEmpireKey);
+
+            iErrCode = t_pCache->ReadData(strEmpireData, GameEmpireData::LastLogin, &vTemp);
+            RETURN_ON_ERROR(iErrCode);
+            UTCTime tLastLoginTime = vTemp.GetInteger64();
+            
+            Seconds sConsumedTime = Time::GetSecondDifference(tLastAvailableTime, tLastLoginTime);
+            if (sConsumedTime > 0)
+            {
+                UTCTime tNewTime;
+                Time::SubtractSeconds(tCurrentTime, sConsumedTime, &tNewTime);
+            
+                iErrCode = t_pCache->WriteData(strEmpireData, GameEmpireData::LastLogin, tNewTime);
+                RETURN_ON_ERROR(iErrCode);
+            }
+        }
+        
+        // Delete the game if it's in an 'interrupted' state
+        if ((iState & GAME_BUSY) && !(iState & GAME_WAITING_TO_UPDATE)) {
+
+            int iReason = iState & ~GAME_DELETION_REASON_MASK;
+            Assert(iReason != 0);
+
+            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", iReason);
+            RETURN_ON_ERROR(iErrCode);
+
+            char pszBuffer [512];
+            sprintf(
+                pszBuffer,
+                "GameEngine setup deleted game %i of gameclass %i because it was in "\
+                "inconsistent state %i",
+                iGameNumber,
+                iGameClass,
+                iReason
+                );
+
+            global.GetReport()->WriteReport(pszBuffer);
+            continue;
+        }
+
+        // Game should be killed if it's not paused and it's not a longterm and 
+        // more than x updates have transpired while the server was down
+        Seconds sElapsedTime = Time::GetSecondDifference(tCurrentTime, tLastAvailableTime);
+
+        if (!bPaused &&
+            sPeriod < sSecondsForLongtermStatus && 
+            sElapsedTime > sPeriod * iNumUpdatesDownBeforeGameIsKilled) {
+
+            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN);
+            RETURN_ON_ERROR(iErrCode);
+
+            char pszBuffer [512];
+            sprintf(
+                pszBuffer,
+                "GameEngine setup deleted game %i of gameclass %i "\
+                "because it grew stale during a system shutdown",
+                iGameNumber,
+                iGameClass
+                );
+
+            global.GetReport()->WriteReport(pszBuffer);
+            continue;
+        }
+
+        // If game hasn't started and is password protected and has only one empire, kill it                    
+        if (!(iState & STARTED) && bPasswordProtected && iNumEmpires == 1) {
+            
+            iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED);
+            RETURN_ON_ERROR(iErrCode);
+
+            char pszBuffer [512];
+            sprintf(
+                pszBuffer,
+                "GameEngine setup deleted game %i of gameclass %i "\
+                "because it was password protected and only contained one empire",
+                iGameNumber,
+                iGameClass
+                );
+                
+            global.GetReport()->WriteReport(pszBuffer);
+            continue;
+        }
+
+        // Finally, check the game for updates
+        bool bUpdate;
+        iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bUpdate);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    return iErrCode;
 }
 
 //
 // Creation
 //
 
-int GameEngine::InitializeNewDatabase() {
-    
+int GameEngine::InitializeNewDatabase()
+{
     int iErrCode;
 
     global.GetReport()->WriteReport("GameEngine setup is initializing a new database");
@@ -947,12 +795,16 @@ int GameEngine::InitializeNewDatabase() {
 //
 // Create the default system tables
 //
-int GameEngine::CreateDefaultSystemTables() {
-
+int GameEngine::CreateDefaultSystemTables()
+{
     int iErrCode;
 
     // Create SystemData table
     iErrCode = t_pCache->CreateTable(SYSTEM_DATA, SystemData::Template);
+    RETURN_ON_ERROR(iErrCode);
+
+    // Create SystemAvailability table
+    iErrCode = t_pCache->CreateTable(SYSTEM_AVAILABILITY, SystemAvailability::Template);
     RETURN_ON_ERROR(iErrCode);
 
     // Create SystemGameClassData table
@@ -1076,8 +928,8 @@ int GameEngine::CreateDefaultSystemTables() {
 
 
 // Insert default data into the system tables
-int GameEngine::SetupDefaultSystemTables() {
-    
+int GameEngine::SetupDefaultSystemTables()
+{
     int iErrCode;
     unsigned int iKey;
 
@@ -1203,6 +1055,15 @@ int GameEngine::SetupDefaultSystemTables() {
     };
 
     iErrCode = t_pCache->InsertRow(SYSTEM_DATA, SystemData::Template, pvSystemData, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    // Insert default availability row
+    const Variant pvAvailability[SystemAvailability::NumColumns] = 
+    {
+        tTime
+    };
+
+    iErrCode = t_pCache->InsertRow(SYSTEM_AVAILABILITY, SystemAvailability::Template, pvAvailability, NULL);
     RETURN_ON_ERROR(iErrCode);
 
     // Set up default administrator empire(root)

@@ -111,6 +111,7 @@ struct CrossJoinEntry
 struct TableCacheEntry
 {
     TableEntry Table;
+    void* Reserved;
     const char* PartitionColumn;
     CrossJoinEntry* CrossJoin;
 };

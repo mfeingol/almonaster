@@ -18,33 +18,47 @@
 
 #include "AsyncManager.h"
 #include "Global.h"
+#include "GameEngine.h"
 
 int AsyncManager::Initialize()
 {
     int iErrCode;
-    
+    bool bInit;
+
     iErrCode = m_eQueryEvent.Initialize();
     Assert(iErrCode == OK);
 
-    bool bInit = m_tsfqQueryQueue.Initialize();
+    bInit = m_tsfqQueryQueue.Initialize();
     Assert(bInit);
 
     iErrCode = m_tLongRunningQueries.Start(StartAsyncTaskLoop, this);
     Assert(iErrCode == OK);
 
-    global.GetReport()->WriteReport ("GameEngine started the long running query thread");
+    iErrCode = m_eExitEvent.Initialize();
+    Assert(iErrCode == OK);
+
+    iErrCode = m_tAvailability.Start(StartAvailabilityLoop, this);
+    Assert(iErrCode == OK);
+
+    global.GetReport()->WriteReport ("GameEngine started asynchronous tasks");
     return OK;
 }
 
 void AsyncManager::Close()
 {
     // Stop long running query processor
-    if (m_tsfqQueryQueue.IsInitialized())
+    if (m_tsfqQueryQueue.IsInitialized() && m_tLongRunningQueries.IsAlive())
     {
         bool push = m_tsfqQueryQueue.Push(NULL);
         Assert(push);
         m_eQueryEvent.Signal();
         m_tLongRunningQueries.WaitForTermination();
+    }
+
+    if (m_tAvailability.IsAlive())
+    {
+        m_eExitEvent.Signal();
+        m_tAvailability.WaitForTermination();
     }
 }
 
@@ -53,8 +67,8 @@ int AsyncManager::StartAsyncTaskLoop(void* pVoid)
     return ((AsyncManager*)pVoid)->AsyncTaskLoop();
 }
 
-int AsyncManager::AsyncTaskLoop() {
-
+int AsyncManager::AsyncTaskLoop()
+{
     AsyncTask* plrqMessage;
     bool bExit = false;
 
@@ -101,16 +115,50 @@ int AsyncManager::QueueTask(Fxn_QueryCallBack pfxnFunction, void* pVoid) {
     // Build the message
     AsyncTask* pMessage = new AsyncTask;
     Assert(pMessage);
-
     pMessage->pArguments = pVoid;
     pMessage->pQueryCall = pfxnFunction;
 
     // Push message into the queue
-    bool ret = m_tsfqQueryQueue.Push (pMessage);
+    bool ret = m_tsfqQueryQueue.Push(pMessage);
     Assert(ret);
 
     // Signal the event
     m_eQueryEvent.Signal();
+
+    return OK;
+}
+
+int AsyncManager::StartAvailabilityLoop(void* pVoid)
+{
+    return ((AsyncManager*)pVoid)->AvailabilityLoop();
+}
+
+int AsyncManager::AvailabilityLoop()
+{
+    GameEngine gameEngine;
+    while(true)
+    {
+        // Best effort
+        int iErrCode = gameEngine.WriteAvailability();
+        TRACE_ON_ERROR(iErrCode);
+
+        iErrCode = m_eExitEvent.Wait(60 * 1000);
+        if (iErrCode == WARNING)
+        {
+            // Keep going
+            continue;
+        }
+        
+        if (iErrCode == OK)
+        {
+            // Exiting
+            break;
+        }
+
+        // Bad error
+        Assert(false);
+        break;
+    }
 
     return OK;
 }

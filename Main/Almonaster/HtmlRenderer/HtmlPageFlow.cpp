@@ -714,7 +714,7 @@ int HtmlRenderer::InitializeGame(PageId* ppageRedirect, bool* pbRedirected)
     ///////////////////////
     
     bool bUpdate;
-    iErrCode = CheckGameForUpdates(m_iGameClass, m_iGameNumber, false, &bUpdate);
+    iErrCode = CheckGameForUpdates(m_iGameClass, m_iGameNumber, &bUpdate);
     RETURN_ON_ERROR(iErrCode);
 
     if (bUpdate)

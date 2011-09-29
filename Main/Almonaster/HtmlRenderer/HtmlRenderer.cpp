@@ -126,7 +126,7 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_systemEmpireCol.Name = SystemEmpireActiveGames::EmpireKey;
     m_systemEmpireCol.Data = NO_KEY;
 
-    m_systemTournamentCol.Name = SystemEmpireTournaments::EmpireKey;
+    m_systemTournamentCol.Name = SystemEmpireTournaments::TournamentKey;
     m_systemTournamentCol.Data = NO_KEY;
 
     m_gameCols[0].Name = GameData::GameClass;
@@ -906,14 +906,13 @@ int HtmlRenderer::SearchForDuplicateEmpires(int iGameClass, int iGameNumber, Dup
     {
         if (iNumDuplicates == 1)
         {
-            sprintf(pszBuffer, "1 </strong> empire with a duplicate %s was found:<strong>", pszName);
-            AddMessage(pszBuffer);
+            sprintf(pszBuffer, "1</strong> group of empires with the same %s was found:<strong>", pszName);
         }
         else
         {
-            sprintf(pszBuffer, "%i</strong> empires with a duplicate %s were found:<strong>", iNumDuplicates, pszName);
-            AddMessage(pszBuffer);
+            sprintf(pszBuffer, "%i</strong> groups of empires with the same %s were found:<strong>", iNumDuplicates, pszName);
         }
+        AddMessage(pszBuffer);
             
         Variant vName;
         String strList;
@@ -948,7 +947,7 @@ int HtmlRenderer::SearchForDuplicateEmpires(int iGameClass, int iGameNumber, Dup
             strList += pszName;
             strList += "<strong>";
                 
-            AddMessage (strList);
+            AddMessage(strList);
         }
     }
 
@@ -5319,7 +5318,7 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
             OutputText ("<strike>");
         }
 
-        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
+        m_pHttpResponse->WriteText(ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
 
         if (iOptions & RESIGNED) {
             OutputText ("</strike>");
@@ -5334,12 +5333,12 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
 
         OutputText ("<td align=\"center\">");
 
-        sprintf(pszProfile, "View the profile of %s", vValue.GetCharPtr());
+        sprintf(pszProfile, "View the profile of %s", ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
 
         WriteProfileAlienString (
             iValue,
             iCurrentEmpireKey,
-            vValue.GetCharPtr(),
+            ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr(),
             0,
             "ProfileLink",
             pszProfile,
@@ -6138,13 +6137,8 @@ int HtmlRenderer::HandleIconSelection (unsigned int* piIcon, const char* pszUplo
     else
     {
         const char* pszStart;
-        if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith("Alien")) != NULL && 
-            (pszStart = pHttpForm->GetName()) != NULL &&
-            sscanf (pszStart, "Alien%d", piIcon) == 1)
-        {
-            return OK;
-        }
-        else
+        if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith("Alien")) == NULL ||
+            (pszStart = pHttpForm->GetName()) == NULL || sscanf (pszStart, "Alien%d", piIcon) != 1)
         {
             return ERROR_MISSING_FORM;
         }
@@ -6273,7 +6267,7 @@ int HtmlRenderer::WriteActiveGameAdministration(int* piGameClass, int* piGameNum
     for (i = 0; i < iNumActiveGames; i ++)
     {
         bool bUpdate;
-        iErrCode = CheckGameForUpdates (piGameClass[i], piGameNumber[i], true, &bUpdate);
+        iErrCode = CheckGameForUpdates (piGameClass[i], piGameNumber[i], &bUpdate);
         RETURN_ON_ERROR(iErrCode);
 
         if (bUpdate)
@@ -6356,7 +6350,7 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
     RETURN_ON_ERROR(iErrCode);
 
     bool bUpdate;
-    iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdate);
+    iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bUpdate);
     RETURN_ON_ERROR(iErrCode);
 
     if (bUpdate)

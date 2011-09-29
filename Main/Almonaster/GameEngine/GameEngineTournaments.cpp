@@ -417,9 +417,8 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
 {
     int iErrCode;
 
-    Variant pvData[SystemEmpireMessages::NumColumns], vOwnerKey;
-
     // Verify access
+    Variant vOwnerKey;
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Owner, &vOwnerKey);
     RETURN_ON_ERROR(iErrCode);
 
@@ -450,6 +449,9 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
 
     int iFlags = 0;
 
+    Variant pvData[SystemEmpireMessages::NumColumns];
+
+    pvData[SystemEmpireMessages::iEmpireKey] = iInviteKey;
     pvData[SystemEmpireMessages::iUnread] = MESSAGE_UNREAD;
 
     unsigned int iUseSourceKey;
@@ -981,9 +983,9 @@ int GameEngine::GetAvailableTournamentEmpires (unsigned int iTournamentKey, Vari
 
     iErrCode = GetTournamentEmpires(
         iTournamentKey,
-        ppvEmpireKey ? NULL : &pvEmpireKey,
-        ppvTeamKey ? NULL : &pvTeamKey,
-        ppvName ? NULL : &pvName,
+        &pvEmpireKey,
+        !ppvTeamKey ? NULL : &pvTeamKey,
+        !ppvName ? NULL : &pvName,
         &iNumKeys
         );
 
@@ -991,15 +993,13 @@ int GameEngine::GetAvailableTournamentEmpires (unsigned int iTournamentKey, Vari
 
     for (i = 0; i < iNumKeys; i ++)
     {
-        iErrCode = GetEmpireOptions2 (pvEmpireKey[i], &iOptions);
+        iErrCode = GetEmpireOptions2(pvEmpireKey[i], &iOptions);
         RETURN_ON_ERROR(iErrCode);
         
         if (iOptions & UNAVAILABLE_FOR_TOURNAMENTS)
         {
             // Remove from list
-            if (pvEmpireKey != NULL) {
-                pvEmpireKey[i] = pvEmpireKey [iNumKeys - 1];
-            }
+            pvEmpireKey[i] = pvEmpireKey [iNumKeys - 1];
 
             if (pvTeamKey != NULL) {
                 pvTeamKey[i] = pvTeamKey [iNumKeys - 1];

@@ -105,6 +105,10 @@ int TournamentScoring::OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker
         return OK;
     }
 
+    GameEngine engine;
+    iErrCode = engine.CacheTournamentTables(&iTournamentKey, 1);
+    RETURN_ON_ERROR(iErrCode);
+
     Assert(iEmpireNuker != NO_KEY || iEmpireNuked != NO_KEY);
 
     if (iEmpireNuker != NO_KEY) {
@@ -162,6 +166,10 @@ int TournamentScoring::OnEvent (int iGameClass, int iGameNumber, int iEmpireKey,
     if (iTournamentKey == NO_KEY) {
         return OK;
     }
+
+    GameEngine engine;
+    iErrCode = engine.CacheTournamentTables(&iTournamentKey, 1);
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = OnEvent (iTournamentKey, iEmpireKey, event);
     RETURN_ON_ERROR(iErrCode);

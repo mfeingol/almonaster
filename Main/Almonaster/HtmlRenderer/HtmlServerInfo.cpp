@@ -369,20 +369,17 @@ int HtmlRenderer::WriteServerRules()
         OutputText ("</strong> closed)</li>");
 
         unsigned int iNumGamingEmpires = m_siNumGamingEmpires;
-        if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60)
+        if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 5 * 60)
         {
-            // More than a quarter of an hour has passed since the last game check
-            // Lock to ensure only one query is made
+            // Lock to ensure only one query is made at a time
             m_slockEmpiresInGames.Wait();
-            if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60) {
-
+            if (Time::GetSecondDifference (tNow, m_stEmpiresInGamesCheck) > 15 * 60)
+            {
                 m_stEmpiresInGamesCheck = tNow;
                 m_slockEmpiresInGames.Signal();
 
-                // Yep, the people who lost the race will get the stale value until the query finishes
-                // That's just too bad...
-
-                iErrCode = GetNumEmpiresInGames(&iNumGamingEmpires);
+                // People who lose the race will see a stale value until the query finishes...
+                iErrCode = GetNumUniqueEmpiresInGames(&iNumGamingEmpires);
                 RETURN_ON_ERROR(iErrCode);
                 m_siNumGamingEmpires = iNumGamingEmpires;
                     

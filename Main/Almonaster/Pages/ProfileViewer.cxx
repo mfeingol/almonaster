@@ -166,9 +166,6 @@ SearchResults:
                 Variant vSentName;
                 if (pszMessage != NULL && pszTargetEmpire != NULL)
                 {
-                    iErrCode = CacheEmpireAndMessages(iTargetEmpireKey);
-                    RETURN_ON_ERROR(iErrCode);
-
                     iErrCode = SendSystemMessage(iTargetEmpireKey, pszMessage, m_iEmpireKey, 0);
                     switch (iErrCode) {
 

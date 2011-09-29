@@ -18,15 +18,16 @@
 
 #include "HtmlRenderer.h"
 
-static const TableCacheEntry systemData = { { SYSTEM_DATA, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemThemes = { { SYSTEM_THEMES, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemGameClassData = { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemSuperClassData = { { SYSTEM_SUPERCLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemActiveGames = { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemLatestGames = { { SYSTEM_LATEST_GAMES, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemTournaments = { { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemChatRoomData = { { SYSTEM_CHATROOM_DATA, NO_KEY, 0, NULL }, NULL, NULL };
-static const TableCacheEntry systemNukeList = { { SYSTEM_NUKE_LIST, NO_KEY, 0, NULL }, NULL, NULL };
+static const TableCacheEntry systemData = { { SYSTEM_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemThemes = { { SYSTEM_THEMES, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemGameClassData = { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemSuperClassData = { { SYSTEM_SUPERCLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemActiveGames = { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemLatestGames = { { SYSTEM_LATEST_GAMES, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemTournaments = { { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemChatRoomData = { { SYSTEM_CHATROOM_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemNukeList = { { SYSTEM_NUKE_LIST, NO_KEY, 0, NULL }, NULL, NULL, NULL };
+static const TableCacheEntry systemAlienIcons = { { SYSTEM_ALIEN_ICONS, NO_KEY, 0, NULL }, NULL, NULL, NULL };
 
 void Cache(Vector<TableCacheEntry>& cache, const TableCacheEntry& entry)
 {
@@ -46,11 +47,14 @@ void HtmlRenderer::GatherCacheTablesForSystemPage(Vector<TableCacheEntry>& cache
     {
         m_systemEmpireCol.Data = m_iEmpireKey;
 
-        const TableCacheEntry systemEmpireDataN = { { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL }, NULL, NULL };
+        const TableCacheEntry systemEmpireDataN = { { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL }, NULL, NULL, NULL };
         Cache(cache, systemEmpireDataN);
 
-        const TableCacheEntry systemEmpireMessagesN = { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+        const TableCacheEntry systemEmpireMessagesN = { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
         Cache(cache, systemEmpireMessagesN);
+
+        const TableCacheEntry systemEmpireTournamentsN = { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
+        Cache(cache, systemEmpireTournamentsN);
     }
 
     if (m_iTournamentKey != NO_KEY)
@@ -65,10 +69,11 @@ void HtmlRenderer::GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache)
     Cache(cache, systemThemes);
     Cache(cache, systemGameClassData);
     Cache(cache, systemActiveGames);
+    Cache(cache, systemTournaments);
 
     if (m_iEmpireKey != NO_KEY)
     {
-        TableCacheEntry systemEmpireDataN = { { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL }, NULL, NULL };
+        TableCacheEntry systemEmpireDataN = { { SYSTEM_EMPIRE_DATA, m_iEmpireKey, 0, NULL }, NULL, NULL, NULL };
         Cache(cache, systemEmpireDataN);
     }
 
@@ -81,16 +86,16 @@ void HtmlRenderer::GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache)
 
     if (m_iGameClass != NO_KEY && m_iGameNumber != -1)
     {
-        const TableCacheEntry gameData = { { GAME_DATA, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL };
+        const TableCacheEntry gameData = { { GAME_DATA, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
         Cache(cache, gameData);
 
-        const TableCacheEntry gameEmpires = { { GAME_EMPIRES, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL };
+        const TableCacheEntry gameEmpires = { { GAME_EMPIRES, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
         Cache(cache, gameEmpires);
 
-        const TableCacheEntry allGameEmpireData = { { GAME_EMPIRE_DATA, NO_KEY, countof(m_gameCols), m_gameCols }, GameEmpireData::EmpireKey, NULL };
+        const TableCacheEntry allGameEmpireData = { { GAME_EMPIRE_DATA, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireData::EmpireKey, NULL };
         Cache(cache, allGameEmpireData);
 
-        const TableCacheEntry gameEmpireMessages = { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+        const TableCacheEntry gameEmpireMessages = { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
         Cache(cache, gameEmpireMessages);
     }
 }
@@ -99,7 +104,7 @@ void HtmlRenderer::RegisterCache_ActiveGameList(Vector<TableCacheEntry>& cache)
 {
     Cache(cache, systemActiveGames);
 
-    TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
 }
 
@@ -115,14 +120,14 @@ void HtmlRenderer::RegisterCache_OpenGameList(Vector<TableCacheEntry>& cache)
 {
     Cache(cache, systemActiveGames);
 
-    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
 }
 
 void HtmlRenderer::RegisterCache_SystemGameList(Vector<TableCacheEntry>& cache)
 {
     // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
-    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
 
     // Needed to insert a row when entering a game
@@ -131,10 +136,7 @@ void HtmlRenderer::RegisterCache_SystemGameList(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_ProfileEditor(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry systemEmpireTournamentsN = { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
-    Cache(cache, systemEmpireTournamentsN);
-
-    const TableCacheEntry systemEmpireAssociationsN = { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireAssociationsN = { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireAssociationsN);
 }
 
@@ -147,23 +149,24 @@ void HtmlRenderer::RegisterCache_ProfileViewer(Vector<TableCacheEntry>& cache)
     // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
     Assert(m_iEmpireKey != NO_KEY);
 
-    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
 
     // Needed to determine whether to display nuke history
-    const TableCacheEntry systemEmpireNukerListN = { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireNukerListN = { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireNukerListN);
 
-    const TableCacheEntry systemEmpireNukedListN = { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireNukedListN = { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireNukedListN);
 
     // Log in as associated empire
-    const TableCacheEntry systemEmpireAssociationsN = { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireAssociationsN = { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireAssociationsN);
 }
 
 void HtmlRenderer::RegisterCache_ServerAdministrator(Vector<TableCacheEntry>& cache)
 {
+    Cache(cache, systemAlienIcons);
 }
 
 void HtmlRenderer::RegisterCache_EmpireAdministrator(Vector<TableCacheEntry>& cache)
@@ -183,7 +186,7 @@ void HtmlRenderer::RegisterCache_ThemeAdministrator(Vector<TableCacheEntry>& cac
 void HtmlRenderer::RegisterCache_PersonalGameClasses(Vector<TableCacheEntry>& cache)
 {
     // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
-    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    const TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
 
     // Needed to insert a row when entering a game
@@ -210,11 +213,11 @@ void HtmlRenderer::RegisterCache_SystemNews(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_Info(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireShips);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireDiplomacy);
 
     // Ratios line
@@ -225,13 +228,13 @@ void HtmlRenderer::RegisterCache_Info(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
+    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
     Cache(cache, gameEmpireDiplomacyContacts);
 }
 
 int HtmlRenderer::AfterCache_Info()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
 
 void HtmlRenderer::RegisterCache_Tech(Vector<TableCacheEntry>& cache)
@@ -248,18 +251,18 @@ void HtmlRenderer::RegisterCache_Tech(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
+    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
     Cache(cache, gameEmpireDiplomacyContacts);
 }
 
 int HtmlRenderer::AfterCache_Tech()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
 
 void HtmlRenderer::RegisterCache_Diplomacy(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireDiplomacy);
 
     m_crossJoinEntry.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
@@ -269,7 +272,7 @@ void HtmlRenderer::RegisterCache_Diplomacy(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
+    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
     Cache(cache, gameEmpireDiplomacyContacts);
 
     m_crossJoinEntry2.LeftColumnName = ID_COLUMN_NAME;
@@ -279,13 +282,13 @@ void HtmlRenderer::RegisterCache_Diplomacy(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry2.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry2.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry systemEmpireDataContacts = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, ID_COLUMN_NAME, &m_crossJoinEntry2 };
+    const TableCacheEntry systemEmpireDataContacts = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, NULL, ID_COLUMN_NAME, &m_crossJoinEntry2 };
     Cache(cache, systemEmpireDataContacts);
 }
 
 int HtmlRenderer::AfterCache_Diplomacy()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
 
 void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
@@ -294,18 +297,18 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
     Cache(cache, gameMap);
 
     // Need access to everyone's map and ships
-    const TableCacheEntry allGameEmpireMaps = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, GameEmpireMap::EmpireKey, NULL };
+    const TableCacheEntry allGameEmpireMaps = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireMap::EmpireKey, NULL };
     Cache(cache, allGameEmpireMaps);
 
-    const TableCacheEntry allGameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameCols), m_gameCols }, GameEmpireShips::EmpireKey, NULL };
+    const TableCacheEntry allGameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireShips::EmpireKey, NULL };
     Cache(cache, allGameEmpireShips);
 
     // Ship view
-    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireFleets);
 
     // Diplomacy coloring
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireDiplomacy);
 
     // When another empire's ship appears on a planet, we need their SystemEmpireData row
@@ -316,33 +319,33 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameCols);
     m_crossJoinEntry.Table.Columns = m_gameCols;
 
-    const TableCacheEntry systemEmpireDataFromGame = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, ID_COLUMN_NAME, &m_crossJoinEntry };
+    const TableCacheEntry systemEmpireDataFromGame = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, NULL, ID_COLUMN_NAME, &m_crossJoinEntry };
     Cache(cache, systemEmpireDataFromGame);
 }
 
 int HtmlRenderer::AfterCache_Map()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS);
 }
 
 void HtmlRenderer::RegisterCache_Planets(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL };
+    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
     Cache(cache, gameMap);
 
     // Need access to everyone's map and ships
-    const TableCacheEntry allGameEmpireMaps = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, GameEmpireMap::EmpireKey, NULL };
+    const TableCacheEntry allGameEmpireMaps = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireMap::EmpireKey, NULL };
     Cache(cache, allGameEmpireMaps);
 
-    const TableCacheEntry allGameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameCols), m_gameCols }, GameEmpireShips::EmpireKey, NULL };
+    const TableCacheEntry allGameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireShips::EmpireKey, NULL };
     Cache(cache, allGameEmpireShips);
 
     // Ship view
-    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireFleets);
 
     // Diplomacy coloring
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireDiplomacy);
     
     // When another empire's ship appears on a planet, we need their SystemEmpireData row
@@ -353,7 +356,7 @@ void HtmlRenderer::RegisterCache_Planets(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameCols);
     m_crossJoinEntry.Table.Columns = m_gameCols;
 
-    const TableCacheEntry systemEmpireDataFromGame = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, ID_COLUMN_NAME, &m_crossJoinEntry };
+    const TableCacheEntry systemEmpireDataFromGame = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, NULL, ID_COLUMN_NAME, &m_crossJoinEntry };
     Cache(cache, systemEmpireDataFromGame);
 }
 
@@ -364,26 +367,26 @@ int HtmlRenderer::AfterCache_Planets()
 
 void HtmlRenderer::RegisterCache_Options(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL };
+    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
     Cache(cache, gameMap);
 }
 
 void HtmlRenderer::RegisterCache_Build(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL };
+    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
     Cache(cache, gameMap);
 
-    const TableCacheEntry gameEmpireMap = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireMap = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireMap);
 
-    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireShips);
 
-    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireFleets);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireDiplomacy);
 
     // Ratios line
@@ -394,25 +397,25 @@ void HtmlRenderer::RegisterCache_Build(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
+    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
     Cache(cache, gameEmpireContactDiplomacy);
 }
 
 int HtmlRenderer::AfterCache_Build()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
 
 void HtmlRenderer::RegisterCache_Ships(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireShips);
 
-    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireFleets);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
     Cache(cache, gameEmpireDiplomacy);
 
     // Ratios line
@@ -423,54 +426,21 @@ void HtmlRenderer::RegisterCache_Ships(Vector<TableCacheEntry>& cache)
     m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
+    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
     Cache(cache, gameEmpireContactDiplomacy);
 
     // Cancel builds
-    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL };
+    const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
     Cache(cache, gameMap);
 
-    const TableCacheEntry gameEmpireMap = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL };
+    const TableCacheEntry gameEmpireMap = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireMap);
 }
 
 int HtmlRenderer::AfterCache_Ships()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
-
-//int HtmlRenderer::AfterCache_Ships()
-//{
-//    GET_GAME_EMPIRES(strEmpires, m_iGameClass, m_iGameNumber);
-//
-//    Variant* pvEmpireKey = NULL;
-//    unsigned int iNumEmpires;
-//    int iErrCode = t_pCache->ReadColumn(strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
-//    if (iErrCode == OK)
-//    {
-//        for (unsigned int i = 0; i < iNumEmpires; i ++)
-//        {
-//            unsigned int iThisEmpire = pvEmpireKey[i].GetInteger();
-//
-//            GET_GAME_EMPIRE_DIPLOMACY(strEmpireDiplomacy, m_iGameClass, m_iGameNumber, iThisEmpire);
-//            if (!t_pCache->IsCached(strEmpireDiplomacy))
-//            {
-//                iErrCode = t_pCache->CreateEmpty(GAME_EMPIRE_DIPLOMACY, strEmpireDiplomacy);
-//                if (iErrCode != OK)
-//                {
-//                    goto Cleanup;
-//                }
-//            }
-//        }
-//    }
-//
-//Cleanup:
-//
-//    if (pvEmpireKey)
-//        t_pCache->FreeData(pvEmpireKey);
-//
-//    return iErrCode;
-//}
 
 void HtmlRenderer::RegisterCache_GameServerRules(Vector<TableCacheEntry>& cache)
 {
@@ -490,8 +460,12 @@ void HtmlRenderer::RegisterCache_GameProfileViewer(Vector<TableCacheEntry>& cach
 
 void HtmlRenderer::RegisterCache_Quit(Vector<TableCacheEntry>& cache)
 {
-    TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
+    TableCacheEntry systemEmpireActiveGamesN = { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireActiveGamesN);
+    
+    // When you resign, interesting things happen to your stuff
+    const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
+    Cache(cache, gameEmpireShips);
 }
 
 void HtmlRenderer::RegisterCache_LatestNukes(Vector<TableCacheEntry>& cache)
@@ -530,10 +504,10 @@ void HtmlRenderer::RegisterCache_TournamentAdministrator(Vector<TableCacheEntry>
     // Cache tables for tournament
     if (m_iTournamentKey != NO_KEY)
     {
-        const TableCacheEntry systemTournamentEmpires = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL };
+        const TableCacheEntry systemTournamentEmpires = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL, NULL };
         Cache(cache, systemTournamentEmpires);
 
-        const TableCacheEntry systemTournamentTeamsN = { { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL };
+        const TableCacheEntry systemTournamentTeamsN = { { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL, NULL };
         Cache(cache, systemTournamentTeamsN);
     }
 
@@ -549,17 +523,11 @@ void HtmlRenderer::RegisterCache_Tournaments(Vector<TableCacheEntry>& cache)
     // Cache tables for tournament
     if (m_iTournamentKey != NO_KEY)
     {
-        const TableCacheEntry systemTournamentEmpires = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL };
+        const TableCacheEntry systemTournamentEmpires = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL, NULL };
         Cache(cache, systemTournamentEmpires);
 
-        const TableCacheEntry systemTournamentTeamsN = { { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL };
+        const TableCacheEntry systemTournamentTeamsN = { { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &m_systemTournamentCol }, NULL, NULL, NULL };
         Cache(cache, systemTournamentTeamsN);
-    }
-
-    if (m_iEmpireKey != NO_KEY)
-    {
-        const TableCacheEntry systemEmpireTournamentsN = { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL };
-        Cache(cache, systemEmpireTournamentsN);
     }
 
     Cache(cache, systemActiveGames);

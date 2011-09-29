@@ -197,8 +197,7 @@ int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile, con
     sChannelCred.dwFlags = SCH_CRED_NO_SYSTEM_MAPPER;
     sChannelCred.cCreds = 1;
     sChannelCred.paCred = &phPrivateKey;
-    sChannelCred.grbitEnabledProtocols = SP_PROT_SSL3_CLIENT | SP_PROT_SSL3_SERVER |
-                                         SP_PROT_TLS1_CLIENT | SP_PROT_TLS1_SERVER;
+    sChannelCred.grbitEnabledProtocols = SP_PROT_SSL3TLS1_X;
 
     SECURITY_STATUS ss = AcquireCredentialsHandle(
         NULL,
@@ -846,12 +845,8 @@ int SslSocket::DecryptMessageWrapper(BYTE* pbData, size_t cbCypherData, size_t* 
         break;
 
     case SEC_I_RENEGOTIATE:
-        // Not supported
-        Assert(false);
+        // Not supported for now
     default:
-
-        // printf("DecryptMessage returned 0x%x\n", ss);
-
         iErrCode = ERROR_FAILURE;
         break;
     }

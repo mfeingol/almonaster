@@ -1367,6 +1367,9 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 if (bExist)
                 {
+                    iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	                RETURN_ON_ERROR(iErrCode);
+
                     iErrCode = ForceUpdate (iGameClass, iGameNumber);
                     RETURN_ON_ERROR(iErrCode);
                     AddMessage ("The game was forcibly updated");
@@ -1388,7 +1391,10 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
             }
 
-            if (WasButtonPressed (BID_RESET)) {
+            if (WasButtonPressed (BID_RESET))
+            {
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	            RETURN_ON_ERROR(iErrCode);
 
                 iErrCode = ResetGameUpdateTime (iGameClass, iGameNumber);
                 if (iErrCode == ERROR_GAME_PAUSED)
@@ -1525,7 +1531,10 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Check for search for empires with duplicate IP's
-            if (WasButtonPressed (BID_SEARCHIPADDRESSES)) {
+            if (WasButtonPressed (BID_SEARCHIPADDRESSES))
+            {
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	            RETURN_ON_ERROR(iErrCode);
 
                 iGameAdminPage = 3;
                 m_bRedirectTest = false;
@@ -1535,7 +1544,10 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Check for search for empires with duplicate IP's
-            if (WasButtonPressed (BID_SEARCHSESSIONIDS)) {
+            if (WasButtonPressed (BID_SEARCHSESSIONIDS))
+            {
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	            RETURN_ON_ERROR(iErrCode);
 
                 iGameAdminPage = 3;
                 m_bRedirectTest = false;
@@ -1562,7 +1574,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 RETURN_ON_ERROR(iErrCode);
                 
                 bool bUpdated;
-                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bUpdated);
+                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bUpdated);
                 RETURN_ON_ERROR(iErrCode);
 
                 // Best effort pause the game
@@ -1579,6 +1591,9 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	            RETURN_ON_ERROR(iErrCode);
+
                 iErrCode = PauseGame (iGameClass, iGameNumber, true, true);
                 RETURN_ON_ERROR(iErrCode);
                 
@@ -1590,6 +1605,9 @@ if (m_bOwnPost && !m_bRedirection) {
             // Unpause game
             if (WasButtonPressed (BID_UNPAUSEGAME))
             {
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	            RETURN_ON_ERROR(iErrCode);
+
                 iErrCode = UnpauseGame (iGameClass, iGameNumber, true, true);
                 RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The game is no longer paused");
@@ -1934,7 +1952,8 @@ case 0:
     if (iNumSuperClasses > 0) {
 
         %><tr><td>Rename a SuperClass:</td><td><select name="RenSuperClass"><%
-        for (i = 0; i < (int)iNumSuperClasses; i ++) { 
+        for (i = 0; i < (int)iNumSuperClasses; i ++)
+        { 
             %><option value="<% Write (piSuperClassKey [i]); %>"><% 
             Write (pvSuperClassName[i].GetCharPtr()); %></option><%
         }
@@ -1952,11 +1971,11 @@ case 0:
     %><tr><td>&nbsp;</td></td><%
 
     // GameClasses
-    if (iNumGameClasses > 0) {
-
+    if (iNumGameClasses > 0)
+    {
         int iNumHalted = 0, iNumNotHalted = 0, iNumDeleted = 0, iNumNotDeleted = 0;
-        for (i = 0; i < iNumGameClasses; i ++) {
-
+        for (i = 0; i < iNumGameClasses; i ++)
+        {
             if (pbGameClassHalted[i]) {
                 iNumHalted ++;
                 iNumNotDeleted ++;
@@ -1977,12 +1996,16 @@ case 0:
 
             char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-            for (i = 0; i < iNumGameClasses; i ++) { 
-                if (!pbGameClassDeleted[i] &&
-                    GetGameClassName (piGameClassKey[i], pszGameClassName) == OK) {
-                    %><option value="<% Write (piGameClassKey[i]); %>"><% 
-                    Write (pszGameClassName); %></option><%
-                }
+            for (i = 0; i < iNumGameClasses; i ++)
+            { 
+                if (pbGameClassDeleted[i])
+                    continue;
+                
+                iErrCode = GetGameClassName (piGameClassKey[i], pszGameClassName);
+                RETURN_ON_ERROR(iErrCode);
+                
+                %><option value="<% Write (piGameClassKey[i]); %>"><% 
+                Write (pszGameClassName); %></option><%
             }
             %></select></td><td><%
             WriteButton (BID_DELETEGAMECLASS);
@@ -1995,12 +2018,16 @@ case 0:
 
             char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-            for (i = 0; i < iNumGameClasses; i ++) { 
-                if (pbGameClassDeleted[i] &&
-                    GetGameClassName (piGameClassKey[i], pszGameClassName) == OK) {
-                    %><option value="<% Write (piGameClassKey[i]); %>"><% 
-                    Write (pszGameClassName); %></option><%
-                }
+            for (i = 0; i < iNumGameClasses; i ++)
+            { 
+                if (!pbGameClassDeleted[i])
+                    continue;
+                
+                iErrCode = GetGameClassName(piGameClassKey[i], pszGameClassName);
+                RETURN_ON_ERROR(iErrCode);
+
+                %><option value="<% Write (piGameClassKey[i]); %>"><% 
+                Write (pszGameClassName); %></option><%
             }
             %></select></td><td><%
             WriteButton (BID_UNDELETEGAMECLASS);
@@ -2013,12 +2040,16 @@ case 0:
 
             char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-            for (i = 0; i < iNumGameClasses; i ++) { 
-                if (!pbGameClassHalted[i] &&
-                    GetGameClassName (piGameClassKey[i], pszGameClassName) == OK) {
-                    %><option value="<% Write (piGameClassKey[i]); %>"><% 
-                    Write (pszGameClassName); %></option><%
-                }
+            for (i = 0; i < iNumGameClasses; i ++)
+            { 
+                if (pbGameClassHalted[i])
+                    continue;
+                
+                iErrCode = GetGameClassName(piGameClassKey[i], pszGameClassName);
+                RETURN_ON_ERROR(iErrCode);
+                    
+                %><option value="<% Write (piGameClassKey[i]); %>"><% 
+                Write (pszGameClassName); %></option><%
             }
             %></select></td><td><%
             WriteButton (BID_HALTGAMECLASS);
@@ -2031,12 +2062,16 @@ case 0:
 
             char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
 
-            for (i = 0; i < iNumGameClasses; i ++) { 
-                if (pbGameClassHalted[i] &&
-                    GetGameClassName (piGameClassKey[i], pszGameClassName) == OK) {
-                    %><option value="<% Write (piGameClassKey[i]); %>"><% 
-                    Write (pszGameClassName); %></option><%
-                }
+            for (i = 0; i < iNumGameClasses; i ++)
+            {
+                if (!pbGameClassHalted[i])
+                    continue;
+                
+                iErrCode = GetGameClassName (piGameClassKey[i], pszGameClassName);
+                RETURN_ON_ERROR(iErrCode);
+                
+                %><option value="<% Write (piGameClassKey[i]); %>"><% 
+                Write (pszGameClassName); %></option><%
             }
             %></select></td><td><%
             WriteButton (BID_UNHALTGAMECLASS);
@@ -2738,6 +2773,9 @@ case 4:
 
     int iState;
 
+    iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	RETURN_ON_ERROR(iErrCode);
+
     iErrCode = GetGameState (iGameClass, iGameNumber, &iState);
     RETURN_ON_ERROR(iErrCode);
 
@@ -2760,6 +2798,9 @@ case 4:
 
 case 6:
     {
+
+    iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	RETURN_ON_ERROR(iErrCode);
 
     Variant vOptions;
 
@@ -2827,10 +2868,12 @@ case 6:
     break;
 
 case 7:
-
     {
-    char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
+    
+    iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+	RETURN_ON_ERROR(iErrCode);
 
+    char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
     iErrCode = GetGameClassName (iGameClass, pszGameClassName);
     RETURN_ON_ERROR(iErrCode);
 

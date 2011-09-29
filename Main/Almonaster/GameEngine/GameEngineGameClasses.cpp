@@ -520,7 +520,7 @@ int GameEngine::GetSystemGameClassKeys (int** ppiKey, bool** ppbHalted, bool** p
         int* piKey = new int[iNumGameClasses];
         Assert(piKey);
 
-        for (int i = 0; i < *piNumKeys; i ++)
+        for (unsigned int i = 0; i < iNumGameClasses; i ++)
         {
             int iOptions = pvOptions[i].GetInteger();
 

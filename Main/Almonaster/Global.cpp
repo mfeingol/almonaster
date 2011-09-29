@@ -135,10 +135,6 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     int iErrCode;
     char* pszTemp;
 
-    // AsyncManager
-    iErrCode = m_asyncManager.Initialize();
-    RETURN_ON_ERROR(iErrCode);
-
     //
     // Configuration
     //
@@ -217,6 +213,11 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     RETURN_ON_ERROR(iErrCode);
 
     TlsCloseConnection();
+
+    // Initialize AsyncManager
+    iErrCode = m_asyncManager.Initialize();
+    RETURN_ON_ERROR(iErrCode);
+
     return iErrCode;
 }
 

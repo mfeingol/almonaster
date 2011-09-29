@@ -91,7 +91,7 @@ void TableCacheCollection::InsertTable(const char* pszCacheTableName, CachedTabl
 
 void TableCacheCollection::InsertTableNoDup(const char* pszCacheTableName, CachedTable* pTable)
 {
-    Trace("TableCacheCollection caching {0}", gcnew System::String(pszCacheTableName));
+    Trace("TableCacheCollection caching 0x{0:X} as {1}", (size_t)pTable, gcnew System::String(pszCacheTableName));
 
     pTable->AddRef();
     bool ret = m_htTableViews.Insert((char*)pszCacheTableName, pTable);
@@ -349,6 +349,8 @@ char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry)
     {
         if (entry.Table.NumColumns == 0)
         {
+            // This means that entries with excessively generic names are created for cross-joined and partitioned lookups.
+            // So far it hasn't been a problem.  But it could be a seriously evil problem...
             pszCacheEntryName = (char*)entry.Table.Name;
         }
         else
@@ -373,6 +375,7 @@ char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry)
     }
 
     // We might have already processed the cache entry
+    Assert(pszCacheEntryName);
     if (m_htTableViews.Contains(pszCacheEntryName))
         return NULL;
 

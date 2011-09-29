@@ -50,7 +50,10 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
 
     unsigned int iNumHalted = 0, iNumNotHalted = 0, iNumMarked = 0, iNumUnmarked = 0, iNumStartable = 0, iGames;
     
-    iErrCode = GetTournamentData (iTournamentKey, &pvData);
+    iErrCode = CacheTournamentEmpireTables(iTournamentKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetTournamentData(iTournamentKey, &pvData);
     if (iErrCode == ERROR_TOURNAMENT_DOES_NOT_EXIST)
     {
         OutputText ("<p><strong>The tournament does not exist</strong>");
@@ -467,6 +470,9 @@ int HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, un
 
     unsigned int i, iNumEmpires;
     String strDesc, strUrl;
+
+    iErrCode = CacheTournamentEmpireTables(iTournamentKey);
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetTournamentTeamData(iTournamentKey, iTeamKey, &pvData);
     if (iErrCode == ERROR_TOURNAMENT_TEAM_DOES_NOT_EXIST)
@@ -1287,7 +1293,7 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
     const char* pszString = NULL;
 
     // Cache tables for tournament
-    iErrCode = CacheTournamentTables(&iTournamentKey, 1);
+    iErrCode = CacheTournamentAndEmpireTables(iTournamentKey);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetTournamentData (iTournamentKey, &pvData);

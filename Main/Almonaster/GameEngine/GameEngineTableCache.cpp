@@ -1,9 +1,27 @@
+//
+// Almonaster.dll: a component of Almonaster
+// Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
+//
+// This program is free software;you can redistribute it and/or
+// modify it under the terms of the GNU General Public License
+// as published by the Free Software Foundation;either version 2
+// of the License, or(at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY;without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program;if not, write to the Free Software
+// Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA02111-1307, USA.
+
 #include "GameEngine.h"
 
 int GameEngine::LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey, ICachedTable** ppTable)
 {
     const ColumnEntry col = { SystemEmpireData::Name, pszName };
-    const TableCacheEntry entry = { { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &col }, NULL, NULL };
+    const TableCacheEntry entry = { { SYSTEM_EMPIRE_DATA, NO_KEY, 1, &col }, NULL, NULL, NULL };
     Assert(col.Data.GetCharPtr());
 
     ICachedTable* pEmpire = NULL;
@@ -50,7 +68,7 @@ int GameEngine::CacheEmpire(unsigned int iEmpireKey)
 
 int GameEngine::CacheEmpire(unsigned int iEmpireKey, unsigned int* piResults)
 {
-    return CacheEmpires(&iEmpireKey, 1);
+    return CacheEmpires(&iEmpireKey, 1, piResults);
 }
 
 int GameEngine::CacheEmpires(const Variant* pvEmpireKey, unsigned int iNumEmpires)
@@ -77,6 +95,7 @@ int GameEngine::CacheEmpires(const unsigned int* piEmpireKey, unsigned int iNumE
         pcEntries[i].Table.Key = piEmpireKey[i];
         pcEntries[i].Table.NumColumns = 0;
         pcEntries[i].Table.Columns = NULL;
+        pcEntries[i].Reserved = NULL;
         pcEntries[i].PartitionColumn = NULL;
         pcEntries[i].CrossJoin = NULL;
     }
@@ -105,8 +124,8 @@ int GameEngine::CacheEmpireAndMessages(unsigned int iEmpireKey)
     const ColumnEntry systemEmpireMessagesCol = { SystemEmpireMessages::EmpireKey, iEmpireKey };
     const TableCacheEntry systemEmpireEntries[] =
     {
-        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL },
-        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL },
+        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(systemEmpireEntries, countof(systemEmpireEntries));
@@ -118,9 +137,9 @@ int GameEngine::CacheEmpireMessagesAndTournaments(unsigned int iEmpireKey)
     const ColumnEntry systemEmpireTournamentsCol = { SystemEmpireTournaments::EmpireKey, iEmpireKey };
     const TableCacheEntry systemEmpireEntries[] =
     {
-        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL },
-        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol }, NULL, NULL },
+        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(systemEmpireEntries, countof(systemEmpireEntries));
@@ -132,9 +151,9 @@ int GameEngine::CacheEmpireForDeletion(unsigned int iEmpireKey)
     const ColumnEntry systemEmpireNukeListCol = { SystemEmpireNukeList::EmpireKey, iEmpireKey };
     const TableCacheEntry systemEmpireEntries[] =
     {
-        { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemEmpireActiveGamesCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL },
+        { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemEmpireActiveGamesCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(systemEmpireEntries, countof(systemEmpireEntries));
@@ -156,6 +175,7 @@ int GameEngine::CacheTournamentTables(const unsigned int* piTournamentKey, unsig
         pcEntries[i].Table.Key = NO_KEY;
         pcEntries[i].Table.NumColumns = 1;
         pcEntries[i].Table.Columns = pcCols + i;
+        pcEntries[i].Reserved = NULL;
         pcEntries[i].PartitionColumn = NULL;
         pcEntries[i].CrossJoin = NULL;
 
@@ -163,11 +183,64 @@ int GameEngine::CacheTournamentTables(const unsigned int* piTournamentKey, unsig
         pcEntries[i + iNumTournaments].Table.Key = NO_KEY;
         pcEntries[i + iNumTournaments].Table.NumColumns = 1;
         pcEntries[i + iNumTournaments].Table.Columns = pcCols + i + iNumTournaments;
+        pcEntries[i + iNumTournaments].Reserved = NULL;
         pcEntries[i + iNumTournaments].PartitionColumn = NULL;
         pcEntries[i + iNumTournaments].CrossJoin = NULL;
     }
 
     return t_pCache->Cache(pcEntries, iNumTournaments * 2);
+}
+
+int GameEngine::CacheTournamentAndEmpireTables(unsigned int iTournamentKey)
+{
+    ColumnEntry tournamentCol = { SystemTournamentEmpires::TournamentKey, iTournamentKey };
+    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &tournamentCol }, ID_COLUMN_NAME, SystemTournamentEmpires::EmpireKey };
+
+    const TableCacheEntry entries[] =
+    {
+        { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &tournamentCol }, NULL, NULL, NULL},
+        { { SYSTEM_TOURNAMENT_TEAMS, NO_KEY, 1, &tournamentCol }, NULL, NULL, NULL},
+        { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL }, NULL, ID_COLUMN_NAME, &crossJoin },
+    };
+
+    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}
+
+int GameEngine::CacheTournamentEmpireTables(unsigned int iTournamentKey)
+{
+    ColumnEntry crossJoinCol = { SystemTournamentEmpires::TournamentKey, iTournamentKey };
+    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &crossJoinCol }, ID_COLUMN_NAME, SystemTournamentEmpires::EmpireKey };
+
+    const TableCacheEntry entries[] =
+    {
+        { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL }, NULL, ID_COLUMN_NAME, &crossJoin },
+    };
+
+    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}
+
+int GameEngine::CacheTournamentEmpiresForGame(unsigned int iTournamentKey)
+{
+    ColumnEntry crossJoinCol = { SystemTournamentEmpires::TournamentKey, iTournamentKey };
+    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &crossJoinCol }, ID_COLUMN_NAME, SystemTournamentEmpires::EmpireKey };
+
+    const TableCacheEntry entries[] =
+    {
+        { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL }, NULL, ID_COLUMN_NAME, &crossJoin },
+        { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, SystemEmpireActiveGames::EmpireKey, &crossJoin },
+    };
+
+    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CreateEmptyGameCacheEntries(NO_KEY, 0, NO_KEY, iTournamentKey, NO_KEY, EMPTY_SYSTEM_EMPIRE_ACTIVE_GAMES);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKey, unsigned int iNumGames)
@@ -195,6 +268,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
 		pcEntries[i + iNumGames * 0].Table.Key = NO_KEY;
 		pcEntries[i + iNumGames * 0].Table.NumColumns = cGameDataCols;
 		pcEntries[i + iNumGames * 0].Table.Columns = pcGameCols + i*cGameDataCols;
+        pcEntries[i + iNumGames * 0].Reserved = NULL;
         pcEntries[i + iNumGames * 0].PartitionColumn = NULL;
         pcEntries[i + iNumGames * 0].CrossJoin = NULL;
 
@@ -202,6 +276,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
 		pcEntries[i + iNumGames * 1].Table.Key = NO_KEY;
 		pcEntries[i + iNumGames * 1].Table.NumColumns = cGameDataCols;
 		pcEntries[i + iNumGames * 1].Table.Columns = pcGameCols + i*cGameDataCols;
+        pcEntries[i + iNumGames * 1].Reserved = NULL;
         pcEntries[i + iNumGames * 1].PartitionColumn = NULL;
         pcEntries[i + iNumGames * 1].CrossJoin = NULL;
 
@@ -209,6 +284,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
 		pcEntries[i + iNumGames * 2].Table.Key = NO_KEY;
 		pcEntries[i + iNumGames * 2].Table.NumColumns = cGameDataCols;
 		pcEntries[i + iNumGames * 2].Table.Columns = pcGameCols + i*cGameDataCols;
+        pcEntries[i + iNumGames * 2].Reserved = NULL;
         pcEntries[i + iNumGames * 2].PartitionColumn = NULL;
         pcEntries[i + iNumGames * 2].CrossJoin = NULL;
 
@@ -216,6 +292,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
 		pcEntries[i + iNumGames * 3].Table.Key = NO_KEY;
 		pcEntries[i + iNumGames * 3].Table.NumColumns = cGameDataCols;
 		pcEntries[i + iNumGames * 3].Table.Columns = pcGameCols + i*cGameDataCols;
+        pcEntries[i + iNumGames * 3].Reserved = NULL;
         pcEntries[i + iNumGames * 3].PartitionColumn = NULL;
         pcEntries[i + iNumGames * 3].CrossJoin = NULL;
 
@@ -223,6 +300,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
 		pcEntries[i + iNumGames * 4].Table.Key = NO_KEY;
 		pcEntries[i + iNumGames * 4].Table.NumColumns = cGameDataCols;
 		pcEntries[i + iNumGames * 4].Table.Columns = pcGameCols + i*cGameDataCols;
+        pcEntries[i + iNumGames * 4].Reserved = NULL;
         pcEntries[i + iNumGames * 4].PartitionColumn = GameEmpireData::EmpireKey;
         pcEntries[i + iNumGames * 4].CrossJoin = NULL;
 
@@ -239,6 +317,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
             pcEntries[i + iNumGames * (cNumGameTables + 0)].Table.Key = NO_KEY;
             pcEntries[i + iNumGames * (cNumGameTables + 0)].Table.NumColumns = cGameEmpireDataCols;
             pcEntries[i + iNumGames * (cNumGameTables + 0)].Table.Columns = pcGameEmpireCols + i*cGameEmpireDataCols;
+            pcEntries[i + iNumGames * (cNumGameTables + 0)].Reserved = NULL;
             pcEntries[i + iNumGames * (cNumGameTables + 0)].PartitionColumn = NULL;
             pcEntries[i + iNumGames * (cNumGameTables + 0)].CrossJoin = NULL;
         }
@@ -270,6 +349,7 @@ int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant* pvGa
 		pcEntries[i].Table.Key = NO_KEY;
 		pcEntries[i].Table.NumColumns = cGameEmpireDataCols;
 		pcEntries[i].Table.Columns = pcGameEmpireDataCols + i*cGameEmpireDataCols;
+        pcEntries[i].Reserved = NULL;
         pcEntries[i].PartitionColumn = NULL;
         pcEntries[i].CrossJoin = NULL;
 	}
@@ -297,6 +377,7 @@ int GameEngine::CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsig
         pcEntries[iNumEmpires + i].Table.Key = NO_KEY;
         pcEntries[iNumEmpires + i].Table.NumColumns = 1;
         pcEntries[iNumEmpires + i].Table.Columns = pCol;
+        pcEntries[iNumEmpires + i].Reserved = NULL;
         pcEntries[iNumEmpires + i].PartitionColumn = NULL;
         pcEntries[iNumEmpires + i].CrossJoin = NULL;
     }
@@ -313,6 +394,7 @@ int GameEngine::CacheEmpiresAndGameMessages(int iGameClass, int iGameNumber, con
         pcEntries[i].Table.Key = piEmpireKey[i];
         pcEntries[i].Table.NumColumns = 0;
         pcEntries[i].Table.Columns = NULL;
+        pcEntries[i].Reserved = NULL;
         pcEntries[i].PartitionColumn = NULL;
         pcEntries[i].CrossJoin = NULL;
 
@@ -355,6 +437,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
         pcEntries[iNumEmpires + i].Table.Key = NO_KEY;
         pcEntries[iNumEmpires + i].Table.NumColumns = 1;
         pcEntries[iNumEmpires + i].Table.Columns = pActiveGamesCol;
+        pcEntries[iNumEmpires + i].Reserved = NULL;
         pcEntries[iNumEmpires + i].PartitionColumn = NULL;
         pcEntries[iNumEmpires + i].CrossJoin = NULL;
 
@@ -366,6 +449,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
         pcEntries[2 * iNumEmpires + i].Table.Key = NO_KEY;
         pcEntries[2 * iNumEmpires + i].Table.NumColumns = 1;
         pcEntries[2 * iNumEmpires + i].Table.Columns = pMessagesCol;
+        pcEntries[2 * iNumEmpires + i].Reserved = NULL;
         pcEntries[2 * iNumEmpires + i].PartitionColumn = NULL;
         pcEntries[2 * iNumEmpires + i].CrossJoin = NULL;
 
@@ -377,6 +461,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
         pcEntries[3 * iNumEmpires + i].Table.Key = NO_KEY;
         pcEntries[3 * iNumEmpires + i].Table.NumColumns = 1;
         pcEntries[3 * iNumEmpires + i].Table.Columns = pNukeListCol;
+        pcEntries[3 * iNumEmpires + i].Reserved = NULL;
         pcEntries[3 * iNumEmpires + i].PartitionColumn = NULL;
         pcEntries[3 * iNumEmpires + i].CrossJoin = NULL;
 
@@ -384,6 +469,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
         pcEntries[4 * iNumEmpires + i].Table.Key = NO_KEY;
         pcEntries[4 * iNumEmpires + i].Table.NumColumns = 1;
         pcEntries[4 * iNumEmpires + i].Table.Columns = pNukeListCol;
+        pcEntries[4 * iNumEmpires + i].Reserved = NULL;
         pcEntries[4 * iNumEmpires + i].PartitionColumn = NULL;
         pcEntries[4 * iNumEmpires + i].CrossJoin = NULL;
     }
@@ -402,22 +488,22 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
 
     const TableCacheEntry entries[] =
     {
-        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL },
-        { { SYSTEM_LATEST_GAMES, NO_KEY, 0, NULL }, NULL, NULL },
-        { { SYSTEM_NUKE_LIST, NO_KEY, 0, NULL }, NULL, NULL },
+        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_LATEST_GAMES, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_NUKE_LIST, NO_KEY, 0, NULL }, NULL, NULL, NULL },
 
-        { { GAME_DATA, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL },
-        { { GAME_SECURITY, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL },
-        { { GAME_EMPIRES, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL },
-        { { GAME_NUKED_EMPIRES, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL },
-        { { GAME_MAP, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL },
+        { { GAME_DATA, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL, NULL },
+        { { GAME_SECURITY, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL, NULL },
+        { { GAME_EMPIRES, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL, NULL },
+        { { GAME_NUKED_EMPIRES, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL, NULL },
+        { { GAME_MAP, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, NULL, NULL },
 
-        { { GAME_EMPIRE_DATA, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireData::EmpireKey, NULL },
-        { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireMessages::EmpireKey, NULL },
-        { { GAME_EMPIRE_MAP, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireMap::EmpireKey, NULL },
-        { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireDiplomacy::EmpireKey, NULL },
-        { { GAME_EMPIRE_SHIPS, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireShips::EmpireKey, NULL },
-        { { GAME_EMPIRE_FLEETS, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireFleets::EmpireKey, NULL },
+        { { GAME_EMPIRE_DATA, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireData::EmpireKey, NULL },
+        { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireMessages::EmpireKey, NULL },
+        { { GAME_EMPIRE_MAP, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireMap::EmpireKey, NULL },
+        { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL },
+        { { GAME_EMPIRE_SHIPS, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireShips::EmpireKey, NULL },
+        { { GAME_EMPIRE_FLEETS, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireFleets::EmpireKey, NULL },
     };
 
     int iErrCode;
@@ -445,6 +531,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i].Table.Key = pvEmpireKey[i].GetInteger();
             pEntries[countof(entries) + i].Table.NumColumns = 0;
             pEntries[countof(entries) + i].Table.Columns = NULL;
+            pEntries[countof(entries) + i].Reserved = NULL;
             pEntries[countof(entries) + i].PartitionColumn = NULL;
             pEntries[countof(entries) + i].CrossJoin = NULL;
 
@@ -455,6 +542,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires].Table.Key = NO_KEY;
             pEntries[countof(entries) + i + iNumEmpires].Table.NumColumns = 1;
             pEntries[countof(entries) + i + iNumEmpires].Table.Columns = pcColumns + i;
+            pEntries[countof(entries) + i + iNumEmpires].Reserved = NULL;
             pEntries[countof(entries) + i + iNumEmpires].PartitionColumn = NULL;
             pEntries[countof(entries) + i + iNumEmpires].CrossJoin = NULL;
 
@@ -465,6 +553,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires * 2].Table.Key = NO_KEY;
             pEntries[countof(entries) + i + iNumEmpires * 2].Table.NumColumns = 1;
             pEntries[countof(entries) + i + iNumEmpires * 2].Table.Columns = pcColumns + i + iNumEmpires;
+            pEntries[countof(entries) + i + iNumEmpires * 2].Reserved = NULL;
             pEntries[countof(entries) + i + iNumEmpires * 2].PartitionColumn = NULL;
             pEntries[countof(entries) + i + iNumEmpires * 2].CrossJoin = NULL;
 
@@ -475,6 +564,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires * 3].Table.Key = NO_KEY;
             pEntries[countof(entries) + i + iNumEmpires * 3].Table.NumColumns = 1;
             pEntries[countof(entries) + i + iNumEmpires * 3].Table.Columns = pcColumns + i + iNumEmpires * 2;
+            pEntries[countof(entries) + i + iNumEmpires * 3].Reserved = NULL;
             pEntries[countof(entries) + i + iNumEmpires * 3].PartitionColumn = NULL;
             pEntries[countof(entries) + i + iNumEmpires * 3].CrossJoin = NULL;
 
@@ -482,6 +572,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires * 4].Table.Key = NO_KEY;
             pEntries[countof(entries) + i + iNumEmpires * 4].Table.NumColumns = 1;
             pEntries[countof(entries) + i + iNumEmpires * 4].Table.Columns = pcColumns + i + iNumEmpires * 2;
+            pEntries[countof(entries) + i + iNumEmpires * 4].Reserved = NULL;
             pEntries[countof(entries) + i + iNumEmpires * 4].PartitionColumn = NULL;
             pEntries[countof(entries) + i + iNumEmpires * 4].CrossJoin = NULL;
         }
@@ -509,7 +600,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
 
     Assert(pvEmpireKey && iNumEmpires);
 
-    iErrCode = CreateEmptyGameCacheEntries(iGameClass, iGameNumber, NO_KEY, NO_KEY, 
+    iErrCode = CreateEmptyGameCacheEntries(iGameClass, iGameNumber, NO_KEY, NO_KEY, NO_KEY, 
                                            EMPTY_GAME_EMPIRE_MESSAGES | EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_DIPLOMACY | 
                                            EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_FLEETS |
                                            EMPTY_SYSTEM_EMPIRE_MESSAGES);
@@ -529,16 +620,16 @@ int GameEngine::CacheGameTablesForBroadcast(int iGameClass, int iGameNumber)
 
     const TableCacheEntry entries[] =
     {
-        { { GAME_EMPIRE_DATA, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireData::EmpireKey, NULL },
-        { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireDiplomacy::EmpireKey, NULL },
-        { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(gameDataCols), gameDataCols }, GameEmpireMessages::EmpireKey, NULL },
+        { { GAME_EMPIRE_DATA, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireData::EmpireKey, NULL },
+        { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL },
+        { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(gameDataCols), gameDataCols }, NULL, GameEmpireMessages::EmpireKey, NULL },
     };
 
     int iErrCode = t_pCache->Cache(entries, countof(entries));
     RETURN_ON_ERROR(iErrCode);
 
     // Create empty entries for all empires
-    iErrCode = CreateEmptyGameCacheEntries(iGameClass, iGameNumber, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MESSAGES | EMPTY_GAME_EMPIRE_DIPLOMACY);
+    iErrCode = CreateEmptyGameCacheEntries(iGameClass, iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MESSAGES | EMPTY_GAME_EMPIRE_DIPLOMACY);
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
@@ -554,12 +645,12 @@ int GameEngine::CacheProfileData(unsigned int iEmpireKey)
 
     const TableCacheEntry entries[] = 
     {
-        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL },
-        { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemActiveGamesCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL },
+        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemActiveGamesCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(entries, countof(entries));
@@ -571,9 +662,9 @@ int GameEngine::CacheNukeHistory(unsigned int iEmpireKey)
 
     const TableCacheEntry entries[] = 
     {
-        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL },
-        { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL },
-        { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL },
+        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(entries, countof(entries));
@@ -586,8 +677,8 @@ int GameEngine::CacheMutualAssociations(unsigned int iEmpireKey, unsigned int iS
 
     const TableCacheEntry entries[] = 
     {
-        { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &systemEmpireAssoc1 }, NULL, NULL },
-        { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &systemEmpireAssoc2 }, NULL, NULL },
+        { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &systemEmpireAssoc1 }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &systemEmpireAssoc2 }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(entries, countof(entries));
@@ -597,10 +688,12 @@ int GameEngine::CacheForReload()
 {
     const TableCacheEntry entries[] = 
     {
-        { { SYSTEM_DATA, NO_KEY, 0, NULL }, NULL, NULL },
-        { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL },
-        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL },
-        { { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL }, NULL, NULL },
+        { { SYSTEM_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_AVAILABILITY, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_THEMES, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_TOURNAMENTS, NO_KEY, 0, NULL }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(entries, countof(entries));
@@ -615,36 +708,56 @@ int CreateEmptyIfNecessary(const char* pszTable, const char* pszCacheTable)
     return OK;
 }
 
-int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyKey, int eFlags)
+int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iTournamentKey, int iDiplomacyKey, int eFlags)
 {
     int iErrCode = OK;
     Variant* pvEmpireKey = NULL, * pvFreeEmpireKey = NULL, vTemp;
     AutoFreeData free(pvFreeEmpireKey);
     unsigned int iNumEmpires;
 
-    Assert(iEmpireKey == NO_KEY || iDiplomacyKey == NO_KEY);
-
     if (iDiplomacyKey != NO_KEY)
     {
+        Assert(iGameClass != NO_KEY && iGameNumber > 0 && iEmpireKey == NO_KEY && iTournamentKey == NO_KEY);
+
         GET_GAME_EMPIRE_DIPLOMACY(strDipEmpires, iGameClass, iGameNumber, iDiplomacyKey);
         iErrCode = t_pCache->ReadColumn(strDipEmpires, GameEmpireDiplomacy::ReferenceEmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
             return OK;
+        }
         RETURN_ON_ERROR(iErrCode);
         pvFreeEmpireKey = pvEmpireKey;
     }
     else if (iEmpireKey != NO_KEY)
     {
+        Assert(iGameClass == NO_KEY && iGameNumber == 0 && iTournamentKey == NO_KEY && iDiplomacyKey == NO_KEY);
         vTemp = iEmpireKey;
         pvEmpireKey = &vTemp;
         iNumEmpires = 1;
     }
+    else if (iTournamentKey != NO_KEY)
+    {
+        Assert(iGameClass == NO_KEY && iGameNumber == 0 && iEmpireKey == NO_KEY && iDiplomacyKey == NO_KEY);
+
+        GET_SYSTEM_TOURNAMENT_EMPIRES(strTournamentEmpires, iTournamentKey);
+        iErrCode = t_pCache->ReadColumn(strTournamentEmpires, SystemTournamentEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            return OK;
+        }
+        RETURN_ON_ERROR(iErrCode);
+        pvFreeEmpireKey = pvEmpireKey;
+    }
     else
     {
+        Assert(iGameClass != NO_KEY && iGameNumber > 0 && iEmpireKey == NO_KEY && iTournamentKey == NO_KEY && iDiplomacyKey == NO_KEY);
+
         GET_GAME_EMPIRES(strEmpires, iGameClass, iGameNumber);
         iErrCode = t_pCache->ReadColumn(strEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
             return OK;
+        }
         RETURN_ON_ERROR(iErrCode);
         pvFreeEmpireKey = pvEmpireKey;
     }
@@ -694,6 +807,13 @@ int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int
             iErrCode = CreateEmptyIfNecessary(SYSTEM_EMPIRE_MESSAGES, strTable);
             RETURN_ON_ERROR(iErrCode);
         }
+
+        if (eFlags & EMPTY_SYSTEM_EMPIRE_ACTIVE_GAMES)
+        {
+            GET_SYSTEM_EMPIRE_ACTIVE_GAMES(strTable, iThisEmpire);
+            iErrCode = CreateEmptyIfNecessary(SYSTEM_EMPIRE_ACTIVE_GAMES, strTable);
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
     if (iDiplomacyKey == NO_KEY && iEmpireKey == NO_KEY && (eFlags & EMPTY_GAME_EMPIRE_SHIPS))
@@ -706,5 +826,71 @@ int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int
         }
     }
 
+    return iErrCode;
+}
+
+int GameEngine::CacheForCheckAllGamesForUpdates()
+{
+    const TableCacheEntry entries[] =
+    {
+        { { SYSTEM_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_THEMES, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+        { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL, NULL }
+    };
+
+    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}
+
+int GameEngine::CacheSystemAlienIcons()
+{
+    const TableCacheEntry entries[] =
+    {
+        { { SYSTEM_ALIEN_ICONS, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+    };
+
+    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}
+
+int GameEngine::CacheSystemAvailability()
+{
+    const TableCacheEntry entries[] =
+    {
+        { { SYSTEM_AVAILABILITY, NO_KEY, 0, NULL }, NULL, NULL, NULL },
+    };
+
+    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}
+
+int GameEngine::CacheGameEmpireTables(const Variant* pvGameClassGameNumber, unsigned int iNumGames)
+{
+    TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumGames * sizeof(TableCacheEntry));
+    for (unsigned int i = 0; i < iNumGames; i ++)
+    {
+        int iGameClass, iGameNumber;
+        GetGameClassGameNumber(pvGameClassGameNumber[i].GetCharPtr(), &iGameClass, &iGameNumber);
+
+        ColumnEntry* pCols = (ColumnEntry*)StackAlloc(2 * sizeof(ColumnEntry));
+        pCols[0].Name = GameEmpires::GameClass;
+        pCols[0].Data = iGameClass;
+        pCols[1].Name = GameEmpires::GameNumber;
+        pCols[1].Data = iGameNumber;
+
+        pcEntries[i].Table.Name = GAME_EMPIRES;
+        pcEntries[i].Table.Key = NO_KEY;
+        pcEntries[i].Table.NumColumns = 2;
+        pcEntries[i].Table.Columns = pCols;
+        pcEntries[i].PartitionColumn = NULL;
+        pcEntries[i].CrossJoin = NULL;
+    }
+
+    int iErrCode = t_pCache->Cache(pcEntries, iNumGames);
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }

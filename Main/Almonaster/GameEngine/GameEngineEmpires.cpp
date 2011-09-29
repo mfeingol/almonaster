@@ -1286,17 +1286,12 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
 
 int GameEngine::CheckAllGamesForUpdatesMsg(AsyncTask* pMessage)
 {
-    const TableCacheEntry entries[] =
-    {
-        { { SYSTEM_ACTIVE_GAMES, NO_KEY, 0, NULL }, NULL, NULL },
-        { { SYSTEM_GAMECLASS_DATA, NO_KEY, 0, NULL }, NULL, NULL }
-    };
+    GameEngine gameEngine;
 
-    int iErrCode = t_pCache->Cache(entries, countof(entries));
+    int iErrCode = gameEngine.CacheForCheckAllGamesForUpdates();
     RETURN_ON_ERROR(iErrCode);
 
-    GameEngine gameEngine;
-    iErrCode = gameEngine.CheckAllGamesForUpdates(true);
+    iErrCode = gameEngine.CheckAllGamesForUpdates();
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;

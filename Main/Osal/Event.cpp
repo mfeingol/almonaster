@@ -127,9 +127,16 @@ int Event::Wait (MilliSeconds iWait) {
     Assert (m_hEvent != NULL);
 
     DWORD dwRetVal = ::WaitForSingleObject (m_hEvent, (DWORD) iWait);
-    if (dwRetVal == WAIT_TIMEOUT) {
+    switch (dwRetVal)
+    {
+    case WAIT_OBJECT_0:
+        return OK;
+    case WAIT_TIMEOUT:
         return WARNING;
+    case WAIT_ABANDONED:
+    case WAIT_FAILED:
+    default:
+        return ERROR_FAILURE;
     }
-    return OK;
 #endif
 }

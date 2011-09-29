@@ -60,20 +60,20 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
         }
         int iTournamentAdminPageSubmit = pHttpForm->GetIntValue();
 
-        if (m_iTournamentKey == NO_KEY)
-            goto Redirection;
-
-        unsigned int iRealOwner;
-
-        // Simple security check
-        iErrCode = GetTournamentOwner (m_iTournamentKey, &iRealOwner);
-        RETURN_ON_ERROR(iErrCode);
-
-        if (iRealOwner != iOwnerKey)
+        if (m_iTournamentKey != NO_KEY)
         {
-            AddMessage ("Tournament ownership verification failed");
-            iTAdminPage = 1;
-            goto Redirection;
+            unsigned int iRealOwner;
+
+            // Simple security check
+            iErrCode = GetTournamentOwner (m_iTournamentKey, &iRealOwner);
+            RETURN_ON_ERROR(iErrCode);
+
+            if (iRealOwner != iOwnerKey)
+            {
+                AddMessage ("Tournament ownership verification failed");
+                iTAdminPage = 1;
+                goto Redirection;
+            }
         }
 
         if ((pHttpForm = m_pHttpRequest->GetForm ("TeamKey")) != NULL) {
@@ -678,6 +678,9 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                     bAdvanced = true;
                 }
 
+                iErrCode = CacheTournamentEmpiresForGame(m_iTournamentKey);
+                RETURN_ON_ERROR(iErrCode);
+
                 iErrCode = StartTournamentGame(m_iTournamentKey, iTeamOptions, bAdvanced);
                 switch (iErrCode)
                 {
@@ -846,6 +849,10 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
         case 10:
             {
+
+            // An extra I/O, but it almost never happens
+            iErrCode = CacheSystemAlienIcons();
+            RETURN_ON_ERROR(iErrCode);
 
             unsigned int iOldIcon, iIcon;
 
@@ -1118,7 +1125,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
                 // Flush remaining updates
                 bool bUpdated, bExists = true;
-                iErrCode = CheckGameForUpdates(m_iGameClass, m_iGameNumber, true, &bUpdated);
+                iErrCode = CheckGameForUpdates(m_iGameClass, m_iGameNumber, &bUpdated);
                 RETURN_ON_ERROR(iErrCode);
 
                 if (bUpdated)
@@ -1521,7 +1528,10 @@ Redirection:
         AutoFreeData free_pvEmpireKey(pvEmpireKey);
         Algorithm::AutoDelete<Variant> free_pvEmpireName(pvEmpireName, true);
 
-        iErrCode = GetAvailableTournamentEmpires (m_iTournamentKey, &pvEmpireKey, &pvTeamEmpireKey, &pvEmpireName, &iNumEmpires);
+        iErrCode = CacheTournamentEmpireTables(m_iTournamentKey);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetAvailableTournamentEmpires(m_iTournamentKey, &pvEmpireKey, &pvTeamEmpireKey, &pvEmpireName, &iNumEmpires);
         RETURN_ON_ERROR(iErrCode);
         
         Variant* pvTeamName = NULL;
@@ -1748,6 +1758,10 @@ Redirection:
         if (m_iTournamentKey == NO_KEY) {
             goto Start;
         }
+
+        // An extra I/O, but it almost never happens
+        iErrCode = CacheSystemAlienIcons();
+        RETURN_ON_ERROR(iErrCode);
 
         unsigned int iIcon;
         iErrCode = GetTournamentIcon (m_iTournamentKey, &iIcon);

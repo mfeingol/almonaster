@@ -196,7 +196,7 @@ if (bConfirmPage)
                 iGameNumber = piGameNumber[i];
 
                 // Check everything
-                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, false, &bFlag);
+                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bFlag);
                 RETURN_ON_ERROR(iErrCode);
                 
                 iErrCode = DoesGameExist(iGameClass, iGameNumber, &bFlag);

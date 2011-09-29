@@ -948,7 +948,6 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         0,                  // Zero paused
         MIN_COORDINATE,     // MaxY
         0,          // SecondsUntilNextUpdateWhilePaused
-        tTime,      // LastUpdateCheck
         tTime,      // CreationTime
         0,          // NumPlanetsPerEmpire
         0,          // HWAg
@@ -1613,7 +1612,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         // Try to trigger all remaining updates
         if (!bCreatingGame)
         {
-            iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bFlag);
+            iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, &bFlag);
             RETURN_ON_ERROR(iErrCode);
         }
     }
@@ -2084,6 +2083,10 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
 
     if (bGenerateMapForAllEmpires)
     {
+        GET_GAME_MAP(strGameMap, iGameClass, iGameNumber);
+        iErrCode = t_pCache->CreateEmpty(GAME_MAP, strGameMap);
+        RETURN_ON_ERROR(iErrCode);
+
         int* piEmpKey;
         unsigned int iNumKeys;
 
@@ -3166,7 +3169,7 @@ int GameEngine::PauseAllGames()
             GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
 
             // Flush remaining updates
-            iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, true, &bExists);
+            iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bExists);
             RETURN_ON_ERROR(iErrCode);
 
             // Pause the game
@@ -3237,7 +3240,7 @@ int GameEngine::LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireK
     UTCTime tTime;
     Time::GetTime(&tTime);
 
-    if (Time::GetSecondDifference(vLastLogin.GetInteger64(), tTime) >= LAST_LOGIN_PRECISION_IN_SECONDS)
+    if (Time::GetSecondDifference(tTime, vLastLogin.GetInteger64()) >= LAST_LOGIN_PRECISION_IN_SECONDS)
     {
         // Set last login
         iErrCode = pTable->WriteData(GameEmpireData::LastLogin, tTime);
@@ -3636,57 +3639,45 @@ int GameEngine::AddToLatestGames(const Variant* pvColumns) {
     return iErrCode;
 }
 
-int GameEngine::GetNumEmpiresInGames (unsigned int* piNumEmpires) {
-
+int GameEngine::GetNumUniqueEmpiresInGames(unsigned int* piNumEmpires)
+{
     int iErrCode;
 
-    ICachedTable* pGames = NULL;
-    unsigned int iKey = NO_KEY, iEmpireKey;
+    Variant* pvGame = NULL;
+    AutoFreeData free_pvGame(pvGame);
+
+    unsigned int iNumGames;
+    iErrCode = t_pCache->ReadColumn(SYSTEM_ACTIVE_GAMES, SystemActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CacheGameEmpireTables(pvGame, iNumGames);
+    RETURN_ON_ERROR(iErrCode);
 
     HashTable<unsigned int, unsigned int, GenericHashValue<unsigned int>, GenericEquals <unsigned int> > htEmpires(NULL, NULL);
     bool ret = htEmpires.Initialize(250);
     Assert(ret);
 
-    while (true)
+    for (unsigned int i = 0; i < iNumGames; i ++)
     {
-        SafeRelease (pGames);
-
-        iErrCode = t_pCache->GetTable(SYSTEM_ACTIVE_GAMES, &pGames);
-        RETURN_ON_ERROR(iErrCode);
-
-        iErrCode = pGames->GetNextKey (iKey, &iKey);
-        if (iErrCode == ERROR_DATA_NOT_FOUND) {
-            iErrCode = OK;
-            break;
-        }
-        RETURN_ON_ERROR(iErrCode);
-
-        Variant vGame;
-        iErrCode = pGames->ReadData(iKey, SystemActiveGames::GameClassGameNumber, &vGame);
-        RETURN_ON_ERROR(iErrCode);
-
         int iGameClass, iGameNumber;
-        GetGameClassGameNumber(vGame.GetCharPtr(), &iGameClass, &iGameNumber);
+        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
 
-        GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
-        unsigned int iProxyKey = NO_KEY;
-        while (true)
+        GET_GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
+
+        Variant* pvEmpireKey = NULL;
+        AutoFreeData free_pvEmpireKey(pvEmpireKey);
+
+        unsigned int iNumEmpires;
+        iErrCode = t_pCache->ReadColumn(strGameEmpires, GameEmpires::EmpireKey, NULL, &pvEmpireKey, &iNumEmpires);
+        RETURN_ON_ERROR(iErrCode);
+
+        for (unsigned int j = 0; j < iNumEmpires; j ++)
         {
-            iErrCode = t_pCache->GetNextKey(strGameEmpires, iProxyKey, &iProxyKey);
-            if (iErrCode == ERROR_DATA_NOT_FOUND)
-            {
-                iErrCode = OK;
-                break;
-            }
-            RETURN_ON_ERROR(iErrCode);
-
-            Variant vTemp;
-            iErrCode = t_pCache->ReadData(strGameEmpires, iProxyKey, GameEmpires::EmpireKey, &vTemp);
-            if (iErrCode != OK) {
-                break;
-            }
-            iEmpireKey = vTemp.GetInteger();
-
+            int iEmpireKey = pvEmpireKey[j].GetInteger();
             if (!htEmpires.Contains(iEmpireKey))
             {
                 ret = htEmpires.Insert(iEmpireKey, iEmpireKey);

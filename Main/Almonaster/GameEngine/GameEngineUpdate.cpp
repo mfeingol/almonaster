@@ -27,8 +27,8 @@
 //
 // Executes an update if one has occurred.  Also updates game lastlogin data
 
-int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpdateCheckTime, bool* pbUpdate) {
-
+int GameEngine::CheckGameForUpdates(int iGameClass, int iGameNumber, bool* pbUpdate)
+{
     int iErrCode;
 
     *pbUpdate = false;
@@ -168,13 +168,6 @@ int GameEngine::CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpda
         }
     }
     
-    if (fUpdateCheckTime && !bGameOver)
-    {
-        // Update last checked
-        iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateCheck, tNow);
-        RETURN_ON_ERROR(iErrCode);
-    }
-
     return iErrCode;
 }
 
@@ -416,7 +409,7 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
 
     // Flush remaining updates
     bool bExists;
-    iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, true, &bExists);
+    iErrCode = CheckGameForUpdates (iGameClass, iGameNumber, &bExists);
     RETURN_ON_ERROR(iErrCode);
 
     // Prevent the game from updating
@@ -443,9 +436,6 @@ int GameEngine::ResetGameUpdateTime (int iGameClass, int iGameNumber) {
     Time::GetTime (&tTime);
 
     iErrCode = pGameData->WriteData(GameData::LastUpdateTime, tTime);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = pGameData->WriteData(GameData::LastUpdateCheck, tTime);
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
@@ -547,12 +537,11 @@ int GameEngine::ForceUpdate (int iGameClass, int iGameNumber)
     return iErrCode;
 }
 
-
+//
 // Check all currently existing games for an update
-// This is best effort
-
-int GameEngine::CheckAllGamesForUpdates (bool fUpdateCheckTime) {
-
+//
+int GameEngine::CheckAllGamesForUpdates()
+{
     unsigned int i, iNumGames;
     int iErrCode, * piGameClass = NULL, * piGameNumber = NULL;
     Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
@@ -567,7 +556,7 @@ int GameEngine::CheckAllGamesForUpdates (bool fUpdateCheckTime) {
     for (i = 0; i < iNumGames; i ++)
     {
         bool bUpdate;
-        iErrCode = CheckGameForUpdates(piGameClass[i], piGameNumber[i], fUpdateCheckTime, &bUpdate);
+        iErrCode = CheckGameForUpdates(piGameClass[i], piGameNumber[i], &bUpdate);
         RETURN_ON_ERROR(iErrCode);
     }
 

@@ -82,7 +82,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
             }
 
             // Check game for updates
-            iErrCode = CheckGameForUpdates (m_iGameClass, m_iGameNumber, true, &bFlag);
+            iErrCode = CheckGameForUpdates (m_iGameClass, m_iGameNumber, &bFlag);
             RETURN_ON_ERROR(iErrCode);
         }
 

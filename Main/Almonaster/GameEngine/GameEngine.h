@@ -411,7 +411,6 @@ private:
     int SetupDefaultSystemGameClasses();
 
     int VerifySystem();
-    int VerifyGameClasses();
     int VerifyMarkedGameClasses();
     int VerifyActiveGames();
 
@@ -722,6 +721,7 @@ public:
 
     // Setup
     int Setup();
+    int WriteAvailability();
 
     int FlushDatabase (int iEmpireKey);
     int BackupDatabase (int iEmpireKey);
@@ -996,7 +996,7 @@ public:
 
     int GetBridierRankPotentialGainLoss (int iGameClass, int iGameNumber, int iEmpireKey, int* piGain, int* piLoss);
 
-    int GetNumEmpiresInGames (unsigned int* piNumEmpires);
+    int GetNumUniqueEmpiresInGames (unsigned int* piNumEmpires);
     int GetNumRecentActiveEmpiresInGames (unsigned int* piNumEmpires);
 
     // GameEmpireData
@@ -1055,6 +1055,9 @@ public:
     int CacheEmpireMessagesAndTournaments(unsigned int iEmpireKey);
     int CacheEmpireForDeletion(unsigned int iEmpireKey);
     int CacheTournamentTables(const unsigned int* piTournamentKey, unsigned int iNumTournaments);
+    int CacheTournamentAndEmpireTables(unsigned int iTournamentKey);
+    int CacheTournamentEmpireTables(unsigned int iTournamentKey);
+    int CacheTournamentEmpiresForGame(unsigned int iTournamentKey);
     int CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKey, unsigned int iNumGames);
     int CacheGameEmpireData(unsigned int iEmpireKey, const Variant* pvGame, unsigned int iNumGames);
     int CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
@@ -1066,18 +1069,23 @@ public:
     int CacheNukeHistory(unsigned int iEmpireKey);
     int CacheMutualAssociations(unsigned int iEmpireKey, unsigned int iSecondEmpireKey);
     int CacheForReload();
+    int CacheForCheckAllGamesForUpdates();
+    int CacheSystemAvailability();
+    int CacheSystemAlienIcons();
+    int CacheGameEmpireTables(const Variant* pvGameClassGameNumber, unsigned int iNumGames);
 
     enum GameCacheEntryFlags
     {
-        EMPTY_GAME_EMPIRE_DIPLOMACY  = 0x00000001,
-        EMPTY_GAME_EMPIRE_MAP        = 0x00000002,
-        EMPTY_GAME_EMPIRE_SHIPS      = 0x00000004,
-        EMPTY_GAME_EMPIRE_MESSAGES   = 0x00000008,
-        EMPTY_GAME_EMPIRE_FLEETS     = 0x00000010,
-        EMPTY_SYSTEM_EMPIRE_MESSAGES = 0x00000020,
+        EMPTY_GAME_EMPIRE_DIPLOMACY      = 0x00000001,
+        EMPTY_GAME_EMPIRE_MAP            = 0x00000002,
+        EMPTY_GAME_EMPIRE_SHIPS          = 0x00000004,
+        EMPTY_GAME_EMPIRE_MESSAGES       = 0x00000008,
+        EMPTY_GAME_EMPIRE_FLEETS         = 0x00000010,
+        EMPTY_SYSTEM_EMPIRE_MESSAGES     = 0x00000020,
+        EMPTY_SYSTEM_EMPIRE_ACTIVE_GAMES = 0x00000040,
     };
 
-    int CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iDiplomacyKey, int eFlags);
+    int CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int iEmpireKey, int iTournamentKey, int iDiplomacyKey, int eFlags);
 
     int LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey);
     int LookupEmpireByName(const char* pszName, unsigned int* piEmpireKey, Variant* pvName, int64* pi64SecretKey, ICachedTable** ppTable);
@@ -1281,8 +1289,8 @@ public:
     int PerformMultipleSearch(const RangeSearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
 
     // Updates
-    int CheckGameForUpdates (int iGameClass, int iGameNumber, bool fUpdateCheckTime, bool* pbUpdate);
-    int CheckAllGamesForUpdates (bool fUpdateCheckTime);
+    int CheckGameForUpdates(int iGameClass, int iGameNumber, bool* pbUpdate);
+    int CheckAllGamesForUpdates();
 
     static int THREAD_CALL CheckAllGamesForUpdatesMsg (AsyncTask* pMessage);
 

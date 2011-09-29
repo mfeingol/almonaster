@@ -368,6 +368,9 @@
     <ClCompile Include="GameEngine\GameEngineTableCache.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
+    <ClCompile Include="GameEngineAvailability.cpp">
+      <Filter>GameEngine Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">

@@ -93,7 +93,7 @@ while (true)
         for (i = 0; i < iNumGames; i ++)
         {
             bool bUpdateOccurred;
-            iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], false, &bUpdateOccurred);
+            iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], &bUpdateOccurred);
             RETURN_ON_ERROR(iErrCode);
             if (bUpdateOccurred)
             {

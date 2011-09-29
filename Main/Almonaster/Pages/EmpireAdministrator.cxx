@@ -32,6 +32,7 @@ IHttpForm* pSearchForm, * pHttpForm;
 
 int iEmpireAdminPage = 0;
 unsigned int iLastKey = NO_KEY, * piSearchEmpireKey = NULL, iNumSearchEmpires = 0, iTargetEmpireKey = NO_KEY;
+AutoFreeKeys free_piSearchEmpireKey(piSearchEmpireKey);
 
 // Make sure that the unprivileged don't abuse this:
 if (m_iPrivilege < ADMINISTRATOR) {
@@ -107,9 +108,14 @@ SearchResults:
 
                         if (iNumSearchEmpires > 0) {
 
-                            if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
+                            if (iNumSearchEmpires == 1 && iLastKey == NO_KEY)
+                            {
                                 iTargetEmpireKey = piSearchEmpireKey[0];
-                                t_pCache->FreeKeys (piSearchEmpireKey);
+                            
+                                // Cache profile data
+                                iErrCode = CacheProfileData(iTargetEmpireKey);
+                                RETURN_ON_ERROR(iErrCode);
+
                                 piSearchEmpireKey = NULL;
                                 iEmpireAdminPage = 3;
                             } else {
@@ -179,6 +185,10 @@ SearchResults:
                     goto Redirection;
                 }
                 iTargetEmpireKey = pHttpForm->GetIntValue();
+
+                // Cache profile data
+                iErrCode = CacheProfileData(iTargetEmpireKey);
+                RETURN_ON_ERROR(iErrCode);
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("NewPass")) == NULL || 
                     (pSearchForm = m_pHttpRequest->GetForm ("NewPass2")) == NULL) {
@@ -255,6 +265,10 @@ SearchResults:
             }
 
             iTargetEmpireKey = pHttpForm->GetIntValue();
+
+            // Cache profile data
+            iErrCode = CacheProfileData(iTargetEmpireKey);
+            RETURN_ON_ERROR(iErrCode);
 
             // Change privilege, scores
             int iValue, iOldValue;
@@ -500,6 +514,10 @@ SearchResults:
                     goto Redirection;
                 }
                 iTargetEmpireKey = pHttpForm->GetIntValue();
+
+                // Cache profile data
+                iErrCode = CacheProfileData(iTargetEmpireKey);
+                RETURN_ON_ERROR(iErrCode);
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("TargetEmpireSecret")) == NULL) {
                     goto Redirection;

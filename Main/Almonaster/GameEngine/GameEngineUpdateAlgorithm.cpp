@@ -1148,9 +1148,6 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
     iErrCode = t_pCache->WriteData(strGameData, GameData::RealLastUpdateTime, tUpdateTime);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = t_pCache->WriteData(strGameData, GameData::LastUpdateCheck, tUpdateTime);
-    RETURN_ON_ERROR(iErrCode);
-
     /////////////////////////////////
     // Increment number of updates //
     /////////////////////////////////
@@ -1217,8 +1214,11 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
     {
         if (!pbAlive[i] && pbSendFatalMessage[i])
         {
-            // TODOTODO - could this fail because an empire marked for deletion no longer exists?
             iErrCode = SendFatalUpdateMessage(iGameClass, iGameNumber, piEmpireKey[i], pszGameClassName, pstrUpdateMessage[i]);
+            if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST)
+            {
+                iErrCode = OK;
+            }
             RETURN_ON_ERROR(iErrCode);
         }
     }

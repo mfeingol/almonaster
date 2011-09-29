@@ -92,6 +92,12 @@ void TraceError(int iErrCode, const char* pszFile, int iLine);
 #define TRACE_ERROR(iErrCode)                                                               \
     TraceError(iErrCode, __FILE__, __LINE__);
 
+#define TRACE_ON_ERROR(iErrCode)                                                            \
+    if (iErrCode != OK)                                                                     \
+    {                                                                                       \
+        TRACE_ERROR(iErrCode);                                                              \
+    }
+
 #define GOTO_CLEANUP_ON_ERROR(iErrCode)                                                     \
     if (iErrCode != OK)                                                                     \
     {                                                                                       \

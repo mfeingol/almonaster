@@ -69,7 +69,7 @@ public:
     bool HeldSpeculative (Thread* pThread);
 };
 
-class AutoReadLock {
+class OSAL_EXPORT AutoReadLock {
 protected:
     ReadWriteLock* m_prwLock;
 public:
@@ -77,7 +77,7 @@ public:
     ~AutoReadLock();
 };
 
-class AutoWriteLock {
+class OSAL_EXPORT AutoWriteLock {
 protected:
     ReadWriteLock* m_prwLock;
 public:

@@ -407,6 +407,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
   <ItemGroup>
     <ClCompile Include="AlmonasterEventSink.cpp" />
     <ClCompile Include="AsyncManager.cpp" />
+    <ClCompile Include="GameEngineAvailability.cpp" />
     <ClCompile Include="GameEngine\GameEngine.cpp" />
     <ClCompile Include="GameEngine\GameEngineAliens.cpp" />
     <ClCompile Include="GameEngine\GameEngineAssociations.cpp" />

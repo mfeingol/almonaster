@@ -999,6 +999,52 @@ namespace SystemEmpireData
     };
 };
 
+////////////////////////
+// SystemAvailability //
+////////////////////////
+
+#define SYSTEM_AVAILABILITY "SystemAvailability"
+
+namespace SystemAvailability
+{
+    static const char* const LastAvailableTime = "LastAvailableTime";
+
+    enum Columns 
+    {
+        iLastAvailableTime,
+    };
+
+    static const char* const ColumnNames[] = 
+    {
+        LastAvailableTime,
+    };
+
+    static const VariantType Types[] = 
+    {
+        V_INT64,
+    };
+
+    static const unsigned int Sizes[] = 
+    {
+        0,
+    };
+
+    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+
+    static const TemplateDescription Template =
+    {
+        "SystemAvailability",
+        NumColumns,
+        (char**)ColumnNames,
+        (VariantType*)Types,
+        (unsigned int*)Sizes,
+        true,
+        0,
+        NULL,
+        1
+    };
+};
+
 /////////////////////////
 // SystemGameClassData //
 /////////////////////////
@@ -2409,7 +2455,6 @@ namespace GameData
     static const char* const NumRequestingPause = "NumRequestingPause";
     static const char* const MaxY = "MaxY";
     static const char* const SecondsUntilNextUpdateWhilePaused = "SecondsUntilNextUpdateWhilePaused";
-    static const char* const LastUpdateCheck = "LastUpdateCheck";
     static const char* const CreationTime = "CreationTime";
     static const char* const NumPlanetsPerEmpire = "NumPlanetsPerEmpire";
     static const char* const HWAg = "HWAg";
@@ -2459,7 +2504,6 @@ namespace GameData
         iNumRequestingPause,
         iMaxY,
         iSecondsUntilNextUpdateWhilePaused,
-        iLastUpdateCheck,
         iCreationTime,
         iNumPlanetsPerEmpire,
         iHWAg,
@@ -2510,7 +2554,6 @@ namespace GameData
         NumRequestingPause,
         MaxY,
         SecondsUntilNextUpdateWhilePaused,
-        LastUpdateCheck,
         CreationTime,
         NumPlanetsPerEmpire,
         HWAg,
@@ -2562,7 +2605,6 @@ namespace GameData
         V_INT,
         V_INT,
         V_INT64,
-        V_INT64,
         V_INT,
         V_INT,
         V_INT,
@@ -2607,7 +2649,6 @@ namespace GameData
         0,
         0,
         MAX_PASSWORD_LENGTH,
-        0,
         0,
         0,
         0,

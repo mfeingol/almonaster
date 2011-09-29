@@ -16,42 +16,27 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#pragma once
+#include "GameEngine.h"
 
-#include "Osal/Event.h"
-#include "Osal/Thread.h"
-#include "Osal/FifoQueue.h"
-
-struct AsyncTask;
-typedef int (THREAD_CALL *Fxn_QueryCallBack)(AsyncTask*);
-
-struct AsyncTask
+int GameEngine::WriteAvailability()
 {
-    Fxn_QueryCallBack pQueryCall;
-    void* pArguments;
-};
+    int iErrCode;
 
-class AsyncManager
-{
-private:
-    Event m_eQueryEvent;
-    Thread m_tLongRunningQueries;
+    global.TlsOpenConnection();
 
-    ThreadSafeFifoQueue<AsyncTask*> m_tsfqQueryQueue;
+    iErrCode = CacheSystemAvailability();
+    if (iErrCode == OK)
+    {
+        UTCTime tNow;
+        Time::GetTime(&tNow);
+        iErrCode = t_pCache->WriteData(SYSTEM_AVAILABILITY, SystemAvailability::LastAvailableTime, tNow);
+        if (iErrCode == OK)
+        {
+            iErrCode = global.TlsCommitTransaction();
+        }
+    }
+    global.TlsCloseConnection();
 
-    static int THREAD_CALL StartAsyncTaskLoop(void* pVoid);
-    int AsyncTaskLoop();
-
-    Event m_eExitEvent;
-    Thread m_tAvailability;
-
-    static int THREAD_CALL StartAvailabilityLoop(void* pVoid);
-    int AvailabilityLoop();
-
-public:
-    int Initialize();
-    void Close();
-
-    int QueueTask(Fxn_QueryCallBack pfxFunction, void* pVoid);
-};
-
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}

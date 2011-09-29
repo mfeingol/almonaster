@@ -32,6 +32,17 @@ int GameEngine::SendSystemMessage(int iTargetEmpireKey, const char* pszMessage, 
 {
     int iErrCode;
 
+    iErrCode = CacheEmpireAndMessages(iTargetEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    bool bExists;
+    iErrCode = DoesEmpireExist(iTargetEmpireKey, &bExists, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    if (!bExists)
+    {
+        return ERROR_EMPIRE_DOES_NOT_EXIST;
+    }
+
     // Make sure source can broadcast && send system messages
     if (iSourceEmpireKey != SYSTEM)
     {
@@ -42,15 +53,6 @@ int GameEngine::SendSystemMessage(int iTargetEmpireKey, const char* pszMessage, 
         {
             return ERROR_CANNOT_SEND_MESSAGE;
         }
-    }
-
-    // Make sure target empire exists
-    unsigned int iNumResults;
-    iErrCode = CacheEmpire(iTargetEmpireKey, &iNumResults);
-    RETURN_ON_ERROR(iErrCode);
-    if (iNumResults == 0)
-    {
-        return ERROR_EMPIRE_DOES_NOT_EXIST;
     }
 
     Variant pvData [SystemEmpireMessages::NumColumns];
@@ -93,12 +95,23 @@ int GameEngine::SendSystemMessage(int iTargetEmpireKey, const char* pszMessage, 
 int GameEngine::DeliverSystemMessage(int iEmpireKey, const Variant* pvData)
 {
     int iErrCode;
-    unsigned int iKey, iNumMessages, iNumUnreadMessages;
-    Variant vTemp;
+
+    // Make sure target empire exists
+    iErrCode = CacheEmpireAndMessages(iEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    bool bExists;
+    iErrCode = DoesEmpireExist(iEmpireKey, &bExists, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    if (!bExists)
+    {
+        return ERROR_EMPIRE_DOES_NOT_EXIST;
+    }
 
     ICachedTable* pMessages = NULL;
     AutoRelease<ICachedTable> rel(pMessages);
 
+    Variant vTemp;
     iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::MaxNumSystemMessages, &vTemp);
     RETURN_ON_ERROR(iErrCode);
     const unsigned int iMaxNumMessages = vTemp.GetInteger();
@@ -108,6 +121,7 @@ int GameEngine::DeliverSystemMessage(int iEmpireKey, const Variant* pvData)
     RETURN_ON_ERROR(iErrCode);
 
     // Insert row
+    unsigned int iKey;
     iErrCode = pMessages->InsertRow(SystemEmpireMessages::Template, pvData, &iKey);
     RETURN_ON_ERROR(iErrCode);
 
@@ -116,10 +130,12 @@ int GameEngine::DeliverSystemMessage(int iEmpireKey, const Variant* pvData)
     //////////////////////////
 
     // Get num messages
+    unsigned int iNumMessages;
     iErrCode = pMessages->GetNumCachedRows(&iNumMessages);
     RETURN_ON_ERROR(iErrCode);
 
     // Get unread message count
+    unsigned int iNumUnreadMessages;
     iErrCode = GetNumUnreadSystemMessagesPrivate(pMessages, &iNumUnreadMessages);
     RETURN_ON_ERROR(iErrCode);
     Assert(iNumMessages >= iNumUnreadMessages);
@@ -501,6 +517,9 @@ int GameEngine::SendGameMessage(int iGameClass, int iGameNumber, int iEmpireKey,
             }
         }
     }
+
+    iErrCode = CacheEmpiresAndGameMessages(iGameClass, iGameNumber, (unsigned int*)&iEmpireKey, 1);
+    RETURN_ON_ERROR(iErrCode);
 
     // Okay, go ahead and deliver the message
     GET_GAME_EMPIRE_MESSAGES (strGameEmpireMessages, iGameClass, iGameNumber, iEmpireKey);

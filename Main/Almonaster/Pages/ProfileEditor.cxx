@@ -1513,6 +1513,10 @@ if (m_bOwnPost && !m_bRedirection) {
         case 1:
             {
 
+            // An extra I/O, but it almost never happens
+            iErrCode = CacheSystemAlienIcons();
+            RETURN_ON_ERROR(iErrCode);
+
             unsigned int iIcon;
             bool bHandled;
             iErrCode = HandleIconSelection (&iIcon, BASE_UPLOADED_ALIEN_DIR, m_iEmpireKey, NO_KEY, &bHandled);
@@ -3116,6 +3120,10 @@ case 0:
 
 case 1:
     {
+
+    // An extra I/O, but it almost never happens
+    iErrCode = CacheSystemAlienIcons();
+    RETURN_ON_ERROR(iErrCode);
 
     Variant vAlienKey;
     iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
