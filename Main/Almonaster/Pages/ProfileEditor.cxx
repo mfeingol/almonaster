@@ -615,10 +615,6 @@ if (m_bOwnPost && !m_bRedirection) {
             case WARNING:
                 break;
 
-            case ERROR_STRING_IS_TOO_LONG:
-                AddMessage ("Your quote is too long");
-                break;
-
             default:
                 RETURN_ON_ERROR(iErrCode);
                 break;
@@ -648,10 +644,6 @@ if (m_bOwnPost && !m_bRedirection) {
                 break;
 
             case WARNING:
-                break;
-
-            case ERROR_STRING_IS_TOO_LONG:
-                AddMessage ("Your victory sneer is too long");
                 break;
 
             default:

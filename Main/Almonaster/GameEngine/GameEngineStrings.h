@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#ifndef _GameEngineStrings_H_
-#define _GameEngineStrings_H_
+#pragma once
 
 //
 // Non-database constants
@@ -45,6 +44,9 @@
 // Quote
 #define MAX_QUOTE_LENGTH 8192
 
+// Messages
+#define MAX_MESSAGE_LENGTH 16384
+
 // Victory sneer
 #define MAX_VICTORY_SNEER_LENGTH 8192
 
@@ -69,9 +71,9 @@
 // Tournament team description
 #define MAX_TOURNAMENT_NEWS_LENGTH 1024
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// These values cannot be changed without running dbconv on the affected database tables //
-///////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+// These values cannot be changed without changing the database //
+//////////////////////////////////////////////////////////////////
 
 // Server name
 #define MAX_SERVER_NAME_LENGTH 35
@@ -143,5 +145,3 @@
 #define MAX_FULL_GAME_CLASS_NAME_LENGTH (MAX_GAME_CLASS_NAME_LENGTH + MAX_TOURNAMENT_NAME_LENGTH + MAX_EMPIRE_NAME_LENGTH + 10)
 
 #define MAX_PLANET_NAME_WITH_COORDINATES_LENGTH (MAX_PLANET_NAME_LENGTH + MAX_COORDINATE_LENGTH + 5)
-
-#endif

@@ -28,7 +28,6 @@ using namespace System::Runtime::InteropServices;
 
 SqlDatabaseBridge::SqlDatabaseBridge()
     :
-    m_iOptions(0),
     m_iNumRefs(1)
 {
 }
@@ -42,10 +41,8 @@ SqlDatabaseBridge* SqlDatabaseBridge::CreateInstance()
     return new SqlDatabaseBridge();
 }
 
-int SqlDatabaseBridge::Initialize(const char* pszConnString, unsigned int iOptions)
+int SqlDatabaseBridge::Initialize(const char* pszConnString)
 {
-    // TODOTODO - options?
-    m_iOptions = iOptions;
     m_sqlDatabase = gcnew SqlDatabase(gcnew System::String(pszConnString));
 
     int iErrCode;
@@ -55,7 +52,7 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, unsigned int iOptio
     }
     catch (SqlDatabaseException^)
     {
-        iErrCode = ERROR_FAILURE;
+        iErrCode = ERROR_DATABASE_EXCEPTION;
     }
     return iErrCode;
 }
@@ -63,89 +60,4 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, unsigned int iOptio
 IDatabaseConnection* SqlDatabaseBridge::CreateConnection(TransactionIsolationLevel isoLevel)
 {
     return new SqlDatabaseConnection(m_sqlDatabase, isoLevel);
-}
-
-// TODOTODO - Backups
-
-// Backup
-int SqlDatabaseBridge::Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst)
-{
-    return OK;
-}
-
-unsigned int SqlDatabaseBridge::DeleteOldBackups(Seconds iNumSecondsOld)
-{
-    return 0;
-}
-
-IDatabaseBackupEnumerator* SqlDatabaseBridge::GetBackupEnumerator()
-{
-    return NULL;
-}
-
-int SqlDatabaseBridge::RestoreBackup(IDatabaseBackup* pBackup)
-{
-    return OK;
-}
-
-int SqlDatabaseBridge::DeleteBackup(IDatabaseBackup* pBackup)
-{
-    return OK;
-}
-
-////////////////
-// Accounting //
-////////////////
-
-const char* SqlDatabaseBridge::GetConnectionString()
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return NULL;
-}
-
-unsigned int SqlDatabaseBridge::GetOptions()
-{
-    return m_iOptions;
-}
-
-unsigned int SqlDatabaseBridge::GetNumTables()
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return 0;
-}
-
-unsigned int SqlDatabaseBridge::GetNumTemplates()
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return 0;
-}
-
-ITableEnumerator* SqlDatabaseBridge::GetTableEnumerator()
-{
-    // TODOTODO - Needs implementation
-    Assert(false);
-    return NULL;
-}
-
-int SqlDatabaseBridge::Flush()
-{
-    // TODOTODO - Needs implementation
-    return OK;
-}
-
-int SqlDatabaseBridge::Check()
-{
-    // TODOTODO - Needs implementation
-    return OK;
-}
-
-// Stats
-int SqlDatabaseBridge::GetStatistics(DatabaseStatistics* pdsStats)
-{
-    // TODOTODO - Needs implementation
-    memset(pdsStats, 0, sizeof(*pdsStats));
-    return OK;
 }

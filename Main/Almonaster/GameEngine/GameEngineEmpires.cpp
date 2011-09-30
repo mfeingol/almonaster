@@ -730,12 +730,12 @@ int GameEngine::UpdateEmpireString(int iEmpireKey, const char* pszColumn, const 
         char* pszNew = NULL;
         Algorithm::AutoDelete<char> free_pszNew(pszNew, true);
 
-        if (strlen (pszString) >= stMaxLen)
+        if (strlen(pszString) >= stMaxLen)
         {
-            pszNew = new char [stMaxLen + 1];
+            pszNew = new char[stMaxLen + 1];
             Assert(pszNew);
-            memcpy (pszNew, pszString, stMaxLen);
-            pszNew [stMaxLen] = '\0';
+            memcpy(pszNew, pszString, stMaxLen);
+            pszNew[stMaxLen] = '\0';
 
             *pbTruncated = true;
             pszString = pszNew;

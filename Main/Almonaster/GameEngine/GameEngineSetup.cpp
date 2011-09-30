@@ -21,6 +21,7 @@
 
 int GameEngine::Setup()
 {
+    int iErrCode;
     bool bNewDatabase, bGoodDatabase;
     const char* pszBadTable;
 
@@ -29,19 +30,20 @@ int GameEngine::Setup()
     /////////////////////////
 
     global.GetReport()->WriteReport("GameEngine setup attempting to reuse an existing database");
-    VerifySystemTables(&bNewDatabase, &bGoodDatabase, &pszBadTable);
+    iErrCode = VerifySystemTables(&bNewDatabase, &bGoodDatabase, &pszBadTable);
+    RETURN_ON_ERROR(iErrCode);
 
     if (bNewDatabase)
     {
         // Create a new database and we're done
         global.GetReport()->WriteReport("Setting up new database");
-        int iErrCode = InitializeNewDatabase();
+        iErrCode = InitializeNewDatabase();
         RETURN_ON_ERROR(iErrCode);
         global.GetReport()->WriteReport("Set up new database");
     }
 
-    if (!bGoodDatabase) {
-
+    if (!bGoodDatabase)
+    {
         // Bad database - report error 
         char* pszMessage = (char*)StackAlloc(strlen(pszBadTable) + 256);
         sprintf(pszMessage, "GameEngine setup found errors in the %s table", pszBadTable);
@@ -108,22 +110,26 @@ int GameEngine::ReloadDatabase()
     return iErrCode;
 }
 
-bool GameEngine::VerifyTableExistence(const char* pszTable, bool bNewDatabase)
+int GameEngine::VerifyTableExistence(const char* pszTable, bool bNewDatabase, bool* pbGood)
 {
-    bool bTableExists = t_pConn->DoesTableExist(pszTable);
-    if ((bTableExists && bNewDatabase) || (!bTableExists && !bNewDatabase))
-    {
-        return false;
-    }
-    return true;
+    bool bTableExists;
+    int iErrCode = t_pConn->DoesTableExist(pszTable, &bTableExists);
+    RETURN_ON_ERROR(iErrCode);
+
+    *pbGood = (!bTableExists || !bNewDatabase) && (bTableExists || bNewDatabase);
+    return OK;
 }
 
-bool GameEngine::VerifyTableExistenceWithRows(const char* pszTable, bool bNewDatabase)
+int GameEngine::VerifyTableExistenceWithRows(const char* pszTable, bool bNewDatabase, bool* pbGood)
 {
-    bool bTableExists = t_pConn->DoesTableExist(pszTable);
+    bool bTableExists;
+    int iErrCode = t_pConn->DoesTableExist(pszTable, &bTableExists);
+    RETURN_ON_ERROR(iErrCode);
+    
     if ((bTableExists && bNewDatabase) || (!bTableExists && !bNewDatabase))
     {
-        return false;
+        *pbGood = false;
+        return OK;
     }
 
     if (bTableExists)
@@ -134,28 +140,32 @@ bool GameEngine::VerifyTableExistenceWithRows(const char* pszTable, bool bNewDat
 
         if (iNumRows < 1)
         {
-            return false;
+            *pbGood = false;
+            return OK;
         }
     }
 
-    return true;
+    *pbGood = true;
+    return OK;
 }
 
-void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable)
+int GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable)
 {
-    const char* pszTable = NULL;
     bool bNewDatabase = false, bGoodDatabase = true;
-
-    unsigned int iNumRows;
 
     // SystemData
     Assert(countof(SystemData::Types) == SystemData::NumColumns);
     Assert(countof(SystemData::Sizes) == SystemData::NumColumns);
     Assert(countof(SystemData::ColumnNames) == SystemData::NumColumns);
 
-    pszTable = SYSTEM_DATA;
-    if (t_pConn->DoesTableExist(pszTable))
+    const char* pszTable = SYSTEM_DATA;
+    bool bExists;
+    int iErrCode = t_pConn->DoesTableExist(pszTable, &bExists);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (bExists)
     {
+        unsigned int iNumRows;
         if (t_pConn->GetNumPhysicalRows(pszTable, &iNumRows) != OK || iNumRows != 1)
         {
             bGoodDatabase = false;
@@ -173,7 +183,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemAvailability::ColumnNames) == SystemAvailability::NumColumns);
 
     pszTable = SYSTEM_AVAILABILITY;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistenceWithRows(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
     
@@ -183,7 +194,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireData::ColumnNames) == SystemEmpireData::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_DATA;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistenceWithRows(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -193,7 +205,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemGameClassData::ColumnNames) == SystemGameClassData::NumColumns);
 
     pszTable = SYSTEM_GAMECLASS_DATA;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistenceWithRows(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -203,7 +216,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemAlienIcons::ColumnNames) == SystemAlienIcons::NumColumns);
 
     pszTable = SYSTEM_ALIEN_ICONS;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistenceWithRows(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -213,7 +227,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemSuperClassData::ColumnNames) == SystemSuperClassData::NumColumns);
 
     pszTable = SYSTEM_SUPERCLASS_DATA;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistenceWithRows(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
     
@@ -223,7 +238,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemThemes::ColumnNames) == SystemThemes::NumColumns);
 
     pszTable = SYSTEM_THEMES;
-    bGoodDatabase = VerifyTableExistenceWithRows(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistenceWithRows(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
     
@@ -233,7 +249,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemActiveGames::ColumnNames) == SystemActiveGames::NumColumns);
 
     pszTable = SYSTEM_ACTIVE_GAMES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -243,7 +260,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemChatroomData::ColumnNames) == SystemChatroomData::NumColumns);
 
     pszTable = SYSTEM_CHATROOM_DATA;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -253,7 +271,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournaments::ColumnNames) == SystemTournaments::NumColumns);
 
     pszTable = SYSTEM_TOURNAMENTS;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -263,7 +282,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemNukeList::ColumnNames) == SystemNukeList::NumColumns);
 
     pszTable = SYSTEM_NUKE_LIST;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -273,7 +293,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemLatestGames::ColumnNames) == SystemLatestGames::NumColumns);
 
     pszTable = SYSTEM_LATEST_GAMES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
     
@@ -283,7 +304,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireMessages::ColumnNames) == SystemEmpireMessages::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_MESSAGES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -293,7 +315,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireAssociations::ColumnNames) == SystemEmpireAssociations::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_ASSOCIATIONS;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -303,7 +326,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireNukeList::ColumnNames) == SystemEmpireNukeList::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_NUKER_LIST;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -313,7 +337,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireNukeList::ColumnNames) == SystemEmpireNukeList::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_NUKED_LIST;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -323,7 +348,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireActiveGames::ColumnNames) == SystemEmpireActiveGames::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_ACTIVE_GAMES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -333,7 +359,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournamentTeams::ColumnNames) == SystemTournamentTeams::NumColumns);
 
     pszTable = SYSTEM_TOURNAMENT_TEAMS;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -343,7 +370,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemTournamentEmpires::ColumnNames) == SystemTournamentEmpires::NumColumns);
 
     pszTable = SYSTEM_TOURNAMENT_EMPIRES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -353,7 +381,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(SystemEmpireTournaments::ColumnNames) == SystemEmpireTournaments::NumColumns);
 
     pszTable = SYSTEM_EMPIRE_TOURNAMENTS;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -367,7 +396,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameData::ColumnNames) == GameData::NumColumns);
 
     pszTable = GAME_DATA;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
     
@@ -377,7 +407,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpires::ColumnNames) == GameEmpires::NumColumns);
 
     pszTable = GAME_EMPIRES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -387,7 +418,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameNukedEmpires::ColumnNames) == GameNukedEmpires::NumColumns);
 
     pszTable = GAME_NUKED_EMPIRES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -397,7 +429,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameMap::ColumnNames) == GameMap::NumColumns);
 
     pszTable = GAME_MAP;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -407,7 +440,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpireData::ColumnNames) == GameEmpireData::NumColumns);
 
     pszTable = GAME_DATA;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -417,7 +451,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpireMessages::ColumnNames) == GameEmpireMessages::NumColumns);
 
     pszTable = GAME_EMPIRE_MESSAGES;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -427,7 +462,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpireMap::ColumnNames) == GameEmpireMap::NumColumns);
     
     pszTable = GAME_EMPIRE_MAP;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -437,7 +473,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpireDiplomacy::ColumnNames) == GameEmpireDiplomacy::NumColumns);
 
     pszTable = GAME_EMPIRE_DIPLOMACY;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -447,7 +484,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpireShips::ColumnNames) == GameEmpireShips::NumColumns);
 
     pszTable = GAME_EMPIRE_SHIPS;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -457,7 +495,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameEmpireFleets::ColumnNames) == GameEmpireFleets::NumColumns);
 
     pszTable = GAME_EMPIRE_FLEETS;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -467,7 +506,8 @@ void GameEngine::VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, c
     Assert(countof(GameSecurity::ColumnNames) == GameSecurity::NumColumns);
 
     pszTable = GAME_SECURITY;
-    bGoodDatabase = VerifyTableExistence(pszTable, bNewDatabase);
+    iErrCode = VerifyTableExistence(pszTable, bNewDatabase, &bGoodDatabase);
+    RETURN_ON_ERROR(iErrCode);
     if (!bGoodDatabase)
         goto Cleanup;
 
@@ -476,6 +516,8 @@ Cleanup:
     *pbNewDatabase = bNewDatabase;
     *pbGoodDatabase = bGoodDatabase;
     *ppszBadTable = pszTable;
+
+    return OK;
 }
 
 int GameEngine::VerifySystem() {

@@ -46,6 +46,11 @@ int GameEngine::SendSystemMessage(int iTargetEmpireKey, const char* pszMessage, 
     // Make sure source can broadcast && send system messages
     if (iSourceEmpireKey != SYSTEM)
     {
+        if (strlen(pszMessage) > MAX_MESSAGE_LENGTH)
+        {
+            return ERROR_STRING_IS_TOO_LONG;
+        }
+
         bool bBroadcast;
         iErrCode = GetEmpireOption(iSourceEmpireKey, CAN_BROADCAST, &bBroadcast);
         RETURN_ON_ERROR(iErrCode);
@@ -465,6 +470,11 @@ int GameEngine::SendGameMessage(int iGameClass, int iGameNumber, int iEmpireKey,
     Variant vTemp;
 
     UTCTime tTime = tSendTime;
+
+    if (iSourceKey != SYSTEM && strlen(pszMessage) > MAX_MESSAGE_LENGTH)
+    {
+        return ERROR_STRING_IS_TOO_LONG;
+    }
     
     // Make sure private messages are allowed
     if (!(iFlags & (MESSAGE_BROADCAST | MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR)))
@@ -835,9 +845,13 @@ int GameEngine::BroadcastGameMessage(int iGameClass, int iGameNumber, const char
 
     if (!(iFlags & (MESSAGE_SYSTEM | MESSAGE_ADMINISTRATOR | MESSAGE_TOURNAMENT_ADMINISTRATOR)))
     {
-        bool bFlag;
+        if (strlen(pszMessage) > MAX_MESSAGE_LENGTH)
+        {
+            return ERROR_STRING_IS_TOO_LONG;
+        }
         
-        // Make sure source can broadcast && send system messages
+        // Make sure source can broadcast and send system messages
+        bool bFlag;
         iErrCode = GetEmpireOption (iSourceKey, CAN_BROADCAST, &bFlag);
         RETURN_ON_ERROR(iErrCode);
         if (!bFlag)

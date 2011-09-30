@@ -416,9 +416,9 @@ private:
 
     int VerifyTournaments();
 
-    bool VerifyTableExistence(const char* pszTable, bool bNewDatabase);
-    bool VerifyTableExistenceWithRows(const char* pszTable, bool bNewDatabase);
-    void VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable);
+    int VerifyTableExistence(const char* pszTable, bool bNewDatabase, bool* pbGood);
+    int VerifyTableExistenceWithRows(const char* pszTable, bool bNewDatabase, bool* pbGood);
+    int VerifySystemTables(bool* pbNewDatabase, bool* pbGoodDatabase, const char** ppszBadTable);
 
     // Games
     int CleanupGame (int iGameClass, int iGameNumber, GameResult grResult, const char* pszWinnerName = NULL);

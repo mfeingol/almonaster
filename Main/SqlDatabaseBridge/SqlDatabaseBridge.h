@@ -31,7 +31,6 @@ class SqlDatabaseBridge : public IDatabase
 {
 private:
     gcroot<SqlDatabase^> m_sqlDatabase;
-    int m_iOptions;
 
 public:
 	SqlDatabaseBridge();
@@ -42,36 +41,7 @@ public:
     // IDatabase
     IMPLEMENT_INTERFACE(IDatabase);
 
-    int Initialize(const char* pszConnString, unsigned int iOptions);
-
-    // Connections
+    int Initialize(const char* pszConnString);
     IDatabaseConnection* CreateConnection(TransactionIsolationLevel isoLevel);
-
-    // Utilities
-    int Backup(IDatabaseBackupNotificationSink* pSink, bool bCheckFirst);
-    unsigned int DeleteOldBackups(Seconds iNumSecondsOld);
-
-    IDatabaseBackupEnumerator* GetBackupEnumerator();
-
-    int RestoreBackup(IDatabaseBackup* pBackup);
-    int DeleteBackup(IDatabaseBackup* pBackup);
-
-    ////////////////
-    // Accounting //
-    ////////////////
-
-    const char* GetConnectionString();
-
-    unsigned int GetNumTables();
-    unsigned int GetNumTemplates();
-
-    ITableEnumerator* GetTableEnumerator();
-    
-    int Flush();
-    int Check();
-
-    // Stats
-    int GetStatistics(DatabaseStatistics* pdsStats);
-    unsigned int GetOptions();
 };
 

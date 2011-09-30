@@ -15,7 +15,6 @@ private:
     gcroot<BulkTableReadResult^> m_result;
     bool m_bCompleteTable;
 
-    // TODOTODO - does it need to be a sorted dictionary
     gcroot<SortedDictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_keyToRows;
     gcroot<Dictionary<int64, IDictionary<System::String^, System::Object^>^>^> m_writes;
     gcroot<System::String^> m_ID_COLUMN_NAME;

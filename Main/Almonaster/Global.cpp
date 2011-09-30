@@ -224,13 +224,18 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
 int Global::InitializeState()
 {
     int iErrCode;
-
-    iErrCode = t_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, ROOT_NAME, &m_iRootKey);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = t_pConn->GetFirstKey(SYSTEM_EMPIRE_DATA, SystemEmpireData::Name, GUEST_NAME, &m_iGuestKey);
-    RETURN_ON_ERROR(iErrCode);
+    GameEngine gameEngine;
     
+    iErrCode = gameEngine.LookupEmpireByName(ROOT_NAME, &m_iRootKey, NULL, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = gameEngine.LookupEmpireByName(GUEST_NAME, &m_iGuestKey, NULL, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (m_iRootKey == NO_KEY || m_iGuestKey == NO_KEY)
+    {
+        return ERROR_FAILURE;
+    }
     return iErrCode;
 }
 
@@ -326,7 +331,7 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
     m_pReport->WriteReport("Loaded the database library");
     m_pReport->WriteReport("Initializing the database");
 
-    iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString, 0);
+    iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString);
     switch (iErrCode)
     {
     case OK:

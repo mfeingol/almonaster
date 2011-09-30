@@ -26,9 +26,6 @@
     <ClInclude Include="SqlDatabaseReadTable.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SqlDatabaseWriteTable.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TableCacheCollection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -53,9 +50,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="SqlDatabaseReadTable.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SqlDatabaseWriteTable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TableCacheCollection.cpp">

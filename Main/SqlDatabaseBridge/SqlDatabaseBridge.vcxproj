@@ -215,7 +215,6 @@ copy /y SqlDatabase.h "%DropSdk%"
     <ClInclude Include="SqlDatabaseConnection.h" />
     <ClInclude Include="SqlDatabaseBridge.h" />
     <ClInclude Include="SqlDatabaseReadTable.h" />
-    <ClInclude Include="SqlDatabaseWriteTable.h" />
     <ClInclude Include="TableCacheCollection.h" />
     <ClInclude Include="Utils.h" />
   </ItemGroup>
@@ -226,7 +225,6 @@ copy /y SqlDatabase.h "%DropSdk%"
     <ClCompile Include="SqlDatabaseBridge.cpp" />
     <ClCompile Include="SqlDatabaseConnection.cpp" />
     <ClCompile Include="SqlDatabaseReadTable.cpp" />
-    <ClCompile Include="SqlDatabaseWriteTable.cpp" />
     <ClCompile Include="TableCacheCollection.cpp" />
     <ClCompile Include="Utils.cpp" />
   </ItemGroup>

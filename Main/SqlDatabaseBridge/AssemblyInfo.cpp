@@ -9,11 +9,11 @@ using namespace System::Security::Permissions;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 //
-[assembly:AssemblyTitleAttribute("SqlDatabase")];
+[assembly:AssemblyTitleAttribute("SqlDatabaseBridge")];
 [assembly:AssemblyDescriptionAttribute("")];
 [assembly:AssemblyConfigurationAttribute("")];
 [assembly:AssemblyCompanyAttribute("Max Feingold")];
-[assembly:AssemblyProductAttribute("SqlDatabase")];
+[assembly:AssemblyProductAttribute("SqlDatabaseBridge")];
 [assembly:AssemblyCopyrightAttribute("Copyright(c) Max Feingold 2011")];
 [assembly:AssemblyTrademarkAttribute("")];
 [assembly:AssemblyCultureAttribute("")];

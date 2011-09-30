@@ -184,6 +184,10 @@ SearchResults:
                         AddMessage("That empire no longer exists");
                         break;
 
+                    case ERROR_STRING_IS_TOO_LONG:
+                        AddMessage ("The message was too long");
+                        break;
+
                     default:
                         RETURN_ON_ERROR(iErrCode);
                         break;

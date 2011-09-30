@@ -21,7 +21,7 @@
 int HtmlRenderer::WriteServerRules()
 {
     int iErrCode, iNumActiveGames, iSystemOptions;
-    unsigned int iNumProcessors, iMHz, iNumFiles, iNumPages, iTimeSpent, iDBOptions, iNumOpenGames, iNumClosedGames;
+    unsigned int iNumProcessors, iMHz, iNumFiles, iNumPages, iTimeSpent, iNumOpenGames, iNumClosedGames;
     float fValue;
     Seconds iUptime, iCpuTime, sBridierScanFrequency;
     size_t iTotalPhysicalMemory, iTotalFreePhysicalMemory, iTotalSwapMemory, iTotalFreeSwapMemory, iTotalVirtualMemory, stFileCacheSize;
@@ -34,10 +34,9 @@ int HtmlRenderer::WriteServerRules()
     
     HttpServerStatistics stats;
     AlmonasterStatistics aStats;
-    DatabaseStatistics dsStats;
 
     UTCTime tNow;
-    Time::GetTime (&tNow);
+    Time::GetTime(&tNow);
     
     iErrCode = GetGameConfiguration (&gcConfig);
     RETURN_ON_ERROR(iErrCode);
@@ -144,128 +143,6 @@ int HtmlRenderer::WriteServerRules()
     OutputText ("</strong> KB received and <strong>");
     m_pHttpResponse->WriteText((int64)stats.NumBytesSent / 1024);
     OutputText ("</strong> KB sent</li>");
-    
-    IDatabase* pDatabase = global.GetDatabase(); // No refcount
-    Assert(pDatabase != NULL);
-
-    iDBOptions = pDatabase->GetOptions();
-    iErrCode = pDatabase->GetStatistics (&dsStats);
-    RETURN_ON_ERROR(iErrCode);
-    
-    OutputText ("<li>The database is in ");
-    if (iDBOptions & DATABASE_WRITETHROUGH) {
-        OutputText ("write-through");
-    } else {
-        OutputText ("write-back");
-    }
-
-    OutputText (" mode. It contains <strong>");
-    m_pHttpResponse->WriteText (dsStats.iNumTables);
-    OutputText ("</strong> tables, <strong>");
-    m_pHttpResponse->WriteText (dsStats.iNumTemplates);
-    OutputText ("</strong> templates and occupies <strong>");
-        
-    m_pHttpResponse->WriteText ((int64)
-        (dsStats.fhsMetaStats.cbSize + 
-        dsStats.fhsTableStats.cbSize + 
-        dsStats.fhsTemplateStats.cbSize + 
-        dsStats.fhsVarlenStats.cbSize) / 1024
-        );
-
-    OutputText ("</strong> KB on disk");
-
-    if (m_iPrivilege >= ADMINISTRATOR) {
-
-        OutputText (
-            ":<ul>"\
-            "<li>Tables: <strong>"
-            );
-            
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumAllocatedBlocks);
-        OutputText ("</strong> allocated block");
-        if (dsStats.fhsTableStats.cNumAllocatedBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cNumFreeBlocks);
-        OutputText ("</strong> free block");
-        if (dsStats.fhsTableStats.cNumFreeBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumUsedBytes / 1024);
-        OutputText ("</strong> used KB, <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTableStats.cbNumSlackBytes / 1024);
-        OutputText ("</strong> slack KB, <strong>");
-        m_pHttpResponse->WriteText ((int64)
-            (dsStats.fhsTableStats.cbSize - 
-            dsStats.fhsTableStats.cbNumUsedBytes - 
-            dsStats.fhsTableStats.cbNumSlackBytes) / 1024
-            );
-        OutputText ("</strong> free KB</li>");
-
-
-        OutputText ("<li>Metadata: <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumAllocatedBlocks);
-        OutputText ("</strong> allocated block");
-        if (dsStats.fhsMetaStats.cNumAllocatedBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cNumFreeBlocks);
-        OutputText ("</strong> free block");
-        if (dsStats.fhsMetaStats.cNumFreeBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumUsedBytes / 1024);
-        OutputText ("</strong> used KB, <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsMetaStats.cbNumSlackBytes / 1024);
-        OutputText ("</strong> slack KB, <strong>");
-        m_pHttpResponse->WriteText ((int64)
-            (dsStats.fhsMetaStats.cbSize - 
-            dsStats.fhsMetaStats.cbNumUsedBytes - 
-            dsStats.fhsMetaStats.cbNumSlackBytes) / 1024
-            );
-        OutputText ("</strong> free KB</li>");
-
-
-        OutputText ("<li>Varlen data: <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumAllocatedBlocks);
-        OutputText ("</strong> allocated block");
-        if (dsStats.fhsVarlenStats.cNumAllocatedBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cNumFreeBlocks);
-        OutputText ("</strong> free block");
-        if (dsStats.fhsVarlenStats.cNumFreeBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumUsedBytes / 1024);
-        OutputText ("</strong> used KB, <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsVarlenStats.cbNumSlackBytes / 1024);
-        OutputText ("</strong> slack KB, <strong>");
-        m_pHttpResponse->WriteText ((int64)
-            (dsStats.fhsVarlenStats.cbSize - 
-            dsStats.fhsVarlenStats.cbNumUsedBytes - 
-            dsStats.fhsVarlenStats.cbNumSlackBytes) / 1024
-            );
-        OutputText ("</strong> free KB</li>");
-
-
-        OutputText ("<li>Templates: <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumAllocatedBlocks);
-        OutputText ("</strong> allocated block");
-        if (dsStats.fhsTemplateStats.cNumAllocatedBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cNumFreeBlocks);
-        OutputText ("</strong> free block");
-        if (dsStats.fhsTemplateStats.cNumFreeBlocks != 1) OutputText ("s");
-        OutputText (", <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumUsedBytes / 1024);
-        OutputText ("</strong> used KB, <strong>");
-        m_pHttpResponse->WriteText ((int64) dsStats.fhsTemplateStats.cbNumSlackBytes / 1024);
-        OutputText ("</strong> slack KB, <strong>");
-        m_pHttpResponse->WriteText ((int64)
-            (dsStats.fhsTemplateStats.cbSize - 
-            dsStats.fhsTemplateStats.cbNumUsedBytes - 
-            dsStats.fhsTemplateStats.cbNumSlackBytes) / 1024
-            );
-        OutputText ("</strong> free KB</li>");
-        OutputText ("</ul>");
-    }
-
-    OutputText ("</li>");
     
     aStats = m_sStats;
     iNumPages = aStats.NumPageScriptRenders;

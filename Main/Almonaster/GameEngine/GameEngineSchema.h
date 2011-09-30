@@ -565,16 +565,16 @@ namespace SystemData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemData",
         NumColumns,
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        true,
         0,
         NULL,
-        1
+        NULL
     };
 };
 
@@ -985,17 +985,16 @@ namespace SystemEmpireData
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemEmpireData",
         NumColumns,
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        3000,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -1038,10 +1037,9 @@ namespace SystemAvailability
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        true,
         0,
         NULL,
-        1
+        NULL
     };
 };
 
@@ -1297,11 +1295,9 @@ namespace SystemGameClassData {
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        200,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -1346,17 +1342,16 @@ namespace SystemAlienIcons {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemAlienIcons",
         NumColumns,
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        150,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -1399,10 +1394,9 @@ namespace SystemSuperClassData {
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20
+        NULL
     };
 };
 
@@ -1413,8 +1407,8 @@ namespace SystemSuperClassData {
 
 #define SYSTEM_THEMES "SystemThemes"
 
-namespace SystemThemes {
-
+namespace SystemThemes
+{
     static const char* const Name = "Name";
     static const char* const AuthorName = "AuthorName";
     static const char* const Version = "Version";
@@ -1429,7 +1423,8 @@ namespace SystemThemes {
     static const char* const PrivateMessageColor = "PrivateMessageColor";
     static const char* const BroadcastMessageColor = "BroadcastMessageColor";
 
-    enum Columns {
+    enum Columns
+    {
         iName,
         iAuthorName,
         iVersion,
@@ -1445,7 +1440,8 @@ namespace SystemThemes {
         iBroadcastMessageColor,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         Name,
         AuthorName,
         Version,
@@ -1461,7 +1457,8 @@ namespace SystemThemes {
         BroadcastMessageColor,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_STRING,
         V_STRING,
         V_STRING,
@@ -1501,11 +1498,9 @@ namespace SystemThemes {
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -1558,7 +1553,7 @@ namespace SystemActiveGames
 
     static unsigned int IndexFlags[] = 
     {
-        INDEX_CASE_SENSITIVE,
+        0,
         0,
     };
 
@@ -1571,10 +1566,8 @@ namespace SystemActiveGames
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        100,
         IndexFlags,
     };
 };
@@ -1627,11 +1620,9 @@ namespace SystemEmpireAssociations
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        500,
-        NULL,
+        NULL
     };
 };
 
@@ -1718,11 +1709,9 @@ namespace SystemEmpireMessages
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        10,
-        NULL,
+        NULL
     };
 };
 
@@ -1815,11 +1804,9 @@ namespace SystemEmpireNukeList
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -1897,11 +1884,9 @@ namespace SystemNukeList {
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -1985,11 +1970,9 @@ namespace SystemLatestGames
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -2041,11 +2024,9 @@ namespace SystemEmpireActiveGames
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -2117,17 +2098,16 @@ namespace SystemTournaments
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemTournaments",
         NumColumns,
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        0,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        20,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -2219,11 +2199,9 @@ namespace SystemTournamentTeams
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -2305,11 +2283,9 @@ namespace SystemTournamentEmpires
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -2361,11 +2337,9 @@ namespace SystemEmpireTournaments
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        10,
-        NULL,
+        NULL
     };
 };
 
@@ -2418,11 +2392,9 @@ namespace SystemChatroomData
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        25,
-        NULL,
+        NULL
     };
 };
 
@@ -2696,11 +2668,9 @@ namespace GameData
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        true,
         0,
         NULL,
-        1,
-        NULL,
+        NULL
     };
 };
 
@@ -2785,11 +2755,9 @@ namespace GameSecurity
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        2,
-        NULL,
+        NULL
     };
 };
 
@@ -2861,11 +2829,9 @@ namespace GameEmpires
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        20,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -2949,11 +2915,9 @@ namespace GameNukedEmpires
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        10,
-        NULL,
+        NULL
     };
 };
 
@@ -3132,7 +3096,7 @@ namespace GameMap
 
     static unsigned int IndexFlags[] = {
         0,
-        INDEX_CASE_SENSITIVE,
+        0,
     };
     
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
@@ -3143,11 +3107,9 @@ namespace GameMap
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        countof (IndexColumns),
+        countof(IndexColumns),
         (char**)IndexColumns,
-        100,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -3461,11 +3423,9 @@ namespace GameEmpireData
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        true,
         0,
         NULL,
-        1,
-        NULL,
+        NULL
     };
 };
 
@@ -3559,11 +3519,9 @@ namespace GameEmpireMessages
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
         0,
         NULL,
-        20,
-        NULL,
+        NULL
     };
 };
 
@@ -3661,11 +3619,9 @@ namespace GameEmpireMap
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        50,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -3775,11 +3731,9 @@ namespace GameEmpireDiplomacy
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        sizeof (IndexColumns) / sizeof (IndexColumns[0]),
+        countof(IndexColumns),
         (char**)IndexColumns,
-        10,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -3905,11 +3859,9 @@ namespace GameEmpireShips
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        2,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        50,
-        IndexFlags,
+        IndexFlags
     };
 };
 
@@ -4007,10 +3959,8 @@ namespace GameEmpireFleets
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        false,
-        1,
+        countof(IndexColumns),
         (char**)IndexColumns,
-        10,
         IndexFlags,
     };
 };

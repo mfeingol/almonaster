@@ -83,7 +83,7 @@ int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
         return OK;
     }
 
-    // TODO - can we do better than this with a better data structure?
+    // TODO - can we do better than a linear search with a better data structure?
     bool bNext = false;
     for each (long id in m_keyToRows->Keys)
     {
@@ -159,7 +159,9 @@ int CachedTable::GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys)
     *piNumKeys = iNumRows;
 
     if (iNumRows == 0)
+    {
         return ERROR_DATA_NOT_FOUND;
+    }
 
     *ppiKey = new unsigned int[iNumRows];
     Assert(*ppiKey);
@@ -186,7 +188,9 @@ int CachedTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** 
     unsigned int iNumRows = Enumerable::Count(m_result->Rows);
     *piNumRows = iNumRows;
     if (iNumRows == 0)
+    {
         return ERROR_DATA_NOT_FOUND;
+    }
 
     int* piData = new int[iNumRows];
     Assert(piData);
@@ -267,7 +271,9 @@ int CachedTable::ReadColumns(unsigned int iNumColumns, const char* const* ppszCo
     unsigned int iNumRows = Enumerable::Count(m_result->Rows);
     *piNumRows = iNumRows;
     if (iNumRows == 0)
+    {
         return ERROR_DATA_NOT_FOUND;
+    }
 
     Variant** ppvData = new Variant*[iNumRows];
     Assert(ppvData);
@@ -556,8 +562,7 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
     }
     catch (SqlDatabaseException^)
     {
-        // TODO - other errors?
-        return ERROR_DUPLICATE_DATA;
+        return ERROR_DATABASE_EXCEPTION;
     }
 
     if (iNumRows == 1 && piKey)
@@ -601,14 +606,14 @@ int CachedTable::DeleteRow(unsigned int iKey)
     Trace("CachedTable :: DeleteRows {0}", m_result->TableName);
 
     // First delete the actual row
+    // We can't defer this to commit time if we want unique constraints to work
     try
     {
         m_cmd->DeleteRow(m_result->TableName, m_ID_COLUMN_NAME, (int64)iKey);
     }
     catch (SqlDatabaseException^)
     {
-        // TODO - other errors?
-        return ERROR_UNKNOWN_ROW_KEY;
+        return ERROR_DATABASE_EXCEPTION;
     }
 
     // Second, remove the row from cache
@@ -639,8 +644,7 @@ int CachedTable::DeleteAllRows()
     }
     catch (SqlDatabaseException^)
     {
-        // TODO - other errors?
-        return ERROR_UNKNOWN_TABLE_NAME;
+        return ERROR_DATABASE_EXCEPTION;
     }
 
     // Second, flush the cache
@@ -693,7 +697,9 @@ int CachedTable::Increment(unsigned int iKey, const char* pszColumn, const Varia
 
     row[columnName] = newValue;
     if (pvOldValue)
+    {
         Convert(value, pvOldValue);
+    }
 
     SaveWrite(iKey != NO_KEY ? iKey : (unsigned int)(int64)row[m_ID_COLUMN_NAME], columnName, newValue);
     return OK;

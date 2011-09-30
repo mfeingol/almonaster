@@ -63,11 +63,11 @@ int TableCacheCollection::Commit()
         }
         catch (SqlDatabaseException^)
         {
-            return ERROR_FAILURE;
+            return ERROR_DATABASE_EXCEPTION;
         }
     }
-    return OK;
 
+    return OK;
 }
 
 CachedTable* TableCacheCollection::CreateEmptyTable(const char* pszTableName, bool bCompleteTable)
@@ -134,8 +134,7 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
     }
     catch (SqlDatabaseException^)
     {
-        // TODO - other errors
-        return ERROR_TABLE_ALREADY_EXISTS;
+        return ERROR_DATABASE_EXCEPTION;
     }
 
     // Add to cache
@@ -149,7 +148,9 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
 int TableCacheCollection::CreateEmpty(const char* pszTableName, const char* pszCachedTableName)
 {
     if (m_htTableViews.Contains((char*)pszCachedTableName))
+    {
         return ERROR_TABLE_ALREADY_EXISTS;
+    }
 
     CachedTable* pTable = CreateEmptyTable(pszTableName, false);
     InsertTable(pszCachedTableName, pTable);
@@ -204,8 +205,7 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     }
     catch (SqlDatabaseException^)
     {
-        // TODOTODO - error code?
-        return ERROR_FAILURE;
+        return ERROR_DATABASE_EXCEPTION;
     }
 
     // Process results
@@ -404,16 +404,16 @@ int TableCacheCollection::GetTable(const char* pszCacheTableName, ICachedTable**
 
 int TableCacheCollection::GetTable(const char* pszCacheTableName, CachedTable** ppTable)
 {
+    *ppTable = NULL;
+
     if (m_htTableViews.FindFirst((char* const)pszCacheTableName, ppTable))
     {
         (*ppTable)->AddRef();
         return OK;
     }
 
-    // TODO - we'll handle a cache miss more gracefully in the future. For now, let's not have any.
+    // TODOTODO - we'll handle a cache miss more gracefully in the future. For now, let's not have any.
     Assert(false);
-
-    *ppTable = NULL;
     return ERROR_UNKNOWN_TABLE_NAME;
 }
 

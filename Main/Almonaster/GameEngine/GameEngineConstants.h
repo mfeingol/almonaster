@@ -16,8 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#ifndef _GameEngineConstants_H_
-#define _GameEngineConstants_H_
+#pragma once
 
 #include "SqlDatabase.h"
 
@@ -1046,5 +1045,4 @@ extern const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES];
 #define ERROR_GAME_PAUSED (-1125)
 #define ERROR_MISSING_FORM (-1126)
 #define ERROR_COULD_NOT_START_GAME (-1127)
-
-#endif
+#define ERROR_STRING_IS_TOO_LONG (-1128)
