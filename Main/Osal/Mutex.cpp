@@ -108,7 +108,7 @@ int Mutex::Wait (const char* pszLockName, NamedMutex* pNamedMutex) {
         Assert (false);
         return ERROR_FAILURE;
     }
-    return ::WaitForSingleObject (*pNamedMutex, INFINITE) == WAIT_OBJECT_0 ? OK : ERROR_FAILURE;
+    return ::WaitForSingleObjectEx(*pNamedMutex, INFINITE, TRUE) == WAIT_OBJECT_0 ? OK : ERROR_FAILURE;
 #endif
 }
 
@@ -128,7 +128,7 @@ int Mutex::TryWait (const char* pszLockName, NamedMutex* pNamedMutex) {
         return ERROR_FAILURE;
     }
 
-    DWORD dwRetVal = ::WaitForSingleObject (*pNamedMutex, 0);
+    DWORD dwRetVal = ::WaitForSingleObjectEx(*pNamedMutex, 0, TRUE);
     if (dwRetVal == WAIT_FAILED) {
         Assert (false);
         return ERROR_FAILURE;

@@ -1321,7 +1321,7 @@ int GameEngine::UndeleteEmpire(int iEmpireKey)
 
     iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Options, &vTemp);
     if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-        return ERROR_CANNOT_UNDELETE_EMPIRE;
+        return ERROR_EMPIRE_DOES_NOT_EXIST;
     RETURN_ON_ERROR(iErrCode);
     
     if (vTemp.GetInteger() & EMPIRE_MARKED_FOR_DELETION)

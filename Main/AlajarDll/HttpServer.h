@@ -19,15 +19,16 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFXHttpServer_H__7E3E4053_A569_11D1_9C4E_0060083E8062__INCLUDED_)
-#define AFXHttpServer_H__7E3E4053_A569_11D1_9C4E_0060083E8062__INCLUDED_
+#pragma once
 
 #include "FileCache.h"
 #include "PageSourceEnumerator.h"
 #include "HttpRequest.h"
 #include "HttpResponse.h"
 #include "HttpThreadPool.h"
+#include "Report.h"
 
+#include "Osal/AsyncFile.h"
 #include "Osal/TempFile.h"
 #include "Osal/HashTable.h"
 #include "Osal/ReadWriteLock.h"
@@ -39,30 +40,14 @@
 #define COALESCE_REQUESTS  25
 #define COALESCE_PERIOD_MS 30000
 
-// Log structures
-#define MAX_LOG_MESSAGE (4096 + OS::MaxFileNameLength)
-
-enum LogMessageType { LOG_MESSAGE, REPORT_MESSAGE };
-struct LogMessage {
-    LogMessageType lmtMessageType;
-    PageSource* pPageSource;
-    char pszText [MAX_LOG_MESSAGE];
-};
-
 class SocketAllocator {
 public:
     static Socket* New() { return new Socket(); }
     static void Delete (Socket* pSocket) { delete pSocket; }
 };
 
-class LogMessageAllocator {
-public:
-    static LogMessage* New() { return new LogMessage; }
-    static void Delete (LogMessage* pLogMessage) { delete pLogMessage; }
-};
-
-class HttpServer : public IHttpServer, public IReport {
-
+class HttpServer : public IHttpServer
+{
 private:
 
     unsigned int m_iNumRefs;
@@ -133,15 +118,19 @@ private:
     ObjectCache<HttpResponse, HttpResponseAllocator>* m_pHttpResponseCache;
     Mutex m_mHttpObjectCacheLock;
 
-    ObjectCache<LogMessage, LogMessageAllocator>* m_pLogMessageCache;
-    Mutex m_mLogMessageCacheLock;
-
-    // Report
-    File m_fReportFile;
-    Mutex m_mReportMutex;
-
     // Config file
     IConfigFile* m_pConfigFile;
+
+    // Report file
+    TraceInfoLevel m_reportTracelevel;
+    UTCTime m_tReportTime;
+    Report* m_pReport;
+    Mutex m_reportMutex;
+
+    UTCTime m_tStatsTime;
+
+    void GetReportFileName (char pszFileName[OS::MaxFileNameLength]);
+    void ReportEvent(const char* pszMessage);
 
     // Page sources
     PageSource* m_pDefaultPageSource;
@@ -157,27 +146,8 @@ private:
     int ConfigurePageSources();
     void ShutdownPageSources();
 
-    // Event reporting
-    void ReportEvent (const char* pszEvent);
-
     // Close down a pagesource
     static int THREAD_CALL ClosePageSource (void* pVoid);
-
-    // Log thread stuff
-    Thread m_tLogThread;
-    bool m_bLogExit;
-
-    UTCTime m_tLogDate;
-
-    ThreadSafeFifoQueue<LogMessage*> m_tsfqLogQueue;
-
-    LogMessage* GetNextLogMessage();
-    int GetNumLogMessages();
-    static int THREAD_CALL LogThread (void* pVoid);
-    int LogLoop();
-
-    // Shutdown
-    Event m_evLogEvent;
 
     HttpServer();
     ~HttpServer();
@@ -198,7 +168,7 @@ public:
     PageSource* GetPageSource (const char* pszPageSourceName);
     HttpThreadPool* GetThreadPool();
 
-    void GetStatisticsFileName (char* pszStatName, const UTCTime& tTime = 0);
+    void GetStatisticsFileName (char* pszStatName, const UTCTime& tTime);
 
     int GetHttpObjects (HttpRequest** ppHttpRequest, HttpResponse** ppHttpResponse);
     void ReleaseHttpObjects (HttpRequest* pHttpRequest, HttpResponse* pHttpResponse);
@@ -214,12 +184,6 @@ public:
     static bool DifferentDays (const UTCTime& tOldTime, const UTCTime& tNewTime);
 
     int WWWServe (HttpPoolThread* pThread);
-
-    // Messages
-    int PostMessage (LogMessage* plmMessage);
-
-    LogMessage* GetLogMessage();
-    void FreeLogMessage (LogMessage* plmMessage);
 
     // IHttpServer
     DECLARE_IOBJECT;
@@ -248,7 +212,7 @@ public:
     const char* GetReportPath() { return m_pszReportPath; }
     const char* GetStatisticsPath() { return m_pszStatisticsPath; }
 
-    IReport* GetReport();
+    ITraceLog* GetReport();
     IConfigFile* GetConfigFile();
     IFileCache* GetFileCache();
 
@@ -258,14 +222,7 @@ public:
 
     IPageSourceEnumerator* EnumeratePageSources();
     IPageSourceControl* GetPageSourceByName (const char* pszName);
-
-    // IReport
-    int WriteReport (const char* pszMessage);
-    size_t GetReportTail (char* pszBuffer, size_t stNumChars);
 };
 
 /*size_t AppendString (char** ppszBuffer, const char* pszNewString, size_t stTotalLength);
 char* EqualsToSlash (const char* pszInput);*/
-
-
-#endif // !defined(AFXHttpServer_H__7E3E4053_A569_11D1_9C4E_0060083E8062__INCLUDED_)

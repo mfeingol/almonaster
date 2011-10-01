@@ -67,7 +67,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
             // Add to report
             char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
             sprintf(pszReport, "%s resigned from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
-            global.GetReport()->WriteReport (pszReport);
+            global.WriteReport(TRACE_INFO, pszReport);
 
             // Make sure we still exist after quitting
             bool bFlag;
@@ -121,7 +121,7 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
                 // Add to report
                 char pszReport [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 128];
                 sprintf(pszReport, "%s quit from %s %i", m_vEmpireName.GetCharPtr(), m_pszGameClassName, m_iGameNumber);
-                global.GetReport()->WriteReport (pszReport);
+                global.WriteReport(TRACE_INFO, pszReport);
 
                 // Make sure we still exist after quitting
                 bool bFlag;

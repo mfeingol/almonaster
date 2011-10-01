@@ -29,17 +29,17 @@ int GameEngine::Setup()
     // Check system tables //
     /////////////////////////
 
-    global.GetReport()->WriteReport("GameEngine setup attempting to reuse an existing database");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup attempting to reuse an existing database");
     iErrCode = VerifySystemTables(&bNewDatabase, &bGoodDatabase, &pszBadTable);
     RETURN_ON_ERROR(iErrCode);
 
     if (bNewDatabase)
     {
         // Create a new database and we're done
-        global.GetReport()->WriteReport("Setting up new database");
+        global.WriteReport(TRACE_ALWAYS, "Setting up new database");
         iErrCode = InitializeNewDatabase();
         RETURN_ON_ERROR(iErrCode);
-        global.GetReport()->WriteReport("Set up new database");
+        global.WriteReport(TRACE_ALWAYS, "Set up new database");
     }
 
     if (!bGoodDatabase)
@@ -48,8 +48,8 @@ int GameEngine::Setup()
         char* pszMessage = (char*)StackAlloc(strlen(pszBadTable) + 256);
         sprintf(pszMessage, "GameEngine setup found errors in the %s table", pszBadTable);
 
-        global.GetReport()->WriteReport(pszMessage);
-        global.GetReport()->WriteReport("GameEngine setup could not successfully reuse an existing database");
+        global.WriteReport(TRACE_ERROR, pszMessage);
+        global.WriteReport(TRACE_ERROR, "GameEngine setup could not successfully reuse an existing database");
         
         return ERROR_FAILURE;
     }
@@ -75,7 +75,7 @@ int GameEngine::ReloadDatabase()
 
     iErrCode = VerifySystem();
     RETURN_ON_ERROR(iErrCode);
-    global.GetReport()->WriteReport("GameEngine setup successfully verified system data");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup successfully verified system data");
 
     //
     // Games
@@ -83,7 +83,7 @@ int GameEngine::ReloadDatabase()
 
     iErrCode = VerifyActiveGames();
     RETURN_ON_ERROR(iErrCode);
-    global.GetReport()->WriteReport("GameEngine setup successfully verified active games");    
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup successfully verified active games");    
 
     //
     // Marked gameclasses
@@ -91,7 +91,7 @@ int GameEngine::ReloadDatabase()
 
     iErrCode = VerifyMarkedGameClasses();
     RETURN_ON_ERROR(iErrCode);
-    global.GetReport()->WriteReport("GameEngine setup successfully verified marked gameclasses");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup successfully verified marked gameclasses");
 
     //
     // Tournaments
@@ -99,13 +99,13 @@ int GameEngine::ReloadDatabase()
 
     iErrCode = VerifyTournaments();
     RETURN_ON_ERROR(iErrCode);
-    global.GetReport()->WriteReport("GameEngine setup successfully verified tournaments");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup successfully verified tournaments");
 
     //////////
     // Done //
     //////////
 
-    global.GetReport()->WriteReport("GameEngine setup successfully reused the existing database");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup successfully reused the existing database");
 
     return iErrCode;
 }
@@ -603,7 +603,7 @@ int GameEngine::VerifyMarkedGameClasses() {
                         "GameEngine setup deleted gameclass %i because it was marked for deletion",
                         piGameClassKey[i]
                         );
-                    global.GetReport()->WriteReport(pszBuffer);
+                    global.WriteReport(TRACE_WARNING, pszBuffer);
                 }
             }
         }
@@ -755,7 +755,7 @@ int GameEngine::VerifyActiveGames()
                 iReason
                 );
 
-            global.GetReport()->WriteReport(pszBuffer);
+            global.WriteReport(TRACE_WARNING, pszBuffer);
             continue;
         }
 
@@ -779,7 +779,7 @@ int GameEngine::VerifyActiveGames()
                 iGameClass
                 );
 
-            global.GetReport()->WriteReport(pszBuffer);
+            global.WriteReport(TRACE_WARNING, pszBuffer);
             continue;
         }
 
@@ -798,7 +798,7 @@ int GameEngine::VerifyActiveGames()
                 iGameClass
                 );
                 
-            global.GetReport()->WriteReport(pszBuffer);
+            global.WriteReport(TRACE_WARNING, pszBuffer);
             continue;
         }
 
@@ -819,7 +819,7 @@ int GameEngine::InitializeNewDatabase()
 {
     int iErrCode;
 
-    global.GetReport()->WriteReport("GameEngine setup is initializing a new database");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup is initializing a new database");
 
     iErrCode = CreateDefaultSystemTables();
     RETURN_ON_ERROR(iErrCode);
@@ -830,7 +830,7 @@ int GameEngine::InitializeNewDatabase()
     iErrCode = SetupDefaultSystemGameClasses();
     RETURN_ON_ERROR(iErrCode);
     
-    global.GetReport()->WriteReport("GameEngine setup finished initializing a new database");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine setup finished initializing a new database");
     return iErrCode;
 }
 

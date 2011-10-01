@@ -126,7 +126,7 @@ int Event::Wait (MilliSeconds iWait) {
 
     Assert (m_hEvent != NULL);
 
-    DWORD dwRetVal = ::WaitForSingleObject (m_hEvent, (DWORD) iWait);
+    DWORD dwRetVal = ::WaitForSingleObjectEx(m_hEvent, (DWORD)iWait, TRUE);
     switch (dwRetVal)
     {
     case WAIT_OBJECT_0:

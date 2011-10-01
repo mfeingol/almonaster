@@ -889,12 +889,12 @@ int HtmlRenderer::Render()
         }
         else
         {
-            global.GetReport()->WriteReport("Render failed - aborting transaction");
+            global.WriteReport(TRACE_ERROR, "Page render failed - aborting transaction");
         }
     }
     else
     {
-        global.GetReport()->WriteReport("CacheTables failed - aborting transaction");
+        global.WriteReport(TRACE_ERROR, "CacheTables failed - aborting transaction");
     }
     global.TlsCloseConnection();
     

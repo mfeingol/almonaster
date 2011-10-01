@@ -32,6 +32,7 @@
 
 #include "Osal/IObject.h"
 #include "Osal/Variant.h"
+#include "Osal/TraceLog.h"
 
 ////////////
 // Export //
@@ -56,8 +57,7 @@ ALAJAR_EXPORT extern const Uuid CLSID_ConfigFile;
 
 ALAJAR_EXPORT extern const Uuid IID_ICachedFile;
 ALAJAR_EXPORT extern const Uuid IID_IFileCache;
-ALAJAR_EXPORT extern const Uuid IID_IReport;
-ALAJAR_EXPORT extern const Uuid IID_ILog;
+ALAJAR_EXPORT extern const Uuid IID_ITraceLogReader;
 ALAJAR_EXPORT extern const Uuid IID_IConfigFile;
 ALAJAR_EXPORT extern const Uuid IID_IPageSourceControl;
 ALAJAR_EXPORT extern const Uuid IID_IHttpForm;
@@ -286,15 +286,10 @@ public:
     virtual size_t GetSize() = 0;
 };
 
-class IReport : virtual public IObject {
+class ITraceLogReader : virtual public IObject
+{
 public:
-    virtual int WriteReport (const char* pszMessage) = 0;
-    virtual size_t GetReportTail (char* pszBuffer, size_t stNumChars) = 0;
-};
-
-class ILog : virtual public IObject {
-public:
-    virtual size_t GetLogTail (char* pszBuffer, size_t stNumChars) = 0;
+    virtual int GetTail(char* pszBuffer, unsigned int cbSize) = 0;
 };
 
 class IConfigFile : virtual public IObject {
@@ -321,8 +316,8 @@ public:
     virtual const char* GetName() = 0;
     virtual IConfigFile* GetConfigFile() = 0;
 
-    virtual IReport* GetReport() = 0;
-    virtual ILog* GetLog() = 0;
+    virtual ITraceLog* GetReport() = 0;
+    virtual ITraceLog* GetLog() = 0;
 
     virtual void LockWithNoThreads() = 0;
     virtual void LockWithSingleThread() = 0;
@@ -474,7 +469,7 @@ public:
     virtual unsigned int GetNumPageSources() = 0;
     virtual IPageSourceEnumerator* EnumeratePageSources() = 0;
 
-    virtual IReport* GetReport() = 0;
+    virtual ITraceLog* GetReport() = 0;
     virtual IConfigFile* GetConfigFile() = 0;
     virtual IFileCache* GetFileCache() = 0;
 

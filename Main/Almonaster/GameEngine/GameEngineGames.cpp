@@ -297,7 +297,7 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
         iGameNumber,
         strList.GetCharPtr() == NULL ? "" : strList.GetCharPtr()
         );
-    global.GetReport()->WriteReport (pszMessage);
+    global.WriteReport(TRACE_INFO, pszMessage);
 
     // Add to latest games
     if (vGameState.GetInteger() & STARTED) {
@@ -1293,7 +1293,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         *piGameNumber
         );
 
-    global.GetReport()->WriteReport (pszUpdateReport);
+    global.WriteReport(TRACE_INFO, pszUpdateReport);
 
     return iErrCode;
 }
@@ -2077,7 +2077,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
 
             char pszUpdateReport [128 + MAX_FULL_GAME_CLASS_NAME_LENGTH];
             sprintf(pszUpdateReport, "%s %i has started", pszGameClassName, iGameNumber);
-            global.GetReport()->WriteReport (pszUpdateReport);
+            global.WriteReport(TRACE_INFO, pszUpdateReport);
         }
     }
 
@@ -2273,7 +2273,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         iGameNumber
         );
 
-    global.GetReport()->WriteReport (pszUpdateReport);
+    global.WriteReport(TRACE_INFO, pszUpdateReport);
 
     return iErrCode;
 }

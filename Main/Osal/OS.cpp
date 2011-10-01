@@ -392,12 +392,12 @@ void OS::Sleep (MilliSeconds iMs) {
 #ifdef __LINUX__
     usleep(iMs * 1000);
 #else if defined __WIN32__
-    ::Sleep (iMs);
+    ::SleepEx(iMs, TRUE);
 #endif
 }
 
 void OS::Exit (int iExitCode) {
-    exit (iExitCode);
+    exit(iExitCode);
 }
 
 void OS::Alert (const char* pszMessage) {

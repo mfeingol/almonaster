@@ -31,9 +31,7 @@ class Global
 {
 private:
     IHttpServer* m_pHttpServer;
-    IReport* m_pReport;
     IConfigFile* m_pConfig;
-    ILog* m_pLog;
     IPageSourceControl* m_pPageSourceControl;
     IFileCache* m_pFileCache;
 
@@ -74,15 +72,20 @@ public:
     AsyncManager* GetAsyncManager() { return &m_asyncManager; }
     Chatroom* GetChatroom() { return &m_cChatroom; }
 
+    // Weak refs
     IHttpServer* GetHttpServer() { return m_pHttpServer; }
     IPageSourceControl* GetPageSourceControl() { return m_pPageSourceControl; }
     IConfigFile* GetConfigFile() { return m_pConfig; }
     IFileCache* GetFileCache() { return m_pFileCache; }
-    IReport* GetReport() { return m_pReport; }
 
     const char* GetResourceDir() { return m_pszResourceDir; }
     unsigned int GetRootKey() { return m_iRootKey; }
     unsigned int GetGuestKey() { return m_iGuestKey; }
+
+    // Strong ref
+    ITraceLog* GetReport() { return m_pPageSourceControl->GetReport(); }
+
+    void WriteReport(TraceInfoLevel level, const char* pszMessage);
 };
 
 extern Global global;

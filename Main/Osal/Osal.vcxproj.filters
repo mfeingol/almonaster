@@ -71,6 +71,12 @@
     <ClCompile Include="Variant.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="AsyncFile.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="TraceLog.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm.h">
@@ -146,6 +152,12 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="Vector.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="AsyncFile.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="TraceLog.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

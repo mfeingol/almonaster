@@ -40,7 +40,8 @@ int AsyncManager::Initialize()
     iErrCode = m_tAvailability.Start(StartAvailabilityLoop, this);
     Assert(iErrCode == OK);
 
-    global.GetReport()->WriteReport ("GameEngine started asynchronous tasks");
+    global.WriteReport(TRACE_ALWAYS, "GameEngine started asynchronous tasks");
+
     return OK;
 }
 

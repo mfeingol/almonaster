@@ -21,7 +21,6 @@
 
 #include <stdio.h>
 
-
 #define OutputText(string) pHttpResponse->WriteText (string, sizeof(string) - 1);
 
 int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, 
@@ -30,6 +29,8 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
     int iErrCode = OK;
 
     IPageSourceEnumerator* pPageSourceEnumerator = NULL;
+    AutoRelease<IPageSourceEnumerator> release_pPageSourceEnumerator(pPageSourceEnumerator);
+
     IPageSourceControl** ppPageSource = NULL;
     unsigned int i, j, iNumPageSources = 0;
 
@@ -51,12 +52,12 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
     OutputText ("<h2>Restart and Shutdown</h2>");
 
     pPageSourceEnumerator = m_pHttpServer->EnumeratePageSources();
-    if (pPageSourceEnumerator == NULL || 
-        (iNumPageSources = pPageSourceEnumerator->GetNumPageSources()) == 0) {
+    if (pPageSourceEnumerator == NULL || (iNumPageSources = pPageSourceEnumerator->GetNumPageSources()) == 0)
+    {
         OutputText ("<p><strong>Could not enumerate pagesources</strong>");
-
-    } else {
-
+    }
+    else
+    {
         ppPageSource = pPageSourceEnumerator->GetPageSourceControls();
 
         OutputText ("<table width=\"80%\">");
@@ -346,6 +347,7 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
         OutputText (" Parameters</h3><table width=\"80%\">");
 
         IConfigFile* pConfig = ppPageSource[i]->GetConfigFile();
+        AutoRelease<IConfigFile> release(pConfig);
         iNumParameters = pConfig->GetNumParameters();
         
         for (j = 0; j < iNumParameters; j ++) {
@@ -370,29 +372,17 @@ int Admin::RenderAdminPage (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResp
         OutputText ("PageSourceParams\" value=\"Update ");
         pHttpResponse->WriteText (ppPageSource[i]->GetName());
         OutputText (" Parameters\">");
-
-        SafeRelease(pConfig);
     }
 
     // Close form, page
     OutputText ("</form></center></body></html>");
 
-    // Clean up
-    if (pPageSourceEnumerator != NULL) {
-        pPageSourceEnumerator->Release();
-    }
-
     return iErrCode;
 }
 
-
-int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, 
-                                      String* pstrMessage) {
-
+int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, String* pstrMessage)
+{
     IHttpForm* pHttpForm;
-    IPageSourceControl* pPageSource;
-    IReport* pReport;
-    ILog* pLog;
 
     int iErrCode;
     const char* pszValue;
@@ -420,7 +410,8 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             return OK;
         }
 
-        pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
+        IPageSourceControl* pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
+        AutoRelease<IPageSourceControl> release_pPageSource(pPageSource);
         if (pPageSource == NULL) {
             *pstrMessage = "The PageSource ";
             *pstrMessage += pszValue;
@@ -430,7 +421,6 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
 
         // Restart the PageSource
         pPageSource->Restart();
-        pPageSource->Release();
 
         *pstrMessage = "The PageSource ";
         *pstrMessage += pszValue;
@@ -455,7 +445,8 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             return OK;
         }
 
-        pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
+        IPageSourceControl* pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
+        AutoRelease<IPageSourceControl> release_pPageSource(pPageSource);
         if (pPageSource == NULL) {
             *pstrMessage = "The PageSource ";
             *pstrMessage += pszValue;
@@ -465,8 +456,6 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
 
         // Restart the PageSource
         iErrCode = pPageSource->Shutdown();
-        pPageSource->Release();
-
         if (iErrCode == OK) {
             *pstrMessage = "The PageSource ";
             *pstrMessage += pszValue;
@@ -507,9 +496,8 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
     }
 
     // Check for pagesource report viewing
-    char* pszBuffer = new char [m_stDisplayChars + 1];
+    char* pszBuffer = new char[m_chDisplayChars + 1];
     Algorithm::AutoDelete<char> autoPtr (pszBuffer, true);
-
     if (pszBuffer == NULL) {
         *pstrMessage = "The server is out of memory";
         return ERROR_OUT_OF_MEMORY;
@@ -531,8 +519,10 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             return OK;
         }
 
-        pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
-        if (pPageSource == NULL) {
+        IPageSourceControl* pPageSource = m_pHttpServer->GetPageSourceByName(pszValue);
+        AutoRelease<IPageSourceControl> release_pPageSource(pPageSource);
+        if (pPageSource == NULL)
+        {
             *pstrMessage = "The PageSource ";
             *pstrMessage += pszValue;
             *pstrMessage += " does not exist";
@@ -540,30 +530,43 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
         }
 
         // Restart the PageSource
-        pReport = pPageSource->GetReport();
-        if (pReport == NULL) {
-
+        ITraceLog* pReport = pPageSource->GetReport();
+        AutoRelease<ITraceLog> release_pReport(pReport);
+        if (pReport == NULL)
+        {
             *pstrMessage = "The ";
             *pstrMessage += pszValue;
             *pstrMessage += " PageSource does not have a report";
+        }
+        else
+        {
+            ITraceLogReader* pReader = NULL;
+            AutoRelease<ITraceLogReader> release_pReader(pReader);
+            iErrCode = pReport->QueryInterface(IID_ITraceLogReader, (void**)&pReader);
+            if (iErrCode != OK)
+            {
+                return iErrCode;
+            }
 
-        } else {
+            iErrCode = pReader->GetTail(pszBuffer, m_chDisplayChars);
+            if (iErrCode != OK)
+            {
+                return iErrCode;
+            }
             
-            if (pReport->GetReportTail (pszBuffer, m_stDisplayChars) > 0) {
-                
+            if (!String::IsBlank(pszBuffer))
+            {                
                 *pstrMessage = "</center>";
                 pstrMessage->AppendHtml (pszBuffer, 60, true);
                 *pstrMessage += "<center>";
-                
-            } else {
-                
+            }
+            else
+            {
                 *pstrMessage = "The ";
                 *pstrMessage += pszValue;
                 *pstrMessage += " PageSource has an empty report";
             }
         }
-
-        pPageSource->Release();
 
         return OK;
     }
@@ -585,7 +588,8 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             return OK;
         }
 
-        pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
+        IPageSourceControl* pPageSource = m_pHttpServer->GetPageSourceByName (pszValue);
+        AutoRelease<IPageSourceControl> release_pPageSource(pPageSource);
         if (pPageSource == NULL) {
             *pstrMessage = "The PageSource ";
             *pstrMessage += pszValue;
@@ -593,45 +597,69 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             return OK;
         }
 
-        // Restart the PageSource
-        pLog = pPageSource->GetLog();
-        if (pLog == NULL) {
-
+        ITraceLog* pLog = pPageSource->GetLog();
+        AutoRelease<ITraceLog> release_pLog(pLog);
+        if (pLog == NULL)
+        {
             *pstrMessage = "The ";
             *pstrMessage += pszValue;
             *pstrMessage += " PageSource does not have a log";
-
-        } else {
+        }
+        else
+        {
+            ITraceLogReader* pReader = NULL;
+            AutoRelease<ITraceLogReader> release_pReader(pReader);
+            iErrCode = pLog->QueryInterface(IID_ITraceLogReader, (void**)&pReader);
+            if (iErrCode != OK)
+            {
+                return iErrCode;
+            }
             
-            if (pLog->GetLogTail (pszBuffer, m_stDisplayChars) > 0) {
-                
+            iErrCode = pReader->GetTail(pszBuffer, m_chDisplayChars);
+            if (iErrCode != OK)
+            {
+                return iErrCode;
+            }
+            
+            if (!String::IsBlank(pszBuffer))
+            {
                 *pstrMessage = "</center>";
                 pstrMessage->AppendHtml (pszBuffer, 60, true);
                 *pstrMessage += "<center>";
-                
-            } else {
-                
+            }
+            else
+            {
                 *pstrMessage = "The ";
                 *pstrMessage += pszValue;
                 *pstrMessage += " PageSource has an empty log";
             }
         }
 
-        pPageSource->Release();
-
         return OK;
     }
 
     // Check for server report viewing
     pHttpForm = pHttpRequest->GetForm ("ServerReport");
-    if (pHttpForm != NULL) {
+    if (pHttpForm != NULL)
+    {
+        ITraceLog* pServerReport = m_pHttpServer->GetReport();
+        AutoRelease<ITraceLog> release_pServerReport(pServerReport);
 
-        m_pServerReport->GetReportTail (pszBuffer, m_stDisplayChars);
+        ITraceLogReader* pReader = NULL;
+        AutoRelease<ITraceLogReader> release_pReader(pReader);
+        iErrCode = pServerReport->QueryInterface(IID_ITraceLogReader, (void**)&pReader);
+        if (iErrCode != OK)
+        {
+            return iErrCode;
+        }
 
-        *pstrMessage = "</center>";
-        pstrMessage->AppendHtml (pszBuffer, 60, true);
-        *pstrMessage += "<center>";
-
+        iErrCode = pReader->GetTail(pszBuffer, m_chDisplayChars);
+        if (iErrCode == OK)
+        {
+            *pstrMessage = "</center>";
+            pstrMessage->AppendHtml (pszBuffer, 60, true);
+            *pstrMessage += "<center>";
+        }
         return OK;
     }
 
@@ -716,13 +744,15 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
 
     // Update pagesource parameters
     IPageSourceEnumerator* pPageSourceEnumerator = NULL;
+    AutoRelease<IPageSourceEnumerator> release_pPageSourceEnumerator(pPageSourceEnumerator);
+
     IPageSourceControl** ppPageSource;
-    IConfigFile* pConfig;
     
     String strFormName;
     const char* pszName;
 
     char* pszFormName = NULL;
+    Algorithm::AutoDelete<char> delete_pszFormName(pszFormName, true);
     size_t stFormNameLen = 0;
 
     unsigned int j, iNumPageSources;
@@ -743,7 +773,9 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             pHttpForm = pHttpRequest->GetForm (strFormName);
             if (pHttpForm != NULL) {
                 
-                pConfig = ppPageSource[i]->GetConfigFile();
+                IConfigFile* pConfig = ppPageSource[i]->GetConfigFile();
+                AutoRelease<IConfigFile> release_pConfig(pConfig);
+
                 iNumParameters = pConfig->GetNumParameters();
 
                 m_mServerLock.Wait();
@@ -753,13 +785,12 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
                     if (pConfig->GetParameter (j, &pszLhs, &pszRhs) == OK) {
 
                         size_t stThisFormNameLen = String::StrLen (pszName) + String::StrLen (pszLhs) + 2;
-                        if (stThisFormNameLen > stFormNameLen) {
-
+                        if (stThisFormNameLen > stFormNameLen)
+                        {
                             delete [] pszFormName;
-                            pszFormName = new char [stThisFormNameLen];
+                            pszFormName = new char[stThisFormNameLen];
                             if (pszFormName == NULL) {
                                 m_mServerLock.Signal();
-                                pPageSourceEnumerator->Release();
                                 *pstrMessage = "The server is out of memory";
                                 return ERROR_OUT_OF_MEMORY;
                             }
@@ -799,12 +830,6 @@ int Admin::HandleAdminPageSubmission (IHttpRequest* pHttpRequest, IHttpResponse*
             }
         }
     }
-
-    if (pPageSourceEnumerator != NULL) {
-        pPageSourceEnumerator->Release();
-    }
-
-    delete [] pszFormName;
 
     return OK;
 }

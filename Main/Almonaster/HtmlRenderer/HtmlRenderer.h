@@ -595,9 +595,9 @@ public:
     bool CopyNewAlien (const char* pszFileName, int iAlienKey);
     bool DeleteAlien (int iAlienKey);
 
-    void ReportLoginFailure (IReport* pReport, const char* pszEmpireName);
-    void ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon);
-    void ReportEmpireCreation (IReport* pReport, const char* pszEmpireName);
+    void ReportLoginFailure(const char* pszEmpireName);
+    void ReportLoginSuccess(const char* pszEmpireName, bool bAutoLogon);
+    void ReportEmpireCreation(const char* pszEmpireName);
 
     int OpenSystemPage(bool bFileUpload);
     int WriteSystemTitleString();

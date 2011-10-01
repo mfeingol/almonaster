@@ -19,11 +19,11 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
-#if !defined(AFX_PAGESOURCE_H__1F955CC5_AD9D_11D1_9C61_0060083E8062__INCLUDED_)
-#define AFX_PAGESOURCE_H__1F955CC5_AD9D_11D1_9C61_0060083E8062__INCLUDED_
+#pragma once
 
 #include "Config.h"
 #include "CachedFile.h"
+#include "Report.h"
 
 #include "Osal/Thread.h"
 #include "Osal/LinkedList.h"
@@ -32,7 +32,7 @@
 #include "Osal/ReadWriteLock.h"
 #include "Osal/Event.h"
 #include "Osal/File.h"
-
+#include "Osal/AsyncFile.h"
 
 typedef int (*Fxn_CreateInstance) (const Uuid&, const Uuid&, void**);
 
@@ -46,8 +46,8 @@ class HttpServer;
 class HttpRequest;
 class HttpResponse;
 
-class PageSource : public IPageSourceControl, public IPageSource, public ILog, public IReport {
-
+class PageSource : public IPageSourceControl, public IPageSource
+{
 private:
 
     unsigned int m_iNumRefs;
@@ -72,14 +72,13 @@ private:
 
     ConfigFile m_cfCounterFile;
 
-    File m_fLogFile;
-    File m_fReportFile;
-
-    Mutex m_mLogMutex;
-    Mutex m_mReportMutex;
+    Report* m_pLog;
+    Report* m_pReport;
 
     UTCTime m_tLogTime;
     UTCTime m_tReportTime;
+
+    TraceInfoLevel m_reportTracelevel;
 
     // Configuration data
     bool m_bBrowsingAllowed;
@@ -151,6 +150,10 @@ private:
     // Counter lock
     ReadWriteLock m_mCounterLock;
 
+    // Report and log locks
+    Mutex m_reportMutex;
+    Mutex m_logMutex;
+
     // Restart call
     static int THREAD_CALL RestartPageSource (void* pVoid);
 
@@ -165,13 +168,8 @@ private:
     inline bool Enter();
     inline void Exit (bool bLocked);
     
-    int OpenReport();
-    int OpenLog();
-
     void GetReportFileName (char pszFileName[OS::MaxFileNameLength]);
     void GetLogFileName (char pszFileName[OS::MaxFileNameLength]);
-
-    size_t GetFileTail (File& fFile, Mutex& mMutex, const UTCTime& tTime, char* pszBuffer, size_t stNumChars);
 
 public:
 
@@ -218,10 +216,6 @@ public:
     bool IsIPAddressAllowedAccess (const char* pszIPAddress);
     bool IsUserAgentAllowedAccess (const char* pszUserAgent);
 
-    void ReportMessage (const char* pszMessage);
-    void LogMessage (const char* pszMessage);
-
-
     DECLARE_IOBJECT;
 
     // IPageSource
@@ -241,8 +235,8 @@ public:
     const char* GetName();
     IConfigFile* GetConfigFile();
 
-    IReport* GetReport();
-    ILog* GetLog();
+    ITraceLog* GetReport();
+    ITraceLog* GetLog();
 
     void LockWithNoThreads();
     void LockWithSingleThread();
@@ -253,14 +247,4 @@ public:
 
     unsigned int IncrementCounter (const char* pszName);
     unsigned int GetCounterValue (const char* pszName);
-
-    // ILog
-    size_t GetLogTail (char* pszBuffer, size_t stNumChars);
-
-    // IReport
-    int WriteReport (const char* pszMessage);
-    size_t GetReportTail (char* pszBuffer, size_t stNumChars);
 };
-
-
-#endif // !defined(AFX_PAGESOURCE_H__1F955CC5_AD9D_11D1_9C61_0060083E8062__INCLUDED_)

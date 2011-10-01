@@ -1,3 +1,22 @@
+//
+// SqlDatabaseBridge.dll - A database library
+// Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Library General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or(at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Library General Public License for more details.
+//
+// You should have received a copy of the GNU Library General Public
+// License along with this library; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+// Boston, MA  02111-1307, USA.
+
 #include "CachedTable.h"
 #include "Utils.h"
 
@@ -37,7 +56,7 @@ IDictionary<int64, IDictionary<System::String^, System::Object^>^>^ CachedTable:
 
 int CachedTable::GetNumCachedRows(unsigned int* piNumRows)
 {
-    Trace("CachedTable :: GetNumCachedRows :: {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: GetNumCachedRows :: %s", m_result->TableName);
 
     *piNumRows = m_result->Rows->Count;
     return OK;
@@ -46,7 +65,7 @@ int CachedTable::GetNumCachedRows(unsigned int* piNumRows)
 int CachedTable::GetFirstKey(const char* pszColumn, const Variant& vData, unsigned int* piKey)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: GetFirstKey :: {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: GetFirstKey :: %s :: %s", m_result->TableName, columnName);
 
     *piKey = NO_KEY;
 
@@ -68,7 +87,7 @@ int CachedTable::GetFirstKey(const char* pszColumn, const Variant& vData, unsign
 
 int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 {
-    Trace("CachedTable :: GetNextKey :: {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: GetNextKey :: %s", m_result->TableName);
 
     *piNextKey = NO_KEY;
 
@@ -110,7 +129,7 @@ int CachedTable::GetEqualKeys(const char* pszColumn, const Variant& vData, unsig
 
 int CachedTable::GetEqualKeys(const char** ppszColumn, const Variant* pvData, unsigned int iNumColumns, unsigned int** ppiKey, unsigned int* piNumKeys)
 {
-    Trace("CachedTable :: GetEqualKeys :: {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: GetEqualKeys :: %s", m_result->TableName);
 
     if (ppiKey)
         *ppiKey = NULL;
@@ -151,7 +170,7 @@ int CachedTable::GetEqualKeys(const char** ppszColumn, const Variant* pvData, un
 
 int CachedTable::GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys)
 {
-    Trace("CachedTable :: GetAllKeys :: {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: GetAllKeys :: %s", m_result->TableName);
 
     unsigned int iNumRows = m_result->Rows->Count;
 
@@ -178,7 +197,7 @@ int CachedTable::GetAllKeys(unsigned int** ppiKey, unsigned int* piNumKeys)
 int CachedTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** ppiData, unsigned int* piNumRows)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: ReadColumn {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumn %s :: %s", m_result->TableName, columnName);
 
     if (ppiKey != NULL)
         *ppiKey = NULL;
@@ -221,7 +240,7 @@ int CachedTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, int** 
 int CachedTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: ReadColumn {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumn %s :: %s", m_result->TableName, columnName);
 
     if (ppiKey != NULL)
         *ppiKey = NULL;
@@ -261,7 +280,7 @@ int CachedTable::ReadColumn(const char* pszColumn, unsigned int** ppiKey, Varian
 
 int CachedTable::ReadColumns(unsigned int iNumColumns, const char* const* ppszColumn, unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows)
 {
-    Trace("CachedTable :: ReadColumns {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumns %s", m_result->TableName);
 
     if (ppiKey != NULL)
         *ppiKey = NULL;
@@ -322,7 +341,7 @@ int CachedTable::ReadColumnWhereEqual(const char* pszEqualColumn, const Variant&
     System::String^ equalColumnName = gcnew System::String(pszEqualColumn);
     System::String^ readColumnName = gcnew System::String(pszReadColumn);
 
-    Trace("CachedTable :: ReadColumnWhereEqual {0} :: {1} :: {2}", m_result->TableName, equalColumnName, readColumnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumnWhereEqual %s :: %s :: %s", m_result->TableName, equalColumnName, readColumnName);
 
     if (ppiKey != NULL)
         *ppiKey = NULL;
@@ -408,7 +427,7 @@ int CachedTable::ReadRow(Variant** ppvData)
 
 int CachedTable::ReadRow(unsigned int iKey, Variant** ppvData)
 {
-    Trace("CachedTable :: ReadRow {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadRow %s", m_result->TableName);
 
     *ppvData = NULL;
 
@@ -511,7 +530,7 @@ int CachedTable::ReadData(unsigned int iKey, const char* pszColumn, int64* pi64D
 int CachedTable::ReadData(unsigned int iKey, const char* pszColumn, Variant* pvData)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: ReadData {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadData %s :: %s", m_result->TableName, columnName);
 
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
@@ -526,13 +545,13 @@ int CachedTable::ReadData(unsigned int iKey, const char* pszColumn, Variant* pvD
 
 int CachedTable::InsertRow(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int* piKey)
 {
-    Trace("CachedTable :: InsertRow {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: InsertRow %s", m_result->TableName);
     return InsertDuplicateRows(ttTemplate, pvColVal, 1, piKey);
 }
 
 int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, const Variant* pvColVal, unsigned int iNumRows)
 {
-    Trace("CachedTable :: InsertDuplicateRows {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: InsertDuplicateRows %s", m_result->TableName);
     return InsertDuplicateRows(ttTemplate, pvColVal, iNumRows, NULL);
 }
 
@@ -560,8 +579,9 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
     {
         ids = m_cmd->Insert(m_result->TableName, insert);
     }
-    catch (SqlDatabaseException^)
+    catch (SqlDatabaseException^ e)
     {
+        TraceException(e);
         return ERROR_DATABASE_EXCEPTION;
     }
 
@@ -603,7 +623,7 @@ int CachedTable::InsertDuplicateRows(const TemplateDescription& ttTemplate, cons
 
 int CachedTable::DeleteRow(unsigned int iKey)
 {
-    Trace("CachedTable :: DeleteRows {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: DeleteRows %s", m_result->TableName);
 
     // First delete the actual row
     // We can't defer this to commit time if we want unique constraints to work
@@ -611,8 +631,9 @@ int CachedTable::DeleteRow(unsigned int iKey)
     {
         m_cmd->DeleteRow(m_result->TableName, m_ID_COLUMN_NAME, (int64)iKey);
     }
-    catch (SqlDatabaseException^)
+    catch (SqlDatabaseException^ e)
     {
+        TraceException(e);
         return ERROR_DATABASE_EXCEPTION;
     }
 
@@ -630,7 +651,7 @@ int CachedTable::DeleteRow(unsigned int iKey)
 
 int CachedTable::DeleteAllRows()
 {
-    Trace("CachedTable :: DeleteAllRows {0}", m_result->TableName);
+    Trace(TRACE_VERBOSE, "CachedTable :: DeleteAllRows %s", m_result->TableName);
     try
     {
         if (m_bCompleteTable)
@@ -642,8 +663,9 @@ int CachedTable::DeleteAllRows()
             m_cmd->DeleteRows(m_result->TableName, m_ID_COLUMN_NAME, m_keyToRows->Keys);
         }
     }
-    catch (SqlDatabaseException^)
+    catch (SqlDatabaseException^ e)
     {
+        TraceException(e);
         return ERROR_DATABASE_EXCEPTION;
     }
 
@@ -683,7 +705,7 @@ int CachedTable::Increment(unsigned int iKey, const char* pszColumn, const Varia
 int CachedTable::Increment(unsigned int iKey, const char* pszColumn, const Variant& vIncrement, Variant* pvOldValue)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: Increment {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: Increment %s :: %s", m_result->TableName, columnName);
 
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
@@ -751,7 +773,7 @@ int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, int64 i64Da
 int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const char* pszData)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: WriteData {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: WriteData %s :: %s", m_result->TableName, columnName);
 
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
@@ -770,7 +792,7 @@ int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const char*
 int CachedTable::WriteData(unsigned int iKey, const char* pszColumn, const Variant& vData)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: WriteData {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: WriteData %s :: %s", m_result->TableName, columnName);
 
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
@@ -794,7 +816,7 @@ int CachedTable::WriteAnd(const char* pszColumn, unsigned int iBitField)
 int CachedTable::WriteAnd(unsigned int iKey, const char* pszColumn, unsigned int iBitField)
 {
     System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: WriteAnd {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: WriteAnd %s :: %s", m_result->TableName, columnName);
 
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
@@ -819,8 +841,7 @@ int CachedTable::WriteOr(const char* pszColumn, unsigned int iBitField)
 
 int CachedTable::WriteOr(unsigned int iKey, const char* pszColumn, unsigned int iBitField)
 {
-    System::String^ columnName = gcnew System::String(pszColumn);
-    Trace("CachedTable :: WriteOr {0} :: {1}", m_result->TableName, columnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: WriteOr(%s) :: %s", m_result->TableName, pszColumn);
 
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
@@ -829,6 +850,7 @@ int CachedTable::WriteOr(unsigned int iKey, const char* pszColumn, unsigned int 
         return iErrCode;
     }
 
+    System::String^ columnName = gcnew System::String(pszColumn);
     int iValue = (int)row[columnName];
     System::Object^ newValue = int(iValue | iBitField);
     row[columnName] = newValue;

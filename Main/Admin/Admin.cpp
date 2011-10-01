@@ -17,6 +17,7 @@
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Admin.h"
+#include "Osal/TraceLog.h"
 
 const Uuid CLSID_Admin = { 0x8b631301, 0x8cfa, 0x11d3, { 0xa2, 0x40, 0x0, 0x50, 0x4, 0x7f, 0xe2, 0xe2 } };
 
@@ -35,21 +36,34 @@ int CreateInstance (const Uuid& uuidClsid, const Uuid& uuidIid, void** ppObject)
     return ERROR_NO_CLASS;
 }
 
-Admin::Admin() {
-    
+Admin::Admin()
+{
     m_pHttpServer = NULL;
-    m_pReport = NULL;
     m_pConfig = NULL;
     m_pServerConfig = NULL;
-    m_pServerReport = NULL;
-    m_pLog = NULL;
     m_pPageSourceControl = NULL;
     m_pFileCache = NULL;
     m_pszLogin = NULL;
     m_pszPassword = NULL;
-    m_stDisplayChars = 0;
+    m_chDisplayChars = 0;
 
     m_iNumRefs = 1;
+}
+
+Admin::~Admin()
+{
+    // Clean up
+    if (m_pszLogin != NULL)
+    {
+        OS::HeapFree(m_pszLogin);
+        m_pszLogin = NULL;
+    }
+
+    if (m_pszPassword != NULL)
+    {
+        OS::HeapFree(m_pszPassword);
+        m_pszPassword = NULL;
+    }
 }
 
 Admin* Admin::CreateInstance() {
@@ -57,35 +71,35 @@ Admin* Admin::CreateInstance() {
     return new Admin();
 }
 
-int Admin::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl) {
-    
+int Admin::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl)
+{
     // Weak refs
     m_pHttpServer = pHttpServer;
     m_pPageSourceControl = pPageSourceControl;
 
-    m_pReport = m_pPageSourceControl->GetReport();
-    m_pConfig = m_pPageSourceControl->GetConfigFile();
-    m_pLog = m_pPageSourceControl->GetLog();
-
-    m_pServerReport = m_pHttpServer->GetReport();
-    m_pServerConfig = m_pHttpServer->GetConfigFile();
+    // Strong refs
     m_pFileCache = m_pHttpServer->GetFileCache();
+    m_pServerConfig = m_pHttpServer->GetConfigFile();
+    m_pConfig = m_pPageSourceControl->GetConfigFile();
+
+    ITraceLog* pReport = m_pPageSourceControl->GetReport();
+    AutoRelease<ITraceLog> release_pReport(pReport);
 
     int iErrCode = m_mServerLock.Initialize();
     if (iErrCode != OK) {
-        m_pReport->WriteReport ("Could not initialize m_mServerLock");
+        pReport->Write(TRACE_ERROR, "Could not initialize m_mServerLock");
         return iErrCode;
     }
 
     // Read login and password from the config file
     char* pszTemp;
     if (m_pConfig->GetParameter ("Login", &pszTemp) != OK) {
-        m_pReport->WriteReport ("Could not read the Login value from the admin .conf file");
+        pReport->Write(TRACE_ERROR, "Could not read the Login value from the admin .conf file");
         return ERROR_FAILURE;
     }
 
     if (pszTemp == NULL || *pszTemp == '\0') {
-        m_pReport->WriteReport ("The Login value in the admin .conf file cannot be zero length");
+        pReport->Write(TRACE_ERROR, "The Login value in the admin .conf file cannot be zero length");
         return ERROR_FAILURE;
     }
 
@@ -95,7 +109,7 @@ int Admin::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSour
     }
 
     if (m_pConfig->GetParameter ("Password", &pszTemp) != OK) {
-        m_pReport->WriteReport ("Could not read the Password value from the admin .conf file");
+        pReport->Write(TRACE_ERROR, "Could not read the Password value from the admin .conf file");
         return ERROR_FAILURE;
     }
 
@@ -106,28 +120,19 @@ int Admin::OnInitialize (IHttpServer* pHttpServer, IPageSourceControl* pPageSour
     }
     
     if (m_pConfig->GetParameter ("DisplayChars", &pszTemp) != OK || pszTemp == NULL || *pszTemp == '\0') {
-        m_pReport->WriteReport ("Could not read the DisplayChars value from the admin .conf file");
+        pReport->Write(TRACE_ERROR, "Could not read the DisplayChars value from the admin .conf file");
         return ERROR_FAILURE;
     }
 
-    m_stDisplayChars = atoi (pszTemp);
+    m_chDisplayChars = atoi (pszTemp);
 
     return OK;
 }
 
-int Admin::OnFinalize() {
-
-    // Clean up
-    if (m_pszLogin != NULL) {
-        OS::HeapFree (m_pszLogin);
-        m_pszLogin = NULL;
-    }
-
-    if (m_pszPassword != NULL) {
-        OS::HeapFree (m_pszPassword);
-        m_pszPassword = NULL;
-    }
-
+int Admin::OnFinalize()
+{
+    SafeRelease(m_pFileCache);
+    SafeRelease(m_pServerConfig);
     SafeRelease(m_pConfig);
 
     return OK;

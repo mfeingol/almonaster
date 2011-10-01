@@ -1,3 +1,22 @@
+//
+// SqlDatabaseBridge.dll - A database library
+// Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Library General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or(at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Library General Public License for more details.
+//
+// You should have received a copy of the GNU Library General Public
+// License along with this library; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+// Boston, MA  02111-1307, USA.
+
 #include "TableCacheCollection.h"
 #include "Utils.h"
 
@@ -61,8 +80,9 @@ int TableCacheCollection::Commit()
         {
             m_cmd->BulkWrite(requests, gcnew System::String(ID_COLUMN_NAME));
         }
-        catch (SqlDatabaseException^)
+        catch (SqlDatabaseException^ e)
         {
+            TraceException(e);
             return ERROR_DATABASE_EXCEPTION;
         }
     }
@@ -91,7 +111,7 @@ void TableCacheCollection::InsertTable(const char* pszCacheTableName, CachedTabl
 
 void TableCacheCollection::InsertTableNoDup(const char* pszCacheTableName, CachedTable* pTable)
 {
-    Trace("TableCacheCollection caching 0x{0:X} as {1}", (size_t)pTable, gcnew System::String(pszCacheTableName));
+    Trace(TRACE_VERBOSE, "TableCacheCollection caching 0x%p as %s", pTable, pszCacheTableName);
 
     pTable->AddRef();
     bool ret = m_htTableViews.Insert((char*)pszCacheTableName, pTable);
@@ -101,7 +121,7 @@ void TableCacheCollection::InsertTableNoDup(const char* pszCacheTableName, Cache
 // Table operations
 int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate)
 {
-    Trace("TableCacheCollection::CreateTable {0}", gcnew System::String(pszTableName));
+    Trace(TRACE_VERBOSE, "TableCacheCollection::CreateTable %s", pszTableName);
 
     List<ColumnDescription>^ cols = gcnew List<ColumnDescription>();
 
@@ -132,8 +152,9 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
     {
         m_cmd->CreateTable(tableDesc);
     }
-    catch (SqlDatabaseException^)
+    catch (SqlDatabaseException^ e)
     {
+        TraceException(e);
         return ERROR_DATABASE_EXCEPTION;
     }
 
@@ -203,8 +224,9 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     {
         results = m_cmd->BulkRead(requests);
     }
-    catch (SqlDatabaseException^)
+    catch (SqlDatabaseException^ e)
     {
+        TraceException(e);
         return ERROR_DATABASE_EXCEPTION;
     }
 

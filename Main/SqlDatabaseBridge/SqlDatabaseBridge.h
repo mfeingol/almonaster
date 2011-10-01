@@ -1,5 +1,5 @@
 //
-// SqlDatabase.dll - A database library
+// SqlDatabaseBridge.dll - A database library
 // Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
@@ -30,6 +30,7 @@ using namespace System::Collections::Generic;
 class SqlDatabaseBridge : public IDatabase
 {
 private:
+    ITraceLog* m_pTrace;
     gcroot<SqlDatabase^> m_sqlDatabase;
 
 public:
@@ -41,7 +42,7 @@ public:
     // IDatabase
     IMPLEMENT_INTERFACE(IDatabase);
 
-    int Initialize(const char* pszConnString);
+    int Initialize(const char* pszConnString, ITraceLog* pTrace);
     IDatabaseConnection* CreateConnection(TransactionIsolationLevel isoLevel);
 };
 

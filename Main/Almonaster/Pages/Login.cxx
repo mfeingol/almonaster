@@ -189,7 +189,7 @@ else if (!m_bRedirection)
                 AddMessage(pszBuffer);
 
                 // Add to report
-                ReportLoginFailure(global.GetReport(), m_vEmpireName.GetCharPtr());
+                ReportLoginFailure(m_vEmpireName.GetCharPtr());
             }
             else
             {
@@ -246,10 +246,7 @@ else if (!m_bRedirection)
     }
 }
 
-
 Text:
-
-Assert(iErrCode == OK);
 
 // Get a cookie for last empire used's graphics
 ICookie* pCookie = m_pHttpRequest->GetCookie (LAST_EMPIRE_USED_COOKIE);

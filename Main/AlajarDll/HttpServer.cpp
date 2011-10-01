@@ -33,6 +33,7 @@ HttpServer::HttpServer() {
 
     m_iNumRefs = 1;
     m_bRunning = false;
+
     m_pConfigFile = NULL;
 
     m_pStartupSink = NULL;
@@ -45,7 +46,6 @@ HttpServer::HttpServer() {
 
     m_pHttpRequestCache = NULL;
     m_pHttpResponseCache = NULL;
-    m_pLogMessageCache = NULL;
 
     m_pFileCache = NULL;
 
@@ -56,36 +56,24 @@ HttpServer::HttpServer() {
     m_pszServerName = "Alajar 1.8.3";
     m_stServerNameLength = countof ("Alajar 1.8.3") - 1;
 
-    Time::GetTime (&m_tLogDate);
-
     m_bExit = false;
-    m_bLogExit = false;
     m_bRestart = false;
 
     m_siPort = 0;
     m_siSslPort = 0;
 
-    // Initialize winsock library
-    if (Socket::Initialize() != OK) {
-        ReportEvent ("Could not initialize socket library!");
-    }
+    m_reportTracelevel = TRACE_WARNING;
+    Time::ZeroTime(&m_tReportTime);
+    Time::ZeroTime(&m_tStatsTime);
+    m_pReport = NULL;
+    m_pszReportPath[0] = '\0';
 }
 
 HttpServer::~HttpServer() {
 
     Clean();
 
-    m_tsfqLogQueue.Clear();
-
-    m_fReportFile.Close();
-
-    if (m_pConfigFile != NULL) {
-        m_pConfigFile->Release();
-    }
-
-    if (m_pLogMessageCache != NULL) {
-        delete m_pLogMessageCache;
-    }
+    SafeRelease(m_pConfigFile);
 
     // Close winsock library
     Socket::Finalize();
@@ -207,11 +195,8 @@ int HttpServer::Init() {
 
     int iErrCode;
 
-    if (!m_tsfqLogQueue.Initialize()) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    iErrCode = m_evLogEvent.Initialize();
+    // Initialize winsock library
+    iErrCode = Socket::Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }
@@ -223,19 +208,14 @@ int HttpServer::Init() {
     if (iErrCode != OK) {
         return iErrCode;
     }
+    iErrCode = m_reportMutex.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
     iErrCode = m_mHttpObjectCacheLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }
-    iErrCode = m_mLogMessageCacheLock.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    iErrCode = m_mReportMutex.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
     iErrCode = m_rwPageSourceTableLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
@@ -265,6 +245,15 @@ PageSource* HttpServer::GetPageSource (const char* pszPageSourceName) {
     return NULL;
 }
 
+void HttpServer::ReportEvent(const char* pszMessage)
+{
+    ITraceLog* pReport = GetReport();
+    pReport->Write(TRACE_ALWAYS, pszMessage);
+    SafeRelease(pReport);
+
+    // Make STDIO hosts happy...
+    printf("%s\n", pszMessage);
+}
 
 ///////////////////////
 // Server operations //
@@ -300,14 +289,13 @@ int HttpServer::StartServer(void* pvServer) {
     return iErrCode;
 }
 
-int HttpServer::StartServer() {
-    
+int HttpServer::StartServer()
+{
     int iErrCode;
     char* pszRhs;
 
     bool bFileCache, bMemoryCache;
 
-    char pszReportFileName [OS::MaxFileNameLength];
     char pszCertificateFile [OS::MaxFileNameLength];
     char pszPrivateKeyFile [OS::MaxFileNameLength];
 
@@ -317,35 +305,47 @@ int HttpServer::StartServer() {
     unsigned int iInitNumThreads, iMaxNumThreads;
     
     // First, get report
-    if (m_pConfigFile->GetParameter ("ReportPath", &pszRhs) == OK && pszRhs != NULL) {
-        
-        if (File::ResolvePath (pszRhs, m_pszReportPath) != OK) {
-            ReportEvent ((String) "Error: The ReportPath value was invalid:" + pszRhs);
+    if (m_pConfigFile->GetParameter ("ReportPath", &pszRhs) == OK && pszRhs != NULL)
+    {
+        if (File::ResolvePath (pszRhs, m_pszReportPath) != OK)
+        {
             goto ErrorExit;
         }
-        
-        if (!File::DoesDirectoryExist (m_pszReportPath)) {
-
-            if (File::CreateDirectory (m_pszReportPath) != OK) {
-                ReportEvent ((String) "Error: Could not create ReportPath directory " + m_pszReportPath);
+        if (!File::DoesDirectoryExist (m_pszReportPath))
+        {
+            if (File::CreateDirectory (m_pszReportPath) != OK)
+            {
                 goto ErrorExit;
             }
         }
-
-    } else {
-        
-        ReportEvent ("Error: Could not read the ReportPath from Alajar.conf");
+    }
+    else
+    {
         goto ErrorExit;
     }
     
-    // Open report file
-    sprintf (pszReportFileName, "%s/Alajar.report", m_pszReportPath);
-
-    if (m_fReportFile.OpenAppend (pszReportFileName) != OK) {
-        ReportEvent ("Error: Could not open the report file");
-        goto ErrorExit;
+    // ReportTraceLevel
+    if (m_pConfigFile->GetParameter("ReportTraceLevel", &pszRhs) == OK && pszRhs != NULL)
+    {
+        if (String::StriCmp(pszRhs, "verbose") == 0)
+        {
+            m_reportTracelevel = TRACE_VERBOSE;
+        }
+        else if (String::StriCmp(pszRhs, "info") == 0)
+        {
+            m_reportTracelevel = TRACE_INFO;
+        }
+        else if (String::StriCmp(pszRhs, "warning") == 0)
+        {
+            m_reportTracelevel = TRACE_WARNING;
+        }
+        else if (String::StriCmp(pszRhs, "error") == 0)
+        {
+            m_reportTracelevel = TRACE_ERROR;
+        }
+        // Else just use the default
     }
-        
+
     // Print intro screen
     ReportEvent (m_pszServerName);
     ReportEvent ("Copyright (c) 1998 Max Attar Feingold");
@@ -356,7 +356,7 @@ int HttpServer::StartServer() {
     ReportEvent ("View License.txt for more details.");
     ReportEvent ("");
     ReportEvent ("Initializing server");
-    
+
     // Counter path
     if (m_pConfigFile->GetParameter ("CounterPath", &pszRhs) == OK && pszRhs != NULL) {
         
@@ -649,24 +649,6 @@ int HttpServer::StartServer() {
         goto ErrorExit;
     }
 
-    // Needed for reports during pagesource init
-    if (m_pLogMessageCache == NULL) {
-
-        // Calculate size of log message cache
-        unsigned int iNumLogMessageObjects;
-        if (!bMemoryCache) {
-            iNumLogMessageObjects = 0;
-        } else {
-            iNumLogMessageObjects = iMaxNumThreads * 5;
-        }
-
-        m_pLogMessageCache = new ObjectCache<LogMessage, LogMessageAllocator>();
-        if (m_pLogMessageCache == NULL || !m_pLogMessageCache->Initialize (iNumLogMessageObjects)) {
-            ReportEvent ("The server is out of memory");
-            goto ErrorExit;
-        }
-    }
-
     // Configure PageSources
     iErrCode = ConfigurePageSources();
     if (iErrCode != OK) {
@@ -796,7 +778,6 @@ int HttpServer::Run() {
 
     // Initialize exit notification environment
     m_bExit = false;
-    m_bLogExit = false;
     m_bRestart = false;
 
     // Set our priority higher than average
@@ -813,14 +794,6 @@ int HttpServer::Run() {
     if (iErrCode != OK) {
         ReportEvent ("Unable to start thread pool");
         return iErrCode;
-    }
-
-    // Initialize the log thread
-    ReportEvent ("Starting logging thread");
-    iErrCode = m_tLogThread.Start (HttpServer::LogThread, this, Thread::LowerPriority);
-    if (iErrCode != OK) {
-        ReportEvent ("Unable to start logging thread");
-        goto ErrorExit;
     }
 
     // Loop until we receive the order to finish
@@ -875,8 +848,6 @@ int HttpServer::Run() {
         }
     }
 
-ErrorExit:
-
     // Shut down the thread pool
     ReportEvent ("Shutting down the threadpool");
     
@@ -890,7 +861,7 @@ ErrorExit:
 
     // Write statistics
     ReportEvent ("Writing statistics file");
-    WriteStatistics (m_tLogDate);
+    WriteStatistics(m_tStatsTime);
 
     // Close down listener sockets, if necessary
     if (m_pSocket != NULL && m_pSocket->IsConnected()) {
@@ -902,17 +873,6 @@ ErrorExit:
     }
 
     Clean();
-
-    // Shut down the logging thread
-    if (m_tLogThread.IsAlive()) {
-        ReportEvent ("Shutting down the logging thread");
-        m_bLogExit = true;
-        m_evLogEvent.Signal();
-        m_tLogThread.WaitForTermination();
-
-        // Flush messages
-        LogLoop();
-    }
 
     if (m_bRestart) {
 
@@ -1286,155 +1246,15 @@ void HttpServer::ShutdownPageSources() {
     tDefaultThread.WaitForTermination();
 }
 
-LogMessage* HttpServer::GetNextLogMessage() {
-
-    LogMessage* plmLogMessage;
-    return m_tsfqLogQueue.Pop (&plmLogMessage) ? plmLogMessage : NULL;
-}
-
-int HttpServer::GetNumLogMessages() {
-    return m_tsfqLogQueue.GetNumElements();
-}
-
-
-int THREAD_CALL HttpServer::LogThread (void* pVoid) {
-
-    HttpServer* pThis = (HttpServer*) pVoid;
-
-    return pThis->LogLoop();
-}
-
-int HttpServer::LogLoop() {
-
-    LogMessage* plmMessage;
-    PageSource* pPageSource;
-
-    while (true) {
-        
-        plmMessage = GetNextLogMessage();
-        
-        if (plmMessage == NULL) {
-
-            if (m_bLogExit) {
-                
-                if (GetNumLogMessages() == 0) {
-                    break;
-                }
-
-            } else {
-
-                // Wait for something to happen
-                m_evLogEvent.Wait();
-            }
-
-        } else {
-
-            pPageSource = plmMessage->pPageSource;
-
-            switch (plmMessage->lmtMessageType) {
-
-            case LOG_MESSAGE:
-
-                pPageSource->LogMessage (plmMessage->pszText);
-                break;
-
-            case REPORT_MESSAGE:
-
-                pPageSource->ReportMessage (plmMessage->pszText);
-                break;
-
-            default:
-
-                Assert (false);
-            }
-
-            pPageSource->Release();
-            FreeLogMessage (plmMessage);
-        }
-    }
-
-    return OK;
-}
-
-/*
-size_t AppendString (char** ppszBuffer, const char* pszNewString, size_t stTotalLength) {
-
-    size_t iNewLength, iNewStringLength = strlen (pszNewString);
-    
-    if (*ppszBuffer == NULL || stTotalLength == 0) {
-    
-        *ppszBuffer = new char [iNewStringLength + 1];
-        strcpy (*ppszBuffer, pszNewString);
-        iNewLength = iNewStringLength;
-    
-    } else {
-
-        size_t iOldLength = strlen (*ppszBuffer);
-        iNewLength = iOldLength + iNewStringLength;
-
-        if (iNewLength >= stTotalLength) {
-
-            char* pszTemp = new char [iNewLength + 1];
-
-            strcpy (pszTemp, *ppszBuffer);
-            strcat (pszTemp, pszNewString);
-
-            delete [] *ppszBuffer;
-            *ppszBuffer = pszTemp;
-
-        } else {
-
-            strcpy (&((*ppszBuffer)[iOldLength]), pszNewString);
-        }
-    }
-    
-    return iNewLength;
-}
-
-char* EqualsToSlash (const char* pszInput) {
-    
-    if (pszInput == NULL) {
-        return NULL;
-    }
-    
-    int i, iCurPos = 0, stLength = strlen (pszInput);
-    
-    char* pszNewString = new char [stLength + 1];
-    
-    for (i = 0; i < stLength; i ++) {
-        
-        if (pszInput[i] == '=') {
-            pszNewString[iCurPos] = '/';
-        } else {
-            pszNewString[iCurPos] = pszInput[i];
-        }
-        
-        iCurPos ++;
-    }
-    
-    pszNewString [iCurPos] = '\0';
-    
-    return pszNewString;
-}
-*/
-
-IFileCache* HttpServer::GetFileCache() {
-
+IFileCache* HttpServer::GetFileCache()
+{
     Assert (m_pFileCache != NULL);
     m_pFileCache->AddRef();
     return m_pFileCache;
 }
 
-void HttpServer::ReportEvent (const char* pszEvent) {
-    
-    printf (pszEvent);
-    printf ("\n");
-
-    WriteReport (pszEvent);
-}
-
-int HttpServer::ClosePageSource (void* pVoid) {
-
+int HttpServer::ClosePageSource (void* pVoid)
+{
     PageSource* pPageSource = (PageSource*) pVoid;
 
     pPageSource->OnFinalize();
@@ -1495,8 +1315,49 @@ unsigned int HttpServer::GetNumPageSources() {
     return m_pPageSourceTable->GetNumElements() + 1;
 }
 
-IReport* HttpServer::GetReport() {
-    return this;
+void HttpServer::GetReportFileName (char pszFileName[OS::MaxFileNameLength])
+{
+    int iSec, iMin, iHour, iDay, iMonth, iYear;
+    char pszMonth[20], pszDay[20];
+    DayOfWeek day;
+
+    Time::GetDate(m_tReportTime, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
+
+    sprintf(pszFileName, "%s/%s_%i_%s_%s.report", GetReportPath(), "Alajar", iYear, 
+            String::ItoA (iMonth, pszMonth, 10, 2), String::ItoA (iDay, pszDay, 10, 2));
+}
+
+ITraceLog* HttpServer::GetReport()
+{
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    ITraceLog* pReturn;
+
+    m_reportMutex.Wait();
+    if (HttpServer::DifferentDays(m_tReportTime, tNow))
+    {
+        m_tReportTime = tNow;
+
+        char pszFileName[OS::MaxFileNameLength];
+        GetReportFileName(pszFileName);
+
+        Report* pNew = new Report();
+        if (pNew)
+        {
+            int iErrCode = pNew->Initialize((ReportFlags)(WRITE_DATE_TIME | WRITE_THREAD_ID), m_reportTracelevel, pszFileName);
+            if (iErrCode == OK)
+            {
+                SafeRelease(m_pReport);
+                m_pReport = pNew;
+            }
+        }
+    }
+    pReturn = m_pReport;
+    pReturn->AddRef();
+    m_reportMutex.Signal();
+
+    return pReturn;
 }
 
 IConfigFile* HttpServer::GetConfigFile() {
@@ -1710,6 +1571,8 @@ void HttpServer::ReleaseHttpObjects (HttpRequest* pHttpRequest, HttpResponse* pH
     m_mHttpObjectCacheLock.Signal();
 }
 
+#define MAX_LOG_MESSAGE (4096 + OS::MaxFileNameLength)
+
 void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHttpResponse, Socket* pSocket,
                                    HttpServerStatistics* psThreadStats, int iErrCode) {
 
@@ -1797,143 +1660,123 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
             pszUri = "Unknown URI";
         }
 
-        LogMessage* plmMessage = GetLogMessage();
-        if (plmMessage != NULL) {
+        // Stabilize pagesource
+        pPageSource->AddRef();
 
-            plmMessage->lmtMessageType = LOG_MESSAGE;
-            plmMessage->pPageSource = pPageSource;
+        // Get date
+        int iSec, iMin, iHour, iDay, iMonth, iYear;
+        DayOfWeek day;
+
+        Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
             
-            // Stabilize pagesource
-            pPageSource->AddRef();
+        // Write log message
+        char pszText[MAX_LOG_MESSAGE];
+        int printed;
+        if (pPageSource->UseCommonLogFormat()) {
+                
+            // Get uri forms
+            const char* pszForms = pHttpRequest->GetParsedUriForms();
+            if (pszForms == NULL) {
+                pszForms = "";
+            }
+                
+            const char* pszQ;
+            if (*pszForms == '\0') {
+                pszQ = "";
+            } else {
+                pszQ = "?";
+            }
+                
+            const char* pszUserName = pHttpRequest->GetAuthenticationUserName();
+            if (String::IsBlank(pszUserName)) {
+                pszUserName = "-";
+            }
+                
+            char pszDay [20];
+            char pszBias [20];
 
-            // Get date
-            int iSec, iMin, iHour, iDay, iMonth, iYear;
-            DayOfWeek day;
+            int iBias;
+            Time::GetTimeZoneBias (&iBias);
 
-            Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
-            
-            // Write log message
-            if (pPageSource->UseCommonLogFormat()) {
-                
-                // Get uri forms
-                const char* pszForms = pHttpRequest->GetParsedUriForms();
-                if (pszForms == NULL) {
-                    pszForms = "";
-                }
-                
-                const char* pszQ;
-                if (*pszForms == '\0') {
-                    pszQ = "";
-                } else {
-                    pszQ = "?";
-                }
-                
-                const char* pszUserName = pHttpRequest->GetAuthenticationUserName();
-                if (String::IsBlank (pszUserName)) {
-                    pszUserName = "-";
-                }
-                
-                char pszDay [20];
-                char pszBias [20];
+            printed = snprintf (
+                pszText, countof(pszText) - 1,
+                "%s - %s [%s/%s/%d:%s:%s:%s %s] \"%s %s%s%s\" %d %u",
+                pszIP,
+                pszUserName,
+                String::ItoA (iDay, pszDay, 10, 2),
+                Time::GetAbbreviatedMonthName (iMonth),
+                iYear,
+                String::ItoA (iHour, pszHour, 10, 2),
+                String::ItoA (iMin, pszMin, 10, 2),
+                String::ItoA (iSec, pszSec, 10, 2),
+                String::ItoA (iBias, pszBias, 10, 4),
+                HttpMethodText [mMethod],
+                pszUri,
+                pszQ,
+                pszForms,
+                HttpStatusValue [sStatus],
+                pHttpResponse->GetResponseLength()
+                );
 
-                int iBias;
-                Time::GetTimeZoneBias (&iBias);
+        } else {
                 
-                snprintf (
-                    plmMessage->pszText, sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]),
-                    "%s - %s [%s/%s/%d:%s:%s:%s %s] \"%s %s%s%s\" %d %u",
-                    pszIP,
-                    pszUserName,
-                    String::ItoA (iDay, pszDay, 10, 2),
-                    Time::GetAbbreviatedMonthName (iMonth),
-                    iYear,
+            // Get user agent
+            const char* pszBrowser = pHttpRequest->GetBrowserName();
+            if (pszBrowser == NULL) {
+                pszBrowser = "Unknown Browser";
+            }
+                
+            if (iNumUploads == 0)
+            {
+                printed = snprintf (
+                    pszText, countof(pszText) - 1,
+                    "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s", 
                     String::ItoA (iHour, pszHour, 10, 2),
                     String::ItoA (iMin, pszMin, 10, 2),
                     String::ItoA (iSec, pszSec, 10, 2),
-                    String::ItoA (iBias, pszBias, 10, 4),
-                    HttpMethodText [mMethod],
-                    pszUri,
-                    pszQ,
-                    pszForms,
+                    pszIP, 
+                    HttpMethodText[mMethod], 
                     HttpStatusValue [sStatus],
-                    pHttpResponse->GetResponseLength()
+                    pszReferer,
+                    pszUri,
+                    pszBrowser
                     );
-
-                plmMessage->pszText [sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]) - 1] = '\0';
-                
-            } else {
-                
-                // Get user agent
-                const char* pszBrowser = pHttpRequest->GetBrowserName();
-                if (pszBrowser == NULL) {
-                    pszBrowser = "Unknown Browser";
-                }
-                
-                if (iNumUploads == 0) {
-                    
-                    snprintf (
-                        plmMessage->pszText, sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]),
-                        "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s", 
-                        String::ItoA (iHour, pszHour, 10, 2),
-                        String::ItoA (iMin, pszMin, 10, 2),
-                        String::ItoA (iSec, pszSec, 10, 2),
-                        pszIP, 
-                        HttpMethodText[mMethod], 
-                        HttpStatusValue [sStatus],
-                        pszReferer,
-                        pszUri,
-                        pszBrowser
-                        );
-                    
-                } else {
-                    
-                    snprintf (
-                        plmMessage->pszText, sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]),
-                        "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s\t%d uploa%s (%u bytes)", 
-                        String::ItoA (iHour, pszHour, 10, 2),
-                        String::ItoA (iMin, pszMin, 10, 2),
-                        String::ItoA (iSec, pszSec, 10, 2),
-                        pszIP,
-                        HttpMethodText[mMethod],
-                        HttpStatusValue [sStatus],
-                        pszReferer,
-                        pszUri,
-                        pszBrowser,
-                        iNumUploads, iNumUploads == 1 ? "d" : "ds",
-                        pHttpRequest->GetNumBytesInUploadedFiles()
-                        );
-                }
-
-                plmMessage->pszText [sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]) - 1] = '\0';
-                
-                unsigned int i, iNumCustomLogMessages;
-                const char** ppszCustomLogMessages;
-                
-                pHttpResponse->GetCustomLogMessages (&ppszCustomLogMessages, &iNumCustomLogMessages);
-                
-                for (i = 0; i < iNumCustomLogMessages; i ++) {
-                    
-                    strncat (
-                        plmMessage->pszText,
-                        "\t", 
-                        sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]) - strlen (plmMessage->pszText)
-                        );
-
-                    strncat (
-                        plmMessage->pszText, 
-                        ppszCustomLogMessages[i],
-                        sizeof (plmMessage->pszText) / sizeof (plmMessage->pszText[0]) - strlen (plmMessage->pszText)
-                        );
-                }
             }
-            
-            // Add log message to the queue
-            if (PostMessage (plmMessage) != OK) {
+            else
+            {
+                printed = snprintf (
+                    pszText, countof(pszText) - 1,
+                    "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s\t%d uploa%s (%u bytes)", 
+                    String::ItoA (iHour, pszHour, 10, 2),
+                    String::ItoA (iMin, pszMin, 10, 2),
+                    String::ItoA (iSec, pszSec, 10, 2),
+                    pszIP,
+                    HttpMethodText[mMethod],
+                    HttpStatusValue [sStatus],
+                    pszReferer,
+                    pszUri,
+                    pszBrowser,
+                    iNumUploads, iNumUploads == 1 ? "d" : "ds",
+                    pHttpRequest->GetNumBytesInUploadedFiles()
+                    );
+            }
 
-                plmMessage->pPageSource->Release();
-                FreeLogMessage (plmMessage);
+            pszText[printed] = '\0';
+                
+            unsigned int i, iNumCustomLogMessages;
+            const char** ppszCustomLogMessages;
+            pHttpResponse->GetCustomLogMessages(&ppszCustomLogMessages, &iNumCustomLogMessages);
+                
+            for (i = 0; i < iNumCustomLogMessages; i ++)
+            {
+                strncat(pszText, "\t", countof(pszText) - 1 - strlen(pszText));
+                strncat(pszText, ppszCustomLogMessages[i], countof(pszText) - 1 - strlen(pszText));
             }
         }
+
+        ITraceLog* pLog = pPageSource->GetLog();
+        AutoRelease<ITraceLog> release_pLog(pLog);
+        pLog->Write(TRACE_ALWAYS, pszText);
     }
 }
 
@@ -1945,8 +1788,8 @@ void HttpServer::CoalesceStatistics (HttpServerStatistics* psThreadStats) {
 
     // Check for daily refresh
     Time::GetTime (&tNow);
-    if (DifferentDays (m_tLogDate, tNow)) {
-
+    if (DifferentDays(m_tStatsTime, tNow))
+    {
         // Flush and reinitialize
         if (m_stats.NumRequests == 0) {
             m_stats.AverageRequestParseTime = 0;
@@ -1954,14 +1797,13 @@ void HttpServer::CoalesceStatistics (HttpServerStatistics* psThreadStats) {
             m_stats.AverageRequestParseTime = (MilliSeconds) (m_stats.TotalRequestParseTime / m_stats.NumRequests);
         }
 
-        WriteStatistics (m_tLogDate);
-        m_tLogDate = tNow;
+        WriteStatistics(m_tStatsTime);
+        m_tStatsTime = tNow;
         
         UTCTime tTime = m_stats.StartupTime;
         memset (&m_stats, 0, sizeof (HttpServerStatistics));
         m_stats.StartupTime = tTime;
     }
-
 
     m_stats.NumErrors += psThreadStats->NumErrors;
     m_stats.NumRequests += psThreadStats->NumRequests;
@@ -2019,9 +1861,7 @@ void HttpServer::CoalesceStatistics (HttpServerStatistics* psThreadStats) {
 void HttpServer::ReadStatistics() {
 
     char pszStatFile [OS::MaxFileNameLength];
-    GetStatisticsFileName (pszStatFile);
-
-    Time::GetTime (&m_tLogDate);
+    GetStatisticsFileName(pszStatFile, m_tStatsTime);
 
     MemoryMappedFile mfStats;
     if (mfStats.OpenExisting (pszStatFile, true) != OK) {
@@ -2225,11 +2065,7 @@ void HttpServer::GetStatisticsFileName (char* pszStatName, const UTCTime& tTime)
     char pszMonth[20], pszDay[20];
     DayOfWeek day;
 
-    if (tTime == 0) {
-        Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
-    } else {
-        Time::GetDate (tTime, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
-    }
+    Time::GetDate(tTime, &iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 
     sprintf (pszStatName, "%s/Statistics_%i_%s_%s.stat", m_pszStatisticsPath, iYear, 
         String::ItoA (iMonth, pszMonth, 10, 2), String::ItoA (iDay, pszDay, 10, 2));
@@ -2248,107 +2084,4 @@ bool HttpServer::DifferentDays (const UTCTime& tOldTime, const UTCTime& tNewTime
     }
 
     return false;
-}
-
-int HttpServer::PostMessage (LogMessage* plmMessage) {
-
-    if (m_tsfqLogQueue.Push (plmMessage)) {
-
-        // Wake up the log message thread
-        m_evLogEvent.Signal();
-
-        return OK;
-    }
-
-    return ERROR_OUT_OF_MEMORY;
-}
-
-LogMessage* HttpServer::GetLogMessage() {
-
-    m_mLogMessageCacheLock.Wait();
-    LogMessage* pMessage = m_pLogMessageCache->GetObject();
-    m_mLogMessageCacheLock.Signal();
-
-    return pMessage;
-}
-
-void HttpServer::FreeLogMessage (LogMessage* plmMessage) {
-    
-    m_mLogMessageCacheLock.Wait();
-    m_pLogMessageCache->ReleaseObject (plmMessage);
-    m_mLogMessageCacheLock.Signal();
-}
-
-
-int HttpServer::WriteReport (const char* pszMessage) {
-
-    int iErrCode = WARNING;
-
-    if (m_fReportFile.IsOpen()) {
-
-        // Write the time
-        int iSec, iMin, iHour, iDay, iMonth, iYear;
-        DayOfWeek day;
-
-        Time::GetDate (&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
-        
-        char pszText[512], pszDay[20], pszHour[20], pszMin[20], pszSec[20], pszMonth[20];
-        
-        sprintf (pszText, "[%s-%s-%i, %s:%s:%s]\t", String::ItoA (iMonth, pszMonth, 10, 2), 
-            String::ItoA (iDay, pszDay, 10, 2), iYear, String::ItoA (iHour, pszHour, 10, 2), 
-            String::ItoA (iMin, pszMin, 10, 2), String::ItoA (iSec, pszSec, 10, 2));
-        
-        m_mReportMutex.Wait();
-        
-        iErrCode = m_fReportFile.Write (pszText);
-        if (iErrCode == OK) {
-            iErrCode = m_fReportFile.Write (pszMessage);
-            if (iErrCode == OK) {
-                iErrCode = m_fReportFile.WriteEndLine();
-            }
-        }
-        
-        m_mReportMutex.Signal();
-    
-    } else {
-    
-        OS::Alert (pszMessage);
-    }
-
-    return iErrCode;
-}
-
-size_t HttpServer::GetReportTail (char* pszBuffer, size_t stNumChars) {
-
-    size_t stFilePtr, stRetVal;
-
-    pszBuffer[0] = '\0';
-
-    if (!m_fReportFile.IsOpen()) {
-        return 0;
-    }
-
-    stRetVal = 0;
-
-    m_mReportMutex.Wait();
-
-    if (m_fReportFile.GetFilePointer (&stFilePtr) == OK) {
-
-        if (stNumChars > stFilePtr) {
-            stNumChars = stFilePtr;
-        }
-
-        if (m_fReportFile.SetFilePointer (stFilePtr - stNumChars) == OK) {
-
-            if (m_fReportFile.Read (pszBuffer, stNumChars, &stRetVal) == OK) {
-                pszBuffer[stRetVal] = '\0';
-            }
-
-            m_fReportFile.SetFilePointer (stFilePtr);
-        }
-    }
-
-    m_mReportMutex.Signal();
-
-    return stRetVal;
 }

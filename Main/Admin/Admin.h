@@ -29,19 +29,17 @@ class Admin : public IPageSource {
 private:
 
     Admin();
+    ~Admin();
 
     IHttpServer* m_pHttpServer;
-    IReport* m_pReport;
-    IReport* m_pServerReport;
     IConfigFile* m_pConfig;
     IConfigFile* m_pServerConfig;
-    ILog* m_pLog;
     IPageSourceControl* m_pPageSourceControl;
     IFileCache* m_pFileCache;
 
     char* m_pszLogin;
     char* m_pszPassword;
-    size_t m_stDisplayChars;
+    unsigned int m_chDisplayChars;
 
     int ConvertTime (Seconds iNumSeconds, String* pstrTime);
 

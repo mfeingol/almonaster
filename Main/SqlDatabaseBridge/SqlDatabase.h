@@ -1,8 +1,28 @@
+//
+// SqlDatabaseBridge.dll - A database library
+// Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Library General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or(at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Library General Public License for more details.
+//
+// You should have received a copy of the GNU Library General Public
+// License along with this library; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+// Boston, MA  02111-1307, USA.
+
 #pragma once
 
 #include "Osal/IObject.h"
 #include "Osal/Variant.h"
 #include "Osal/FileHeap.h"
+#include "Osal/TraceLog.h"
 
 #ifndef SQL_DATABASE_EXPORT
 #ifdef SQL_DATABASE_BUILD
@@ -318,6 +338,8 @@ class IDatabase : virtual public IObject
 {
 public:
     	// Return OK if database was reloaded, WARNING if new database was created, something else if an error occurred
-    virtual int Initialize(const char* pszConnectionString) = 0;
+    virtual int Initialize(const char* pszConnectionString, ITraceLog* pTrace) = 0;
     virtual IDatabaseConnection* CreateConnection(TransactionIsolationLevel isoLevel) = 0;
 };
+
+

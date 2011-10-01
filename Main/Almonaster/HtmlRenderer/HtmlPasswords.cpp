@@ -138,7 +138,7 @@ int HtmlRenderer::HtmlLoginEmpire(bool* pbLoggedIn)
     }
 
     // Add to report
-    ReportLoginSuccess(global.GetReport(), m_vEmpireName.GetCharPtr(), m_bAutoLogon);
+    ReportLoginSuccess(m_vEmpireName.GetCharPtr(), m_bAutoLogon);
     
     // Have a ticket
     m_bAuthenticated = true;
@@ -345,10 +345,6 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
             m_bRepeatedButtons = (m_iSystemOptions & SYSTEM_REPEATED_BUTTONS) != 0;
             m_bTimeDisplay = (m_iSystemOptions & SYSTEM_DISPLAY_TIME) != 0;
         }
-        
-        // Add name to web server's log
-        iErrCode = m_pHttpResponse->AddCustomLogMessage(m_vEmpireName.GetCharPtr());
-        RETURN_ON_ERROR(iErrCode);
     }
     else
     {
@@ -379,6 +375,10 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
         return OK;
     }
     
+    // Add name to web server's log
+    iErrCode = m_pHttpResponse->AddCustomLogMessage(m_vEmpireName.GetCharPtr());
+    RETURN_ON_ERROR(iErrCode);
+
     *pbInitialized = true;
     return iErrCode;
 }

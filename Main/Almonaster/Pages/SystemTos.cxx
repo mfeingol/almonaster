@@ -50,7 +50,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
 	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
 	        sprintf(pszText, "%s accepted the Terms of Service", m_vEmpireName.GetCharPtr());
-            global.GetReport()->WriteReport (pszText);
+            global.WriteReport(TRACE_INFO, pszText);
 
             return Redirect (ACTIVE_GAME_LIST);
         }
@@ -61,7 +61,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
 	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
 	        sprintf(pszText, "%s declined the Terms of Service", m_vEmpireName.GetCharPtr());
-            global.GetReport()->WriteReport (pszText);
+            global.WriteReport(TRACE_WARNING, pszText);
         }
         break;
 

@@ -954,15 +954,15 @@ int HtmlRenderer::SearchForDuplicateEmpires(int iGameClass, int iGameNumber, Dup
     return iErrCode;
 }
 
-void HtmlRenderer::ReportLoginFailure (IReport* pReport, const char* pszEmpireName)
+void HtmlRenderer::ReportLoginFailure(const char* pszEmpireName)
 {
     char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
     sprintf(pszMessage, "Logon failure for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
         
-    pReport->WriteReport (pszMessage);
+    global.WriteReport(TRACE_WARNING, pszMessage);
 }
 
-void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireName, bool bAutoLogon)
+void HtmlRenderer::ReportLoginSuccess (const char* pszEmpireName, bool bAutoLogon)
 {
     char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
 
@@ -971,21 +971,16 @@ void HtmlRenderer::ReportLoginSuccess (IReport* pReport, const char* pszEmpireNa
     } else {
         sprintf(pszMessage, "Logon success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
     }
-
-    pReport->WriteReport (pszMessage);
+    global.WriteReport(TRACE_INFO, pszMessage);
 }
 
 
-void HtmlRenderer::ReportEmpireCreation (IReport* pReport, const char* pszEmpireName)
+void HtmlRenderer::ReportEmpireCreation (const char* pszEmpireName)
 {
     char* pszMessage = (char*) StackAlloc (MAX_EMPIRE_NAME_LENGTH + 256);
     sprintf(pszMessage, "Creation success for %s from %s", pszEmpireName, m_pHttpRequest->GetClientIP());
         
-    pReport->WriteReport (pszMessage);
-}
-
-void HtmlRenderer::WriteBackupMessage() {
-   // TODOTODO - Remove this codepath 
+    global.WriteReport (TRACE_INFO, pszMessage);
 }
 
 int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCookie) {
@@ -5040,12 +5035,12 @@ int HtmlRenderer::OnDeleteEmpire(int iEmpireKey) {
 
     char pszMessage[MAX_EMPIRE_NAME_LENGTH + 256];
     sprintf(pszMessage, "%s was deleted", pszEmpireName);
-    global.GetReport()->WriteReport (pszMessage);
+    global.WriteReport(TRACE_INFO, pszMessage);
 
     if (bFileDeleted)
     {
         sprintf(pszMessage, "Uploaded icon %i was deleted", iEmpireKey);
-        global.GetReport()->WriteReport (pszMessage);
+        global.WriteReport(TRACE_INFO, pszMessage);
     }
     
     return iErrCode;
@@ -5092,7 +5087,7 @@ int HtmlRenderer::OnDeleteTournament (unsigned int iTournamentKey) {
     {
         char pszMessage[256];
         sprintf(pszMessage, "Uploaded icon %i was deleted", iTournamentKey);
-        global.GetReport()->WriteReport (pszMessage);
+        global.WriteReport(TRACE_INFO, pszMessage);
     }
 
     return OK;
@@ -5119,7 +5114,7 @@ int HtmlRenderer::OnDeleteTournamentTeam (unsigned int iTournamentKey, unsigned 
     {
         char pszMessage[256];
         sprintf(pszMessage, "Uploaded icon %i.%i was deleted", iTournamentKey, iTeamKey);
-        global.GetReport()->WriteReport (pszMessage);
+        global.WriteReport(TRACE_INFO, pszMessage);
     }
 
     return OK;

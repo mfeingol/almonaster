@@ -1406,33 +1406,24 @@ if (m_bOwnPost && !m_bRedirection) {
             // Handle undelete empire request
             if (WasButtonPressed (BID_UNDELETEEMPIRE)) {
 
-                const char* pszReport = NULL;
-
                 switch (UndeleteEmpire (m_iEmpireKey))
                 {
+                case ERROR_EMPIRE_DOES_NOT_EXIST:
+                    AddMessage ("Your empire no longer exists");
+                    break;
+
                 case ERROR_CANNOT_UNDELETE_EMPIRE:
-                    pszReport = "could not be undeleted";
                     AddMessage ("Your empire cannot be undeleted");
                     break;
 
                 case OK:
-                    pszReport = "was successfully undeleted";
                     AddMessage ("Your empire is no longer marked for deletion"); 
                     m_iSystemOptions &= ~EMPIRE_MARKED_FOR_DELETION;
                     break;
 
                 default:
                     RETURN_ON_ERROR(iErrCode);
-                    AddMessage ("An unexpected error occurred");
                 }
-
-                char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-                if (pszReport == NULL) {
-                    sprintf(pszText, "UndeleteEmpire failed for %s: error %d", m_vEmpireName.GetCharPtr(), iErrCode);
-                } else {
-                    sprintf(pszText, "%s %s", m_vEmpireName.GetCharPtr(), pszReport);
-                }
-                global.GetReport()->WriteReport (pszText);
                 break;
             }
 
@@ -2003,7 +1994,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
             sprintf(pszText, "%s requested to be deleted", m_vEmpireName.GetCharPtr());
-            global.GetReport()->WriteReport (pszText);
+            global.WriteReport(TRACE_INFO, pszText);
 
             iErrCode = CacheEmpireForDeletion(m_iEmpireKey);
             RETURN_ON_ERROR(iErrCode);
@@ -2024,7 +2015,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
                 char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
                 sprintf(pszText, "%s was marked for deletion", m_vEmpireName.GetCharPtr());
-                global.GetReport()->WriteReport (pszText);
+                global.WriteReport(TRACE_INFO, pszText);
 
                 break;
 
@@ -2050,7 +2041,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
             sprintf(pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
-            global.GetReport()->WriteReport (pszText);
+            global.WriteReport(TRACE_INFO, pszText);
 
             break;
 

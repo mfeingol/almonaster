@@ -47,7 +47,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iGameNumber
         );
 
-    global.GetReport()->WriteReport (pszMessage);
+    global.WriteReport(TRACE_INFO, pszMessage);
 
     // Increment nukes and nuked
     iErrCode = t_pCache->Increment(strNukerEmpire, iNukerKey, SystemEmpireData::Nukes, 1);
@@ -172,7 +172,7 @@ int GameEngine::UpdateScoresOn30StyleSurrender (int iLoserKey, const char* pszLo
     // Report
     char pszMessage [MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH + 64];
     sprintf(pszMessage, "%s surrendered out of %s %i", pszLoserName, pszGameClassName, iGameNumber);
-    global.GetReport()->WriteReport(pszMessage);
+    global.WriteReport(TRACE_INFO, pszMessage);
 
     // Increment nuked for loser
     GET_SYSTEM_EMPIRE_DATA(strLoser, iLoserKey);
@@ -216,7 +216,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         iGameNumber
         );
 
-    global.GetReport()->WriteReport (pszMessage);
+    global.WriteReport(TRACE_INFO, pszMessage);
 
     // Give empire credit for nuke
     GET_SYSTEM_EMPIRE_DATA(strWinner, iWinnerKey);
@@ -1384,7 +1384,7 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryCallback()
     //                        iFinalIndex
     //                        );
     //                        
-    //                    global.GetReport()->WriteReport (pszMessage);
+    //                    global.WriteReport(pszMessage);
     //                }
     //            }
     //        }

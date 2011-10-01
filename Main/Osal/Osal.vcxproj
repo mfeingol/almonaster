@@ -437,6 +437,7 @@ copy /y *.h "%DropOsalSdk%"
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Algorithm.cpp" />
+    <ClCompile Include="AsyncFile.cpp" />
     <ClCompile Include="ConfigFile.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Event.cpp" />
@@ -455,10 +456,12 @@ copy /y *.h "%DropOsalSdk%"
     <ClCompile Include="TempFile.cpp" />
     <ClCompile Include="Thread.cpp" />
     <ClCompile Include="Time.cpp" />
+    <ClCompile Include="TraceLog.cpp" />
     <ClCompile Include="Variant.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Algorithm.h" />
+    <ClInclude Include="AsyncFile.h" />
     <ClInclude Include="ConfigFile.h" />
     <ClInclude Include="Crypto.h" />
     <ClInclude Include="Event.h" />
@@ -481,6 +484,7 @@ copy /y *.h "%DropOsalSdk%"
     <ClInclude Include="TempFile.h" />
     <ClInclude Include="Thread.h" />
     <ClInclude Include="Time.h" />
+    <ClInclude Include="TraceLog.h" />
     <ClInclude Include="Variant.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>

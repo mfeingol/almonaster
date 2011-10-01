@@ -1,8 +1,29 @@
+//
+// SqlDatabaseBridge.dll - A database library
+// Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Library General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or(at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+// Library General Public License for more details.
+//
+// You should have received a copy of the GNU Library General Public
+// License along with this library; if not, write to the
+// Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+// Boston, MA  02111-1307, USA.
+
 #include "Utils.h"
+#include <msclr/marshal.h>
 
 using namespace System::Collections::Generic;
 using namespace System::Linq;
 using namespace System::Runtime::InteropServices;
+using namespace msclr::interop;
 
 System::Object^ Convert(const Variant& v)
 {
@@ -90,6 +111,22 @@ IsolationLevel Convert(TransactionIsolationLevel isoLevel)
     }
 }
 
+System::Object^ Increment(System::Object^ original, const Variant& inc)
+{
+    switch(inc.GetType())
+    {
+    case V_INT:
+        return (int)original + inc.GetInteger();
+    case V_FLOAT:
+        return (double)original + inc.GetFloat();
+    case V_INT64:
+        return (int64)original + inc.GetInteger64();
+    default:
+        Assert(false);
+        return nullptr;
+    }
+}
+
 unsigned int* ConvertIdsToKeys(IEnumerable<int64>^ ids, unsigned int* piCount)
 {
     unsigned int* piKey = NULL;
@@ -110,23 +147,27 @@ unsigned int* ConvertIdsToKeys(IEnumerable<int64>^ ids, unsigned int* piCount)
     return piKey;
 }
 
-void Trace(System::String^ fmt, ... array<System::Object^>^ params)
+#pragma warning(disable : 4793)
+ITraceLog* g_pTrace = NULL;
+
+void Trace(TraceInfoLevel level, const char* pszFormat, ...)
 {
-    System::Diagnostics::Trace::WriteLine(System::String::Format(fmt, params));
+    va_list list;
+    va_start(list, pszFormat);
+
+    int cchLen = vsnprintf(NULL, 0, pszFormat, list);
+    char* pszBuffer = (char*)StackAlloc(cchLen);
+
+    vsprintf(pszBuffer, pszFormat, list);
+    g_pTrace->Write(level, pszBuffer);
+
+    va_end(list);
 }
 
-System::Object^ Increment(System::Object^ original, const Variant& inc)
+void TraceException(System::Exception^ e)
 {
-    switch(inc.GetType())
-    {
-    case V_INT:
-        return (int)original + inc.GetInteger();
-    case V_FLOAT:
-        return (double)original + inc.GetFloat();
-    case V_INT64:
-        return (int64)original + inc.GetInteger64();
-    default:
-        Assert(false);
-        return nullptr;
-    }
+    marshal_context^ context = gcnew marshal_context();
+    const char* pszMessage = context->marshal_as<const char*>(e->Message);
+    Trace(TRACE_ERROR, pszMessage);
+	delete context;
 }

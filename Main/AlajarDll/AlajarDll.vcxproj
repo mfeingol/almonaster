@@ -453,6 +453,7 @@ copy /y Alajar.h "%DropSdk%"
     <ClCompile Include="Interface.cpp" />
     <ClCompile Include="PageSource.cpp" />
     <ClCompile Include="PageSourceEnumerator.cpp" />
+    <ClCompile Include="Report.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Alajar.h" />
@@ -467,6 +468,7 @@ copy /y Alajar.h "%DropSdk%"
     <ClInclude Include="HttpThreadPool.h" />
     <ClInclude Include="PageSource.h" />
     <ClInclude Include="PageSourceEnumerator.h" />
+    <ClInclude Include="Report.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Osal\Osal.vcxproj">

@@ -236,9 +236,8 @@ if (!m_bRedirection &&
                 switch (iErrCode)
                 {
                 case OK:
-                    ReportEmpireCreation(global.GetReport(), pszEmpireName);
-                    iErrCode = SendWelcomeMessage(pszEmpireName);
-                    RETURN_ON_ERROR(iErrCode);
+                    ReportEmpireCreation(pszEmpireName);
+                    SendWelcomeMessage(pszEmpireName);
 
                     m_iEmpireKey = iEmpireKey;
                     m_iReserved = 0;

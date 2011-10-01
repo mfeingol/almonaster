@@ -47,6 +47,9 @@
     <ClCompile Include="PageSourceEnumerator.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Report.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Alajar.h">
@@ -83,6 +86,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="PageSourceEnumerator.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="Report.h">
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>

@@ -67,6 +67,8 @@ PageSource::PageSource (HttpServer* pHttpServer) {
     m_pPageSource = NULL;
 
     m_pcfConfig = NULL;
+    m_pReport = NULL;
+    m_pLog = NULL;
 
     m_bRestart = false;
     m_bScrewed = false;
@@ -74,8 +76,9 @@ PageSource::PageSource (HttpServer* pHttpServer) {
     m_bIsDefault = false;
 
     m_iNumRefs = 1; // AddRef
-
     m_iNumThreads = 0;
+
+    m_reportTracelevel = TRACE_WARNING;
 
     m_bFilterGets = false;
 
@@ -89,14 +92,6 @@ int PageSource::Init() {
 
     int iErrCode;
 
-    iErrCode = m_mLogMutex.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-    iErrCode = m_mReportMutex.Initialize();
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
     iErrCode = m_mShutdownLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
@@ -105,12 +100,18 @@ int PageSource::Init() {
     if (iErrCode != OK) {
         return iErrCode;
     }
-
     iErrCode = m_mCounterLock.Initialize();
     if (iErrCode != OK) {
         return iErrCode;
     }
-
+    iErrCode = m_reportMutex.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+    iErrCode = m_logMutex.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
     m_pcfConfig = Config::CreateInstance();
     if (m_pcfConfig == NULL) {
         return ERROR_OUT_OF_MEMORY;
@@ -202,8 +203,11 @@ void PageSource::Clean() {
     ClearACEList (&m_llAllowReferer);
 
     // Close files
-    m_fLogFile.Close();
-    m_fReportFile.Close();
+    SafeRelease(m_pReport);
+    SafeRelease(m_pLog);
+
+    Time::ZeroTime (&m_tLogTime);
+    Time::ZeroTime (&m_tReportTime);
 }
 
 void PageSource::ClearACEList (ACEList* pllList) {
@@ -214,7 +218,6 @@ void PageSource::ClearACEList (ACEList* pllList) {
     }
     pllList->Clear();
 }
-
 
 //
 // IObject
@@ -250,16 +253,7 @@ int PageSource::QueryInterface (const Uuid& iidInterface, void** ppInterface) {
         AddRef();                                                       
         return OK;                                                      
     }
-    if (iidInterface == IID_ILog) {                             
-        *ppInterface = (void*) static_cast<ILog*> (this);           
-        AddRef();                                                       
-        return OK;                                                      
-    }
-    if (iidInterface == IID_IReport) {                              
-        *ppInterface = (void*) static_cast<IReport*> (this);            
-        AddRef();                                                       
-        return OK;                                                      
-    }
+
     *ppInterface = NULL;                                                
     return ERROR_NO_INTERFACE;                                          
 }
@@ -338,21 +332,8 @@ int PageSource::Initialize (const char* pszLibraryName, const char* pszClsid) {
         return iErrCode;
     }
 
-    // Open report and log
-    iErrCode = OpenReport();
-    if (iErrCode != OK) {
-        m_libPageSource.Close();
-        return iErrCode;
-    }
-
-    iErrCode = OpenLog();
-    if (iErrCode != OK) {
-        m_libPageSource.Close();
-        return iErrCode;
-    }
-
     // Initialize underlying PageSource
-    return OnInitialize (m_pHttpServer, this);
+    return OnInitialize(m_pHttpServer, this);
 }
 
 static const char* g_pszSeparator = ";";
@@ -417,12 +398,70 @@ IConfigFile* PageSource::GetConfigFile() {
     return m_pcfConfig;
 }
 
-IReport* PageSource::GetReport() {
-    return this;
+ITraceLog* PageSource::GetReport()
+{
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    ITraceLog* pReturn;
+
+    m_reportMutex.Wait();
+    if (HttpServer::DifferentDays(m_tReportTime, tNow))
+    {
+        m_tReportTime = tNow;
+
+        char pszFileName[OS::MaxFileNameLength];
+        GetReportFileName(pszFileName);
+
+        Report* pNew = new Report();
+        if (pNew)
+        {
+            int iErrCode = pNew->Initialize((ReportFlags)(WRITE_DATE_TIME | WRITE_THREAD_ID), m_reportTracelevel, pszFileName);
+            if (iErrCode == OK)
+            {
+                SafeRelease(m_pReport);
+                m_pReport = pNew;
+            }
+        }
+    }
+    pReturn = m_pReport;
+    pReturn->AddRef();
+    m_reportMutex.Signal();
+
+    return pReturn;
 }
 
-ILog* PageSource::GetLog() {
-    return this;
+ITraceLog* PageSource::GetLog()
+{
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    ITraceLog* pReturn;
+
+    m_logMutex.Wait();
+    if (HttpServer::DifferentDays(m_tLogTime, tNow))
+    {
+        m_tLogTime = tNow;
+
+        char pszFileName[OS::MaxFileNameLength];
+        GetLogFileName(pszFileName);
+
+        Report* pNew = new Report();
+        if (pNew)
+        {
+            int iErrCode = pNew->Initialize(WRITE_NONE, m_reportTracelevel, pszFileName);
+            if (iErrCode == OK)
+            {
+                SafeRelease(m_pLog);
+                m_pLog = pNew;
+            }
+        }
+    }
+    pReturn = m_pLog;
+    pReturn->AddRef();
+    m_logMutex.Signal();
+
+    return pReturn;
 }
 
 const char* PageSource::GetBasePath() {
@@ -697,6 +736,28 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
     if (iErrCode != OK) {
         *pstrErrorMessage = "The config file was invalid";
         return iErrCode;
+    }
+
+    // ReportTraceLevel
+    if (m_pcfConfig->GetParameter("ReportTraceLevel", &pszRhs) == OK && pszRhs != NULL)
+    {
+        if (String::StriCmp(pszRhs, "verbose") == 0)
+        {
+            m_reportTracelevel = TRACE_VERBOSE;
+        }
+        else if (String::StriCmp(pszRhs, "info") == 0)
+        {
+            m_reportTracelevel = TRACE_INFO;
+        }
+        else if (String::StriCmp(pszRhs, "warning") == 0)
+        {
+            m_reportTracelevel = TRACE_WARNING;
+        }
+        else if (String::StriCmp(pszRhs, "error") == 0)
+        {
+            m_reportTracelevel = TRACE_ERROR;
+        }
+        // Else just use the default
     }
 
     // The pagesource's name is the name of the file sans the last extension
@@ -1198,7 +1259,9 @@ int PageSource::RestartPageSource (void* pVoid) {
         
         if (iErrCode != OK) {
             pThis->m_bScrewed = true;
-            pThis->WriteReport ((String) "Error restarting page source. " + strErrorMessage);
+            ITraceLog* pReport = pThis->GetReport();
+            pReport->Write(TRACE_ERROR, (String)"Error restarting page source. " + strErrorMessage);
+            SafeRelease(pReport);
         } else {
             pThis->m_bScrewed = false;
         }
@@ -1335,160 +1398,4 @@ void PageSource::GetLogFileName (char pszFileName[OS::MaxFileNameLength]) {
 
     sprintf (pszFileName, "%s/%s_%i_%s_%s.log", m_pHttpServer->GetLogPath(), m_pszName, iYear, 
         String::ItoA (iMonth, pszMonth, 10, 2), String::ItoA (iDay, pszDay, 10, 2));
-}
-
-void PageSource::LogMessage (const char* pszMessage) {
-
-    // All log file operations are best effort
-    UTCTime tNow;
-    Time::GetTime (&tNow);
-
-    m_mLogMutex.Wait();
-
-    if (HttpServer::DifferentDays (m_tLogTime, tNow)) {
-        OpenLog();        
-    }
-
-    if (m_fLogFile.IsOpen()) {
-        m_fLogFile.Write (pszMessage);
-        m_fLogFile.WriteEndLine();
-    }
-
-    m_mLogMutex.Signal();
-}
-
-int PageSource::OpenLog() {
-
-    Time::GetTime (&m_tLogTime);
-
-    char pszFileName [OS::MaxFileNameLength];
-    GetLogFileName (pszFileName);
-
-    m_fLogFile.Close();
-    return m_fLogFile.OpenAppend (pszFileName);
-}
-
-void PageSource::ReportMessage (const char* pszMessage) {
-
-    // All log file operations are best effort
-    UTCTime tNow;
-    Time::GetTime (&tNow);
-
-    m_mReportMutex.Wait();
-
-    if (HttpServer::DifferentDays (m_tReportTime, tNow)) {
-        OpenReport();
-    }
-
-    // Add date and time
-    DayOfWeek weekDay;
-    int iSec, iMin, iHour, iDay, iMonth, iYear;
-    Time::GetDate (tNow, &iSec, &iMin, &iHour, &weekDay, &iDay, &iMonth, &iYear);
-
-    char pszDate [64];
-    snprintf (
-        pszDate, sizeof (pszDate), "[%.4d-%.2d-%.2d %.2d:%.2d:%.2d] ",
-        iYear, iMonth, iDay, iHour, iMin, iSec
-        );
-
-    m_fReportFile.Write (pszDate);
-    m_fReportFile.Write (pszMessage);
-    m_fReportFile.WriteEndLine();
-
-    m_mReportMutex.Signal();
-}
-
-int PageSource::OpenReport() {
-
-    Time::GetTime (&m_tReportTime);
-
-    char pszFileName [OS::MaxFileNameLength];
-    GetReportFileName (pszFileName);
-
-    m_fReportFile.Close();
-    return m_fReportFile.OpenAppend (pszFileName);
-}
-
-
-size_t PageSource::GetFileTail (File& fFile, Mutex& mMutex, const UTCTime& tTime, char* pszBuffer, 
-                                size_t stNumChars) {
-
-    UTCTime tZero;
-    Time::ZeroTime (&tZero);
-
-    size_t stFilePtr;
-
-    *pszBuffer = '\0';
-
-    if (tTime == tZero) {
-        return 0;
-    }
-
-    size_t stRetVal = 0;
-
-    mMutex.Wait();
-
-    if (fFile.GetFilePointer (&stFilePtr) == OK) {
-
-        if (stNumChars > stFilePtr) {
-            stNumChars = stFilePtr;
-        }
-
-        if (fFile.SetFilePointer (stFilePtr - stNumChars) == OK) {
-
-            if (fFile.Read (pszBuffer, stNumChars, &stRetVal) == OK) {
-                pszBuffer[stRetVal] = '\0';
-            }
-
-            fFile.SetFilePointer (stFilePtr);
-        }
-    }
-
-    mMutex.Signal();
-
-    return stRetVal;
-}
-
-
-// ILog
-size_t PageSource::GetLogTail (char* pszBuffer, size_t stNumChars) {
-
-    return GetFileTail (m_fLogFile, m_mLogMutex, m_tLogTime, pszBuffer, stNumChars);
-}
-
-// IReport
-int PageSource::WriteReport (const char* pszMessage) {
-
-    size_t stLength = String::StrLen (pszMessage);
-
-    if (stLength > MAX_LOG_MESSAGE) {
-        return ERROR_INVALID_ARGUMENT;
-    }
-
-    ::LogMessage* plmMessage = m_pHttpServer->GetLogMessage();
-    if (plmMessage == NULL) {
-        return ERROR_OUT_OF_MEMORY;
-    }
-
-    plmMessage->lmtMessageType = REPORT_MESSAGE;
-    plmMessage->pPageSource = this;
-
-    AddRef();
-
-    memcpy (plmMessage->pszText, pszMessage, stLength + 1);
-    int iErrCode = m_pHttpServer->PostMessage (plmMessage);
-    if (iErrCode != OK) {
-
-        // Otherwise, the LogMessage instance owns the reference
-        Release();
-
-        m_pHttpServer->FreeLogMessage (plmMessage);
-    }
-
-    return iErrCode;
-}
-
-size_t PageSource::GetReportTail (char* pszBuffer, size_t stNumChars) {
-
-    return GetFileTail (m_fReportFile, m_mReportMutex, m_tReportTime, pszBuffer, stNumChars);
 }

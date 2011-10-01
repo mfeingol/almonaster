@@ -42,9 +42,7 @@ Variant** AutoFreeData::g_ppvData = NULL;
 
 Global::Global() 
     : m_pHttpServer(NULL),
-      m_pReport(NULL),
       m_pConfig(NULL),
-      m_pLog(NULL),
       m_pPageSourceControl(NULL),
       m_pFileCache(NULL),
       m_pDatabase(NULL),
@@ -59,9 +57,7 @@ void Global::Close()
     // Weak refs
     //SafeRelease(m_pHttpServer);
     //SafeRelease(m_pPageSourceControl);
-    //SafeRelease(m_pReport);
-    //SafeRelease(m_pLog);
-
+    
     m_asyncManager.Close();
 
     // Strong refs
@@ -117,7 +113,7 @@ void TraceError(int iErrCode, const char* pszFile, int iLine)
 
     char pszError[512];
     sprintf(pszError, "Thread %d - Request %s - Error %i occurred in %s line %i", thread.GetThreadId(), pszUuidReqId, iErrCode, pszFile, iLine);
-    global.GetReport()->WriteReport(pszError);
+    global.WriteReport(TRACE_ERROR, pszError);
 }
 
 int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSourceControl)
@@ -125,8 +121,6 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     // Weak refs
     m_pHttpServer = pHttpServer;
     m_pPageSourceControl = pPageSourceControl;
-    m_pReport = pPageSourceControl->GetReport();
-    m_pLog = pPageSourceControl->GetLog();
 
     // Strong refs
     m_pFileCache = pHttpServer->GetFileCache();
@@ -139,17 +133,20 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     // Configuration
     //
 
+    ITraceLog* pReport = GetReport();
+    AutoRelease<ITraceLog> release_pReport(pReport);
+
     // DatabaseLibrary
     iErrCode = m_pConfig->GetParameter ("DatabaseLibrary", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the DatabaseLibrary value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the DatabaseLibrary value from the configuration file");
         return ERROR_FAILURE;
     }
     char pszDatabaseLibrary[OS::MaxFileNameLength];
     if (File::ResolvePath(pszTemp, pszDatabaseLibrary) == ERROR_FAILURE)
     {
-        m_pReport->WriteReport("Error: The DatabaseLibrary value from the configuration file was invalid");
+        pReport->Write(TRACE_ERROR, "Error: The DatabaseLibrary value from the configuration file was invalid");
         return ERROR_FAILURE;
     }
 
@@ -157,14 +154,14 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     iErrCode = m_pConfig->GetParameter("DatabaseClsid", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the DatabaseClsid value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the DatabaseClsid value from the configuration file");
         return ERROR_FAILURE;
     }
     Uuid uuidDatabaseClsid;
     iErrCode = OS::UuidFromString(pszTemp, &uuidDatabaseClsid);
     if (iErrCode != OK)
     {
-        m_pReport->WriteReport("Error: The DatabaseClsid value from the configuration file was invalid");
+        pReport->Write(TRACE_ERROR, "Error: The DatabaseClsid value from the configuration file was invalid");
         return ERROR_FAILURE;
     }
 
@@ -173,7 +170,7 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     iErrCode = m_pConfig->GetParameter("DatabaseConnectionString", &pszDatabaseConnectionString);
     if (iErrCode != OK || pszDatabaseConnectionString == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the DatabaseConnectionString value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the DatabaseConnectionString value from the configuration file");
         return ERROR_FAILURE;
     }
 
@@ -181,19 +178,19 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
     iErrCode = m_pConfig->GetParameter ("ResourceDirectory", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the ResourceDirectory value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the ResourceDirectory value from the configuration file");
         return ERROR_FAILURE;
     }
     if (File::ResolvePath(pszTemp, m_pszResourceDir) != OK)
     {
-        m_pReport->WriteReport("Error: The ResourceDirectory value from the configuration file was invalid");
+        pReport->Write(TRACE_ERROR, "Error: The ResourceDirectory value from the configuration file was invalid");
         return ERROR_FAILURE;
     }
 
     iErrCode = InitializeDatabase(pszDatabaseLibrary, uuidDatabaseClsid, pszDatabaseConnectionString);
     if (iErrCode != OK && iErrCode != WARNING)
     {
-        m_pReport->WriteReport("Failed to initialize database");
+        pReport->Write(TRACE_ERROR, "Failed to initialize database");
         return iErrCode;
     }
 
@@ -251,10 +248,13 @@ int Global::InitializeChatroom()
     // Config
     //
 
+    ITraceLog* pReport = GetReport();
+    AutoRelease<ITraceLog> release_pReport(pReport);
+
     iErrCode = m_pConfig->GetParameter ("ChatroomMaxNumSpeakers", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the ChatroomMaxNumSpeakers value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the ChatroomMaxNumSpeakers value from the configuration file");
         return ERROR_FAILURE;
     }
     ccConfig.iMaxNumSpeakers = atoi (pszTemp);
@@ -262,7 +262,7 @@ int Global::InitializeChatroom()
     iErrCode = m_pConfig->GetParameter ("ChatroomNumMessages", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the ChatroomNumMessages value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the ChatroomNumMessages value from the configuration file");
         return ERROR_FAILURE;
     }
     ccConfig.iMaxNumMessages = atoi (pszTemp);
@@ -270,7 +270,7 @@ int Global::InitializeChatroom()
     iErrCode = m_pConfig->GetParameter ("ChatroomMaxMessageLength", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the ChatroomMaxMessageLength value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the ChatroomMaxMessageLength value from the configuration file");
         return ERROR_FAILURE;
     }
     ccConfig.iMaxMessageLength = atoi (pszTemp);
@@ -278,20 +278,20 @@ int Global::InitializeChatroom()
     iErrCode = m_pConfig->GetParameter ("ChatroomTimeOut", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the ChatroomTimeOut value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the ChatroomTimeOut value from the configuration file");
         return ERROR_FAILURE;
     }
     ccConfig.sTimeOut = atoi(pszTemp);
     if (ccConfig.sTimeOut == 0)
     {
-        m_pReport->WriteReport("Error: Invalid ChatroomTimeOut value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Invalid ChatroomTimeOut value from the configuration file");
         return ERROR_FAILURE;
     }
 
     iErrCode = m_pConfig->GetParameter ("ChatroomPostSystemMessages", &pszTemp);
     if (iErrCode != OK || pszTemp == NULL)
     {
-        m_pReport->WriteReport("Error: Could not read the ChatroomPostSystemMessages value from the configuration file");
+        pReport->Write(TRACE_ERROR, "Error: Could not read the ChatroomPostSystemMessages value from the configuration file");
         return ERROR_FAILURE;
     }
     ccConfig.bPostSystemMessages = atoi(pszTemp) != 0;
@@ -304,12 +304,15 @@ int Global::InitializeChatroom()
 
 int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatabaseClsid, const char* pszDatabaseConnectionString)
 {
-    m_pReport->WriteReport("Loading the database library");
+    ITraceLog* pReport = GetReport();
+    AutoRelease<ITraceLog> release_pReport(pReport);
+
+    pReport->Write(TRACE_ERROR, "Loading the database library");
 
     int iErrCode = m_libDatabase.Open(pszLibDatabase);
     if (iErrCode != OK)
     {
-        m_pReport->WriteReport("Unable to load database library");
+        pReport->Write(TRACE_ERROR, "Unable to load database library");
         return iErrCode;
     }
 
@@ -317,28 +320,28 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
     Fxn_CreateInstance pCreateInstance = (Fxn_CreateInstance)m_libDatabase.GetExport("CreateInstance");
     if (pCreateInstance == NULL)
     {
-        m_pReport->WriteReport("Unable to obtain CreateInstance export from database library");
+        pReport->Write(TRACE_ERROR, "Unable to obtain CreateInstance export from database library");
         return ERROR_FAILURE;
     }
 
     iErrCode = pCreateInstance(uuidDatabaseClsid, IID_IDatabase, (void**)&m_pDatabase);
     if (iErrCode != OK)
     {
-        m_pReport->WriteReport("Unable to create database instance");
+        pReport->Write(TRACE_ERROR, "Unable to create database instance");
         return iErrCode;
     }
 
-    m_pReport->WriteReport("Loaded the database library");
-    m_pReport->WriteReport("Initializing the database");
+    pReport->Write(TRACE_ERROR, "Loaded the database library");
+    pReport->Write(TRACE_ERROR, "Initializing the database");
 
-    iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString);
+    iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString, pReport);
     switch (iErrCode)
     {
     case OK:
-        m_pReport->WriteReport("Reloaded database sucessfully");
+        pReport->Write(TRACE_ERROR, "Reloaded database sucessfully");
         break;
     case WARNING:
-        m_pReport->WriteReport("New database successfully created");
+        pReport->Write(TRACE_ERROR, "New database successfully created");
         break;
     default:
         RETURN_ON_ERROR(iErrCode);
@@ -346,4 +349,12 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
     }
 
     return iErrCode;
+}
+
+void Global::WriteReport(TraceInfoLevel level, const char* pszMessage)
+{
+    ITraceLog* pReport = GetReport();
+    AutoRelease<ITraceLog> release_pReport(pReport);
+
+    pReport->Write(level, pszMessage);
 }

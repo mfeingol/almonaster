@@ -1,5 +1,5 @@
 //
-// SqlDatabase.dll - A database library
+// SqlDatabaseBridge.dll - A database library
 // Copyright(c) 1998 Max Attar Feingold(maf6@cornell.edu)
 //
 // This library is free software; you can redistribute it and/or
@@ -28,12 +28,15 @@ using namespace System::Runtime::InteropServices;
 
 SqlDatabaseBridge::SqlDatabaseBridge()
     :
-    m_iNumRefs(1)
+    m_iNumRefs(1),
+    m_pTrace(NULL)
 {
 }
 
 SqlDatabaseBridge::~SqlDatabaseBridge()
 {
+    g_pTrace = NULL;
+    SafeRelease(m_pTrace);
 }
 
 SqlDatabaseBridge* SqlDatabaseBridge::CreateInstance()
@@ -41,8 +44,14 @@ SqlDatabaseBridge* SqlDatabaseBridge::CreateInstance()
     return new SqlDatabaseBridge();
 }
 
-int SqlDatabaseBridge::Initialize(const char* pszConnString)
+int SqlDatabaseBridge::Initialize(const char* pszConnString, ITraceLog* pTrace)
 {
+    m_pTrace = pTrace;
+    m_pTrace->AddRef();
+    
+    // HACKHACK - Major hackery to enable static Trace() methods
+    g_pTrace = m_pTrace;
+
     m_sqlDatabase = gcnew SqlDatabase(gcnew System::String(pszConnString));
 
     int iErrCode;
@@ -50,8 +59,9 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString)
     {
         iErrCode = m_sqlDatabase->CreateIfNecessary() ? WARNING : OK;
     }
-    catch (SqlDatabaseException^)
+    catch (SqlDatabaseException^ e)
     {
+        TraceException(e);
         iErrCode = ERROR_DATABASE_EXCEPTION;
     }
     return iErrCode;

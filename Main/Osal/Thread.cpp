@@ -170,7 +170,7 @@ int Thread::WaitForTermination (MilliSeconds msWait) {
 		return ERROR_FAILURE;
 	}
 
-	DWORD dwRetVal = ::WaitForSingleObject (m_hThread, msWait);
+	DWORD dwRetVal = ::WaitForSingleObjectEx(m_hThread, msWait, TRUE);
 	if (dwRetVal == WAIT_TIMEOUT) {
 		return WARNING;
 	}

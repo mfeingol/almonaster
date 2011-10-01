@@ -63,10 +63,6 @@ int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPage
     int iErrCode = global.Initialize(pHttpServer, pPageSourceControl);
     RETURN_ON_ERROR(iErrCode);
 
-    // Weak ref
-    IReport* pReport = global.GetReport();
-    Assert(pReport);
-
     // Prepare URI's
     m_bIsDefault = pPageSourceControl->IsDefault();
     if (m_bIsDefault)
@@ -95,9 +91,9 @@ int Almonaster::OnInitialize(IHttpServer* pHttpServer, IPageSourceControl* pPage
     iErrCode = HtmlRenderer::StaticInitialize();
     RETURN_ON_ERROR(iErrCode);
 
-    pReport->WriteReport ("Finished initializing GameEngine");
-    pReport->WriteReport ("Almonaster will now begin");
-    pReport->WriteReport ("===================================================");
+    global.WriteReport(TRACE_ALWAYS, "Finished initializing GameEngine");
+    global.WriteReport(TRACE_ALWAYS, "Almonaster will now begin");
+    global.WriteReport(TRACE_ALWAYS, "===================================================");
 
     return iErrCode;
 }
@@ -155,17 +151,18 @@ int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
     return iErrCode;
 }
 
-int Almonaster::OnFinalize() {
-    
-    IReport* pReport = global.GetReport();
+int Almonaster::OnFinalize()
+{
+    ITraceLog* pReport = global.GetReport();
     Assert(pReport);
+    AutoRelease<ITraceLog> release_pReport(pReport);
 
-    pReport->WriteReport ("Shutting down Almonaster");
+    pReport->Write(TRACE_ALWAYS, "Shutting down Almonaster");
     
     global.Close();
 
-    pReport->WriteReport ("Finished shutting down Almonaster");
-    pReport->WriteReport ("===================================================");
+    pReport->Write(TRACE_ALWAYS, "Finished shutting down Almonaster");
+    pReport->Write(TRACE_ALWAYS, "===================================================");
 
     return OK;
 }

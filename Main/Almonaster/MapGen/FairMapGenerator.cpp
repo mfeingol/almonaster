@@ -121,16 +121,18 @@ int FairMapGenerator::CreatePlanets(
 void FairMapGenerator::WriteReport(bool bAcceptable, unsigned int iAttempts)
 {
     char pszReport[256];
-
-    if (bAcceptable) {
+    if (bAcceptable)
+    {
         sprintf(pszReport, "Fair map generated after %d attempt", iAttempts);
         if (iAttempts != 1)
             strcat(pszReport, "s");
-    } else {
-        sprintf(pszReport, "Failed to generate fair map after %d attempts", iAttempts);
+        global.WriteReport(TRACE_INFO, pszReport);
     }
-
-    global.GetReport()->WriteReport(pszReport);
+    else
+    {
+        sprintf(pszReport, "Failed to generate fair map after %d attempts", iAttempts);
+        global.WriteReport(TRACE_ERROR, pszReport);
+    }
 }
 
 int FairMapGenerator::EvaluateMap(int iGameClass, int iGameNumber,

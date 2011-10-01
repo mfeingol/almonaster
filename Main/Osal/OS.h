@@ -82,6 +82,7 @@ typedef unsigned long long int uint64;
 
 #define INVALID_HANDLE_VALUE (-1)
 
+#define PLATFORM_LINE_BREAK "\n"
 #endif
 
 
@@ -111,6 +112,8 @@ typedef unsigned __int64 uint64;
 
 #define CONTROL_CALL WINAPI
 #define THREAD_CALL WINAPI
+
+#define PLATFORM_LINE_BREAK "\r\n"
 
 #endif  // WIN32
 
