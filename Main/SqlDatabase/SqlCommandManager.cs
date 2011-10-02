@@ -103,7 +103,7 @@ namespace Almonaster.Database.Sql
 
         public void CreateTable(TableDescription tableDesc)
         {
-            // TODOTODO - redo this to be transactional, use TSQL
+            // TODO - 610 - Rewrite CreateTable to use TSQL, be transactional
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.conn.ConnectionString);
             ServerConnection serverConn = new ServerConnection(builder.DataSource);
 
@@ -152,7 +152,7 @@ namespace Almonaster.Database.Sql
                 }
             }
 
-            // TODOTODO - Index Flags
+            // TODO - 494 - Add database indexes
 
             try
             {
@@ -425,8 +425,7 @@ namespace Almonaster.Database.Sql
         public IEnumerable<long> Search(string tableName, string idColumnName, long maxResults, long skipResults,
                                         IEnumerable<RangeSearchColumn> rangeCols, IEnumerable<OrderBySearchColumn> orderByCols)
         {
-            // TODOTODO - search flags
-            // TODOTODO - skip hits
+            // TODO - 611 - Implement or remove search flags and skip hits
 
             int index = 0;
             using (SqlCommand cmd = new SqlCommand())

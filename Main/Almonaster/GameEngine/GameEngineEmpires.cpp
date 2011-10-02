@@ -342,7 +342,6 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     iErrCode = pNewEmpire->InsertRow(SystemEmpireData::Template, pvColVal, &iKey);
     RETURN_ON_ERROR(iErrCode);
 
-    // TODOTODO - make this better
     // Populate the cache with the row we just inserted
     iErrCode = CacheEmpire(iKey);
     RETURN_ON_ERROR(iErrCode);

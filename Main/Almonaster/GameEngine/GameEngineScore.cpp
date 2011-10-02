@@ -1291,17 +1291,16 @@ int GameEngine::TriggerBridierTimeBombIfNecessaryMsg(AsyncTask* pMessage)
 
 int GameEngine::TriggerBridierTimeBombIfNecessaryCallback()
 {
-    // TODOTODO - rewrite Bridier time bomb scanning to be more efficient
+    // TODO - 608 - Rewrite TriggerBridierTimeBombIfNecessary
 
     //int iErrCode, iFinalIndex;
-
     //unsigned int iKey = NO_KEY;
     //
     //Variant vLastAct, vIndex;
-
+    //
     //UTCTime tNow;
     //Time::GetTime(&tNow);
-
+    //
     //while (true) {
     //    
     //    iErrCode = t_pCache->GetNextKey(SYSTEM_EMPIRE_DATA, iKey, &iKey);

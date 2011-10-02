@@ -210,9 +210,9 @@ int GameEngine::GetNumUnreadSystemMessagesPrivate (ICachedTable* pMessages, unsi
 //
 // Send a message to all empires on the server
 
-int GameEngine::SendMessageToAll (int iEmpireKey, const char* pszMessage) {
-
-    // TODOTODO - Rewrite broadcast to all
+int GameEngine::SendMessageToAll(int iEmpireKey, const char* pszMessage)
+{
+    // TODO - 607 - SendMessageToAll needs new implementation
     return OK;
 
     //int iErrCode = OK;
@@ -712,7 +712,7 @@ int GameEngine::GetSavedGameMessages(int iGameClass, int iGameNumber, int iEmpir
 // Return the first unread message in the given empire's queue.  Mark it unread and 
 // delete it if there should be zero messages on the queue
 
-int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmpireKey, Variant*** pppvMessage, unsigned int* piNumMessages)
+int GameEngine::GetUnreadGameMessages(int iGameClass, int iGameNumber, int iEmpireKey, Variant*** pppvMessage, unsigned int* piNumMessages)
 {
     GET_GAME_EMPIRE_MESSAGES (strMessages, iGameClass, iGameNumber, iEmpireKey);
     GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
@@ -735,19 +735,11 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     iErrCode = t_pCache->GetTable(strMessages, &pMessages);
     RETURN_ON_ERROR(iErrCode);
 
-    // TODOTODO - Use ReadColumnsWhere() call
-    iErrCode = pMessages->GetEqualKeys(
-        GameEmpireMessages::Unread,
-        MESSAGE_UNREAD,
-        &piKey,
-        &iNumMessages
-        );
-
+    iErrCode = pMessages->GetEqualKeys(GameEmpireMessages::Unread, MESSAGE_UNREAD, &piKey, &iNumMessages);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         return OK;
     }
-
     RETURN_ON_ERROR(iErrCode);
 
     Variant** ppvMessage = new Variant*[iNumMessages];
@@ -769,7 +761,7 @@ int GameEngine::GetUnreadGameMessages (int iGameClass, int iGameNumber, int iEmp
     }
 
     // Sort the read messages oldest to newest
-    Algorithm::QSortTwoAscending <UTCTime, Variant*> (ptTime, ppvMessage, iNumMessages);
+    Algorithm::QSortTwoAscending<UTCTime, Variant*> (ptTime, ppvMessage, iNumMessages);
 
     // All messages have been read, so we need to make sure that if we have more saved messages 
     // than the max, we delete the oldest messages (best effort)

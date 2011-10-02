@@ -145,9 +145,7 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
         cols->Add(colDesc);
     }
 
-    // TODOTODO - Indexes
-    // TODOTODO - Foreign keys
-
+    // TODO - 494 - Add database indexes
     try
     {
         m_cmd->CreateTable(tableDesc);
@@ -434,8 +432,6 @@ int TableCacheCollection::GetTable(const char* pszCacheTableName, CachedTable** 
         return OK;
     }
 
-    // TODOTODO - we'll handle a cache miss more gracefully in the future. For now, let's not have any.
-    Assert(false);
     return ERROR_UNKNOWN_TABLE_NAME;
 }
 

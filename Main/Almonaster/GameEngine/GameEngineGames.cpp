@@ -3539,7 +3539,7 @@ int GameEngine::GetNumUniqueEmpiresInGames(unsigned int* piNumEmpires)
 
 int GameEngine::GetNumRecentActiveEmpiresInGames(unsigned int* piNumEmpires)
 {
-    // TODOTODO - Need new way to solve this
+    // TODO - 377 - GetNumRecentActiveEmpiresInGames needs implementation
     *piNumEmpires = 0;
     return OK;
 }

@@ -115,9 +115,7 @@ int SqlDatabaseConnection::CreateTable(const char* pszTableName, const TemplateD
         return ERROR_DATABASE_EXCEPTION;
     }
 
-    // TODOTODO - Indexes
-
-    // TODOTODO - Foreign keys
+    // TODO - 494 - Add database indexes
 
     return OK;
 }
@@ -175,7 +173,7 @@ int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSe
             cols[i].LessThanOrEqual = Convert(sdRange.pscColumns[i].vData2);
         }
 
-        // TODOTODO - Flags
+        // TODO - 611 - Implement or remove search flags and skip hits
     }
 
     int64 maxHits = sdRange.iMaxNumHits == 0 ? System::Int32::MaxValue : sdRange.iMaxNumHits + 1;
@@ -234,7 +232,7 @@ int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSe
             rangeCols[i].LessThanOrEqual = Convert(sdRange.pscColumns[i].vData2);
         }
 
-        // TODOTODO - Flags
+        // TODO - 611 - Implement or remove search flags and skip hits
     }
 
     array<OrderBySearchColumn>^ orderByCols = gcnew array<OrderBySearchColumn>(sdOrderBy.iNumColumns);

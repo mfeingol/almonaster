@@ -171,7 +171,7 @@ int GameEngine::GetScoreForPrivilege (Privilege privLevel, float* pfScore) {
 //
 int GameEngine::ScanEmpiresOnScoreChanges()
 {
-    // TODOTODO - Rewrite this
+    // TODO - 609 - Rewrite ScanEmpiresOnScoreChanges
     //int iErrCode;
     //unsigned int iEmpireKey = NO_KEY;
 

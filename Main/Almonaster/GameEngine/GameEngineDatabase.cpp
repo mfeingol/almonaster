@@ -57,7 +57,7 @@ int GameEngine::PurgeDatabaseMsg(AsyncTask* pMessage) {
 
 int GameEngine::PurgeDatabasePrivate (int iEmpireKey, int iCriteria) {
 
-    // TODOTODO - rewrite purges
+    // TODO - 529 - Rewrite database purge handling
     return OK;
 
     //int iErrCode = OK;
