@@ -1339,7 +1339,7 @@ public:
     int IsEmpireRequestingPause (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbPause);
     int GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, unsigned int* piNumEmpires);
 
-    int RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState);
+    int RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbDrawnGame);
     int RequestNoDraw (int iGameClass, int iGameNumber, int iEmpireKey);
     int IsEmpireRequestingDraw (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbDraw);
     int GetNumEmpiresRequestingDraw (int iGameClass, int iGameNumber, unsigned int* piNumEmpires);

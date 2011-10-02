@@ -633,16 +633,17 @@ if (m_bOwnPost && !m_bRedirection)
                         RETURN_ON_ERROR(iErrCode);
 
                         // Only update if we changed the status
-                        if ((iDraw != 0) != bOldDraw) {
-
-                            if (iDraw != 0) {
-
-                                iErrCode = RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &m_iGameState);
+                        if ((iDraw != 0) != bOldDraw)
+                        {
+                            if (iDraw != 0)
+                            {
+                                bool bDrawnGame;
+                                iErrCode = RequestDraw (m_iGameClass, m_iGameNumber, m_iEmpireKey, &bDrawnGame);
                                 RETURN_ON_ERROR(iErrCode);
 
                                 m_iGameOptions |= REQUEST_DRAW;
 
-                                if (!(m_iGameState & GAME_ENDED))
+                                if (!bDrawnGame)
                                 {
                                     AddMessage ("You are now requesting a draw");
                                 }

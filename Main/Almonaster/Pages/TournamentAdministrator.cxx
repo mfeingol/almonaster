@@ -1261,7 +1261,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 }
                 const char* pszMessage = pHttpForm->GetValue();
 
-                iErrCode = DeleteGame(m_iGameClass, m_iGameNumber, m_iEmpireKey, pszMessage, 0);
+                iErrCode = DeleteGame(m_iGameClass, m_iGameNumber, m_iEmpireKey, pszMessage, REASON_NONE);
                 RETURN_ON_ERROR(iErrCode);
                 AddMessage ("The game was deleted");
 

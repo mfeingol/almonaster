@@ -675,10 +675,6 @@ int GameEngine::VerifyActiveGames()
             bool bPaused = (iState & PAUSED) ||(iState & ADMIN_PAUSED);
             bool bStarted = (iState & STARTED) != 0;
         
-            // Reset state
-            iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_BUSY);
-            RETURN_ON_ERROR(iErrCode);
-        
             // Get num empires
             unsigned int iNumEmpires;
             iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
@@ -739,29 +735,6 @@ int GameEngine::VerifyActiveGames()
                 }
             }
         
-            // Delete the game if it's in an 'interrupted' state
-            if (iState & GAME_BUSY)
-            {
-                int iReason = iState & ~GAME_DELETION_REASON_MASK;
-                Assert(iReason != 0);
-
-                iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", iReason);
-                RETURN_ON_ERROR(iErrCode);
-
-                char pszBuffer [512];
-                sprintf(
-                    pszBuffer,
-                    "GameEngine setup deleted game %i of gameclass %i because it was in "\
-                    "inconsistent state %i",
-                    iGameNumber,
-                    iGameClass,
-                    iReason
-                    );
-
-                global.WriteReport(TRACE_WARNING, pszBuffer);
-                continue;
-            }
-
             // Game should be killed if it's not paused and it's not a longterm and 
             // more than x updates have transpired while the server was down
             Seconds sElapsedTime = Time::GetSecondDifference(tCurrentTime, tLastAvailableTime);
@@ -770,7 +743,7 @@ int GameEngine::VerifyActiveGames()
                 sPeriod < sSecondsForLongtermStatus && 
                 sElapsedTime > sPeriod * iNumUpdatesDownBeforeGameIsKilled) {
 
-                iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", SYSTEM_SHUTDOWN);
+                iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", REASON_SYSTEM_SHUTDOWN);
                 RETURN_ON_ERROR(iErrCode);
 
                 char pszBuffer [512];
@@ -789,7 +762,7 @@ int GameEngine::VerifyActiveGames()
             // If game hasn't started and is password protected and has only one empire, kill it                    
             if (!(iState & STARTED) && bPasswordProtected && iNumEmpires == 1) {
             
-                iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", PASSWORD_PROTECTED);
+                iErrCode = DeleteGame(iGameClass, iGameNumber, SYSTEM, "", REASON_PASSWORD_PROTECTED);
                 RETURN_ON_ERROR(iErrCode);
 
                 char pszBuffer [512];
@@ -1002,7 +975,6 @@ int GameEngine::SetupDefaultSystemTables()
        (float) 100.0,  // AdeptScore
         20,             // MaxNumSystemMessages
         20,             // MaxNumGameMessages
-        tTime,          // LastShutDownTimeUnused
         "Needle",       // DefaultAttackName
         "Probe",        // Science
         "Seed",         // Colony

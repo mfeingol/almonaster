@@ -803,18 +803,12 @@ int GameEngine::RemoveEmpireFromGame(int iGameClass, int iGameNumber, unsigned i
     }
     
     // Actually remove empire from game
-    iErrCode = t_pCache->WriteOr(strGameData, GameData::State, GAME_DELETING_EMPIRE);
-    RETURN_ON_ERROR(iErrCode);
-
     Variant vNumUpdates;
     iErrCode = t_pCache->ReadData(strGameData, GameData::NumUpdates, &vNumUpdates);
     RETURN_ON_ERROR(iErrCode);
 
     GameUpdateInformation guInfo = { vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
     iErrCode = DeleteEmpireFromGame(iGameClass, iGameNumber, iEmpireKey, iKillerEmpire == NO_KEY ? EMPIRE_QUIT : EMPIRE_ADMIN_REMOVED, &guInfo);
-    RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_DELETING_EMPIRE);
     RETURN_ON_ERROR(iErrCode);
     
     // Get number of empires remaining
@@ -1017,15 +1011,9 @@ int GameEngine::QuitEmpireFromGameInternal (int iGameClass, int iGameNumber, int
     else
     {
         // Remove empire from game
-        iErrCode = t_pCache->WriteOr(strGameData, GameData::State, GAME_DELETING_EMPIRE);
-        RETURN_ON_ERROR(iErrCode);
-
         iErrCode = DeleteEmpireFromGame (iGameClass, iGameNumber, iEmpireKey, EMPIRE_QUIT, NULL);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_DELETING_EMPIRE);
-        RETURN_ON_ERROR(iErrCode);
-        
         // If empires remain, so broadcast to other players
         Variant vEmpireName;
         iErrCode = GetEmpireName (iEmpireKey, &vEmpireName);
@@ -1090,11 +1078,11 @@ int GameEngine::ResignEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
 
     unsigned int iShipKey = NO_KEY;
 
-    int iGameState;
     char pszMessage [256];
     Variant vOldResigned, vEmpireName;
 
     // Set empire to paused
+    int iGameState;
     iErrCode = RequestPause (iGameClass, iGameNumber, iEmpireKey, &iGameState);
     RETURN_ON_ERROR(iErrCode);
 
@@ -1105,7 +1093,8 @@ int GameEngine::ResignEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     if (iGameClassOptions & ALLOW_DRAW)
     {
         // Set empire to request draw
-        iErrCode = RequestDraw (iGameClass, iGameNumber, iEmpireKey, &iGameState);
+        bool bDrawnGame;
+        iErrCode = RequestDraw (iGameClass, iGameNumber, iEmpireKey, &bDrawnGame);
         RETURN_ON_ERROR(iErrCode);
     }
 
@@ -1135,11 +1124,11 @@ int GameEngine::ResignEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     
     sprintf(pszMessage, "%s resigned from the game", vEmpireName.GetCharPtr());
 
-    iErrCode = BroadcastGameMessage (iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
+    iErrCode = BroadcastGameMessage(iGameClass, iGameNumber, pszMessage, SYSTEM, MESSAGE_BROADCAST | MESSAGE_SYSTEM);
     RETURN_ON_ERROR(iErrCode);
 
     bool bUpdate;
-    iErrCode = SetEmpireReadyForUpdate (iGameClass, iGameNumber, iEmpireKey, &bUpdate);
+    iErrCode = SetEmpireReadyForUpdate(iGameClass, iGameNumber, iEmpireKey, &bUpdate);
     RETURN_ON_ERROR(iErrCode);
 
     // Kill game if all empires have resigned

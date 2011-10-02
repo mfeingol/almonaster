@@ -62,9 +62,9 @@ int GameEngine::DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, con
     char pszTemp [512 + MAX_FULL_GAME_CLASS_NAME_LENGTH];
     if (iEmpireKey == SYSTEM)
     {
-        switch (iReason) {
-        
-        case SYSTEM_SHUTDOWN:
+        switch (iReason)
+        {
+        case REASON_SYSTEM_SHUTDOWN:
             sprintf (
                 pszTemp,
                 "%s %i was deleted after a system restart because the server was down too long",
@@ -73,16 +73,7 @@ int GameEngine::DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, con
                 );
             break;
         
-        case MAP_CREATION_ERROR:
-            sprintf (
-                pszTemp,
-                "%s %i was deleted because of an error during map creation",
-                pszGameClassName,
-                iGameNumber
-                );
-            break;
-
-        case PASSWORD_PROTECTED:
+        case REASON_PASSWORD_PROTECTED:
             sprintf (
                 pszTemp,
                 "%s %i was deleted because it was password protected and only one empire was playing",
@@ -91,59 +82,8 @@ int GameEngine::DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, con
                 );
             break;
 
-        case GAME_UPDATING:
-            sprintf (
-                pszTemp,
-                "%s %i was deleted because it was interrupted during an update",
-                pszGameClassName,
-                iGameNumber
-                );
-            break;
-
-        case GAME_CREATING:
-            sprintf (
-                pszTemp,
-                "%s %i was deleted because it was interrupted during game creation",
-                pszGameClassName,
-                iGameNumber
-                );
-            break;
-        
-        case GAME_ADDING_EMPIRE:
-            sprintf (
-                pszTemp,
-                "%s %i was deleted because it was interrupted during empire addition",
-                pszGameClassName,
-                iGameNumber
-                );
-            break;
-
-        case GAME_DELETING_EMPIRE:
-            sprintf (
-                pszTemp,
-                "%s %i was deleted because it was interrupted during empire deletion",
-                pszGameClassName,
-                iGameNumber
-                );
-            break;
-
-        case GAME_DELETING:
-            sprintf (
-                pszTemp,
-                "%s %i was deleted because it was interrupted during game deletion",
-                pszGameClassName,
-                iGameNumber
-                );
-            break;
-
         default:
             Assert(false);
-            sprintf (
-                pszTemp,
-                "%s %i was deleted for an unknown reason",
-                pszGameClassName,
-                iGameNumber
-                );
             break;
         }
     }
@@ -232,9 +172,6 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
 
     // Update scores if necessary
     iErrCode = UpdateScoresOnGameEnd(iGameClass, iGameNumber);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = t_pCache->WriteOr(strGameData, GameData::State, GAME_DELETING);
     RETURN_ON_ERROR(iErrCode);
 
     // Delete all remaining empires from the game
@@ -872,7 +809,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         0,      // Max num empires so far
         0,      // 0 updates
         tTime,  // Last updated now
-        STILL_OPEN | GAME_CREATING,     // State
+        STILL_OPEN,     // State
         MAX_COORDINATE,     // MinX
         0,      // 0 empires updated
         goGameOptions.pszPassword,  // Password
@@ -998,10 +935,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         }
     }
 
-    // No longer creating
-    iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_CREATING);
-    RETURN_ON_ERROR(iErrCode);
-
+    // Enter empires into game
     GET_GAME_EMPIRES(strGameEmpires, iGameClass, *piGameNumber);
     iErrCode = t_pCache->CreateEmpty(GAME_EMPIRES, strGameEmpires);
     RETURN_ON_ERROR(iErrCode);
@@ -1576,24 +1510,18 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     iErrCode = GetGameClassName(iGameClass, pszGameClassName);
     RETURN_ON_ERROR(iErrCode);
     
-    // We're adding an empire!
-    iErrCode = t_pCache->WriteOr(strGameData, GameData::State, GAME_ADDING_EMPIRE);
-    RETURN_ON_ERROR(iErrCode);
-
     // Insert row into GameEmpires(I.I) table
+    Variant pvGameEmpire[GameEmpires::NumColumns] =
     {
-        Variant pvGameEmpire[GameEmpires::NumColumns] =
-        {
-            iGameClass,
-            iGameNumber,
-            iEmpireKey,
-            vEmpireName
-        };
-        Assert(pvGameEmpire[GameEmpires::iEmpireName].GetCharPtr());
+        iGameClass,
+        iGameNumber,
+        iEmpireKey,
+        vEmpireName
+    };
+    Assert(pvGameEmpire[GameEmpires::iEmpireName].GetCharPtr());
 
-        iErrCode = t_pCache->InsertRow(strGameEmpires, GameEmpires::Template, pvGameEmpire, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
+    iErrCode = t_pCache->InsertRow(strGameEmpires, GameEmpires::Template, pvGameEmpire, NULL);
+    RETURN_ON_ERROR(iErrCode);
 
     iCurrentNumEmpires ++;
     bAddedToGame = true;
@@ -2193,9 +2121,6 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     *piNumUpdates = vNumUpdates.GetInteger();
     
     // We're done adding the empire
-    iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~GAME_ADDING_EMPIRE);
-    RETURN_ON_ERROR(iErrCode);
-
     char pszUpdateReport [128 + MAX_EMPIRE_NAME_LENGTH + MAX_FULL_GAME_CLASS_NAME_LENGTH];
     sprintf (
         pszUpdateReport,

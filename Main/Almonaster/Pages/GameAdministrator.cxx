@@ -1727,7 +1727,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
                 RETURN_ON_ERROR(iErrCode);
 
-                iErrCode = DeleteGame(iGameClass, iGameNumber, m_iEmpireKey, pszMessage, 0);
+                iErrCode = DeleteGame(iGameClass, iGameNumber, m_iEmpireKey, pszMessage, REASON_NONE);
                 RETURN_ON_ERROR(iErrCode);
 
                 AddMessage ("The game was deleted");

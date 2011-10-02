@@ -514,10 +514,12 @@ int GameEngine::GetNumEmpiresRequestingPause (int iGameClass, int iGameNumber, u
 //
 // Request game draw
 
-int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, int* piGameState)
+int GameEngine::RequestDraw(int iGameClass, int iGameNumber, int iEmpireKey, bool* pbDrawnGame)
 {
     int iErrCode;
     unsigned int iNumEmpires;
+
+    *pbDrawnGame = false;
 
     GET_GAME_EMPIRE_DATA (strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
     GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
@@ -555,10 +557,8 @@ int GameEngine::RequestDraw (int iGameClass, int iGameNumber, int iEmpireKey, in
     
     if ((unsigned int)vOldNum.GetInteger() + 1 >= iNumEmpires)
     {
-        iGameState |= GAME_ENDED;
+        *pbDrawnGame = true;
     }
-
-    *piGameState = iGameState;
 
     return iErrCode;
 }

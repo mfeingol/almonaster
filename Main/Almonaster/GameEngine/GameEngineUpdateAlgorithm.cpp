@@ -722,31 +722,18 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
 
         int* piRuinEmpire = (int*) StackAlloc (iNumEmpires * sizeof (int));
 
-        int iNumIdleUpdatesForRuin, iNumUpdatesForIdle, iGameState;
+        int iNumIdleUpdatesForRuin, iNumUpdatesForIdle;
 
         memset (pbRuinEmpireUpdated, false, iNumEmpires * sizeof (bool));
         memset (pbNewlyIdle, false, iNumEmpires * sizeof (bool));
 
         // Get idle updates for idle
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA,
-            iGameClass,
-            SystemGameClassData::NumUpdatesForIdle,
-            &vTemp
-            );
-
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumUpdatesForIdle, &vTemp);
         RETURN_ON_ERROR(iErrCode);
-
         iNumUpdatesForIdle = vTemp.GetInteger();
 
         // Get idle updates for ruin
-        iErrCode = t_pCache->ReadData(
-            SYSTEM_GAMECLASS_DATA,
-            iGameClass,
-            SystemGameClassData::NumUpdatesForRuin,
-            &vTemp
-            );
-
+        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumUpdatesForRuin, &vTemp);
         RETURN_ON_ERROR(iErrCode);
         iNumIdleUpdatesForRuin = vTemp.GetInteger();
 
@@ -978,11 +965,10 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
         }   // End if ruins occurred
 
         // Newly idle empires request pause and draw
-        for (i = 0; i < iNumEmpires; i ++) {
-
-            if (!pbNewlyIdle[i] || !pbAlive[i]) {
+        for (i = 0; i < iNumEmpires; i ++)
+        {
+            if (!pbNewlyIdle[i] || !pbAlive[i])
                 continue;
-            }
 
             bool bFlag;
             if (iGameClassOptions & ALLOW_DRAW) {
@@ -990,9 +976,10 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
                 iErrCode = IsEmpireRequestingDraw (iGameClass, iGameNumber, piEmpireKey[i], &bFlag);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (!bFlag) {
-
-                    iErrCode = RequestDraw (iGameClass, iGameNumber, piEmpireKey[i], &iGameState);
+                if (!bFlag)
+                {
+                    bool bDrawnGame;
+                    iErrCode = RequestDraw (iGameClass, iGameNumber, piEmpireKey[i], &bDrawnGame);
                     RETURN_ON_ERROR(iErrCode);
                     iNumNewDraws ++;
                 }
@@ -1001,8 +988,8 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
             iErrCode = IsEmpireRequestingPause (iGameClass, iGameNumber, piEmpireKey[i], &bFlag);
             RETURN_ON_ERROR(iErrCode);
 
-            if (!bFlag) {
-
+            if (!bFlag)
+            {
                 iErrCode = RequestPauseDuringUpdate (iGameClass, iGameNumber, piEmpireKey[i]);
                 RETURN_ON_ERROR(iErrCode);
             }
@@ -1056,8 +1043,8 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
     // Check for ally out and draw out if someone died and the game has closed //
     /////////////////////////////////////////////////////////////////////////////
 
-    if (!(iGameState & STILL_OPEN) && iNumObliterations + iNumRuins + iNumNewDraws > 0) {
-
+    if (!(iGameState & STILL_OPEN) && iNumObliterations + iNumRuins + iNumNewDraws > 0)
+    {
         iErrCode = CheckGameForEndConditions (iGameClass, iGameNumber, NULL, pbGameOver);
         RETURN_ON_ERROR(iErrCode);
 

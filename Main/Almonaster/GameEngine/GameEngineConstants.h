@@ -391,15 +391,8 @@ extern const int TECH_BITS[];
 #define ADMIN_PAUSED                            (0x00000002)
 #define STILL_OPEN                              (0x00000004)
 #define STARTED                                 (0x00000008)
-#define GAME_UPDATING                           (0x00000010)
-#define GAME_CREATING                           (0x00000020)
-#define GAME_ADDING_EMPIRE                      (0x00000040)
-#define GAME_DELETING                           (0x00000080)
-#define GAME_DELETING_EMPIRE                    (0x00000100)
 #define GAME_MAP_GENERATED                      (0x00000400)
-#define GAME_ENDED                              (0x80000000)
 
-#define GAME_BUSY (GAME_UPDATING | GAME_CREATING | GAME_ADDING_EMPIRE | GAME_DELETING | GAME_DELETING_EMPIRE)
 #define GAME_DELETION_REASON_MASK (PAUSED | ADMIN_PAUSED | STILL_OPEN | STARTED | GAME_MAP_GENERATED)
 
 // GameData::Fairness
@@ -516,9 +509,9 @@ enum MessageType {
 #define GAME_SECURITY_CHECK_SESSIONID   (0x00000002)
 
 // DeleteGame() reasons
-#define SYSTEM_SHUTDOWN                 (0x00000001)
-#define MAP_CREATION_ERROR              (0x00000002)
-#define PASSWORD_PROTECTED              (0x00000004)
+#define REASON_NONE                     (0x00000000)
+#define REASON_SYSTEM_SHUTDOWN          (0x00000001)
+#define REASON_PASSWORD_PROTECTED       (0x00000002)
 
 // SystemThemes::Options
 #define THEME_BACKGROUND                (0x00000001)

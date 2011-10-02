@@ -43,7 +43,6 @@ namespace SystemData
     static const char* const AdeptScore = "AdeptScore";
     static const char* const MaxNumSystemMessages = "MaxNumSystemMessages";
     static const char* const MaxNumGameMessages = "MaxNumGameMessages";
-    static const char* const LastShutdownTimeUNUSED = "LastShutdownTimeUNUSED";
     static const char* const DefaultAttackName = "DefaultAttackName";
     static const char* const DefaultScienceName = "DefaultScienceName";
     static const char* const DefaultColonyName = "DefaultColonyName";
@@ -135,7 +134,8 @@ namespace SystemData
     static const char* const AdminEmail = "AdminEmail";
     static const char* const BuilderBRDampener = "BuilderBRDampener";
 
-    enum Columns {
+    enum Columns
+    {
         iDefaultAlien,
         iServerName,
         iDefaultMaxNumSystemMessages,
@@ -149,7 +149,6 @@ namespace SystemData
         iAdeptScore,
         iMaxNumSystemMessages,
         iMaxNumGameMessages,
-        iLastShutdownTimeUNUSED,
         iDefaultAttackName,
         iDefaultScienceName,
         iDefaultColonyName,
@@ -242,7 +241,8 @@ namespace SystemData
         iBuilderBRDampener,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         DefaultAlien,
         ServerName,
         DefaultMaxNumSystemMessages,
@@ -256,7 +256,6 @@ namespace SystemData
         AdeptScore,
         MaxNumSystemMessages,
         MaxNumGameMessages,
-        LastShutdownTimeUNUSED,
         DefaultAttackName,
         DefaultScienceName,
         DefaultColonyName,
@@ -363,7 +362,6 @@ namespace SystemData
         V_FLOAT,
         V_INT,
         V_INT,
-        V_INT64,
         V_STRING,
         V_STRING,
         V_STRING,
@@ -459,7 +457,6 @@ namespace SystemData
     static const unsigned int Sizes[] = {
         0,
         MAX_SERVER_NAME_LENGTH,
-        0,
         0,
         0,
         0,
