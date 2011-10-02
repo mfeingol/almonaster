@@ -6143,10 +6143,16 @@ int HtmlRenderer::HandleIconSelection (unsigned int* piIcon, const char* pszUplo
     return OK;
 }
 
-int HtmlRenderer::WriteActiveGameAdministration(int* piGameClass, int* piGameNumber, unsigned int iNumActiveGames, 
-                                                unsigned int iNumOpenGames, unsigned int iNumClosedGames, bool bAdmin)
+int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsigned int iNumActiveGames, unsigned int iNumOpenGames, unsigned int iNumClosedGames, bool bAdmin)
 {
-    unsigned int i;
+    int* piGameClass = (int*)StackAlloc(iNumActiveGames * sizeof(int));
+    int* piGameNumber = (int*)StackAlloc(iNumActiveGames * sizeof(int));
+
+    for (unsigned int i = 0; i < iNumActiveGames; i ++)
+    {
+        piGameClass[i] = ppvGames[i][0].GetInteger();
+        piGameNumber[i] = ppvGames[i][1].GetInteger();
+    }
 
     if (iNumActiveGames == 0)
     {
@@ -6228,6 +6234,7 @@ int HtmlRenderer::WriteActiveGameAdministration(int* piGameClass, int* piGameNum
     int iBegin = 0, iNumToSort;
     int iCurrentGameClass = piGameClass[0];
 
+    unsigned int i;
     for (i = 1; i < iNumActiveGames; i ++) {
 
         if (piGameClass[i] != iCurrentGameClass) {
@@ -6259,7 +6266,7 @@ int HtmlRenderer::WriteActiveGameAdministration(int* piGameClass, int* piGameNum
     iErrCode = CacheGameData(piGameClass, piGameNumber, NO_KEY, iNumActiveGames);
     RETURN_ON_ERROR(iErrCode);
 
-    for (i = 0; i < iNumActiveGames; i ++)
+    for (unsigned int i = 0; i < iNumActiveGames; i ++)
     {
         bool bUpdate;
         iErrCode = CheckGameForUpdates (piGameClass[i], piGameNumber[i], &bUpdate);

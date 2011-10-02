@@ -31,8 +31,8 @@ if (!bInitialized)
 IHttpForm* pHttpForm;
 
 // Handle a submission
-if (m_bOwnPost && !m_bRedirection) {
-
+if (m_bOwnPost && !m_bRedirection)
+{
     const char* pszStart;
     int iGameClassKey, iGameNumber;
     if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("Login")) != NULL && 
@@ -64,36 +64,30 @@ RETURN_ON_ERROR(iErrCode);
 
 // Begin individual page
 unsigned int i, iNumGames;
-int* piGameClassKey = NULL, * piGameNumber = NULL;
-Algorithm::AutoDelete<int> del_piGameClassKey(piGameClassKey, true);
-Algorithm::AutoDelete<int> del_piGameNumber(piGameNumber, true);
+
+Variant** ppvActiveGames = NULL;
+AutoFreeData free_ppvActiveGames(ppvActiveGames);
 
 // Check games for updates until no further updates are needed
 while (true)
 {
-    if (piGameClassKey)
+    if (ppvActiveGames)
     {
-        delete [] piGameClassKey;
-        piGameClassKey = NULL;
+        t_pCache->FreeData(ppvActiveGames);
+        ppvActiveGames = NULL;
     }
 
-    if (piGameNumber)
-    {
-        delete [] piGameNumber;
-        piGameNumber = NULL;
-    }
-
-    iErrCode = GetEmpireActiveGames(m_iEmpireKey, &piGameClassKey, &piGameNumber, &iNumGames);
+    iErrCode = GetEmpireActiveGames(m_iEmpireKey, &ppvActiveGames, &iNumGames);
     RETURN_ON_ERROR(iErrCode);
 
     if (iNumGames > 0)
     {
-        iErrCode = CacheGameData(piGameClassKey, piGameNumber, m_iEmpireKey, iNumGames);
+        iErrCode = CacheGameData((const Variant**)ppvActiveGames, m_iEmpireKey, iNumGames);
         RETURN_ON_ERROR(iErrCode);
         for (i = 0; i < iNumGames; i ++)
         {
             bool bUpdateOccurred;
-            iErrCode = CheckGameForUpdates(piGameClassKey[i], piGameNumber[i], &bUpdateOccurred);
+            iErrCode = CheckGameForUpdates(ppvActiveGames[i][0].GetInteger(), ppvActiveGames[i][1].GetInteger(), &bUpdateOccurred);
             RETURN_ON_ERROR(iErrCode);
             if (bUpdateOccurred)
             {
@@ -139,25 +133,28 @@ else
         }
 
         // Fill in the table
-        for (i = 0; i < iNumGames; i ++) {
+        for (i = 0; i < iNumGames; i ++)
+        {
+            int iGameClass = ppvActiveGames[i][0].GetInteger();
+            int iGameNumber = ppvActiveGames[i][1].GetInteger();
 
             bool bFlag;
 
-            iErrCode = DoesGameExist (piGameClassKey[i], piGameNumber[i], &bFlag);
+            iErrCode = DoesGameExist(iGameClass, iGameNumber, &bFlag);
             RETURN_ON_ERROR(iErrCode);
             if (!bFlag)
             {
                 continue;
             }
 
-            iErrCode = HasEmpireResignedFromGame (piGameClassKey[i], piGameNumber[i], m_iEmpireKey, &bFlag);
+            iErrCode = HasEmpireResignedFromGame(iGameClass, iGameNumber, m_iEmpireKey, &bFlag);
             RETURN_ON_ERROR(iErrCode);
             if (bFlag)
             {
                 continue;
             }
 
-            iErrCode = GetGameClassSuperClassKey (piGameClassKey[i], &iSuperClassKey);
+            iErrCode = GetGameClassSuperClassKey(iGameClass, &iSuperClassKey);
             RETURN_ON_ERROR(iErrCode);
 
             iNumRenderGames ++;
@@ -190,8 +187,8 @@ else
             // We found a match, so write down the game in question
             ppiTable [iSuperClassIndex][iNumGamesSoFar] = i;
 
-            ppiGameClass[iSuperClassIndex][iNumGamesSoFar] = piGameClassKey[i];
-            ppiGameNumber[iSuperClassIndex][iNumGamesSoFar] = piGameNumber[i];
+            ppiGameClass[iSuperClassIndex][iNumGamesSoFar] = iGameClass;
+            ppiGameNumber[iSuperClassIndex][iNumGamesSoFar] = iGameNumber;
 
             iNumGamesSoFar ++;
         }
@@ -204,9 +201,6 @@ else
         }
         else
         {
-            iErrCode = CacheGameData(piGameClassKey, piGameNumber, m_iEmpireKey, iNumGames);
-            RETURN_ON_ERROR(iErrCode);
-
             %>You are in the following games:</h3><% 
 
             //

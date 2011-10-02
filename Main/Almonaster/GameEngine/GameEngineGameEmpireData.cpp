@@ -671,26 +671,27 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     RETURN_ON_ERROR(iErrCode);
 
     // Delete game from personal list
-    unsigned int iGames = 1;
     GET_SYSTEM_EMPIRE_ACTIVE_GAMES(strEmpireActiveGames, iEmpireKey);
     iErrCode = t_pCache->GetTable(strEmpireActiveGames, &pEmpireActiveGames);
-    if (iErrCode == OK)
-    {
-        iErrCode = pEmpireActiveGames->GetNumCachedRows(&iGames);
-        RETURN_ON_ERROR(iErrCode);
+    RETURN_ON_ERROR(iErrCode);
 
-        char pszData[MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
-        GetGameClassGameNumber(iGameClass, iGameNumber, pszData);
+    unsigned int iGames;
+    iErrCode = pEmpireActiveGames->GetNumCachedRows(&iGames);
+    RETURN_ON_ERROR(iErrCode);
 
-        unsigned int iGameKey;
-        iErrCode = pEmpireActiveGames->GetFirstKey(SystemEmpireActiveGames::GameClassGameNumber, pszData, &iGameKey);
-        RETURN_ON_ERROR(iErrCode);
+    const char* ppszColumns[] = { SystemEmpireActiveGames::GameClass, SystemEmpireActiveGames::GameNumber };
+    const Variant pvGameData[] = { iGameClass, iGameNumber };
 
-        iErrCode = pEmpireActiveGames->DeleteRow(iGameKey);
-        RETURN_ON_ERROR(iErrCode);
-    }
+    unsigned int* piGameKey = NULL, iNumEqualKeys;
+    AutoFreeKeys free_piGameKey(piGameKey);
+    iErrCode = pEmpireActiveGames->GetEqualKeys(ppszColumns, pvGameData, countof(ppszColumns), &piGameKey, &iNumEqualKeys);
+    RETURN_ON_ERROR(iErrCode);
+    Assert(iNumEqualKeys == 1);
 
-    // If last game, empire should be tested for deletion
+    iErrCode = pEmpireActiveGames->DeleteRow(piGameKey[0]);
+    RETURN_ON_ERROR(iErrCode);
+
+    // If last game, empire should be checked for deletion
     if (iGames == 1)
     {
         Variant vOptions;

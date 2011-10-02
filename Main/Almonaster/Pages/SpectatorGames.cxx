@@ -170,12 +170,11 @@ case 0:
     %><input type="hidden" name="SpectSubPage" value="0"><%
 
     // Get open games
-    int * piGameClass = NULL, * piGameNumber = NULL;
-    Algorithm::AutoDelete<int> del_piGameClass(piGameClass, true);
-    Algorithm::AutoDelete<int> del_piGameNumber(piGameNumber, true);
+    Variant** ppvGame = NULL;
+    AutoFreeData free_ppvGame(ppvGame);
 
     unsigned int iNumClosedGames = 0;
-    iErrCode = GetClosedGames(&piGameClass, &piGameNumber, &iNumClosedGames);
+    iErrCode = GetClosedGames(&ppvGame, &iNumClosedGames);
     RETURN_ON_ERROR(iErrCode);
 
     if (iNumClosedGames == 0)
@@ -186,7 +185,6 @@ case 0:
     {
         // Update the open games
         bool bDraw = false;
-        int iGameClass, iGameNumber;
         unsigned int* piSuperClassKey = NULL, j, iNumSuperClasses;
         AutoFreeKeys free_piSuperClassKey(piSuperClassKey);
 
@@ -216,13 +214,13 @@ case 0:
             bool bFlag;
 
             // Cache GameData for each game
-            iErrCode = CacheGameData(piGameClass, piGameNumber, m_iEmpireKey, iNumClosedGames);
+            iErrCode = CacheGameData((const Variant**)ppvGame, m_iEmpireKey, iNumClosedGames);
             RETURN_ON_ERROR(iErrCode);
 
-            for (i = 0; i < (int)iNumClosedGames; i ++) {
-
-                iGameClass = piGameClass[i];
-                iGameNumber = piGameNumber[i];
+            for (i = 0; i < (int)iNumClosedGames; i ++)
+            {
+                int iGameClass = ppvGame[i][0].GetInteger();
+                int iGameNumber = ppvGame[i][1].GetInteger();
 
                 // Check everything
                 iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bFlag);
@@ -332,8 +330,8 @@ case 0:
 
                     for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumClosedGames]; j ++)
                     {
-                        iGameClass = ppiGameClass[iNumSuperClasses][j];
-                        iGameNumber = ppiGameNumber[iNumSuperClasses][j];
+                        int iGameClass = ppiGameClass[iNumSuperClasses][j];
+                        int iGameNumber = ppiGameNumber[iNumSuperClasses][j];
 
                         Variant* pvGameClassInfo = NULL;
                         AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
@@ -405,8 +403,8 @@ case 0:
 
                         for (j = 0; j < iNumGamesInSuperClass; j ++) {
 
-                            iGameClass = ppiGameClass[i][j];
-                            iGameNumber = ppiGameNumber[i][j];
+                            int iGameClass = ppiGameClass[i][j];
+                            int iGameNumber = ppiGameNumber[i][j];
 
                             Variant* pvGameClassInfo = NULL;
                             AutoFreeData free_pvGameClassInfo(pvGameClassInfo);

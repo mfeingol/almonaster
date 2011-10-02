@@ -237,7 +237,7 @@ int GameEngine::DeleteTournament (int iEmpireKey, unsigned int iTournamentKey, b
     }
 
     // Can't delete a tournament with games
-    iErrCode = GetTournamentGames (iTournamentKey, NULL, NULL, &iGames);
+    iErrCode = GetTournamentGames (iTournamentKey, NULL, &iGames);
     RETURN_ON_ERROR(iErrCode);
 
     if (iGames > 0) {
@@ -750,20 +750,19 @@ int GameEngine::RespondToTournamentJoinRequest (int iEmpireKey, int iMessageKey,
 int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDeleteKey) {
 
     int iErrCode;
-    unsigned int iKey, iNumGames, i;
+    unsigned int iKey;
 
     ICachedTable* pEmpires = NULL;
     AutoRelease<ICachedTable> rel(pEmpires);
 
-    Variant vTourneyName, * pvGameClassGameNumber = NULL;
-    AutoFreeData free(pvGameClassGameNumber);
+    Variant vTourneyName;
 
     GET_SYSTEM_TOURNAMENT_EMPIRES(pszEmpires, iTournamentKey);
     GET_SYSTEM_EMPIRE_TOURNAMENTS(pszTourneys, iDeleteKey);
 
     char pszMessage [MAX_TOURNAMENT_TEAM_NAME_LENGTH + 96];
 
-    iErrCode = GetTournamentName (iTournamentKey, &vTourneyName);
+    iErrCode = GetTournamentName(iTournamentKey, &vTourneyName);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = t_pCache->GetFirstKey(pszEmpires, SystemTournamentEmpires::EmpireKey, iDeleteKey, &iKey);
@@ -772,19 +771,18 @@ int GameEngine::DeleteEmpireFromTournament (unsigned int iTournamentKey, int iDe
     }
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = t_pCache->ReadColumnWhereEqual(SYSTEM_ACTIVE_GAMES, SystemActiveGames::TournamentKey, iTournamentKey, 
-                                              SystemActiveGames::GameClassGameNumber, NULL, &pvGameClassGameNumber, &iNumGames);
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
-        iErrCode = OK;
+    unsigned int iNumGames;
+    Variant** ppvGames = NULL;
+    AutoFreeData free_ppvGames(ppvGames);
+    iErrCode = GetTournamentGames(iTournamentKey, &ppvGames, &iNumGames);
     RETURN_ON_ERROR(iErrCode);
 
-    for (i = 0; i < iNumGames; i ++)
+    for (unsigned int i = 0; i < iNumGames; i ++)
     {
-        bool bInGame;
-        int iGameClass, iGameNumber;
+        int iGameClass = ppvGames[i][0].GetInteger();
+        int iGameNumber = ppvGames[i][1].GetInteger();
     
-        GetGameClassGameNumber (pvGameClassGameNumber[i].GetCharPtr(), &iGameClass, &iGameNumber);
-
+        bool bInGame;
         iErrCode = IsEmpireInGame(iGameClass, iGameNumber, iDeleteKey, &bInGame);
         RETURN_ON_ERROR(iErrCode);
 
@@ -1353,38 +1351,21 @@ int GameEngine::SetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int
 }
 
 
-int GameEngine::GetTournamentGames(unsigned int iTournamentKey, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames)
+int GameEngine::GetTournamentGames(unsigned int iTournamentKey, Variant*** pppvGames, unsigned int* piNumGames)
 {
-    Assert(ppiGameClass != NULL && ppiGameNumber != NULL || ppiGameClass == NULL && ppiGameNumber == NULL);
+    int iErrCode;
 
-    if (ppiGameClass)
-        *ppiGameClass = NULL;
+    if (pppvGames)
+        *pppvGames = NULL;
 
-    if (ppiGameNumber)
-        *ppiGameNumber = NULL;
+    const char* ppszColumns[] = { SystemActiveGames::GameClass, SystemActiveGames::GameNumber };
 
-    Variant* pvGame = NULL;
-    AutoFreeData free(pvGame);
-    
-    int iErrCode = t_pCache->ReadColumnWhereEqual(SYSTEM_ACTIVE_GAMES, SystemActiveGames::TournamentKey, iTournamentKey, 
-                                                  SystemActiveGames::GameClassGameNumber, NULL, &pvGame, piNumGames);
+    iErrCode = t_pCache->ReadColumnsWhereEqual(SYSTEM_ACTIVE_GAMES, SystemActiveGames::TournamentKey, iTournamentKey, 
+                                               ppszColumns, countof(ppszColumns), NULL, pppvGames, piNumGames);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
-        return OK;
-    RETURN_ON_ERROR(iErrCode);
-    
-    if (ppiGameClass != NULL)
     {
-        *ppiGameClass = new int[*piNumGames];
-        Assert(*ppiGameClass);
-
-        *ppiGameNumber = new int[*piNumGames];
-        Assert(*ppiGameNumber);
-
-        for (unsigned int i = 0; i < *piNumGames; i ++)
-        {
-            GetGameClassGameNumber(pvGame[i].GetCharPtr(), (*ppiGameClass) + i, (*ppiGameNumber) + i);
-        }
+        iErrCode = OK;
     }
-
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }

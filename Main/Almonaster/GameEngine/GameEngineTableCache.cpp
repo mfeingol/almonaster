@@ -243,7 +243,21 @@ int GameEngine::CacheTournamentEmpiresForGame(unsigned int iTournamentKey)
     return iErrCode;
 }
 
-int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKey, unsigned int iNumGames)
+int GameEngine::CacheGameData(const Variant** ppvGames, int iEmpireKey, unsigned int iNumGames)
+{
+    int* piGameClass = (int*)StackAlloc(iNumGames * sizeof(int));
+    int* piGameNumber = (int*)StackAlloc(iNumGames * sizeof(int));
+
+    for (unsigned int i = 0; i < iNumGames; i ++)
+    {
+        piGameClass[i] = ppvGames[i][0].GetInteger();
+        piGameNumber[i] = ppvGames[i][1].GetInteger();
+    }
+
+    return CacheGameData(piGameClass, piGameNumber, iEmpireKey, iNumGames);
+}
+
+int GameEngine::CacheGameData(const int* piGameClass, const int* piGameNumber, int iEmpireKey, unsigned int iNumGames)
 {
     const unsigned int cGameDataCols = 2;
     const unsigned int cGameEmpireDataCols = 3;
@@ -326,7 +340,7 @@ int GameEngine::CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKe
 	return t_pCache->Cache(pcEntries, iNumGames * cNumTableTypes);
 }
 
-int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant* pvGame, unsigned int iNumGames)
+int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant** ppvGames, unsigned int iNumGames)
 {
     const unsigned int cGameEmpireDataCols = 3;
 
@@ -335,8 +349,8 @@ int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant* pvGa
 
     for (unsigned int i = 0; i < iNumGames; i ++)
 	{
-        int iGameClass, iGameNumber;
-        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
+        int iGameClass = ppvGames[i][0].GetInteger();
+        int iGameNumber = ppvGames[i][1].GetInteger();
 
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Name = GameEmpireData::GameClass;
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Data = iGameClass;
@@ -868,13 +882,13 @@ int GameEngine::CacheSystemAvailability()
     return iErrCode;
 }
 
-int GameEngine::CacheGameEmpireTables(const Variant* pvGameClassGameNumber, unsigned int iNumGames)
+int GameEngine::CacheGameEmpireTables(const Variant** ppvGames, unsigned int iNumGames)
 {
     TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumGames * sizeof(TableCacheEntry));
     for (unsigned int i = 0; i < iNumGames; i ++)
     {
-        int iGameClass, iGameNumber;
-        GetGameClassGameNumber(pvGameClassGameNumber[i].GetCharPtr(), &iGameClass, &iGameNumber);
+        int iGameClass = ppvGames[i][0].GetInteger();
+        int iGameNumber = ppvGames[i][1].GetInteger();
 
         ColumnEntry* pCols = (ColumnEntry*)StackAlloc(2 * sizeof(ColumnEntry));
         pCols[0].Name = GameEmpires::GameClass;

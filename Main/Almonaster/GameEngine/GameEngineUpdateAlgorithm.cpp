@@ -439,17 +439,17 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
             iErrCode = t_pCache->WriteAnd(strGameData, GameData::State, ~STILL_OPEN);
             RETURN_ON_ERROR(iErrCode);
             
-            char pszData[MAX_GAMECLASS_GAMENUMBER_LENGTH + 1];
-            GetGameClassGameNumber(iGameClass, iGameNumber, pszData);
-            
             // Mark closed in game list
-            unsigned int iActiveGameKey;
-            iErrCode = t_pCache->GetFirstKey(SYSTEM_ACTIVE_GAMES, SystemActiveGames::GameClassGameNumber, pszData, &iActiveGameKey);
+            const char* ppszColumns[] = { SystemActiveGames::GameClass, SystemActiveGames::GameNumber };
+            const Variant pvGameData[] = { iGameClass, iGameNumber };
+
+            unsigned int* piGameKey = NULL, iNumEqualKeys;
+            AutoFreeKeys free_piGameKey(piGameKey);
+            iErrCode = t_pCache->GetEqualKeys(SYSTEM_ACTIVE_GAMES, ppszColumns, pvGameData, countof(ppszColumns), &piGameKey, &iNumEqualKeys);
             RETURN_ON_ERROR(iErrCode);
-            
-            Assert(iActiveGameKey != NO_KEY);
-            
-            iErrCode = t_pCache->WriteData(SYSTEM_ACTIVE_GAMES, iActiveGameKey, SystemActiveGames::State, 0);
+            Assert(iNumEqualKeys == 1);
+
+            iErrCode = t_pCache->WriteData(SYSTEM_ACTIVE_GAMES, piGameKey[0], SystemActiveGames::Open, CLOSED);
             RETURN_ON_ERROR(iErrCode);
 
             // Add to update messages

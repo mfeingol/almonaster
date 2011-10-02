@@ -1816,12 +1816,11 @@ Redirection:
         iErrCode = GetTournamentName(m_iTournamentKey, &vName);
         RETURN_ON_ERROR(iErrCode);
 
-        int* piGameClass = NULL, * piGameNumber = NULL;
-        Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
-        Algorithm::AutoDelete<int> free_piGameNumber(piGameNumber, true);
+        Variant** ppvGame = NULL;
+        AutoFreeData free_ppvGame(ppvGame);
         unsigned int iNumActiveGames;
 
-        iErrCode = GetTournamentGames(m_iTournamentKey, &piGameClass, &piGameNumber, &iNumActiveGames);
+        iErrCode = GetTournamentGames(m_iTournamentKey, &ppvGame, &iNumActiveGames);
         RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="12"><%
@@ -1832,7 +1831,7 @@ Redirection:
 
         %> tournament active games:</h3><%
 
-        iErrCode = WriteActiveGameAdministration(piGameClass, piGameNumber, iNumActiveGames, 0, 0, false);
+        iErrCode = WriteActiveGameAdministration((const Variant**)ppvGame, iNumActiveGames, 0, 0, false);
         RETURN_ON_ERROR(iErrCode);
 
         %><p><% WriteButton (BID_CANCEL);

@@ -827,10 +827,8 @@ public:
     int HandleIconSelection (unsigned int* piIcon, const char* pszUploadDir, unsigned int iKey1, unsigned int iKey2, bool* pbHandled);
 
     // Admin
-    int WriteActiveGameAdministration (int* piGameClass, int* piGameNumber, unsigned int iNumActiveGames, 
-        unsigned int iNumOpenGames, unsigned int iNumClosedGames, bool bAdmin);
-
-    int WriteAdministerGame (int iGameClass, int iGameNumber, bool bAdmin);
+    int WriteActiveGameAdministration (const Variant** ppvGames, unsigned int iNumActiveGames, unsigned int iNumOpenGames, unsigned int iNumClosedGames, bool bAdmin);
+    int WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdmin);
 
     // Tournaments
     int RenderTournaments(const Variant* pvTournamentKey, unsigned int iTournaments, bool bSingleOwner);

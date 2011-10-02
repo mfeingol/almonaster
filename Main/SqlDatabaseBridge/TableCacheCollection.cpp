@@ -492,6 +492,25 @@ int TableCacheCollection::ReadColumnWhereEqual(const char* pszCacheTableName, co
     return iErrCode;
 }
 
+int TableCacheCollection::ReadColumnsWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char** ppszReadColumn, unsigned int iNumReadColumns,
+                                                unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows)
+{
+    if (ppiKey)
+        *ppiKey = NULL;
+
+    *pppvData = NULL;
+    *piNumRows = 0;
+
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->ReadColumnsWhereEqual(pszEqualColumn, vData, ppszReadColumn, iNumReadColumns, ppiKey, pppvData, piNumRows);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
 int TableCacheCollection::ReadColumns(const char* pszCacheTableName, unsigned int iNumColumns, const char* const* ppszColumn,
                                      unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows)
 {

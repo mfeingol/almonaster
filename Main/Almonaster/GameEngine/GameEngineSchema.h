@@ -28,8 +28,8 @@
 
 #define SYSTEM_DATA "SystemData"
 
-namespace SystemData {
-    
+namespace SystemData
+{
     static const char* const DefaultAlien = "DefaultAlien";
     static const char* const ServerName = "ServerName";
     static const char* const DefaultMaxNumSystemMessages = "DefaultMaxNumSystemMessages";
@@ -563,7 +563,7 @@ namespace SystemData {
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -983,7 +983,7 @@ namespace SystemEmpireData
         INDEX_UNIQUE_DATA,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -1028,7 +1028,7 @@ namespace SystemAvailability
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -1287,7 +1287,7 @@ namespace SystemGameClassData {
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "SystemGameClassData",
@@ -1340,7 +1340,7 @@ namespace SystemAlienIcons {
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -1386,7 +1386,7 @@ namespace SystemSuperClassData {
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "SystemSuperClassData",
@@ -1490,7 +1490,7 @@ namespace SystemThemes
         MAX_COLOR_LENGTH,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "SystemThemes",
@@ -1513,41 +1513,47 @@ namespace SystemThemes
 
 namespace SystemActiveGames
 {
-    static const char* const GameClassGameNumber = "GameClassGameNumber";
-    static const char* const State = "State";
+    static const char* const GameClass = "GameClass";
+    static const char* const GameNumber = "GameNumber";
+    static const char* const Open = "Open";
     static const char* const TournamentKey = "TournamentKey";
 
     enum Columns
     {
-        iGameClassGameNumber,
-        iState,
+        iGameClass,
+        iGameNumber,
+        iOpen,
         iTournamentKey,
     };
 
     static const char* const ColumnNames[] = 
     {
-        GameClassGameNumber,
-        State,
+        GameClass,
+        GameNumber,
+        Open,
         TournamentKey,
     };
     
     static const VariantType Types[] = 
     {
-        V_STRING,
+        V_INT,
+        V_INT,
         V_INT,
         V_INT,
     };
 
     static const unsigned int Sizes[] = 
     {
-        VARIABLE_LENGTH_STRING,
+        0,
+        0,
         0,
         0,
     };
 
     static const char* const IndexColumns[] =
     {
-        GameClassGameNumber,
+        GameClass,
+        GameNumber,
         TournamentKey,
     };
 
@@ -1555,9 +1561,10 @@ namespace SystemActiveGames
     {
         0,
         0,
+        0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = 
     {
@@ -1611,7 +1618,7 @@ namespace SystemEmpireAssociations
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -1701,7 +1708,7 @@ namespace SystemEmpireMessages
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "SystemEmpireMessages",
@@ -1795,7 +1802,7 @@ namespace SystemEmpireNukeList
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -1876,7 +1883,7 @@ namespace SystemNukeList {
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "SystemNukeList",
@@ -1961,7 +1968,7 @@ namespace SystemLatestGames
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = 
     {
@@ -1989,33 +1996,38 @@ namespace SystemLatestGames
 namespace SystemEmpireActiveGames
 {
     static const char* const EmpireKey = "EmpireKey";
-    static const char* const GameClassGameNumber = "GameClassGameNumber";
+    static const char* const GameClass = "GameClass";
+    static const char* const GameNumber = "GameNumber";
 
     enum Columns
     {
         iEmpireKey,
-        iGameClassGameNumber
+        iGameClass,
+        iGameNumber
     };
 
     static const char* const ColumnNames[] =
     {
         EmpireKey,
-        GameClassGameNumber
+        GameClass,
+        GameNumber
     };
 
     static const VariantType Types[] =
     {
         V_INT,
-        V_STRING
+        V_INT,
+        V_INT
     };
 
     static const unsigned int Sizes[] =
     {
         0,
-        VARIABLE_LENGTH_STRING
+        0,
+        0
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -2096,7 +2108,7 @@ namespace SystemTournaments
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -2190,7 +2202,7 @@ namespace SystemTournamentTeams
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = 
     {
@@ -2274,7 +2286,7 @@ namespace SystemTournamentEmpires
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -2328,7 +2340,7 @@ namespace SystemEmpireTournaments
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
     {
@@ -2384,7 +2396,7 @@ namespace SystemChatroomData
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "SystemChatroomData",
@@ -2660,7 +2672,7 @@ namespace GameData
         0,
     };
     
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameData",
@@ -2747,7 +2759,7 @@ namespace GameSecurity
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameSecurity",
@@ -2821,7 +2833,7 @@ namespace GameEmpires
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameEmpires",
@@ -2907,7 +2919,7 @@ namespace GameNukedEmpires
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameNukedEmpires",
@@ -3099,7 +3111,7 @@ namespace GameMap
         0,
     };
     
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameMap",
@@ -3415,7 +3427,7 @@ namespace GameEmpireData
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
     
     static const TemplateDescription Template = {
         "GameEmpireData",
@@ -3511,7 +3523,7 @@ namespace GameEmpireMessages
         VARIABLE_LENGTH_STRING,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameEmpireMessages",
@@ -3611,7 +3623,7 @@ namespace GameEmpireMap
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameEmpireMap",
@@ -3723,7 +3735,7 @@ namespace GameEmpireDiplomacy
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
     
     static const TemplateDescription Template = {
         "GameEmpireDiplomacy",
@@ -3851,7 +3863,7 @@ namespace GameEmpireShips
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
     
     static const TemplateDescription Template = {
         "GameEmpireShips",
@@ -3951,7 +3963,7 @@ namespace GameEmpireFleets
         0,
     };
 
-    static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
+    static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
         "GameEmpireFleets",

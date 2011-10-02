@@ -360,34 +360,24 @@ int GameEngine::GetGameUpdateData (int iGameClass, int iGameNumber, int* piSecon
 }
 
 // Resets all games' update times to now
-int GameEngine::ResetAllGamesUpdateTime() {
+int GameEngine::ResetAllGamesUpdateTime()
+{
+    int iErrCode;
 
-    unsigned int i, iNumKeys;
-    int iGameClass, iGameNumber;
+    Variant** ppvGame;
+    AutoFreeData free_ppvGame(ppvGame);
+    unsigned int iNumGames;
 
-    Variant* pvGame;
-    AutoFreeData free(pvGame);
-
-    int iErrCode = t_pCache->ReadColumn(
-        SYSTEM_ACTIVE_GAMES,
-        SystemActiveGames::GameClassGameNumber,
-        NULL,
-        &pvGame,
-        &iNumKeys
-        );
-
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
-    {
-        return OK;
-    }
+    iErrCode = GetActiveGames(&ppvGame, &iNumGames);
     RETURN_ON_ERROR(iErrCode);
-    
-    for (i = 0; i < iNumKeys; i ++)
-    {
-        GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
 
-        // Best effort reset game update time
-        ResetGameUpdateTime(iGameClass, iGameNumber);
+    for (unsigned int i = 0; i < iNumGames; i ++)
+    {
+        int iGameClass = ppvGame[i][0].GetInteger();
+        int iGameNumber = ppvGame[i][1].GetInteger();
+
+        iErrCode = ResetGameUpdateTime(iGameClass, iGameNumber);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
@@ -542,21 +532,25 @@ int GameEngine::ForceUpdate (int iGameClass, int iGameNumber)
 //
 int GameEngine::CheckAllGamesForUpdates()
 {
-    unsigned int i, iNumGames;
-    int iErrCode, * piGameClass = NULL, * piGameNumber = NULL;
-    Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
-    Algorithm::AutoDelete<int> free_piGameNumber(piGameNumber, true);
+    int iErrCode;
 
-    iErrCode = GetActiveGames(&piGameClass, &piGameNumber, &iNumGames);
+    Variant** ppvGame;
+    AutoFreeData free_ppvGame(ppvGame);
+    unsigned int iNumGames;
+
+    iErrCode = GetActiveGames(&ppvGame, &iNumGames);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = CacheGameData(piGameClass, piGameNumber, NO_KEY, iNumGames);
+    iErrCode = CacheGameData((const Variant**)ppvGame, NO_KEY, iNumGames);
     RETURN_ON_ERROR(iErrCode);
 
-    for (i = 0; i < iNumGames; i ++)
+    for (unsigned int i = 0; i < iNumGames; i ++)
     {
+        int iGameClass = ppvGame[i][0].GetInteger();
+        int iGameNumber = ppvGame[i][1].GetInteger();
+
         bool bUpdate;
-        iErrCode = CheckGameForUpdates(piGameClass[i], piGameNumber[i], &bUpdate);
+        iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bUpdate);
         RETURN_ON_ERROR(iErrCode);
     }
 

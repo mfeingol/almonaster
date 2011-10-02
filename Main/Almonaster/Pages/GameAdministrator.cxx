@@ -2722,13 +2722,12 @@ AllGames:
 case 1:
     {
 
-    int* piGameClass = NULL, * piGameNumber = NULL;
-    Algorithm::AutoDelete<int> del_piGameClass(piGameClass, true);
-    Algorithm::AutoDelete<int> del_piGameNumber(piGameNumber, true);
+    Variant** ppvActiveGames = NULL;
+    AutoFreeData free_ppvActiveGames(ppvActiveGames);
 
     unsigned int iNumActiveGames, iNumOpenGames, iNumClosedGames;
 
-    iErrCode = GetActiveGames(&piGameClass, &piGameNumber, &iNumActiveGames);
+    iErrCode = GetActiveGames(&ppvActiveGames, &iNumActiveGames);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetNumOpenGames(&iNumOpenGames);
@@ -2739,7 +2738,7 @@ case 1:
 
     %><input type="hidden" name="GameAdminPage" value="1"><%
 
-    iErrCode = WriteActiveGameAdministration (piGameClass, piGameNumber, iNumActiveGames, iNumOpenGames, iNumClosedGames, true);
+    iErrCode = WriteActiveGameAdministration((const Variant**)ppvActiveGames, iNumActiveGames, iNumOpenGames, iNumClosedGames, true);
     RETURN_ON_ERROR(iErrCode);
 
     }

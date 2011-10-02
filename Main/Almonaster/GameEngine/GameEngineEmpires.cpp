@@ -157,7 +157,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
 
         // Make sure we can delete the parent empire
         unsigned int iNumGames;
-        iErrCode = GetEmpireActiveGames(iParentKey, NULL, NULL, &iNumGames);
+        iErrCode = GetEmpireActiveGames(iParentKey, NULL, &iNumGames);
         RETURN_ON_ERROR(iErrCode);
 
         if (iNumGames > 0)
@@ -899,8 +899,8 @@ int GameEngine::GetEmpireMaxNumSavedSystemMessages (int iEmpireKey, int* piMaxNu
 //
 // Delete an empire and "ruin" it out of all games
 
-int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, unsigned int iKillerEmpire) {
-
+int GameEngine::ObliterateEmpire(unsigned int iEmpireKey, int64 i64SecretKey, unsigned int iKillerEmpire)
+{
     int iErrCode;
 
     if (iEmpireKey == global.GetRootKey()) {
@@ -932,29 +932,25 @@ int GameEngine::ObliterateEmpire (unsigned int iEmpireKey, int64 i64SecretKey, u
 
     // At this point, the empire cannot have entered any new games
     // Nuke him out of any game he might be in
-    GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszGames, iEmpireKey);
-
     unsigned int iNumGames; 
-    Variant* pvGame;
-    AutoFreeData free(pvGame);
+    Variant** ppvActiveGames = NULL;
+    AutoFreeData free(ppvActiveGames);
 
-    iErrCode = t_pCache->ReadColumn(pszGames, SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    iErrCode = GetEmpireActiveGames(iEmpireKey, &ppvActiveGames, &iNumGames);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iNumGames > 0)
     {
-        iErrCode = OK;
-    }
-    else
-    {
+        iErrCode = CacheGameEmpireData(iEmpireKey, (const Variant**)ppvActiveGames, iNumGames);
         RETURN_ON_ERROR(iErrCode);
 
-        // Ruin empire out of each game
         for (unsigned int i = 0; i < iNumGames; i ++)
         {
-            int iGameClass, iGameNumber;
-            GetGameClassGameNumber(pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
+            int iGameClass = ppvActiveGames[i][0].GetInteger();
+            int iGameNumber = ppvActiveGames[i][1].GetInteger();
 
             // Is empire in the game
-            iErrCode = IsEmpireInGame (iGameClass, iGameNumber, iEmpireKey, &bFlag);
+            iErrCode = IsEmpireInGame(iGameClass, iGameNumber, iEmpireKey, &bFlag);
             RETURN_ON_ERROR(iErrCode);
 
             if (bFlag)
@@ -1518,60 +1514,35 @@ int GameEngine::GetEmpireData(int iEmpireKey, Variant** ppvEmpData, unsigned int
 //
 // Returns the gameclasses and gamenumbers of the games an empire is currently in
 
-int GameEngine::GetEmpireActiveGames(int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames) {
+int GameEngine::GetEmpireActiveGames(int iEmpireKey, Variant*** pppvActiveGames, unsigned int* piNumGames)
+{
+    int iErrCode;
 
-    int iErrCode = OK;
-
-    ICachedTable* pGames = NULL;
-    AutoRelease<ICachedTable> release(pGames);
-
-    Variant* pvGames = NULL;
-    AutoFreeData free(pvGames);
-
-    *ppiGameClass = NULL;
-    *ppiGameNumber = NULL;
+    if (pppvActiveGames)
+        *pppvActiveGames = NULL;
     *piNumGames = 0;
 
-    Assert((ppiGameClass && ppiGameNumber) || !(ppiGameClass && ppiGameNumber));
+    GET_SYSTEM_EMPIRE_ACTIVE_GAMES(strGames, iEmpireKey);
 
-    GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszGames, iEmpireKey);
-    iErrCode = t_pCache->GetTable(pszGames, &pGames);
-    RETURN_ON_ERROR(iErrCode);
-
-    if (ppiGameClass == NULL)
+    if (pppvActiveGames)
     {
-        Assert(piNumGames);
-        iErrCode = pGames->GetNumCachedRows(piNumGames);
+        const char* ppszColumns[] = { SystemEmpireActiveGames::GameClass, SystemEmpireActiveGames::GameNumber };
+
+        iErrCode = t_pCache->ReadColumns(strGames, countof(ppszColumns), ppszColumns, NULL, pppvActiveGames, piNumGames);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
         RETURN_ON_ERROR(iErrCode);
     }
     else
     {
-        iErrCode = pGames->ReadColumn(SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGames, piNumGames);
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-        {
-            Assert(*piNumGames == 0);
-            iErrCode = OK;
-        }
-        else
-        {
-            RETURN_ON_ERROR(iErrCode);
-
-            *ppiGameClass = new int[*piNumGames];
-            Assert(*ppiGameClass);
-
-            *ppiGameNumber = new int[*piNumGames];
-            Assert(*ppiGameNumber);
-
-            for (unsigned int i = 0; i < *piNumGames; i ++)
-            {
-                GetGameClassGameNumber(pvGames[i].GetCharPtr(), &((*ppiGameClass)[i]), &((*ppiGameNumber)[i]));
-            }
-        }
+        iErrCode = t_pCache->GetNumCachedRows(strGames, piNumGames);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     return iErrCode;
 }
-
 
 // Input:
 // iGameClass -> Integer key of gameclass
@@ -1982,32 +1953,34 @@ int GameEngine::SetEmpireProperty(int iEmpireKey, const char* pszColumn, const V
 
 int GameEngine::IsEmpireIdleInSomeGame(int iEmpireKey, bool* pfIdle)
 {
-    int iErrCode, iGameClass, iGameNumber;
+    int iErrCode;
     unsigned int i, iNumGames = 0;
 
-    Variant* pvGame = NULL;
-    AutoFreeData free(pvGame);
+    Variant** ppvActiveGames = NULL;
+    AutoFreeData free(ppvActiveGames);
 
     *pfIdle = false;
 
-    GET_SYSTEM_EMPIRE_ACTIVE_GAMES(pszGames, iEmpireKey);
-    iErrCode = t_pCache->ReadColumn(pszGames, SystemEmpireActiveGames::GameClassGameNumber, NULL, &pvGame, &iNumGames);
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    iErrCode = GetEmpireActiveGames(iEmpireKey, &ppvActiveGames, &iNumGames);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iNumGames == 0)
     {
         return OK;
     }
-    RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = CacheGameEmpireData(iEmpireKey, pvGame, iNumGames);
+    iErrCode = CacheGameEmpireData(iEmpireKey, (const Variant**)ppvActiveGames, iNumGames);
     RETURN_ON_ERROR(iErrCode);
 
     for (i = 0; i < iNumGames; i ++)
     {
-        GetGameClassGameNumber (pvGame[i].GetCharPtr(), &iGameClass, &iGameNumber);
-        GET_GAME_EMPIRE_DATA(strGameData, iGameClass, iGameNumber, iEmpireKey);
+        int iGameClass = ppvActiveGames[i][0].GetInteger();
+        int iGameNumber = ppvActiveGames[i][1].GetInteger();
+
+        GET_GAME_EMPIRE_DATA(strGameEmpireData, iGameClass, iGameNumber, iEmpireKey);
 
         Variant vOptions;
-        iErrCode = t_pCache->ReadData(strGameData, GameEmpireData::Options, &vOptions);
+        iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::Options, &vOptions);
         RETURN_ON_ERROR(iErrCode);
 
         // Ignore games in which the empire has resigned
@@ -2019,7 +1992,7 @@ int GameEngine::IsEmpireIdleInSomeGame(int iEmpireKey, bool* pfIdle)
         if (!(vOptions.GetInteger() & LOGGED_IN_THIS_UPDATE))
         {
             Variant vNumUpdatesIdle;
-            iErrCode = t_pCache->ReadData(strGameData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, GameEmpireData::NumUpdatesIdle, &vNumUpdatesIdle);
             RETURN_ON_ERROR(iErrCode);
 
             Variant vNumUpdatesForIdle;

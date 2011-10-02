@@ -298,7 +298,7 @@ int CachedTable::ReadColumns(unsigned int iNumColumns, const char* const* ppszCo
     Assert(ppvData);
 
     Variant* pvData = new Variant[iNumRows * iNumColumns];
-    Assert(ppvData);
+    Assert(pvData);
 
     if (ppiKey != NULL)
     {
@@ -341,7 +341,7 @@ int CachedTable::ReadColumnWhereEqual(const char* pszEqualColumn, const Variant&
     System::String^ equalColumnName = gcnew System::String(pszEqualColumn);
     System::String^ readColumnName = gcnew System::String(pszReadColumn);
 
-    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumnWhereEqual %s :: %s :: %s", m_result->TableName, equalColumnName, readColumnName);
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumnWhereEqual %s :: %s :: %s", m_result->TableName, pszEqualColumn, pszReadColumn);
 
     if (ppiKey != NULL)
         *ppiKey = NULL;
@@ -384,6 +384,73 @@ int CachedTable::ReadColumnWhereEqual(const char* pszEqualColumn, const Variant&
 
     *piNumRows = index;
     *ppvData = pvData;
+
+    return OK;
+}
+
+int CachedTable::ReadColumnsWhereEqual(const char* pszEqualColumn, const Variant& vData, const char** ppszReadColumn, unsigned int iNumReadColumns,
+                                       unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows)
+{
+    System::String^ equalColumnName = gcnew System::String(pszEqualColumn);
+
+    Trace(TRACE_VERBOSE, "CachedTable :: ReadColumnsWhereEqual %s :: %s :: %s", m_result->TableName, pszEqualColumn);
+
+    if (ppiKey != NULL)
+        *ppiKey = NULL;
+
+    *pppvData = NULL;
+
+    unsigned int iNumRows = Enumerable::Count(m_result->Rows);
+    *piNumRows = iNumRows;
+    if (iNumRows == 0)
+        return ERROR_DATA_NOT_FOUND;
+
+    Variant** ppvData = new Variant*[iNumRows];
+    Assert(ppvData);
+
+    Variant* pvData = new Variant[iNumRows * iNumReadColumns];
+    Assert(pvData);
+
+    array<System::String^>^ columnNames = gcnew array<System::String^>(iNumReadColumns);
+    for (unsigned int i = 0; i < iNumReadColumns; i ++)
+    {
+        columnNames[i] = gcnew System::String(ppszReadColumn[i]);
+    }
+
+    if (ppiKey != NULL)
+    {
+        *ppiKey = new unsigned int[iNumRows];
+        Assert(*ppiKey);
+    }
+
+    unsigned int index = 0;
+    for each (IDictionary<System::String^, System::Object^>^ row in m_result->Rows)
+    {
+        System::Object^ value = row[equalColumnName];
+        Variant vValue;
+        Convert(value, &vValue);
+
+        if (vValue == vData)
+        {
+            if (ppiKey != NULL)
+            {
+                System::Object^ id = row[m_ID_COLUMN_NAME];
+                (*ppiKey)[index] = (unsigned int)(int64)id;
+            }
+
+            ppvData[index] = pvData + index * iNumReadColumns;
+            for (unsigned int column = 0; column < iNumReadColumns; column ++)
+            {
+                System::Object^ value = row[columnNames[column]];
+                Convert(value, ppvData[index] + column);
+            }
+
+            index ++;
+        }
+    }
+
+    *piNumRows = index;
+    *pppvData = ppvData;
 
     return OK;
 }

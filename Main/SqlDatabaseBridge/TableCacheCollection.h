@@ -92,6 +92,9 @@ public:
     int ReadColumnWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
                              unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumKeys);
     
+    int ReadColumnsWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char** ppszReadColumn, unsigned int iNumReadColumns,
+                              unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows);
+
     int ReadColumns(const char* pszCacheTableName, unsigned int iNumColumns, const char* const* ppszColumn,
                     unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows);
 

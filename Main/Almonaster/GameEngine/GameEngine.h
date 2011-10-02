@@ -430,7 +430,7 @@ private:
     int DeleteShipFromDeadEmpire (const char* pszEmpireShips, const char* pszGameMap, 
         unsigned int iShipKey, unsigned int iPlanetKey);
 
-    int GetGames (bool bOpen, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
+    int GetGames (bool bOpen, Variant*** ppvGames, unsigned int* piNumGames);
 
     int RuinEmpire (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage);
 
@@ -928,9 +928,9 @@ public:
 
     int AreAllEmpiresIdle (int iGameClass, int iGameNumber, bool* pbIdle);
 
-    int GetActiveGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
-    int GetOpenGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
-    int GetClosedGames(int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
+    int GetActiveGames(Variant*** pppvActiveGames, unsigned int* piNumGames);
+    int GetOpenGames(Variant*** pppvOpenGames, unsigned int* piNumGames);
+    int GetClosedGames(Variant*** pppvClosedGames, unsigned int* piNumGames);
 
     int IsGameOpen (int iGameClass, int iGameNumber, bool* pbOpen);
     int HasGameStarted (int iGameClass, int iGameNumber, bool* pbStarted);
@@ -968,9 +968,6 @@ public:
     int IsSpectatorGame (int iGameClass, int iGameNumber, bool* pbSpectatorGame);
 
     int AddToLatestGames(const Variant* pvColumns);
-
-    void GetGameClassGameNumber (const char* pszGameData, int* piGameClass, int* piGameNumber);
-    void GetGameClassGameNumber (int iGameClass, int iGameNumber, char* pszGameData);
 
     int PauseAllGames();
     int UnpauseAllGames();
@@ -1058,8 +1055,9 @@ public:
     int CacheTournamentAndEmpireTables(unsigned int iTournamentKey);
     int CacheTournamentEmpireTables(unsigned int iTournamentKey);
     int CacheTournamentEmpiresForGame(unsigned int iTournamentKey);
-    int CacheGameData(int* piGameClass, int* piGameNumber, int iEmpireKey, unsigned int iNumGames);
-    int CacheGameEmpireData(unsigned int iEmpireKey, const Variant* pvGame, unsigned int iNumGames);
+    int CacheGameData(const int* piGameClass, const int* piGameNumber, int iEmpireKey, unsigned int iNumGames);
+    int CacheGameData(const Variant** ppvGame, int iEmpireKey, unsigned int iNumGames);
+    int CacheGameEmpireData(unsigned int iEmpireKey, const Variant** pvGames, unsigned int iNumGames);
     int CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
     int CacheEmpiresAndGameMessages(int iGameClass, int iGameNumber, const unsigned int* piEmpireKey, unsigned int iNumEmpires);
     int CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
@@ -1072,7 +1070,7 @@ public:
     int CacheForCheckAllGamesForUpdates();
     int CacheSystemAvailability();
     int CacheSystemAlienIcons();
-    int CacheGameEmpireTables(const Variant* pvGameClassGameNumber, unsigned int iNumGames);
+    int CacheGameEmpireTables(const Variant** ppvGames, unsigned int iNumGames);
 
     enum GameCacheEntryFlags
     {
@@ -1107,7 +1105,7 @@ public:
     int GetEmpirePersonalGameClasses (int iEmpireKey, unsigned int** ppiGameClassKey, Variant** ppvName, unsigned int* piNumKeys);
 
     int GetEmpireData (int iEmpireKey, Variant** ppvEmpData, unsigned int* piNumActiveGames);
-    int GetEmpireActiveGames(int iEmpireKey, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
+    int GetEmpireActiveGames(int iEmpireKey, Variant*** pppvActiveGames, unsigned int* piNumGames);
 
     int GetEmpirePrivilege(unsigned int iEmpireKey, int* piPrivilege);
     int SetEmpirePrivilege(unsigned int iEmpireKey, int iPrivilege);
@@ -1517,7 +1515,7 @@ public:
     int GetTournamentTeams (unsigned int iTournamentKey, unsigned int** ppiTeamKey, 
         Variant** ppvName, unsigned int* piNumKeys);
 
-    int GetTournamentGames (unsigned int iTournamentKey, int** ppiGameClass, int** ppiGameNumber, unsigned int* piNumGames);
+    int GetTournamentGames(unsigned int iTournamentKey, Variant*** pppvGames, unsigned int* piNumGames);
 
     int CreateTournamentTeam (unsigned int iTournamentKey, Variant* pvTeamData, unsigned int* piTeamKey);
     int DeleteTournamentTeam (unsigned int iTournamentKey, unsigned int iTeamKey);

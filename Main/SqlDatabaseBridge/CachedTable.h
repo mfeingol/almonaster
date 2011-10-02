@@ -67,6 +67,9 @@ public:
     int ReadColumnWhereEqual(const char* pszEqualColumn, const Variant& vData, const char* pszReadColumn, 
                              unsigned int** ppiKey, Variant** ppvData, unsigned int* piNumRows);
 
+    int ReadColumnsWhereEqual(const char* pszEqualColumn, const Variant& vData, const char** ppszReadColumn, unsigned int iNumReadColumns,
+                              unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows);
+
     int ReadRow(Variant** ppvData);
     int ReadRow(unsigned int iKey, Variant** ppvData);
 

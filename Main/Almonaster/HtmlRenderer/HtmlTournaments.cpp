@@ -31,9 +31,7 @@ void HtmlRenderer::WriteTournamentTeamIcon (int iIconKey, int iTournamentKey, in
 
 int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
 {
-    int iErrCode, * piOptions = NULL, * piGameClass = NULL, * piGameNumber = NULL;
-    Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
-    Algorithm::AutoDelete<int> free_piGameNumber(piGameNumber, true);
+    int iErrCode, * piOptions = NULL;
 
     Variant* pvData = NULL, * pvGameClassName = NULL, * pvEmpireName = NULL, * pvTeamName = NULL, * pvEmpireKey = NULL;
     AutoFreeData free_pvData(pvData);
@@ -70,15 +68,15 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
     iErrCode = GetTournamentTeams (iTournamentKey, &piTeamKey, &pvTeamName, &iNumTeams);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = GetTournamentGames (iTournamentKey, &piGameClass, &piGameNumber, &iGames);
+    iErrCode = GetTournamentGames(iTournamentKey, NULL, &iGames);
     RETURN_ON_ERROR(iErrCode);
 
     if (iNumGameClasses > 0)
     {
         piOptions = (int*) StackAlloc (iNumGameClasses * sizeof (int));
 
-        for (i = 0; i < iNumGameClasses; i ++) {
-
+        for (i = 0; i < iNumGameClasses; i ++)
+        {
             iErrCode = GetGameClassOptions (piGameClassKey[i], piOptions + i);
             RETURN_ON_ERROR(iErrCode);
 

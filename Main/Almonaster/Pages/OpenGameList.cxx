@@ -139,11 +139,10 @@ if (bConfirmPage)
 
     // Get open games
     unsigned int iNumOpenGames = 0;
-    int* piGameClass = NULL, * piGameNumber = NULL;
-    Algorithm::AutoDelete<int> free_piGameClass(piGameClass, true);
-    Algorithm::AutoDelete<int> free_piGameNumber(piGameNumber, true);
+    Variant** ppvGame = NULL;
+    AutoFreeData free_ppvGame(ppvGame);
 
-    iErrCode = GetOpenGames(&piGameClass, &piGameNumber, &iNumOpenGames);
+    iErrCode = GetOpenGames(&ppvGame, &iNumOpenGames);
     RETURN_ON_ERROR(iErrCode);
 
     if (iNumOpenGames == 0)
@@ -187,13 +186,13 @@ if (bConfirmPage)
             bool bFlag, bIdle = false;
 
             // Cache GameData for each game
-            iErrCode = CacheGameData(piGameClass, piGameNumber, NO_KEY, iNumOpenGames);
+            iErrCode = CacheGameData((const Variant**)ppvGame, NO_KEY, iNumOpenGames);
             RETURN_ON_ERROR(iErrCode);
 
             for (i = 0; i < (int)iNumOpenGames; i ++)
             {
-                iGameClass = piGameClass[i];
-                iGameNumber = piGameNumber[i];
+                iGameClass = ppvGame[i][0].GetInteger();
+                iGameNumber = ppvGame[i][1].GetInteger();
 
                 // Check everything
                 iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bFlag);

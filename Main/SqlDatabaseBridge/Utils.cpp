@@ -156,7 +156,7 @@ void Trace(TraceInfoLevel level, const char* pszFormat, ...)
     va_start(list, pszFormat);
 
     int cchLen = vsnprintf(NULL, 0, pszFormat, list);
-    char* pszBuffer = (char*)StackAlloc(cchLen);
+    char* pszBuffer = (char*)StackAlloc(cchLen + 1);
 
     vsprintf(pszBuffer, pszFormat, list);
     g_pTrace->Write(level, pszBuffer);
