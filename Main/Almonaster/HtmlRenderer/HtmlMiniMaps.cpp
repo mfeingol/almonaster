@@ -18,8 +18,8 @@
 
 #include "HtmlRenderer.h"
 
-int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey) {
-
+int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey)
+{
     int iErrCode, iMapMinX = 0, iMapMaxX = 0, iMapMinY = 0, iMapMaxY = 0;
 
     unsigned int iNumHorz, iNumVert, i, j, iNumPlanets, iLivePlanetKey, iDeadPlanetKey, * piProxyKey = NULL;
@@ -132,11 +132,15 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
 
         default:
 
+            ppMiniMap[iIndexX][iIndexY].iiIcon = ICON_EMPIREPLANET;
+
             iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienKey, &vValue);
             RETURN_ON_ERROR(iErrCode);
-
-            ppMiniMap[iIndexX][iIndexY].iiIcon = ICON_EMPIREPLANET;
             ppMiniMap[iIndexX][iIndexY].iAlienKey = vValue.GetInteger();
+
+            iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienAddress, &vValue);
+            RETURN_ON_ERROR(iErrCode);
+            ppMiniMap[iIndexX][iIndexY].iAlienAddress = vValue.GetInteger();
             break;
         }
     }
@@ -169,8 +173,10 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
             
             // Render a planet
             OutputText ("<td>");
-            if (ppMiniMap[j][i].iiIcon != ICON_NONE) {
-                RenderMiniPlanet (ppMiniMap[j][i], iEmpireKey, iLivePlanetKey, iDeadPlanetKey);
+            if (ppMiniMap[j][i].iiIcon != ICON_NONE)
+            {
+                iErrCode = RenderMiniPlanet (ppMiniMap[j][i], iEmpireKey, iLivePlanetKey, iDeadPlanetKey);
+                RETURN_ON_ERROR(iErrCode);
             }
             OutputText ("</td>");
         }
@@ -201,8 +207,9 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
     return iErrCode;
 }
 
-void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey)
+int HtmlRenderer::RenderMiniPlanet(const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey)
 {
+    int iErrCode = OK;
     String strPlanetString;
 
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
@@ -222,8 +229,9 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
 
     case ICON_EMPIREPLANET:
 
-        GetAlienPlanetButtonString (
-            mmEntry.iAlienKey, 
+        iErrCode = GetAlienPlanetButtonString (
+            mmEntry.iAlienKey,
+            mmEntry.iAlienAddress,
             mmEntry.iOwnerKey, 
             mmEntry.iOwnerKey == iEmpireKey, 
             mmEntry.iPlanetKey, 
@@ -232,7 +240,7 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
             "width=\"75%\"",
             &strPlanetString
             );
-
+        RETURN_ON_ERROR(iErrCode);
         break;
 
     case ICON_INDEPENDENT:
@@ -242,4 +250,5 @@ void HtmlRenderer::RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int i
     }
 
     m_pHttpResponse->WriteText (strPlanetString.GetCharPtr(), strPlanetString.GetLength());
+    return iErrCode;
 }

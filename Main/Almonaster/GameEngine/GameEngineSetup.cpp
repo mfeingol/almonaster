@@ -587,7 +587,7 @@ int GameEngine::VerifyMarkedGameClasses() {
             iErrCode = GetGameClassProperty(piGameClassKey[i], SystemGameClassData::NumActiveGames, &vActiveGames);
             RETURN_ON_ERROR(iErrCode);
 
-            if (vActiveGames.GetInteger() > 0)
+            if (vActiveGames.GetInteger() == 0)
             {
                 // This game class needs to be deleted
                 bool bDeleted;
@@ -945,7 +945,6 @@ int GameEngine::CreateDefaultSystemTables()
     return iErrCode;
 }
 
-
 // Insert default data into the system tables
 int GameEngine::SetupDefaultSystemTables()
 {
@@ -955,24 +954,30 @@ int GameEngine::SetupDefaultSystemTables()
     UTCTime tTime;
     Time::GetTime(&tTime);
 
-    // Set up themes first
+    // Set up themes and icons first
     unsigned int iDefaultThemeKey;
     iErrCode = SetupDefaultThemes(&iDefaultThemeKey);
     RETURN_ON_ERROR(iErrCode);
 
+    unsigned int iDefaultAlienKey, iDefaultSystemMessageAlienKey;
+    int iDefaultAlienAddress, iDefaultSystemMessageAlienAddress;
+    iErrCode = SetupDefaultAlienIcons(&iDefaultAlienKey, &iDefaultAlienAddress, &iDefaultSystemMessageAlienKey, &iDefaultSystemMessageAlienAddress); 
+    RETURN_ON_ERROR(iErrCode);
+
     // Insert data into SYSTEM_DATA
     Variant pvSystemData [SystemData::NumColumns] = {
-        3,              // DefaultAlien
-        "Cortegana",    // ServerName
-        10,             // DefaultMaxNumSystemMessages
-        10,             // DefaultMaxNumGameMessages
+        iDefaultAlienKey,     // DefaultAlienKey
+        iDefaultAlienAddress, // DefaultAlienAddress
+        "Cortegana",          // ServerName
+        10,                   // DefaultMaxNumSystemMessages
+        10,                   // DefaultMaxNumGameMessages
         iDefaultThemeKey, // DefaultUIButtons
         iDefaultThemeKey, // DefaultUIBackground
         iDefaultThemeKey, // DefaultUILivePlanet
         iDefaultThemeKey, // DefaultUIDeadPlanet
         iDefaultThemeKey, // DefaultUISeparator
         NOVICE,         // DefaultPrivilegeLevel
-       (float) 100.0,  // AdeptScore
+       (float) 100.0,   // AdeptScore
         20,             // MaxNumSystemMessages
         20,             // MaxNumGameMessages
         "Needle",       // DefaultAttackName
@@ -1038,9 +1043,7 @@ int GameEngine::SetupDefaultSystemTables()
         75,             // ChanceNewPlanetLinkedToLastCreatedPlanetLargeMap
         35,             // ChanceNewPlanetLinkedToLastCreatedPlanetSmallMap
         10,             // LargeMapThreshold
-        COLONY_USE_MULTIPLIED_BUILD_COST | CLOAKER_CLOAK_ON_BUILD | JUMPGATE_LIMIT_RANGE |
-        MORPHER_CLOAK_ON_CLOAKER_MORPH,
-                        // ShipBehavior
+        COLONY_USE_MULTIPLIED_BUILD_COST | CLOAKER_CLOAK_ON_BUILD | JUMPGATE_LIMIT_RANGE | MORPHER_CLOAK_ON_CLOAKER_MORPH, // ShipBehavior
         1,              // ColonySimpleBuildFactor
        (float) 1.0,    // ColonyMultipliedBuildFactor
        (float) 3.0,    // ColonyMultipliedDepositFactor
@@ -1067,7 +1070,8 @@ int GameEngine::SetupDefaultSystemTables()
         30,             // NumGamesInLatestGameList,
         5,              // MaxNumPersonalTournaments
         10,             // MaxNumGameClassesPerPersonalTournament
-        140,            // SystemMessagesAlienKey
+        iDefaultSystemMessageAlienKey,     // SystemMessagesAlienKey
+        iDefaultSystemMessageAlienAddress, // SystemMessagesAlienAddress
        (const char*) NULL, //AdminEmail,
        (float) 4.0,    // BuilderBRDampener
     };
@@ -1388,11 +1392,183 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     return iErrCode;
 }
 
+int GameEngine::SetupDefaultAlienIcons(unsigned int* piDefaultAlienKey, int* piDefaultAlienAddress,
+                                       unsigned int* piDefaultSystemMessageAlienKey, int* piDefaultSystemMessageAlienAddress)
+{
+    int iErrCode, i;
+    Variant pvSubmitArray[SystemAlienIcons::NumColumns];
+
+    // Do this mainly for debugging purposes... to ensure that the alien keys don't overlap with the addresses
+    for (i = 0; i < 200; i ++)
+    {
+        pvSubmitArray[SystemAlienIcons::iAddress] = 0; 
+        pvSubmitArray[SystemAlienIcons::iAuthorName] = "Test";
+
+        unsigned int iKey;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, &iKey);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = t_pCache->DeleteRow(SYSTEM_ALIEN_ICONS, iKey);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    // 1 to 42
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ken Eppstein";
+    for (i = 1; i <= 2; i ++)
+    {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    pvSubmitArray[SystemAlienIcons::iAddress] = *piDefaultAlienAddress = 3;
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, piDefaultAlienKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    for (i = 4; i <= 42; i ++)
+    {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 43 to 82
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
+    for (i = 43; i <= 82; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 83
+    pvSubmitArray[SystemAlienIcons::iAddress] = 83;
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Unknown";
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    
+    // 84 to 89
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
+    for (i = 84; i <= 89; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 90
+    pvSubmitArray[SystemAlienIcons::iAddress] = 90;
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    
+    // 91
+    pvSubmitArray[SystemAlienIcons::iAddress] = 91;
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    
+    // 92 to 101
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
+    for (i = 92; i <= 101; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 102 to 103
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
+    for (i = 102; i <= 103; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 104 to 105
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
+    for (i = 104; i <= 105; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 106 to 125
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
+    for (i = 106; i <= 125; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 126 to 127
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
+    for (i = 126; i <= 127; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 128
+    pvSubmitArray[SystemAlienIcons::iAddress] = 128;
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Haavard Fledsberg";
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    
+    // 129 to 135
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
+    for (i = 129; i <= 135; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    
+    // 136 to 145
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
+    for (i = 136; i <= 139; i ++)
+    {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    pvSubmitArray[SystemAlienIcons::iAddress] = *piDefaultSystemMessageAlienAddress = 140;
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, piDefaultSystemMessageAlienKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
+    for (i = 141; i <= 145; i ++)
+    {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    // 146
+    pvSubmitArray[SystemAlienIcons::iAddress] = 146;
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Michel Lemieux";
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+    RETURN_ON_ERROR(iErrCode);
+    
+    // 147 to 152
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Unknown";
+    for (i = 147; i <= 152; i ++) {
+        pvSubmitArray[SystemAlienIcons::iAddress] = i;
+        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    // 153
+    pvSubmitArray[SystemAlienIcons::iAddress] = 153;
+    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Kia";
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
+}
+
 // Create default superclasses and gameclasses
 int GameEngine::SetupDefaultSystemGameClasses()
 {
     // Add SuperClasses
-    int i, iErrCode, iBeginnerKey, iGrudgeKey, iLongTermKey, iBlitzKey, iGameClass;
+    int iErrCode, iBeginnerKey, iGrudgeKey, iLongTermKey, iBlitzKey, iGameClass;
     
     iErrCode = CreateSuperClass("Beginner Games", &iBeginnerKey);
     RETURN_ON_ERROR(iErrCode);
@@ -2244,181 +2420,61 @@ int GameEngine::SetupDefaultSystemGameClasses()
     iErrCode = CreateGameClass(SYSTEM, pvSubmitArray, &iGameClass);
     RETURN_ON_ERROR(iErrCode);
 
-
-    //////////////////////
-    // SystemAlienIcons //
-    //////////////////////
-    
-    // 1 to 42
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ken Eppstein";
-    for (i = 1; i <= 42; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 43 to 82
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for (i = 43; i <= 82; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 83
-    pvSubmitArray[SystemAlienIcons::iAlienKey] = 83;
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Unknown";
-    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    RETURN_ON_ERROR(iErrCode);
-    
-    // 84 to 89
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for (i = 84; i <= 89; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 90
-    pvSubmitArray[SystemAlienIcons::iAlienKey] = 90;
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
-    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    RETURN_ON_ERROR(iErrCode);
-    
-    // 91
-    pvSubmitArray[SystemAlienIcons::iAlienKey] = 91;
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    RETURN_ON_ERROR(iErrCode);
-    
-    // 92 to 101
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
-    for (i = 92; i <= 101; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 102 to 103
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for (i = 102; i <= 103; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 104 to 105
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    for (i = 104; i <= 105; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 106 to 125
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Ronald Kinion";
-    for (i = 106; i <= 125; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 126 to 127
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    for (i = 126; i <= 127; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 128
-    pvSubmitArray[SystemAlienIcons::iAlienKey] = 128;
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Haavard Fledsberg";
-    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    RETURN_ON_ERROR(iErrCode);
-    
-    // 129 to 135
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Chris John";
-    for (i = 129; i <= 135; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 136 to 145
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Jens Klavsen";
-    for (i = 136; i <= 145; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    
-    // 146
-    pvSubmitArray[SystemAlienIcons::iAlienKey] = 146;
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Michel Lemieux";
-    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    RETURN_ON_ERROR(iErrCode);
-    
-    // 147 to 152
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Unknown";
-    for (i = 147; i <= 152; i ++) {
-        pvSubmitArray[SystemAlienIcons::iAlienKey] = i;
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-        RETURN_ON_ERROR(iErrCode);
-    }
-
-    // 153
-    pvSubmitArray[SystemAlienIcons::iAlienKey] = 153;
-    pvSubmitArray[SystemAlienIcons::iAuthorName] = "Kia";
-    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvSubmitArray, NULL);
-    RETURN_ON_ERROR(iErrCode);
-
     return iErrCode;
 }
 
-int GameEngine::VerifyTournaments() {
-
+int GameEngine::VerifyTournaments()
+{
     int iErrCode;
-    unsigned int iKey = NO_KEY, iNumGames, iOwner;
 
-    bool bExists;
-
-    while (true)
+    unsigned int* piKey = NULL, iNumTournaments;
+    AutoFreeKeys free_piKey(piKey);
+    
+    iErrCode = t_pCache->GetAllKeys(SYSTEM_TOURNAMENTS, &piKey, &iNumTournaments);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        iErrCode = t_pCache->GetNextKey(SYSTEM_TOURNAMENTS, iKey, &iKey);
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-        {
-            iErrCode = OK;
-            break;
-        }
-        
+        return OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CacheTournamentTables(piKey, iNumTournaments);
+    RETURN_ON_ERROR(iErrCode);
+
+    for (unsigned int i = 0; i < iNumTournaments; i ++)
+    {
+        unsigned int iTournamentKey = piKey[i];
+
+        unsigned int iOwner;
+        iErrCode = GetTournamentOwner(iTournamentKey, &iOwner);
         RETURN_ON_ERROR(iErrCode);
-        
-        iErrCode = GetTournamentOwner(iKey, &iOwner);
+
+        iErrCode = CacheEmpire(iOwner);
         RETURN_ON_ERROR(iErrCode);
 
         // Check for tournament that needs to be deleted
         if (iOwner == DELETED_EMPIRE_KEY)
         {
-            iErrCode = GetTournamentGames(iKey, NULL, &iNumGames);
+            unsigned int iNumGames;
+            iErrCode = GetTournamentGames(iTournamentKey, NULL, &iNumGames);
             RETURN_ON_ERROR(iErrCode);
 
             if (iNumGames == 0)
             {
-                iErrCode = DeleteTournament(DELETED_EMPIRE_KEY, iKey, false);
+                iErrCode = DeleteTournament(DELETED_EMPIRE_KEY, iTournamentKey, false);
                 RETURN_ON_ERROR(iErrCode);
             }
         }
 
         // Check for tournament without empire
-        else if (iOwner != SYSTEM) {
-
+        else if (iOwner != SYSTEM)
+        {
+            bool bExists;
             iErrCode = DoesEmpireExist(iOwner, &bExists, NULL);
             RETURN_ON_ERROR(iErrCode);
 
             if (!bExists) {
 
-                iErrCode = DeleteTournament(iOwner, iKey, true);
+                iErrCode = DeleteTournament(iOwner, iTournamentKey, true);
                 if (iErrCode == ERROR_TOURNAMENT_HAS_GAMES)
                 {
                     iErrCode = OK;

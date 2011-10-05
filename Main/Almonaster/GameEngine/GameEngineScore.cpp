@@ -57,16 +57,24 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
     RETURN_ON_ERROR(iErrCode);
 
     // Update nuker and nuked lists
-    int iNukedAlienKey, iNukerAlienKey;
     Variant vValue, vSneer;
 
-    if (t_pCache->ReadData(strNukedEmpire, iNukedKey, SystemEmpireData::AlienKey, &vValue) == OK)
+    int iNukedAlienKey, iNukedAlienAddress;
+    iErrCode = t_pCache->ReadData(strNukedEmpire, iNukedKey, SystemEmpireData::AlienKey, &vValue);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
     {
-        iNukedAlienKey = vValue.GetInteger();
+        iErrCode = OK;
+        iNukedAlienKey = NO_KEY;
+        iNukedAlienAddress = -1;
     }
     else
     {
-        iNukedAlienKey = NO_KEY;
+        RETURN_ON_ERROR(iErrCode);
+        iNukedAlienKey = vValue.GetInteger();
+        
+        iErrCode = t_pCache->ReadData(strNukedEmpire, iNukedKey, SystemEmpireData::AlienAddress, &vValue);
+        RETURN_ON_ERROR(iErrCode);
+        iNukedAlienAddress = vValue.GetInteger();
     }
 
     iErrCode = AddNukeToHistory (
@@ -76,20 +84,31 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukerKey,
         NULL,
         NO_KEY,
+        -1,
         iNukedKey,
         pszNukedName,
-        iNukedAlienKey
+        iNukedAlienKey,
+        iNukedAlienAddress
         );
 
     RETURN_ON_ERROR(iErrCode);
 
-    if (t_pCache->ReadData(strNukerEmpire, iNukerKey, SystemEmpireData::AlienKey, &vValue) == OK)
+    int iNukerAlienKey, iNukerAlienAddress;
+    iErrCode = t_pCache->ReadData(strNukerEmpire, iNukerKey, SystemEmpireData::AlienKey, &vValue);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
     {
-        iNukerAlienKey = vValue.GetInteger();
+        iErrCode = OK;
+        iNukerAlienKey = NO_KEY;
+        iNukerAlienAddress = -1;
     }
     else
     {
-        iNukerAlienKey = NO_KEY;
+        RETURN_ON_ERROR(iErrCode);
+        iNukerAlienKey = vValue.GetInteger();
+        
+        iErrCode = t_pCache->ReadData(strNukerEmpire, iNukerKey, SystemEmpireData::AlienAddress, &vValue);
+        RETURN_ON_ERROR(iErrCode);
+        iNukerAlienAddress = vValue.GetInteger();
     }
 
     iErrCode = AddNukeToHistory (
@@ -99,9 +118,11 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukedKey,
         NULL,
         NO_KEY,
+        -1,
         iNukerKey,
         pszNukerName,
-        iNukerAlienKey
+        iNukerAlienKey,
+        iNukerAlienAddress
         );
 
     RETURN_ON_ERROR(iErrCode);
@@ -114,9 +135,11 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukerKey,
         pszNukerName,
         iNukerAlienKey,
+        iNukerAlienAddress,
         iNukedKey,
         pszNukedName,
-        iNukedAlienKey
+        iNukedAlienKey,
+        iNukedAlienAddress
         );
 
     RETURN_ON_ERROR(iErrCode);
@@ -259,23 +282,32 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     int scanf = sscanf (vPlanetName.GetCharPtr(), RUINS_OF, pszNukedName);
     Assert(scanf == 1);
 
-    int iNukerAlienKey, iNukedAlienKey;
+    int iNukerAlienKey, iNukerAlienAddress, iNukedAlienKey, iNukedAlienAddress;
 
     // Get nuker alien key
     iErrCode = t_pCache->ReadData(strWinnerEmpire, iWinnerKey, SystemEmpireData::AlienKey, &vTemp);
     RETURN_ON_ERROR(iErrCode);
     iNukerAlienKey = vTemp.GetInteger();
 
+    iErrCode = t_pCache->ReadData(strWinnerEmpire, iWinnerKey, SystemEmpireData::AlienAddress, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
+    iNukerAlienAddress = vTemp.GetInteger();
+
     // Get nuked alien key
-    if (iLoserKey == NO_KEY) {
-
+    if (iLoserKey == NO_KEY)
+    {
         iNukedAlienKey = NO_KEY;
-
-    } else {
-
+        iNukedAlienAddress = -1;
+    }
+    else
+    {
         iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);
         RETURN_ON_ERROR(iErrCode);
         iNukedAlienKey = vTemp.GetInteger();
+
+        iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienAddress, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        iNukedAlienAddress = vTemp.GetInteger();
 
         // Add to nuked's nuke history
         iErrCode = AddNukeToHistory (
@@ -285,9 +317,11 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
             iLoserKey,
             NULL,
             NO_KEY,
+            -1,
             iWinnerKey,
             pszWinnerName,
-            iNukerAlienKey
+            iNukerAlienKey,
+            iNukerAlienAddress
             );
 
         RETURN_ON_ERROR(iErrCode);
@@ -305,9 +339,11 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         iWinnerKey,
         NULL,
         NO_KEY,
+        -1,
         iLoserKey,
         pszNukedName,
-        iNukedAlienKey
+        iNukedAlienKey,
+        iNukedAlienAddress
         );
 
     RETURN_ON_ERROR(iErrCode);
@@ -320,9 +356,11 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         iWinnerKey,
         pszWinnerName,
         iNukerAlienKey,
+        iNukerAlienAddress,
         iLoserKey,
         pszNukedName,
-        iNukedAlienKey
+        iNukedAlienKey,
+        iNukedAlienAddress
         );
 
     RETURN_ON_ERROR(iErrCode);
@@ -503,25 +541,14 @@ int GameEngine::GetNukeHistory(int iEmpireKey, int* piNumNuked, Variant*** pppvN
     GET_SYSTEM_EMPIRE_NUKER_LIST(strNuker, iEmpireKey);
     GET_SYSTEM_EMPIRE_NUKED_LIST(strNuked, iEmpireKey);
 
-    const char* pszNukeColumns[] = 
-    {
-        SystemEmpireNukeList::EmpireKey,
-        SystemEmpireNukeList::AlienKey,
-        SystemEmpireNukeList::EmpireName,
-        SystemEmpireNukeList::ReferenceEmpireKey,
-        SystemEmpireNukeList::GameClassName,
-        SystemEmpireNukeList::GameNumber,
-        SystemEmpireNukeList::TimeStamp
-    };
-
     *piNumNuked = *piNumNukers = 0;
     *pppvNukedData = *pppvNukerData = NULL;
 
     // Get Nuked data
     iErrCode = t_pCache->ReadColumns (
         strNuked, 
-        countof(pszNukeColumns),
-        pszNukeColumns,
+        SystemEmpireNukeList::NumColumns,
+        SystemEmpireNukeList::ColumnNames,
         NULL,
         &ppvNukedData,
         (unsigned int*) piNumNuked
@@ -536,8 +563,8 @@ int GameEngine::GetNukeHistory(int iEmpireKey, int* piNumNuked, Variant*** pppvN
     // Get Nuker data
     iErrCode = t_pCache->ReadColumns (
         strNuker, 
-        countof(pszNukeColumns),
-        pszNukeColumns,
+        SystemEmpireNukeList::NumColumns,
+        SystemEmpireNukeList::ColumnNames,
         NULL,
         &ppvNukerData,
         (unsigned int*) piNumNukers
@@ -1104,9 +1131,9 @@ int GameEngine::SendScoringChangeMessages (int iGameClass, int iGameNumber, int 
 // Assumption: schemas for all nuke lists are the same
 //
 int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
-                                 int iEmpireKey, const char* pszEmpireName, int iAlienKey,
-                                 int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey) {
-
+                                 int iEmpireKey, const char* pszEmpireName, int iAlienKey, int iAlienAddress,
+                                 int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey, int iOtherAlienAddress)
+{
     int iErrCode;
 
     ICachedTable* pWriteTable = NULL;
@@ -1206,9 +1233,11 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
         Variant pvColData[SystemNukeList::NumColumns] = 
         {
             iAlienKey,
+            iAlienAddress,
             pszEmpireName,
             iEmpireKey,
             iOtherAlienKey,
+            iOtherAlienAddress,
             pszOtherEmpireName,
             iOtherEmpireKey,
             pszGameClassName,
@@ -1225,6 +1254,7 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
         {
             iEmpireKey,
             iOtherAlienKey,
+            iOtherAlienAddress,
             pszOtherEmpireName,
             iOtherEmpireKey,
             pszGameClassName,

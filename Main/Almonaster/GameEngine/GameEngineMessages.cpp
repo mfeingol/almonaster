@@ -74,16 +74,12 @@ int GameEngine::SendSystemMessage(int iTargetEmpireKey, const char* pszMessage, 
     {
         Assert(iFlags & MESSAGE_SYSTEM);
         pvData[SystemEmpireMessages::iSourceName] = (const char*)NULL;
-        pvData[SystemEmpireMessages::iSourceSecret] = 0;
     }
     else
     {
         GET_SYSTEM_EMPIRE_DATA(strEmpire, iSourceEmpireKey);
         
         iErrCode = t_pCache->ReadData(strEmpire, iSourceEmpireKey, SystemEmpireData::Name, pvData + SystemEmpireMessages::iSourceName);
-        RETURN_ON_ERROR(iErrCode);
-
-        iErrCode = t_pCache->ReadData(strEmpire, iSourceEmpireKey, SystemEmpireData::SecretKey, pvData + SystemEmpireMessages::iSourceSecret);
         RETURN_ON_ERROR(iErrCode);
     }
 
@@ -559,15 +555,11 @@ int GameEngine::SendGameMessage(int iGameClass, int iGameNumber, int iEmpireKey,
         iFlags |= MESSAGE_SYSTEM;
 
         pvData[GameEmpireMessages::iSourceName] = (const char*)NULL;
-        pvData[GameEmpireMessages::iSourceSecret] = (int64)0;
     }
     else
     {
         GET_SYSTEM_EMPIRE_DATA(strEmpire, iSourceKey);
         iErrCode = t_pCache->ReadData(strEmpire, iSourceKey, SystemEmpireData::Name, pvData + GameEmpireMessages::iSourceName);
-        RETURN_ON_ERROR(iErrCode);
-
-        iErrCode = t_pCache->ReadData(strEmpire, iSourceKey, SystemEmpireData::SecretKey, pvData + GameEmpireMessages::iSourceSecret);
         RETURN_ON_ERROR(iErrCode);
     }
     

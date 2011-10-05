@@ -30,7 +30,8 @@
 
 namespace SystemData
 {
-    static const char* const DefaultAlien = "DefaultAlien";
+    static const char* const DefaultAlienKey = "DefaultAlienKey";
+    static const char* const DefaultAlienAddress = "DefaultAlienAddress";
     static const char* const ServerName = "ServerName";
     static const char* const DefaultMaxNumSystemMessages = "DefaultMaxNumSystemMessages";
     static const char* const DefaultMaxNumGameMessages = "DefaultMaxNumGameMessages";
@@ -131,12 +132,14 @@ namespace SystemData
     static const char* const MaxNumPersonalTournaments = "MaxNumPersonalTournaments";
     static const char* const MaxNumGameClassesPerPersonalTournament = "MaxNumGameClassesPerPersonalTournament";
     static const char* const SystemMessagesAlienKey = "SystemMessagesAlienKey";
+    static const char* const SystemMessagesAlienAddress = "SystemMessagesAlienAddress";
     static const char* const AdminEmail = "AdminEmail";
     static const char* const BuilderBRDampener = "BuilderBRDampener";
 
     enum Columns
     {
-        iDefaultAlien,
+        iDefaultAlienKey,
+        iDefaultAlienAddress,
         iServerName,
         iDefaultMaxNumSystemMessages,
         iDefaultMaxNumGameMessages,
@@ -237,13 +240,15 @@ namespace SystemData
         iMaxNumPersonalTournaments,
         iMaxNumGameClassesPerPersonalTournament,
         iSystemMessagesAlienKey,
+        iSystemMessagesAlienAddress,
         iAdminEmail,
         iBuilderBRDampener,
     };
 
     static const char* const ColumnNames[] =
     {
-        DefaultAlien,
+        DefaultAlienKey,
+        DefaultAlienAddress,
         ServerName,
         DefaultMaxNumSystemMessages,
         DefaultMaxNumGameMessages,
@@ -344,12 +349,14 @@ namespace SystemData
         MaxNumPersonalTournaments,
         MaxNumGameClassesPerPersonalTournament,
         SystemMessagesAlienKey,
+        SystemMessagesAlienAddress,
         AdminEmail,
         BuilderBRDampener,
     };
 
     static const VariantType Types[] = {
         V_INT,
+        V_INT,
         V_STRING,
         V_INT,
         V_INT,
@@ -445,6 +452,7 @@ namespace SystemData
         V_STRING,
         V_STRING,
         V_FLOAT,
+        V_INT,
         V_INT,
         V_INT,
         V_INT,
@@ -455,6 +463,7 @@ namespace SystemData
     };
     
     static const unsigned int Sizes[] = {
+        0,
         0,
         MAX_SERVER_NAME_LENGTH,
         0,
@@ -556,6 +565,7 @@ namespace SystemData
         0,
         0,
         0,
+        0,
         VARIABLE_LENGTH_STRING,
         0,
     };
@@ -596,6 +606,7 @@ namespace SystemEmpireData
     static const char* const WebPage = "WebPage";
     static const char* const Quote = "Quote";
     static const char* const AlienKey = "AlienKey";
+    static const char* const AlienAddress = "AlienAddress";
     static const char* const UIIndependentPlanet = "UIIndependentPlanet";
     static const char* const Wins = "Wins";
     static const char* const Nukes = "Nukes";
@@ -673,6 +684,7 @@ namespace SystemEmpireData
         iWebPage,
         iQuote,
         iAlienKey,
+        iAlienAddress,
         iUIIndependentPlanet,
         iWins,
         iNukes,
@@ -750,6 +762,7 @@ namespace SystemEmpireData
         WebPage,
         Quote,
         AlienKey,
+        AlienAddress,
         UIIndependentPlanet,
         Wins,
         Nukes,
@@ -831,6 +844,7 @@ namespace SystemEmpireData
         V_INT,
         V_INT,
         V_INT,
+        V_INT,
         V_INT64,
         V_INT,
         V_INT,
@@ -903,6 +917,7 @@ namespace SystemEmpireData
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
+        0,
         0,
         0,
         0,
@@ -1306,16 +1321,17 @@ namespace SystemGameClassData {
 
 namespace SystemAlienIcons {
 
-    static const char* const AlienKey = "AlienKey";
+    static const char* const Address = "Address";
     static const char* const AuthorName = "AuthorName";
 
-    enum Columns {      
-        iAlienKey,
+    enum Columns
+    {      
+        iAddress,
         iAuthorName
     };
 
     static const char* const ColumnNames[] = {
-        AlienKey,
+        Address,
         AuthorName,
     };
     
@@ -1330,7 +1346,7 @@ namespace SystemAlienIcons {
     };
 
     static const char* const IndexColumns[] = {
-        AlienKey
+        Address
     };
 
     static unsigned int IndexFlags[] = {
@@ -1646,7 +1662,6 @@ namespace SystemEmpireMessages
     static const char* const Unread = "Unread";
     static const char* const SourceKey = "SourceKey";
     static const char* const SourceName = "SourceName";
-    static const char* const SourceSecret = "SourceSecret";
     static const char* const TimeStamp = "TimeStamp";
     static const char* const Flags = "Flags";
     static const char* const Text = "Text";
@@ -1658,7 +1673,6 @@ namespace SystemEmpireMessages
         iUnread,
         iSourceKey,
         iSourceName,
-        iSourceSecret,
         iTimeStamp,
         iFlags,
         iText,
@@ -1671,7 +1685,6 @@ namespace SystemEmpireMessages
         Unread,
         SourceKey,
         SourceName,
-        SourceSecret,
         TimeStamp,
         Flags,
         Text,
@@ -1685,7 +1698,6 @@ namespace SystemEmpireMessages
         V_INT,
         V_STRING,
         V_INT64,
-        V_INT64,
         V_INT,
         V_STRING,
         V_INT,
@@ -1697,7 +1709,6 @@ namespace SystemEmpireMessages
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
-        0,
         0,
         0,
         VARIABLE_LENGTH_STRING,
@@ -1749,6 +1760,7 @@ namespace SystemEmpireNukeList
 {
     static const char* const EmpireKey = "EmpireKey";
     static const char* const AlienKey = "AlienKey";
+    static const char* const AlienAddress = "AlienAddress";
     static const char* const EmpireName = "EmpireName";
     static const char* const ReferenceEmpireKey = "ReferenceEmpireKey";
     static const char* const GameClassName = "GameClassName";
@@ -1759,6 +1771,7 @@ namespace SystemEmpireNukeList
     {
         iEmpireKey,
         iAlienKey,
+        iAlienAddress,
         iEmpireName,
         iReferenceEmpireKey,
         iGameClassName,
@@ -1770,6 +1783,7 @@ namespace SystemEmpireNukeList
     {
         EmpireKey,
         AlienKey,
+        AlienAddress,
         EmpireName,
         ReferenceEmpireKey,
         GameClassName,
@@ -1781,6 +1795,7 @@ namespace SystemEmpireNukeList
     {
         V_INT,
         V_INT,
+        V_INT,
         V_STRING,
         V_INT,
         V_STRING,
@@ -1790,6 +1805,7 @@ namespace SystemEmpireNukeList
 
     static const unsigned int Sizes[] = 
     {
+        0,
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
@@ -1823,9 +1839,11 @@ namespace SystemEmpireNukeList
 namespace SystemNukeList {
 
     static const char* const NukerAlienKey = "NukerAlienKey";
+    static const char* const NukerAlienAddress = "NukerAlienAddress";
     static const char* const NukerEmpireName = "NukerEmpireName";
     static const char* const NukerEmpireKey = "NukerEmpireKey";
     static const char* const NukedAlienKey = "NukedAlienKey";
+    static const char* const NukedAlienAddress = "NukedAlienAddress";
     static const char* const NukedEmpireName = "NukedEmpireName";
     static const char* const NukedEmpireKey = "NukedEmpireKey";
     static const char* const GameClassName = "GameClassName";
@@ -1834,9 +1852,11 @@ namespace SystemNukeList {
 
     enum Columns {
         iNukerAlienKey,
+        iNukerAlienAddress,
         iNukerEmpireName,
         iNukerEmpireKey,
         iNukedAlienKey,
+        iNukedAlienAddress,
         iNukedEmpireName,
         iNukedEmpireKey,
         iGameClassName,
@@ -1846,9 +1866,11 @@ namespace SystemNukeList {
 
     static const char* const ColumnNames[] = {
         NukerAlienKey,
+        NukerAlienAddress,
         NukerEmpireName,
         NukerEmpireKey,
         NukedAlienKey,
+        NukedAlienAddress,
         NukedEmpireName,
         NukedEmpireKey,
         GameClassName,
@@ -1858,7 +1880,9 @@ namespace SystemNukeList {
     
     static const VariantType Types[] = {
         V_INT,
+        V_INT,
         V_STRING,
+        V_INT,
         V_INT,
         V_INT,
         V_STRING,
@@ -1870,7 +1894,9 @@ namespace SystemNukeList {
 
     static const unsigned int Sizes[] = {
         0,
+        0,
         MAX_EMPIRE_NAME_LENGTH,
+        0,
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
@@ -2053,6 +2079,7 @@ namespace SystemTournaments
     static const char* const News = "News";
     static const char* const Owner = "Owner";
     static const char* const Icon = "Icon";
+    static const char* const IconAddress = "IconAddress";
     static const char* const OwnerName = "OwnerName";
 
     enum Columns
@@ -2063,6 +2090,7 @@ namespace SystemTournaments
         iNews,
         iOwner,
         iIcon,
+        iIconAddress,
         iOwnerName,
     };
 
@@ -2074,6 +2102,7 @@ namespace SystemTournaments
         News,
         Owner,
         Icon,
+        IconAddress,
         OwnerName,
     };
 
@@ -2084,6 +2113,7 @@ namespace SystemTournaments
         V_STRING,
         V_INT,
         V_INT,
+        V_INT,
         V_STRING,
     };
 
@@ -2092,6 +2122,7 @@ namespace SystemTournaments
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
+        0,
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
@@ -2137,6 +2168,7 @@ namespace SystemTournamentTeams
     static const char* const Description = "Description";
     static const char* const WebPage = "WebPage";
     static const char* const Icon = "Icon";
+    static const char* const IconAddress = "IconAddress";
     static const char* const Wins = "Wins";
     static const char* const Nukes = "Nukes";
     static const char* const Nuked = "Nuked";
@@ -2150,6 +2182,7 @@ namespace SystemTournamentTeams
         iDescription,
         iWebPage,
         iIcon,
+        iIconAddress,
         iWins,
         iNukes,
         iNuked,
@@ -2164,6 +2197,7 @@ namespace SystemTournamentTeams
         Description,
         WebPage,
         Icon,
+        IconAddress,
         Wins,
         Nukes,
         Nuked,
@@ -2183,6 +2217,7 @@ namespace SystemTournamentTeams
         V_INT,
         V_INT,
         V_INT,
+        V_INT,
     };
 
     static const unsigned int Sizes[] =
@@ -2191,6 +2226,7 @@ namespace SystemTournamentTeams
         MAX_TOURNAMENT_TEAM_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
+        0,
         0,
         0,
         0,
@@ -2863,7 +2899,8 @@ namespace GameNukedEmpires
     static const char* const GameNumber = "GameNumber";
     static const char* const Name = "Name";
     static const char* const NukedEmpireKey = "NukedEmpireKey";
-    static const char* const Icon = "Icon";
+    static const char* const AlienKey = "AlienKey";
+    static const char* const AlienAddress = "AlienAddress";
     static const char* const Update = "Update";
     static const char* const Reason = "Reason";
     static const char* const SecretKey = "SecretKey";
@@ -2874,7 +2911,8 @@ namespace GameNukedEmpires
         iGameNumber,
         iName,
         iNukedEmpireKey,
-        iIcon,
+        iAlienKey,
+        iAlienAddress,
         iUpdate,
         iReason,
         iSecretKey,
@@ -2886,7 +2924,8 @@ namespace GameNukedEmpires
         GameNumber,
         Name,
         NukedEmpireKey,
-        Icon,
+        AlienKey,
+        AlienAddress,
         Update,
         Reason,
         SecretKey,
@@ -2901,6 +2940,7 @@ namespace GameNukedEmpires
         V_INT,
         V_INT,
         V_INT,
+        V_INT,
         V_INT64,
     };
 
@@ -2909,6 +2949,7 @@ namespace GameNukedEmpires
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
+        0,
         0,
         0,
         0,
@@ -3460,7 +3501,6 @@ namespace GameEmpireMessages
     static const char* const Unread = "Unread";
     static const char* const SourceKey = "SourceKey";
     static const char* const SourceName = "SourceName";
-    static const char* const SourceSecret = "SourceSecret";
     static const char* const TimeStamp = "TimeStamp";
     static const char* const Flags = "Flags";
     static const char* const Text = "Text";
@@ -3473,7 +3513,6 @@ namespace GameEmpireMessages
         iUnread,
         iSourceKey,
         iSourceName,
-        iSourceSecret,
         iTimeStamp,
         iFlags,
         iText,
@@ -3487,7 +3526,6 @@ namespace GameEmpireMessages
         Unread,
         SourceKey,
         SourceName,
-        SourceSecret,
         TimeStamp,
         Flags,
         Text,
@@ -3502,7 +3540,6 @@ namespace GameEmpireMessages
         V_INT,
         V_STRING,
         V_INT64,
-        V_INT64,
         V_INT,
         V_STRING,
     };
@@ -3510,11 +3547,11 @@ namespace GameEmpireMessages
     static const unsigned int Sizes[] = 
     {
         0,
-        0,        0,
+        0,        
+        0,
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
-        0,
         0,
         0,
         VARIABLE_LENGTH_STRING,
@@ -3943,8 +3980,8 @@ namespace GameEmpireFleets
     {
         0,
         0,
-        MAX_FLEET_NAME_LENGTH,
         0,
+        MAX_FLEET_NAME_LENGTH,
         0,
         0,
         0,

@@ -418,7 +418,8 @@ case 0:
         %><td rowspan="3"><% 
 
         String strAlienButtonString;
-        GetAlienPlanetButtonString(m_iAlienKey, m_iEmpireKey, true, 0, 0, NULL, NULL, &strAlienButtonString);
+        iErrCode = GetAlienPlanetButtonString(m_iAlienKey, m_iAlienAddress, m_iEmpireKey, true, 0, 0, NULL, NULL, &strAlienButtonString);
+        RETURN_ON_ERROR(iErrCode);
 
         m_pHttpResponse->WriteText (strAlienButtonString.GetCharPtr(), strAlienButtonString.GetLength());
 

@@ -358,35 +358,35 @@ void HtmlRenderer::WriteSeparatorString (int iSeparatorKey) {
     }
 }
 
-
-void HtmlRenderer::WriteEmpireIcon (int iIconKey, int iEmpireKey, const char* pszAlt, bool bVerifyUpload) {
-
-    WriteIcon (iIconKey, iEmpireKey, NO_KEY, pszAlt, BASE_UPLOADED_ALIEN_DIR, bVerifyUpload);
+int HtmlRenderer::WriteEmpireIcon(unsigned int iIconKey, int iAddress, unsigned int iEmpireKey, const char* pszAlt, bool bVerifyUpload)
+{
+    return WriteIcon(iIconKey, iAddress, iEmpireKey, NO_KEY, pszAlt, BASE_UPLOADED_ALIEN_DIR, bVerifyUpload);
 }
 
+int HtmlRenderer::WriteIcon(unsigned int iIconKey, int iAddress, unsigned int iEntityKey, unsigned int iEntityKey2,
+                            const char* pszAlt, const char* pszUploadDir, bool bVerifyUpload)
+{
+    int iErrCode = OK;
 
-void HtmlRenderer::WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2,
-                              const char* pszAlt, const char* pszUploadDir, bool bVerifyUpload) {
-    
-    if (iIconKey != UPLOADED_ICON) {
-
-        OutputText ("<img src=\"" BASE_RESOURCE_DIR BASE_ALIEN_DIR ALIEN_NAME);
-
-    } else {
-        
+    if (iIconKey != UPLOADED_ICON)
+    {
+        OutputText("<img src=\"" BASE_RESOURCE_DIR BASE_ALIEN_DIR ALIEN_NAME);
+        m_pHttpResponse->WriteText(iAddress);
+    }
+    else
+    {
         bool bDisplay = true;
-
-        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS) {
+        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS)
+        {
             bDisplay = false;
         }
-        
-        else if (bVerifyUpload) {
-            
+        else if (bVerifyUpload)
+        {
             // Make sure file exists
             char pszDestFileName[OS::MaxFileNameLength];
 
-            if (iEntityKey2 != NO_KEY) {
-
+            if (iEntityKey2 != NO_KEY)
+            {
                 sprintf (
                     pszDestFileName, 
                     "%s/%s/" ALIEN_NAME "%i.%i" DEFAULT_IMAGE_EXTENSION, 
@@ -395,9 +395,9 @@ void HtmlRenderer::WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2,
                     iEntityKey,
                     iEntityKey2
                     );
-
-            } else {
-            
+            }
+            else
+            {
                 sprintf (
                     pszDestFileName, 
                     "%s/%s/" ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
@@ -407,67 +407,75 @@ void HtmlRenderer::WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2,
                     );
             }
             
-            if (!File::DoesFileExist (pszDestFileName)) {
+            if (!File::DoesFileExist(pszDestFileName))
+            {
                 bDisplay = false;
             }
         }
         
-        if (bDisplay) {
-            
+        if (bDisplay)
+        {
             OutputText ("<img src=\"" BASE_RESOURCE_DIR);
-            m_pHttpResponse->WriteText (pszUploadDir);
+            m_pHttpResponse->WriteText(pszUploadDir);
             OutputText ("/" ALIEN_NAME);
 
-            if (iEntityKey2 != NO_KEY) {
-                m_pHttpResponse->WriteText (iEntityKey);
-                OutputText (".");
-                iIconKey = iEntityKey2;
-            } else {
-                iIconKey = iEntityKey;
+            if (iEntityKey2 != NO_KEY)
+            {
+                m_pHttpResponse->WriteText(iEntityKey);
+                OutputText(".");
+                m_pHttpResponse->WriteText(iEntityKey2);
             }
-            
-        } else {
-            
+            else
+            {
+                m_pHttpResponse->WriteText(iEntityKey);
+            }
+        }
+        else
+        {
             // Render default icon
-            EnsureDefaultSystemIcon();
-            iIconKey = m_iDefaultSystemIcon;
-            
             OutputText ("<img src=\"" BASE_RESOURCE_DIR BASE_ALIEN_DIR ALIEN_NAME);
+
+            Variant vDefaultAlienAddress;
+            iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, &vDefaultAlienAddress);
+            RETURN_ON_ERROR(iErrCode);
+            m_pHttpResponse->WriteText(vDefaultAlienAddress.GetInteger());
         }
     }
     
-    m_pHttpResponse->WriteText (iIconKey);
     OutputText (DEFAULT_IMAGE_EXTENSION "\"");
     
-    if (!String::IsBlank (pszAlt)) {
+    if (!String::IsBlank(pszAlt))
+    {
         OutputText (" alt=\"");
-        m_pHttpResponse->WriteText (pszAlt);
+        m_pHttpResponse->WriteText(pszAlt);
         OutputText ("\"");
     }
     
     OutputText (">");
+    return iErrCode;
 }
 
-void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey, 
-                                            const char* pszEmpireName, int iBorder, const char* pszFormName, 
-                                            const char* pszAlt, bool bVerifyUpload, bool bKeyAndHash) {
-    
+int HtmlRenderer::WriteProfileAlienString(unsigned int iAlienKey, int iAddress, unsigned int iEmpireKey, 
+                                          const char* pszEmpireName, int iBorder, const char* pszFormName, 
+                                          const char* pszAlt, bool bVerifyUpload, bool bKeyAndHash)
+{
+    int iErrCode = OK;
+
     OutputText ("<input type=\"image\" border=\"");
     m_pHttpResponse->WriteText (iBorder);
     OutputText ("\" src=\"" BASE_RESOURCE_DIR);
     
-    if (iAlienKey == UPLOADED_ICON) {
-
+    if (iAlienKey == UPLOADED_ICON)
+    {
         Assert(iEmpireKey != NO_KEY);
 
         bool bDisplay = true;
-        
-        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS) {
+        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS)
+        {
             bDisplay = false;
         }
-
-        else if (bVerifyUpload) {
-
+        else if (bVerifyUpload)
+        {
             // Make sure file exists
             char pszDestFileName[OS::MaxFileNameLength];
             
@@ -478,37 +486,43 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
                 iEmpireKey
                 );
             
-            if (!File::DoesFileExist (pszDestFileName)) {
+            if (!File::DoesFileExist (pszDestFileName))
+            {
                 bDisplay = false;
             }
         }
         
-        if (bDisplay) {
-            
+        if (bDisplay)
+        {
             OutputText (BASE_UPLOADED_ALIEN_DIR "/" ALIEN_NAME);
-            m_pHttpResponse->WriteText (iEmpireKey);
+            m_pHttpResponse->WriteText(iEmpireKey);
             OutputText (DEFAULT_IMAGE_EXTENSION);
             
         } else {
             
             // Render default icon
             OutputText (BASE_ALIEN_DIR ALIEN_NAME);
-            EnsureDefaultSystemIcon();
-            m_pHttpResponse->WriteText(m_iDefaultSystemIcon);
+
+            Variant vAddress;
+            iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, &vAddress);
+            RETURN_ON_ERROR(iErrCode);
+
+            m_pHttpResponse->WriteText(vAddress.GetInteger());
             OutputText (DEFAULT_IMAGE_EXTENSION);
         }
-        
-    } else {
-        
+    }
+    else
+    {
         OutputText (BASE_ALIEN_DIR ALIEN_NAME);
-        m_pHttpResponse->WriteText (iAlienKey);
+        m_pHttpResponse->WriteText(iAddress);
         OutputText (DEFAULT_IMAGE_EXTENSION);
     }
     
     OutputText ("\" name=\"");
     m_pHttpResponse->WriteText (pszFormName);
     
-    if (bKeyAndHash) {
+    if (bKeyAndHash)
+    {
         OutputText (".");
         m_pHttpResponse->WriteText (iEmpireKey);
         OutputText (".");
@@ -518,6 +532,8 @@ void HtmlRenderer::WriteProfileAlienString (int iAlienKey, int iEmpireKey,
     OutputText ("\" alt=\"");
     m_pHttpResponse->WriteText (pszAlt);
     OutputText ("\">");
+
+    return iErrCode;
 }
 
 struct GifHeader
@@ -664,7 +680,7 @@ bool HtmlRenderer::CopyUploadedIcon(const char* pszFileName, const char* pszUplo
     return false;
 }
 
-bool HtmlRenderer::CopyNewAlien(const char* pszFileName, int iAlienKey)
+bool HtmlRenderer::CopyNewAlien(const char* pszFileName, int iNewAddress)
 {
     char pszDestFileName[OS::MaxFileNameLength];
     
@@ -672,7 +688,7 @@ bool HtmlRenderer::CopyNewAlien(const char* pszFileName, int iAlienKey)
         pszDestFileName, 
         "%s/" BASE_ALIEN_DIR ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
         global.GetResourceDir(),
-        iAlienKey
+        iNewAddress
         );
     
     global.GetFileCache()->ReleaseFile (pszDestFileName);
@@ -680,36 +696,18 @@ bool HtmlRenderer::CopyNewAlien(const char* pszFileName, int iAlienKey)
     return File::CopyFile (pszFileName, pszDestFileName) == OK;
 }
 
-bool HtmlRenderer::DeleteAlien (int iAlienKey)
+bool HtmlRenderer::DeleteAlienFile(int iAddress)
 {
     char pszDestFileName[OS::MaxFileNameLength];
     
     sprintf (
-        pszDestFileName, 
+        pszDestFileName,
         "%s/" BASE_ALIEN_DIR ALIEN_NAME "%i" DEFAULT_IMAGE_EXTENSION, 
         global.GetResourceDir(),
-        iAlienKey
+        iAddress
         );
     
     global.GetFileCache()->ReleaseFile (pszDestFileName);
     
     return File::DeleteFile (pszDestFileName) == OK;
-}
-
-int HtmlRenderer::EnsureDefaultSystemIcon()
-{
-    int iErrCode = OK;
-
-    if (m_iDefaultSystemIcon == NO_KEY)
-    {
-        int iErrCode;
-        Variant vAlien;
-
-        iErrCode = GetSystemProperty(SystemData::DefaultAlien, &vAlien);
-        RETURN_ON_ERROR(iErrCode);
-
-        m_iDefaultSystemIcon = vAlien.GetInteger();
-    }
-
-    return iErrCode;
 }

@@ -92,6 +92,7 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_iSeparatorKey = NO_KEY;
     m_iPrivilege = NOVICE;
     m_iAlienKey = NO_KEY;
+    m_iAlienAddress = -1;
     m_iThemeKey = NO_KEY;
     m_iGameState = 0;
     m_iGameRatios = RATIOS_DISPLAY_NEVER;
@@ -100,7 +101,6 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_iSystemOptions = 0;
     m_iSystemOptions2 = 0;
     m_iGameOptions = 0;
-    m_iDefaultSystemIcon = NO_KEY;
     
     m_bRedirection = false;
     m_bRepeatedButtons = false;
@@ -4227,8 +4227,9 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
                     ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr()
                     );
                     
-                WriteProfileAlienString (
-                    ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
+                iErrCode = WriteProfileAlienString (
+                    ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(),
+                    ppvData[i][SystemEmpireNukeList::iAlienAddress].GetInteger(),
                     ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
                     ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
                     0,
@@ -4237,6 +4238,7 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
                     true,
                     true
                     );
+                RETURN_ON_ERROR(iErrCode);
                     
                 OutputText ("</td><td align=\"center\">");
                 m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
@@ -4285,8 +4287,9 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
                     
                 sprintf(pszProfile, "View the profile of %s", ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr());
                     
-                WriteProfileAlienString (
-                    ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(), 
+                iErrCode = WriteProfileAlienString (
+                    ppvData[i][SystemEmpireNukeList::iAlienKey].GetInteger(),
+                    ppvData[i][SystemEmpireNukeList::iAlienAddress].GetInteger(), 
                     ppvData[i][SystemEmpireNukeList::iReferenceEmpireKey].GetInteger(),
                     ppvData[i][SystemEmpireNukeList::iEmpireName].GetCharPtr(),
                     0,
@@ -4295,6 +4298,7 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
                     true,
                     true
                     );
+                RETURN_ON_ERROR(iErrCode);
                     
                 OutputText ("</td><td align=\"center\">");
                 m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
@@ -5324,14 +5328,19 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
         // Alien
         iErrCode = GetEmpireProperty(iCurrentEmpireKey, SystemEmpireData::AlienKey, &vTemp);
         RETURN_ON_ERROR(iErrCode);
-        iValue = vTemp.GetInteger();
+        unsigned int iAlienKey = vTemp.GetInteger();
+
+        iErrCode = GetEmpireProperty(iCurrentEmpireKey, SystemEmpireData::AlienAddress, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        int iAlienAddress = vTemp.GetInteger();
 
         OutputText ("<td align=\"center\">");
 
         sprintf(pszProfile, "View the profile of %s", ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
 
-        WriteProfileAlienString (
-            iValue,
+        iErrCode = WriteProfileAlienString (
+            iAlienKey,
+            iAlienAddress,
             iCurrentEmpireKey,
             ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr(),
             0,
@@ -5340,6 +5349,7 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
             false,
             true
             );
+        RETURN_ON_ERROR(iErrCode);
 
         OutputText ("</td>");
 
@@ -5623,7 +5633,7 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
         while (true) {
             
             const char* pszName;
-            int iIcon, iDeadEmpireKey;
+            int iDeadEmpireKey;
             
             iErrCode = t_pCache->GetNextKey (strGameEmpireData, iKey, &iKey);
             if (iErrCode == ERROR_DATA_NOT_FOUND) {
@@ -5632,9 +5642,13 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
             }
             RETURN_ON_ERROR(iErrCode);
             
-            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::Icon, &vValue);
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::AlienKey, &vValue);
             RETURN_ON_ERROR(iErrCode);
-            iIcon = vValue.GetInteger();
+            unsigned int iAlienKey = vValue.GetInteger();
+
+            iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::AlienAddress, &vValue);
+            RETURN_ON_ERROR(iErrCode);
+            int iAlienAddress = vValue.GetInteger();
             
             iErrCode = t_pCache->ReadData(strGameEmpireData, iKey, GameNukedEmpires::NukedEmpireKey, &vValue);
             RETURN_ON_ERROR(iErrCode);
@@ -5650,8 +5664,9 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
             
             sprintf(pszProfile, "View the profile of %s", pszName);
 
-            WriteProfileAlienString (
-                iIcon,
+            iErrCode = WriteProfileAlienString (
+                iAlienKey,
+                iAlienAddress,
                 iDeadEmpireKey,
                 pszName,
                 0,
@@ -5660,6 +5675,7 @@ int HtmlRenderer::RenderEmpireInformation(int iGameClass, int iGameNumber, bool 
                 true,
                 iDeadEmpireKey != NO_KEY
                 );
+            RETURN_ON_ERROR(iErrCode);
 
             OutputText ("</td><td colspan=\"2\" align=\"center\">");
 
@@ -5851,8 +5867,11 @@ int HtmlRenderer::ParseCreateTournamentForms(Variant* pvSubmitArray, int iEmpire
     }
 
     // Icon
-    EnsureDefaultSystemIcon();
-    pvSubmitArray[SystemTournaments::iIcon] = m_iDefaultSystemIcon;
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienKey, pvSubmitArray + SystemTournaments::iIcon);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, pvSubmitArray + SystemTournaments::iIconAddress);
+    RETURN_ON_ERROR(iErrCode);
 
     // News
     pvSubmitArray[SystemTournaments::iNews] = (const char*) NULL;
@@ -6006,12 +6025,15 @@ int HtmlRenderer::WriteTournamentAdministrator (int iEmpireKey) {
     return iErrCode;
 }
 
-int HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* pszCategory) {
-
+int HtmlRenderer::WriteIconSelection(int iIconSelect, unsigned int iAlienKey, const char* pszCategory)
+{
     int iErrCode = OK;
-    unsigned int iNumAliens, i;
-    Variant** ppvAlienData = NULL;
-    AutoFreeData free_ppvAlienData(ppvAlienData);
+
+    Variant** ppvData = NULL;
+    AutoFreeData free_ppvData(ppvData);
+
+    unsigned int* piKey = NULL;
+    AutoFreeKeys free_piKey(piKey);
 
     OutputText ("<p><h3>Choose an icon for your ");
     m_pHttpResponse->WriteText (pszCategory);
@@ -6021,7 +6043,8 @@ int HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* ps
     switch (iIconSelect) {
     case 0:
 
-        iErrCode = GetAlienKeys (&ppvAlienData, &iNumAliens);
+        unsigned int iNumAliens;
+        iErrCode = GetAliens(&ppvData, &piKey, &iNumAliens);
         RETURN_ON_ERROR(iErrCode);
 
         OutputText (
@@ -6029,15 +6052,9 @@ int HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* ps
             "<p><table width=\"75%\"><tr><td>"
             );
 
-        for (i = 0; i < iNumAliens; i ++) {
-
-            WriteAlienButtonString (
-                ppvAlienData[i][0].GetInteger(),
-                iIcon == ppvAlienData[i][0],
-                "Alien",
-                ppvAlienData[i][1].GetCharPtr()
-                );
-
+        for (unsigned int i = 0; i < iNumAliens; i ++)
+        {
+            WriteAlienButtonString(piKey[i], ppvData[i][SystemAlienIcons::iAddress], piKey[i] == iAlienKey, "Alien", ppvData[i][SystemAlienIcons::iAuthorName]);
             OutputText (" ");
         }
 
@@ -6080,7 +6097,7 @@ int HtmlRenderer::WriteIconSelection (int iIconSelect, int iIcon, const char* ps
     return iErrCode;
 }
 
-int HtmlRenderer::HandleIconSelection (unsigned int* piIcon, const char* pszUploadDir, unsigned int iKey1, unsigned int iKey2, bool* pbHandled)
+int HtmlRenderer::HandleIconSelection(unsigned int* piAlienKey, const char* pszUploadDir, unsigned int iKey1, unsigned int iKey2, bool* pbHandled)
 {
     *pbHandled = false;
 
@@ -6126,14 +6143,14 @@ int HtmlRenderer::HandleIconSelection (unsigned int* piIcon, const char* pszUplo
             return OK;
         }
 
-        *piIcon = UPLOADED_ICON;
+        *piAlienKey = UPLOADED_ICON;
         AddMessage ("Your new icon was uploaded successfully");
     }
     else
     {
         const char* pszStart;
         if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith("Alien")) == NULL ||
-            (pszStart = pHttpForm->GetName()) == NULL || sscanf (pszStart, "Alien%d", piIcon) != 1)
+            (pszStart = pHttpForm->GetName()) == NULL || sscanf (pszStart, "Alien%d", piAlienKey) != 1)
         {
             return ERROR_MISSING_FORM;
         }
@@ -6591,6 +6608,10 @@ int HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey)
     RETURN_ON_ERROR(iErrCode);
     iAlienKey = vTemp.GetInteger();
 
+    iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienAddress, &vTemp);
+    RETURN_ON_ERROR(iErrCode);
+    int iAlienAddress = vTemp.GetInteger();
+
     iErrCode = GetTournamentEmpireData (iTournamentKey, iEmpireKey, &pvTournamentEmpireData);
     RETURN_ON_ERROR(iErrCode);
 
@@ -6605,8 +6626,9 @@ int HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey)
 
     sprintf(pszProfile, "View the profile of %s", pszName);
 
-    WriteProfileAlienString (
+    iErrCode = WriteProfileAlienString (
         iAlienKey,
+        iAlienAddress,
         iEmpireKey,
         pszName,
         0, 
@@ -6615,6 +6637,7 @@ int HtmlRenderer::RenderEmpire (unsigned int iTournamentKey, int iEmpireKey)
         false,
         true
         );
+    RETURN_ON_ERROR(iErrCode);
                 
     NotifyProfileLink();
     

@@ -1500,33 +1500,39 @@ if (m_bOwnPost && !m_bRedirection) {
             iErrCode = CacheSystemAlienIcons();
             RETURN_ON_ERROR(iErrCode);
 
-            unsigned int iIcon;
+            unsigned int iAlienKey;
             bool bHandled;
-            iErrCode = HandleIconSelection (&iIcon, BASE_UPLOADED_ALIEN_DIR, m_iEmpireKey, NO_KEY, &bHandled);
+            iErrCode = HandleIconSelection(&iAlienKey, BASE_UPLOADED_ALIEN_DIR, m_iEmpireKey, NO_KEY, &bHandled);
             RETURN_ON_ERROR(iErrCode);
 
             if (bHandled)
             {
-                if (iIcon == UPLOADED_ICON) {
-
+                if (iAlienKey == UPLOADED_ICON)
+                {
                     if (m_iAlienKey != UPLOADED_ICON)
                     {
-                        iErrCode = SetEmpireAlienKey (m_iEmpireKey, UPLOADED_ICON);
+                        int iAddress;
+                        iErrCode = SetEmpireAlienIcon(m_iEmpireKey, UPLOADED_ICON, &iAddress);
                         RETURN_ON_ERROR(iErrCode);
+
                         m_iAlienKey = UPLOADED_ICON;
+                        m_iAlienAddress = iAddress;
                     }
                 }
-
-                else if (m_iAlienKey != iIcon) {
-
-                    iErrCode = SetEmpireAlienKey (m_iEmpireKey, iIcon);
+                else if (m_iAlienKey != iAlienKey)
+                {
+                    int iAddress;
+                    iErrCode = SetEmpireAlienIcon(m_iEmpireKey, iAlienKey, &iAddress);
                     RETURN_ON_ERROR(iErrCode);
-                    m_iAlienKey = iIcon;
+
+                    m_iAlienKey = iAlienKey;
+                    m_iAlienAddress = iAddress;
+
                     AddMessage ("Your icon was updated");
                 }
-
-                else {
-                    AddMessage ("That was the same icon");
+                else
+                {
+                    AddMessage ("You chose the same icon");
                 }
             }
 
@@ -2174,8 +2180,9 @@ case 0:
 
     %><input type="hidden" name="ProfileEditorPage" value="0"><p><%
 
-    WriteProfileAlienString (
+    iErrCode = WriteProfileAlienString (
         pvEmpireData[SystemEmpireData::iAlienKey].GetInteger(),
+        pvEmpireData[SystemEmpireData::iAlienAddress].GetInteger(),
         m_iEmpireKey,
         m_vEmpireName.GetCharPtr(),
         0,
@@ -2184,6 +2191,7 @@ case 0:
         false,
         false
         );
+    RETURN_ON_ERROR(iErrCode);
 
     %> <font size="+2"><%
     Write (m_vEmpireName.GetCharPtr());
@@ -3112,8 +3120,13 @@ case 1:
     iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
     RETURN_ON_ERROR(iErrCode);
 
+    Variant vAlienAddress;
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienAddress, &vAlienAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     %><input type="hidden" name="ProfileEditorPage" value="1"><p><%
-    WriteEmpireIcon (vAlienKey.GetInteger(), m_iEmpireKey, "Your current icon", false);
+    iErrCode = WriteEmpireIcon(vAlienKey, vAlienAddress, m_iEmpireKey, "Your current icon", false);
+    RETURN_ON_ERROR(iErrCode);
     %><p><%
 
     iErrCode = WriteIconSelection(iAlienSelect, vAlienKey.GetInteger(), "empire");

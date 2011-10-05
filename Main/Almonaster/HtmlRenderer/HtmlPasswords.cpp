@@ -112,9 +112,13 @@ int HtmlRenderer::HtmlLoginEmpire(bool* pbLoggedIn)
         RETURN_ON_ERROR(iErrCode);
         m_iPrivilege = vValue.GetInteger();
 
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
         RETURN_ON_ERROR(iErrCode);
         m_iAlienKey = vValue.GetInteger();
+
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlienAddress, &vValue);
+        RETURN_ON_ERROR(iErrCode);
+        m_iAlienAddress = vValue.GetInteger();
 
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IPAddress, &m_vPreviousIPAddress);
         RETURN_ON_ERROR(iErrCode);
@@ -336,6 +340,10 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
         RETURN_ON_ERROR(iErrCode);
         m_iAlienKey = vValue.GetInteger();
+
+        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlienAddress, &vValue);
+        RETURN_ON_ERROR(iErrCode);
+        m_iAlienAddress = vValue.GetInteger();
 
         iErrCode = GetUIData (m_iThemeKey);
         RETURN_ON_ERROR(iErrCode);

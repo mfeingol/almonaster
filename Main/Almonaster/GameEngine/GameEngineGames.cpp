@@ -1945,6 +1945,10 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     {
         GET_GAME_MAP(strGameMap, iGameClass, iGameNumber);
         iErrCode = t_pCache->CreateEmpty(GAME_MAP, strGameMap);
+        if (iErrCode == ERROR_TABLE_ALREADY_EXISTS)
+        {
+            iErrCode = OK;
+        }
         RETURN_ON_ERROR(iErrCode);
 
         int* piEmpKey;

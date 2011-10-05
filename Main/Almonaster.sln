@@ -26,9 +26,13 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SqlDatabaseBridge", "SqlDat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlDatabase", "SqlDatabase\SqlDatabase.csproj", "{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MigrateDatabase", "MigrateDatabase\MigrateDatabase.vcxproj", "{75EFC304-71BA-4247-BDD4-354F8DB63551}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileDatabase", "FileDatabase\FileDatabase.vcxproj", "{208D5299-BDCB-4479-BD23-B544474E8772}"
+EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 11
+		SccNumberOfProjects = 13
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs29
 		SccLocalPath0 = .
@@ -62,6 +66,12 @@ Global
 		SccProjectUniqueName10 = SqlDatabaseBridge\\SqlDatabaseBridge.vcxproj
 		SccProjectName10 = SqlDatabaseBridge
 		SccLocalPath10 = SqlDatabaseBridge
+		SccProjectUniqueName11 = MigrateDatabase\\MigrateDatabase.vcxproj
+		SccProjectName11 = MigrateDatabase
+		SccLocalPath11 = MigrateDatabase
+		SccProjectUniqueName12 = FileDatabase\\FileDatabase.vcxproj
+		SccProjectName12 = FileDatabase
+		SccLocalPath12 = FileDatabase
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -198,7 +208,8 @@ Global
 		{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}.Release|Mixed Platforms.Build.0 = Release|x64
 		{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}.Release|Win32.ActiveCfg = Release|Win32
 		{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}.Release|Win32.Build.0 = Release|Win32
-		{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}.Release|x64.ActiveCfg = Release|Win32
+		{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}.Release|x64.ActiveCfg = Release|x64
+		{C1CDC493-AAA3-4B34-9C1B-F07B455CE2A4}.Release|x64.Build.0 = Release|x64
 		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
@@ -211,7 +222,36 @@ Global
 		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Release|Win32.ActiveCfg = Release|Any CPU
-		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Release|x64.ActiveCfg = Release|Any CPU
+		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Release|x64.ActiveCfg = Release|x64
+		{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}.Release|x64.Build.0 = Release|x64
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|Mixed Platforms.ActiveCfg = Debug|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|Mixed Platforms.Build.0 = Debug|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|Win32.ActiveCfg = Debug|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|Win32.Build.0 = Debug|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|x64.ActiveCfg = Debug|x64
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Debug|x64.Build.0 = Debug|x64
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|Any CPU.ActiveCfg = Release|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|Mixed Platforms.ActiveCfg = Release|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|Win32.ActiveCfg = Release|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|Win32.Build.0 = Release|Win32
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|x64.ActiveCfg = Release|x64
+		{75EFC304-71BA-4247-BDD4-354F8DB63551}.Release|x64.Build.0 = Release|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|Win32.ActiveCfg = Debug|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|Win32.Build.0 = Debug|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|x64.ActiveCfg = Debug|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Debug|x64.Build.0 = Debug|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|Any CPU.ActiveCfg = Release|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|Mixed Platforms.Build.0 = Release|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|Win32.ActiveCfg = Release|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|Win32.Build.0 = Release|Win32
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|x64.ActiveCfg = Release|x64
+		{208D5299-BDCB-4479-BD23-B544474E8772}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

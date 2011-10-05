@@ -115,7 +115,7 @@ else
             ppvData[i][SystemNukeList::iNukerEmpireName].GetCharPtr()
             );
 
-        WriteProfileAlienString (
+        iErrCode = WriteProfileAlienString (
             ppvData[i][SystemNukeList::iNukerAlienKey].GetInteger(), 
             ppvData[i][SystemNukeList::iNukerEmpireKey].GetInteger(),
             ppvData[i][SystemNukeList::iNukerEmpireName].GetCharPtr(),
@@ -125,6 +125,7 @@ else
             true,
             true
             );
+        RETURN_ON_ERROR(iErrCode);
 
         %></td><%
 
@@ -139,7 +140,7 @@ else
             ppvData[i][SystemNukeList::iNukedEmpireName].GetCharPtr()
             );
 
-        WriteProfileAlienString (
+        iErrCode = WriteProfileAlienString (
             ppvData[i][SystemNukeList::iNukedAlienKey].GetInteger(), 
             ppvData[i][SystemNukeList::iNukedEmpireKey].GetInteger(),
             ppvData[i][SystemNukeList::iNukedEmpireName].GetCharPtr(),
@@ -149,6 +150,7 @@ else
             true,
             true
             );
+        RETURN_ON_ERROR(iErrCode);
 
         %></td><%
 

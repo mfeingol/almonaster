@@ -112,12 +112,15 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
         iErrCode = GetEmpireName(iEmpireKey, pvGameEmpireData + GameNukedEmpires::iName);
         RETURN_ON_ERROR(iErrCode);
             
-        Variant vIcon;
-        iErrCode = GetEmpireProperty (iEmpireKey, SystemEmpireData::AlienKey, &vIcon);
+        Variant vAlienKey, vAlienAddress;
+        iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
+        RETURN_ON_ERROR(iErrCode);
+        iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::AlienAddress, &vAlienAddress);
         RETURN_ON_ERROR(iErrCode);
 
         pvGameEmpireData[GameNukedEmpires::iNukedEmpireKey] = iEmpireKey;
-        pvGameEmpireData[GameNukedEmpires::iIcon] = vIcon.GetInteger();
+        pvGameEmpireData[GameNukedEmpires::iAlienKey] = vAlienKey;
+        pvGameEmpireData[GameNukedEmpires::iAlienAddress] = vAlienAddress;
         pvGameEmpireData[GameNukedEmpires::iUpdate] = pguInfo == NULL ? 0 : pguInfo->iUpdate;
         pvGameEmpireData[GameNukedEmpires::iReason] = rReason;
 

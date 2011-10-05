@@ -198,11 +198,14 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
 
     List<BulkTableReadRequest>^ requests = gcnew List<BulkTableReadRequest>(iNumEntries);
 
+    // Holds a weak reference
+    CachedTable* pExistingCachedTable = NULL;
+    
     unsigned int iActual = 0;
     for (unsigned int i = 0; i < iNumEntries; i ++)
     {
-        char* pszEntryName = EnsureNewCacheEntry(pcCacheEntry[i]);
-        if (pszEntryName == NULL)
+        char* pszEntryName = EnsureNewCacheEntry(pcCacheEntry[i], &pExistingCachedTable);
+        if (!pszEntryName)
             continue;
 
         ppszCacheEntryName[iActual] = pszEntryName;
@@ -214,7 +217,14 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
 
     // Maybe we've already cached everything we wanted...
     if (iActual == 0)
+    {
+        if (ppTable && iNumEntries == 1 && pExistingCachedTable)
+        {
+            *ppTable = pExistingCachedTable;
+            pExistingCachedTable->AddRef();
+        }
         return OK;
+    }
 
     // Go to the database
     IEnumerable<BulkTableReadResult^>^ results;
@@ -243,7 +253,13 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
 
         if (entry.PartitionColumn)
         {
-            CreateTablePartitions(result, ppszCacheEntryName[iActual], entry.PartitionColumn);
+            const char* pszCacheEntryPrefix = ppszCacheEntryName[iActual];
+            if (entry.CrossJoin)
+            {
+                // Just use the table name as a prefix...  The partitioned results are identical
+                pszCacheEntryPrefix = entry.Table.Name;
+            }
+            CreateTablePartitions(result, pszCacheEntryPrefix, entry.PartitionColumn);
         }
 
         if (entry.Table.NumColumns > 0 && Enumerable::Count(result->Rows) == 1)
@@ -359,7 +375,7 @@ void TableCacheCollection::ConvertToRequest(const TableCacheEntry& entry, List<B
     requests->Add(request);
 }
 
-char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry)
+char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry, CachedTable** ppCachedTable)
 {
     String s;
     char* pszCacheEntryName;
@@ -369,9 +385,35 @@ char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry)
     {
         if (entry.Table.NumColumns == 0)
         {
-            // This means that entries with excessively generic names are created for cross-joined and partitioned lookups.
-            // So far it hasn't been a problem.  But it could be a seriously evil problem...
-            pszCacheEntryName = (char*)entry.Table.Name;
+            if (entry.CrossJoin)
+            {
+                s = entry.Table.Name;
+                s += "_x_";
+                s += entry.CrossJoin->Table.Name;
+                
+                if (entry.Table.Key == NO_KEY)
+                {
+                    for (unsigned int i = 0; i < entry.CrossJoin->Table.NumColumns; i ++)
+                    {
+                        s += "_";
+                        s += entry.CrossJoin->Table.Columns[i].Name;
+                        s += "_";
+                        s += (String)entry.CrossJoin->Table.Columns[i].Data;
+                    }
+                }
+                else
+                {
+                    s += "_";
+                    s += ID_COLUMN_NAME;
+                    s += "_";
+                    s += entry.Table.Key;
+                }
+                pszCacheEntryName = s.GetCharPtr();
+            }
+            else
+            {
+                pszCacheEntryName = (char*)entry.Table.Name;
+            }
         }
         else
         {
@@ -396,9 +438,12 @@ char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry)
 
     // We might have already processed the cache entry
     Assert(pszCacheEntryName);
-    if (m_htTableViews.Contains(pszCacheEntryName))
+    if (m_htTableViews.FindFirst(pszCacheEntryName, ppCachedTable))
+    {
+        // No addref
         return NULL;
-
+    }
+    
     char* pszRet = String::StrDup(pszCacheEntryName);
     Assert(pszRet);
     return pszRet;
@@ -431,6 +476,9 @@ int TableCacheCollection::GetTable(const char* pszCacheTableName, CachedTable** 
         (*ppTable)->AddRef();
         return OK;
     }
+
+    // TODOTODO
+    Assert(false);
 
     return ERROR_UNKNOWN_TABLE_NAME;
 }
@@ -494,7 +542,9 @@ int TableCacheCollection::ReadColumnsWhereEqual(const char* pszCacheTableName, c
     if (ppiKey)
         *ppiKey = NULL;
 
-    *pppvData = NULL;
+    if (pppvData)
+        *pppvData = NULL;
+    
     *piNumRows = 0;
 
     ICachedTable* pTable;
@@ -521,6 +571,20 @@ int TableCacheCollection::ReadColumns(const char* pszCacheTableName, unsigned in
     if (iErrCode == OK)
     {
         iErrCode = pTable->ReadColumns(iNumColumns, ppszColumn, ppiKey, pppvData, piNumRows);
+    }
+    SafeRelease(pTable);
+    return iErrCode;
+}
+
+int TableCacheCollection::ReadRow(const char* pszCacheTableName, Variant** ppvData)
+{
+    *ppvData = NULL;
+
+    ICachedTable* pTable;
+    int iErrCode = GetTable(pszCacheTableName, &pTable);
+    if (iErrCode == OK)
+    {
+        iErrCode = pTable->ReadRow(ppvData);
     }
     SafeRelease(pTable);
     return iErrCode;

@@ -32,7 +32,8 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
 
     m_pHttpResponse->WriteText("<center>");
 
-    WriteSystemHeaders(bFileUpload);
+    iErrCode = WriteSystemHeaders(bFileUpload);
+    RETURN_ON_ERROR(iErrCode);
 
     PostSystemPageInformation();
 
@@ -84,8 +85,10 @@ int HtmlRenderer::WriteSystemTitleString() {
     return iErrCode;
 }
 
-void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
+int HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
 { 
+    int iErrCode;
+
     if (bFileUpload)
     {
         OutputText ("<form method=\"post\" enctype=\"multipart/form-data\">");
@@ -101,8 +104,9 @@ void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
 
     const char* pszName = m_vEmpireName.GetCharPtr();
 
-    WriteProfileAlienString (
-        m_iAlienKey, 
+    iErrCode = WriteProfileAlienString (
+        m_iAlienKey,
+        m_iAlienAddress,
         m_iEmpireKey, 
         m_vEmpireName.GetCharPtr(),
         0,
@@ -111,6 +115,7 @@ void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
         false,
         false
         );
+    RETURN_ON_ERROR(iErrCode);
 
     OutputText(" <font size=\"+3\"><strong>");
     m_pHttpResponse->WriteText (pszName);
@@ -131,6 +136,8 @@ void HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
     }
 
     OutputText ("</strong></font><p>");
+
+    return iErrCode;
 }
 
 void HtmlRenderer::PostSystemPageInformation()
@@ -298,8 +305,9 @@ int HtmlRenderer::WriteGameHeaderString()
 
     const char* pszEmpireName = m_vEmpireName.GetCharPtr();
 
-    WriteProfileAlienString (
-        m_iAlienKey, 
+    iErrCode = WriteProfileAlienString (
+        m_iAlienKey,
+        m_iAlienAddress,
         m_iEmpireKey, 
         m_vEmpireName.GetCharPtr(),
         0,
@@ -308,6 +316,7 @@ int HtmlRenderer::WriteGameHeaderString()
         false,
         false
         );
+    RETURN_ON_ERROR(iErrCode);
 
     OutputText (" <font size=\"+3\"><strong>");
     m_pHttpResponse->WriteText (pszEmpireName);

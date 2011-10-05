@@ -220,6 +220,7 @@ int GameEngine::CacheTournamentEmpireTables(unsigned int iTournamentKey)
 
     int iErrCode = t_pCache->Cache(entries, countof(entries));
     RETURN_ON_ERROR(iErrCode);
+
     return iErrCode;
 }
 

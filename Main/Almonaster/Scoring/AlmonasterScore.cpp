@@ -827,37 +827,37 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
         Assert(scanf == 1);
         scChanges.pszNukedName = pszNukedName;
 
-        int iNukerAlienKey, iNukedAlienKey;
+        int iNukerAlienKey, iNukerAlienAddress, iNukedAlienKey, iNukedAlienAddress;
 
         // Get nuker alien key
         iErrCode = t_pCache->ReadData(strNukerEmpire, iNukerEmpireKey, SystemEmpireData::AlienKey, &vTemp);
         RETURN_ON_ERROR(iErrCode);
         iNukerAlienKey = vTemp.GetInteger();
 
-        // Get nuked alien key
-        if (iLoserKey == NO_KEY) {
+        iErrCode = t_pCache->ReadData(strNukerEmpire, iNukerEmpireKey, SystemEmpireData::AlienAddress, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        iNukerAlienAddress = vTemp.GetInteger();
 
+        if (iLoserKey == NO_KEY)
+        {
             iNukedAlienKey = NO_KEY;
-        
-        } else {
-
-            GET_SYSTEM_EMPIRE_DATA(strLoserEmpire, iLoserKey);
-
-            iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);            
-            RETURN_ON_ERROR(iErrCode);
-            iNukedAlienKey = vTemp.GetInteger();
-
+            iNukedAlienAddress = -1;
+        }
+        else
+        {
             // Add to nuked's nuke history
-            iErrCode = m_pGameEngine->AddNukeToHistory (
+            iErrCode = m_pGameEngine->AddNukeToHistory(
                 NUKER_LIST,
                 pszGameClassName,
                 iGameNumber,
                 iLoserKey,
                 NULL,
                 NO_KEY,
+                -1,
                 iNukerEmpireKey,
                 vNukerName.GetCharPtr(),
-                iNukerAlienKey
+                iNukerAlienKey,
+                iNukerAlienAddress
                 );
 
             RETURN_ON_ERROR(iErrCode);
@@ -865,6 +865,17 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             // Send victory sneer
             iErrCode = m_pGameEngine->SendVictorySneer (iNukerEmpireKey, vNukerName.GetCharPtr(), iLoserKey);
             RETURN_ON_ERROR(iErrCode);
+
+            // Get nuked alien key
+            GET_SYSTEM_EMPIRE_DATA(strNukedEmpire, iLoserKey);
+
+            iErrCode = t_pCache->ReadData(strNukedEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);
+            RETURN_ON_ERROR(iErrCode);
+            iNukedAlienKey = vTemp.GetInteger();
+
+            iErrCode = t_pCache->ReadData(strNukedEmpire, iLoserKey, SystemEmpireData::AlienAddress, &vTemp);
+            RETURN_ON_ERROR(iErrCode);
+            iNukedAlienAddress = vTemp.GetInteger();
         }
 
         // Notify classic score
@@ -882,24 +893,28 @@ int AlmonasterScore::HandleUncolonizedHomeWorldOnEndGame(int iGameClass, int iGa
             iNukerEmpireKey,
             NULL,
             NO_KEY,
+            -1,
             iLoserKey,
             pszNukedName,
-            iNukedAlienKey
+            iNukedAlienKey,
+            iNukedAlienAddress
             );
 
         RETURN_ON_ERROR(iErrCode);
 
         // Update system nuke list
-        iErrCode = m_pGameEngine->AddNukeToHistory (
+        iErrCode = m_pGameEngine->AddNukeToHistory(
             SYSTEM_LIST,
             pszGameClassName,
             iGameNumber,
             iNukerEmpireKey,
             vNukerName.GetCharPtr(),
             iNukerAlienKey,
+            iNukerAlienAddress,
             iLoserKey,
             pszNukedName,
-            iNukedAlienKey
+            iNukedAlienKey,
+            iNukedAlienAddress
             );
 
         RETURN_ON_ERROR(iErrCode);

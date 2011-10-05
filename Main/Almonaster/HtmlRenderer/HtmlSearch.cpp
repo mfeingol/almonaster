@@ -598,6 +598,10 @@ int HtmlRenderer::RenderSearchResults(RangeSearchDefinition& sd,
         
         iErrCode = GetEmpireProperty (piSearchEmpireKey[i], SystemEmpireData::AlienKey, &vAlien);
         RETURN_ON_ERROR(iErrCode);
+
+        Variant vAlienAddress;
+        iErrCode = GetEmpireProperty (piSearchEmpireKey[i], SystemEmpireData::AlienAddress, &vAlienAddress);
+        RETURN_ON_ERROR(iErrCode);
             
         OutputText ("<tr><td align=\"center\"><strong>");
         m_pHttpResponse->WriteText (vName.GetCharPtr());
@@ -605,8 +609,9 @@ int HtmlRenderer::RenderSearchResults(RangeSearchDefinition& sd,
             
         sprintf(pszProfile, "View the profile of %s", vName.GetCharPtr());
             
-        WriteProfileAlienString (
-            vAlien.GetInteger(), 
+        iErrCode = WriteProfileAlienString (
+            vAlien.GetInteger(),
+            vAlienAddress.GetInteger(),
             piSearchEmpireKey[i],
             vName.GetCharPtr(),
             0, 
@@ -615,6 +620,7 @@ int HtmlRenderer::RenderSearchResults(RangeSearchDefinition& sd,
             true,
             true
             );
+        RETURN_ON_ERROR(iErrCode);
             
         OutputText ("</td>");
             

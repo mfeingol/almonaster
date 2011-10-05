@@ -283,8 +283,9 @@ case 1:
         char pszProfile[128 + MAX_EMPIRE_NAME_LENGTH];
         sprintf(pszProfile, "View the profile of %s", pvEmpData[SystemEmpireData::iName].GetCharPtr());
 
-        WriteProfileAlienString (
+        iErrCode = WriteProfileAlienString (
             pvEmpData[SystemEmpireData::iAlienKey].GetInteger(),
+            pvEmpData[SystemEmpireData::iAlienAddress].GetInteger(),
             piEmpireKey[i],
             pvEmpData[SystemEmpireData::iName].GetCharPtr(),
             0,
@@ -293,6 +294,7 @@ case 1:
             true,
             true
             );
+        RETURN_ON_ERROR(iErrCode);
 
         %></td><td align="center"><%
 

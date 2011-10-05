@@ -18,15 +18,14 @@
 
 #include "HtmlRenderer.h"
 
-void HtmlRenderer::WriteTournamentIcon (int iIconKey, int iTournamentKey, const char* pszAlt, bool bVerifyUpload) {
-
-    WriteIcon (iIconKey, iTournamentKey, NO_KEY, pszAlt, BASE_UPLOADED_TOURNAMENT_ICON_DIR, bVerifyUpload);
+int HtmlRenderer::WriteTournamentIcon(unsigned int iIconKey, int iAddress, int iTournamentKey, const char* pszAlt, bool bVerifyUpload)
+{
+    return WriteIcon(iIconKey, iAddress, iTournamentKey, NO_KEY, pszAlt, BASE_UPLOADED_TOURNAMENT_ICON_DIR, bVerifyUpload);
 }
 
-void HtmlRenderer::WriteTournamentTeamIcon (int iIconKey, int iTournamentKey, int iTournamentTeamKey, 
-                                            const char* pszAlt, bool bVerifyUpload) {
-
-    WriteIcon (iIconKey, iTournamentKey, iTournamentTeamKey, pszAlt, BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR, bVerifyUpload);
+int HtmlRenderer::WriteTournamentTeamIcon(unsigned int iIconKey, int iAddress, int iTournamentKey, int iTournamentTeamKey, const char* pszAlt, bool bVerifyUpload)
+{
+    return WriteIcon(iIconKey, iAddress, iTournamentKey, iTournamentTeamKey, pszAlt, BASE_UPLOADED_TOURNAMENT_TEAM_ICON_DIR, bVerifyUpload);
 }
 
 int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
@@ -48,7 +47,7 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
 
     unsigned int iNumHalted = 0, iNumNotHalted = 0, iNumMarked = 0, iNumUnmarked = 0, iNumStartable = 0, iGames;
     
-    iErrCode = CacheTournamentEmpireTables(iTournamentKey);
+    iErrCode = CacheTournamentAndEmpireTables(iTournamentKey);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetTournamentData(iTournamentKey, &pvData);
@@ -103,7 +102,8 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
     HTMLFilter (pvData[SystemTournaments::iNews].GetCharPtr(), &strNews, 0, false);
 
     OutputText ("<p>");
-    WriteTournamentIcon (pvData[SystemTournaments::iIcon].GetInteger(), iTournamentKey, NULL, false);
+    iErrCode = WriteTournamentIcon(pvData[SystemTournaments::iIcon], pvData[SystemTournaments::iIconAddress], iTournamentKey, NULL, false);
+    RETURN_ON_ERROR(iErrCode);
 
     OutputText (" <font size=\"+1\"><strong>Administer the ");
     m_pHttpResponse->WriteText (pvData[SystemTournaments::iName].GetCharPtr());
@@ -144,7 +144,7 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
         "<option "
         );
 
-    if (pvData[SystemTournaments::iIcon].GetInteger() != NO_KEY) {
+    if (pvData[SystemTournaments::iIcon].GetInteger() != UPLOADED_ICON) {
         OutputText ("selected ");
     }
 
@@ -153,7 +153,7 @@ int HtmlRenderer::WriteAdministerTournament(unsigned int iTournamentKey)
         "<option "
         );
 
-    if (pvData[SystemTournaments::iIcon].GetInteger() == NO_KEY) {
+    if (pvData[SystemTournaments::iIcon].GetInteger() == UPLOADED_ICON) {
         OutputText ("selected ");
     }
         
@@ -487,7 +487,8 @@ int HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, un
     HTMLFilter(pvData[SystemTournamentTeams::iWebPage].GetCharPtr(), &strUrl, 0, false);
 
     OutputText ("<p>");
-    WriteTournamentTeamIcon(pvData[SystemTournamentTeams::iIcon].GetInteger(), iTournamentKey, iTeamKey, NULL, false);
+    iErrCode = WriteTournamentTeamIcon(pvData[SystemTournamentTeams::iIcon], pvData[SystemTournamentTeams::iIconAddress], iTournamentKey, iTeamKey, NULL, false);
+    RETURN_ON_ERROR(iErrCode);
 
     OutputText (" <font size=\"+1\"><strong>Administer the ");
     m_pHttpResponse->WriteText (pvData[SystemTournamentTeams::iName].GetCharPtr());
@@ -530,7 +531,7 @@ int HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, un
         "<option "
         );
 
-    if (pvData[SystemTournamentTeams::iIcon].GetInteger() != NO_KEY) {
+    if (pvData[SystemTournamentTeams::iIcon].GetInteger() != UPLOADED_ICON) {
         OutputText ("selected ");
     }
 
@@ -539,7 +540,7 @@ int HtmlRenderer::WriteAdministerTournamentTeam (unsigned int iTournamentKey, un
         "<option "
         );
 
-    if (pvData[SystemTournamentTeams::iIcon].GetInteger() == NO_KEY) {
+    if (pvData[SystemTournamentTeams::iIcon].GetInteger() == UPLOADED_ICON) {
         OutputText ("selected ");
     }
         
@@ -740,6 +741,8 @@ int HtmlRenderer::ProcessCreateTournamentTeam(unsigned int iTournamentKey, bool*
 
 int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsigned int iTournamentKey, bool* pbParsed)
 {
+    int iErrCode = OK;
+
     *pbParsed = false;
 
     pvSubmitArray[SystemTournamentTeams::iTournamentKey] = iTournamentKey;
@@ -794,12 +797,15 @@ int HtmlRenderer::ParseCreateTournamentTeamForms (Variant* pvSubmitArray, unsign
     }
 
     // Icon
-    EnsureDefaultSystemIcon();
-    pvSubmitArray [SystemTournamentTeams::iIcon] = m_iDefaultSystemIcon;
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienKey, pvSubmitArray + SystemTournamentTeams::iIcon);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, pvSubmitArray + SystemTournamentTeams::iIconAddress);
+    RETURN_ON_ERROR(iErrCode);
 
     *pbParsed = true;
 
-    return OK;
+    return iErrCode;
 }
 
 int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOptions, bool bAdvanced)
@@ -1199,13 +1205,9 @@ int HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSin
         "<td align=\"center\">"
         );
     
-    WriteTournamentIcon (
-        pvData[SystemTournaments::iIcon].GetInteger(),
-        iTournamentKey,
-        NULL,
-        true
-        );
-    
+    iErrCode = WriteTournamentIcon(pvData[SystemTournaments::iIcon], pvData[SystemTournaments::iIconAddress], iTournamentKey, NULL, true);
+    RETURN_ON_ERROR(iErrCode);
+
     OutputText (
         "</td>"\
         
@@ -1306,12 +1308,14 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
     OutputText ("<p>");
 
     // Icon
-    WriteTournamentIcon (
-        pvData[SystemTournaments::iIcon].GetInteger(),
+    iErrCode = WriteTournamentIcon (
+        pvData[SystemTournaments::iIcon],
+        pvData[SystemTournaments::iIconAddress],
         iTournamentKey,
         NULL,
         true
         );
+    RETURN_ON_ERROR(iErrCode);
 
     // Name
     OutputText (" <h3>");
@@ -1422,12 +1426,14 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
                 "<td align=\"center\">"
                 );
             
-            WriteTournamentIcon (
-                pvTeamData[SystemTournamentTeams::iIcon].GetInteger(),
+            iErrCode = WriteTournamentIcon (
+                pvTeamData[SystemTournamentTeams::iIcon],
+                pvTeamData[SystemTournamentTeams::iIconAddress],
                 iTournamentKey,
                 NULL,
                 true
                 );
+            RETURN_ON_ERROR(iErrCode);
             
             OutputText (
                 "</td>"\

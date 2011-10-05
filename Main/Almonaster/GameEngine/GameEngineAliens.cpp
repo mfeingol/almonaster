@@ -37,17 +37,16 @@ int GameEngine::GetNumAliens(unsigned int* piNumAliens)
 //
 // Return the system's current alien keys and author names
 
-int GameEngine::GetAlienKeys(Variant*** pppvData, unsigned int* piNumAliens)
+int GameEngine::GetAliens(Variant*** pppvData, unsigned int** ppiKey, unsigned int* piNumAliens)
 {
-    const char* pszColumns[] =
+    int iErrCode = t_pCache->ReadColumns(SYSTEM_ALIEN_ICONS, SystemAlienIcons::NumColumns, SystemAlienIcons::ColumnNames, ppiKey, pppvData, piNumAliens);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        SystemAlienIcons::AlienKey, 
-        SystemAlienIcons::AuthorName
-    };
-
-    return t_pCache->ReadColumns(SYSTEM_ALIEN_ICONS, countof(pszColumns), pszColumns, NULL, pppvData, piNumAliens);
+        iErrCode = OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
-
 
 // Input:
 // iAlienKey -> Key of new alien
@@ -55,59 +54,77 @@ int GameEngine::GetAlienKeys(Variant*** pppvData, unsigned int* piNumAliens)
 //
 // Create a new alien icon
 
-int GameEngine::CreateAlienIcon(int iAlienKey, const char* pszAuthorName) {
+int GameEngine::CreateAlienIcon(const char* pszAuthorName, int* piAddress, unsigned int* piKey)
+{
+    *piAddress = 0;
+    *piKey = NO_KEY;
 
-    unsigned int iKey;
-    int iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
+    Variant* pvAddress = NULL;
+    AutoFreeData free_pvAddress(pvAddress);
+
+    unsigned int iNumIcons;
+    int iErrCode = t_pCache->ReadColumn(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Address, NULL, &pvAddress, &iNumIcons);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         iErrCode = OK;
-
-        Variant pvArray[SystemAlienIcons::NumColumns] = 
-        {
-            iAlienKey,
-            pszAuthorName,
-        };
-
-        iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
-        RETURN_ON_ERROR(iErrCode);
-        return iErrCode;
     }
-    
     RETURN_ON_ERROR(iErrCode);
-    return ERROR_ALIEN_ICON_ALREADY_EXISTS;
-}
 
+    int iNewAddress = 1;
+    for (unsigned int i = 0; i < iNumIcons; i ++)
+    {
+        if (iNewAddress <= pvAddress[i].GetInteger())
+        {
+            iNewAddress = pvAddress[i].GetInteger() + 1;
+        }
+    }
+
+    Variant pvArray[SystemAlienIcons::NumColumns] = 
+    {
+        iNewAddress,
+        pszAuthorName,
+    };
+
+    unsigned int iKey;
+    iErrCode = t_pCache->InsertRow(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Template, pvArray, &iKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    *piAddress = iNewAddress;
+    *piKey = iKey;
+    
+    return iErrCode;
+}
 
 // Input:
 // iAlienKey -> Key of alien icon
 //
 // Delete an alien icon
 
-int GameEngine::DeleteAlienIcon (int iAlienKey) {
-
-    unsigned int iKey;
+int GameEngine::DeleteAlienIcon(unsigned int iKey)
+{
     int iErrCode;
 
-    Variant vDefaultAlien;
-
-    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::DefaultAlien, &vDefaultAlien);
+    Variant vDefaultAlienKey;
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::DefaultAlienKey, &vDefaultAlienKey);
     RETURN_ON_ERROR(iErrCode);
 
-    if (vDefaultAlien.GetInteger() == iAlienKey)
+    if (vDefaultAlienKey.GetInteger() == (int)iKey)
     {
         return ERROR_DEFAULT_ALIEN_ICON;
     }
 
-    iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    unsigned int iNumAliens;
+    iErrCode = GetNumAliens(&iNumAliens);
+    if (iNumAliens == 1)
+    {
+        return ERROR_LAST_ALIEN_ICON;
+    }
+
+    iErrCode = t_pCache->DeleteRow(SYSTEM_ALIEN_ICONS, iKey);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
     {
         return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
     }
-    RETURN_ON_ERROR(iErrCode);
-
-    // Delete the icon!
-    iErrCode = t_pCache->DeleteRow(SYSTEM_ALIEN_ICONS, iKey);
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
@@ -119,49 +136,57 @@ int GameEngine::DeleteAlienIcon (int iAlienKey) {
 //
 // Return the empire's alien icon key
 
-int GameEngine::SetEmpireAlienKey (int iEmpireKey, int iAlienKey) {
+int GameEngine::SetEmpireAlienIcon(int iEmpireKey, unsigned int iKey, int* piAddress)
+{
+    int iErrCode;
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
 
-    int iErrCode = OK;
-    GET_SYSTEM_EMPIRE_DATA(strEmpireKey, iEmpireKey);
-
-    if (iAlienKey == UPLOADED_ICON)
+    *piAddress = -1;
+    if (iKey != UPLOADED_ICON)
     {
-        iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, UPLOADED_ICON);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    else
-    {
-        unsigned int iKey;
-        iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        Variant vAddress;
+        iErrCode = t_pCache->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::Address, &vAddress);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
         {
             return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
         }
         RETURN_ON_ERROR(iErrCode);
-
-        iErrCode = t_pCache->WriteData(strEmpireKey, iEmpireKey, SystemEmpireData::AlienKey, iAlienKey);
-        RETURN_ON_ERROR(iErrCode);
+        *piAddress = vAddress.GetInteger();
     }
+
+    iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::AlienKey, (int)iKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::AlienAddress, *piAddress);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
-
 
 // Input:
 // iAlienKey -> Alien icon key
 //
 // Return the alien's author name
 
-int GameEngine::GetAlienAuthorName(int iAlienKey, Variant* pvAuthorName) {
+int GameEngine::GetAlienData(unsigned int iKey, Variant** ppvData)
+{
+    int iErrCode = t_pCache->ReadRow(SYSTEM_ALIEN_ICONS, iKey, ppvData);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+    {
+        return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
+    }
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
+}
 
+int GameEngine::GetAlienIconAddress(unsigned int iKey, int* piAddress)
+{
     int iErrCode;
-    unsigned int iKey;
 
-    iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::AlienKey, iAlienKey, &iKey);
+    Variant vAddress;
+    iErrCode = t_pCache->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::Address, &vAddress);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = t_pCache->ReadData(SYSTEM_ALIEN_ICONS, iKey, SystemAlienIcons::AuthorName, pvAuthorName);
-    RETURN_ON_ERROR(iErrCode);
-
+    *piAddress = vAddress.GetInteger();
     return iErrCode;
 }

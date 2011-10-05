@@ -482,7 +482,7 @@ AutoFreeKeys free_piProxyEmpireKey(piProxyEmpireKey);
 bool bSubjective = false, bPrivateMessages;
 
 int piDipKey [NUM_DIP_LEVELS], iSelected = 0, iNumOptions = 0, iSelectedIndex, iWeOffer, 
-    iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey,
+    iTheyOffer, iCurrentStatus, iKnownEmpireKey, iNumKnownEmpires = 0, iAlienKey, iAlienAddress,
     iRuins, iSec, iMin, iHour, iDay, iMonth, iYear, * piStatus = NULL, * piIndex = NULL, iIndex;
 
 DayOfWeek day;
@@ -743,8 +743,9 @@ if (bGameStarted)
 %><td align="center"><strong><font size="+1">You</font></strong></td><%
 %><td align="center"><%
 
-WriteProfileAlienString (
+iErrCode = WriteProfileAlienString (
     m_iAlienKey,
+    m_iAlienAddress,
     m_iEmpireKey,
     m_vEmpireName.GetCharPtr(),
     0,
@@ -753,6 +754,7 @@ WriteProfileAlienString (
     false,
     false
     );
+RETURN_ON_ERROR(iErrCode);
 
 %></td><%
 %><td align="center"><% Write (iEcon); %></td><%
@@ -939,6 +941,9 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::AlienKey, &iAlienKey);
     RETURN_ON_ERROR(iErrCode);
 
+    iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::AlienAddress, &iAlienAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     iErrCode = pSystemEmpireDataTable->ReadData(iKnownEmpireKey, SystemEmpireData::Wins, &iWins);
     RETURN_ON_ERROR(iErrCode);
 
@@ -1014,8 +1019,9 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
     %><td align="center"><%
 
     sprintf(pszProfile, "View the profile of %s", vKnownEmpireName.GetCharPtr());
-    WriteProfileAlienString (
+    iErrCode = WriteProfileAlienString (
         iAlienKey,
+        iAlienAddress,
         iKnownEmpireKey,
         vKnownEmpireName.GetCharPtr(),
         0,
@@ -1024,6 +1030,7 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
         false,
         true
         );
+    RETURN_ON_ERROR(iErrCode);
 
     NotifyProfileLink();
 

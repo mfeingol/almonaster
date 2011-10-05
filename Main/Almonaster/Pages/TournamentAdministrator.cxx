@@ -65,7 +65,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             unsigned int iRealOwner;
 
             // Simple security check
-            iErrCode = GetTournamentOwner (m_iTournamentKey, &iRealOwner);
+            iErrCode = GetTournamentOwner(m_iTournamentKey, &iRealOwner);
             RETURN_ON_ERROR(iErrCode);
 
             if (iRealOwner != iOwnerKey)
@@ -74,6 +74,9 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
                 iTAdminPage = 1;
                 goto Redirection;
             }
+
+            iErrCode = CacheTournamentTables(&m_iTournamentKey, 1);
+            RETURN_ON_ERROR(iErrCode);
         }
 
         if ((pHttpForm = m_pHttpRequest->GetForm ("TeamKey")) != NULL) {
@@ -85,8 +88,8 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
         }
 
         // Get game class, game number
-        if (m_iGameClass != NO_KEY) {
-
+        if (m_iGameClass != NO_KEY)
+        {
             unsigned int iCheckTournament;
 
             iErrCode = GetGameClassTournament(m_iGameClass, &iCheckTournament);
@@ -710,14 +713,15 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
 
         case 8:
 
-            if (m_iTournamentKey == NO_KEY) {
+            if (m_iTournamentKey == NO_KEY)
+            {
                 iTAdminPage = 1;
                 goto Redirection;
             }
 
             // Handle new team creation
-            if (WasButtonPressed (BID_CREATETEAM)) {
-
+            if (WasButtonPressed (BID_CREATETEAM))
+            {
                 m_bRedirectTest = false;
                 bool bCreated;
                 iErrCode = ProcessCreateTournamentTeam(m_iTournamentKey, &bCreated);
@@ -855,8 +859,9 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             RETURN_ON_ERROR(iErrCode);
 
             unsigned int iOldIcon, iIcon;
+            int iOldAddress;
 
-            iErrCode = GetTournamentIcon (m_iTournamentKey, &iOldIcon);
+            iErrCode = GetTournamentIcon (m_iTournamentKey, &iOldIcon, &iOldAddress);
             RETURN_ON_ERROR(iErrCode);
 
             bool bHandled;
@@ -898,8 +903,13 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             {
 
             unsigned int iOldIcon, iIcon;
+            int iOldAddress;
 
-            iErrCode = GetTournamentTeamIcon (m_iTournamentKey, iTeamKey, &iOldIcon);
+            // An extra I/O, but it almost never happens
+            iErrCode = CacheSystemAlienIcons();
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = GetTournamentTeamIcon(m_iTournamentKey, iTeamKey, &iOldIcon, &iOldAddress);
             RETURN_ON_ERROR(iErrCode);
 
             bool bHandled;
@@ -1764,16 +1774,18 @@ Redirection:
         RETURN_ON_ERROR(iErrCode);
 
         unsigned int iIcon;
-        iErrCode = GetTournamentIcon (m_iTournamentKey, &iIcon);
+        int iIconAddress;
+        iErrCode = GetTournamentIcon (m_iTournamentKey, &iIcon, &iIconAddress);
         RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="10"><p><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
 
-        WriteTournamentIcon (iIcon, m_iTournamentKey, "The current tournament icon", false);
+        iErrCode = WriteTournamentIcon(iIcon, iIconAddress, m_iTournamentKey, "The current tournament icon", false);
+        RETURN_ON_ERROR(iErrCode);
         %><p><%
 
-        iErrCode = WriteIconSelection (iIconSelect, iIcon, "tournament");
+        iErrCode = WriteIconSelection(iIconSelect, iIcon, "tournament");
         RETURN_ON_ERROR(iErrCode);
 
         break;
@@ -1788,14 +1800,19 @@ Redirection:
             goto Admin;
         }
 
-        iErrCode = GetTournamentTeamIcon (m_iTournamentKey, iTeamKey, &iIcon);
+        // An extra I/O, but it almost never happens
+        iErrCode = CacheSystemAlienIcons();
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = GetTournamentTeamIcon(m_iTournamentKey, iTeamKey, &iIcon, &iIconAddress);
         RETURN_ON_ERROR(iErrCode);
 
         %><input type="hidden" name="TournamentAdminPage" value="11"><p><%
         %><input type="hidden" name="TournamentKey" value="<% Write (m_iTournamentKey); %>"><%
         %><input type="hidden" name="TeamKey" value="<% Write (iTeamKey); %>"><%
 
-        WriteTournamentTeamIcon (iIcon, m_iTournamentKey, iTeamKey, "The current team icon", false);
+        iErrCode = WriteTournamentTeamIcon(iIcon, iIconAddress, m_iTournamentKey, iTeamKey, "The current team icon", false);
+        RETURN_ON_ERROR(iErrCode);
         %><p><%
 
         iErrCode = WriteIconSelection (iIconSelect, iIcon, "team");

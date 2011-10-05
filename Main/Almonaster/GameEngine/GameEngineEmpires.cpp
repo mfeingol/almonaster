@@ -289,7 +289,10 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystemData);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = pSystemData->ReadData(SystemData::DefaultAlien, pvColVal + SystemEmpireData::iAlienKey);
+    iErrCode = pSystemData->ReadData(SystemData::DefaultAlienKey, pvColVal + SystemEmpireData::iAlienKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = pSystemData->ReadData(SystemData::DefaultAlienAddress, pvColVal + SystemEmpireData::iAlienAddress);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pSystemData->ReadData(SystemData::DefaultUIIndependentPlanet, pvColVal + SystemEmpireData::iUIIndependentPlanet);

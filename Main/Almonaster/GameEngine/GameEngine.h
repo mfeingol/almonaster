@@ -409,6 +409,7 @@ private:
     int SetupDefaultSystemTables();
     int SetupDefaultThemes(unsigned int* piDefaultThemeKey);
     int SetupDefaultSystemGameClasses();
+    int SetupDefaultAlienIcons(unsigned int* piDefaultAlienKey, int* piDefaultAlienAddress, unsigned int* piDefaultSystemMessageAlienKey, int* piDefaultSystemMessageAlienAddress);
 
     int VerifySystem();
     int VerifyMarkedGameClasses();
@@ -872,7 +873,6 @@ public:
     int GetStartableSystemGameClassKeys(unsigned int** ppiKey, unsigned int* piNumKeys);
 
     int GetGameClassSuperClassKey(int iGameClass, unsigned int* piSuperClassKey);
-    int SetGameClassSuperClassKey(int iGameClass, unsigned int iSuperClassKey);
 
     int GetGameClassData (int iGameClass, Variant** ppvData);
     int GetGameClassOwner (int iGameClass, unsigned int* piOwner);
@@ -1248,8 +1248,8 @@ public:
     int CalculatePrivilegeLevel (int iEmpireKey);
 
     int AddNukeToHistory (NukeList nlNukeList, const char* pszGameClassName, int iGameNumber, 
-        int iEmpireKey, const char* pszEmpireName, int iAlienKey,
-        int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey);
+        int iEmpireKey, const char* pszEmpireName, int iAlienKey, int iAlienAddress,
+        int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey, int iOtherAlienAddress);
 
     // System Config
     int GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLivePlanet, 
@@ -1272,13 +1272,12 @@ public:
 
     // Aliens
     int GetNumAliens (unsigned int* piNumAliens);
-    int GetAlienKeys(Variant*** pppvData, unsigned int* piNumAliens);
-    int CreateAlienIcon (int iAlienKey, const char* pszAuthorName);
-    int DeleteAlienIcon (int iAlienKey);
-
-    int GetAlienAuthorName (int iAlienKey, Variant* pvAuthorName);
-
-    int SetEmpireAlienKey (int iEmpireKey, int iAlienKey);
+    int GetAliens(Variant*** pppvData, unsigned int** ppiKey, unsigned int* piNumAliens);
+    int CreateAlienIcon(const char* pszAuthorName, int* piAddress, unsigned int* piKey);
+    int DeleteAlienIcon(unsigned int iKey);
+    int GetAlienData(unsigned int iAlienKey, Variant** ppvData);
+    int SetEmpireAlienIcon(int iEmpireKey, unsigned int iKey, int* piAddress);
+    int GetAlienIconAddress(unsigned int iKey, int* piAddress);
 
     // Top Lists
     int GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey, unsigned int* piNumEmpires);
@@ -1534,11 +1533,11 @@ public:
 
     int GetGameClassTournament (int iGameClass, unsigned int* piTournamentKey);
 
-    int GetTournamentIcon (unsigned int iTournamentKey, unsigned int* piIcon);
+    int GetTournamentIcon (unsigned int iTournamentKey, unsigned int* piIcon, int* piIconAddress);
     int SetTournamentIcon (unsigned int iTournamentKey, unsigned int iIcon);
 
-    int GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int* piIcon);
-    int SetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int iIcon);
+    int GetTournamentTeamIcon(unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int* piIcon, int* piIconAddress);
+    int SetTournamentTeamIcon(unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int iIcon);
 
     // Associations
     int GetAssociations (unsigned int iEmpireKey, Variant** ppvAssoc, unsigned int* piNumAssoc);

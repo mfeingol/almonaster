@@ -78,13 +78,9 @@ int HtmlRenderer::WriteProfile(unsigned int iEmpireKey, unsigned int iTargetEmpi
     // Name and alien icon
     OutputText ("<p>");
     
-    WriteEmpireIcon(
-        pvEmpireData[SystemEmpireData::iAlienKey].GetInteger(),
-        iTargetEmpireKey,
-        NULL,
-        true
-        );
-    
+    iErrCode = WriteEmpireIcon(pvEmpireData[SystemEmpireData::iAlienKey], pvEmpireData[SystemEmpireData::iAlienAddress], iTargetEmpireKey, NULL, true);
+    RETURN_ON_ERROR(iErrCode);
+
     OutputText (" <font size=\"+2\">");
     m_pHttpResponse->WriteText (pvEmpireData[SystemEmpireData::iName].GetCharPtr());
     OutputText ("</font><p>");

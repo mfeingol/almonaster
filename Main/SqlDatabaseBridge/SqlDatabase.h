@@ -269,6 +269,7 @@ public:
     virtual int ReadColumnsWhereEqual(const char* pszCacheTableName, const char* pszEqualColumn, const Variant& vData, const char** ppszReadColumn, unsigned int iNumReadColumns,
                                       unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows) = 0;
 
+    virtual int ReadRow(const char* pszCacheTableName, Variant** ppvData) = 0;
     virtual int ReadRow(const char* pszCacheTableName, unsigned int iKey, Variant** ppvData) = 0;
 
     virtual int ReadData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, Variant* pvData) = 0;  

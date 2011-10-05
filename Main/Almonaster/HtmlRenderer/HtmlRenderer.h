@@ -119,6 +119,7 @@ struct MiniMapEntry {
     IconIndicator iiIcon;
     unsigned int iOwnerKey;
     unsigned int iAlienKey;
+    unsigned int iAlienAddress;
     unsigned int iPlanetKey;
     unsigned int iPlanetProxyKey;
     int iX;
@@ -374,6 +375,7 @@ protected:
     unsigned int m_iSeparatorKey;
     int m_iPrivilege;
     unsigned int m_iAlienKey;
+    int m_iAlienAddress;
     unsigned int m_iThemeKey;
     int m_iGameState;
     int m_iGameRatios;
@@ -382,7 +384,6 @@ protected:
     int m_iSystemOptions;
     int m_iSystemOptions2;
     int m_iGameOptions;
-    int m_iDefaultSystemIcon;
 
     Variant m_vTableColor;
     Variant m_vTextColor;
@@ -568,12 +569,12 @@ public:
 
     void WriteTime (Seconds sNumSeconds);
 
-    void WriteEmpireIcon (int iIconKey, int iEmpireKey, const char* pszAlt, bool bVerifyUpload);
-    void WriteTournamentIcon (int iIconKey, int iTournamentKey, const char* pszAlt, bool bVerifyUpload);
-    void WriteTournamentTeamIcon (int iIconKey, int iTournamentKey, int iTournamentTeamKey, const char* pszAlt, bool bVerifyUpload);
-    void WriteIcon (int iIconKey, int iEntityKey, int iEntityKey2, const char* pszAlt, const char* pszUploadDir, bool bVerifyUpload);
+    int WriteEmpireIcon(unsigned int iIconKey, int iAddress, unsigned int iEmpireKey, const char* pszAlt, bool bVerifyUpload);
+    int WriteTournamentIcon(unsigned int iIconKey, int iAddress, int iTournamentKey, const char* pszAlt, bool bVerifyUpload);
+    int WriteTournamentTeamIcon(unsigned int iIconKey, int iAddress, int iTournamentKey, int iTournamentTeamKey, const char* pszAlt, bool bVerifyUpload);
+    int WriteIcon(unsigned int iIconKey, int iAddress, unsigned int iEntityKey, unsigned int iEntityKey2, const char* pszAlt, const char* pszUploadDir, bool bVerifyUpload);
 
-    void WriteProfileAlienString (int iAlienKey, int iEmpireKey, const char* pszEmpireName, int iBorder, 
+    int WriteProfileAlienString(unsigned int iAlienKey, int iAddress, unsigned int iEmpireKey, const char* pszEmpireName, int iBorder, 
         const char* pszFormName, const char* pszAlt, bool bVerifyUpload, bool bKeyAndHash);
 
     void NotifyProfileLink();
@@ -592,8 +593,8 @@ public:
     int VerifyGIF(const char* pszFileName, bool* pbGoodGIF);
     bool CopyUploadedIcon (const char* pszFileName, const char* pszUploadDir, int iKey1, int iKey2);
 
-    bool CopyNewAlien (const char* pszFileName, int iAlienKey);
-    bool DeleteAlien (int iAlienKey);
+    bool CopyNewAlien(const char* pszFileName, int iNewAddress);
+    bool DeleteAlienFile(int iAddress);
 
     void ReportLoginFailure(const char* pszEmpireName);
     void ReportLoginSuccess(const char* pszEmpireName, bool bAutoLogon);
@@ -601,7 +602,7 @@ public:
 
     int OpenSystemPage(bool bFileUpload);
     int WriteSystemTitleString();
-    void WriteSystemHeaders (bool bFileUpload);
+    int WriteSystemHeaders(bool bFileUpload);
 
     int WriteSystemButtons(int iButtonKey, int iPrivilege);
     int WriteSystemMessages();
@@ -665,13 +666,10 @@ public:
 
     int WriteGameMessages();
 
-    int EnsureDefaultSystemIcon();
-
-    void GetAlienPlanetButtonString (int iAlienKey, int iEmpireKey, bool bBorder, int iPlanetKey, int iProxyKey,
+    int GetAlienPlanetButtonString(unsigned int iAlienKey, int iAlienAddress, unsigned int iEmpireKey, bool bBorder, int iPlanetKey, int iProxyKey,
         const char* pszAlt, const char* pszExtraTag, String* pstrAlienButtonString);
 
-    void WriteAlienButtonString (int iAlienKey, bool bBorder, const char* pszNamePrefix, 
-        const char* pszAuthorName);
+    void WriteAlienButtonString(unsigned int iAlienKey, int iAddress, bool bBorder, const char* pszNamePrefix, const char* pszAuthorName);
 
     void GetLivePlanetButtonString (int iLivePlanetKey, int iPlanetKey, int iProxyKey, const char* pszAlt,
         const char* pszExtraTag, String* pstrLivePlanet);
@@ -742,8 +740,7 @@ public:
         const PartialMapInfo* pPartialMapInfo, bool bSpectators);
 
     int RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey);
-    void RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, 
-        unsigned int iDeadPlanetKey);
+    int RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey);
 
     int GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey,
         int iProxyPlanetKey, bool bVisibleBuilds, bool bIndependence, const Variant* pvPlanetData, String* pstrAltTag);
@@ -823,8 +820,8 @@ public:
     int ParseGameConfigurationForms (int iGameClass, unsigned int iTournamentKey, const Variant* pvGameClassInfo, GameOptions* pgoOptions);
 
     // Icons
-    int WriteIconSelection (int iIconSelect, int iIcon, const char* pszCategory);
-    int HandleIconSelection (unsigned int* piIcon, const char* pszUploadDir, unsigned int iKey1, unsigned int iKey2, bool* pbHandled);
+    int WriteIconSelection(int iIconSelect, unsigned int iAlienKey, const char* pszCategory);
+    int HandleIconSelection(unsigned int* piAlienKey, const char* pszUploadDir, unsigned int iKey1, unsigned int iKey2, bool* pbHandled);
 
     // Admin
     int WriteActiveGameAdministration (const Variant** ppvGames, unsigned int iNumActiveGames, unsigned int iNumOpenGames, unsigned int iNumClosedGames, bool bAdmin);

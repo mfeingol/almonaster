@@ -611,42 +611,6 @@ int GameEngine::GetGameClassSuperClassKey (int iGameClass, unsigned int* piSuper
     return iErrCode;
 }
 
-
-// Input:
-// iGameClass -> Integer key of a gameclass
-// iSuperClassKey -> Integer key of a superclass
-//
-// Set the key of the superclass that the gameclass belongs to
-
-int GameEngine::SetGameClassSuperClassKey(int iGameClass, unsigned int iSuperClassKey)
-{
-    Variant vTemp;
-    int iErrCode;
-
-    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, &vTemp);
-    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-    {
-        return ERROR_GAMECLASS_DOES_NOT_EXIST;
-    }
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, vTemp.GetInteger(), SystemSuperClassData::NumGameClasses, -1);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, iSuperClassKey, SystemSuperClassData::NumGameClasses, 1);
-    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-    {
-        return ERROR_SUPERCLASS_DOES_NOT_EXIST;
-    }
-    RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = t_pCache->WriteData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, (int)iSuperClassKey);
-    RETURN_ON_ERROR(iErrCode);
-
-    return iErrCode;
-}
-
-
 // Input:
 // iGameClass -> Integer key of a gameclass
 //

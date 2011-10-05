@@ -65,61 +65,51 @@ if (m_bOwnPost && !m_bRedirection) {
             RETURN_ON_ERROR(iErrCode);
 
             // Create alien
-            if (WasButtonPressed (BID_CREATEALIENICON)) {
-
-                if ((pHttpForm = m_pHttpRequest->GetForm ("NewAlienKey")) == NULL) {
+            if (WasButtonPressed (BID_CREATEALIENICON))
+            {
+                if ((pHttpForm = m_pHttpRequest->GetForm ("NewAuthorName")) == NULL) {
                     goto Redirection;
                 }
-                iNewValue = pHttpForm->GetIntValue();
-                if (iNewValue < 1) {
-                    AddMessage ("The key must be an integer greater than zero");
+                pszNewValue = pHttpForm->GetValue();
+
+                if (pszNewValue == NULL || *pszNewValue == '\0' || strlen (pszNewValue) > MAX_ALIEN_AUTHOR_NAME_LENGTH) {
+                    AddMessage ("You must submit an valid alien author name");
                 } else {
 
-                    if ((pHttpForm = m_pHttpRequest->GetForm ("NewAuthorName")) == NULL) {
+                    // Icon upload hack
+                    if ((pHttpForm = m_pHttpRequest->GetForm ("NewAlienFile")) == NULL) {
                         goto Redirection;
                     }
-                    pszNewValue = pHttpForm->GetValue();
 
-                    if (pszNewValue == NULL || *pszNewValue == '\0' || strlen (pszNewValue) > MAX_ALIEN_AUTHOR_NAME_LENGTH) {
-                        AddMessage ("You must submit an valid alien author name");
+                    const char* pszFileName = pHttpForm->GetValue();
+                    if (pszFileName == NULL) {
+                        AddMessage ("You didn't upload a file");
                     } else {
 
-                        // Icon upload hack
-                        if ((pHttpForm = m_pHttpRequest->GetForm ("NewAlienFile")) == NULL) {
-                            goto Redirection;
-                        }
+                        bool bGoodGIF;
+                        iErrCode = VerifyGIF(pszFileName, &bGoodGIF);
+                        RETURN_ON_ERROR(iErrCode);
 
-                        const char* pszFileName = pHttpForm->GetValue();
-                        if (pszFileName == NULL) {
-                            AddMessage ("You didn't upload a file");
-                        } else {
-
-                            bool bGoodGIF;
-                            iErrCode = VerifyGIF(pszFileName, &bGoodGIF);
+                        if (bGoodGIF)
+                        {
+                            // The gif was OK, so insert the key and copy it to its destination
+                            int iNewAddress;
+                            unsigned int iNewKey;
+                            iErrCode = CreateAlienIcon(pszNewValue, &iNewAddress, &iNewKey);
                             RETURN_ON_ERROR(iErrCode);
 
-                            if (bGoodGIF)
+                            if (!CopyNewAlien(pszFileName, iNewAddress))
                             {
-                                // The gif was OK, so insert the key and copy it to its destination
-                                switch (CreateAlienIcon (iNewValue, pszNewValue)) {
-
-                                case OK:
-                                    if (CopyNewAlien (pszFileName, iNewValue)) {
-                                        AddMessage ("The file was uploaded, but could not be copied");
-                                    } else {
-                                        AddMessage ("The alien icon was created successfully");
-                                    }
-                                    break;
-
-                                case ERROR_ALIEN_ICON_ALREADY_EXISTS:
-                                    AddMessage ("The alien icon key already exists");
-                                    break;
-
-                                default:
-                                    RETURN_ON_ERROR(iErrCode);
-                                    break;
-                                }
+                                // Compensate
+                                iErrCode = DeleteAlienIcon(iNewKey);
+                                RETURN_ON_ERROR(iErrCode);
+                                AddMessage("The file could not be copied to its destination");
                             }
+                            else
+                            {
+                                AddMessage ("The alien icon was created successfully");
+                            }
+                            break;
                         }
                     }
                 }
@@ -128,36 +118,39 @@ if (m_bOwnPost && !m_bRedirection) {
             // Delete alien
             if (WasButtonPressed (BID_DELETEALIENICON)) {
 
-                if ((pHttpForm = m_pHttpRequest->GetForm ("OldAlienKey")) == NULL) {
+                if ((pHttpForm = m_pHttpRequest->GetForm ("OldAlienKey")) == NULL)
+                {
                     goto Redirection;
                 }
                 iNewValue = pHttpForm->GetIntValue();
-                if (iNewValue < 1) {
-                    AddMessage ("The key must be an integer greater than zero");
-                } else {
-
-                    switch (DeleteAlienIcon (iNewValue)) {
-                    case OK:
-                        DeleteAlien (iNewValue);
-                        AddMessage ("The alien icon was deleted successfully");
-                        break;
-
-                    case ERROR_LAST_ALIEN_ICON:
-                        AddMessage ("You cannot delete the last alien icon");
-                        break;
-
-                    case ERROR_ALIEN_ICON_DOES_NOT_EXIST:
-                        AddMessage ("The given alien icon key does not exist");
-                        break;
-
-                    case ERROR_DEFAULT_ALIEN_ICON:
-                        AddMessage ("The default alien icon cannot be deleted");
-                        break;
-
-                    default:
-                        RETURN_ON_ERROR(iErrCode);
-                        break;
+                switch (DeleteAlienIcon(iNewValue))
+                {
+                case OK:
+                    if (DeleteAlienFile(iNewValue))
+                    {
+                        AddMessage("The alien icon was deleted successfully");
                     }
+                    else
+                    {
+                        AddMessage("The alien icon was deleted successfully, but the file could not be removed. Please remove it manually.");
+                    }
+                    break;
+
+                case ERROR_LAST_ALIEN_ICON:
+                    AddMessage("You cannot delete the last alien icon");
+                    break;
+
+                case ERROR_ALIEN_ICON_DOES_NOT_EXIST:
+                    AddMessage("The alien icon key does not exist");
+                    break;
+
+                case ERROR_DEFAULT_ALIEN_ICON:
+                    AddMessage("The default alien icon cannot be deleted");
+                    break;
+
+                default:
+                    RETURN_ON_ERROR(iErrCode);
+                    break;
                 }
             }
 
@@ -742,19 +735,22 @@ if (m_bOwnPost && !m_bRedirection) {
                 sscanf (pszStart, "Alien%d.x", &i) == 1) {
 
                 Variant vDefAlien;
-                iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vDefAlien);
+                iErrCode = GetSystemProperty(SystemData::DefaultAlienKey, &vDefAlien);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (i != vDefAlien.GetInteger()) {
+                if (i != vDefAlien.GetInteger())
+                {
+                    iErrCode = SetSystemProperty(SystemData::DefaultAlienKey, i);
+                    RETURN_ON_ERROR(iErrCode);
 
-                    switch (SetSystemProperty (SystemData::DefaultAlien, i)) {
-                    case OK:
-                        AddMessage ("The default alien icon was updated");
-                        break;
-                    default:
-                        RETURN_ON_ERROR(iErrCode);
-                        break;
-                    }
+                    int iNewAddress;
+                    iErrCode = GetAlienIconAddress(i, &iNewAddress);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    iErrCode = SetSystemProperty(SystemData::DefaultAlienAddress, iNewAddress);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    AddMessage ("The default alien icon was updated");
 
                 } else {
                     AddMessage ("The default alien icon was not updated");
@@ -1127,7 +1123,6 @@ case 0:
     int iNumHrs, iNumMin, j, iSystemOptions;
 
     String strFilter;
-    Variant vAuthorName;
 
     Variant* pvServerData = NULL;
     AutoFreeData free_pvServerData(pvServerData);
@@ -1158,16 +1153,13 @@ case 0:
 
     %><tr><td>Default alien icon:</td><td><%
 
-    iErrCode = GetAlienAuthorName (pvServerData[SystemData::iDefaultAlien], &vAuthorName);
+    Variant* pvAlienData = NULL;
+    AutoFreeData free_pvAlienData(pvAlienData);
+    iErrCode = GetAlienData(pvServerData[SystemData::iDefaultAlienKey], &pvAlienData);
     RETURN_ON_ERROR(iErrCode);
 
-    WriteAlienButtonString (
-        pvServerData[SystemData::iDefaultAlien], 
-        true,
-        "DefaultAlien",
-        vAuthorName.GetCharPtr()
-        );
-
+    WriteAlienButtonString(pvServerData[SystemData::iDefaultAlienKey], pvAlienData[SystemAlienIcons::iAddress], true, "DefaultAlien", pvAlienData[SystemAlienIcons::iAuthorName]);
+    
     %></td></tr><%
 
     %><tr><td>Default UI elements:</td><td><table><tr><%
@@ -1247,18 +1239,13 @@ case 0:
 
     %><tr><td>Alien icon for system messages:</td><td><%
 
-    iErrCode = GetAlienAuthorName (
-        pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(), 
-        &vAuthorName
-        );
+    Variant* pvMessageAlienData = NULL;
+    AutoFreeData free_pvMessageAlienData(pvMessageAlienData);
+    iErrCode = GetAlienData(pvServerData[SystemData::iSystemMessagesAlienKey], &pvMessageAlienData);
     RETURN_ON_ERROR(iErrCode);
 
-    WriteAlienButtonString (
-        pvServerData[SystemData::iSystemMessagesAlienKey].GetInteger(),
-        true,
-        "SysMsgAlien",
-        vAuthorName.GetCharPtr()
-        );
+    WriteAlienButtonString(pvServerData[SystemData::iSystemMessagesAlienKey], pvMessageAlienData[SystemAlienIcons::iAddress], true, 
+                           "SysMsgAlien",pvMessageAlienData[SystemAlienIcons::iAuthorName]);
 
     %></td></tr><%
 
@@ -1440,9 +1427,7 @@ case 0:
     %></td></tr><%
 
     %><tr><td>Create a new alien icon:</td><%
-    %><td><table><tr><td>Key:</td><td><%
-
-    %><input type="text" size="6" maxlength="6" name="NewAlienKey"></td></tr><tr><td><%
+    %><td><table><tr><td><%
     %>Author's name:</td><td><input type="text" size="20" <%
     %>maxlength="<% Write (MAX_ALIEN_AUTHOR_NAME_LENGTH); %>" name="NewAuthorName"></td></tr><%
 
@@ -1512,31 +1497,37 @@ case 0:
 case 1:
     {
 
-    Variant vAlien;
-
-    iErrCode = GetSystemProperty (SystemData::DefaultAlien, &vAlien);
+    Variant vAlienKey;
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienKey, &vAlienKey);
     RETURN_ON_ERROR(iErrCode);
-    int iAlien = vAlien.GetInteger();
 
-    unsigned int iNumAliens;
+    Variant vAlienAddress;
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, &vAlienAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    unsigned int iNumAliens, * piAlienKey = NULL;
+    AutoFreeKeys free_piAlienKey(piAlienKey);
+
     Variant** ppvAlienData = NULL;
     AutoFreeData free_ppvAlienData(ppvAlienData);
 
-    iErrCode = GetAlienKeys(&ppvAlienData, &iNumAliens);
+    iErrCode = GetAliens(&ppvAlienData, &piAlienKey, &iNumAliens);
     RETURN_ON_ERROR(iErrCode);
     %><input type="hidden" name="ServerAdminPage" value="1"><%
 
     %><p><%
 
-    WriteIcon (iAlien, NO_KEY, NO_KEY, "The current default alien icon", NULL, false);
+    iErrCode = WriteIcon(vAlienKey, vAlienAddress, NO_KEY, NO_KEY, "The current default alien icon", NULL, false);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p>Choose a new default alien icon:<p><table width="75%"><tr><td><%
 
-    for (i = 0; i < (int)iNumAliens; i ++) {
-
-        WriteAlienButtonString (
-            ppvAlienData[i][SystemAlienIcons::iAlienKey],
-            iAlien == ppvAlienData[i][SystemAlienIcons::iAlienKey],
+    for (i = 0; i < (int)iNumAliens; i ++)
+    {
+        WriteAlienButtonString(
+            piAlienKey[i],
+            ppvAlienData[i][SystemAlienIcons::iAddress],
+            vAlienKey.GetInteger() == (int)piAlienKey[i],
             "Alien",
             ppvAlienData[i][SystemAlienIcons::iAuthorName].GetCharPtr()
             );
@@ -1554,16 +1545,10 @@ case 2:
 
     int iB, iL, iD, iS, iT, iH, iV, iC;
 
-    ICachedTable* pSystemData = NULL;
-    AutoRelease<ICachedTable> release_pSystemData(pSystemData);
-
-    iErrCode = t_pCache->GetTable(SYSTEM_DATA, &pSystemData);
-    RETURN_ON_ERROR(iErrCode);
-
     Variant* pvData = NULL;
     AutoFreeData free_pvData(pvData);
 
-    iErrCode = pSystemData->ReadRow(&pvData);
+    iErrCode = t_pCache->ReadRow(SYSTEM_DATA, &pvData);
     RETURN_ON_ERROR(iErrCode);
 
     iB = pvData[SystemData::iDefaultUIBackground].GetInteger();
@@ -1669,31 +1654,39 @@ case 5:
 case 6:
     {
 
-    Variant vAlien;
-    iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vAlien);
+    Variant vAlienKey;
+    iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vAlienKey);
     RETURN_ON_ERROR(iErrCode);
-    int iAlien = vAlien.GetInteger();
+
+    Variant vAlienAddress;
+    iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienAddress, &vAlienAddress);
+    RETURN_ON_ERROR(iErrCode);
 
     unsigned int iNumAliens;
     Variant** ppvAlienData = NULL;
     AutoFreeData free_ppvAlienData(ppvAlienData);
 
-    iErrCode = GetAlienKeys (&ppvAlienData, &iNumAliens);
+    unsigned int* piAlienKey;
+    AutoFreeKeys free_piAlienKey(piAlienKey);
+
+    iErrCode = GetAliens(&ppvAlienData, &piAlienKey, &iNumAliens);
     RETURN_ON_ERROR(iErrCode);
 
     %><input type="hidden" name="ServerAdminPage" value="6"><%
 
     %><p><%
 
-    WriteIcon(iAlien, NO_KEY, NO_KEY, "The current alien icon for system messages", NULL, false);
+    iErrCode = WriteIcon(vAlienKey, vAlienAddress, NO_KEY, NO_KEY, "The current alien icon for system messages", NULL, false);
+    RETURN_ON_ERROR(iErrCode);
 
     %><p>Choose a new alien icon for system messages:<p><table width="75%"><tr><td><%
 
-    for (i = 0; i < (int)iNumAliens; i ++) {
-
+    for (i = 0; i < (int)iNumAliens; i ++)
+    {
         WriteAlienButtonString (
-            ppvAlienData[i][SystemAlienIcons::iAlienKey],
-            iAlien == ppvAlienData[i][SystemAlienIcons::iAlienKey],
+            piAlienKey[i],
+            ppvAlienData[i][SystemAlienIcons::iAddress],
+            vAlienKey.GetInteger() == (int)piAlienKey[i],
             "Alien",
             ppvAlienData[i][SystemAlienIcons::iAuthorName].GetCharPtr()
             );

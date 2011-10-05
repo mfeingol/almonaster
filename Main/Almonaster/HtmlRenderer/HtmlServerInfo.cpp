@@ -780,23 +780,29 @@ int HtmlRenderer::WriteServerRules()
     OutputText ("<li>Empires time out of the chatroom when they are idle for ");
     WriteTime(global.GetChatroom()->GetTimeOut());
     
-    iErrCode = GetSystemProperty (SystemData::MaxIconSize, &vValue);
-    if (iErrCode == OK) {
-        OutputText ("</li><li>The maximum size of an uploaded alien icon is <strong>");
-        m_pHttpResponse->WriteText (vValue.GetInteger());
-        OutputText ("</strong> bytes</li>");
-    }
+    OutputText ("</li><li>The maximum size of an uploaded alien icon is <strong>");
+    iErrCode = GetSystemProperty(SystemData::MaxIconSize, &vValue);
+    RETURN_ON_ERROR(iErrCode);
+    m_pHttpResponse->WriteText(vValue.GetInteger());
+    OutputText ("</strong> bytes</li>");
 
     OutputText ("<li>The default icon for new empires is: ");
-    iErrCode = EnsureDefaultSystemIcon();
+    Variant vAlienKey, vAlienAddress;
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienKey, &vAlienKey);
     RETURN_ON_ERROR(iErrCode);
-    WriteEmpireIcon(m_iDefaultSystemIcon, NO_KEY, NULL, false);
+    iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, &vAlienAddress);
+    RETURN_ON_ERROR(iErrCode);
+    iErrCode = WriteEmpireIcon(vAlienKey, vAlienAddress, NO_KEY, NULL, false);
+    RETURN_ON_ERROR(iErrCode);
     OutputText ("</li>");
 
-    iErrCode = GetSystemProperty (SystemData::SystemMessagesAlienKey, &vValue);
-    RETURN_ON_ERROR(iErrCode);
     OutputText ("<li>The icon used for system messages is: ");
-    WriteEmpireIcon (vValue.GetInteger(), NO_KEY, NULL, false);
+    iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vAlienKey);
+    RETURN_ON_ERROR(iErrCode);
+    iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienAddress, &vAlienAddress);
+    RETURN_ON_ERROR(iErrCode);
+    iErrCode = WriteEmpireIcon(vAlienKey, vAlienAddress, NO_KEY, NULL, false);
+    RETURN_ON_ERROR(iErrCode);
     OutputText ("</li>");
     
     OutputText ("</ul><center><h2>Score</h2></center><ul><li>A win gives <strong>");

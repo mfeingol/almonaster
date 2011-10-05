@@ -94,34 +94,35 @@ int HtmlRenderer::WriteGameMessages()
             
             OutputText ("<tr><td align=\"left\">");
             
-            Variant vAlienKey;
+            Variant vAlienKey, vAlienAddress;
             if (iFlags & MESSAGE_SYSTEM)
             {
                 iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vAlienKey);
                 RETURN_ON_ERROR(iErrCode);
 
-                WriteIcon (vAlienKey.GetInteger(), NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
+                iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienAddress, &vAlienAddress);
+                RETURN_ON_ERROR(iErrCode);
+
+                iErrCode = WriteIcon(vAlienKey, vAlienAddress, NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
+                RETURN_ON_ERROR(iErrCode);
             }
             else
             {
-                Variant vSecretKey;
                 unsigned int iSrcEmpireKey = ppvMessage[i][GameEmpireMessages::iSourceKey].GetInteger();
                 
-                iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+                iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
                 RETURN_ON_ERROR(iErrCode);
-                
-                if (vSecretKey.GetInteger64() == ppvMessage[i][GameEmpireMessages::iSourceSecret].GetInteger64())
-                {
-                    iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vAlienKey);
-                    RETURN_ON_ERROR(iErrCode);
 
-                    sprintf(pszProfile, "View the profile of %s", pszSource);
+                iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienAddress, &vAlienAddress);
+                RETURN_ON_ERROR(iErrCode);
 
-                    WriteProfileAlienString(vAlienKey.GetInteger(), iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
-                    OutputText (" ");
+                sprintf(pszProfile, "View the profile of %s", pszSource);
+
+                iErrCode = WriteProfileAlienString(vAlienKey, vAlienAddress, iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
+                RETURN_ON_ERROR(iErrCode);
+                OutputText (" ");
                         
-                    iNumMessagesFromPeople ++;
-                }
+                iNumMessagesFromPeople ++;
             }
             
             OutputText ("On ");
@@ -268,7 +269,7 @@ int HtmlRenderer::WriteSystemMessages()
 int HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage, bool* pbMessageFromEmpire)
 {
     int iErrCode = OK;
-    unsigned int iSrcEmpireKey = NO_KEY, iAlienKey = NO_KEY;
+    unsigned int iSrcEmpireKey = NO_KEY;
     
     *pbMessageFromEmpire = false;
 
@@ -288,30 +289,28 @@ int HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage,
     Assert(iErrCode == OK);
 
     // Get source empire and icon
+    int iAlienKey, iAlienAddress;
     if (bSystem)
     {
         iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienKey, &vTemp);
         RETURN_ON_ERROR(iErrCode);
         iAlienKey = vTemp.GetInteger();
+
+        iErrCode = GetSystemProperty(SystemData::SystemMessagesAlienAddress, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        iAlienAddress = vTemp.GetInteger();
     }
     else
     {
-        Variant vSecretKey;
         iSrcEmpireKey = pvMessage[SystemEmpireMessages::iSourceKey].GetInteger();
 
-        iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
+        iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vTemp);
         RETURN_ON_ERROR(iErrCode);
+        iAlienKey = vTemp.GetInteger();
 
-        if (vSecretKey.GetInteger64() == pvMessage[SystemEmpireMessages::iSourceSecret].GetInteger64())
-        {
-            iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienKey, &vTemp);
-            RETURN_ON_ERROR(iErrCode);
-            iAlienKey = vTemp.GetInteger();
-        }
-        else
-        {
-            pszSource = "Unknown";
-        }
+        iErrCode = GetEmpireProperty(iSrcEmpireKey, SystemEmpireData::AlienAddress, &vTemp);
+        RETURN_ON_ERROR(iErrCode);
+        iAlienAddress = vTemp.GetInteger();
     }
 
     //
@@ -320,26 +319,23 @@ int HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage,
 
     OutputText ("<tr><td align=\"left\">");
 
-    if (iAlienKey != NO_KEY) {
-        
-        if (bSystem)
-        {
-            WriteIcon (iAlienKey, NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
-        }
-        else if (iAlienKey != NO_KEY)
-        {
-            char pszProfile [MAX_EMPIRE_NAME_LENGTH + 64];
-            sprintf(pszProfile, "View the profile of %s", pszSource);
+    if (bSystem)
+    {
+        iErrCode = WriteIcon(iAlienKey, iAlienAddress, NO_KEY, NO_KEY, SYSTEM_MESSAGE_SENDER, NULL, false);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    else if (iAlienKey != NO_KEY)
+    {
+        char pszProfile [MAX_EMPIRE_NAME_LENGTH + 64];
+        sprintf(pszProfile, "View the profile of %s", pszSource);
             
-            Assert(iSrcEmpireKey != NO_KEY);
-            WriteProfileAlienString(iAlienKey, iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
-            *pbMessageFromEmpire = true;
-        }
-
-        OutputText (" ");
+        Assert(iSrcEmpireKey != NO_KEY);
+        iErrCode = WriteProfileAlienString(iAlienKey, iAlienAddress, iSrcEmpireKey, pszSource, 0, "ProfileLink", pszProfile, false, true);
+        RETURN_ON_ERROR(iErrCode);
+        *pbMessageFromEmpire = true;
     }
 
-    OutputText ("On ");
+    OutputText (" On ");
     m_pHttpResponse->WriteText (pszDate);
     OutputText (", ");
 

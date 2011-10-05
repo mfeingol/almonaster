@@ -456,9 +456,14 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                 iErrCode = GetEmpireProperty(iOwner, SystemEmpireData::AlienKey, &vTemp);
                 RETURN_ON_ERROR(iErrCode);
                 iAlienKey = vTemp.GetInteger();
+
+                iErrCode = GetEmpireProperty(iOwner, SystemEmpireData::AlienAddress, &vTemp);
+                RETURN_ON_ERROR(iErrCode);
+                int iAlienAddress = vTemp.GetInteger();
                 
-                GetAlienPlanetButtonString(
-                    iAlienKey, 
+                iErrCode = GetAlienPlanetButtonString(
+                    iAlienKey,
+                    iAlienAddress,
                     iOwner, 
                     iOwner == iEmpireKey, 
                     iPlanetKey, 
@@ -467,6 +472,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                     NULL,
                     &strPlanetString
                     );
+                RETURN_ON_ERROR(iErrCode);
                 
                 if (iOwner == iEmpireKey) {
                     pszColor = bMapColoring ? m_vGoodColor.GetCharPtr() : NULL;
@@ -759,31 +765,37 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     return iErrCode;
 }
 
-void HtmlRenderer::GetAlienPlanetButtonString (int iAlienKey, int iEmpireKey, bool bBorder, int iPlanetKey, 
-                                         int iProxyKey, const char* pszAlt, const char* pszExtraTag,
-                                         String* pstrAlienButtonString) {
-    
+int HtmlRenderer::GetAlienPlanetButtonString(unsigned int iAlienKey, int iAlienAddress, unsigned int iEmpireKey, bool bBorder, int iPlanetKey, 
+                                             int iProxyKey, const char* pszAlt, const char* pszExtraTag, String* pstrAlienButtonString)
+{
+    int iErrCode = OK;
+
     *pstrAlienButtonString = "<input type=\"image\" border=\"";
     *pstrAlienButtonString += (bBorder ? 1:0);
     *pstrAlienButtonString += "\" src=\"" BASE_RESOURCE_DIR;
     
-    if (iAlienKey == UPLOADED_ICON) {
+    if (iAlienKey == UPLOADED_ICON)
+    {
+        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS)
+        {
+            Variant vAddress;
+            iErrCode = GetSystemProperty(SystemData::DefaultAlienAddress, &vAddress);
+            RETURN_ON_ERROR(iErrCode);
 
-        if (m_iSystemOptions2 & BLOCK_UPLOADED_ICONS) {
-
-            EnsureDefaultSystemIcon();
             *pstrAlienButtonString += BASE_ALIEN_DIR ALIEN_NAME;
-            *pstrAlienButtonString += m_iDefaultSystemIcon;
-
-        } else {
-
+            *pstrAlienButtonString += vAddress.GetInteger();
+        }
+        else
+        {
             *pstrAlienButtonString += BASE_UPLOADED_ALIEN_DIR "/" ALIEN_NAME;
             *pstrAlienButtonString += iEmpireKey;
         }
 
-    } else {
+    }
+    else
+    {
         *pstrAlienButtonString += BASE_ALIEN_DIR ALIEN_NAME;
-        *pstrAlienButtonString += iAlienKey;
+        *pstrAlienButtonString += iAlienAddress;
     }
     
     *pstrAlienButtonString += DEFAULT_IMAGE_EXTENSION "\" name=\"Planet";
@@ -793,36 +805,37 @@ void HtmlRenderer::GetAlienPlanetButtonString (int iAlienKey, int iEmpireKey, bo
     
     *pstrAlienButtonString += "\"";
     
-    if (!String::IsBlank (pszAlt)) {
-        
+    if (!String::IsBlank (pszAlt))
+    {
         *pstrAlienButtonString += " alt=\"";
         *pstrAlienButtonString += pszAlt;
         *pstrAlienButtonString += "\"";
     }
 
-    if (pszExtraTag != NULL) {
+    if (pszExtraTag != NULL)
+    {
         *pstrAlienButtonString += " ";
         *pstrAlienButtonString += pszExtraTag;
     }
     
     *pstrAlienButtonString += ">";
+    return iErrCode;
 }
 
-void HtmlRenderer::WriteAlienButtonString (int iAlienKey, bool bBorder, const char* pszNamePrefix,
-                                           const char* pszAuthorName) {
+void HtmlRenderer::WriteAlienButtonString(unsigned int iAlienKey, int iAddress, bool bBorder, const char* pszNamePrefix, const char* pszAuthorName) {
     
     OutputText ("<input type=\"image\" border=\"");
     m_pHttpResponse->WriteText (bBorder ? 1:0);
     OutputText ("\" src=\"" BASE_RESOURCE_DIR);
     OutputText (BASE_ALIEN_DIR ALIEN_NAME);
-    m_pHttpResponse->WriteText (iAlienKey);
-    OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
-    m_pHttpResponse->WriteText (pszNamePrefix);
-    m_pHttpResponse->WriteText (iAlienKey);
+    m_pHttpResponse->WriteText(iAddress);
+    OutputText(DEFAULT_IMAGE_EXTENSION "\" name=\"");
+    m_pHttpResponse->WriteText(pszNamePrefix);
+    m_pHttpResponse->WriteText(iAlienKey);
     OutputText ("\" alt=\"Alien ");
-    m_pHttpResponse->WriteText (iAlienKey);
+    m_pHttpResponse->WriteText(iAddress);
     OutputText (" by ");
-    m_pHttpResponse->WriteText (pszAuthorName);
+    m_pHttpResponse->WriteText(pszAuthorName);
     OutputText ("\">");
 }
 
@@ -834,8 +847,7 @@ void HtmlRenderer::GetLivePlanetButtonString (int iLivePlanetKey, int iPlanetKey
         
     case NULL_THEME:
         
-        *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"" \
-            BASE_RESOURCE_DIR LIVE_PLANET_NAME "\" name=\"Planet";
+        *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR LIVE_PLANET_NAME "\" name=\"Planet";
         break;
         
     case ALTERNATIVE_PATH:
@@ -1040,8 +1052,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         m_pHttpResponse->WriteText (pszTableColor);
         OutputText ("\" align=\"left\">Jumps</th></tr><tr><td align=\"center\">");
         
-        WriteProfileAlienString (
+        iErrCode = WriteProfileAlienString (
             m_iAlienKey,
+            m_iAlienAddress,
             iEmpireKey,
             m_vEmpireName.GetCharPtr(),
             0, 
@@ -1050,6 +1063,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             false,
             false
             );
+        RETURN_ON_ERROR(iErrCode);
         
         OutputText ("</td><td align=\"center\"><strong>");
         m_pHttpResponse->WriteText (m_vEmpireName.GetCharPtr());    // Name
@@ -1124,8 +1138,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 
                 iCurrent = bMapColoring ? ALLIANCE : TRUCE;
                 
-                WriteProfileAlienString (
+                iErrCode = WriteProfileAlienString (
                     m_iAlienKey,
+                    m_iAlienAddress,
                     iEmpireKey,
                     m_vEmpireName.GetCharPtr(),
                     0, 
@@ -1134,6 +1149,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     false,
                     false
                     );
+                RETURN_ON_ERROR(iErrCode);
                 
             } else {
                 
@@ -1156,18 +1172,24 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 }
                 
                 Variant vTemp;
-                iErrCode = GetEmpireProperty (iOwner, SystemEmpireData::AlienKey, &vTemp);
+
+                iErrCode = GetEmpireProperty(iOwner, SystemEmpireData::AlienKey, &vTemp);
                 RETURN_ON_ERROR(iErrCode);
                 iAlienKey = vTemp.GetInteger();
+
+                iErrCode = GetEmpireProperty(iOwner, SystemEmpireData::AlienAddress, &vTemp);
+                RETURN_ON_ERROR(iErrCode);
+                int iAlienAddress = vTemp.GetInteger();
                 
-                iErrCode = GetEmpireName (iOwner, &vEmpireName);
+                iErrCode = GetEmpireName(iOwner, &vEmpireName);
                 RETURN_ON_ERROR(iErrCode);
                 
                 char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
                 sprintf(pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
                 
-                WriteProfileAlienString (
+                iErrCode = WriteProfileAlienString (
                     iAlienKey,
+                    iAlienAddress,
                     iOwner,
                     vEmpireName.GetCharPtr(),
                     0, 
@@ -1176,6 +1198,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     false,
                     true
                     );
+                RETURN_ON_ERROR(iErrCode);
                 
                 NotifyProfileLink();
             }
@@ -1637,8 +1660,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                     
                     if (piOwnerKey[i] == iEmpireKey) {
                         
-                        WriteProfileAlienString (
+                        iErrCode = WriteProfileAlienString (
                             m_iAlienKey,
+                            m_iAlienAddress,
                             iEmpireKey,
                             m_vEmpireName.GetCharPtr(),
                             0, 
@@ -1647,22 +1671,29 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                             false,
                             false
                             );
+                        RETURN_ON_ERROR(iErrCode);
 
                     } else {
                         
                         Variant vTemp;
+
                         iErrCode = GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienKey, &vTemp);
                         RETURN_ON_ERROR(iErrCode);
                         iAlienKey = vTemp.GetInteger();
-                        
+
+                        iErrCode = GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienAddress, &vTemp);
+                        RETURN_ON_ERROR(iErrCode);
+                        int iAlienAddress = vTemp.GetInteger();
+
                         iErrCode = GetEmpireName (piOwnerKey[i], &vEmpireName);
                         RETURN_ON_ERROR(iErrCode);
 
                         char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
                         sprintf(pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
                         
-                        WriteProfileAlienString (
+                        iErrCode = WriteProfileAlienString (
                             iAlienKey,
+                            iAlienAddress,
                             piOwnerKey[i],
                             vEmpireName.GetCharPtr(),
                             0, 
@@ -1671,6 +1702,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                             false,
                             true
                             );
+                        RETURN_ON_ERROR(iErrCode);
                         
                         NotifyProfileLink();
                     }

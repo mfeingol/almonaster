@@ -175,20 +175,15 @@ int GameEngine::CreateTournament(Variant* pvTournamentData, unsigned int* piTour
 
         unsigned int iNumEqual;
 
-        iErrCode = pTournaments->GetEqualKeys(
-            SystemTournaments::Owner, 
-            iOwner,
-            NULL,
-            &iNumEqual
-            );
-
+        iErrCode = pTournaments->GetEqualKeys(SystemTournaments::Owner, iOwner, NULL, &iNumEqual);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
             iErrCode = OK;
         }
         RETURN_ON_ERROR(iErrCode);
 
-        if (iNumEqual >= (unsigned int) vLimit.GetInteger()) {
+        if (iNumEqual >= (unsigned int) vLimit.GetInteger())
+        {
             return ERROR_TOO_MANY_TOURNAMENTS;
         }
     }   
@@ -476,14 +471,10 @@ int GameEngine::InviteEmpireIntoTournament(unsigned int iTournamentKey, int iOwn
     {
         iFlags |= MESSAGE_SYSTEM;
         pvData[SystemEmpireMessages::iSourceName] = (const char*)NULL;
-        pvData[SystemEmpireMessages::iSourceSecret] = (int64)0;
     }
     else
     {
         iErrCode = GetEmpireName(iUseSourceKey, pvData + SystemEmpireMessages::iSourceName);
-        RETURN_ON_ERROR(iErrCode);
-
-        iErrCode = GetEmpireProperty(iUseSourceKey, SystemEmpireData::SecretKey, pvData + SystemEmpireMessages::iSourceSecret);
         RETURN_ON_ERROR(iErrCode);
     }
 
@@ -543,9 +534,6 @@ int GameEngine::InviteSelfIntoTournament (unsigned int iTournamentKey, int iEmpi
     pvData[SystemEmpireMessages::iSourceKey] = iEmpireKey;
 
     iErrCode = GetEmpireName(iEmpireKey, pvData + SystemEmpireMessages::iSourceName);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::SecretKey, pvData + SystemEmpireMessages::iSourceSecret);
     RETURN_ON_ERROR(iErrCode);
 
     pvData[SystemEmpireMessages::iTimeStamp] = tTime;
@@ -1303,34 +1291,50 @@ int GameEngine::GetTournamentTeamUrl (unsigned int iTournamentKey, unsigned int 
     return t_pCache->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::WebPage, pvTournamentTeamUrl);
 }
 
-int GameEngine::SetTournamentTeamUrl (unsigned int iTournamentKey, unsigned int iTeamKey, 
-                                      const char* pszTournamentTeamUrl) {
-
+int GameEngine::SetTournamentTeamUrl (unsigned int iTournamentKey, unsigned int iTeamKey, const char* pszTournamentTeamUrl)
+{
     GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
-
     return t_pCache->WriteData(pszTeams, iTeamKey, SystemTournamentTeams::WebPage, pszTournamentTeamUrl);
 }
 
-int GameEngine::GetTournamentIcon (unsigned int iTournamentKey, unsigned int* piIcon) {
-
+int GameEngine::GetTournamentIcon (unsigned int iTournamentKey, unsigned int* piIcon, int* piIconAddress)
+{
     int iErrCode;
     Variant vVal;
 
     iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, &vVal);
     RETURN_ON_ERROR(iErrCode);
-
     *piIcon = vVal.GetInteger();
-    
+
+    iErrCode = t_pCache->ReadData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::IconAddress, &vVal);
+    RETURN_ON_ERROR(iErrCode);
+    *piIconAddress = vVal.GetInteger();
+
     return iErrCode;
 }
 
-int GameEngine::SetTournamentIcon (unsigned int iTournamentKey, unsigned int iIcon) {
+int GameEngine::SetTournamentIcon (unsigned int iTournamentKey, unsigned int iIcon)
+{
+    int iErrCode;
 
-    return t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, (int)iIcon);
+    int iAddress = -1;
+    if (iIcon != UPLOADED_ICON)
+    {
+        iErrCode = GetAlienIconAddress(iIcon, &iAddress);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    iErrCode = t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::Icon, (int)iIcon);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = t_pCache->WriteData(SYSTEM_TOURNAMENTS, iTournamentKey, SystemTournaments::IconAddress, iAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
-int GameEngine::GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int* piIcon) {
-
+int GameEngine::GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int* piIcon, int* piAddress)
+{
     int iErrCode;
     Variant vVal;
 
@@ -1338,18 +1342,36 @@ int GameEngine::GetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int
 
     iErrCode = t_pCache->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, &vVal);
     RETURN_ON_ERROR(iErrCode);
-    
     *piIcon = vVal.GetInteger();
+
+    iErrCode = t_pCache->ReadData(pszTeams, iTeamKey, SystemTournamentTeams::IconAddress, &vVal);
+    RETURN_ON_ERROR(iErrCode);
+    *piAddress = vVal.GetInteger();
+
     return iErrCode;
 }
 
-int GameEngine::SetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int iIcon) {
+int GameEngine::SetTournamentTeamIcon (unsigned int iTournamentKey, unsigned int iTeamKey, unsigned int iIcon)
+{
+    GET_SYSTEM_TOURNAMENT_TEAMS(strTeams, iTournamentKey);
 
-    GET_SYSTEM_TOURNAMENT_TEAMS (pszTeams, iTournamentKey);
+    int iErrCode;
 
-    return t_pCache->WriteData(pszTeams, iTeamKey, SystemTournamentTeams::Icon, (int)iIcon);
+    int iAddress = -1;
+    if (iIcon != UPLOADED_ICON)
+    {
+        iErrCode = GetAlienIconAddress(iIcon, &iAddress);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    iErrCode = t_pCache->WriteData(strTeams, iTeamKey, SystemTournamentTeams::Icon, (int)iIcon);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = t_pCache->WriteData(strTeams, iTeamKey, SystemTournamentTeams::IconAddress, iAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
-
 
 int GameEngine::GetTournamentGames(unsigned int iTournamentKey, Variant*** pppvGames, unsigned int* piNumGames)
 {

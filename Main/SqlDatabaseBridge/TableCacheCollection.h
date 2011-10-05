@@ -55,7 +55,7 @@ private:
     int GetTable(const char* pszCacheTableName, CachedTable** ppTable);
     int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, ICachedTable** ppTable);
 
-    char* EnsureNewCacheEntry(const TableCacheEntry& entry);
+    char* EnsureNewCacheEntry(const TableCacheEntry& entry, CachedTable** ppCachedTable);
     array<BulkTableReadRequestColumn>^ ConvertToRequestColumns(const TableEntry& table);
     void ConvertToRequest(const TableCacheEntry& entry, List<BulkTableReadRequest>^ requests);
     void CreateTablePartitions(BulkTableReadResult^ result, const char* pszCacheEntryName, const char* pszPartitionColumn);
@@ -98,6 +98,7 @@ public:
     int ReadColumns(const char* pszCacheTableName, unsigned int iNumColumns, const char* const* ppszColumn,
                     unsigned int** ppiKey, Variant*** pppvData, unsigned int* piNumRows);
 
+    int ReadRow(const char* pszCacheTableName, Variant** ppvData);
     int ReadRow(const char* pszCacheTableName, unsigned int iKey, Variant** ppvData);
 
     int ReadData(const char* pszCacheTableName, unsigned int iKey, const char* pszColumn, Variant* pvData);
