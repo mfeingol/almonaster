@@ -2,6 +2,8 @@
 
 #include "Osal/OS.h"
 
+using namespace Almonaster::Database::Sql;
+
 using namespace System::Collections::Generic;
 
 typedef int (*Fxn_CreateInstance)(const Uuid& clsidClassId, const Uuid& iidInterface, void** ppObject);
@@ -45,4 +47,5 @@ public:
     void Commit();
 
     __int64 InsertRow(System::String^ tableName, IEnumerable<IDataElement^>^ row);
+    void WriteRecord(System::String^ tableName, IEnumerable<BulkTableReadRequestColumn>^ matchColumns, System::String^ columnName, System::Object^ value);
 };

@@ -582,5 +582,37 @@ namespace Almonaster.Database.Sql
                 cmd.ExecuteNonQuery();
             }
         }
+
+        public void WriteRecord(string tableName, IEnumerable<BulkTableReadRequestColumn> matchColumns, string columnName, object value)
+        {
+            using (SqlCommand cmd = new SqlCommand())
+            {
+                StringBuilder cmdText = new StringBuilder();
+                cmdText.AppendFormat("UPDATE [{0}] SET [{1}] = @p0", tableName, columnName);
+                cmd.Parameters.Add(new SqlParameter("@p0", value));
+
+                int index = 1;
+                bool first = true;
+                foreach (BulkTableReadRequestColumn col in matchColumns)
+                {
+                    string param = "@p" + index++;
+                    if (first)
+                    {
+                        first = false;
+                        cmdText.AppendFormat(" WHERE [{0}] = {1}", col.ColumnName, param);
+                    }
+                    else
+                    {
+                        cmdText.AppendFormat(" AND [{0}] = {1}", col.ColumnName, param);
+                    }
+                    cmd.Parameters.Add(new SqlParameter(param, col.ColumnValue));
+                }
+
+                cmd.CommandText = cmdText.ToString();
+                cmd.Connection = this.conn;
+                cmd.Transaction = this.tx;
+                cmd.ExecuteNonQuery();
+            }
+        }
     }
 }

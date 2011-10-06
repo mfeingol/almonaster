@@ -99,6 +99,9 @@ private:
     __int64 GetEmpire622IdFromName(System::String^ name);
     System::String^ GetEmpireNameFrom622Id(__int64 id);
 
+    void RemapGameMapPlanetKeys();
+    void RemapGameMapPlanetKey(int gameClassKey, int gameNumber, int planetKey, System::String^ column);
+
     bool IsGameActive(int gameClass, int gameNumber);
     void InsertAssociationRows();
     void InsertAvailabilityRow();

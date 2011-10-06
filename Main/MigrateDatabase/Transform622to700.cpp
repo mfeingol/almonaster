@@ -26,7 +26,8 @@ using namespace System::Text;
 #define HOMEWORLD (-1)
 #define NOT_HOMEWORLD (-2)
 
-enum BuilderPlanets {
+enum BuilderPlanets
+{
     NO_DEFAULT_BUILDER_PLANET = -1,
     HOMEWORLD_DEFAULT_BUILDER_PLANET = -2,
     LAST_BUILDER_DEFAULT_BUILDER_PLANET = -3    
@@ -201,6 +202,9 @@ void Transform622to700::Transform()
     // GameIndependentShips
     TransformTables("GameIndependentShips", "GameEmpireShips", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, m_shipKeyMapper, gcnew CustomRowTransform(this, &Transform622to700::TransformGameIndependentShips));
 
+    // GameMap cardinal point keys
+    RemapGameMapPlanetKeys();
+
     // SystemEmpireAssociations
     InsertAssociationRows();
 
@@ -237,14 +241,9 @@ void Transform622to700::Transform()
         //
 
         Console::WriteLine();
-        Console::WriteLine("Committing changes in destination database...");
+        Console::WriteLine("Committing changes to destination database...");
         m_dest->Commit();
     }
-
-    //else if (nameInfo->Name == "GameIndependentShips")
-    //{
-    //    // Map 622::GameIndependentShips rows to 700::GameShips rows
-    //}
 }
 
 void Transform622to700::TransformTables(System::String^ currentTemplate,
@@ -540,7 +539,7 @@ bool Transform622to700::TransformSystemData(TableNameInfo^ nameInfo, IDataRow^ o
 
     if (cFound != 10)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -576,7 +575,7 @@ bool Transform622to700::TransformSystemGameClassData(TableNameInfo^ nameInfo, ID
 
     if (cFound != 3)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -612,7 +611,7 @@ bool Transform622to700::TransformSystemTournaments(TableNameInfo^ nameInfo, IDat
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -709,7 +708,7 @@ bool Transform622to700::TransformSystemEmpireData(TableNameInfo^ nameInfo, IData
 
     if (cFound != 11)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -751,7 +750,7 @@ bool Transform622to700::TransformSystemActiveGames(TableNameInfo^ nameInfo, IDat
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -807,7 +806,7 @@ bool Transform622to700::TransformSystemEmpireMessages(TableNameInfo^ nameInfo, I
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -831,7 +830,7 @@ bool Transform622to700::TransformSystemEmpireNukerList(TableNameInfo^ nameInfo, 
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -855,7 +854,7 @@ bool Transform622to700::TransformSystemEmpireNukedList(TableNameInfo^ nameInfo, 
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -899,7 +898,7 @@ bool Transform622to700::TransformSystemNukeList(TableNameInfo^ nameInfo, IDataRo
 
     if (cFound != 4)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -935,7 +934,7 @@ bool Transform622to700::TransformSystemLatestGames(TableNameInfo^ nameInfo, IDat
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -966,7 +965,7 @@ bool Transform622to700::TransformSystemEmpireActiveGames(TableNameInfo^ nameInfo
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -990,7 +989,7 @@ bool Transform622to700::TransformSystemTournamentTeams(TableNameInfo^ nameInfo, 
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1020,7 +1019,7 @@ bool Transform622to700::TransformSystemTournamentEmpires(TableNameInfo^ nameInfo
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1040,7 +1039,7 @@ bool Transform622to700::TransformSystemEmpireTournaments(TableNameInfo^ nameInfo
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1060,7 +1059,7 @@ bool Transform622to700::TransformGameSecurity(TableNameInfo^ nameInfo, IDataRow^
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1087,7 +1086,7 @@ bool Transform622to700::TransformGameEmpires(TableNameInfo^ nameInfo, IDataRow^ 
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1117,7 +1116,7 @@ bool Transform622to700::TransformGameDeadEmpires(TableNameInfo^ nameInfo, IDataR
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1153,11 +1152,9 @@ bool Transform622to700::TransformGameMap(TableNameInfo^ nameInfo, IDataRow^ orig
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
-
-    // TODOTODO - handle North/South/East/WestPlanetKey values - need two passes
 }
 
 bool Transform622to700::TransformGameEmpireData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
@@ -1202,7 +1199,7 @@ bool Transform622to700::TransformGameEmpireData(TableNameInfo^ nameInfo, IDataRo
 
     if (cFound != 3)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1232,7 +1229,7 @@ bool Transform622to700::TransformGameEmpireMessages(TableNameInfo^ nameInfo, IDa
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1252,7 +1249,7 @@ bool Transform622to700::TransformGameEmpireMap(TableNameInfo^ nameInfo, IDataRow
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1272,7 +1269,7 @@ bool Transform622to700::TransformGameEmpireDiplomacy(TableNameInfo^ nameInfo, ID
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1303,7 +1300,7 @@ bool Transform622to700::TransformGameEmpireShips(TableNameInfo^ nameInfo, IDataR
 
     if (cFound != 2)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1347,7 +1344,7 @@ bool Transform622to700::TransformGameIndependentShips(TableNameInfo^ nameInfo, I
 
     if (cFound != 3)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1367,7 +1364,7 @@ bool Transform622to700::TransformGameEmpireFleets(TableNameInfo^ nameInfo, IData
 
     if (cFound != 1)
     {
-        throw gcnew ApplicationException("Row not found");
+        throw gcnew ApplicationException("Column not found");
     }
     return true;
 }
@@ -1446,9 +1443,66 @@ System::String^ Transform622to700::GetEmpireNameFrom622Id(__int64 id)
     return m_empire622IdToNameMapper[id];
 }
 
-bool Transform622to700::IsGameActive(int gameClass, int gameNumber)
+void Transform622to700::RemapGameMapPlanetKeys()
 {
-    System::String^ comp = System::String::Format("{0}.{1}", gameClass, gameNumber);
+    Console::WriteLine();
+    Console::WriteLine("Remapping GameMap cardinal point key columns...");
+
+    int cPlanets = 0;
+    for each (IDataTable^ table in m_source)
+    {
+        TableNameInfo^ nameInfo = gcnew TableNameInfo(table->Name);
+        if (System::String::Compare(nameInfo->Name, "GameMap") == 0)
+        {
+            for each (IDataRow^ row in table)
+            {
+                int cFound = 0;
+                for each (IDataElement^ data in row)
+                {
+                    if (System::String::Compare(data->Name, "NorthPlanetKey") == 0 ||
+                        System::String::Compare(data->Name, "EastPlanetKey") == 0 ||
+                        System::String::Compare(data->Name, "SouthPlanetKey") == 0 ||
+                        System::String::Compare(data->Name, "WestPlanetKey") == 0)
+                    {
+                        cFound ++;
+                        cPlanets ++;
+                        
+                        int key = (int)data->Value;
+                        if (key != NO_KEY)
+                        {
+                            RemapGameMapPlanetKey(nameInfo->GameClass, nameInfo->GameNumber, (int)data->Value, data->Name);
+                        }
+                    }
+                }
+
+                if (cFound != 4)
+                {
+                    throw gcnew ApplicationException("Column not found");
+                }
+            }
+        }
+    }
+
+    Console::WriteLine("Remapped {0} cardinal point keys...", cPlanets);
+}
+
+void Transform622to700::RemapGameMapPlanetKey(int gameClassKey, int gameNumber, int planetKey, System::String^ column)
+{
+    array<BulkTableReadRequestColumn>^ cols = gcnew array<BulkTableReadRequestColumn>(2);
+
+    cols[0].ColumnName = "GameClass";
+    cols[0].ColumnValue = gameClassKey;
+    cols[1].ColumnName = "GameNumber";
+    cols[1].ColumnValue = gameNumber;
+
+    __int64 id = m_planetKeyMapper[Tuple::Create(KeyToId(gameClassKey), gameNumber, KeyToId(planetKey))];
+
+    m_dest->WriteRecord("GameMap", cols, column, id);
+}
+
+bool Transform622to700::IsGameActive(int gameClassKey, int gameNumber)
+{
+    System::String^ comp = System::String::Format("{0}.{1}", gameClassKey, gameNumber);
 
     for each (IDataTable^ table in m_source)
     {

@@ -18,4 +18,5 @@ public:
     virtual void Commit();
 
     virtual __int64 InsertRow(System::String^ tableName, IEnumerable<IDataElement^>^ row);
+    virtual void WriteRecord(System::String^ tableName, IEnumerable<BulkTableReadRequestColumn>^ matchColumns, System::String^ columnName, System::Object^ value);
 };
