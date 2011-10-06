@@ -143,8 +143,7 @@ void HtmlRenderer::WriteGameListHeader (const char** ppszHeaders, size_t stNumHe
 
 int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo) {
     
-    int iErrCode, iButtonKey = m_iButtonKey, iEmpireKey =  m_iEmpireKey, i, iNumUpdates,
-        iSecondsSince, iSecondsUntil, iState, iGameOptions,
+    int iErrCode, iEmpireKey = m_iEmpireKey, i, iNumUpdates, iSecondsSince, iSecondsUntil, iState, iGameOptions,
         iNumUpdatesBeforeGameCloses, iEmpireGameOptions, iNumUpdatedEmpires = 0;
 
     GameFairnessOption gfoFairness;
@@ -253,12 +252,12 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
     OutputText ("</strong>)</font>");
     
     // Login
-    if (m_iPrivilege > GUEST) {
-    
+    if (m_iPrivilege > GUEST)
+    {
         OutputText ("<p>");
 
         sprintf(pszLogin, "Login%i.%i", iGameClass, iGameNumber);
-        WriteButtonString (iButtonKey, "Login", "Login", pszLogin);
+        WriteButtonString(m_iButtonKey, m_iButtonAddress, "Login", "Login", pszLogin);
     }
 
     // Ready
@@ -659,7 +658,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
         OutputText ("<p>");
 
         sprintf(pszEnter, "Spectate%i.%i", iGameClass, iGameNumber);
-        WriteButtonString (m_iButtonKey, ButtonName[BID_VIEWMAP], ButtonText[BID_VIEWMAP], pszEnter);
+        WriteButtonString (m_iButtonKey, m_iButtonAddress, ButtonName[BID_VIEWMAP], ButtonText[BID_VIEWMAP], pszEnter);
 
     } else {
 
@@ -668,7 +667,7 @@ int HtmlRenderer::WriteInPlayGameListData (int iGameClass, int iGameNumber, cons
             OutputText ("<p>");
 
             sprintf(pszEnter, "Enter%i.%i", iGameClass, iGameNumber);          
-            WriteButtonString (m_iButtonKey, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
+            WriteButtonString (m_iButtonKey, m_iButtonAddress, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
 
             if (bFlag) {
                 OutputText ("<br>Password: <input type=\"Password\" size=\"8\" maxlength=\"25\" name=\"Pass");
@@ -803,7 +802,7 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
             OutputText ("<p>");
             
             sprintf(pszForm, "Start%i", iGameClass);
-            WriteButtonString (m_iButtonKey, ButtonName[BID_START], ButtonText[BID_START], pszForm);
+            WriteButtonString (m_iButtonKey, m_iButtonAddress, ButtonName[BID_START], ButtonText[BID_START], pszForm);
             
             // Password protection
             OutputText ("<br>Advanced:<input type=\"checkbox\" name=\"Advanced");

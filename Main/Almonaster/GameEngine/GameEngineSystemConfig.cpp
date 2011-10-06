@@ -42,12 +42,12 @@ int GameEngine::SetSystemProperty(const char*  pszColumn, const Variant& vProper
 //
 // Return the server's default UI keys
 
-int GameEngine::GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLivePlanet, 
-                                  unsigned int* piDeadPlanet, unsigned int* piButtons,
-                                  unsigned int* piSeparator, unsigned int* piHorz, unsigned int* piVert, 
-                                  unsigned int* piColor) {
-
+int GameEngine::GetDefaultUIKeys(unsigned int* piBackground, int* piBackgroundAddress, unsigned int* piLivePlanet, 
+                                 unsigned int* piDeadPlanet, unsigned int* piButtons, int* piButtonAddress,
+                                 unsigned int* piSeparator, unsigned int* piHorz, unsigned int* piVert, unsigned int* piColor)
+{
     int iErrCode;
+
     ICachedTable* pTable = NULL;
     AutoRelease<ICachedTable> rel(pTable);
 
@@ -76,6 +76,12 @@ int GameEngine::GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLi
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = pTable->ReadData(SystemData::DefaultUIColor, (int*) piColor);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetThemeAddress(*piButtons, piButtonAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetThemeAddress(*piBackground, piBackgroundAddress);
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;

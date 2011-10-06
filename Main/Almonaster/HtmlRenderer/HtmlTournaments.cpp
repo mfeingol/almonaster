@@ -1267,7 +1267,7 @@ int HtmlRenderer::RenderTournamentSimple (unsigned int iTournamentKey, bool bSin
 
     char pszForm [40];
     sprintf(pszForm, "ViewTourneyInfo%i", iTournamentKey);
-    WriteButtonString (m_iButtonKey, "ViewTournamentInformation", "View Tournament Information", pszForm);
+    WriteButtonString (m_iButtonKey, m_iButtonAddress, "ViewTournamentInformation", "View Tournament Information", pszForm);
 
     OutputText (
         "</td>"\
@@ -1624,14 +1624,18 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
     }
 
     // Actions
-    if (!m_bNotifiedTournamentInvitation && !NotifiedTournamentInvitation()) {
+    if (!m_bNotifiedTournamentInvitation && !NotifiedTournamentInvitation())
+    {
+        int iSeparatorAddress;
+        iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+        RETURN_ON_ERROR(iErrCode);
         
         for (i = 0; i < iNumEmpires; i ++)
         {
             if ((unsigned int)pvEmpireKey[i].GetInteger() == m_iEmpireKey)
             {
                 OutputText ("<p>");
-                WriteSeparatorString (m_iSeparatorKey);
+                WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
                 
                 // Allow empire to invite himself
                 OutputText (
@@ -1650,7 +1654,7 @@ int HtmlRenderer::RenderTournamentDetailed(unsigned int iTournamentKey)
         if (i == iNumEmpires) {
 
             OutputText ("<p>");
-            WriteSeparatorString (m_iSeparatorKey);
+            WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
             
             // Allow empire to invite himself
             OutputText (

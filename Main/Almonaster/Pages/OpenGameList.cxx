@@ -133,7 +133,7 @@ if (bConfirmPage)
     char pszEnter[128];
     sprintf(pszEnter, "Enter%i.%i", iGameClassKey, iGameNumber);
 
-    WriteButtonString (m_iButtonKey, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
+    WriteButtonString(m_iButtonKey, m_iButtonAddress, ButtonName[BID_ENTER], ButtonText[BID_ENTER], pszEnter);
 
 } else {
 

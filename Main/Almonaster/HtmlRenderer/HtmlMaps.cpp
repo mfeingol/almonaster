@@ -283,6 +283,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         ppstrGrid[i] = pstrGrid + i * iGridY;
     }
     
+    int iLivePlanetAddress, iDeadPlanetAddress;
     if (m_iThemeKey == INDIVIDUAL_ELEMENTS) {
         
         Variant vValue;
@@ -295,16 +296,27 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         RETURN_ON_ERROR(iErrCode);
         iVertKey = vValue.GetInteger();
 
-        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
         RETURN_ON_ERROR(iErrCode);
         
     } else {
         
         iHorzKey = iVertKey = iLivePlanetKey = iDeadPlanetKey = m_iThemeKey;
+
+        iErrCode = GetThemeAddress(iLivePlanetKey, &iLivePlanetAddress);
+        RETURN_ON_ERROR(iErrCode);
+        iErrCode = GetThemeAddress(iDeadPlanetKey, &iDeadPlanetAddress);
+        RETURN_ON_ERROR(iErrCode);
     }
     
-    GetHorzString(iHorzKey, &strHorz, false);
-    GetVertString(iVertKey, &strVert, false);
+    int iHorzAddress, iVertAddress;
+    iErrCode = GetThemeAddress(iHorzKey, &iHorzAddress);
+    RETURN_ON_ERROR(iErrCode);
+    iErrCode = GetThemeAddress(iVertKey, &iVertAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    GetHorzString(iHorzKey, iHorzAddress, &strHorz, false);
+    GetVertString(iVertKey, iVertAddress, &strVert, false);
     
     pszHorz = (char*) StackAlloc (strHorz.GetLength() + 100);
     pszVert = (char*) StackAlloc (strVert.GetLength() + 100);
@@ -428,31 +440,26 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         }
         
         // Get planet string        
-        if (pvPlanetData[GameMap::iAnnihilated].GetInteger() != NOT_ANNIHILATED) {
-            
-            GetDeadPlanetButtonString (iDeadPlanetKey, iPlanetKey, iProxyKey, strAltTag, NULL, &strPlanetString);
+        if (pvPlanetData[GameMap::iAnnihilated].GetInteger() != NOT_ANNIHILATED)
+        {
+            GetDeadPlanetButtonString (iDeadPlanetKey, iDeadPlanetAddress, iPlanetKey, iProxyKey, strAltTag, NULL, &strPlanetString);
             pszColor = NULL;
-            
-        } else {
-            
-            switch (iOwner) {
-                
+        }
+        else
+        {
+            switch (iOwner)
+            {
             case SYSTEM:
-                
-                GetLivePlanetButtonString(iLivePlanetKey, iPlanetKey, iProxyKey, strAltTag, NULL, &strPlanetString);
+                GetLivePlanetButtonString(iLivePlanetKey, iLivePlanetAddress, iPlanetKey, iProxyKey, strAltTag, NULL, &strPlanetString);
                 pszColor = NULL;
-                
                 break;
                 
             case INDEPENDENT:
-                
                 GetIndependentPlanetButtonString(iPlanetKey, iProxyKey, strAltTag, NULL, &strPlanetString);
                 pszColor = bMapColoring ? m_vBadColor.GetCharPtr() : NULL;
-                
                 break;
                 
             default:
-                
                 iErrCode = GetEmpireProperty(iOwner, SystemEmpireData::AlienKey, &vTemp);
                 RETURN_ON_ERROR(iErrCode);
                 iAlienKey = vTemp.GetInteger();
@@ -839,28 +846,25 @@ void HtmlRenderer::WriteAlienButtonString(unsigned int iAlienKey, int iAddress, 
     OutputText ("\">");
 }
 
-void HtmlRenderer::GetLivePlanetButtonString (int iLivePlanetKey, int iPlanetKey, int iProxyKey, 
+void HtmlRenderer::GetLivePlanetButtonString (unsigned int iLivePlanetKey, int iLivePlanetAddress, int iPlanetKey, int iProxyKey, 
                                               const char* pszAlt, const char* pszExtraTag,
                                               String* pstrLivePlanet) {
     
-    switch (iLivePlanetKey) {
-        
+    switch (iLivePlanetKey)
+    {
     case NULL_THEME:
-        
         *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR LIVE_PLANET_NAME "\" name=\"Planet";
         break;
         
     case ALTERNATIVE_PATH:
-        
         *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"";
         *pstrLivePlanet += m_vLocalPath.GetCharPtr();
         *pstrLivePlanet += "/" LIVE_PLANET_NAME "\" name=\"Planet";
         break;
         
     default:
-        
         *pstrLivePlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR;
-        *pstrLivePlanet += iLivePlanetKey;
+        *pstrLivePlanet += iLivePlanetAddress;
         *pstrLivePlanet += "/" LIVE_PLANET_NAME "\" name=\"Planet";
         break;
     }
@@ -885,29 +889,24 @@ void HtmlRenderer::GetLivePlanetButtonString (int iLivePlanetKey, int iPlanetKey
     *pstrLivePlanet += ">";
 }
 
-void HtmlRenderer::GetDeadPlanetButtonString (int iDeadPlanetKey, int iPlanetKey, int iProxyKey, 
-                                              const char* pszAlt, const char* pszExtraTag,
-                                              String* pstrDeadPlanet) {
-    
-    switch (iDeadPlanetKey) {   
-        
+void HtmlRenderer::GetDeadPlanetButtonString(unsigned int iDeadPlanetKey, int iDeadPlanetAddress, int iPlanetKey, int iProxyKey, 
+                                             const char* pszAlt, const char* pszExtraTag, String* pstrDeadPlanet)
+{
+    switch (iDeadPlanetKey)
+    {
     case NULL_THEME:
-        
-        *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"" \
-            BASE_RESOURCE_DIR DEAD_PLANET_NAME "\" name=\"Planet";
+        *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR DEAD_PLANET_NAME "\" name=\"Planet";
         break;
         
     case ALTERNATIVE_PATH:
-        
         *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"";
         *pstrDeadPlanet += m_vLocalPath.GetCharPtr();
         *pstrDeadPlanet += "/" DEAD_PLANET_NAME "\" name=\"Planet";
         break;
         
     default:
-        
         *pstrDeadPlanet = "<input type=\"image\" border=\"0\" src=\"" BASE_RESOURCE_DIR;
-        *pstrDeadPlanet += iDeadPlanetKey;
+        *pstrDeadPlanet += iDeadPlanetAddress;
         *pstrDeadPlanet += "/" DEAD_PLANET_NAME "\" name=\"Planet";
         break;
     }
@@ -956,51 +955,45 @@ void HtmlRenderer::GetIndependentPlanetButtonString (int iPlanetKey, int iProxyK
     *pstrPlanetString += ">";
 }
 
-void HtmlRenderer::WriteLivePlanetString (int iLivePlanetKey) {
-    
-    switch (iLivePlanetKey) {
-        
+void HtmlRenderer::WriteLivePlanetString(unsigned int iLivePlanetKey, int iLivePlanetAddress)
+{
+    switch (iLivePlanetKey)
+    {
     case NULL_THEME:
-        
         OutputText ("<img src=\"" BASE_RESOURCE_DIR LIVE_PLANET_NAME "\">");
         break;
         
     case ALTERNATIVE_PATH:
-        
         OutputText ("<img src=\"");
-        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
+        m_pHttpResponse->WriteText(m_vLocalPath.GetCharPtr());
         OutputText ("/" LIVE_PLANET_NAME "\">");
         break;
         
     default:
-        
         OutputText ("<img src=\"" BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iLivePlanetKey);
+        m_pHttpResponse->WriteText(iLivePlanetAddress);
         OutputText ("/" LIVE_PLANET_NAME "\">");
         break;
     }
 }
 
-void HtmlRenderer::WriteDeadPlanetString (int iDeadPlanetKey) {
-    
-    switch (iDeadPlanetKey) {
-        
+void HtmlRenderer::WriteDeadPlanetString(unsigned int iDeadPlanetKey, int iDeadPlanetAddress)
+{
+    switch (iDeadPlanetKey)
+    {
     case NULL_THEME:
-        
         OutputText ("<img src=\"" BASE_RESOURCE_DIR DEAD_PLANET_NAME "\">");
         break;
         
     case ALTERNATIVE_PATH:
-        
         OutputText ("<img src=\"");
-        m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
+        m_pHttpResponse->WriteText(m_vLocalPath.GetCharPtr());
         OutputText ("/" DEAD_PLANET_NAME "\">");
         break;
         
     default:
-        
         OutputText ("<img src=\"" BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iDeadPlanetKey);
+        m_pHttpResponse->WriteText(iDeadPlanetAddress);
         OutputText ("/" DEAD_PLANET_NAME "\">");
         break;
     }
@@ -1012,7 +1005,7 @@ void HtmlRenderer::WriteIndependentPlanetString() {
 }
 
 int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, 
-                                            int iLivePlanetKey, int iDeadPlanetKey, 
+                                            unsigned int iLivePlanetKey, int iLivePlanetAddress, unsigned int iDeadPlanetKey, int iDeadPlanetAddress,
                                             int iPlanetCounter, bool bVisibleBuilds, int iGoodAg, int iBadAg, 
                                             int iGoodMin, int iBadMin, int iGoodFuel, int iBadFuel, 
                                             float fEmpireAgRatio, bool bIndependence, 
@@ -1120,9 +1113,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
         iCurrent = TRUCE;
         
         if (iAnnihilated == 0) {
-            WriteLivePlanetString (iLivePlanetKey);
+            WriteLivePlanetString(iLivePlanetKey, iLivePlanetAddress);
         } else {
-            WriteDeadPlanetString (iDeadPlanetKey);
+            WriteDeadPlanetString(iDeadPlanetKey, iDeadPlanetAddress);
         }
 
     } else {

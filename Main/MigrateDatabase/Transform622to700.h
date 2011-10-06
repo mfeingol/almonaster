@@ -35,6 +35,7 @@ private:
 
     void TransformSystemData(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted);
     void TransformSystemGameClassData(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted);
+    void TransformSystemThemes(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted);
     void TransformSystemTournaments(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted);
     void TransformSystemEmpireData(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted);
     void TransformSystemActiveGames(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted);

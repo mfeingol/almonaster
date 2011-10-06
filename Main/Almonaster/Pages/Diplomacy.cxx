@@ -842,6 +842,10 @@ for (i = 0; i < iNumKnownEmpires; i ++) {
 }
 Algorithm::QSortTwoDescending<int, int> (piStatus, piIndex, iNumKnownEmpires);
 
+int iSeparatorAddress;
+iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+RETURN_ON_ERROR(iErrCode);
+
 for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
 {
     i = piIndex [iIndex];
@@ -976,8 +980,9 @@ for (iIndex = 0; iIndex < iNumKnownEmpires; iIndex ++)
 
     %><tr><td colspan="11">&nbsp;</td></tr><%
 
-    if ((iIndex == 0 && piStatus[0] != ALLIANCE) || (iIndex > 0 && piStatus[iIndex] != piStatus[iIndex - 1])) {
-        %><tr><td align="center" colspan="11"><% WriteSeparatorString (m_iSeparatorKey); %></td></tr><%
+    if ((iIndex == 0 && piStatus[0] != ALLIANCE) || (iIndex > 0 && piStatus[iIndex] != piStatus[iIndex - 1]))
+    {
+        %><tr><td align="center" colspan="11"><% WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress); %></td></tr><%
         %><tr><td colspan="11">&nbsp;</td></tr><%
     }
 
@@ -1223,9 +1228,9 @@ if (iNumKnownEmpires > 0 || iActiveEmpires > 1) {
 
 %></table><%
 
-if (iActiveEmpires > 1) {
-
-    WriteSeparatorString (m_iSeparatorKey);
+if (iActiveEmpires > 1)
+{
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
     bool bBroadcast = bBroadcast = (m_iSystemOptions & CAN_BROADCAST) != 0;
     bool bAllTargets = bPrivateMessages && bGameStarted;

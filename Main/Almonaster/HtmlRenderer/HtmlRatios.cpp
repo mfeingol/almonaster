@@ -206,7 +206,11 @@ int HtmlRenderer::WriteRatiosString (RatioInformation* pratInfo) {
     
     OutputText ("</table><p>");
 
-    WriteSeparatorString (m_iSeparatorKey);
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
     return iErrCode;
 }

@@ -37,7 +37,7 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
 
     PostSystemPageInformation();
 
-    iErrCode = WriteSystemButtons(m_iButtonKey, m_iPrivilege);
+    iErrCode = WriteSystemButtons(m_iPrivilege);
     RETURN_ON_ERROR(iErrCode);
 
     if (m_bTimeDisplay)
@@ -54,7 +54,11 @@ int HtmlRenderer::OpenSystemPage(bool bFileUpload)
     iErrCode = WriteSystemMessages();
     RETURN_ON_ERROR(iErrCode);
 
-    WriteSeparatorString(m_iSeparatorKey);
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
     return iErrCode;
 }
@@ -155,7 +159,7 @@ void HtmlRenderer::PostSystemPageInformation()
     OutputText ("\">");
 }
 
-int HtmlRenderer::WriteSystemButtons (int iButtonKey, int iPrivilege)
+int HtmlRenderer::WriteSystemButtons(int iPrivilege)
 {
     int iErrCode = OK;
     unsigned int iNumber;
@@ -366,7 +370,11 @@ int HtmlRenderer::WriteGameHeaderString()
     RETURN_ON_ERROR(iErrCode);
 
     // Last separator
-    WriteSeparatorString(m_iSeparatorKey);
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
     return iErrCode;
 }
@@ -594,8 +602,12 @@ int HtmlRenderer::CloseGamePage()
 {
     int iErrCode;
 
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     OutputText ("<p>");
-    WriteSeparatorString (m_iSeparatorKey);
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
     OutputText ("<p><strong><font size=\"3\">");
     
     if (m_bRepeatedButtons)
@@ -1165,15 +1177,19 @@ int HtmlRenderer::CloseSystemPage()
 {
     String strFilter;
 
-    int iErrCode = OK, iButtonKey = m_iButtonKey, iPrivilege = m_iPrivilege;
+    int iErrCode = OK, iPrivilege = m_iPrivilege;
     
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     OutputText ("<p>");
-    WriteSeparatorString (m_iSeparatorKey);
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
     OutputText ("<p>");
     
     if (m_bRepeatedButtons)
     {
-        iErrCode = WriteSystemButtons (iButtonKey, iPrivilege);
+        iErrCode = WriteSystemButtons(iPrivilege);
         RETURN_ON_ERROR(iErrCode);
     }
     

@@ -1679,11 +1679,12 @@ if (m_bOwnPost && !m_bRedirection) {
             {
 
             unsigned int iNewValue, iLivePlanetKey, iDeadPlanetKey, iColorKey, iThemeKey;
+            int iLivePlanetAddress, iDeadPlanetAddress;
 
             // Handle graphical theme updates
             bool bUpdate = false, bColorError = false;
 
-            iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+            iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey,&iDeadPlanetAddress);
             RETURN_ON_ERROR(iErrCode);
 
             iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
@@ -1697,10 +1698,15 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetUIntValue();
 
-            if (iNewValue != m_iBackgroundKey) {
+            if (iNewValue != m_iBackgroundKey)
+            {
                 iErrCode = SetEmpireBackgroundKey (m_iEmpireKey, iNewValue);
                 RETURN_ON_ERROR(iErrCode);
                 m_iBackgroundKey = iNewValue;
+
+                iErrCode = GetThemeAddress(m_iBackgroundKey, &m_iBackgroundAddress);
+                RETURN_ON_ERROR(iErrCode);
+
                 bUpdate = true;
             }
 
@@ -1710,8 +1716,9 @@ if (m_bOwnPost && !m_bRedirection) {
             }
             iNewValue = pHttpForm->GetUIntValue();
 
-            if (iNewValue != iLivePlanetKey) {
-                iErrCode = SetEmpireLivePlanetKey (m_iEmpireKey, iNewValue);
+            if (iNewValue != iLivePlanetKey)
+            {
+                iErrCode = SetEmpireLivePlanetKey(m_iEmpireKey, iNewValue);
                 RETURN_ON_ERROR(iErrCode);
                 bUpdate = true;
             }
@@ -2146,6 +2153,8 @@ if (m_bRedirectTest)
     if (bRedirected)
     {
         m_iButtonKey = iNewButtonKey;
+        iErrCode = GetThemeAddress(m_iButtonKey, &m_iButtonAddress);
+        RETURN_ON_ERROR(iErrCode);
         return Redirect(pageRedirect);
     }
 }
@@ -3266,16 +3275,16 @@ case 3:
     Variant vValue;
 
     unsigned int iThemeKey, iLivePlanetKey, iDeadPlanetKey, iColorKey, iHorzKey, iVertKey, iBackgroundKey, iSeparatorKey, iButtonKey;
+    int iLivePlanetAddress, iDeadPlanetAddress;
 
     iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
     RETURN_ON_ERROR(iErrCode);
     iThemeKey = vValue.GetInteger();
 
-    switch (iThemeKey) {
-
+    switch (iThemeKey)
+    {
     case INDIVIDUAL_ELEMENTS:
-
-        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
         RETURN_ON_ERROR(iErrCode);
         
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIHorz, &vValue);
@@ -3297,19 +3306,20 @@ case 3:
         break;
 
     case ALTERNATIVE_PATH:
-
+        int iButtonAddress, iBackgroundAddress;
         iErrCode = GetDefaultUIKeys (
             &iBackgroundKey,
+            &iBackgroundAddress,
             &iLivePlanetKey,
             &iDeadPlanetKey,
             &iButtonKey,
+            &iButtonAddress,
             &iSeparatorKey,
             &iHorzKey,
             &iVertKey,
             &iColorKey
             );
         RETURN_ON_ERROR(iErrCode);
-
         break;
 
     default:
@@ -3446,7 +3456,7 @@ case 4:
 
             %><li><a href="<%
 
-            WriteThemeDownloadSrc (piThemeKey[i], pvThemeData[SystemThemes::iFileName].GetCharPtr());
+            WriteThemeDownloadSrc(piThemeKey[i], pvThemeData[SystemThemes::iAddress], pvThemeData[SystemThemes::iFileName]);
 
             %>"><% Write (pvThemeData[SystemThemes::iName].GetCharPtr()); %></a> (<%
 

@@ -371,7 +371,9 @@ protected:
     int m_iGameNumber;
     unsigned int m_iTournamentKey;
     unsigned int m_iButtonKey;
+    int m_iButtonAddress;
     unsigned int m_iBackgroundKey;
+    int m_iBackgroundAddress;
     unsigned int m_iSeparatorKey;
     int m_iPrivilege;
     unsigned int m_iAlienKey;
@@ -516,25 +518,30 @@ public:
 
     void WriteFormattedMessage (const char* pszText);
     
+    // Graphics
     int GetUIData (int iThemeKey);
     int GetTextColorData (int iEmpireColorKey);
 
     bool IsColor (const char* pszNewValue);
 
-    void WriteBackgroundImageSrc (int iThemeKey);
-    void WriteLivePlanetImageSrc (int iThemeKey);
-    void WriteDeadPlanetImageSrc (int iThemeKey);
-    void WriteSeparatorSrc (int iThemeKey);
+    void WriteBackgroundImageSrc(unsigned int iThemeKey, int iAddress);
+    void WriteLivePlanetImageSrc(unsigned int iThemeKey, int iAddress);
+    void WriteDeadPlanetImageSrc(unsigned int iThemeKey, int iAddress);
+    void WriteSeparatorSrc(unsigned int iThemeKey, int iAddress);
 
-    void WriteHorzSrc (int iThemeKey);
-    void WriteVertSrc (int iThemeKey);
+    void WriteHorzSrc(unsigned int iThemeKey, int iAddress);
+    void WriteVertSrc(unsigned int iThemeKey, int iAddress);
 
-    void GetHorzString (int iThemeKey, String* pstrString, bool bBlowup = true);
-    void GetVertString (int iThemeKey, String* pstrString, bool bBlowup = true);
+    void GetHorzString(unsigned int iThemeKey, int iAddress, String* pstrString, bool bBlowup = true);
+    void GetVertString(unsigned int iThemeKey, int iAddress, String* pstrString, bool bBlowup = true);
 
-    void WriteButtonImageSrc (int iRealThemeKey, const char* pszButtonName);
-    void WriteThemeDownloadSrc (int iRealThemeKey, const char* pszFileName);
+    void WriteButtonImageSrc(unsigned int iRealThemeKey, int iAddress, const char* pszButtonName);
+    void WriteThemeDownloadSrc(unsigned int iRealThemeKey, int iAddress, const char* pszFileName);
 
+    void WriteSeparatorString(unsigned int iSeparatorKey, int iSeparatorAddress);
+    void WriteButtonString(unsigned int iButtonKey, int iButtonAddress, const char* pszButtonFileName, const char* pszButtonText, const char* pszButtonName);
+
+    // Strings
     bool StandardizeEmpireName (const char* pszName, char pszFinalName[MAX_EMPIRE_NAME_LENGTH + 1]);
     
     bool VerifyPassword (const char* pszPassword, bool bPrintErrors = true);
@@ -548,11 +555,8 @@ public:
     int WriteContactLine();
 
     void WriteBodyString (Seconds iSecondsUntil);
-    void WriteSeparatorString (int iSeparatorKey);
-    void WriteButtonString (int iButtonKey, const char* pszButtonFileName, const char* pszButtonText, 
-        const char* pszButtonName);
 
-    int GetButtonName (const char* pszFormName, int iButtonKey, String* pstrButtonName);
+    void GetButtonName (const char* pszFormName, int iButtonKey, String* pstrButtonName);
 
     void OpenForm();
 
@@ -604,7 +608,7 @@ public:
     int WriteSystemTitleString();
     int WriteSystemHeaders(bool bFileUpload);
 
-    int WriteSystemButtons(int iButtonKey, int iPrivilege);
+    int WriteSystemButtons(int iPrivilege);
     int WriteSystemMessages();
     int RenderSystemMessage (int iMessageKey, const Variant* pvMessage, bool* pbMessageFromEmpire);
 
@@ -671,19 +675,16 @@ public:
 
     void WriteAlienButtonString(unsigned int iAlienKey, int iAddress, bool bBorder, const char* pszNamePrefix, const char* pszAuthorName);
 
-    void GetLivePlanetButtonString (int iLivePlanetKey, int iPlanetKey, int iProxyKey, const char* pszAlt,
-        const char* pszExtraTag, String* pstrLivePlanet);
-    void GetDeadPlanetButtonString (int iDeadPlanetKey, int iPlanetKey, int iProxyKey, const char* pszAlt,
-        const char* pszExtraTag, String* pstrDeadPlanet);
-    void GetIndependentPlanetButtonString (int iPlanetKey, int iProxyKey, const char* pszAlt, 
-        const char* pszExtraTag, String* pstrPlanetString);
+    void GetLivePlanetButtonString(unsigned int iLivePlanetThemeKey, int iLivePlanetAddress, int iPlanetKey, int iProxyKey, const char* pszAlt, const char* pszExtraTag, String* pstrLivePlanet);
+    void GetDeadPlanetButtonString(unsigned int iDeadPlanetThemeKey, int iDeadPlanetAddress, int iPlanetKey, int iProxyKey, const char* pszAlt, const char* pszExtraTag, String* pstrDeadPlanet);
+    void GetIndependentPlanetButtonString(int iPlanetKey, int iProxyKey, const char* pszAlt, const char* pszExtraTag, String* pstrPlanetString);
 
-    void WriteLivePlanetString (int iLivePlanetKey);
-    void WriteDeadPlanetString (int iDeadPlanetKey);
+    void WriteLivePlanetString(unsigned int iLivePlanetKey, int iLivePlanetAddress);
+    void WriteDeadPlanetString(unsigned int iDeadPlanetKey, int iDeadPlanetAddress);
     void WriteIndependentPlanetString();
 
-    int WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, int iLivePlanetKey, 
-        int iDeadPlanetKey, int iPlanetCounter, bool bVisibleBuilds, int iGoodAg, int iBadAg, int iGoodMin, 
+    int WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanetKey, int iProxyPlanetKey, unsigned int iLivePlanetKey, int iLivePlanetAddress,
+        unsigned int iDeadPlanetKey, int iDeadPlanetAddress, int iPlanetCounter, bool bVisibleBuilds, int iGoodAg, int iBadAg, int iGoodMin, 
         int iBadMin, int iGoodFuel, int iBadFuel, float fEmpireAgRatio, bool bIndependence, bool bAdmin, 
         bool bSpectator, const Variant* pvPlanetData, bool* pbOurPlanet);
 
@@ -740,7 +741,8 @@ public:
         const PartialMapInfo* pPartialMapInfo, bool bSpectators);
 
     int RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey);
-    int RenderMiniPlanet (const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey);
+    int RenderMiniPlanet(const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, int iLivePlanetAddress,
+                         unsigned int iDeadPlanetKey, int iDeadPlanetAddress);
 
     int GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey,
         int iProxyPlanetKey, bool bVisibleBuilds, bool bIndependence, const Variant* pvPlanetData, String* pstrAltTag);

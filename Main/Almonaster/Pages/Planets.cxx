@@ -184,8 +184,8 @@ RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
 unsigned int iLivePlanetKey, iDeadPlanetKey, iNumPlanets;
-
-iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+int iLivePlanetAddress, iDeadPlanetAddress;
+iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
 RETURN_ON_ERROR(iErrCode);
 
 if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
@@ -272,7 +272,7 @@ if (bMapGenerated) {
             %><p><table width="90%"><%
 
             iErrCode = WriteUpClosePlanetString (m_iEmpireKey, pvPlanetKey[i].GetInteger(), 
-                piProxyKey[i], iLivePlanetKey, iDeadPlanetKey, iCounter, 
+                piProxyKey[i], iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress, iCounter, 
                 (vOptions.GetInteger() & VISIBLE_BUILDS) != 0, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, 
                 iBadFuel, fAgRatio, (vOptions.GetInteger() & INDEPENDENCE) != 0, false, false,
                 pvPlanetData, &bOurPlanet
@@ -326,17 +326,16 @@ if (bMapGenerated) {
     }
 
     %><input type="hidden" name="NumOurPlanets" value="<% Write (iCounter); %>"><%
-
-} else {
-
+}
+else
+{
     %><p><table width="90%"><%
 
     bool bTrue;
-    iErrCode = WriteUpClosePlanetString (m_iEmpireKey, NO_KEY, NO_KEY, iLivePlanetKey, iDeadPlanetKey, 0, false, 0, 0, 0, 0, 0, 0, 0.0, false, false, false, NULL, &bTrue);
+    iErrCode = WriteUpClosePlanetString (m_iEmpireKey, NO_KEY, NO_KEY, iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress, 
+                                         0, false, 0, 0, 0, 0, 0, 0, 0.0, false, false, false, NULL, &bTrue);
     RETURN_ON_ERROR(iErrCode);
 
-    %>Error rendering up-close planet view. The error was <% Write (iErrCode);
-    
     %></table><%
 }
 

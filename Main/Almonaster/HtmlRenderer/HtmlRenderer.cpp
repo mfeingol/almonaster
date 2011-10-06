@@ -88,7 +88,9 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_iGameNumber = -1;
     m_iTournamentKey = NO_KEY;
     m_iButtonKey = NO_KEY;
+    m_iButtonAddress = -1;
     m_iBackgroundKey = NO_KEY;
+    m_iBackgroundAddress = -1;
     m_iSeparatorKey = NO_KEY;
     m_iPrivilege = NOVICE;
     m_iAlienKey = NO_KEY;
@@ -427,16 +429,14 @@ void HtmlRenderer::WriteBodyString (Seconds iSecondsUntil) {
         break;
         
     case ALTERNATIVE_PATH:
-        
         OutputText (" background=\"");
         m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
         OutputText ("/" BACKGROUND_IMAGE "\"");
         break;
         
     default:
-        
         OutputText (" background=\"" BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (m_iBackgroundKey);
+        m_pHttpResponse->WriteText(m_iBackgroundAddress);
         OutputText ("/" BACKGROUND_IMAGE "\"");
         break;
     }
@@ -4599,8 +4599,8 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
     
     String strHorz, strVert;
     
-    GetHorzString(NULL_THEME, &strHorz);
-    GetVertString(NULL_THEME, &strVert);
+    GetHorzString(NULL_THEME, -1, &strHorz);
+    GetVertString(NULL_THEME, -1, &strVert);
     
     OutputText ("<table><tr>");
     for (i = 0; i < sizeof (ppszName) / sizeof (const char*); i ++) {
@@ -4655,17 +4655,17 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
     
     // Live Planet
     OutputText ("<td align=\"center\"><img src=\"");
-    WriteLivePlanetImageSrc (NULL_THEME);
+    WriteLivePlanetImageSrc(NULL_THEME, -1);
     
     OutputText ("\"></td><td align=\"center\"><img src=\"");
-    WriteDeadPlanetImageSrc (NULL_THEME);
+    WriteDeadPlanetImageSrc(NULL_THEME, -1);
     
     OutputText ("\"></td><td align=\"center\">");
-    WriteButtonString (NULL_THEME, "Login", "Login", "Login");
+    WriteButtonString(NULL_THEME, -1, "Login", "Login", "Login");
     
     OutputText ("</td><td align=\"center\">");
     
-    WriteSeparatorString (NULL_THEME);
+    WriteSeparatorString(NULL_THEME, -1);
     
     OutputText ("</td><td align=\"center\">");
     m_pHttpResponse->WriteText (strHorz);
@@ -4710,7 +4710,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         OutputText ("<p>");
         
         snprintf (pszForm, sizeof (pszForm), "ThemeInfo%i", piThemeKey[i]);
-        WriteButtonString (m_iButtonKey, "Info", "Theme Info", pszForm); 
+        WriteButtonString (m_iButtonKey, m_iButtonAddress, "Info", "Theme Info", pszForm); 
         
         OutputText ("</td>");
         
@@ -4720,7 +4720,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         if (iOptions & THEME_BACKGROUND) {
             
             OutputText ("<td align=\"center\"><img width=\"120\" height=\"120\" src=\"");
-            WriteBackgroundImageSrc (piThemeKey[i]);
+            WriteBackgroundImageSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4731,7 +4731,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         if (iOptions & THEME_BACKGROUND) {
             OutputText (" background=\"");
-            WriteBackgroundImageSrc (piThemeKey[i]);
+            WriteBackgroundImageSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"");
         }
         OutputText (">"\
@@ -4779,7 +4779,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         // Live Planet
         if (iOptions & THEME_LIVE_PLANET) {
             OutputText ("<td align=\"center\"><img src=\"");
-            WriteLivePlanetImageSrc (piThemeKey[i]);
+            WriteLivePlanetImageSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4787,7 +4787,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         if (iOptions & THEME_DEAD_PLANET) {
             OutputText ("<td align=\"center\"><img src=\"");
-            WriteDeadPlanetImageSrc (piThemeKey[i]);
+            WriteDeadPlanetImageSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4795,7 +4795,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         if (iOptions & THEME_BUTTONS) {
             OutputText ("<td align=\"center\"><img src=\"");
-            WriteButtonImageSrc (piThemeKey[i], "Login");
+            WriteButtonImageSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress], "Login");
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4803,7 +4803,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         if (iOptions & THEME_SEPARATOR) {
             OutputText ("<td align=\"center\"><img width=\"200\" src=\"");
-            WriteSeparatorSrc (piThemeKey[i]);
+            WriteSeparatorSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4811,7 +4811,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         if (iOptions & THEME_HORZ) {
             OutputText ("<td align=\"center\"><img src=\"");
-            WriteHorzSrc (piThemeKey[i]);
+            WriteHorzSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4819,7 +4819,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
         
         if (iOptions & THEME_VERT) {
             OutputText ("<td align=\"center\"><img src=\"");
-            WriteVertSrc (piThemeKey[i]);
+            WriteVertSrc (piThemeKey[i], pvThemeData[SystemThemes::iAddress]);
             OutputText ("\"></td>");
         } else {
             OutputText ("<td>&nbsp;</td>");
@@ -4881,7 +4881,7 @@ int HtmlRenderer::DisplayThemeData (int iThemeKey) {
     
     OutputText ("</td></tr><tr><td>Download:</td><td><a href=\"");
     
-    WriteThemeDownloadSrc (iThemeKey, pvThemeData[SystemThemes::iFileName].GetCharPtr());
+    WriteThemeDownloadSrc(iThemeKey, pvThemeData[SystemThemes::iAddress], pvThemeData[SystemThemes::iFileName].GetCharPtr());
     
     OutputText ("\">");
     m_pHttpResponse->WriteText (pvThemeData[SystemThemes::iFileName].GetCharPtr());
@@ -6280,6 +6280,10 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
 
     char pszAdmin [192];
 
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     iErrCode = CacheGameData(piGameClass, piGameNumber, NO_KEY, iNumActiveGames);
     RETURN_ON_ERROR(iErrCode);
 
@@ -6324,10 +6328,11 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
         bOpen = (iGameState & STILL_OPEN) != 0;
         bStarted = (iGameState & STARTED) != 0;
 
-        if (i > 0 && piGameClass[i] != iCurrentGameClass) {
+        if (i > 0 && piGameClass[i] != iCurrentGameClass)
+        {
             iCurrentGameClass = piGameClass[i];
             OutputText ("<tr><td align=\"center\" colspan=\"9\">");
-            WriteSeparatorString (m_iSeparatorKey);
+            WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
             OutputText ("</td></tr>");
         }
 
@@ -6341,6 +6346,7 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
 
         WriteButtonString (
             m_iButtonKey,
+            m_iButtonAddress,
             "AdministerGame",
             "Administer Game", 
             pszAdmin
@@ -6440,8 +6446,12 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
 
     OutputText ("</table>");
 
+    int iSeparatorAddress;
+    iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     OutputText ("<p>");
-    WriteSeparatorString (m_iSeparatorKey);
+    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
     OutputText ("<p><table width=\"90%\">");
 
     // View Map

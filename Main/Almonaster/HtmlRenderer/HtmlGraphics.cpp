@@ -20,73 +20,72 @@
 
 #include "Osal/File.h"
 
-void HtmlRenderer::WriteBackgroundImageSrc (int iThemeKey) {
-    
+void HtmlRenderer::WriteBackgroundImageSrc(unsigned int iThemeKey, int iAddress)
+{
     // No Null Theme background image
     OutputText (BASE_RESOURCE_DIR);
-    m_pHttpResponse->WriteText (iThemeKey);
+    m_pHttpResponse->WriteText(iAddress);
     OutputText ("/" BACKGROUND_IMAGE);
 }
 
-void HtmlRenderer::WriteLivePlanetImageSrc (int iThemeKey) {
-    
+void HtmlRenderer::WriteLivePlanetImageSrc(unsigned int iThemeKey, int iAddress)
+{
     if (iThemeKey == NULL_THEME) {
         OutputText (BASE_RESOURCE_DIR LIVE_PLANET_NAME);
     } else {
         OutputText (BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iThemeKey);
+        m_pHttpResponse->WriteText(iAddress);
         OutputText ("/" LIVE_PLANET_NAME);
     }
 }
 
-void HtmlRenderer::WriteDeadPlanetImageSrc (int iThemeKey) {
-    
+void HtmlRenderer::WriteDeadPlanetImageSrc(unsigned int iThemeKey, int iAddress)
+{
     if (iThemeKey == NULL_THEME) {
         OutputText (BASE_RESOURCE_DIR DEAD_PLANET_NAME);
     } else {
         OutputText (BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iThemeKey);
+        m_pHttpResponse->WriteText(iAddress);
         OutputText ("/" DEAD_PLANET_NAME);
     }
 }
 
-void HtmlRenderer::WriteSeparatorSrc (int iThemeKey) {
-    
+void HtmlRenderer::WriteSeparatorSrc(unsigned int iThemeKey, int iAddress)
+{
     // No Null Theme separator
     
     OutputText (BASE_RESOURCE_DIR);
-    m_pHttpResponse->WriteText (iThemeKey);
+    m_pHttpResponse->WriteText(iAddress);
     OutputText ("/" SEPARATOR_IMAGE);
 }
 
-void HtmlRenderer::WriteHorzSrc (int iThemeKey) {
-    
+void HtmlRenderer::WriteHorzSrc(unsigned int iThemeKey, int iAddress)
+{
     if (iThemeKey == NULL_THEME) {
         OutputText (BASE_RESOURCE_DIR HORZ_LINE_NAME);
     } else {
         OutputText (BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iThemeKey);
+        m_pHttpResponse->WriteText(iAddress);
         OutputText ("/" HORZ_LINE_NAME);
     }
 }
 
-void HtmlRenderer::WriteVertSrc (int iThemeKey) {
-    
+void HtmlRenderer::WriteVertSrc(unsigned int iThemeKey, int iAddress)
+{
     if (iThemeKey == NULL_THEME) {
         OutputText (BASE_RESOURCE_DIR VERT_LINE_NAME);
     } else {
         OutputText (BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iThemeKey);
+        m_pHttpResponse->WriteText(iAddress);
         OutputText ("/" VERT_LINE_NAME);
     }
 }
 
-void HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowup) {
-    
-    switch (iThemeKey) {
-        
+void HtmlRenderer::GetHorzString(unsigned int iThemeKey, int iAddress, String* pstrString, bool bBlowup)
+{
+    switch (iThemeKey)
+    {
     case NULL_THEME:
-        
         if (bBlowup) {
             *pstrString = "<img src=\"" BASE_RESOURCE_DIR HORZ_LINE_NAME "\" width=\"21\" height=\"3\">";
         } else {
@@ -95,7 +94,6 @@ void HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowu
         break;
         
     case ALTERNATIVE_PATH:
-        
         *pstrString = "<img src=\"";
         *pstrString += m_vLocalPath.GetCharPtr();
         
@@ -107,14 +105,13 @@ void HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowu
         break;
         
     default:
-        
         if (bBlowup) {
             *pstrString = "<img src=\"" BASE_RESOURCE_DIR;
-            *pstrString += iThemeKey;
+            *pstrString += iAddress;
             *pstrString += "/" HORZ_LINE_NAME "\" width=\"21\" height=\"3\">";
         } else {
             *pstrString = "<img src=\"" BASE_RESOURCE_DIR;
-            *pstrString += iThemeKey;
+            *pstrString += iAddress;
             *pstrString += "/" HORZ_LINE_NAME "\">";
         }
         break;
@@ -123,12 +120,11 @@ void HtmlRenderer::GetHorzString (int iThemeKey, String* pstrString, bool bBlowu
     Assert(pstrString->GetCharPtr());
 }
 
-void HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowup) {
-    
-    switch (iThemeKey) {
-        
+void HtmlRenderer::GetVertString(unsigned int iThemeKey, int iAddress, String* pstrString, bool bBlowup)
+{
+    switch (iThemeKey)
+    {
     case NULL_THEME:
-        
         if (bBlowup) {
             *pstrString = "<img src=\"" BASE_RESOURCE_DIR VERT_LINE_NAME "\" width=\"21\" height=\"3\">";
         } else {
@@ -137,7 +133,6 @@ void HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowu
         break;
         
     case ALTERNATIVE_PATH:
-        
         *pstrString = "<img src=\"";
         *pstrString += m_vLocalPath.GetCharPtr();
         
@@ -149,9 +144,8 @@ void HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowu
         break;
         
     default:
-        
         *pstrString = "<img src=\"" BASE_RESOURCE_DIR;
-        *pstrString += iThemeKey;
+        *pstrString += iAddress;
         
         if (bBlowup) {
             *pstrString += "/" VERT_LINE_NAME "\" width=\"21\" height=\"3\">";
@@ -164,65 +158,68 @@ void HtmlRenderer::GetVertString (int iThemeKey, String* pstrString, bool bBlowu
     Assert(pstrString->GetCharPtr());
 }
 
-int HtmlRenderer::GetUIData (int iThemeKey) {
-    
-    int iErrCode = OK;
+int HtmlRenderer::GetUIData(int iThemeKey)
+{
+    int iErrCode;
     Variant vValue;
     
-    if (iThemeKey == INDIVIDUAL_ELEMENTS) {
-        
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
+    if (iThemeKey == INDIVIDUAL_ELEMENTS)
+    {
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
         RETURN_ON_ERROR(iErrCode);
         m_iButtonKey = vValue.GetInteger();
         
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIBackground, &vValue);
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::UIBackground, &vValue);
         RETURN_ON_ERROR(iErrCode);
         m_iBackgroundKey = vValue.GetInteger();
         
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UISeparator, &vValue);
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::UISeparator, &vValue);
         RETURN_ON_ERROR(iErrCode);
         m_iSeparatorKey = vValue.GetInteger();
 
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
         RETURN_ON_ERROR(iErrCode);
         
-        iErrCode = GetTextColorData (vValue.GetInteger());
+        iErrCode = GetTextColorData(vValue.GetInteger());
         RETURN_ON_ERROR(iErrCode);
-        
-    } else {
-        
+    }
+    else
+    {
         m_iButtonKey = iThemeKey;
         m_iBackgroundKey = iThemeKey;
         m_iSeparatorKey = iThemeKey;
         
-        if (iThemeKey == NULL_THEME) {
-            
-            iErrCode = GetTextColorData (NULL_THEME);
+        if (iThemeKey == NULL_THEME)
+        {
+            iErrCode = GetTextColorData(NULL_THEME);
             RETURN_ON_ERROR(iErrCode);
         }
-        
-        else if (iThemeKey == ALTERNATIVE_PATH) {
-
-            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
+        else if (iThemeKey == ALTERNATIVE_PATH)
+        {
+            iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::UIColor, &vValue);
             RETURN_ON_ERROR(iErrCode);
             
-            iErrCode = GetTextColorData (vValue.GetInteger());
+            iErrCode = GetTextColorData(vValue.GetInteger());
             RETURN_ON_ERROR(iErrCode);
 
-            iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &m_vLocalPath);
+            iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlternativeGraphicsPath, &m_vLocalPath);
             RETURN_ON_ERROR(iErrCode);
         }
-        
-        else {
-            
+        else
+        {
             iErrCode = GetTextColorData (iThemeKey);
             RETURN_ON_ERROR(iErrCode);
         }
     }
+
+    iErrCode = GetThemeAddress(m_iButtonKey, &m_iButtonAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetThemeAddress(m_iBackgroundKey, &m_iBackgroundAddress);
+    RETURN_ON_ERROR(iErrCode);
     
     return iErrCode;
 }
-
 
 int HtmlRenderer::GetTextColorData (int iEmpireColorKey) {
     
@@ -312,19 +309,19 @@ bool HtmlRenderer::IsColor (const char* pszColor) {
 }
 
 
-void HtmlRenderer::WriteButtonImageSrc (int iRealThemeKey, const char* pszButtonName) {
-    
+void HtmlRenderer::WriteButtonImageSrc(unsigned int iRealThemeKey, int iAddress, const char* pszButtonName)
+{
     m_pHttpResponse->WriteText (BASE_RESOURCE_DIR);
-    m_pHttpResponse->WriteText (iRealThemeKey);
+    m_pHttpResponse->WriteText (iAddress);
     OutputText ("/");
     m_pHttpResponse->WriteText (pszButtonName);
     m_pHttpResponse->WriteText (DEFAULT_IMAGE_EXTENSION);
 }
 
-void HtmlRenderer::WriteThemeDownloadSrc (int iRealThemeKey, const char* pszFileName) {
-    
+void HtmlRenderer::WriteThemeDownloadSrc(unsigned int iRealThemeKey, int iAddress, const char* pszFileName)
+{
     m_pHttpResponse->WriteText (BASE_RESOURCE_DIR);
-    m_pHttpResponse->WriteText (iRealThemeKey);
+    m_pHttpResponse->WriteText (iAddress);
     OutputText ("/");
     m_pHttpResponse->WriteText (pszFileName);
 }
@@ -334,8 +331,8 @@ void HtmlRenderer::WriteAlmonasterBanner() {
     OutputText ("<img alt=\"Almonaster\" align=\"center\" src=\"" BASE_RESOURCE_DIR ALMONASTER_BANNER_IMAGE "\">");
 }
 
-void HtmlRenderer::WriteSeparatorString (int iSeparatorKey) {
-    
+void HtmlRenderer::WriteSeparatorString(unsigned int iSeparatorKey, int iSeparatorAddress)
+{
     switch (iSeparatorKey) {
         
     case NULL_THEME:
@@ -343,16 +340,14 @@ void HtmlRenderer::WriteSeparatorString (int iSeparatorKey) {
         break;
         
     case ALTERNATIVE_PATH:
-        
         OutputText ("<img src=\"");
         m_pHttpResponse->WriteText (m_vLocalPath.GetCharPtr());
         OutputText ("/" SEPARATOR_IMAGE "\" width=\"90%\" height=\"16\">");
         break;
         
     default:
-        
         OutputText ("<img src=\"" BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (iSeparatorKey);     
+        m_pHttpResponse->WriteText (iSeparatorAddress);     
         OutputText ("/" SEPARATOR_IMAGE "\" width=\"90%\" height=\"16\">");
         break;
     }

@@ -59,6 +59,7 @@ int GameEngine::CreateAlienIcon(const char* pszAuthorName, int* piAddress, unsig
     *piAddress = 0;
     *piKey = NO_KEY;
 
+    // Pick an address
     Variant* pvAddress = NULL;
     AutoFreeData free_pvAddress(pvAddress);
 

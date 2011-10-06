@@ -471,7 +471,6 @@ case 2:
     {
 
     int iGameClassOptions, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
-    unsigned int iLivePlanetKey, iDeadPlanetKey;
     bool bTrue;
 
     GET_GAME_MAP (pszGameMap, iGameClassKey, iGameNumber);
@@ -485,7 +484,10 @@ case 2:
     }
     else
     {
-        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        unsigned int iLivePlanetKey, iDeadPlanetKey;
+        int iLivePlanetAddress, iDeadPlanetAddress;
+
+        iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
         RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetGameClassOptions(iGameClassKey, &iGameClassOptions);
@@ -518,7 +520,9 @@ case 2:
             iClickedPlanetKey,
             iClickedProxyPlanetKey,
             iLivePlanetKey,
+            iLivePlanetAddress,
             iDeadPlanetKey,
+            iDeadPlanetAddress,
             0,
             (iGameClassOptions & VISIBLE_BUILDS) != 0,
             iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,

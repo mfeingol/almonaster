@@ -2822,7 +2822,8 @@ case 6:
         goto AllGames;
     }
 
-    iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    int iLivePlanetAddress, iDeadPlanetAddress;
+    iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = GetGoodBadResourceLimits (
@@ -2855,7 +2856,7 @@ case 6:
     %><p><table width="90%"><%
 
     iErrCode = WriteUpClosePlanetString (NO_KEY, iClickedPlanetKey, 
-        0, iLivePlanetKey, iDeadPlanetKey, 0, true, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,
+        0, iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress, 0, true, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,
         1.0, (vOptions.GetInteger() & INDEPENDENCE) != 0, true, false, pvPlanetData, &bFalse);
     RETURN_ON_ERROR(iErrCode);
 

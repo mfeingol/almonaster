@@ -83,7 +83,7 @@ void Transform622to700::Transform()
     TransformTables("SystemAlienIcons", nullptr, nullptr, nullptr, nullptr, nullptr);
 
     // SystemAlienIcons
-    TransformTables("SystemThemes", nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("SystemThemes", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemThemes));
 
     // SystemTournaments
     // (MUST run before SystemActiveGames)
@@ -365,6 +365,11 @@ void Transform622to700::TransformSystemGameClassData(IEnumerable<IDataElement^>^
             break;
         }
     }
+}
+
+void Transform622to700::TransformSystemThemes(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+{
+    // TODO - add Address
 }
 
 void Transform622to700::TransformSystemTournaments(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)

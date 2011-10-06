@@ -29,7 +29,8 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
     AutoFreeData free_pvPlanetKey(pvPlanetKey);
 
     // Get empire's preferences
-    iErrCode = GetEmpirePlanetIcons(iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    int iLivePlanetAddress, iDeadPlanetAddress;
+    iErrCode = GetEmpirePlanetIcons(iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Get map geography information
@@ -175,7 +176,7 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
             OutputText ("<td>");
             if (ppMiniMap[j][i].iiIcon != ICON_NONE)
             {
-                iErrCode = RenderMiniPlanet (ppMiniMap[j][i], iEmpireKey, iLivePlanetKey, iDeadPlanetKey);
+                iErrCode = RenderMiniPlanet (ppMiniMap[j][i], iEmpireKey, iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress);
                 RETURN_ON_ERROR(iErrCode);
             }
             OutputText ("</td>");
@@ -207,28 +208,26 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
     return iErrCode;
 }
 
-int HtmlRenderer::RenderMiniPlanet(const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, unsigned int iDeadPlanetKey)
+int HtmlRenderer::RenderMiniPlanet(const MiniMapEntry& mmEntry, unsigned int iEmpireKey, unsigned int iLivePlanetKey, int iLivePlanetAddress,
+                                   unsigned int iDeadPlanetKey, int iDeadPlanetAddress)
 {
     int iErrCode = OK;
     String strPlanetString;
 
-    char pszCoord [MAX_COORDINATE_LENGTH + 1];
-    GetCoordinates (mmEntry.iX, mmEntry.iY, pszCoord);
+    char pszCoord[MAX_COORDINATE_LENGTH + 1];
+    GetCoordinates(mmEntry.iX, mmEntry.iY, pszCoord);
 
-    switch (mmEntry.iiIcon) {
-
+    switch (mmEntry.iiIcon)
+    {
     case ICON_LIVEPLANET:
-
-        GetLivePlanetButtonString (iLivePlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
+        GetLivePlanetButtonString(iLivePlanetKey, iLivePlanetAddress, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
         break;
 
     case ICON_DEADPLANET:
-
-        GetLivePlanetButtonString (iDeadPlanetKey, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
+        GetLivePlanetButtonString(iDeadPlanetKey, iDeadPlanetAddress, mmEntry.iPlanetKey, mmEntry.iPlanetProxyKey, pszCoord, "width=\"75%\"", &strPlanetString);
         break;
 
     case ICON_EMPIREPLANET:
-
         iErrCode = GetAlienPlanetButtonString (
             mmEntry.iAlienKey,
             mmEntry.iAlienAddress,

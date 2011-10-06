@@ -1116,8 +1116,35 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
 
     int iErrCode;
     unsigned int iKey;
+    int iAddress;
 
     Variant pvColVal[SystemThemes::NumColumns];
+
+    // Do this mainly for debugging purposes... to ensure that the alien keys don't overlap with the addresses
+    for (unsigned int i = 0; i < 50; i ++)
+    {
+        pvColVal[SystemThemes::iAddress] = 0;
+        pvColVal[SystemThemes::iName] = "";
+        pvColVal[SystemThemes::iAuthorName] = "";
+        pvColVal[SystemThemes::iVersion] = "";
+        pvColVal[SystemThemes::iAuthorEmail] = "";
+        pvColVal[SystemThemes::iDescription] = "";
+        pvColVal[SystemThemes::iFileName] = "";
+        pvColVal[SystemThemes::iOptions] = 0;
+        pvColVal[SystemThemes::iTableColor] = "";
+        pvColVal[SystemThemes::iTextColor] = "";
+        pvColVal[SystemThemes::iGoodColor] = "";
+        pvColVal[SystemThemes::iBadColor] = "";
+        pvColVal[SystemThemes::iPrivateMessageColor] = "";
+        pvColVal[SystemThemes::iBroadcastMessageColor] = "";
+
+        unsigned int iKey;
+        iErrCode = t_pCache->InsertRow(SYSTEM_THEMES, SystemThemes::Template, pvColVal, &iKey);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = t_pCache->DeleteRow(SYSTEM_THEMES, iKey);
+        RETURN_ON_ERROR(iErrCode);
+    }
 
     // Mensan's First Theme
     pvColVal[SystemThemes::iName] = "Mensan's First Theme";
@@ -1134,7 +1161,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "D3C2EA";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "F7EF80";
 
-    iErrCode = CreateTheme(pvColVal, piDefaultThemeKey);
+    iErrCode = CreateTheme(pvColVal, piDefaultThemeKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Classic theme
@@ -1152,7 +1179,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "25D3AC";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "F0F011";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // MkII theme
@@ -1170,7 +1197,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "FFFF00";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEEEE";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Mensan's first beta theme
@@ -1188,7 +1215,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "COCOFF";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEEEE";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Mensan's second beta theme
@@ -1206,7 +1233,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "C0C0FF";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEEEE";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // DPR's animated theme
@@ -1224,7 +1251,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "80FFFF";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "FFFF00";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Techno Theme
@@ -1242,7 +1269,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "C9C9C9";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEE00";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Animated Theme
@@ -1260,7 +1287,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "FFA936";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "EEEE00";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Blues Theme
@@ -1278,7 +1305,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "25D3AC";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "9CC6FF";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Mensan's Dark Mood Theme
@@ -1296,7 +1323,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "FCCAA2";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "D5D5D5";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Chamber Theme
@@ -1314,7 +1341,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "FFFF00";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "D0D0D0";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // NASA Theme
@@ -1332,7 +1359,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "25CF25";
     pvColVal[SystemThemes::iBroadcastMessageColor] = "F09525";
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Alien Glow Theme
@@ -1350,7 +1377,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "FFFF00";     // Bright yellow
     pvColVal[SystemThemes::iBroadcastMessageColor] = "FFFFCC";   // Dull yellow
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Iceberg Theme
@@ -1368,7 +1395,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "9090FF";     // Brigher light blue
     pvColVal[SystemThemes::iBroadcastMessageColor] = "90A0CC";   // Light blue
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     // Iceberg Theme II
@@ -1386,7 +1413,7 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
     pvColVal[SystemThemes::iPrivateMessageColor] = "B0B0B0";     // Gray
     pvColVal[SystemThemes::iBroadcastMessageColor] = "E0F0E0";   // Light green
 
-    iErrCode = CreateTheme(pvColVal, &iKey);
+    iErrCode = CreateTheme(pvColVal, &iKey, &iAddress);
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;

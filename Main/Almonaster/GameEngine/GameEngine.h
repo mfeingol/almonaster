@@ -802,26 +802,27 @@ public:
     int SetEmpireNotReadyForUpdate (int iGameClass, int iGameNumber, int iEmpireKey, bool* pbSet);
 
     // Themes
-    int DoesThemeExist (int iThemeKey, bool* pbExist);
-    int CreateTheme (Variant* pvData, unsigned int* piKey);
+    int DoesThemeExist(int iThemeKey, bool* pbExist);
+    int CreateTheme(Variant* pvData, unsigned int* piKey, int* piAddress);
+    int DeleteTheme(int iThemeKey);
+
     int GetThemeKeys(unsigned int** ppiThemeKey, unsigned int* piNumKeys);
     int GetFullThemeKeys (unsigned int** ppiThemeKey, unsigned int* piNumKeys);
-    int GetThemeData (int iThemeKey, Variant** ppvThemeData);
-    int GetThemeName (int iThemeKey, Variant* pvThemeName);
 
-    int GetThemeTextColor (int iThemeKey, Variant* pvColor);
-    int GetThemeGoodColor (int iThemeKey, Variant* pvColor);
-    int GetThemeBadColor (int iThemeKey, Variant* pvColor);
-    int GetThemePrivateMessageColor (int iThemeKey, Variant* pvColor);
-    int GetThemeBroadcastMessageColor (int iThemeKey, Variant* pvColor);
-    int GetThemeTableColor (int iThemeKey, Variant* pvTableColor);
+    int GetThemeData(int iThemeKey, Variant** ppvThemeData);
+    int GetThemeAddress(int iThemeKey, int* piAddress);
+    int GetThemeName(int iThemeKey, Variant* pvThemeName);
+    int GetThemeTextColor(int iThemeKey, Variant* pvColor);
+    int GetThemeGoodColor(int iThemeKey, Variant* pvColor);
+    int GetThemeBadColor(int iThemeKey, Variant* pvColor);
+    int GetThemePrivateMessageColor(int iThemeKey, Variant* pvColor);
+    int GetThemeBroadcastMessageColor(int iThemeKey, Variant* pvColor);
+    int GetThemeTableColor(int iThemeKey, Variant* pvTableColor);
 
-    int DeleteTheme (int iThemeKey);
-
-    int SetThemeName (int iThemeKey, const char* pszThemeName);
-    int SetThemeVersion (int iThemeName, const char* pszVersion);
-    int SetThemeFileName (int iThemeKey, const char* pszFileName);
-    int SetThemeAuthorName (int iThemeKey, const char* pszAuthorName);
+    int SetThemeName(int iThemeKey, const char* pszThemeName);
+    int SetThemeVersion(int iThemeName, const char* pszVersion);
+    int SetThemeFileName(int iThemeKey, const char* pszFileName);
+    int SetThemeAuthorName(int iThemeKey, const char* pszAuthorName);
     int SetThemeAuthorEmail (int iThemeKey, const char* pszAuthorEmail);
     int SetThemeBackground (int iThemeKey, bool bExists);
     int SetThemeLivePlanet (int iThemeKey, bool bExists);
@@ -829,10 +830,8 @@ public:
     int SetThemeSeparator (int iThemeKey, bool bExists);
     int SetThemeButtons (int iThemeKey, bool bExists);
     int SetThemeDescription (int iThemeKey, const char* pszDescription);
-
     int SetThemeHorz (int iThemeKey, bool bExists);
     int SetThemeVert (int iThemeKey, bool bExists);
-
     int SetThemeTextColor (int iThemeKey, const char* pszColor);
     int SetThemeGoodColor (int iThemeKey, const char* pszColor);
     int SetThemeBadColor (int iThemeKey, const char* pszColor);
@@ -1212,7 +1211,7 @@ public:
     int GetPlanetCoordinates (int iGameClass, int iGameNumber, int iPlanetKey, int* piPlanetX, int* piPlanetY);
     int GetPlanetProperty (int iGameClass, int iGameNumber, unsigned int iPlanetKey, const char* pszProperty, Variant* pvProperty);
     int GetPlanetKeyFromCoordinates (int iGameClass, int iGameNumber, int iX, int iY, int* piPlanetKey);
-    int GetEmpirePlanetIcons (int iEmpireKey, unsigned int* piLivePlanetKey, unsigned int* piLiveDeadPlanetKey);
+    int GetEmpirePlanetIcons (int iEmpireKey, unsigned int* piLivePlanetKey,  int* piLivePlanetAddress, unsigned int* piDeadPlanetKey, int* piDeadPlanetAddress);
 
     int GetNeighbourPlanetKey (int iGameClass, int iGameNumber, int iPlanetKey, int iDirection, int* piPlanetKey);
     int HasEmpireExploredPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, bool* pbExplored);
@@ -1252,8 +1251,8 @@ public:
         int iOtherEmpireKey, const char* pszOtherEmpireName, int iOtherAlienKey, int iOtherAlienAddress);
 
     // System Config
-    int GetDefaultUIKeys (unsigned int* piBackground, unsigned int* piLivePlanet, 
-        unsigned int* piDeadPlanet, unsigned int* piButtons, unsigned int* piSeparator, 
+    int GetDefaultUIKeys (unsigned int* piBackground, int* piBackgroundAddress, unsigned int* piLivePlanet, 
+        unsigned int* piDeadPlanet, unsigned int* piButtons, int* piButtonAddress, unsigned int* piSeparator, 
         unsigned int* piHorz, unsigned int* piVert, unsigned int* piColor);
 
     int SetScoreForPrivilege (Privilege privLevel, float fScore);

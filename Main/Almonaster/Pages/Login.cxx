@@ -274,9 +274,11 @@ if (m_iEmpireKey == NO_KEY)
 
     iErrCode = GetDefaultUIKeys (
         &m_iBackgroundKey,
+        &m_iBackgroundAddress,
         &iLivePlanetKey,
         &iDeadPlanetKey,
         &m_iButtonKey,
+        &m_iButtonAddress,
         &m_iSeparatorKey,
         &iHorz,
         &iVert,

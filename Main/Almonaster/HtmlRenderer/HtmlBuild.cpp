@@ -336,7 +336,7 @@ int HtmlRenderer::RenderMiniBuild (unsigned int iPlanetKey, bool bSingleBar) {
 
         char pszButton [64];
         snprintf (pszButton, sizeof (pszButton), "MiniBuild%i", iPlanetKey);
-        WriteButtonString (m_iButtonKey, "Build", "Build", pszButton); 
+        WriteButtonString(m_iButtonKey, m_iButtonAddress, "Build", "Build", pszButton); 
     }
 
     OutputText (

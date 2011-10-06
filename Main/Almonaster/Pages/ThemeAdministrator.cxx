@@ -69,8 +69,7 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // Check for delete
             sprintf(pszForm, "DeleteTheme%i", i);
-            iErrCode = GetButtonName (pszForm, m_iButtonKey, &strButtonName);
-            RETURN_ON_ERROR(iErrCode);
+            GetButtonName (pszForm, m_iButtonKey, &strButtonName);
             if (m_pHttpRequest->GetForm (strButtonName) != NULL) {
 
                 m_bRedirectTest = false;
@@ -568,15 +567,17 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             unsigned int iKey;
-            if ((iErrCode = CreateTheme (pvSubmitArray, &iKey)) == OK) {
-                AddMessage ("The theme has been created with directory key ");
-                AppendMessage (iKey);
-            } else {
-                if (iErrCode == ERROR_THEME_ALREADY_EXISTS) {
-                    AddMessage ("The theme already exists");
-                } else {
-                    AddMessage ("The theme could not be created");
-                }
+            int iAddress;
+            iErrCode = CreateTheme(pvSubmitArray, &iKey, &iAddress);
+            if (iErrCode == ERROR_THEME_ALREADY_EXISTS)
+            {
+                AddMessage("The theme already exists");
+            }
+            else
+            {
+                RETURN_ON_ERROR(iErrCode);
+                AddMessage("The theme has been created with directory address ");
+                AppendMessage(iAddress);
             }
         }
     }
@@ -777,7 +778,7 @@ if (iNumThemes > 0) {
         %><td align="center"><%
 
         sprintf(pszDeleteTheme, "DeleteTheme%i", i);
-        WriteButtonString (m_iButtonKey, "DeleteTheme", "Delete Theme", pszDeleteTheme); %></td><%
+        WriteButtonString(m_iButtonKey, m_iButtonAddress, "DeleteTheme", "Delete Theme", pszDeleteTheme); %></td><%
 
         // Space between themes
         %></tr><tr><td>&nbsp;</td></tr><%

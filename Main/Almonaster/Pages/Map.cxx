@@ -478,7 +478,8 @@ case 1:
     unsigned int iNumShipsRendered = 0, iNumFleetsRendered = 0;
 
     unsigned int iLivePlanetKey, iDeadPlanetKey;
-    iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+    int iLivePlanetAddress, iDeadPlanetAddress;
+    iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
     RETURN_ON_ERROR(iErrCode);
 
     if (!bMapGenerated)
@@ -488,7 +489,7 @@ case 1:
         %><p><table width="90%"><%
 
         iErrCode = WriteUpClosePlanetString (
-            m_iEmpireKey, NO_KEY, NO_KEY, iLivePlanetKey, iDeadPlanetKey, 0, false, 
+            m_iEmpireKey, NO_KEY, NO_KEY, iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress, 0, false, 
             0, 0, 0, 0, 0, 0, 0.0, false, false, false, NULL, &bTrue
             );
         RETURN_ON_ERROR(iErrCode);
@@ -531,7 +532,7 @@ case 1:
 
         iErrCode = WriteUpClosePlanetString (
             m_iEmpireKey, iClickedPlanetKey, 
-            iClickedProxyPlanetKey, iLivePlanetKey, iDeadPlanetKey, 0, 
+            iClickedProxyPlanetKey, iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress, 0, 
             (vOptions.GetInteger() & VISIBLE_BUILDS) != 0, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel,
             iBadFuel, fAgRatio, (vOptions.GetInteger() & INDEPENDENCE) != 0, false, false, pvPlanetData, 
             &bOurPlanet

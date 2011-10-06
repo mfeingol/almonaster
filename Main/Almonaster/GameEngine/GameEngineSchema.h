@@ -1422,6 +1422,7 @@ namespace SystemSuperClassData {
 
 namespace SystemThemes
 {
+    static const char* const Address = "Address";
     static const char* const Name = "Name";
     static const char* const AuthorName = "AuthorName";
     static const char* const Version = "Version";
@@ -1438,6 +1439,7 @@ namespace SystemThemes
 
     enum Columns
     {
+        iAddress,
         iName,
         iAuthorName,
         iVersion,
@@ -1455,6 +1457,7 @@ namespace SystemThemes
 
     static const char* const ColumnNames[] =
     {
+        Address,
         Name,
         AuthorName,
         Version,
@@ -1472,6 +1475,7 @@ namespace SystemThemes
     
     static const VariantType Types[] =
     {
+        V_INT,
         V_STRING,
         V_STRING,
         V_STRING,
@@ -1487,7 +1491,9 @@ namespace SystemThemes
         V_STRING,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
+        0,
         MAX_THEME_NAME_LENGTH,
         MAX_THEME_AUTHOR_NAME_LENGTH,
         MAX_THEME_VERSION_LENGTH,

@@ -724,8 +724,7 @@ const char* PageName[] = {
     NULL
 };
 
-void HtmlRenderer::WriteButtonString(int iButtonKey, const char* pszButtonFileName, 
-                                     const char* pszButtonText, const char* pszButtonName)
+void HtmlRenderer::WriteButtonString(unsigned int iButtonKey, int iButtonAddress, const char* pszButtonFileName, const char* pszButtonText, const char* pszButtonName)
 {
     if (iButtonKey == NULL_THEME) {
         OutputText ("<input type=\"submit\" name=\"");
@@ -753,7 +752,7 @@ void HtmlRenderer::WriteButtonString(int iButtonKey, const char* pszButtonFileNa
     OutputText ("<input type=\"image\" border=\"0\" alt=\"");
     m_pHttpResponse->WriteText (pszButtonText);
     OutputText ("\" src=\"" BASE_RESOURCE_DIR);
-    m_pHttpResponse->WriteText (iButtonKey);
+    m_pHttpResponse->WriteText (iButtonAddress);
     OutputText ("/");
     m_pHttpResponse->WriteText (pszButtonFileName);
     OutputText (DEFAULT_IMAGE_EXTENSION "\" name=\"");
@@ -761,7 +760,7 @@ void HtmlRenderer::WriteButtonString(int iButtonKey, const char* pszButtonFileNa
     OutputText ("\">");
 }
 
-int HtmlRenderer::GetButtonName (const char* pszFormName, int iButtonKey, String* pstrButtonName) {
+void HtmlRenderer::GetButtonName (const char* pszFormName, int iButtonKey, String* pstrButtonName) {
     
     if (iButtonKey == NO_KEY || iButtonKey == NULL_THEME) {
         *pstrButtonName = pszFormName;
@@ -769,8 +768,7 @@ int HtmlRenderer::GetButtonName (const char* pszFormName, int iButtonKey, String
         *pstrButtonName = pszFormName;
         *pstrButtonName += ".x";
     }
-    
-    return pstrButtonName->GetCharPtr() != NULL ? OK : ERROR_OUT_OF_MEMORY;
+    Assert(pstrButtonName->GetCharPtr());
 }
 
 bool HtmlRenderer::IsLegalButtonId (ButtonId bidButton) {
@@ -783,21 +781,21 @@ bool HtmlRenderer::WasButtonPressed (ButtonId bidButton) {
     
     Assert(IsLegalButtonId (bidButton));
     
-    if (m_iButtonKey == NULL_THEME) {   
-        return m_pHttpRequest->GetForm (ButtonName[bidButton]) != NULL;
+    if (m_iButtonKey == NULL_THEME)
+    {   
+        return m_pHttpRequest->GetForm(ButtonName[bidButton]) != NULL;
     }
     
-    return m_pHttpRequest->GetForm (ButtonImageName[bidButton]) != NULL;
+    return m_pHttpRequest->GetForm(ButtonImageName[bidButton]) != NULL;
 }
 
-void HtmlRenderer::WriteButton (ButtonId bidButton) {
-    
-    Assert(IsLegalButtonId (bidButton));
+void HtmlRenderer::WriteButton(ButtonId bidButton)
+{
+    Assert(IsLegalButtonId(bidButton));
     
     switch (m_iButtonKey) {
         
     case NULL_THEME:
-        
         OutputText ("<input type=\"submit\" name=\"");
         m_pHttpResponse->WriteText (ButtonName[bidButton]);
         OutputText ("\" value=\"");
@@ -806,7 +804,6 @@ void HtmlRenderer::WriteButton (ButtonId bidButton) {
         break;
 
     case ALTERNATIVE_PATH:
-        
         OutputText ("<input type=\"image\" border=\"0\" alt=\"");
         m_pHttpResponse->WriteText (ButtonText[bidButton]);
         OutputText ("\" src=\"");
@@ -819,15 +816,14 @@ void HtmlRenderer::WriteButton (ButtonId bidButton) {
         break;
         
     default:
-        
         OutputText ("<input type=\"image\" alt=\"");
-        m_pHttpResponse->WriteText (ButtonText[bidButton]);
+        m_pHttpResponse->WriteText(ButtonText[bidButton]);
         OutputText ("\" src=\"" BASE_RESOURCE_DIR);
-        m_pHttpResponse->WriteText (m_iButtonKey);
+        m_pHttpResponse->WriteText(m_iButtonAddress);
         OutputText ("/");
-        m_pHttpResponse->WriteText (ButtonFileName[bidButton]);
+        m_pHttpResponse->WriteText(ButtonFileName[bidButton]);
         OutputText ("\" name=\"");
-        m_pHttpResponse->WriteText (ButtonName[bidButton]);
+        m_pHttpResponse->WriteText(ButtonName[bidButton]);
         OutputText ("\">");
         break;
     }

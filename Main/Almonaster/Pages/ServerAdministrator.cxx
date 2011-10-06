@@ -766,12 +766,15 @@ if (m_bOwnPost && !m_bRedirection) {
             {
 
             unsigned int iBackground, iLivePlanet, iDeadPlanet, iButtons, iSeparator, iHorz, iVert, iColor;
+            int iButtonAddress, iBackgroundAddress;
 
             iErrCode = GetDefaultUIKeys (
                 &iBackground,
+                &iBackgroundAddress,
                 &iLivePlanet,
                 &iDeadPlanet,
                 &iButtons,
+                &iButtonAddress,
                 &iSeparator,
                 &iHorz,
                 &iVert,
@@ -1166,37 +1169,66 @@ case 0:
     if (pvServerData[SystemData::iDefaultUIBackground].GetInteger() == NULL_THEME) { 
         %><td width="75" height="75" bgcolor="#000000">&nbsp;</td><% 
     } else { 
+
+        int iBackgroundAddress;
+        iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUIBackground], &iBackgroundAddress);
+        RETURN_ON_ERROR(iErrCode);
+
         %><td><input type="image" border="0" width="75" height="75" src="<%
-        WriteBackgroundImageSrc(pvServerData[SystemData::iDefaultUIBackground].GetInteger());
+        WriteBackgroundImageSrc(pvServerData[SystemData::iDefaultUIBackground], iBackgroundAddress);
         %>" name="ChooseUI"></td><% 
     }
-    %><td><% 
+    %><td><%
 
-    GetLivePlanetButtonString (pvServerData[SystemData::iDefaultUILivePlanet], 1, 0, NULL, NULL, &strFilter);
+    int iLivePlanetAddress;
+    iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUILivePlanet], &iLivePlanetAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    GetLivePlanetButtonString(pvServerData[SystemData::iDefaultUILivePlanet], iLivePlanetAddress, 1, 0, NULL, NULL, &strFilter);
     Write (strFilter);
 
     %></td><td><%
 
-    GetDeadPlanetButtonString (pvServerData[SystemData::iDefaultUIDeadPlanet], 2, 0, NULL, NULL, &strFilter);
+    int iDeadPlanetAddress;
+    iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUIDeadPlanet], &iDeadPlanetAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    GetDeadPlanetButtonString(pvServerData[SystemData::iDefaultUIDeadPlanet], iDeadPlanetAddress, 2, 0, NULL, NULL, &strFilter);
     Write (strFilter);
 
     %></td><td><% 
-    WriteButtonString (pvServerData[SystemData::iDefaultUIButtons], "Login", "Login", "ChooseUI");
+
+    int iButtonAddress;
+    iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUIButtons], &iButtonAddress);
+    RETURN_ON_ERROR(iErrCode);
+
+    WriteButtonString(pvServerData[SystemData::iDefaultUIButtons], iButtonAddress, "Login", "Login", "ChooseUI");
     %></td><%
 
     if (pvServerData[SystemData::iDefaultUISeparator].GetInteger() == NULL_THEME) {
         %><td width="150"><%
         Write (DEFAULT_SEPARATOR_STRING);
-    } else { 
+    } else {
+
+        int iSeparatorAddress;
+        iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUISeparator], &iSeparatorAddress);
+        RETURN_ON_ERROR(iErrCode);
+
         %><td><input type="image" name="ChooseUI" border="0" width="150" src="<% 
-        WriteSeparatorSrc (pvServerData[SystemData::iDefaultUISeparator].GetInteger());
+        WriteSeparatorSrc (pvServerData[SystemData::iDefaultUISeparator], iSeparatorAddress);
         %>"><% 
     }
 
+    int iHorzAddress, iVertAddress;
+    iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUIHorz], &iHorzAddress);
+    RETURN_ON_ERROR(iErrCode);
+    iErrCode = GetThemeAddress(pvServerData[SystemData::iDefaultUIVert], &iVertAddress);
+    RETURN_ON_ERROR(iErrCode);
+
     %></td><td><input type="image" name="ChooseUI" width="21" height="3" border="0" src="<%
-    WriteHorzSrc (pvServerData[SystemData::iDefaultUIHorz].GetInteger());
+    WriteHorzSrc(pvServerData[SystemData::iDefaultUIHorz], iHorzAddress);
     %>"></td><td><input type="image" name="ChooseUI" width="3" height="21" border="0" src="<%
-    WriteVertSrc (pvServerData[SystemData::iDefaultUIVert].GetInteger());
+    WriteVertSrc(pvServerData[SystemData::iDefaultUIVert], iVertAddress);
     %>"></td></tr></table></td></tr><%
 
 

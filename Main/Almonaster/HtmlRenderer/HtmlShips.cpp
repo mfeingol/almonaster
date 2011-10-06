@@ -246,6 +246,10 @@ int HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigne
             m_pHttpResponse->WriteText (pszTableColor, stTableColorLen); 
             OutputText ("\">Orders</th></tr>");
         }
+
+        int iSeparatorAddress;
+        iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+        RETURN_ON_ERROR(iErrCode);
         
         // Process ships!
         unsigned int iFleetKey, iLastFleetKey = NO_KEY, iProxyFleetKey = 0, iLastProxyFleetKey = 0;
@@ -342,7 +346,7 @@ int HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigne
                 OutputText ("<p>");
                 if (pShipsInMap == NULL)
                 {
-                    WriteSeparatorString(m_iSeparatorKey);
+                    WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
                 }
             }
         }
@@ -452,7 +456,7 @@ int HtmlRenderer::RenderShips (unsigned int iGameClass, int iGameNumber, unsigne
                     sprintf(pszExpandButton, "FltClpse-%i", piFleetKey[i]);
                     bid = BID_MINUS;
                 }
-                WriteButtonString (m_iButtonKey, ButtonName[bid], ButtonText[bid], pszExpandButton);
+                WriteButtonString (m_iButtonKey, m_iButtonAddress, ButtonName[bid], ButtonText[bid], pszExpandButton);
             }
 
             OutputText ("</td><td><input type=\"text\" name=\"FleetName");

@@ -191,6 +191,7 @@ if (!(m_iGameState & STARTED)) {
 
                 WriteButtonString (
                     m_iButtonKey,
+                    m_iButtonAddress,
                     SHIP_TYPE_STRING[piUndevKey[i]],
                     SHIP_TYPE_STRING[piUndevKey[i]],
                     pszTech

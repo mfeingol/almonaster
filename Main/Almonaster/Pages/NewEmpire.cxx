@@ -63,6 +63,12 @@ if ((pHttpForm = m_pHttpRequest->GetForm ("TextColor")) == NULL) {
     return Redirect (LOGIN);
 }
 
+iErrCode = GetThemeAddress(m_iButtonKey, &m_iButtonAddress);
+if (iErrCode == ERROR_THEME_DOES_NOT_EXIST)
+{
+    iErrCode = OK;
+}
+RETURN_ON_ERROR(iErrCode);
 m_vTextColor = pHttpForm->GetValue();
 
 if ((pHttpForm = m_pHttpRequest->GetForm ("GoodColor")) == NULL) {
@@ -136,6 +142,9 @@ if (!m_bRedirection &&
         iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::UIButtons, &vValue);
         RETURN_ON_ERROR(iErrCode);
         m_iButtonKey = vValue.GetInteger();
+
+        iErrCode = GetThemeAddress(m_iButtonKey, &m_iButtonAddress);
+        RETURN_ON_ERROR(iErrCode);
     }
 
     if (WasButtonPressed (BID_CREATEEMPIRE))
@@ -328,6 +337,13 @@ if (pHttpForm == NULL) {
 }
 m_iBackgroundKey = pHttpForm->GetUIntValue();
 
+iErrCode = GetThemeAddress(m_iBackgroundKey, &m_iBackgroundAddress);
+if (iErrCode == ERROR_THEME_DOES_NOT_EXIST)
+{
+    iErrCode = OK;
+}
+RETURN_ON_ERROR(iErrCode);
+
 pHttpForm = m_pHttpRequest->GetForm ("SeparatorKey");
 if (pHttpForm == NULL) {
     AddMessage ("Missing SeparatorKey form");
@@ -348,7 +364,11 @@ WriteBodyString(-1);
 %><center><h1>Create a New Empire</h1><%
 %><p><%
 
-WriteSeparatorString (m_iSeparatorKey);
+int iSeparatorAddress;
+iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+RETURN_ON_ERROR(iErrCode);
+
+WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
 if (!m_strMessage.IsBlank()) {
     %><p><strong><%

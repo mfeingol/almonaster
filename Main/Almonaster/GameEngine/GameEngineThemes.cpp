@@ -48,8 +48,8 @@ int GameEngine::DoesThemeExist(int iThemeKey, bool* pbExist)
 //
 // Insert a theme and return its new key
 
-int GameEngine::CreateTheme (Variant* pvData, unsigned int* piKey) {
-
+int GameEngine::CreateTheme(Variant* pvData, unsigned int* piKey, int* piAddress)
+{
     int iErrCode;
     unsigned int iKey;
 
@@ -72,6 +72,29 @@ int GameEngine::CreateTheme (Variant* pvData, unsigned int* piKey) {
         RETURN_ON_ERROR(iErrCode);
         return ERROR_THEME_ALREADY_EXISTS;
     }
+
+    // Pick an address
+    Variant* pvAddress = NULL;
+    AutoFreeData free_pvAddress(pvAddress);
+
+    unsigned int iNumThemes;
+    iErrCode = t_pCache->ReadColumn(SYSTEM_THEMES, SystemThemes::Address, NULL, &pvAddress, &iNumThemes);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    int iNewAddress = 1;
+    for (unsigned int i = 0; i < iNumThemes; i ++)
+    {
+        if (iNewAddress <= pvAddress[i].GetInteger())
+        {
+            iNewAddress = pvAddress[i].GetInteger() + 1;
+        }
+    }
+
+    pvData[SystemThemes::iAddress] = *piAddress = iNewAddress;
 
     iErrCode = pTable->InsertRow(SystemThemes::Template, pvData, &iKey);
     RETURN_ON_ERROR(iErrCode);
@@ -144,6 +167,29 @@ int GameEngine::GetThemeName (int iThemeKey, Variant* pvThemeName) {
     return t_pCache->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::Name, pvThemeName);
 }
 
+int GameEngine::GetThemeAddress(int iThemeKey, int* piAddress)
+{
+    int iErrCode = OK;
+
+    switch (iThemeKey)
+    {
+    case NULL_THEME:
+    case ALTERNATIVE_PATH:
+        *piAddress = -1;
+        break;
+    default:
+        Variant vAddress;
+        iErrCode = t_pCache->ReadData(SYSTEM_THEMES, iThemeKey, SystemThemes::Address, &vAddress);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        {
+            return ERROR_THEME_DOES_NOT_EXIST;
+        }
+        RETURN_ON_ERROR(iErrCode);
+        *piAddress = vAddress;
+        break;
+    }
+    return iErrCode;
+}
 
 // Input:
 // iThemeKey -> Theme key

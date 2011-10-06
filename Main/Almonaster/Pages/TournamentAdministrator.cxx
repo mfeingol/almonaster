@@ -1428,7 +1428,12 @@ Redirection:
         WriteButton (BID_INVITEEMPIRE);
 
         %><p><%
-        WriteSeparatorString (m_iSeparatorKey);
+        
+        int iSeparatorAddress;
+        iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+        RETURN_ON_ERROR(iErrCode);
+
+        WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
         iErrCode = WriteProfile(m_iEmpireKey, iInviteKey, false, false, false);
         RETURN_ON_ERROR(iErrCode);
@@ -1456,7 +1461,12 @@ Redirection:
         WriteButton (BID_DELETEEMPIRE);
 
         %><p><%
-        WriteSeparatorString (m_iSeparatorKey);
+
+        int iSeparatorAddress;
+        iErrCode = GetThemeAddress(m_iSeparatorKey, &iSeparatorAddress);
+        RETURN_ON_ERROR(iErrCode);
+
+        WriteSeparatorString(m_iSeparatorKey, iSeparatorAddress);
 
         iErrCode = WriteProfile(m_iEmpireKey, iDeleteEmpire, false, false, false);
         RETURN_ON_ERROR(iErrCode);
@@ -1930,6 +1940,7 @@ case 16:
         Variant vOptions;
 
         unsigned int iLivePlanetKey, iDeadPlanetKey;
+        int iLivePlanetAddress, iDeadPlanetAddress;
         int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
 
         bool bStarted, bFalse;
@@ -1945,7 +1956,7 @@ case 16:
             goto AllGames;
         }
 
-        iErrCode = GetEmpirePlanetIcons (m_iEmpireKey, &iLivePlanetKey, &iDeadPlanetKey);
+        iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
         RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetGoodBadResourceLimits (
@@ -1982,7 +1993,7 @@ case 16:
         %><p><table width="90%"><%
 
         iErrCode = WriteUpClosePlanetString (NO_KEY, iClickedPlanetKey, 
-            0, iLivePlanetKey, iDeadPlanetKey, 0, true, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,
+            0, iLivePlanetKey, iLivePlanetAddress, iDeadPlanetKey, iDeadPlanetAddress, 0, true, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel,
             1.0, (vOptions.GetInteger() & INDEPENDENCE) != 0, true, false, pvPlanetData, &bFalse);
         RETURN_ON_ERROR(iErrCode);
 

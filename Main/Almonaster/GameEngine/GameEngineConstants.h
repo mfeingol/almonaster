@@ -115,7 +115,8 @@ enum SurrenderType {
 
 
 // Graphical themes
-enum Graphics {
+enum Graphics
+{
     INDIVIDUAL_ELEMENTS = -10,
     ALTERNATIVE_PATH    = -20,
     NULL_THEME          = -30,
@@ -1040,3 +1041,4 @@ extern const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES];
 #define ERROR_MISSING_FORM (-1126)
 #define ERROR_COULD_NOT_START_GAME (-1127)
 #define ERROR_STRING_IS_TOO_LONG (-1128)
+#define ERROR_THEME_DOES_NOT_EXIST (-1129)

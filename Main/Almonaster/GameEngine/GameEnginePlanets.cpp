@@ -105,9 +105,8 @@ int GameEngine::GetPlanetKeyFromCoordinates (int iGameClass, int iGameNumber, in
 //
 // Return the keys the empire uses to represent planets
 
-int GameEngine::GetEmpirePlanetIcons (int iEmpireKey, unsigned int* piLivePlanetKey, 
-                                      unsigned int* piLiveDeadPlanetKey) {
-
+int GameEngine::GetEmpirePlanetIcons(int iEmpireKey, unsigned int* piLivePlanetKey,  int* piLivePlanetAddress, unsigned int* piDeadPlanetKey, int* piDeadPlanetAddress)
+{
     Variant vTemp;
     int iErrCode;
 
@@ -122,12 +121,17 @@ int GameEngine::GetEmpirePlanetIcons (int iEmpireKey, unsigned int* piLivePlanet
         
         iErrCode = GetEmpireProperty(iEmpireKey, SystemEmpireData::UIDeadPlanet, &vTemp);
         RETURN_ON_ERROR(iErrCode);
-        *piLiveDeadPlanetKey = vTemp.GetInteger();
+        *piDeadPlanetKey = vTemp.GetInteger();
         
     } else {
         
-        *piLivePlanetKey = *piLiveDeadPlanetKey = vTemp.GetInteger();
+        *piLivePlanetKey = *piDeadPlanetKey = vTemp.GetInteger();
     }
+
+    iErrCode = GetThemeAddress(*piLivePlanetKey, piLivePlanetAddress);
+    RETURN_ON_ERROR(iErrCode);
+    iErrCode = GetThemeAddress(*piDeadPlanetKey, piDeadPlanetAddress);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
