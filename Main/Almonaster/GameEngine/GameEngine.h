@@ -945,6 +945,7 @@ public:
         const GameOptions* pgoGameOptions, int* piNumUpdates, bool bSendMessages, bool bCreatingGame, bool bCheckSecurity);
 
     int SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszIPAddress);
+    int IsGamePasswordCorrect(int iGameClass, int iGameNumber, const char* pszPassword);
 
     int DoesGameExist (int iGameClass, int iGameNumber, bool* pbExists);
     int GetNumUpdates (int iGameClass, int iGameNumber, int* piNumUpdates);
@@ -1012,6 +1013,8 @@ public:
     
     int SetEmpirePassword(unsigned int iEmpireKey, const char* pszPassword);
     int ChangeEmpirePassword(unsigned int iEmpireKey, const char* pszPassword);
+
+    int ComputePasswordHash(const char* pszPassword, Variant* pvPasswordHash);
 
     int SetEmpireMaxNumSavedSystemMessages (int iEmpireKey, unsigned int iMaxNumSavedMessages);
 
@@ -1111,8 +1114,6 @@ public:
 
     int GetEmpireAlmonasterScore(unsigned int iEmpireKey, float* pfAlmonasterScore);
     int SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonasterScore);
-
-    int GetEmpirePassword(unsigned int iEmpireKey, Variant* pvPassword);
 
     int GetEmpireDataColumn (int iEmpireKey, const char* pszColumn, Variant* pvData);
 

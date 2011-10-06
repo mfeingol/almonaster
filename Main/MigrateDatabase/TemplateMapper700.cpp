@@ -44,6 +44,7 @@ TemplateMapper700::TemplateMapper700()
 
     m_templates["SystemEmpireData"] = CreateTemplateMetadata(SystemEmpireData::Template);
     m_templates["SystemEmpireData"]->DeletedColumns->Add(gcnew FileDatabaseElement("Associations", nullptr));
+    m_templates["SystemEmpireData"]->DeletedColumns->Add(gcnew FileDatabaseElement("Password", nullptr));
     m_templates["SystemEmpireData"]->RenamedColumns->Add(Tuple::Create("AlienKey", "AlienAddress"));
 
     m_templates["SystemEmpireMessages"] = CreateTemplateMetadata(SystemEmpireMessages::Template);
@@ -80,6 +81,7 @@ TemplateMapper700::TemplateMapper700()
 
     m_templates["GameData"] = CreateTemplateMetadata(GameData::Template);
     m_templates["GameData"]->DeletedColumns->Add(gcnew FileDatabaseElement("LastUpdateCheck", nullptr));
+    m_templates["GameData"]->DeletedColumns->Add(gcnew FileDatabaseElement("Password", nullptr));
 
     m_templates["GameSecurity"] = CreateTemplateMetadata(GameSecurity::Template);
     m_templates["GameEmpires"] = CreateTemplateMetadata(GameEmpires::Template);

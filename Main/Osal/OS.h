@@ -55,7 +55,6 @@ typedef unsigned long DWORD;
     do { if (!(x)) { fprintf(stderr, "Assertion %s failed at %s:%d: in function %s\n", #x, __FILE__, __LINE__, __FUNCTION__); } } while (0)
 
 #define INVALID_SOCKET (~0)
-#define ERROR_WRONG_PASSWORD 1323
 typedef u_int SOCKET;
 
 // ignores radix. assumes 10

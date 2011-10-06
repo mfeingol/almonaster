@@ -19,7 +19,7 @@
 
 int iErrCode = OK;
 unsigned int iEmpireKey = NO_KEY, iParentEmpireKey = NO_KEY;
-bool bVerified = false, bRepost = false;
+bool bRepost = false;
 
 // Make sure this is allowed
 
@@ -29,7 +29,7 @@ RETURN_ON_ERROR(iErrCode);
 
 if (!(iOptions & NEW_EMPIRES_ENABLED))
 {
-    String strMessage = "New empires cannot be created on this server";
+    String strMessage = "New empires cannot be created on this server at the moment";
     Variant vReason;
 
     iErrCode = GetSystemProperty(SystemData::NewEmpiresDisabledReason, &vReason);
@@ -51,17 +51,11 @@ if (!(iOptions & NEW_EMPIRES_ENABLED))
 IHttpForm* pHttpForm;
 
 // Get keys
-if ((pHttpForm = m_pHttpRequest->GetForm ("ButtonKey")) == NULL) {
-    AddMessage ("Missing ButtonKey form");
-    return Redirect (LOGIN);
+if ((pHttpForm = m_pHttpRequest->GetForm ("ButtonKey")) == NULL)
+{
+    return ERROR_MISSING_FORM;
 }
-
 m_iButtonKey = pHttpForm->GetUIntValue();
-
-if ((pHttpForm = m_pHttpRequest->GetForm ("TextColor")) == NULL) {
-    AddMessage ("Missing TextColor form");
-    return Redirect (LOGIN);
-}
 
 iErrCode = GetThemeAddress(m_iButtonKey, &m_iButtonAddress);
 if (iErrCode == ERROR_THEME_DOES_NOT_EXIST)
@@ -69,73 +63,72 @@ if (iErrCode == ERROR_THEME_DOES_NOT_EXIST)
     iErrCode = OK;
 }
 RETURN_ON_ERROR(iErrCode);
+
+if ((pHttpForm = m_pHttpRequest->GetForm ("TextColor")) == NULL)
+{
+    return ERROR_MISSING_FORM;
+}
 m_vTextColor = pHttpForm->GetValue();
+Assert(m_vTextColor.GetCharPtr());
 
-if ((pHttpForm = m_pHttpRequest->GetForm ("GoodColor")) == NULL) {
-    AddMessage ("Missing GoodColor form");
-    return Redirect (LOGIN);
+if ((pHttpForm = m_pHttpRequest->GetForm ("GoodColor")) == NULL)
+{
+    return ERROR_MISSING_FORM;
 }
-
 m_vGoodColor = pHttpForm->GetValue();
+Assert(m_vGoodColor.GetCharPtr());
 
-if ((pHttpForm = m_pHttpRequest->GetForm ("BadColor")) == NULL) {
-    AddMessage ("Missing BadColor form");
+if ((pHttpForm = m_pHttpRequest->GetForm ("BadColor")) == NULL)
+{
+    return ERROR_MISSING_FORM;
+}
+m_vBadColor = pHttpForm->GetValue();
+Assert(m_vBadColor.GetCharPtr());
+
+// Get submitted password
+if ((pHttpForm = m_pHttpRequest->GetForm("Password")) == NULL)
+{
+    return ERROR_MISSING_FORM;
+}
+const char* pszSubmittedPassword = pHttpForm->GetValue();
+if (!VerifyPassword(pszSubmittedPassword))
+{
+    AddMessage ("The password is invalid");
     return Redirect (LOGIN);
 }
-
-m_vBadColor = pHttpForm->GetValue();
 
 // Handle submissions from NewEmpire page
-if (!m_bRedirection &&
-    (pHttpForm = m_pHttpRequest->GetForm ("PageId")) != NULL &&
-    pHttpForm->GetIntValue() == m_pgPageId)
+if (!m_bRedirection && (pHttpForm = m_pHttpRequest->GetForm ("PageId")) != NULL && pHttpForm->GetIntValue() == m_pgPageId)
 {
-    const char* pszTemp;
+    bRepost = true;
     char pszStandardizedName [MAX_EMPIRE_NAME_LENGTH + 1];
 
-    bRepost = true;
-
     // Check for cancel
-    if (WasButtonPressed (BID_CANCEL)) {
+    if (WasButtonPressed (BID_CANCEL))
+    {
         return Redirect (LOGIN);
     }
 
     // Get empire name
-    if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireName")) == NULL) {
-        AddMessage ("Missing EmpireName form");
-        return Redirect (LOGIN);
+    if ((pHttpForm = m_pHttpRequest->GetForm("EmpireName")) == NULL)
+    {
+        return ERROR_MISSING_FORM;
     }
-    pszTemp = pHttpForm->GetValue();
-
-    if (String::IsBlank(pszTemp) || !VerifyEmpireName(pszTemp) || !StandardizeEmpireName(pszTemp, pszStandardizedName))
+    const char* pszName = pHttpForm->GetValue();
+    if (String::IsBlank(pszName) || !VerifyEmpireName(pszName) || !StandardizeEmpireName(pszName, pszStandardizedName))
     {
         AddMessage ("The empire name is invalid");
         return Redirect (LOGIN);
     }
-
-    m_vEmpireName = pszTemp;
+    m_vEmpireName = pszStandardizedName;
     Assert(m_vEmpireName.GetCharPtr());
 
-    if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireProxy")) == NULL) {
-        AddMessage ("Missing EmpireProxy form");
-        return Redirect (LOGIN);
+    if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireProxy")) == NULL)
+    {
+        return ERROR_MISSING_FORM;
     }
     iEmpireKey = pHttpForm->GetUIntValue();
 
-    // Get password
-    if ((pHttpForm = m_pHttpRequest->GetForm ("Password")) == NULL) {
-        AddMessage ("Missing Password form");
-        return Redirect (LOGIN);
-    }
-    if (!VerifyPassword(pHttpForm->GetValue()))
-    {
-        AddMessage ("The password is invalid");
-        return Redirect (LOGIN);
-    }
-
-    m_vPassword = pHttpForm->GetValue();
-    Assert(m_vPassword.GetCharPtr());
-    
     if (m_iButtonKey == INDIVIDUAL_ELEMENTS)
     {
         Variant vValue;
@@ -147,34 +140,32 @@ if (!m_bRedirection &&
         RETURN_ON_ERROR(iErrCode);
     }
 
-    if (WasButtonPressed (BID_CREATEEMPIRE))
+    if (WasButtonPressed(BID_CREATEEMPIRE))
     {
         if ((pHttpForm = m_pHttpRequest->GetForm ("PasswordCopy")) == NULL)
         {
-            AddMessage ("Missing PasswordCopy form");
-            return Redirect (LOGIN);
+            return ERROR_MISSING_FORM;
         }
 
-        if (String::StrCmp (m_vPassword.GetCharPtr(), pHttpForm->GetValue()) != 0)
+        if (String::StrCmp(pszSubmittedPassword, pHttpForm->GetValue()) != 0)
         {
             AddMessage ("Your password wasn't verified correctly");
         }
         else
         {
-            bVerified = false;
+            bool bCreateEmpire = false;
 
             // Get parent empire's name and password
             if ((pHttpForm = m_pHttpRequest->GetForm ("ParentEmpireName")) == NULL)
             {
-                AddMessage ("Missing ParentEmpireName form");
-                return Redirect (LOGIN);
+                return ERROR_MISSING_FORM;
             }
 
             // Make sure the name is valid (if it was submitted)
             const char* pszParentName = pHttpForm->GetValue();
             if (!pszParentName)
             {
-                bVerified = true;
+                bCreateEmpire = true;
             }
             else
             {
@@ -187,8 +178,7 @@ if (!m_bRedirection &&
                 {
                     if ((pHttpForm = m_pHttpRequest->GetForm ("ParentPassword")) == NULL)
                     {
-                        AddMessage ("Missing ParentPassword form");
-                        return Redirect (LOGIN);
+                        return ERROR_MISSING_FORM;
                     }
 
                     if (!VerifyPassword(pHttpForm->GetValue()))
@@ -216,37 +206,21 @@ if (!m_bRedirection &&
                             else
                             {
                                 RETURN_ON_ERROR(iErrCode);
-                                bVerified = true;
+                                bCreateEmpire = true;
                             }
                         }
                     }
                 }
             }
 
-            const char* pszEmpireName, * pszPassword;
-
-            if (m_strMessage.IsBlank())
+            if (bCreateEmpire)
             {
-                // Empire name
-                if ((pHttpForm = m_pHttpRequest->GetForm ("EmpireName")) == NULL) {
-                    AddMessage ("Missing EmpireName form");
-                    return Redirect (LOGIN);
-                }
-                pszEmpireName = pHttpForm->GetValue();
-
-                // Empire password
-                if ((pHttpForm = m_pHttpRequest->GetForm ("Password")) == NULL) {
-                    AddMessage ("Missing Password form");
-                    return Redirect (LOGIN);
-                }
-                pszPassword = pHttpForm->GetValue();
-
-                iErrCode = CreateEmpire(pszEmpireName, pszPassword, NOVICE, iParentEmpireKey, false, &iEmpireKey);
+                iErrCode = CreateEmpire(m_vEmpireName, pszSubmittedPassword, NOVICE, iParentEmpireKey, false, &iEmpireKey);
                 switch (iErrCode)
                 {
                 case OK:
-                    ReportEmpireCreation(pszEmpireName);
-                    SendWelcomeMessage(pszEmpireName);
+                    ReportEmpireCreation(m_vEmpireName);
+                    SendWelcomeMessage(m_vEmpireName);
 
                     m_iEmpireKey = iEmpireKey;
                     m_iReserved = 0;
@@ -378,10 +352,13 @@ if (!m_strMessage.IsBlank()) {
 
 OpenForm();
 
-// POST password and graphics information to NewEmpire page in case we need to return 
+// Re-POST password and graphics information to NewEmpire page in case we need to return 
 %><input type="hidden" name="EmpireProxy" value="<% Write (iEmpireKey); %>"><%
 %><input type="hidden" name="EmpireName" value="<% Write (m_vEmpireName); %>"><%
-%><input type="hidden" name="Password" value="<% Write (m_vPassword); %>"><%
+if (pszSubmittedPassword && strlen(pszSubmittedPassword) <= MAX_EMPIRE_PASSWORD_LENGTH)
+{
+    %><input type="hidden" name="Password" value="<% Write(pszSubmittedPassword); %>"><%
+}
 %><input type="hidden" name="ButtonKey" value="<% Write (m_iButtonKey); %>"><%
 %><input type="hidden" name="BackgroundKey" value="<% Write (m_iBackgroundKey); %>"><%
 %><input type="hidden" name="SeparatorKey" value="<% Write (m_iSeparatorKey); %>"><%
@@ -412,24 +389,17 @@ OpenForm();
 
 %><tr><td><strong>Password</strong>:</td><td><strong><% 
 
-size_t i, stLength = m_vPassword.GetLength();
+size_t i, stLength = strlen(pszSubmittedPassword);
 for (i = 0; i < stLength; i ++) {
     %>*<%
 }
 %></strong></td></tr><%
 
 %><tr><td><strong>Verify your password</strong>:</td><%
-%><td><input type="password" name="PasswordCopy" size="20"<%
+%><td><input type="password" name="PasswordCopy" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>"></td></tr></table><p><% 
 
-if (bRepost && bVerified && (pHttpForm = m_pHttpRequest->GetForm ("PasswordCopy")) != NULL && 
-    pHttpForm->GetValue() != NULL) {
-    %> value="<% Write (pHttpForm->GetValue()); %>"<%
-}
-
-%> maxlength="<% Write (MAX_PASSWORD_LENGTH); %>"></td></tr></table><p><% 
-
-WriteButton (BID_CANCEL);
-WriteButton (BID_CREATEEMPIRE);
+WriteButton(BID_CANCEL);
+WriteButton(BID_CREATEEMPIRE);
 
 %><p><table width="75%"><%
 %><tr><%
@@ -460,8 +430,7 @@ if (bRepost &&
 %></tr><%
 
 %><tr><td><strong>Parent empire's password:</strong></td><%
-%><td><input type="password" name="ParentPassword" size="20" maxlength="<%
-    Write (MAX_PASSWORD_LENGTH); %>"></td><%
+%><td><input type="password" name="ParentPassword" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>"></td><%
 
 %></tr></table><%
 

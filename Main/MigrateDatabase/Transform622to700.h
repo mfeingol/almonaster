@@ -37,6 +37,8 @@ private:
 
     List<Tuple<int, int>^>^ m_associations;
 
+    System::String^ m_serverFixedHashSalt;
+
     void TransformTables(System::String^ currentTemplate, System::String^ destTableOverride, System::String^ idColumn,
                          Dictionary<__int64, __int64>^ idMap,
                          Dictionary<System::String^, __int64>^ nameToIdMapper,
@@ -67,6 +69,7 @@ private:
     bool TransformSystemTournamentTeams(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
     bool TransformSystemTournamentEmpires(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
     bool TransformSystemEmpireTournaments(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
+    bool TransformGameData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
     bool TransformGameSecurity(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
     bool TransformGameEmpires(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
     bool TransformGameDeadEmpires(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted);
@@ -98,6 +101,8 @@ private:
     __int64 GetTournament622IdByLatestGame(System::String^ name, int number);
     __int64 GetEmpire622IdFromName(System::String^ name);
     System::String^ GetEmpireNameFrom622Id(__int64 id);
+
+    System::String^ ComputePasswordHash(System::String^ password);
 
     void RemapGameMapPlanetKeys();
     void RemapGameMapPlanetKey(int gameClassKey, int gameNumber, int planetKey, System::String^ column);

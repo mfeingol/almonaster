@@ -73,15 +73,9 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_bRedirectTest = true;
    
     m_vEmpireName = (const char*) NULL;
-    m_vPassword = (const char*) NULL;
     m_vPreviousIPAddress = (const char*) NULL;
 
-    m_i64SecretKey = 0;
-
-    m_tOldSalt = NULL_TIME;
-    Time::GetTime (&m_tNewSalt);
-    
-    *m_pszGameClassName = '\0';
+    m_pszGameClassName[0] = '\0';
     
     m_iEmpireKey = NO_KEY;
     m_iGameClass = NO_KEY;
@@ -258,13 +252,13 @@ bool HtmlRenderer::VerifyPassword (const char* pszPassword, bool bPrintErrors) {
         return false;
     }
     
-    size_t i, stLength = strlen (pszPassword);
-    if (stLength > MAX_PASSWORD_LENGTH)
+    size_t i, stLength = strlen(pszPassword);
+    if (stLength > MAX_EMPIRE_PASSWORD_LENGTH)
     {
         if (bPrintErrors)
         {
             char pszText [256];
-            sprintf(pszText, "Passwords cannot be longer than %i characters", MAX_PASSWORD_LENGTH);
+            sprintf(pszText, "Passwords cannot be longer than %i characters", MAX_EMPIRE_PASSWORD_LENGTH);
             AddMessage (pszText);
         }
         return false;
@@ -4435,7 +4429,7 @@ int HtmlRenderer::WritePersonalTournaments()
 void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName, 
                                                    int iGameNumber, Seconds iSeconds, Seconds iSecondsUntil, 
                                                    int iNumUpdates, bool bOpen, bool bPaused, bool bAdminPaused, 
-                                                   bool bStarted, const char* pszGamePassword, 
+                                                   bool bStarted, const char* pszGamePasswordHash, 
                                                    Variant** ppvEmpiresInGame, int iNumActiveEmpires, 
                                                    const UTCTime& tCreationTime, bool bAdmin) {
     
@@ -4505,14 +4499,16 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
     
     OutputText ("</td>");
     
-    if (bAdmin) {
-
+    if (bAdmin)
+    {
         OutputText ("<td align=\"center\">");
-        if (!String::IsBlank (pszGamePassword)) {
-            
-            String strFilter;
-            HTMLFilter (pszGamePassword, &strFilter, 0, false);
-            m_pHttpResponse->WriteText (strFilter, strFilter.GetLength());
+        if (!String::IsBlank(pszGamePasswordHash))
+        {
+            OutputText("Protected");
+        }
+        else
+        {
+            OutputText("N/A");
         }
         OutputText ("</td>");
     }
@@ -6237,7 +6233,7 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
     m_pHttpResponse->WriteText (pszTableColor, stLen);
     OutputText ("\"><strong>Administer Game</strong></th></tr>");
 
-    Variant vGamePassword, vName;
+    Variant vGamePasswordHash, vName;
     unsigned int iNumActiveEmpires;
     int iNumUpdates;
     bool bPaused, bOpen, bStarted;
@@ -6308,7 +6304,7 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
         iErrCode = GetGameClassUpdatePeriod (piGameClass[i], &iSeconds);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = GetGameProperty(piGameClass[i], piGameNumber[i], GameData::Password, &vGamePassword);
+        iErrCode = GetGameProperty(piGameClass[i], piGameNumber[i], GameData::PasswordHash, &vGamePasswordHash);
         RETURN_ON_ERROR(iErrCode);
 
         iErrCode = GetGameCreationTime (piGameClass[i], piGameNumber[i], &tCreationTime);
@@ -6338,7 +6334,7 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
 
         WriteGameAdministratorGameData (pszGameClassName, piGameNumber[i], iSeconds, iSecondsUntil, 
             iNumUpdates, bOpen, bPaused, bAdminPaused, bStarted, 
-            vGamePassword.GetCharPtr(), ppvEmpiresInGame, iNumActiveEmpires, tCreationTime, bAdmin);
+            vGamePasswordHash.GetCharPtr(), ppvEmpiresInGame, iNumActiveEmpires, tCreationTime, bAdmin);
 
         OutputText ("<td align=\"center\">"); 
 
@@ -6363,7 +6359,6 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
 int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdmin)
 {
     bool bStarted, bExists, bPaused, bOpen, bAdminPaused;
-    Variant vGamePassword;
     int iErrCode, iNumUpdates, iGameState;
     unsigned int i, iNumActiveEmpires;
     Seconds iSeconds, iSecondsUntil, iSecondsSince;
@@ -6396,10 +6391,7 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
 
     iErrCode = GetGameClassUpdatePeriod (iGameClass, &iSeconds);
     RETURN_ON_ERROR(iErrCode);
-    
-    iErrCode = GetGameProperty(iGameClass, iGameNumber, GameData::Password, &vGamePassword);
-    RETURN_ON_ERROR(iErrCode);
-    
+       
     Variant** ppvEmpiresInGame = NULL;
     AutoFreeData free_ppvEmpiresInGame(ppvEmpiresInGame);
 
@@ -6462,33 +6454,34 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
     }
 
     // Change game password
-    if (bAdmin) {
+    if (bAdmin)
+    {
+        Variant vGamePasswordHash;
+        iErrCode = GetGameProperty(iGameClass, iGameNumber, GameData::PasswordHash, &vGamePasswordHash);
+        RETURN_ON_ERROR(iErrCode);
 
-        const char* pszPassword = vGamePassword.GetCharPtr();
-        if (pszPassword != NULL && *pszPassword != '\0') {
-
+        if (!String::IsBlank(vGamePasswordHash))
+        {
             OutputText (
                 "<tr><td>Change the game's password:</td>"\
                 "<td><input type=\"text\" name=\"NewPassword\" size=\""
                 );
-            m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
+            m_pHttpResponse->WriteText (MAX_GAME_PASSWORD_LENGTH);
             OutputText ("\" maxlength=\"");
-            m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
-            OutputText ("\" value=\"");
-            m_pHttpResponse->WriteText (pszPassword);
+            m_pHttpResponse->WriteText (MAX_GAME_PASSWORD_LENGTH);
             OutputText ("\"> ");
             WriteButton (BID_CHANGEPASSWORD);
             OutputText ("</td></tr>");
-
-        } else {
-
+        }
+        else
+        {
             OutputText (
                 "<tr><td>Password protect the game:</td>"\
                 "<td><input type=\"text\" name=\"NewPassword\" size=\""
                 );
-            m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
+            m_pHttpResponse->WriteText (MAX_GAME_PASSWORD_LENGTH);
             OutputText ("\" maxlength=\"");
-            m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
+            m_pHttpResponse->WriteText (MAX_GAME_PASSWORD_LENGTH);
             OutputText ("\"> ");
             WriteButton (BID_CHANGEPASSWORD);
             OutputText ("</td></tr>");

@@ -364,7 +364,6 @@ int HtmlRenderer::RenderSystemMessage(int iMessageKey, const Variant* pvMessage,
                 pszFontColor = m_vPrivateMessageColor.GetCharPtr();
                 OutputText ("sent");
             }
-
             OutputText (" a message");
 
             pszMessage = pvMessage[SystemEmpireMessages::iText].GetCharPtr();

@@ -33,6 +33,7 @@ namespace SystemData
     static const char* const DefaultAlienKey = "DefaultAlienKey";
     static const char* const DefaultAlienAddress = "DefaultAlienAddress";
     static const char* const ServerName = "ServerName";
+    static const char* const FixedHashSalt = "FixedHashSalt";
     static const char* const DefaultMaxNumSystemMessages = "DefaultMaxNumSystemMessages";
     static const char* const DefaultMaxNumGameMessages = "DefaultMaxNumGameMessages";
     static const char* const DefaultUIButtons = "DefaultUIButtons";
@@ -141,6 +142,7 @@ namespace SystemData
         iDefaultAlienKey,
         iDefaultAlienAddress,
         iServerName,
+        iFixedHashSalt,
         iDefaultMaxNumSystemMessages,
         iDefaultMaxNumGameMessages,
         iDefaultUIButtons,
@@ -250,6 +252,7 @@ namespace SystemData
         DefaultAlienKey,
         DefaultAlienAddress,
         ServerName,
+        FixedHashSalt,
         DefaultMaxNumSystemMessages,
         DefaultMaxNumGameMessages,
         DefaultUIButtons,
@@ -357,6 +360,7 @@ namespace SystemData
     static const VariantType Types[] = {
         V_INT,
         V_INT,
+        V_STRING,
         V_STRING,
         V_INT,
         V_INT,
@@ -466,6 +470,7 @@ namespace SystemData
         0,
         0,
         MAX_SERVER_NAME_LENGTH,
+        VARIABLE_LENGTH_STRING,
         0,
         0,
         0,
@@ -599,7 +604,7 @@ namespace SystemData
 namespace SystemEmpireData
 {
     static const char* const Name = "Name";
-    static const char* const Password = "Password";
+    static const char* const PasswordHash = "PasswordHash";
     static const char* const Privilege = "Privilege";
     static const char* const RealName = "RealName";
     static const char* const Email = "Email";
@@ -677,7 +682,7 @@ namespace SystemEmpireData
     enum Columns
     {
         iName,
-        iPassword,
+        iPasswordHash,
         iPrivilege,
         iRealName,
         iEmail,
@@ -755,7 +760,7 @@ namespace SystemEmpireData
 
     static const char* const ColumnNames[] = {
         Name,
-        Password,
+        PasswordHash,
         Privilege,
         RealName,
         Email,
@@ -911,7 +916,7 @@ namespace SystemEmpireData
 
     static const unsigned int Sizes[] = {
         MAX_EMPIRE_NAME_LENGTH,
-        MAX_PASSWORD_LENGTH,
+        VARIABLE_LENGTH_STRING,
         0,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -2472,7 +2477,7 @@ namespace GameData
     static const char* const State = "State";
     static const char* const MinX = "MinX";
     static const char* const NumEmpiresUpdated = "NumEmpiresUpdated";
-    static const char* const Password = "Password";
+    static const char* const PasswordHash = "PasswordHash";
     static const char* const MaxX = "MaxX";
     static const char* const MinY = "MinY";
     static const char* const NumRequestingPause = "NumRequestingPause";
@@ -2521,7 +2526,7 @@ namespace GameData
         iState,
         iMinX,
         iNumEmpiresUpdated,
-        iPassword,
+        iPasswordHash,
         iMaxX,
         iMinY,
         iNumRequestingPause,
@@ -2571,7 +2576,7 @@ namespace GameData
         State,
         MinX,
         NumEmpiresUpdated,
-        Password,
+        PasswordHash,
         MaxX,
         MinY,
         NumRequestingPause,
@@ -2671,7 +2676,7 @@ namespace GameData
         0,
         0,
         0,
-        MAX_PASSWORD_LENGTH,
+        VARIABLE_LENGTH_STRING,
         0,
         0,
         0,

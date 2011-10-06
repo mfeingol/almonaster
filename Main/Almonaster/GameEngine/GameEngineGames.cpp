@@ -571,15 +571,15 @@ int GameEngine::HasGameStarted (int iGameClass, int iGameNumber, bool* pbStarted
 //
 // Return if a game is password protected
 
-int GameEngine::IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* pbProtected) {
-
-    Variant vPassword;
+int GameEngine::IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* pbProtected)
+{
     GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
 
-    int iErrCode = t_pCache->ReadData(pszGameData, GameData::Password, &vPassword);
+    Variant vPasswordHash;
+    int iErrCode = t_pCache->ReadData(pszGameData, GameData::PasswordHash, &vPasswordHash);
     RETURN_ON_ERROR(iErrCode);
 
-    *pbProtected = !String::IsBlank (vPassword.GetCharPtr());
+    *pbProtected = !String::IsBlank(vPasswordHash.GetCharPtr());
     
     return iErrCode;
 }
@@ -592,10 +592,14 @@ int GameEngine::IsGamePasswordProtected (int iGameClass, int iGameNumber, bool* 
 //
 // Change a game's password
 
-int GameEngine::SetGamePassword(int iGameClass, int iGameNumber, const char* pszNewPassword) {
+int GameEngine::SetGamePassword(int iGameClass, int iGameNumber, const char* pszNewPassword)
+{
+    Variant vNewPasswordHash;
+    int iErrCode = ComputePasswordHash(pszNewPassword, &vNewPasswordHash);
+    RETURN_ON_ERROR(iErrCode);
 
     GET_GAME_DATA (pszGameData, iGameClass, iGameNumber);
-    return t_pCache->WriteData(pszGameData, GameData::Password, pszNewPassword);
+    return t_pCache->WriteData(pszGameData, GameData::PasswordHash, vNewPasswordHash);
 }
 
 // Input:
@@ -812,7 +816,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         STILL_OPEN,     // State
         MAX_COORDINATE,     // MinX
         0,      // 0 empires updated
-        goGameOptions.pszPassword,  // Password
+        (const char*)NULL,  // Password
         MIN_COORDINATE,     // MaxX
         MAX_COORDINATE,     // MinY
         0,                  // Zero paused
@@ -854,7 +858,9 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
 
     if (goGameOptions.pszPassword)
     {
-        Assert(pvGameData[GameData::iPassword].GetCharPtr());
+        iErrCode = ComputePasswordHash(goGameOptions.pszPassword, pvGameData + GameData::iPasswordHash);
+        RETURN_ON_ERROR(iErrCode);
+        Assert(pvGameData[GameData::iPasswordHash].GetCharPtr());
     }
     Assert(pvGameData[GameData::iCreatorName].GetCharPtr());
     if (goGameOptions.pszEnterGameMessage)
@@ -1170,7 +1176,7 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
 // iGameClass -> Game class
 // iGameNumber -> Game number
 // iEmpireKey -> Empire key
-// pszPassword -> Password
+// pszPassword -> Password provided by user
 //
 // Output:
 // *piNumUpdates -> Number of updates transpired
@@ -1198,7 +1204,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     int iErrCode, iNumTechs, iDefaultOptions, iGameState, iSystemOptions, iEmpireOptions;
     unsigned int i, iKey = NO_KEY;
 
-    Variant vGameClassOptions, vHalted, vPassword, vPrivilege, vMinScore, vMaxScore, vEmpireScore, vTemp, 
+    Variant vGameClassOptions, vHalted, vPrivilege, vMinScore, vMaxScore, vEmpireScore, vTemp, 
         vMaxNumEmpires, vStillOpen, vNumUpdates, vMaxTechDev, vDiplomacyLevel,
         vGameOptions, vSecretKey, * pvEmpireKey = NULL;
     AutoFreeData free(pvEmpireKey);
@@ -1301,18 +1307,17 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
     }
 
     // Test for correct password
-    iErrCode = t_pCache->ReadData(strGameData, GameData::Password, &vPassword);
-    RETURN_ON_ERROR(iErrCode);
-
     if (pszPassword == NULL && pgoGameOptions != NULL)
     {
         pszPassword = pgoGameOptions->pszPassword;
     }
 
-    if (!String::IsBlank(vPassword.GetCharPtr()) && String::StrCmp(vPassword.GetCharPtr(), pszPassword) != 0)
+    iErrCode = IsGamePasswordCorrect(iGameClass, iGameNumber, pszPassword);
+    if (iErrCode == ERROR_PASSWORD)
     {
-        return ERROR_WRONG_PASSWORD;
+        return iErrCode;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     // Read all empires in game
     unsigned int iCurrentNumEmpires;
@@ -2146,6 +2151,32 @@ int GameEngine::SetEnterGameIPAddress (int iGameClass, int iGameNumber, int iEmp
     return t_pCache->WriteData(strGameEmpireData, GameEmpireData::EnterGameIPAddress, pszIPAddress);
 }
 
+int GameEngine::IsGamePasswordCorrect(int iGameClass, int iGameNumber, const char* pszPassword)
+{
+    int iErrCode;
+    GET_GAME_DATA(strGameData, iGameClass, iGameNumber);
+
+    Variant vActualPasswordHash;
+    iErrCode = t_pCache->ReadData(strGameData, GameData::PasswordHash, &vActualPasswordHash);
+    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+    {
+        return ERROR_GAME_DOES_NOT_EXIST;
+    }
+    RETURN_ON_ERROR(iErrCode);
+
+    Variant vTestPasswordHash = (const char*)NULL;
+    if (pszPassword)
+    {
+        iErrCode = ComputePasswordHash(pszPassword, &vTestPasswordHash);
+        RETURN_ON_ERROR(iErrCode);
+    }
+
+    if (String::StrCmp(vActualPasswordHash, vTestPasswordHash) != 0)
+    {
+        return ERROR_PASSWORD;
+    }
+    return iErrCode;
+}
 
 // Input:
 // iGameClass -> Gameclass

@@ -19,6 +19,8 @@
 #include "GameEngine.h"
 #include "Global.h"
 
+#include "Osal/Crypto.h"
+
 int GameEngine::Setup()
 {
     int iErrCode;
@@ -964,11 +966,22 @@ int GameEngine::SetupDefaultSystemTables()
     iErrCode = SetupDefaultAlienIcons(&iDefaultAlienKey, &iDefaultAlienAddress, &iDefaultSystemMessageAlienKey, &iDefaultSystemMessageAlienAddress); 
     RETURN_ON_ERROR(iErrCode);
 
+    // Generate fixed hash salt
+    char pBuffer[32];
+    iErrCode = Crypto::GetRandomData(pBuffer, sizeof(pBuffer));
+    RETURN_ON_ERROR(iErrCode);
+
+    size_t cch = Algorithm::GetEncodeBase64Size(sizeof(pBuffer));
+    char* pszBase64 = (char*)StackAlloc(cch);
+    iErrCode = Algorithm::EncodeBase64(pBuffer, sizeof(pBuffer), pszBase64, cch);
+    RETURN_ON_ERROR(iErrCode);
+
     // Insert data into SYSTEM_DATA
     Variant pvSystemData [SystemData::NumColumns] = {
         iDefaultAlienKey,     // DefaultAlienKey
         iDefaultAlienAddress, // DefaultAlienAddress
         "Cortegana",          // ServerName
+        pszBase64,            // FixedHashSalt
         10,                   // DefaultMaxNumSystemMessages
         10,                   // DefaultMaxNumGameMessages
         iDefaultThemeKey, // DefaultUIButtons
@@ -976,8 +989,8 @@ int GameEngine::SetupDefaultSystemTables()
         iDefaultThemeKey, // DefaultUILivePlanet
         iDefaultThemeKey, // DefaultUIDeadPlanet
         iDefaultThemeKey, // DefaultUISeparator
-        NOVICE,         // DefaultPrivilegeLevel
-       (float) 100.0,   // AdeptScore
+        NOVICE,           // DefaultPrivilegeLevel
+        (float) 100.0,    // AdeptScore
         20,             // MaxNumSystemMessages
         20,             // MaxNumGameMessages
         "Needle",       // DefaultAttackName
@@ -1075,6 +1088,18 @@ int GameEngine::SetupDefaultSystemTables()
        (const char*) NULL, //AdminEmail,
        (float) 4.0,    // BuilderBRDampener
     };
+
+    Assert(pvSystemData[SystemData::iServerName].GetCharPtr() &&
+           pvSystemData[SystemData::iFixedHashSalt].GetCharPtr());
+
+    for (unsigned int i = SystemData::iDefaultAttackName; i < SystemData::iDefaultEngineerName; i ++)
+    {
+        Assert(pvSystemData[i].GetCharPtr());
+    }
+    for (unsigned int i = SystemData::iDefaultCarrierName; i < SystemData::iDefaultJumpgateName; i ++)
+    {
+        Assert(pvSystemData[i].GetCharPtr());
+    }
 
     iErrCode = t_pCache->InsertRow(SYSTEM_DATA, SystemData::Template, pvSystemData, NULL);
     RETURN_ON_ERROR(iErrCode);

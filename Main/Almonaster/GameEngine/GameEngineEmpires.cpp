@@ -143,8 +143,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     else
     {
         iErrCode = CacheEmpire(iParentKey);
-        if (iErrCode != OK)
-            return iErrCode;
+        RETURN_ON_ERROR(iErrCode);
 
         // Read parent empire's secret key
         GET_SYSTEM_EMPIRE_DATA(strParentEmpire, iParentKey);
@@ -222,14 +221,16 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     // Send last update messages
     iOptions |= DISPLAY_FATAL_UPDATE_MESSAGES;
 
-
-    // Generate a secret key for the empire
+    // Generate a random secret key for the empire
     i64SecretKey = 0;
-    iErrCode = Crypto::GetRandomData ((Byte*) &i64SecretKey, sizeof (i64SecretKey));
+    iErrCode = Crypto::GetRandomData(&i64SecretKey, sizeof(i64SecretKey));
     RETURN_ON_ERROR(iErrCode);
 
     pvColVal[SystemEmpireData::iName] = pszEmpireName;
-    pvColVal[SystemEmpireData::iPassword] = pszPassword;
+
+    iErrCode = ComputePasswordHash(pszPassword,  pvColVal + SystemEmpireData::iPasswordHash);
+    RETURN_ON_ERROR(iErrCode);
+
     pvColVal[SystemEmpireData::iPrivilege] = iPrivilege;
     pvColVal[SystemEmpireData::iRealName] = (const char*) NULL;
     pvColVal[SystemEmpireData::iEmail] = (const char*) NULL;
@@ -277,7 +278,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     pvColVal[SystemEmpireData::iGameRatios] = RATIOS_DISPLAY_ON_RELEVANT_SCREENS;
 
     Assert(pvColVal[SystemEmpireData::iName].GetCharPtr() &&
-           pvColVal[SystemEmpireData::iPassword].GetCharPtr() &&
+           pvColVal[SystemEmpireData::iPasswordHash].GetCharPtr() &&
            pvColVal[SystemEmpireData::iCustomTableColor].GetCharPtr() &&
            pvColVal[SystemEmpireData::iCustomTextColor].GetCharPtr() &&
            pvColVal[SystemEmpireData::iCustomGoodColor].GetCharPtr() &&
@@ -422,13 +423,19 @@ int GameEngine::SetEmpireName(int iEmpireKey, const char* pszName)
 
 int GameEngine::SetEmpirePassword(unsigned int iEmpireKey, const char* pszPassword)
 {
+    int iErrCode;
+
     if (iEmpireKey == global.GetRootKey())
     {
         return ERROR_CANNOT_MODIFY_ROOT;
     }
 
+    Variant vPasswordHash;
+    iErrCode = ComputePasswordHash(pszPassword, &vPasswordHash);
+    RETURN_ON_ERROR(iErrCode);
+
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
-    return t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Password, pszPassword);
+    return t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::PasswordHash, vPasswordHash);
 }
 
 
@@ -440,15 +447,56 @@ int GameEngine::SetEmpirePassword(unsigned int iEmpireKey, const char* pszPasswo
 
 int GameEngine::ChangeEmpirePassword(unsigned int iEmpireKey, const char* pszPassword)
 {
+    int iErrCode;
+
     if (iEmpireKey == global.GetGuestKey())
     {
         return ERROR_CANNOT_MODIFY_GUEST;
     }
 
+    Variant vPasswordHash;
+    iErrCode = ComputePasswordHash(pszPassword, &vPasswordHash);
+    RETURN_ON_ERROR(iErrCode);
+
     GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
-    return t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::Password, pszPassword);
+    return t_pCache->WriteData(strEmpire, iEmpireKey, SystemEmpireData::PasswordHash, vPasswordHash);
 }
 
+int GameEngine::ComputePasswordHash(const char* pszPassword, Variant* pvPasswordHash)
+{
+    int iErrCode;
+
+    Crypto::HashSHA256 hash;
+
+    iErrCode = hash.HashData(pszPassword, strlen(pszPassword));
+    RETURN_ON_ERROR(iErrCode);
+
+    Variant vFixedSalt;
+    iErrCode = GetSystemProperty(SystemData::FixedHashSalt, &vFixedSalt);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = hash.HashData(vFixedSalt.GetCharPtr(), strlen(vFixedSalt));
+    RETURN_ON_ERROR(iErrCode);
+
+    size_t cbSize;
+    iErrCode = hash.GetHashSize(&cbSize);
+    RETURN_ON_ERROR(iErrCode);
+
+    void* pBuffer = StackAlloc(cbSize);
+    iErrCode = hash.GetHash(pBuffer, cbSize);
+    RETURN_ON_ERROR(iErrCode);
+
+    size_t cch = Algorithm::GetEncodeBase64Size(cbSize);
+    char* pszBase64 = (char*)StackAlloc(cch);
+    iErrCode = Algorithm::EncodeBase64(pBuffer, cbSize, pszBase64, cch);
+    RETURN_ON_ERROR(iErrCode);
+
+    pvPasswordHash->Clear();
+    *pvPasswordHash = pszBase64;
+    Assert(pvPasswordHash->GetCharPtr());
+
+    return iErrCode;
+}
 
 // Input:
 // iEmpireKey -> Integer key of empire
@@ -1187,20 +1235,23 @@ int GameEngine::CheckSecretKey (unsigned int iEmpireKey, int64 i64SecretKey, boo
 // iEmpireKey -> Integer key of empire
 // pszPassword -> Password to be tested
 //
-// Given an empire name and a password, determines if that password is correct for that empire
+// Given an empire key and a password, determines if that password is correct for that empire
 // Return OK if yes, an error if no
 
-int GameEngine::IsPasswordCorrect (int iEmpireKey, const char* pszPassword)
+int GameEngine::IsPasswordCorrect(int iEmpireKey, const char* pszPassword)
 {
-    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
-
     int iErrCode;
-    Variant vPassword;
 
-    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Password, &vPassword);
+    Variant vTestPasswordHash;
+    iErrCode = ComputePasswordHash(pszPassword, &vTestPasswordHash);
     RETURN_ON_ERROR(iErrCode);
 
-    return String::StrCmp (vPassword.GetCharPtr(), pszPassword) == 0 ? OK : ERROR_PASSWORD;
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
+    Variant vActualPasswordHash;
+    iErrCode = t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::PasswordHash, &vActualPasswordHash);
+    RETURN_ON_ERROR(iErrCode);
+
+    return String::StrCmp(vActualPasswordHash, vTestPasswordHash) == 0 ? OK : ERROR_PASSWORD;
 }
 
 
@@ -1713,21 +1764,6 @@ int GameEngine::SetEmpireAlmonasterScore(unsigned int iEmpireKey, float fAlmonas
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
-}
-
-
-// Input:
-// iEmpireKey -> Key of empire
-//
-// Output:
-// *pstrPassword -> Empire's password
-//
-// Return an empire's password
-
-int GameEngine::GetEmpirePassword (unsigned int iEmpireKey, Variant* pvPassword)
-{
-    GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
-    return t_pCache->ReadData(strEmpire, iEmpireKey, SystemEmpireData::Password, pvPassword);
 }
 
 

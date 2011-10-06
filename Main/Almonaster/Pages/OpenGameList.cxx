@@ -59,7 +59,24 @@ if (m_bOwnPost && !m_bRedirection) {
 
         if (bConfirm)
         {
-            bConfirmPage = true;
+            iErrCode = CacheGameData(&iGameClassKey, &iGameNumber, NO_KEY, 1);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = IsGamePasswordCorrect(iGameClassKey, iGameNumber, pszPassword);
+            if (iErrCode == ERROR_GAME_DOES_NOT_EXIST)
+            {
+                AddMessage("That game no longer exists");
+                return Redirect(m_pgPageId);
+            }
+            if (iErrCode == ERROR_PASSWORD)
+            {
+                AddMessage("Your password was not accepted");
+            }
+            else
+            {
+                RETURN_ON_ERROR(iErrCode);
+                bConfirmPage = true;
+            }
         }
         else
         {

@@ -88,6 +88,11 @@ namespace Crypto {
     public:
         HashSHA1();
     };
+
+    class OSAL_EXPORT HashSHA256 : public Hash {
+    public:
+        HashSHA256();
+    };
 #endif
 };
 

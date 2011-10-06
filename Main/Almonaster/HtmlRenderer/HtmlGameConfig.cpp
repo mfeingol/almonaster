@@ -704,27 +704,14 @@ int HtmlRenderer::RenderGameConfiguration(int iGameClass, unsigned int iTourname
             "<td><table><tr><td>Password:</td><td><input type=\"password\" name=\"GamePassword\" size=\""
             );
         
-        m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
+        m_pHttpResponse->WriteText(MAX_GAME_PASSWORD_LENGTH);
         
         OutputText ("\" maxlength=\"");
-        m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
-        
-        if (pszGamePassword != NULL) {
-            OutputText ("\" value=\"");
-            m_pHttpResponse->WriteText (pszGamePassword);
-        }
-        
+        m_pHttpResponse->WriteText(MAX_GAME_PASSWORD_LENGTH);
         OutputText ("\"></td></tr><tr><td>Confirm:</td><td><input type=\"password\" name=\"GamePassword2\" size=\"");
-        m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
+        m_pHttpResponse->WriteText (MAX_GAME_PASSWORD_LENGTH);
         OutputText ("\" maxlength=\"");
-        
-        m_pHttpResponse->WriteText (MAX_PASSWORD_LENGTH);
-        
-        if (pszGamePassword2 != NULL) {
-            OutputText ("\" value=\"");
-            m_pHttpResponse->WriteText (pszGamePassword2);
-        }
-        
+        m_pHttpResponse->WriteText (MAX_GAME_PASSWORD_LENGTH);
         OutputText (
             
             "\"></td></tr></table></td></tr>"\
@@ -1405,7 +1392,8 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
         
         if (stLen > 0) {
             
-            if (stLen > MAX_PASSWORD_LENGTH) {
+            if (stLen > MAX_GAME_PASSWORD_LENGTH)
+            {
                 AddMessage ("The game password was too long");
                 return WARNING;
             }

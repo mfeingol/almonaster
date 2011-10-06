@@ -1,3 +1,6 @@
+#include "Osal/Algorithm.h"
+#include "Osal/Crypto.h"
+
 #include "Transform622to700.h"
 #include "FileDatabaseElement.h"
 
@@ -72,6 +75,8 @@ Transform622to700::Transform622to700(IDataSource^ source, IDataDestination^ dest
     m_tournamentKeyMapper[NO_KEY] = NO_KEY;
 
     m_associations = gcnew List<Tuple<int, int>^>();
+
+    m_serverFixedHashSalt = nullptr;
 }
 
 void Transform622to700::Transform()
@@ -115,6 +120,7 @@ void Transform622to700::Transform()
     TransformTables("SystemThemes", nullptr, nullptr, m_themeKeyMapper, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemThemes));
 
     // SystemData
+    // (MUST run before SystemEmpireData)
     TransformTables("SystemData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemData));
 
     // SystemEmpireData
@@ -166,7 +172,7 @@ void Transform622to700::Transform()
     TransformTables("SystemChatroomData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
     // GameData
-    TransformTables("GameData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("GameData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameData));
 
     // GameSecurity
     TransformTables("GameSecurity", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameSecurity));
@@ -534,7 +540,20 @@ bool Transform622to700::TransformSystemData(TableNameInfo^ nameInfo, IDataRow^ o
         }
     }
 
+    // Generate fixed hash salt
+    char pBuffer[32];
+    int iErrCode = Crypto::GetRandomData(pBuffer, sizeof(pBuffer));
+    THROW_ON_ERROR(iErrCode);
+
+    size_t cch = Algorithm::GetEncodeBase64Size(sizeof(pBuffer));
+    char* pszBase64 = (char*)StackAlloc(cch);
+    iErrCode = Algorithm::EncodeBase64(pBuffer, sizeof(pBuffer), pszBase64, cch);
+    THROW_ON_ERROR(iErrCode);
+
+    m_serverFixedHashSalt = gcnew System::String(pszBase64);
+
     accepted->Insert(0, gcnew FileDatabaseElement("DefaultAlienKey", defaultAlienKey));
+    accepted->Insert(3, gcnew FileDatabaseElement("FixedHashSalt", m_serverFixedHashSalt));
     accepted->Insert(102, gcnew FileDatabaseElement("SystemMessagesAlienKey", systemMessagesAlienKey));
 
     if (cFound != 10)
@@ -685,9 +704,18 @@ bool Transform622to700::TransformSystemEmpireData(TableNameInfo^ nameInfo, IData
         }
     }
 
+    System::String^ passwordHash = nullptr;
+
     for each (IDataElement^ data in original)
     {
-        if (System::String::Compare(data->Name, "Associations") == 0)
+        if (System::String::Compare(data->Name, "Password") == 0)
+        {
+            cFound++;
+
+            passwordHash = ComputePasswordHash((System::String^)data->Value);
+        }
+
+        else if (System::String::Compare(data->Name, "Associations") == 0)
         {
             cFound++;
 
@@ -704,9 +732,10 @@ bool Transform622to700::TransformSystemEmpireData(TableNameInfo^ nameInfo, IData
         }
     }
 
+    accepted->Insert(1, gcnew FileDatabaseElement("PasswordHash", passwordHash));
     accepted->Insert(7, gcnew FileDatabaseElement("AlienKey", alienKey));
 
-    if (cFound != 11)
+    if (cFound != 12)
     {
         throw gcnew ApplicationException("Column not found");
     }
@@ -1036,6 +1065,35 @@ bool Transform622to700::TransformSystemEmpireTournaments(TableNameInfo^ nameInfo
             data->Value = IdToKey(m_tournamentKeyMapper[KeyToId(data->Value)]);
         }
     }
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Column not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    System::String^ password;
+
+    for each (IDataElement^ data in original)
+    {
+        if (System::String::Compare(data->Name, "Password") == 0)
+        {
+            cFound++;
+            password = (System::String^)data->Value;
+        }
+    }
+
+    System::String^ hash = System::String::Empty;
+    if (!System::String::IsNullOrEmpty(password))
+    {
+        hash = ComputePasswordHash(password);
+    }
+    accepted->Insert(6, gcnew FileDatabaseElement("PasswordHash", hash));
 
     if (cFound != 1)
     {
@@ -1441,6 +1499,42 @@ __int64 Transform622to700::GetEmpire622IdFromName(System::String^ name)
 System::String^ Transform622to700::GetEmpireNameFrom622Id(__int64 id)
 {
     return m_empire622IdToNameMapper[id];
+}
+
+System::String^ Transform622to700::ComputePasswordHash(System::String^ password)
+{
+    int iErrCode;
+
+    Crypto::HashSHA256 hash;
+    msclr::auto_handle<marshal_context> context = gcnew marshal_context();
+    
+    const char* pszPassword = context->marshal_as<const char*>(password);
+    iErrCode = hash.HashData(pszPassword, strlen(pszPassword));
+    THROW_ON_ERROR(iErrCode);
+
+    if (m_serverFixedHashSalt == nullptr)
+    {
+        throw gcnew ApplicationException("m_serverFixedHashSalt must be set before calling ComputePasswordHash");
+    }
+
+    const char* pszFixedSalt = context->marshal_as<const char*>(m_serverFixedHashSalt);
+    iErrCode = hash.HashData(pszFixedSalt, strlen(pszFixedSalt));
+    THROW_ON_ERROR(iErrCode);
+
+    size_t cbSize;
+    iErrCode = hash.GetHashSize(&cbSize);
+    THROW_ON_ERROR(iErrCode);
+
+    void* pBuffer = StackAlloc(cbSize);
+    iErrCode = hash.GetHash(pBuffer, cbSize);
+    THROW_ON_ERROR(iErrCode);
+
+    size_t cch = Algorithm::GetEncodeBase64Size(cbSize);
+    char* pszBase64 = (char*)StackAlloc(cch);
+    iErrCode = Algorithm::EncodeBase64(pBuffer, cbSize, pszBase64, cch);
+    THROW_ON_ERROR(iErrCode);
+
+    return gcnew System::String(pszBase64);
 }
 
 void Transform622to700::RemapGameMapPlanetKeys()

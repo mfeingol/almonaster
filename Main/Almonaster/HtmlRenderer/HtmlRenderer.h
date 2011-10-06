@@ -357,12 +357,7 @@ protected:
     IHttpResponse* m_pHttpResponse;
 
     Variant m_vEmpireName;
-    Variant m_vPassword;
     Variant m_vPreviousIPAddress;
-
-    int64 m_i64SecretKey;
-    UTCTime m_tOldSalt;
-    UTCTime m_tNewSalt;
 
     String m_strMessage;
 
@@ -563,9 +558,8 @@ public:
     void SendWelcomeMessage (const char* pszEmpireName);
 
     // Password hashing
-    int GetPasswordHashForAutologon (int64* pi64Hash);
-    int GetPasswordHashForGamePage (const UTCTime& tSalt, int64* pi64Hash);
-    int GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi64Hash);
+    int GetAutologonPasswordHash(int iEmpireKey, String* pstrHash);
+    int GetPagePasswordHash(PageId page, int iEmpireKey, const UTCTime& tSalt, String* pstrHash);
 
     void HashIPAddress (const char* pszIPAddress, char* pszHashedIPAddress);
 
@@ -731,7 +725,7 @@ public:
 
     void WriteGameAdministratorGameData (const char* pszGameClassName, 
         int iGameNumber, Seconds iSeconds, Seconds iSecondsUntil, int iNumUpdates, bool bOpen, bool bPaused, 
-        bool bAdminPaused, bool bStarted, const char* pszGamePassword, Variant** ppvEmpiresInGame, 
+        bool bAdminPaused, bool bStarted, const char* pszGamePasswordHash, Variant** ppvEmpiresInGame, 
         int iNumActiveEmpires, const UTCTime& tCreationTime, bool bAdmin);
 
     int PopulatePlanetInfo (unsigned int iGameClass, unsigned int iGameNumber, unsigned int iShipPlanet,
@@ -1142,8 +1136,8 @@ public:
     case ERROR_GAME_CLOSED:                                                                             \
         AddMessage ("The game already closed");                                                         \
         return Redirect (m_pgPageId);                       \
-    case ERROR_WRONG_PASSWORD:                                                                          \
-        AddMessage ("Your password was not accepted");                                      \
+    case ERROR_PASSWORD:                                                                                \
+        AddMessage ("Your password was not accepted");                                                  \
         return Redirect (m_pgPageId);                       \
     case ERROR_NULL_PASSWORD:                                                                           \
         AddMessage ("Game passwords cannot be blank");                                      \
@@ -1203,7 +1197,7 @@ public:
     case ERROR_GAME_CLOSED:                                                                     \
         AddMessage ("The game already closed");                                                 \
         return Redirect (m_pgPageId);                                                           \
-    case ERROR_WRONG_PASSWORD:                                                                  \
+    case ERROR_PASSWORD:                                                                        \
         AddMessage ("Your password was not accepted");                                          \
         return Redirect (m_pgPageId);                                                           \
     case ERROR_NULL_PASSWORD:                                                                   \

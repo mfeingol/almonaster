@@ -84,8 +84,9 @@
 // Empire name
 #define MAX_EMPIRE_NAME_LENGTH 27
 
-// Empire password
-#define MAX_PASSWORD_LENGTH 27
+// Passwords
+#define MAX_EMPIRE_PASSWORD_LENGTH 27
+#define MAX_GAME_PASSWORD_LENGTH 27
 
 // IP Address
 #define MAX_IP_ADDRESS_LENGTH 15

@@ -1746,12 +1746,12 @@ case 7:
 
     %><tr><%
     %><td><strong>Password</strong>:</td><%
-    %><td><input type="password" name="NPassword" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>"></td><%
+    %><td><input type="password" name="NPassword" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>"></td><%
     %></tr><%
 
     %><tr><%
     %><td><strong>Verify password</strong>:</td><%
-    %><td><input type="password" name="NPassword2" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>"></td><%
+    %><td><input type="password" name="NPassword2" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>"></td><%
     %></tr><%
 
     %><tr><%

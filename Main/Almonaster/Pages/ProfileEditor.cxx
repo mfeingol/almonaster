@@ -89,8 +89,8 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Handle password change
-            if (m_iEmpireKey != global.GetGuestKey()) {
-
+            if (m_iEmpireKey != global.GetGuestKey())
+            {
                 if ((pHttpForm = m_pHttpRequest->GetForm ("NewPassword")) == NULL) {
                     goto Redirection;
                 }
@@ -101,19 +101,15 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 pszVerify = pHttpForm->GetValue();
                 
-                if (String::StrCmp (pszNewValue, pszVerify) != 0) {
+                if (String::StrCmp (pszNewValue, pszVerify) != 0)
+                {
                     AddMessage ("Your password confirmation did not match");
                 }
-
-                else if (String::StrCmp (pszNewValue, INVALID_PASSWORD_STRING) != 0) {
-                
-                    if (String::StrCmp (pszVerify, m_vPassword.GetCharPtr()) == 0) {
-                        AddMessage ("You submitted the same password");
-                    }
-                    
-                    else if (VerifyPassword (pszNewValue)) {
-
-                        iErrCode = ChangeEmpirePassword (m_iEmpireKey, pszNewValue);
+                else if (String::StrCmp(pszNewValue, INVALID_PASSWORD_STRING) != 0)
+                {
+                    if (VerifyPassword (pszNewValue))
+                    {
+                        iErrCode = ChangeEmpirePassword(m_iEmpireKey, pszNewValue);
                         if (iErrCode == ERROR_CANNOT_MODIFY_GUEST)
                         {
                             AddMessage (GUEST_NAME "'s password can only be changed by an administrator");
@@ -122,27 +118,16 @@ if (m_bOwnPost && !m_bRedirection) {
                         {
                             RETURN_ON_ERROR(iErrCode);
                             AddMessage ("Your password was changed");
-                            m_vPassword = pszNewValue;
 
-                            ICookie* pCookie = m_pHttpRequest->GetCookie (AUTOLOGON_EMPIREKEY_COOKIE);
-                            if (pCookie != NULL && pCookie->GetValue() != NULL)
+                            ICookie* pCookie = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
+                            if (pCookie && pCookie->GetValue() && pCookie->GetUIntValue() == m_iEmpireKey)
                             {
-                                if (pCookie->GetUIntValue() == m_iEmpireKey)
-                                {
-                                    int64 i64Hash = 0;
-                                    char pszText [128] = "";
-                                    
-                                    iErrCode = GetPasswordHashForAutologon (&i64Hash);
-                                    RETURN_ON_ERROR(iErrCode);
-                                    
-                                    iErrCode = m_pHttpResponse->CreateCookie (
-                                        AUTOLOGON_PASSWORD_COOKIE,
-                                        String::I64toA (i64Hash, pszText, 10),
-                                        ONE_YEAR_IN_SECONDS,
-                                        NULL
-                                        );
-                                    RETURN_ON_ERROR(iErrCode);
-                                }
+                                String strHash;
+                                iErrCode = GetAutologonPasswordHash(m_iEmpireKey, &strHash);
+                                RETURN_ON_ERROR(iErrCode);
+                                
+                                iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strHash, ONE_YEAR_IN_SECONDS, NULL);
+                                RETURN_ON_ERROR(iErrCode);
                             }
                         }
                     }
@@ -552,9 +537,9 @@ if (m_bOwnPost && !m_bRedirection) {
 
                     iErrCode = m_pHttpResponse->DeleteCookie(AUTOLOGON_PASSWORD_COOKIE, NULL);
                     RETURN_ON_ERROR(iErrCode);
-
-                } else {
-
+                }
+                else
+                {
                     if (uiNewValue != m_iEmpireKey)
                     {
                         AddMessage ("Invalid autologon submission");
@@ -562,20 +547,16 @@ if (m_bOwnPost && !m_bRedirection) {
                     else
                     {
                         // Set cookies (expire in a year)
-                        char pszText [128];
-                        iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_EMPIREKEY_COOKIE, String::UItoA (uiNewValue, pszText, 10), ONE_YEAR_IN_SECONDS, NULL);
+                        char pszText[128];
+                        String::UItoA(m_iEmpireKey, pszText, 10);
+                        iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_EMPIREKEY_COOKIE, pszText, ONE_MONTH_IN_SECONDS, NULL);
                         RETURN_ON_ERROR(iErrCode);
                         
-                        int64 i64Hash = 0;                        
-                        iErrCode = GetPasswordHashForAutologon (&i64Hash);
+                        String strHash;
+                        iErrCode = GetAutologonPasswordHash(m_iEmpireKey, &strHash);
                         RETURN_ON_ERROR(iErrCode);
 
-                        iErrCode = m_pHttpResponse->CreateCookie (
-                            AUTOLOGON_PASSWORD_COOKIE,
-                            String::I64toA (i64Hash, pszText, 10),
-                            ONE_YEAR_IN_SECONDS,
-                            NULL
-                            );
+                        iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strHash, ONE_MONTH_IN_SECONDS, NULL);
                         RETURN_ON_ERROR(iErrCode);
 
                         AddMessage ("Autologon is now on for ");
@@ -2220,11 +2201,11 @@ case 0:
 
         %><tr><td align="left">Password:</td><%
         %><td align="left"><input type="password" name="NewPassword" size="20" maxlength="<%
-            Write (MAX_PASSWORD_LENGTH); %>" value="<% Write (INVALID_PASSWORD_STRING); %>"></td></tr><%
+            Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" value="<% Write(INVALID_PASSWORD_STRING); %>"></td></tr><%
 
         %><tr><td align="left">Verify password:</td><%
         %><td align="left"><input type="password" name="VerifyPassword" size="20" maxlength="<% 
-            Write (MAX_PASSWORD_LENGTH); %>" value="<% Write (INVALID_PASSWORD_STRING); %>"></td></tr><%
+            Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" value="<% Write(INVALID_PASSWORD_STRING); %>"></td></tr><%
     }
 
     HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strFilter, 0, false);
@@ -2343,28 +2324,29 @@ case 0:
     %><option value="<% Write (m_iEmpireKey); %>"><%
     %>Use the current empire (<% Write (m_vEmpireName.GetCharPtr()); %>) to autologon</option><%
 
-    if (iAutoLogonSelected == MAYBE_AUTOLOGON) {
-
+    if (iAutoLogonSelected == MAYBE_AUTOLOGON)
+    {
         unsigned int iAutoLogonKey = NO_KEY;
-        ICookie* pCookie = m_pHttpRequest->GetCookie (AUTOLOGON_EMPIREKEY_COOKIE);
-
-        if (pCookie != NULL && pCookie->GetValue() != NULL) {
-
+        ICookie* pCookie = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
+        if (pCookie && pCookie->GetValue())
+        {
             iAutoLogonKey = pCookie->GetUIntValue();
-            if (iAutoLogonKey != m_iEmpireKey) {
+            if (iAutoLogonKey != m_iEmpireKey)
+            {
+                iErrCode = CacheEmpire(iAutoLogonKey);
+                RETURN_ON_ERROR(iErrCode);
 
                 Variant vName;
-                iErrCode = GetEmpireName (iAutoLogonKey, &vName);
+                iErrCode = GetEmpireName(iAutoLogonKey, &vName);
                 if (iErrCode == ERROR_EMPIRE_DOES_NOT_EXIST)
                 {
-                    iAutoLogonKey = m_iEmpireKey;
+                    iAutoLogonKey = NO_KEY;
                 }
                 else
                 {
                     RETURN_ON_ERROR(iErrCode);
 
-                    %><option selected value="<% Write (iAutoLogonKey); %>"><%
-                    %>Use the <% Write (vName.GetCharPtr()); %> empire to autologon</option><%
+                    %><option selected value="<% Write (iAutoLogonKey); %>">Use another empire (<% Write(vName.GetCharPtr()); %>) to autologon</option><%
                 }
             }
 
@@ -3640,7 +3622,7 @@ case 10:
 
     %><td align="right">Password:</td><%
     %><td><%
-    %><input type="password" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>" name="AssocPass"><%
+    %><input type="password" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" name="AssocPass"><%
     %></td><%
 
     %></tr><%

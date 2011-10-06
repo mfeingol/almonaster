@@ -249,8 +249,6 @@ SearchResults:
                     else
                     {
                         m_iReserved = 0;
-                        m_i64SecretKey = 0;
-                        m_vPassword = (const char*)NULL;
                         m_vEmpireName = (const char*)NULL;
                         m_iEmpireKey = iSwitch;
 

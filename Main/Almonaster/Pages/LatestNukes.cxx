@@ -117,6 +117,7 @@ else
 
         iErrCode = WriteProfileAlienString (
             ppvData[i][SystemNukeList::iNukerAlienKey].GetInteger(), 
+            ppvData[i][SystemNukeList::iNukerAlienAddress].GetInteger(), 
             ppvData[i][SystemNukeList::iNukerEmpireKey].GetInteger(),
             ppvData[i][SystemNukeList::iNukerEmpireName].GetCharPtr(),
             0,
@@ -142,6 +143,7 @@ else
 
         iErrCode = WriteProfileAlienString (
             ppvData[i][SystemNukeList::iNukedAlienKey].GetInteger(), 
+            ppvData[i][SystemNukeList::iNukedAlienAddress].GetInteger(), 
             ppvData[i][SystemNukeList::iNukedEmpireKey].GetInteger(),
             ppvData[i][SystemNukeList::iNukedEmpireName].GetCharPtr(),
             0,

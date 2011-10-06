@@ -35,28 +35,10 @@ int HtmlRenderer::HtmlLoginEmpire(bool* pbLoggedIn)
     int iErrCode = OK;
     Variant vValue;
     
-    if (m_vEmpireName.GetType() != V_STRING || 
-        m_vEmpireName.GetCharPtr() == NULL ||
-        *m_vEmpireName.GetCharPtr() == '\0') {
-        
+    if (m_vEmpireName.GetType() != V_STRING || String::IsBlank(m_vEmpireName))
+    {
         iErrCode = GetEmpireName (m_iEmpireKey, &m_vEmpireName);
         RETURN_ON_ERROR(iErrCode);
-    }
-    
-    if (m_vPassword.GetType() != V_STRING || 
-        m_vPassword.GetCharPtr() == NULL ||
-        *m_vPassword.GetCharPtr() == '\0') {
-        
-        iErrCode = GetEmpirePassword(m_iEmpireKey, &m_vPassword);
-        RETURN_ON_ERROR(iErrCode);
-    }
-
-    if (m_i64SecretKey == 0) {
-
-        Variant vValue;
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::SecretKey, &vValue);
-        RETURN_ON_ERROR(iErrCode);
-        m_i64SecretKey = vValue.GetInteger64();
     }
     
     // Get last login time
@@ -64,81 +46,71 @@ int HtmlRenderer::HtmlLoginEmpire(bool* pbLoggedIn)
     RETURN_ON_ERROR(iErrCode);
     UTCTime lastLoginTime = vValue.GetInteger64();
 
-    // We're authenticated, so register a login
-    iErrCode = LoginEmpire (m_iEmpireKey, m_pHttpRequest->GetBrowserName(), m_pHttpRequest->GetClientIP());
-    if (iErrCode != OK)
+    // We're already authenticated, so register a login
+    iErrCode = LoginEmpire(m_iEmpireKey, m_pHttpRequest->GetBrowserName(), m_pHttpRequest->GetClientIP());
+    if (iErrCode == ERROR_DISABLED)
     {
-        if (iErrCode == ERROR_DISABLED)
-        {
-            String strMessage = "The server is refusing logins at this time. ";
+        String strMessage = "The server is refusing logins at this time. ";
             
-            Variant vReason;
-            iErrCode = GetSystemProperty(SystemData::LoginsDisabledReason, &vReason);
-            RETURN_ON_ERROR(iErrCode);
+        Variant vReason;
+        iErrCode = GetSystemProperty(SystemData::LoginsDisabledReason, &vReason);
+        RETURN_ON_ERROR(iErrCode);
 
-            const char* pszReason = NULL;
+        const char* pszReason = NULL;
             
-            if (vReason.GetType() == V_STRING) {
-                pszReason = vReason.GetCharPtr();
-            }
+        if (vReason.GetType() == V_STRING) {
+            pszReason = vReason.GetCharPtr();
+        }
 
-            if (pszReason == NULL || *pszReason == '\0') {
-                strMessage += "Please try back later.";
-            } else {
-                strMessage += pszReason;
-            }
-            AddMessage (strMessage);
+        if (pszReason == NULL || *pszReason == '\0') {
+            strMessage += "Please try back later.";
+        } else {
+            strMessage += pszReason;
+        }
+        AddMessage (strMessage);
             
-            return OK;
-        }
-        else
-        {
-            RETURN_ON_ERROR(iErrCode);
-        }
+        return OK;
     }
-    else
+    RETURN_ON_ERROR(iErrCode);
+    
+    // Get theme key
+    int iThemeKey;
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
+    RETURN_ON_ERROR(iErrCode);
+    iThemeKey = vValue.GetInteger();
+        
+    iErrCode = GetUIData (iThemeKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Privilege, &vValue);
+    RETURN_ON_ERROR(iErrCode);
+    m_iPrivilege = vValue.GetInteger();
+
+    iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
+    RETURN_ON_ERROR(iErrCode);
+    m_iAlienKey = vValue.GetInteger();
+
+    iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlienAddress, &vValue);
+    RETURN_ON_ERROR(iErrCode);
+    m_iAlienAddress = vValue.GetInteger();
+
+    iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IPAddress, &m_vPreviousIPAddress);
+    RETURN_ON_ERROR(iErrCode);
+        
+    // Set a cookie for the last empire id used on the server
+    char pszEmpireKey[128];
+    String::UItoA(m_iEmpireKey, pszEmpireKey, 10);
+
+    iErrCode = m_pHttpResponse->CreateCookie(LAST_EMPIRE_USED_COOKIE, pszEmpireKey, ONE_MONTH_IN_SECONDS, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    AddMessage("Welcome back, ");
+    AppendMessage(m_vEmpireName.GetCharPtr());
+
+    if (Time::OlderThan(lastLoginTime, m_stServerNewsLastUpdate))
     {
-        // Get theme key
-        int iThemeKey;
-
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::AlmonasterTheme, &vValue);
-        RETURN_ON_ERROR(iErrCode);
-        iThemeKey = vValue.GetInteger();
-        
-        iErrCode = GetUIData (iThemeKey);
-        RETURN_ON_ERROR(iErrCode);
-
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::Privilege, &vValue);
-        RETURN_ON_ERROR(iErrCode);
-        m_iPrivilege = vValue.GetInteger();
-
-        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlienKey, &vValue);
-        RETURN_ON_ERROR(iErrCode);
-        m_iAlienKey = vValue.GetInteger();
-
-        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::AlienAddress, &vValue);
-        RETURN_ON_ERROR(iErrCode);
-        m_iAlienAddress = vValue.GetInteger();
-
-        iErrCode = GetEmpireProperty (m_iEmpireKey, SystemEmpireData::IPAddress, &m_vPreviousIPAddress);
-        RETURN_ON_ERROR(iErrCode);
-        
-        // Set a cookie for the last empire id (expires in a year)
-        char pszEmpireKey [128];
-        iErrCode = m_pHttpResponse->CreateCookie (
-            LAST_EMPIRE_USED_COOKIE,
-            String::UItoA (m_iEmpireKey, pszEmpireKey, 10),
-            ONE_YEAR_IN_SECONDS, 
-            NULL
-            );
-        RETURN_ON_ERROR(iErrCode);
-    }
-
-    AddMessage ("Welcome back, ");
-    AppendMessage (m_vEmpireName.GetCharPtr());
-
-    if (Time::OlderThan (lastLoginTime, m_stServerNewsLastUpdate)) {
-        AddMessage ("The Server News page was updated since your last login");
+        AddMessage("The Server News page was updated since your last login");
     }
 
     // Add to report
@@ -183,7 +155,6 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
                 // Make sure empire key exists
                 iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, &m_vEmpireName);
                 RETURN_ON_ERROR(iErrCode);
-
                 if (!bExists)
                 {
                     AddMessage("That empire no longer exists");
@@ -229,52 +200,38 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
             // Need to authenticate
             //
 
-            // Get empire's password
-            iErrCode = GetEmpirePassword (m_iEmpireKey, &m_vPassword);
-            RETURN_ON_ERROR(iErrCode);
-            
             // Get empire's recorded IP address
             iErrCode = GetEmpireIPAddress(m_iEmpireKey, &m_vPreviousIPAddress);
             RETURN_ON_ERROR(iErrCode);
 
-            // Get empire's secret key
-            Variant vValue;
-            iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::SecretKey, &vValue);
-            RETURN_ON_ERROR(iErrCode);
-            m_i64SecretKey = vValue.GetInteger64();
-            
             // Try to read a hashed password
-            if ((pHttpForm = m_pHttpRequest->GetForm ("Password")) != NULL) {
-                
-                int64 i64SubmittedPasswordHash = pHttpForm->GetInt64Value();
-                int64 i64RealPasswordHash = 0;
+            if ((pHttpForm = m_pHttpRequest->GetForm("Password")) != NULL)
+            {
+                const char* pszSubmittedPasswordHash = pHttpForm->GetValue();
 
                 // Read salt
-                if ((pHttpForm = m_pHttpRequest->GetForm ("Salt")) == NULL) {
-                    AddMessage ("The password was not salted");
+                if ((pHttpForm = m_pHttpRequest->GetForm ("Salt")) == NULL)
+                {
                     return ERROR_MISSING_FORM;
                 }
-                m_tOldSalt = pHttpForm->GetUInt64Value();
+                UTCTime tOldSalt = pHttpForm->GetUInt64Value();
 
-                // Make sure salt is valid
-                if (Time::GetSecondDifference (m_tNewSalt, m_tOldSalt) >= DAY_LENGTH_IN_SECONDS) {
+                // Make sure page hasn't timed out
+                UTCTime tNow;
+                Time::GetTime(&tNow);
+
+                if (Time::GetSecondDifference(tNow, tOldSalt) >= DAY_LENGTH_IN_SECONDS)
+                {
                     AddMessage("Your session has timed out. Please log in again");
                     return OK;
                 }
 
                 // Authenticate
-                if (!IsGamePage (m_pgPageId))
-                {
-                    iErrCode = GetPasswordHashForSystemPage (m_tOldSalt, &i64RealPasswordHash);
-                    RETURN_ON_ERROR(iErrCode);
-                }
-                else
-                {
-                    iErrCode = GetPasswordHashForGamePage (m_tOldSalt, &i64RealPasswordHash);
-                    RETURN_ON_ERROR(iErrCode);
-                }
+                String strActualPasswordHash;
+                iErrCode = GetPagePasswordHash(m_pgPageId, m_iEmpireKey, tOldSalt, &strActualPasswordHash);
+                RETURN_ON_ERROR(iErrCode);
 
-                if (i64RealPasswordHash != i64SubmittedPasswordHash)
+                if (String::StrCmp(pszSubmittedPasswordHash, strActualPasswordHash) != 0)
                 {
                     char pszBuffer [256 + MAX_EMPIRE_NAME_LENGTH];
                     sprintf(pszBuffer, "That was the wrong password for the %s empire", m_vEmpireName.GetCharPtr());
@@ -283,21 +240,28 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
                     return OK;
                 }
             }
+            else if ((pHttpForm = m_pHttpRequest->GetForm("ClearTextPassword")) != NULL)
+            {
+                // Try to use a cleartext password submitted as a form or query param
+                const char* pszPassword = pHttpForm->GetValue();
+                {
+                    iErrCode = IsPasswordCorrect(m_iEmpireKey, pszPassword);
+                    if (iErrCode == ERROR_PASSWORD)
+                    {
+                        char pszBuffer [256 + MAX_EMPIRE_NAME_LENGTH];
+                        sprintf(pszBuffer, "That was the wrong password for the %s empire", m_vEmpireName.GetCharPtr());
+                        AddMessage(pszBuffer);
+                    }
+                    RETURN_ON_ERROR(iErrCode);
+                }
+            }
             else
             {
-                // Try to use a cleartext password
-                const char* pszPassword;
-                if ((pHttpForm = m_pHttpRequest->GetForm ("ClearTextPassword")) == NULL ||
-                    (pszPassword = pHttpForm->GetValue()) == NULL ||
-                    strcmp (pszPassword, m_vPassword.GetCharPtr()) != 0
-                    ) {
-                    
-                    char pszBuffer [256 + MAX_EMPIRE_NAME_LENGTH];
-                    sprintf(pszBuffer, "That was the wrong password for the %s empire", m_vEmpireName.GetCharPtr());
-                    
-                    AddMessage (pszBuffer);
-                    return OK;
-                }
+                // No way to authenticate
+                char pszBuffer [256 + MAX_EMPIRE_NAME_LENGTH];
+                sprintf(pszBuffer, "That was the wrong password for the %s empire", m_vEmpireName.GetCharPtr());
+                AddMessage(pszBuffer);
+                return OK;
             }
 
             m_bAuthenticated = true;
@@ -395,111 +359,76 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
 // Hashing
 //
 
-int HtmlRenderer::GetPasswordHashForAutologon (int64* pi64Hash) {
-
-    int iErrCode;
-    Crypto::HashMD5 hash;
-    size_t stHashLen;
-
-    // Password
-    const char* pszPassword = m_vPassword.GetCharPtr();
-    iErrCode = hash.HashData (pszPassword, strlen (pszPassword));
-    RETURN_ON_ERROR(iErrCode);
-
-    // Browser
-    const char* pszBrowser = m_pHttpRequest->GetBrowserName();
-    if (pszBrowser != NULL)
-    {
-        iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
-        RETURN_ON_ERROR(iErrCode);
-    }
-
-    // Secret key
-    Assert(m_i64SecretKey != 0);
-    iErrCode = hash.HashData (&m_i64SecretKey, sizeof (m_i64SecretKey));
-    RETURN_ON_ERROR(iErrCode);
-
-    // Done
-    iErrCode = hash.GetHashSize (&stHashLen);
-    RETURN_ON_ERROR(iErrCode);
-
-    void* pbHashData = StackAlloc(stHashLen);
-    iErrCode = hash.GetHash(pbHashData, stHashLen);
-    RETURN_ON_ERROR(iErrCode);
-
-    Assert(stHashLen >= sizeof (int64));
-    *pi64Hash = *(int64*) pbHashData;
-
-    return iErrCode;
-}
-
-int HtmlRenderer::GetPasswordHashForGamePage(const UTCTime& tSalt, int64* pi64Hash)
+int HtmlRenderer::GetAutologonPasswordHash(int iEmpireKey, String* pstrHash)
 {
     int iErrCode;
-    Crypto::HashMD5 hash;
-    size_t stHashLen;
+    Crypto::HashSHA256 hash;
 
-    // Password
-    const char* pszPassword = m_vPassword.GetCharPtr();
-    iErrCode = hash.HashData (pszPassword, strlen (pszPassword));
+    // Password hash
+    Variant vPasswordHash;
+    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::PasswordHash, &vPasswordHash);
     RETURN_ON_ERROR(iErrCode);
 
-    // Salt
-    Assert(tSalt != NULL_TIME);
-    iErrCode = hash.HashData (&tSalt, sizeof (tSalt));
+    iErrCode = hash.HashData(vPasswordHash.GetCharPtr(), strlen(vPasswordHash));
     RETURN_ON_ERROR(iErrCode);
 
-    // Browser
-    const char* pszBrowser  = m_pHttpRequest->GetBrowserName();
-    if (pszBrowser != NULL)
+    // User agent
+    const char* pszBrowser = m_pHttpRequest->GetBrowserName();
+    if (pszBrowser)
     {
-        iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
+        iErrCode = hash.HashData(pszBrowser, strlen(pszBrowser));
         RETURN_ON_ERROR(iErrCode);
     }
 
-    // Secret key
-    Assert(m_i64SecretKey != 0);
-    iErrCode = hash.HashData ((Byte*) &m_i64SecretKey, sizeof (m_i64SecretKey));
+    // Empire's secret key
+    Variant vSecretKey;
+    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
     RETURN_ON_ERROR(iErrCode);
 
-    // IP Address
-    if (m_iSystemOptions & IP_ADDRESS_PASSWORD_HASHING)
-    {
-        const char* pszIPAddress = m_pHttpRequest->GetClientIP();
-        iErrCode = hash.HashData (pszIPAddress, strlen (pszIPAddress));
-        RETURN_ON_ERROR(iErrCode);
-    }
+    int64 i64SecretKey = vSecretKey.GetInteger64();
+    iErrCode = hash.HashData(&i64SecretKey, sizeof(i64SecretKey));
+    RETURN_ON_ERROR(iErrCode);
 
-    // Session Id
-    if (m_iSystemOptions & SESSION_ID_PASSWORD_HASHING)
-    {
-        iErrCode = hash.HashData (&m_i64SessionId, sizeof (m_i64SessionId));
-        RETURN_ON_ERROR(iErrCode);
-    }
+    // Fixed server salt
+    Variant vFixedSalt;
+    iErrCode = GetSystemProperty(SystemData::FixedHashSalt, &vFixedSalt);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = hash.HashData(vFixedSalt, strlen(vFixedSalt));
+    RETURN_ON_ERROR(iErrCode);
 
     // Done
-    iErrCode = hash.GetHashSize (&stHashLen);
+    size_t cbSize;
+    iErrCode = hash.GetHashSize(&cbSize);
     RETURN_ON_ERROR(iErrCode);
 
-    void* pbHashData = StackAlloc (stHashLen);
-    iErrCode = hash.GetHash (pbHashData, stHashLen);
+    void* pBuffer = StackAlloc(cbSize);
+    iErrCode = hash.GetHash(pBuffer, cbSize);
     RETURN_ON_ERROR(iErrCode);
 
-    Assert(stHashLen >= sizeof (int64));
-    *pi64Hash = *(int64*) pbHashData;
+    size_t cch = Algorithm::GetEncodeBase64Size(cbSize);
+    char* pszBase64 = (char*)StackAlloc(cch);
+    iErrCode = Algorithm::EncodeBase64(pBuffer, cbSize, pszBase64, cch);
+    RETURN_ON_ERROR(iErrCode);
+
+    pstrHash->Clear();
+    *pstrHash = pszBase64;
+    Assert(pstrHash->GetCharPtr());
 
     return iErrCode;
 }
 
-int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi64Hash) {
-
+int HtmlRenderer::GetPagePasswordHash(PageId page, int iEmpireKey, const UTCTime& tSalt, String* pstrHash)
+{
     int iErrCode;
-    Crypto::HashMD5 hash;
-    size_t stHashLen;
+    Crypto::HashSHA256 hash;
 
     // Password
-    const char* pszPassword = m_vPassword.GetCharPtr();
-    iErrCode = hash.HashData (pszPassword, strlen (pszPassword));
+    Variant vPasswordHash;
+    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::PasswordHash, &vPasswordHash);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = hash.HashData(vPasswordHash.GetCharPtr(), strlen(vPasswordHash));
     RETURN_ON_ERROR(iErrCode);
 
     // Salt
@@ -515,21 +444,58 @@ int HtmlRenderer::GetPasswordHashForSystemPage (const UTCTime& tSalt, int64* pi6
         RETURN_ON_ERROR(iErrCode);
     }
 
-    // Secret key
-    Assert(m_i64SecretKey != 0);
-    iErrCode = hash.HashData (&m_i64SecretKey, sizeof (m_i64SecretKey));
+    // Empire's secret key
+    Variant vSecretKey;
+    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
     RETURN_ON_ERROR(iErrCode);
+
+    int64 i64SecretKey = vSecretKey.GetInteger64();
+    iErrCode = hash.HashData(&i64SecretKey, sizeof(i64SecretKey));
+    RETURN_ON_ERROR(iErrCode);
+
+    // Fixed server salt
+    Variant vFixedSalt;
+    iErrCode = GetSystemProperty(SystemData::FixedHashSalt, &vFixedSalt);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = hash.HashData(vFixedSalt, strlen(vFixedSalt));
+    RETURN_ON_ERROR(iErrCode);
+
+    if (IsGamePage(page))
+    {
+        // IP Address
+        if (m_iSystemOptions & IP_ADDRESS_PASSWORD_HASHING)
+        {
+            const char* pszIPAddress = m_pHttpRequest->GetClientIP();
+            iErrCode = hash.HashData (pszIPAddress, strlen (pszIPAddress));
+            RETURN_ON_ERROR(iErrCode);
+        }
+
+        // Session Id
+        if (m_iSystemOptions & SESSION_ID_PASSWORD_HASHING)
+        {
+            iErrCode = hash.HashData (&m_i64SessionId, sizeof (m_i64SessionId));
+            RETURN_ON_ERROR(iErrCode);
+        }
+    }
 
     // Done
-    iErrCode = hash.GetHashSize (&stHashLen);
+    size_t cbSize;
+    iErrCode = hash.GetHashSize(&cbSize);
     RETURN_ON_ERROR(iErrCode);
 
-    void* pbHashData = StackAlloc (stHashLen);
-    iErrCode = hash.GetHash (pbHashData, stHashLen);
+    void* pBuffer = StackAlloc(cbSize);
+    iErrCode = hash.GetHash(pBuffer, cbSize);
     RETURN_ON_ERROR(iErrCode);
 
-    Assert(stHashLen >= sizeof (int64));
-    *pi64Hash = *(int64*) pbHashData;
+    size_t cch = Algorithm::GetEncodeBase64Size(cbSize);
+    char* pszBase64 = (char*)StackAlloc(cch);
+    iErrCode = Algorithm::EncodeBase64(pBuffer, cbSize, pszBase64, cch);
+    RETURN_ON_ERROR(iErrCode);
+
+    pstrHash->Clear();
+    *pstrHash = pszBase64;
+    Assert(pstrHash->GetCharPtr());
 
     return iErrCode;
 }

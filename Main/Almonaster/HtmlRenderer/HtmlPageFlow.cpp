@@ -146,16 +146,19 @@ int HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
 
 void HtmlRenderer::PostSystemPageInformation()
 {
-    int64 i64PasswordHash = 0;
-    int iErrCode = GetPasswordHashForSystemPage(m_tNewSalt, &i64PasswordHash);
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    String strPasswordHash;
+    int iErrCode = GetPagePasswordHash(m_pgPageId, m_iEmpireKey, tNow, &strPasswordHash);
     Assert(iErrCode == OK);
 
     OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
-    m_pHttpResponse->WriteText (m_iEmpireKey);
+    m_pHttpResponse->WriteText(m_iEmpireKey);
     OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
-    m_pHttpResponse->WriteText (i64PasswordHash);
+    m_pHttpResponse->WriteText(strPasswordHash.GetCharPtr());
     OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
-    m_pHttpResponse->WriteText (m_tNewSalt);
+    m_pHttpResponse->WriteText(tNow);
     OutputText ("\">");
 }
 
@@ -577,22 +580,25 @@ int HtmlRenderer::WriteGameNextUpdateString()
 
 int HtmlRenderer::PostGamePageInformation()
 {
-    int64 i64PasswordHash = 0;
-    int iErrCode = GetPasswordHashForGamePage(m_tNewSalt, &i64PasswordHash);
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    String strPasswordHash;
+    int iErrCode = GetPagePasswordHash(m_pgPageId, m_iEmpireKey, tNow, &strPasswordHash);
     RETURN_ON_ERROR(iErrCode);
 
     OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
-    m_pHttpResponse->WriteText (m_iEmpireKey);
+    m_pHttpResponse->WriteText(m_iEmpireKey);
     OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
-    m_pHttpResponse->WriteText (i64PasswordHash);
+    m_pHttpResponse->WriteText(strPasswordHash.GetCharPtr());
     OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
-    m_pHttpResponse->WriteText (m_tNewSalt);
+    m_pHttpResponse->WriteText(tNow);
     OutputText ("\"><input type=\"hidden\" name=\"GameClass\" value=\"");
-    m_pHttpResponse->WriteText (m_iGameClass);
+    m_pHttpResponse->WriteText(m_iGameClass);
     OutputText ("\"><input type=\"hidden\" name=\"GameNumber\" value=\"");
-    m_pHttpResponse->WriteText (m_iGameNumber);
+    m_pHttpResponse->WriteText(m_iGameNumber);
     OutputText ("\"><input type=\"hidden\" name=\"Updates\" value=\"");
-    m_pHttpResponse->WriteText (m_iNumNewUpdates);
+    m_pHttpResponse->WriteText(m_iNumNewUpdates);
     OutputText ("\"><input type=\"hidden\" name=\"Auto\" value=\"0\">");
 
     return iErrCode;

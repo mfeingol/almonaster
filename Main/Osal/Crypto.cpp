@@ -103,8 +103,9 @@ class Win32AutoInit
 {
 public:
 
-    Win32AutoInit() {
-        BOOL f = CryptAcquireContext (&g_hProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT);
+    Win32AutoInit()
+    {
+        BOOL f = CryptAcquireContext (&g_hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
         Assert (f);
     }
 
@@ -195,5 +196,6 @@ int Crypto::Hash::GetHash (void* pbData, size_t stSize) {
 
 Crypto::HashMD5::HashMD5() : Hash (CALG_MD5) {}
 Crypto::HashSHA1::HashSHA1() : Hash (CALG_SHA1) {}
+Crypto::HashSHA256::HashSHA256() : Hash (CALG_SHA_256) {}
 
 #endif // __WIN32__

@@ -781,10 +781,11 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 #define UNINITIALIZED_KEY (-10)
 
 // Time considered a "weekend", expressed in seconds
-#define ONE_YEAR_IN_SECONDS (31536000)
 #define WEEKEND_LENGTH_IN_SECONDS (60 * 60 * 24 * 2)
 #define DAY_LENGTH_IN_SECONDS (60 * 60 * 24)
 #define MAX_AFTER_WEEKEND_DELAY (60 * 60 * 12)
+#define ONE_MONTH_IN_SECONDS (30 * 24 * 60 * 60)
+#define ONE_YEAR_IN_SECONDS (365 * 24 * 60 * 60)
 
 // Default min, max values for map coordinates
 #define MIN_COORDINATE ((int) -0x7fffffff)

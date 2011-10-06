@@ -72,15 +72,12 @@ int GameEngine::CreateAssociation(unsigned int iEmpireKey, const char* pszSecond
     }
 
     // Verify the second empire's password
-    Variant vPassword;
-    GET_SYSTEM_EMPIRE_DATA(strSecondEmpire, iSecondKey);
-    iErrCode = t_pCache->ReadData(strSecondEmpire, iSecondKey, SystemEmpireData::Password, &vPassword);
-    RETURN_ON_ERROR(iErrCode);
-
-    if (strcmp(pszPassword, vPassword.GetCharPtr()) != 0)
+    iErrCode = IsPasswordCorrect(iSecondKey, pszPassword);
+    if (iErrCode == ERROR_PASSWORD)
     {
-        return ERROR_PASSWORD;
+        return iErrCode;
     }
+    RETURN_ON_ERROR(iErrCode);
 
     // Make sure the association doesn't already exist
     bool bExists;

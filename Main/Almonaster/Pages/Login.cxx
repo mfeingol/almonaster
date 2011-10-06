@@ -27,84 +27,72 @@ char pszStandardizedName [MAX_EMPIRE_NAME_LENGTH + 1];
 int iErrCode = OK;
 
 m_iEmpireKey = NO_KEY;
-m_vEmpireName = m_vPassword = (const char*) NULL;
+m_vEmpireName = (const char*) NULL;
 
 // Check for submission
-if (m_pHttpRequest->GetMethod() == GET) {
-
-    // Look for cookies
+if (m_pHttpRequest->GetMethod() == GET)
+{
+    // Look for auto-login cookie
     ICookie* pAutoLogonEmpire, * pPasswordCookie;
     unsigned int iAutoLogonKey = NO_KEY;
-    int64 i64SubmittedPasswordHash = -1, i64RealPasswordHash;
 
-    pAutoLogonEmpire = m_pHttpRequest->GetCookie (AUTOLOGON_EMPIREKEY_COOKIE);
-    pPasswordCookie = m_pHttpRequest->GetCookie (AUTOLOGON_PASSWORD_COOKIE);
+    pAutoLogonEmpire = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
+    pPasswordCookie = m_pHttpRequest->GetCookie(AUTOLOGON_PASSWORD_COOKIE);
 
-    if (pAutoLogonEmpire != NULL && pAutoLogonEmpire->GetValue() != NULL) {
-        iAutoLogonKey = pAutoLogonEmpire->GetUIntValue();
-    }
-
-    if (pPasswordCookie != NULL && pPasswordCookie->GetValue() != NULL) {
-        i64SubmittedPasswordHash = pPasswordCookie->GetInt64Value();
-    }
-
-    if (iAutoLogonKey != NO_KEY && i64SubmittedPasswordHash != -1)
+    if (pAutoLogonEmpire && pAutoLogonEmpire->GetValue() && pPasswordCookie)
     {
-        Variant vValue;
-        unsigned int iResults;
-        iErrCode = CacheEmpire(iAutoLogonKey, &iResults);
-        RETURN_ON_ERROR(iErrCode);
-
-        if (iResults > 0)
+        iAutoLogonKey = pAutoLogonEmpire->GetUIntValue();
+        if (iAutoLogonKey != NO_KEY)
         {
-            iErrCode = GetEmpirePassword(iAutoLogonKey, &m_vPassword);
+            Variant vValue;
+            unsigned int iResults;
+            iErrCode = CacheEmpire(iAutoLogonKey, &iResults);
             RETURN_ON_ERROR(iErrCode);
 
-            iErrCode = GetEmpireProperty(iAutoLogonKey, SystemEmpireData::SecretKey, &vValue);
-            RETURN_ON_ERROR(iErrCode);
-
-            // Authenticate
-            m_i64SecretKey = vValue.GetInteger64();
-
-            iErrCode = GetPasswordHashForAutologon(&i64RealPasswordHash);
-            RETURN_ON_ERROR(iErrCode);
-            
-            if (i64RealPasswordHash == i64SubmittedPasswordHash)
+            if (iResults > 0)
             {
-                m_iEmpireKey = iAutoLogonKey;
-                m_bAutoLogon = true;
-
-                bool bLoggedIn;
-                iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                // Authenticate
+                String strActualHash;
+                iErrCode = GetAutologonPasswordHash(iAutoLogonKey, &strActualHash);
                 RETURN_ON_ERROR(iErrCode);
-                if (bLoggedIn)
+            
+                if (String::StrCmp(strActualHash, pPasswordCookie->GetValue()) == 0)
                 {
-                    bool bInitialized;
-                    iErrCode = InitializeEmpire(true, &bInitialized);
+                    m_iEmpireKey = iAutoLogonKey;
+                    m_bAutoLogon = true;
+
+                    bool bLoggedIn;
+                    iErrCode = HtmlLoginEmpire(&bLoggedIn);
                     RETURN_ON_ERROR(iErrCode);
-                    if (bInitialized)
+                    if (bLoggedIn)
                     {
-                        // Yay!
-                        return Redirect(ACTIVE_GAME_LIST);
+                        bool bInitialized;
+                        iErrCode = InitializeEmpire(true, &bInitialized);
+                        RETURN_ON_ERROR(iErrCode);
+                        if (bInitialized)
+                        {
+                            // Yay!
+                            return Redirect(ACTIVE_GAME_LIST);
+                        }
                     }
                 }
             }
         }
-
-        m_iEmpireKey = NO_KEY;
-        m_vPassword = (const char*) NULL;
-        m_i64SecretKey = 0;
-
-        // Autologon failed
-        AddMessage ("Autologon failed and was disabled");
     }
 
-    if (pAutoLogonEmpire != NULL) {
-        m_pHttpResponse->DeleteCookie (AUTOLOGON_EMPIREKEY_COOKIE, NULL);
+    // Autologon failed
+    m_iEmpireKey = NO_KEY;
+    AddMessage("Autologon failed and was disabled");
+
+    // Best effort delete invalid cookies
+    if (pAutoLogonEmpire)
+    {
+        m_pHttpResponse->DeleteCookie(AUTOLOGON_EMPIREKEY_COOKIE, NULL);
     }
 
-    if (pPasswordCookie != NULL) {
-        m_pHttpResponse->DeleteCookie (AUTOLOGON_PASSWORD_COOKIE, NULL);
+    if (pPasswordCookie)
+    {
+        m_pHttpResponse->DeleteCookie(AUTOLOGON_PASSWORD_COOKIE, NULL);
     }
 }
 
@@ -112,38 +100,36 @@ else if (!m_bRedirection)
 {
     const char* pszEmpireName, * pszPassword;
 
-    // Get empire name
+    // Get empire name, validate it
     pHttpForm = m_pHttpRequest->GetForm("EmpireName");
-    if (pHttpForm == NULL) {
+    if (pHttpForm == NULL)
+    {
         goto Text;
     }
-
-    // Make sure the name is valid
     pszEmpireName = pHttpForm->GetValue();
-
     if (!VerifyEmpireName (pszEmpireName) || !StandardizeEmpireName (pszEmpireName, pszStandardizedName))
     {
         goto Text;
     }
-
     pszPrintEmpireName = pszStandardizedName;
 
-    // Get password
+    // Get password form, validate it
     pHttpForm = m_pHttpRequest->GetForm("Password");
-    if (pHttpForm == NULL) {
+    if (pHttpForm == NULL)
+    {
         goto Text;
     }
-
-    // Make sure password is valid
     pszPassword = pHttpForm->GetValue();
     if (!VerifyPassword(pszPassword))
     {
         goto Text;
     }
 
+    // See if the empire exists
     iErrCode = LookupEmpireByName(pszStandardizedName, &m_iEmpireKey, NULL, NULL);
     RETURN_ON_ERROR(iErrCode);
 
+    // Check if they clicked the CreateEmpire button
     if (m_pHttpRequest->GetFormBeginsWith("CreateEmpire"))
     {
         if (m_iEmpireKey != NO_KEY)
@@ -156,92 +142,52 @@ else if (!m_bRedirection)
 
         // A new empire, so redirect to NewEmpire
         m_vEmpireName = pszStandardizedName;
-        m_vPassword = pszPassword;
         return Redirect(NEW_EMPIRE);
     }
-    else if (m_pHttpRequest->GetFormBeginsWith("BLogin") || m_pHttpRequest->GetFormBeginsWith("TransDot"))
+
+    // Check if they clicked the Login button or hit return
+    if (m_pHttpRequest->GetFormBeginsWith("BLogin") || m_pHttpRequest->GetFormBeginsWith("TransDot"))
     {
         if (m_iEmpireKey == NO_KEY)
         {
             // A new empire, so redirect to NewEmpire
             m_vEmpireName = pszStandardizedName;
-            m_vPassword = pszPassword;
+            Assert(m_vEmpireName.GetCharPtr());
             return Redirect(NEW_EMPIRE);
         }
 
-        iErrCode = GetEmpireProperty(m_iEmpireKey, SystemEmpireData::Name, &m_vEmpireName);
+        // Check password
+        iErrCode = IsPasswordCorrect(m_iEmpireKey, pszPassword);
+        if (iErrCode == ERROR_PASSWORD)
+        {
+            char pszBuffer [128 + MAX_EMPIRE_NAME_LENGTH];
+            sprintf(pszBuffer, "That was not the right password for the %s empire", pszEmpireName);
+            AddMessage(pszBuffer);
+            
+            ReportLoginFailure(m_vEmpireName.GetCharPtr());
+            goto Text;
+        }
         RETURN_ON_ERROR(iErrCode);
 
-        if (m_iEmpireKey != NO_KEY)
+         // Make sure access is allowed
+        int iOptions;
+        iErrCode = GetSystemOptions(&iOptions);
+        RETURN_ON_ERROR(iErrCode);
+
+        bool bLoggedIn;
+        iErrCode = HtmlLoginEmpire(&bLoggedIn);
+        RETURN_ON_ERROR(iErrCode);
+        if (bLoggedIn)
         {
-            // Check password
-            iErrCode = IsPasswordCorrect(m_iEmpireKey, pszPassword);
-            if (iErrCode == ERROR_PASSWORD)
-            {
-                char pszBuffer [128 + MAX_EMPIRE_NAME_LENGTH];
-                sprintf (
-                    pszBuffer,
-                    "That was not the right password for the %s empire",
-                    m_vEmpireName.GetCharPtr()
-                    );
-
-                // Message
-                AddMessage(pszBuffer);
-
-                // Add to report
-                ReportLoginFailure(m_vEmpireName.GetCharPtr());
-            }
-            else
-            {
-                RETURN_ON_ERROR(iErrCode);
-                m_vPassword = pszPassword;
-
-                bool bLoggedIn;
-                iErrCode = HtmlLoginEmpire(&bLoggedIn);
-                RETURN_ON_ERROR(iErrCode);
-                if (bLoggedIn)
-                {
-                    bool bInitialized;
-                    iErrCode = InitializeEmpire(false, &bInitialized);
-                    RETURN_ON_ERROR(iErrCode);
-                    if (bInitialized)
-                    {
-                        // Yay!
-                        return Redirect(ACTIVE_GAME_LIST);
-                    }
-                }
-
-                // Security?
-                m_vEmpireName = (const char*) NULL;
-                m_vPassword = (const char*) NULL;
-            }
-        }
-        else
-        {
-            // Make sure access is allowed
-            int iOptions;
-            iErrCode = GetSystemOptions(&iOptions);
+            bool bInitialized;
+            iErrCode = InitializeEmpire(false, &bInitialized);
             RETURN_ON_ERROR(iErrCode);
-
-            if (!(iOptions & LOGINS_ENABLED) && m_iPrivilege < ADMINISTRATOR) {
-
-                // Get reason
-                AddMessage ("Access is denied to the server at this time. ");
-
-                Variant vReason;
-                iErrCode = GetSystemProperty(SystemData::AccessDisabledReason, &vReason);
-                RETURN_ON_ERROR(iErrCode);
-                
-                AppendMessage (vReason.GetCharPtr());
-                
-            } else {
-
-                // We're a new empire, so redirect to NewEmpire
-                m_vEmpireName = pszStandardizedName;
-                m_vPassword = pszPassword;
-
-                return Redirect(NEW_EMPIRE);
+            if (bInitialized)
+            {
+                // Yay!
+                return Redirect(ACTIVE_GAME_LIST);
             }
+            m_vEmpireName = (const char*) NULL;
         }
     }
 }
@@ -249,7 +195,7 @@ else if (!m_bRedirection)
 Text:
 
 // Get a cookie for last empire used's graphics
-ICookie* pCookie = m_pHttpRequest->GetCookie (LAST_EMPIRE_USED_COOKIE);
+ICookie* pCookie = m_pHttpRequest->GetCookie(LAST_EMPIRE_USED_COOKIE);
 if (pCookie != NULL && pCookie->GetValue() != NULL)
 {
     m_iEmpireKey = pCookie->GetIntValue();
@@ -387,8 +333,9 @@ if (!(iOptions & LOGINS_ENABLED)) {
     %><td><%
     %><input type="text" size="20" tabindex="32767" maxlength="<% Write (MAX_EMPIRE_NAME_LENGTH); %>" name="EmpireName"<% 
 
-    if (pszPrintEmpireName != NULL) {
-        %> value="<% Write (pszPrintEmpireName); %>"<%
+    if (pszPrintEmpireName)
+    {
+        %> value="<% Write(pszPrintEmpireName); %>"<%
     }
     %>></td><%
 
@@ -396,7 +343,7 @@ if (!(iOptions & LOGINS_ENABLED)) {
 
     %><td align="right"><strong>Password:</strong></td><%
     %><td><%
-    %><input type="password" size="20" tabindex="32767" maxlength="<% Write (MAX_PASSWORD_LENGTH); %>" name="Password"><%
+    %><input type="password" size="20" tabindex="32767" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" name="Password"><%
     %></td><%
 
     %></tr><%

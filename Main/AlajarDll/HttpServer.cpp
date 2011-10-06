@@ -1345,7 +1345,7 @@ ITraceLog* HttpServer::GetReport()
         Report* pNew = new Report();
         if (pNew)
         {
-            int iErrCode = pNew->Initialize((ReportFlags)(WRITE_DATE_TIME | WRITE_THREAD_ID), m_reportTracelevel, pszFileName);
+            int iErrCode = pNew->Initialize((ReportFlags)(WRITE_TIME | WRITE_THREAD_ID), m_reportTracelevel, pszFileName);
             if (iErrCode == OK)
             {
                 SafeRelease(m_pReport);

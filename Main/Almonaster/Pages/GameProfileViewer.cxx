@@ -118,8 +118,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 {
                     m_iReserved = 0;
                     m_i64SecretKey = 0;
-                    m_vPassword = 0;
-                    m_vEmpireName = 0;
+                    m_vEmpireName = (char*)NULL;
 
                     m_iEmpireKey = iSwitch;
 

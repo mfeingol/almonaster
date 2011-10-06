@@ -22,55 +22,61 @@ int Report::Write(TraceInfoLevel level, const char* pszMessage)
         return WARNING;
     }
     
-    int iSec, iMin, iHour, iDay, iMonth, iYear;
+    int iSec = 0, iMin = 0, iHour = 0, iDay = 0, iMonth = 0, iYear = 0;
     DayOfWeek day;
-    Time::GetDate(&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
 
-    Thread tThread;
-    Thread::GetCurrentThread(&tThread);
+    if (m_flags & (WRITE_DATE | WRITE_TIME))
+    {
+        Time::GetDate(&iSec, &iMin, &iHour, &day, &iDay, &iMonth, &iYear);
+    }
+
+    char pszDate[64] = {0};
+    if (m_flags & WRITE_DATE)
+    {
+        char pszDay[5], pszMonth[5];
+        snprintf(pszDate, countof(pszDate)-1, "%s-%s-%i", String::ItoA(iMonth, pszMonth, 10, 2), String::ItoA(iDay, pszDay, 10, 2), iYear);
+    }
+
+    char pszTime[64] = {0};
+    if (m_flags & WRITE_TIME)
+    {
+        char pszHour[5], pszMin[5], pszSec[5];
+        snprintf(pszTime, countof(pszTime)-1, "%s:%s:%s", String::ItoA(iHour, pszHour, 10, 2), String::ItoA(iMin, pszMin, 10, 2), String::ItoA(iSec, pszSec, 10, 2));
+    }
+
+    char pszDateTime[128] = {0};
+    if ((m_flags & WRITE_DATE) && (m_flags & WRITE_TIME))
+    {
+        snprintf(pszDateTime, countof(pszDateTime)-1, "[%s,%s]", pszDate, pszTime);
+    }
+    else if (m_flags & WRITE_DATE)
+    {
+        snprintf(pszDateTime, countof(pszDateTime)-1, "[%s]", pszDate);
+    }
+    else if (m_flags & WRITE_TIME)
+    {
+        snprintf(pszDateTime, countof(pszDateTime)-1, "[%s]", pszTime);
+    }
+
+    char pszThreadId[64] = {0};
+    if (m_flags & WRITE_THREAD_ID)
+    {
+        Thread tThread;
+        Thread::GetCurrentThread(&tThread);
+        snprintf(pszThreadId, countof(pszThreadId)-1, "[0x%x]", tThread.GetThreadId());
+    }
 
     const size_t chLen = strlen(pszMessage) + 64;
     char* pszText = (char*)StackAlloc(chLen);
     memset(pszText, 0, chLen);
-    char pszDay[5], pszHour[5], pszMin[5], pszSec[5], pszMonth[5];
 
-    if (m_flags & (WRITE_DATE_TIME | WRITE_THREAD_ID))
+    const char* pszSpace = "";
+    if (m_flags)
     {
-        snprintf(pszText, chLen, "[%s-%s-%i,%s:%s:%s][0x%x] %s%s",
-                 String::ItoA(iMonth, pszMonth, 10, 2), 
-                 String::ItoA(iDay, pszDay, 10, 2),
-                 iYear,
-                 String::ItoA(iHour, pszHour, 10, 2), 
-                 String::ItoA(iMin, pszMin, 10, 2),
-                 String::ItoA(iSec, pszSec, 10, 2),
-                 tThread.GetThreadId(),
-                 pszMessage,
-                 PLATFORM_LINE_BREAK);
+        pszSpace = " ";
     }
-    else if (m_flags & WRITE_DATE_TIME)
-    {
-        snprintf(pszText, chLen, "[%s-%s-%i,%s:%s:%s] %s%s",
-                 String::ItoA(iMonth, pszMonth, 10, 2), 
-                 String::ItoA(iDay, pszDay, 10, 2),
-                 iYear,
-                 String::ItoA(iHour, pszHour, 10, 2), 
-                 String::ItoA(iMin, pszMin, 10, 2),
-                 String::ItoA(iSec, pszSec, 10, 2),
-                 pszMessage,
-                 PLATFORM_LINE_BREAK);
-    }
-    else if (m_flags & WRITE_THREAD_ID)
-    {
-        snprintf(pszText, chLen, "[0x%x] %s%s",
-                 tThread.GetThreadId(),
-                 pszMessage,
-                 PLATFORM_LINE_BREAK);
-    }
-    else
-    {
-        snprintf(pszText, chLen, "%s%s", pszMessage, PLATFORM_LINE_BREAK);
-    }
- 
+
+    snprintf(pszText, chLen-1, "%s%s%s%s%s", pszDateTime, pszThreadId, pszSpace, pszMessage, PLATFORM_LINE_BREAK);
     return m_fFile.Write(pszText, (unsigned int)strlen(pszText));
 }
 

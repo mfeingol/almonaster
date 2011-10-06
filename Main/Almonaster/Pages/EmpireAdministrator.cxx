@@ -202,7 +202,6 @@ SearchResults:
                         return Redirect (m_pgPageId);
                     }
 
-                    Variant vOldPassword;
                     int iPrivilege;
                     const char* pszValue = pHttpForm->GetValue(), * pszValue2 = pSearchForm->GetValue();
 
@@ -221,9 +220,6 @@ SearchResults:
                         return Redirect (m_pgPageId);
                     }
                     
-                    iErrCode = GetEmpirePassword (iTargetEmpireKey, &vOldPassword);
-                    RETURN_ON_ERROR(iErrCode);
-
                     iErrCode = GetEmpirePrivilege (iTargetEmpireKey, &iPrivilege);
                     RETURN_ON_ERROR(iErrCode);
 
@@ -232,24 +228,22 @@ SearchResults:
                         return Redirect (m_pgPageId);
                     }
 
-                    if (String::StrCmp (vOldPassword.GetCharPtr(), pszValue) == 0) {
-                        AddMessage ("The new password was the same as the old one");
-                    } else {
-                        if (!VerifyPassword(pszValue)) {
-                            return Redirect (m_pgPageId);
-                        }
-
-                        // Confirm
-                        if (strcmp(pszValue, pszValue2) != 0) {
-                            AddMessage ("The new password was not confirmed");
-                            return Redirect (m_pgPageId);
-                        }
-
-                        iErrCode = SetEmpirePassword (iTargetEmpireKey, pszValue);
-                        RETURN_ON_ERROR(iErrCode);
-
-                        AddMessage ("The empire's password was successfully changed");
+                    if (!VerifyPassword(pszValue))
+                    {
+                        return Redirect (m_pgPageId);
                     }
+
+                    // Confirm
+                    if (strcmp(pszValue, pszValue2) != 0)
+                    {
+                        AddMessage ("The new password was correctly confirmed");
+                        return Redirect (m_pgPageId);
+                    }
+
+                    iErrCode = SetEmpirePassword (iTargetEmpireKey, pszValue);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    AddMessage ("The empire's password was successfully changed");
                 }
             }
 
@@ -641,17 +635,11 @@ case 2:
     }
     else
     {
-        Variant vTargetPassword;
-        iErrCode = GetEmpirePassword (iTargetEmpireKey, &vTargetPassword);
-        RETURN_ON_ERROR(iErrCode);
-    
         %><p><strong>Change <% Write (vTargetName.GetCharPtr()); %>'s password:</strong><%
         %><p><table><tr><td><strong>New password</strong></td><td><%
-        %><input type="password" name="NewPass" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); 
-            %>" value="<% Write (vTargetPassword.GetCharPtr()); %>"></td></tr><%
+        %><input type="password" name="NewPass" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>"></td></tr><%
         %><tr><td><strong>Confirm password</strong></td><td><%
-        %><input type="password" name="NewPass2" size="20" maxlength="<% Write (MAX_PASSWORD_LENGTH); 
-            %>" value="<% Write (vTargetPassword.GetCharPtr()); %>"></td></tr></table><%
+        %><input type="password" name="NewPass2" size="20" maxlength="<% Write(MAX_EMPIRE_PASSWORD_LENGTH); %>"></td></tr></table><%
     }
 
     %><p><%

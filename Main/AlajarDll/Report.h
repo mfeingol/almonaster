@@ -8,8 +8,9 @@
 enum ReportFlags
 {
     WRITE_NONE      = 0x00000000,
-    WRITE_DATE_TIME = 0x00000001,
-    WRITE_THREAD_ID = 0x00000002,
+    WRITE_DATE      = 0x00000001,
+    WRITE_TIME      = 0x00000002,
+    WRITE_THREAD_ID = 0x00000004,
 };
 
 class Report : public ITraceLog, public ITraceLogReader
