@@ -589,24 +589,12 @@ int GameEngine::GetNukeHistory(int iEmpireKey, int* piNumNuked, Variant*** pppvN
 //
 // Return the system's nuke history, unsorted
 
-int GameEngine::GetSystemNukeHistory (int* piNumNukes, Variant*** pppvNukedData) {
-
-    const char* pszNukeColumns[] = {
-        SystemNukeList::NukerAlienKey,
-        SystemNukeList::NukerEmpireName,
-        SystemNukeList::NukerEmpireKey,
-        SystemNukeList::NukedAlienKey,
-        SystemNukeList::NukedEmpireName,
-        SystemNukeList::NukedEmpireKey,
-        SystemNukeList::GameClassName,
-        SystemNukeList::GameNumber,
-        SystemNukeList::TimeStamp
-    };
-
+int GameEngine::GetSystemNukeHistory (int* piNumNukes, Variant*** pppvNukedData)
+{
     int iErrCode = t_pCache->ReadColumns (
         SYSTEM_NUKE_LIST, 
-        countof(pszNukeColumns),
-        pszNukeColumns,
+        SystemNukeList::NumColumns,
+        SystemNukeList::ColumnNames,
         NULL,
         pppvNukedData,
         (unsigned int*) piNumNukes
@@ -619,7 +607,6 @@ int GameEngine::GetSystemNukeHistory (int* piNumNukes, Variant*** pppvNukedData)
 
     return iErrCode;
 }
-
 
 int GameEngine::GetSystemLatestGames (int* piNumGames, Variant*** pppvGameData) {
 

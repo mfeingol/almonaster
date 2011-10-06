@@ -1,7 +1,5 @@
 #pragma once
 
-using namespace System;
-
 enum class TableType
 {
     System,

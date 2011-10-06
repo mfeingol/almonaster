@@ -87,7 +87,13 @@ int GameEngine::GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey
         break;
     }
 
-    return t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, rangeSd, orderByDef, ppiEmpireKey, piNumEmpires);
+    int iErrCode = t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, rangeSd, orderByDef, ppiEmpireKey, piNumEmpires);
+    if (iErrCode == ERROR_TOO_MANY_HITS)
+    {
+        iErrCode = OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
+    return iErrCode;
 }
 
 IScoringSystem* GameEngine::CreateScoringSystem(ScoringSystem ssTopList)

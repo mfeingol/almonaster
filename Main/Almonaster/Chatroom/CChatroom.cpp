@@ -114,16 +114,21 @@ int Chatroom::GetMessages(ChatroomMessage** ppcmMessage, unsigned int* piNumMess
         ChatroomMessage* pcmMessage = new ChatroomMessage[iNumMessages];
         Assert(pcmMessage);
 
+        UTCTime* ptPostTime = (UTCTime*)StackAlloc(iNumMessages * sizeof(UTCTime));
+
         for (unsigned int i = 0; i < iNumMessages; i ++)
         {
             pcmMessage[i].strMessageText = ppvData[i][SystemChatroomData::iMessage].GetCharPtr();
             pcmMessage[i].strSpeaker = ppvData[i][SystemChatroomData::iSpeaker].GetCharPtr();
-            pcmMessage[i].tTime = ppvData[i][SystemChatroomData::iTime].GetInteger64();
+            pcmMessage[i].tTime = ptPostTime[i] = ppvData[i][SystemChatroomData::iTime].GetInteger64();
             pcmMessage[i].iFlags = ppvData[i][SystemChatroomData::iFlags].GetInteger();
 
             Assert(pcmMessage[i].strMessageText.GetCharPtr());
             Assert(pcmMessage[i].strSpeaker.GetCharPtr());
         }
+
+        Algorithm::QSortTwoAscending<UTCTime, ChatroomMessage>(ptPostTime, pcmMessage, iNumMessages);
+
         *ppcmMessage = pcmMessage;
         *piNumMessages = iNumMessages;
     }

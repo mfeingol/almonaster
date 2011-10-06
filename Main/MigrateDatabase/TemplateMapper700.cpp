@@ -47,11 +47,11 @@ TemplateMapper700::TemplateMapper700()
     m_templates["SystemEmpireData"]->RenamedColumns->Add(Tuple::Create("AlienKey", "AlienAddress"));
 
     m_templates["SystemEmpireMessages"] = CreateTemplateMetadata(SystemEmpireMessages::Template);
-    m_templates["SystemEmpireMessages"]->DeletedColumns->Add(gcnew FileDatabaseElement("SourceSecret", nullptr));
     m_templates["SystemEmpireMessages"]->RenamedColumns->Add(Tuple::Create("Source", "SourceName"));
 
     m_templates["SystemEmpireNukedList"] = CreateTemplateMetadata(SystemEmpireNukeList::Template);
     m_templates["SystemEmpireNukedList"]->RenamedColumns->Add(Tuple::Create("AlienKey", "AlienAddress"));
+    m_templates["SystemEmpireNukedList"]->RenamedColumns->Add(Tuple::Create("EmpireKey", "ReferenceEmpireKey"));
 
     m_templates["SystemEmpireNukerList"] = CreateTemplateMetadata(SystemEmpireNukeList::Template);
     m_templates["SystemEmpireNukerList"]->RenamedColumns->Add(Tuple::Create("AlienKey", "AlienAddress"));
@@ -97,7 +97,6 @@ TemplateMapper700::TemplateMapper700()
     m_templates["GameEmpireData"]->DeletedColumns->Add(gcnew FileDatabaseElement("NumAlliances", nullptr));
 
     m_templates["GameEmpireMessages"] = CreateTemplateMetadata(GameEmpireMessages::Template);
-    m_templates["GameEmpireMessages"]->DeletedColumns->Add(gcnew FileDatabaseElement("SourceSecret", nullptr));
     m_templates["GameEmpireMessages"]->RenamedColumns->Add(Tuple::Create("Source", "SourceName"));
 
     m_templates["GameEmpireMap"] = CreateTemplateMetadata(GameEmpireMap::Template);

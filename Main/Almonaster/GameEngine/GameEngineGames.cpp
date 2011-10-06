@@ -356,7 +356,7 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
     RETURN_ON_ERROR(iErrCode);
 
     // Attempt to delete gameclass if it's marked for deletion
-    if (vNumGames.GetInteger() == 0 && vGameClassOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION)
+    if (vNumGames.GetInteger() == 1 && vGameClassOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION)
     {
         bool bDeleted;
         iErrCode = DeleteGameClass(iGameClass, &bDeleted);

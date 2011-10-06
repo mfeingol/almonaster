@@ -18,6 +18,7 @@
 // Boston, MA  02111-1307, USA.
 
 #include "Utils.h"
+#include <msclr/auto_handle.h>
 #include <msclr/marshal.h>
 
 using namespace System::Collections::Generic;
@@ -47,9 +48,8 @@ void Convert(System::Object^ object, Variant* pv)
     System::Type^ t = object->GetType();
     if (t == System::String::typeid)
     {
-        System::IntPtr intPtr = Marshal::StringToCoTaskMemAnsi((System::String^)object);
-        *pv = (char*)(void*)intPtr;
-        Marshal::FreeCoTaskMem(intPtr);
+        msclr::auto_handle<marshal_context> context = gcnew marshal_context();
+        *pv = context->marshal_as<const char*>((System::String^)object);
     }
     else if (t == System::Int32::typeid)
     {
@@ -166,8 +166,7 @@ void Trace(TraceInfoLevel level, const char* pszFormat, ...)
 
 void TraceException(System::Exception^ e)
 {
-    marshal_context^ context = gcnew marshal_context();
+    msclr::auto_handle<marshal_context> context = gcnew marshal_context();
     const char* pszMessage = context->marshal_as<const char*>(e->Message);
     Trace(TRACE_ERROR, pszMessage);
-	delete context;
 }

@@ -1,12 +1,12 @@
 #include "Transform622to700.h"
 #include "FileDatabaseElement.h"
 
+#include <msclr/auto_handle.h>
+#include <msclr/marshal.h>
+
+using namespace msclr::interop;
+using namespace System::IO;
 using namespace System::Text;
-
-System::String^ ColumnNamesToStringList(List<IDataElement^>^ cols);
-System::String^ ColumnRenamesToStringList(List<Tuple<System::String^, System::String^>^>^ renames);
-
-void EnsureIdenticalDeletionLists(TemplateMetadata^ templateMeta, List<IDataElement^>^ experimental);
 
 // Stolen from GameEngineConstants.h, etc
 #define SUPERCLASS_KEY_TOURNAMENT ((unsigned int) 0xfffffffc)
@@ -14,6 +14,23 @@ void EnsureIdenticalDeletionLists(TemplateMetadata^ templateMeta, List<IDataElem
 #define NO_KEY ((unsigned int) 0xffffffff)
 #define SYSTEM_KEY ((unsigned int) 0xffffffed)
 #define INDEPENDENT_KEY ((unsigned int) 0xfffffffd)
+#define TOURNAMENT_KEY ((unsigned int) 0xfffffffc)
+#define PERSONAL_GAME ((unsigned int) 0xfffffffb)
+
+#define INDIVIDUAL_ELEMENTS ((unsigned int)-10)
+#define ALTERNATIVE_PATH    ((unsigned int)-20)
+#define NULL_THEME          ((unsigned int)-30)
+#define CUSTOM_COLORS       ((unsigned int)-40)
+#define UPLOADED_ICON       ((unsigned int)-50)
+
+#define HOMEWORLD (-1)
+#define NOT_HOMEWORLD (-2)
+
+enum BuilderPlanets {
+    NO_DEFAULT_BUILDER_PLANET = -1,
+    HOMEWORLD_DEFAULT_BUILDER_PLANET = -2,
+    LAST_BUILDER_DEFAULT_BUILDER_PLANET = -3    
+};
 
 Transform622to700::Transform622to700(IDataSource^ source, IDataDestination^ dest)
 {
@@ -24,14 +41,36 @@ Transform622to700::Transform622to700(IDataSource^ source, IDataDestination^ dest
     m_templates700 = gcnew TemplateMapper700();
 
     m_empireKeyMapper = gcnew Dictionary<__int64, __int64>();
+    m_empireKeyMapper[SYSTEM_KEY] = SYSTEM_KEY;
+
     m_empireNameTo622IdMapper = gcnew Dictionary<System::String^, __int64>();
     m_empire622IdToNameMapper = gcnew Dictionary<__int64, System::String^>();
+
     m_superClassKeyMapper = gcnew Dictionary<__int64, __int64>();
     m_superClassKeyMapper[SUPERCLASS_KEY_TOURNAMENT] = SUPERCLASS_KEY_TOURNAMENT;
     m_superClassKeyMapper[SUPERCLASS_KEY_PERSONAL_GAME] = SUPERCLASS_KEY_PERSONAL_GAME;
 
+    m_alienKeyMapper = gcnew Dictionary<__int64, __int64>();
+    m_alienKeyMapper[UPLOADED_ICON] = UPLOADED_ICON;
+
+    m_themeKeyMapper = gcnew Dictionary<__int64, __int64>();
+    m_themeKeyMapper[INDIVIDUAL_ELEMENTS] = INDIVIDUAL_ELEMENTS;
+    m_themeKeyMapper[ALTERNATIVE_PATH] = ALTERNATIVE_PATH;
+    m_themeKeyMapper[NULL_THEME] = NULL_THEME;
+    m_themeKeyMapper[CUSTOM_COLORS] = CUSTOM_COLORS;
+
+    m_teamKeyMapper = gcnew Dictionary<Tuple<__int64, __int64>^, __int64>();
+
+    m_planetKeyMapper = gcnew Dictionary<Tuple<__int64, int, __int64>^, __int64>();
+
+    m_shipKeyMapper = gcnew Dictionary<Tuple<__int64, int, __int64, __int64>^, __int64>();
+    m_fleetKeyMapper = gcnew Dictionary<Tuple<__int64, int, __int64, __int64>^, __int64>();
+
     m_gameClassKeyMapper = gcnew Dictionary<__int64, __int64>();
     m_tournamentKeyMapper = gcnew Dictionary<__int64, __int64>();
+    m_tournamentKeyMapper[NO_KEY] = NO_KEY;
+
+    m_associations = gcnew List<Tuple<int, int>^>();
 }
 
 void Transform622to700::Transform()
@@ -66,101 +105,107 @@ void Transform622to700::Transform()
 
     Console::WriteLine("Found {0} source tables from {1} templates", cTables, m_tables->Count);
 
+    // SystemAlienIcons
+    // (MUST run before SystemData and SystemGameClassData)
+    TransformTables("SystemAlienIcons", nullptr, "AlienKey", m_alienKeyMapper, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
+
+    // SystemThemes
+    // (MUST run before SystemData and SystemGameClassData)
+    TransformTables("SystemThemes", nullptr, nullptr, m_themeKeyMapper, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemThemes));
+
     // SystemData
-    TransformTables("SystemData", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemData));
+    TransformTables("SystemData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemData));
 
     // SystemEmpireData
-    TransformTables("SystemEmpireData", nullptr, m_empireKeyMapper, m_empireNameTo622IdMapper, m_empire622IdToNameMapper, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireData));
+    TransformTables("SystemEmpireData", nullptr, nullptr, m_empireKeyMapper, m_empireNameTo622IdMapper, m_empire622IdToNameMapper, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireData));
 
     // SystemSuperClassData
     // (MUST run before SystemGameClassData)
-    TransformTables("SystemSuperClassData", nullptr, m_superClassKeyMapper, nullptr, nullptr, nullptr);
-
-    // SystemGameClassData
-    TransformTables("SystemGameClassData", nullptr, m_gameClassKeyMapper, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemGameClassData));
-
-    // SystemAlienIcons
-    TransformTables("SystemAlienIcons", nullptr, nullptr, nullptr, nullptr, nullptr);
-
-    // SystemAlienIcons
-    TransformTables("SystemThemes", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemThemes));
+    TransformTables("SystemSuperClassData", nullptr, nullptr, m_superClassKeyMapper, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
     // SystemTournaments
-    // (MUST run before SystemActiveGames)
-    TransformTables("SystemTournaments", nullptr, m_tournamentKeyMapper, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemTournaments));
+    // (MUST run before SystemActiveGames and SystemGameClassData)
+    TransformTables("SystemTournaments", nullptr, nullptr, m_tournamentKeyMapper, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemTournaments));
+
+    // SystemGameClassData
+    TransformTables("SystemGameClassData", nullptr, nullptr, m_gameClassKeyMapper, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemGameClassData));
 
     // SystemActiveGames
-    TransformTables("SystemActiveGames", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemActiveGames));
+    TransformTables("SystemActiveGames", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemActiveGames));
 
     // SystemEmpireMessages
-    TransformTables("SystemEmpireMessages", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireMessages));
+    TransformTables("SystemEmpireMessages", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireMessages));
 
     // SystemEmpireNukerList
-    TransformTables("SystemEmpireNukerList", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireNukerList));
+    TransformTables("SystemEmpireNukerList", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireNukerList));
 
     // SystemEmpireNukedList
-    TransformTables("SystemEmpireNukedList", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireNukedList));
+    TransformTables("SystemEmpireNukedList", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireNukedList));
 
     // SystemNukeList
-    TransformTables("SystemNukeList", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemNukeList));
+    TransformTables("SystemNukeList", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemNukeList));
 
     // SystemLatestGames
-    TransformTables("SystemLatestGames", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemLatestGames));
+    TransformTables("SystemLatestGames", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemLatestGames));
 
     // SystemEmpireActiveGames
-    TransformTables("SystemEmpireActiveGames", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireActiveGames));
+    TransformTables("SystemEmpireActiveGames", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireActiveGames));
 
     // SystemTournamentTeams
-    TransformTables("SystemTournamentTeams", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemTournamentTeams));
+    // (MUST run before SystemTournamentEmpires)
+    TransformTables("SystemTournamentTeams", nullptr, nullptr, nullptr, nullptr, nullptr, m_teamKeyMapper, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemTournamentTeams));
 
     // SystemTournamentEmpires
-    TransformTables("SystemTournamentEmpires", nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("SystemTournamentEmpires", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemTournamentEmpires));
 
     // SystemEmpireTournaments
-    TransformTables("SystemEmpireTournaments", nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("SystemEmpireTournaments", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformSystemEmpireTournaments));
 
     // SystemChatroomData
-    TransformTables("SystemChatroomData", nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("SystemChatroomData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
     // GameData
-    TransformTables("GameData", nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("GameData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr);
 
     // GameSecurity
-    TransformTables("GameSecurity", nullptr, nullptr, nullptr, nullptr, nullptr);
+    TransformTables("GameSecurity", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameSecurity));
 
     // GameEmpires
-    TransformTables("GameEmpires", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpires));
+    TransformTables("GameEmpires", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpires));
 
     // GameDeadEmpires
-    TransformTables("GameDeadEmpires", "GameNukedEmpires", nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameDeadEmpires));
+    TransformTables("GameDeadEmpires", "GameNukedEmpires", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameDeadEmpires));
 
     // GameMap
-    TransformTables("GameMap", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameMap));
+    TransformTables("GameMap", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, m_planetKeyMapper, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameMap));
 
-    // GameMap
-    TransformTables("GameEmpireData", nullptr, nullptr, nullptr, nullptr, nullptr);
+    // GameEmpireData
+    TransformTables("GameEmpireData", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireData));
 
     // GameEmpireMessages
-    TransformTables("GameEmpireMessages", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireMessages));
+    TransformTables("GameEmpireMessages", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireMessages));
 
     // GameEmpireMap
-    TransformTables("GameEmpireMap", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireMap));
+    TransformTables("GameEmpireMap", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireMap));
 
     // GameEmpireDiplomacy
-    TransformTables("GameEmpireDiplomacy", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireDiplomacy));
-
-    // GameEmpireShips
-    TransformTables("GameEmpireShips", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireShips));
-
-    // GameIndependentShips
-    TransformTables("GameIndependentShips", "GameEmpireShips", nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameIndependentShips));
+    TransformTables("GameEmpireDiplomacy", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireDiplomacy));
 
     // GameEmpireFleets
-    TransformTables("GameEmpireFleets", nullptr, nullptr, nullptr, nullptr, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireFleets));
+    // (MUST run before GameEmpireShips)
+    TransformTables("GameEmpireFleets", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, m_fleetKeyMapper, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireFleets));
 
-    // TODOTODO - SystemAvailability row
+    // GameEmpireShips
+    TransformTables("GameEmpireShips", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, m_shipKeyMapper, gcnew CustomRowTransform(this, &Transform622to700::TransformGameEmpireShips));
 
-    // TODOTODO - review schemas for more foreign keys that need updating
+    // GameIndependentShips
+    TransformTables("GameIndependentShips", "GameEmpireShips", nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, m_shipKeyMapper, gcnew CustomRowTransform(this, &Transform622to700::TransformGameIndependentShips));
+
+    // SystemEmpireAssociations
+    InsertAssociationRows();
+
+    // SystemAvailability
+    InsertAvailabilityRow();
 
     //
     // Deletions
@@ -202,8 +247,15 @@ void Transform622to700::Transform()
     //}
 }
 
-void Transform622to700::TransformTables(System::String^ currentTemplate, System::String^ destTableOverride, Dictionary<__int64, __int64>^ idMapper, 
-                                        Dictionary<System::String^, __int64>^ nameToIdMapper, Dictionary<__int64, System::String^>^ idToNameMapper,
+void Transform622to700::TransformTables(System::String^ currentTemplate,
+                                        System::String^ destTableOverride,
+                                        System::String^ idColumn,
+                                        Dictionary<__int64, __int64>^ idMapper,
+                                        Dictionary<System::String^, __int64>^ nameToIdMapper,
+                                        Dictionary<__int64, System::String^>^ idToNameMapper,
+                                        Dictionary<Tuple<__int64, __int64>^, __int64>^ tournamentTeamKeyMapper,
+                                        Dictionary<Tuple<__int64, int, __int64>^, __int64>^ gameIdMapper,
+                                        Dictionary<Tuple<__int64, int, __int64, __int64>^, __int64>^ gameEmpireIdMapper,
                                         CustomRowTransform^ custom)
 {
     Console::WriteLine();
@@ -240,11 +292,27 @@ void Transform622to700::TransformTables(System::String^ currentTemplate, System:
             Console::WriteLine("\tRenamed columns: {0}", renamedCols);
         }
 
+        switch (nameInfo->Type)
+        {
+        case TableType::Game:
+        case TableType::GameEmpire:
+            if (!IsGameActive(nameInfo->GameClass, nameInfo->GameNumber))
+            {
+                Console::WriteLine("Skipping table {0}", table->Name);
+                continue;
+            }
+            break;
+        }
+
         unsigned int cRows = 0;
         for each (IDataRow^ row in table)
         {
             List<IDataElement^>^ accepted, ^ rejected;
-            TransformColumns(templateMeta, row, nameToIdMapper, idToNameMapper, custom, accepted, rejected);
+            if (!TransformColumns(nameInfo, templateMeta, row, nameToIdMapper, idToNameMapper, custom, accepted, rejected))
+            {
+                Console::WriteLine("Skipping row {0}", row->Id);
+                continue;
+            }
             EnsureIdenticalDeletionLists(templateMeta, rejected);
 
             switch (nameInfo->Type)
@@ -273,7 +341,51 @@ void Transform622to700::TransformTables(System::String^ currentTemplate, System:
 
             if (idMapper)
             {
+                if (idColumn)
+                {
+                    bool bFound = false;
+                    for each (IDataElement^ record in row)
+                    {
+                        if (System::String::Compare(record->Name, idColumn) == 0)
+                        {
+                            id622 = (int)record->Value;
+                            bFound = true;
+                            break;
+                        }
+                    }
+                    if (!bFound)
+                        throw gcnew ApplicationException("ID column not found");
+                }
+
                 idMapper->Add(id622, id700);
+            }
+
+            if (gameIdMapper)
+            {
+                gameIdMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, id622)] = id700;
+            }
+
+            if (gameEmpireIdMapper)
+            {
+                int iGameClass = nameInfo->GameClass;
+                int iGameNumber = nameInfo->GameNumber;
+                int iEmpireKey;
+                
+                if (nameInfo->Name == "GameIndependentEmpires")
+                {
+                    iEmpireKey = INDEPENDENT_KEY;
+                }
+                else
+                {
+                    iEmpireKey = nameInfo->EmpireKey;
+                }
+
+                gameEmpireIdMapper[Tuple::Create(KeyToId(iGameClass), iGameNumber, KeyToId(iEmpireKey), id622)] = id700;
+            }
+
+            if (tournamentTeamKeyMapper)
+            {
+                tournamentTeamKeyMapper[Tuple::Create(KeyToId(nameInfo->TournamentKey), row->Id)] = id700;
             }
 
             cRows++;
@@ -289,8 +401,10 @@ void Transform622to700::TransformTables(System::String^ currentTemplate, System:
     m_tables->Remove(currentTemplate);
 }
 
-void Transform622to700::TransformColumns(TemplateMetadata^ templateMeta, IDataRow^ row,
-                                         Dictionary<System::String^, __int64>^ nameToIdMapper, Dictionary<__int64, System::String^>^ idToNameMapper, CustomRowTransform^ custom,
+bool Transform622to700::TransformColumns(TableNameInfo^ nameInfo, TemplateMetadata^ templateMeta, IDataRow^ row,
+                                         Dictionary<System::String^, __int64>^ nameToIdMapper,
+                                         Dictionary<__int64, System::String^>^ idToNameMapper,
+                                         CustomRowTransform^ custom,
                                          [Out] List<IDataElement^>^% selected, [Out] List<IDataElement^>^% rejected)
 {
     selected = gcnew List<IDataElement^>();
@@ -305,11 +419,13 @@ void Transform622to700::TransformColumns(TemplateMetadata^ templateMeta, IDataRo
             idToNameMapper->Add(row->Id, name);
         }
 
+        // Check for renames first
         bool found = false;
-        for each (TemplateColumnMetadata^ column in templateMeta->Columns)
+        for each (Tuple<System::String^, System::String^>^ tuple in templateMeta->RenamedColumns)
         {
-            if (System::String::Compare(column->Name, record->Name) == 0)
+            if (System::String::Compare(record->Name, tuple->Item1) == 0)
             {
+                record = gcnew FileDatabaseElement(tuple->Item2, record->Value);
                 found = true;
                 break;
             }
@@ -317,12 +433,11 @@ void Transform622to700::TransformColumns(TemplateMetadata^ templateMeta, IDataRo
 
         if (!found)
         {
-            // Check for renames
-            for each (Tuple<System::String^, System::String^>^ tuple in templateMeta->RenamedColumns)
+            // Make sure we're keeping the column
+            for each (TemplateColumnMetadata^ column in templateMeta->Columns)
             {
-                if (System::String::Compare(record->Name, tuple->Item1) == 0)
+                if (System::String::Compare(column->Name, record->Name) == 0)
                 {
-                    record = gcnew FileDatabaseElement(tuple->Item2, record->Value);
                     found = true;
                     break;
                 }
@@ -339,66 +454,292 @@ void Transform622to700::TransformColumns(TemplateMetadata^ templateMeta, IDataRo
         }
     }
 
+    bool keep = true;
     if (custom)
     {
-        custom(row, selected);
+        keep = custom(nameInfo, row, selected);
     }
+    return keep;
 }
 
 //
 // Custom transformation
 //
 
-void Transform622to700::TransformSystemData(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - add DefaultAlienKey
-    // TODOTODO - add SystemMessagesAlienKey
-}
+    int cFound = 0;
 
-void Transform622to700::TransformSystemGameClassData(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
-{
-    for each (IDataElement^ data in original)
+    int defaultAlienKey = 0, systemMessagesAlienKey = 0;
+
+    for each (IDataElement^ data in accepted)
     {
-        if (System::String::Compare(data->Name, "SuperClassKey") == 0)
+        if (System::String::Compare(data->Name, "DefaultAlienAddress") == 0)
         {
-            data->Value = IdToKey(m_superClassKeyMapper[KeyToId(data->Value)]);
-            break;
+            cFound++;
+            defaultAlienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "SystemMessagesAlienAddress") == 0)
+        {
+            cFound++;
+            systemMessagesAlienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUIButtons") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUIBackground") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUILivePlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUIDeadPlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUISeparator") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUIHorz") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUIVert") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultUIColor") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
         }
     }
+
+    accepted->Insert(0, gcnew FileDatabaseElement("DefaultAlienKey", defaultAlienKey));
+    accepted->Insert(102, gcnew FileDatabaseElement("SystemMessagesAlienKey", systemMessagesAlienKey));
+
+    if (cFound != 10)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemThemes(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemGameClassData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODO - add Address
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "Owner") == 0)
+        {
+            cFound++;
+            unsigned int key = (int)data->Value;
+            if (key != TOURNAMENT_KEY && key != PERSONAL_GAME)
+            {
+                data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+            }
+        }
+
+        else if (System::String::Compare(data->Name, "TournamentKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_tournamentKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "SuperClassKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_superClassKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    if (cFound != 3)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemTournaments(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemThemes(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - add Icon
+    accepted->Insert(0, gcnew FileDatabaseElement("Address", IdToKey(original->Id)));
+    return true;
 }
 
-void Transform622to700::TransformSystemEmpireData(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemTournaments(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - convert Associations column to SystemEmpireAssociations insertions
-    // TODOTODO - add AlienKey
+    int cFound = 0;
+
+    int icon = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "Owner") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "IconAddress") == 0)
+        {
+            cFound++;
+            icon = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    accepted->Insert(5, gcnew FileDatabaseElement("Icon", icon));
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemActiveGames(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemEmpireData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    int alienKey = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "AlienAddress") == 0)
+        {
+            cFound++;
+            alienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UIButtons") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UIBackground") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UILivePlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UIDeadPlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UISeparator") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UIHorz") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UIVert") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "UIColor") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "AlmonasterTheme") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_themeKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    for each (IDataElement^ data in original)
+    {
+        if (System::String::Compare(data->Name, "Associations") == 0)
+        {
+            cFound++;
+
+            System::String^ oldAssoc = (System::String^)data->Value;
+            if (!System::String::IsNullOrEmpty(oldAssoc))
+            {
+                // Convert Associations column to SystemEmpireAssociations insertions
+                array<System::String^>^ split = oldAssoc->Split(';');
+                for each (System::String^ assoc in split)
+                {
+                    m_associations->Add(Tuple::Create(IdToKey(original->Id), Int32::Parse(assoc)));
+                }
+            }
+        }
+    }
+
+    accepted->Insert(7, gcnew FileDatabaseElement("AlienKey", alienKey));
+
+    if (cFound != 11)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformSystemActiveGames(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
     System::String^ gameClassGameNumber = nullptr;
+    int cFound = 0;
+
+    int gameClass = 0, gameNumber = 0;
+
     for each (IDataElement^ data in original)
     {
         // Split GameClassGameNumber into two integer columns
         if (System::String::Compare(data->Name, "GameClassGameNumber") == 0)
         {
+            cFound++;
+
             // (We need this for later)
             gameClassGameNumber = (System::String^)data->Value;
             
             array<System::String^>^ split = gameClassGameNumber->Split('.');
-            accepted->Insert(0, gcnew FileDatabaseElement("GameClass", IdToKey(m_gameClassKeyMapper[KeyToId(Int32::Parse(split[0]))])));
-            accepted->Insert(1, gcnew FileDatabaseElement("GameNumber", Int32::Parse(split[1])));
+            
+            gameClass = IdToKey(m_gameClassKeyMapper[KeyToId(Int32::Parse(split[0]))]);
+            gameNumber = Int32::Parse(split[1]);
         }
     }
+
+    accepted->Insert(0, gcnew FileDatabaseElement("GameClass", gameClass));
+    accepted->Insert(1, gcnew FileDatabaseElement("GameNumber", gameNumber));
 
     // Add TournamentKey column
     __int64 tournamentId = GetTournament622IdByActiveGame(gameClassGameNumber);
@@ -407,56 +748,179 @@ void Transform622to700::TransformSystemActiveGames(IEnumerable<IDataElement^>^ o
         tournamentId = m_tournamentKeyMapper[tournamentId];
     }
     accepted->Add(gcnew FileDatabaseElement("TournamentKey", IdToKey(tournamentId)));
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemEmpireMessages(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemEmpireMessages(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
     // Add SourceKey
-    for each (IDataElement^ data in original)
+    int cFound = 0;
+
+    int sourceKey = 0;
+
+    for each (IDataElement^ data in accepted)
     {
-        if (System::String::Compare(data->Name, "Source") == 0)
+        if (System::String::Compare(data->Name, "SourceName") == 0)
         {
+            cFound++;
+
             __int64 id = GetEmpire622IdFromName((System::String^)data->Value);
             if (id != KeyToId(NO_KEY))
             {
                 id = m_empireKeyMapper[id];
             }
-            accepted->Insert(1, gcnew FileDatabaseElement("SourceKey", IdToKey(id)));
+            sourceKey = IdToKey(id);
+        }
+
+        else if (System::String::Compare(data->Name, "Data") == 0)
+        {
+            cFound++;
+
+            System::String^ value = (System::String^)data->Value;
+            array<System::String^>^ split = value->Split('.');
+            if (split->Length == 2)
+            {
+                int iTournamentKey = Int32::Parse(split[0]);
+                int iEmpireKey = Int32::Parse(split[1]);
+
+                __int64 tournamentId = KeyToId(iTournamentKey);
+                if (!m_tournamentKeyMapper->ContainsKey(tournamentId))
+                {
+                    // Just delete the row
+                    return false;
+                }
+
+                iTournamentKey = IdToKey(m_tournamentKeyMapper[KeyToId(iTournamentKey)]);
+                iEmpireKey = IdToKey(m_empireKeyMapper[KeyToId(iEmpireKey)]);
+
+                data->Value = System::String::Format("{0}.{1}", iTournamentKey, iEmpireKey);
+            }
         }
     }
 
-    // TODOTODO - Data may contain keys in string form?
+    accepted->Insert(1, gcnew FileDatabaseElement("SourceKey", sourceKey));
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemEmpireNukerList(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemEmpireNukerList(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - add AlienKey
+    int cFound = 0;
+
+    int alienKey = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "AlienAddress") == 0)
+        {
+            cFound++;
+            alienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+    
+    accepted->Insert(0, gcnew FileDatabaseElement("AlienKey", alienKey));
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemEmpireNukedList(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemEmpireNukedList(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - add AlienKey
+    int cFound = 0;
+
+    int alienKey = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "AlienAddress") == 0)
+        {
+            cFound++;
+            alienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    accepted->Insert(0, gcnew FileDatabaseElement("AlienKey", alienKey));
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemNukeList(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemNukeList(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - add NukerAlienKey
-    // TODOTODO - add NukedAlienKey
+    int cFound = 0;
+
+    int nukerAlienKey = 0, nukedAlienKey = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "NukerAlienAddress") == 0)
+        {
+            cFound++;
+            nukerAlienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "NukedAlienAddress") == 0)
+        {
+            cFound++;
+            nukedAlienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "NukerEmpireKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "NukedEmpireKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    accepted->Insert(0, gcnew FileDatabaseElement("NukerAlienKey", nukerAlienKey));
+    accepted->Insert(4, gcnew FileDatabaseElement("NukedAlienKey", nukedAlienKey));
+
+
+    if (cFound != 4)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemLatestGames(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemLatestGames(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
+    int cFound = 0;
+
     System::String^ name;
-    int number;
+    int number = 0;
 
-    for each (IDataElement^ data in original)
+    for each (IDataElement^ data in accepted)
     {
         if (System::String::Compare(data->Name, "Name") == 0)
         {
+            cFound++;
             name = (System::String^)data->Value;
         }
         else if (System::String::Compare(data->Name, "Number") == 0)
         {
+            cFound++;
             number = (int)data->Value;
         }
     }
@@ -468,136 +932,444 @@ void Transform622to700::TransformSystemLatestGames(IEnumerable<IDataElement^>^ o
         tournamentId = m_tournamentKeyMapper[tournamentId];
     }
     accepted->Add(gcnew FileDatabaseElement("TournamentKey", IdToKey(tournamentId)));
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemEmpireActiveGames(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemEmpireActiveGames(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
+    int cFound = 0;
+
+    int gameClass = 0, gameNumber = 0;
+
     for each (IDataElement^ data in original)
     {
         // Split GameClassGameNumber into two integer columns
         if (System::String::Compare(data->Name, "GameClassGameNumber") == 0)
         {
+            cFound++;
+
             System::String^ gameClassGameNumber = (System::String^)data->Value;
 
             array<System::String^>^ split = gameClassGameNumber->Split('.');
-            accepted->Insert(0, gcnew FileDatabaseElement("GameClass", IdToKey(m_gameClassKeyMapper[KeyToId(Int32::Parse(split[0]))])));
-            accepted->Insert(1, gcnew FileDatabaseElement("GameNumber", Int32::Parse(split[1])));
+            gameClass = IdToKey(m_gameClassKeyMapper[KeyToId(Int32::Parse(split[0]))]);
+            gameNumber = Int32::Parse(split[1]);
         }
     }
+
+    accepted->Insert(0, gcnew FileDatabaseElement("GameClass", gameClass));
+    accepted->Insert(1, gcnew FileDatabaseElement("GameNumber", gameNumber));
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformSystemTournamentTeams(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemTournamentTeams(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - Add Icon
+    int cFound = 0;
+
+    int icon = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "IconAddress") == 0)
+        {
+            cFound++;
+            icon = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    accepted->Insert(3, gcnew FileDatabaseElement("Icon", icon));
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformGameEmpires(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformSystemTournamentEmpires(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    for each (IDataElement^ data in original)
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "EmpireKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "TeamKey") == 0)
+        {
+            cFound++;
+            int teamKey = (int)data->Value;
+            if (teamKey != NO_KEY)
+            {
+                data->Value = IdToKey(m_teamKeyMapper[Tuple::Create(KeyToId(nameInfo->TournamentKey), KeyToId(teamKey))]);
+            }
+        }
+    }
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformSystemEmpireTournaments(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "TournamentKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_tournamentKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameSecurity(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "EmpireKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameEmpires(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    System::String^ name = nullptr;
+
+    for each (IDataElement^ data in accepted)
     {
         // Add EmpireName, map EmpireKey
         if (System::String::Compare(data->Name, "EmpireKey") == 0)
         {
-            System::String^ name = GetEmpireNameFrom622Id(KeyToId(data->Value));
-            accepted->Add(gcnew FileDatabaseElement("EmpireName", name));
+            cFound++;
 
+            name = GetEmpireNameFrom622Id(KeyToId(data->Value));
             data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
-            break;
-        }
-    }
-}
-
-void Transform622to700::TransformGameDeadEmpires(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
-{
-    // Map Key
-    for each (IDataElement^ data in original)
-    {
-        if (System::String::Compare(data->Name, "Key") == 0)
-        {
-            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
-            break;
         }
     }
 
-    // TODOTODO - add AlienKey
+    accepted->Add(gcnew FileDatabaseElement("EmpireName", name));
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformGameMap(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformGameDeadEmpires(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // Map Owner
-    for each (IDataElement^ data in original)
+    int cFound = 0;
+
+    int alienKey = 0;
+
+    for each (IDataElement^ data in accepted)
     {
-        if (System::String::Compare(data->Name, "Key") == 0)
+        if (System::String::Compare(data->Name, "NukedEmpireKey") == 0)
         {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+
+        else if (System::String::Compare(data->Name, "AlienAddress") == 0)
+        {
+            cFound++;
+            alienKey = IdToKey(m_alienKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    accepted->Insert(2, gcnew FileDatabaseElement("AlienKey", alienKey));
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameMap(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "Owner") == 0)
+        {
+            cFound++;
+
             __int64 id = KeyToId(data->Value);
             if (id != KeyToId(SYSTEM_KEY) && id != KeyToId(INDEPENDENT_KEY))
             {
                 data->Value = IdToKey(m_empireKeyMapper[id]);
             }
-            break;
+        }
+
+        else if (System::String::Compare(data->Name, "HomeWorld") == 0)
+        {
+            cFound++;
+
+            int hw = (int)data->Value;
+            if (hw != HOMEWORLD && hw != NOT_HOMEWORLD)
+            {
+                data->Value = IdToKey(m_empireKeyMapper[KeyToId(hw)]);
+            }
         }
     }
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 
     // TODOTODO - handle North/South/East/WestPlanetKey values - need two passes
 }
 
-void Transform622to700::TransformGameEmpireMessages(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformGameEmpireData(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // Add SourceKey
-    for each (IDataElement^ data in original)
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
     {
-        if (System::String::Compare(data->Name, "Source") == 0)
+        if (System::String::Compare(data->Name, "HomeWorld") == 0)
         {
+            cFound++;
+
+            int hw = (int)data->Value;
+            if (hw != NO_KEY)
+            {
+                data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(hw))]);
+            }
+        }
+
+        else if (System::String::Compare(data->Name, "DefaultBuilderPlanet") == 0)
+        {
+            cFound++;
+
+            int key = (int)data->Value;
+            if (key != NO_DEFAULT_BUILDER_PLANET && key != HOMEWORLD_DEFAULT_BUILDER_PLANET && key != LAST_BUILDER_DEFAULT_BUILDER_PLANET)
+            {
+                data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
+            }
+        }
+
+        else if (System::String::Compare(data->Name, "LastBuilderPlanet") == 0)
+        {
+            cFound++;
+
+            int key = (int)data->Value;
+            if (key != NO_KEY)
+            {
+                data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
+            }
+        }
+    }
+
+    if (cFound != 3)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameEmpireMessages(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    int sourceKey = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "SourceName") == 0)
+        {
+            cFound++;
+
             __int64 id = GetEmpire622IdFromName((System::String^)data->Value);
             if (id != KeyToId(NO_KEY))
             {
                 id = m_empireKeyMapper[id];
             }
-            accepted->Insert(1, gcnew FileDatabaseElement("SourceKey", IdToKey(id)));
+            sourceKey = IdToKey(id);
         }
     }
-}
 
-void Transform622to700::TransformGameEmpireMap(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
-{
-    // TODOTODO - look up PlanetKey
-}
+    accepted->Insert(1, gcnew FileDatabaseElement("SourceKey", sourceKey));
 
-void Transform622to700::TransformGameEmpireDiplomacy(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
-{
-    // Map EmpireKey
-    for each (IDataElement^ data in original)
+    if (cFound != 1)
     {
-        if (System::String::Compare(data->Name, "EmpireKey") == 0)
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameEmpireMap(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "PlanetKey") == 0)
         {
-            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
-            break;
+            cFound++;
+            data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
         }
     }
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformGameEmpireShips(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformGameEmpireDiplomacy(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - map CurrentPlanet
-    // TODOTODO - map FleetKey
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "ReferenceEmpireKey") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_empireKeyMapper[KeyToId(data->Value)]);
+        }
+    }
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformGameIndependentShips(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformGameEmpireShips(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - map CurrentPlanet
-    // TODOTODO - map FleetKey
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "CurrentPlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
+        }
+
+        else if (System::String::Compare(data->Name, "FleetKey") == 0)
+        {
+            cFound++;
+
+            int key = (int)data->Value;
+            if (key != NO_KEY)
+            {
+                data->Value = IdToKey(m_fleetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(nameInfo->EmpireKey), KeyToId(data->Value))]);
+            }
+        }
+    }
+
+    if (cFound != 2)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
+}
+
+bool Transform622to700::TransformGameIndependentShips(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
+{
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "CurrentPlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
+        }
+
+        else if (System::String::Compare(data->Name, "GateDestination") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
+        }
+
+        else if (System::String::Compare(data->Name, "FleetKey") == 0)
+        {
+            cFound++;
+
+            int key = (int)data->Value;
+            if (key != NO_KEY)
+            {
+                data->Value = IdToKey(m_fleetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(nameInfo->EmpireKey), KeyToId(data->Value))]);
+            }
+        }
+    }
 
     // Add EmpireKey
-    accepted->Add(gcnew FileDatabaseElement("EmpireKey", (int)INDEPENDENT_KEY));
+    accepted->Insert(0, gcnew FileDatabaseElement("EmpireKey", (int)INDEPENDENT_KEY));
 
     // Add ColonyBuildCost
     int zero = 0;
     accepted->Add(gcnew FileDatabaseElement("ColonyBuildCost", zero));
+
+    if (cFound != 3)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
-void Transform622to700::TransformGameEmpireFleets(IEnumerable<IDataElement^>^ original, List<IDataElement^>^ accepted)
+bool Transform622to700::TransformGameEmpireFleets(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    // TODOTODO - map CurrentPlanet
+    int cFound = 0;
+
+    for each (IDataElement^ data in accepted)
+    {
+        if (System::String::Compare(data->Name, "CurrentPlanet") == 0)
+        {
+            cFound++;
+            data->Value = IdToKey(m_planetKeyMapper[Tuple::Create(KeyToId(nameInfo->GameClass), nameInfo->GameNumber, KeyToId(data->Value))]);
+        }
+    }
+
+    if (cFound != 1)
+    {
+        throw gcnew ApplicationException("Row not found");
+    }
+    return true;
 }
 
 //
@@ -674,7 +1446,86 @@ System::String^ Transform622to700::GetEmpireNameFrom622Id(__int64 id)
     return m_empire622IdToNameMapper[id];
 }
 
-System::String^ ColumnNamesToStringList(List<IDataElement^>^ cols)
+bool Transform622to700::IsGameActive(int gameClass, int gameNumber)
+{
+    System::String^ comp = System::String::Format("{0}.{1}", gameClass, gameNumber);
+
+    for each (IDataTable^ table in m_source)
+    {
+        if (System::String::Compare(table->Name, "SystemActiveGames") == 0)
+        {
+            for each (IDataRow^ row in table)
+            {
+                for each (IDataElement^ data in row)
+                {
+                    if (System::String::Compare(data->Name, "GameClassGameNumber") == 0 && 
+                        System::String::Compare((System::String^)data->Value, comp) == 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    return false;
+}
+
+void Transform622to700::InsertAssociationRows()
+{
+    int cAssoc = m_associations->Count;
+    if (cAssoc > 0)
+    {
+        Console::WriteLine();
+        Console::WriteLine("Inserting {0} rows into SystemEmpireAssociations", cAssoc);
+
+        for each (Tuple<int, int>^ assoc in m_associations)
+        {
+            if (assoc->Item1 < assoc->Item2)
+            {
+                int empireKey = IdToKey(m_empireKeyMapper[KeyToId(assoc->Item1)]);
+                int referenceEmpireKey = IdToKey(m_empireKeyMapper[KeyToId(assoc->Item2)]);
+
+                List<IDataElement^>^ row;
+                
+                row = gcnew List<IDataElement^>();
+                row->Add(gcnew FileDatabaseElement("EmpireKey", empireKey));
+                row->Add(gcnew FileDatabaseElement("ReferenceEmpireKey", referenceEmpireKey));
+
+                m_dest->InsertRow("SystemEmpireAssociations", row);
+
+                row = gcnew List<IDataElement^>();
+                row->Add(gcnew FileDatabaseElement("EmpireKey", referenceEmpireKey));
+                row->Add(gcnew FileDatabaseElement("ReferenceEmpireKey", empireKey));
+
+                m_dest->InsertRow("SystemEmpireAssociations", row);
+            }
+        }
+    }
+}
+
+void Transform622to700::InsertAvailabilityRow()
+{
+    // HACKHACK - slight hackery here
+    System::String^ fileDb = System::Configuration::ConfigurationManager::AppSettings["FileDatabase"];
+    fileDb = Path::Combine(fileDb, "tables.dat");
+
+    DateTime backupTime = File::GetLastWriteTimeUtc(fileDb);
+    DateTime startTime(1970, 1, 1, 0, 0, 0, 0);
+    TimeSpan diff = backupTime - startTime;
+    __int64 lastAvailableUtc = Convert::ToInt64(Math::Abs(diff.TotalSeconds));
+ 
+    List<IDataElement^>^ row = gcnew List<IDataElement^>();
+    row->Add(gcnew FileDatabaseElement("LastAvailableTime", lastAvailableUtc));
+
+    Console::WriteLine();
+    Console::WriteLine("Inserting SystemAvailability row with LastAvailableTime={0}", backupTime.ToString("u"));
+
+    m_dest->InsertRow("SystemAvailability", row);
+}
+
+System::String^ Transform622to700::ColumnNamesToStringList(List<IDataElement^>^ cols)
 {
     StringBuilder^ builder = gcnew StringBuilder();
     bool first = true;
@@ -694,7 +1545,7 @@ System::String^ ColumnNamesToStringList(List<IDataElement^>^ cols)
     return builder->ToString();
 }
 
-System::String^ ColumnRenamesToStringList(List<Tuple<System::String^, System::String^>^>^ renames)
+System::String^ Transform622to700::ColumnRenamesToStringList(List<Tuple<System::String^, System::String^>^>^ renames)
 {
     StringBuilder^ builder = gcnew StringBuilder();
     bool first = true;
@@ -714,26 +1565,7 @@ System::String^ ColumnRenamesToStringList(List<Tuple<System::String^, System::St
     return builder->ToString();
 }
 
-//void WriteTableInfo(TableNameInfo^ nameInfo)
-//{
-//    switch (nameInfo->Type)
-//    {
-//    case TableType::System:
-//        Console::WriteLine("\tSystemTable {0}", nameInfo->Name);
-//        break;
-//    case TableType::SystemEmpire:
-//        Console::WriteLine("\tSystemEmpire {0} - {1}", nameInfo->Name, nameInfo->EmpireKey);
-//        break;
-//    case TableType::Game:
-//        Console::WriteLine("\tGameTable {0} - {1} - {2}", nameInfo->Name, nameInfo->GameClass, nameInfo->GameNumber);
-//        break;
-//    case TableType::GameEmpire:
-//        Console::WriteLine("\tGameEmpireTable {0} - {1} - {2} - {3}", nameInfo->Name, nameInfo->GameClass, nameInfo->GameNumber, nameInfo->EmpireKey);
-//        break;
-//    }
-//}
-
-void EnsureIdenticalDeletionLists(TemplateMetadata^ templateMeta, List<IDataElement^>^ experimental)
+void Transform622to700::EnsureIdenticalDeletionLists(TemplateMetadata^ templateMeta, List<IDataElement^>^ experimental)
 {
     List<IDataElement^>^ missing = gcnew List<IDataElement^>();
 

@@ -1,5 +1,7 @@
 #include "TableNameInfo.h"
 
+using namespace System;
+
 TableNameInfo::TableNameInfo(System::String^ tableName)
 {
     array<wchar_t>^ digits = { L'0', L'1', L'2', L'3', L'4', L'5', L'6', L'7', L'8', L'9' };
