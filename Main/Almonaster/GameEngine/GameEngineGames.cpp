@@ -2165,7 +2165,7 @@ int GameEngine::IsGamePasswordCorrect(int iGameClass, int iGameNumber, const cha
     RETURN_ON_ERROR(iErrCode);
 
     Variant vTestPasswordHash = (const char*)NULL;
-    if (pszPassword)
+    if (!String::IsBlank(pszPassword))
     {
         iErrCode = ComputePasswordHash(pszPassword, &vTestPasswordHash);
         RETURN_ON_ERROR(iErrCode);
