@@ -27,6 +27,10 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SqlDatabase", "SqlDatabase\SqlDatabase.csproj", "{33E1C5B1-3E11-4371-AB7F-3337DA02A45B}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MigrateDatabase", "MigrateDatabase\MigrateDatabase.vcxproj", "{75EFC304-71BA-4247-BDD4-354F8DB63551}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E57B328E-DC3B-4030-8B96-058326205BD5} = {E57B328E-DC3B-4030-8B96-058326205BD5}
+		{208D5299-BDCB-4479-BD23-B544474E8772} = {208D5299-BDCB-4479-BD23-B544474E8772}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileDatabase", "FileDatabase\FileDatabase.vcxproj", "{208D5299-BDCB-4479-BD23-B544474E8772}"
 EndProject
