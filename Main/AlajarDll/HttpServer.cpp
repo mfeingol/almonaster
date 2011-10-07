@@ -1000,7 +1000,8 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         case ERROR_OUT_OF_DISK_SPACE:
             pHttpResponse->SetStatusCode (HTTP_503);
             break;
-            
+         
+        case ERROR_MALFORMED_REQUEST:
         default:
             pHttpResponse->SetStatusCode (HTTP_400);
             break;

@@ -1941,52 +1941,60 @@ int HttpRequest::HandleBigMultiPartForm (size_t stNumRemaining, char* pszBuffer,
     *pstNumProcessed = 0;
     *pstNumRemaining = stNumRemaining;
 
-    // Peek at the buffer and try to find the form type
-    char* pszEnd = pszBuffer + m_stSeparatorLength + 40;
-    if (pszEnd >= pszEndMarker) {
+    // Find the start of the form name
+    char* pszName = strstr(pszBuffer + m_stSeparatorLength, "name=");
+    if (pszName == NULL) {
+        return ERROR_MALFORMED_REQUEST;
+    }
+
+    // Find the begin quote
+    char* pszBeginQuote = strstr(pszName, "\"");
+    if (pszBeginQuote == NULL) {
         return ERROR_MALFORMED_REQUEST;
     }
 
     // Find the end quote and cap it with a null character
-    char* pszBegin = strstr (pszEnd, "\"");
-    if (pszBegin == NULL) {
+    char* pszForm = pszBeginQuote + 1;
+    char* pszEndQuote = strstr(pszForm, "\"");
+    if (pszEndQuote == NULL) {
         return ERROR_MALFORMED_REQUEST;
     }
-    *pszBegin = '\0';
+    *pszEndQuote = '\0';
     
     // That's our form name
-    size_t stFileSize = 0, stFormNameLen = strlen (pszEnd) + 1;
-
-    char* pszFormName, * pszFileName = NULL, * pszNext;
-
-    if (stFormNameLen > MAX_STACK_ALLOC) {
-
+    size_t stFormNameLen = strlen(pszForm) + 1;
+    char* pszFormName;
+    if (stFormNameLen > MAX_STACK_ALLOC)
+    {
         pszFormName = new char [stFormNameLen];
-        if (pszFormName == NULL) {
+        if (pszFormName == NULL)
+        {
             return ERROR_OUT_OF_MEMORY;
         }
-
-    } else {
-
+    }
+    else
+    {
         pszFormName = (char*) StackAlloc (stFormNameLen);
     }
+    strcpy(pszFormName, pszForm);
 
-    memcpy (pszFormName, pszEnd, stFormNameLen);
+    char* pszFileName = NULL, * pszNext;
+    size_t stFileSize = 0;
 
     // Determine form type
-    pszEnd += stFormNameLen;
-    if (pszEnd[0] == ';') {
+    char* pszType = pszForm + stFormNameLen;
+    if (pszType[0] == ';') {
 
-        if (strncmp (pszEnd, "; filename=", 11) != 0) {
+        if (strncmp (pszType, "; filename=", 11) != 0) {
             iErrCode = ERROR_MALFORMED_REQUEST;
             goto Cleanup;
         }
         
         // Jump over the semicolon space and filename
-        pszEnd += 12;
+        pszType += 12;
         
         // Find the end quote and cap it with a null character
-        pszBegin = strstr (pszEnd, "\"");
+        char* pszBegin = strstr (pszType, "\"");
         if (pszBegin == NULL) {
             iErrCode = ERROR_MALFORMED_REQUEST;
             goto Cleanup;
@@ -1994,18 +2002,18 @@ int HttpRequest::HandleBigMultiPartForm (size_t stNumRemaining, char* pszBuffer,
         *pszBegin = '\0';
         
         // That's the file name
-        pszFileName = pszEnd;       
+        pszFileName = pszType;       
         
         // Find the beginning of the content-type
-        pszEnd += strlen (pszFileName) + 3;
+        pszType += strlen (pszFileName) + 3;
         
         // Ignore the content-type and find the data
-        pszEnd = strstr (pszEnd, "\r\n");
-        if (pszEnd == NULL) {
+        pszType = strstr (pszType, "\r\n");
+        if (pszType == NULL) {
             iErrCode = ERROR_MALFORMED_REQUEST;
             goto Cleanup;
         }
-        pszEnd += 4;
+        pszType += 4;
 
         // It's a file
         ftFormType = FILE_FORM;
@@ -2013,12 +2021,12 @@ int HttpRequest::HandleBigMultiPartForm (size_t stNumRemaining, char* pszBuffer,
     
     } else {
 
-        if (strncmp (pszEnd, "\r\n\r\n", 4) != 0) {
+        if (strncmp (pszType, "\r\n\r\n", 4) != 0) {
             iErrCode = ERROR_MALFORMED_REQUEST;
             goto Cleanup;
         }
 
-        pszEnd += 4;
+        pszType += 4;
 
         // It's a large data form
         ftFormType = SIMPLE_FORM;
@@ -2028,22 +2036,22 @@ int HttpRequest::HandleBigMultiPartForm (size_t stNumRemaining, char* pszBuffer,
     tfTempFile.Open();
 
     // Do we have a closing separator?
-    pszNext = Algorithm::memstr (pszEnd, m_pszSeparator, stNumRemaining - (pszEnd - pszBuffer));
-    if (pszNext != NULL) {
-        
+    pszNext = Algorithm::memstr(pszType, m_pszSeparator, stNumRemaining - (pszType - pszBuffer));
+    if (pszNext != NULL)
+    {
         // Write the data minus the \r\n at the end of the file's data (and of course the last separator)       
-        tfTempFile.Write (pszEnd, pszNext - pszEnd);
-        
-    } else {
-        
+        tfTempFile.Write(pszType, pszNext - pszType);
+    }
+    else
+    {
         // The file is too big for this buffer, so write the first chunk to disk
-        tfTempFile.Write (pszEnd, pszEndMarker - pszEnd);
+        tfTempFile.Write(pszType, pszEndMarker - pszType);
         *pstNumProcessed = stNumRemaining;
         *pstNumRemaining = 0;
         
         // Recv until we have the whole thing
-        while (true) {
-            
+        while (true)
+        {
             iErrCode = m_pSocket->Recv (pszBuffer, MAX_REQUEST_LENGTH, &stNumBytesRecvd);
             if (iErrCode != OK) {
                 tfTempFile.Close();
