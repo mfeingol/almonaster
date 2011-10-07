@@ -30,7 +30,13 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-Variant::Variant() {
+Variant::Variant()
+{
+    Initialize();
+}
+
+void Variant::Initialize()
+{
     m_iType = V_INT;
     m_vArg.iArg = 0;
 }
@@ -108,15 +114,12 @@ Variant::Variant (int64 i64Val) {
     m_vArg.i64Arg = i64Val;
 }
 
-
 Variant::~Variant() {
     DeleteString();
 }
 
-
-// Delete Variant String member
-bool Variant::DeleteString() {
-    
+bool Variant::DeleteString()
+{
     if (m_iType == V_STRING && m_vArg.pszArg != NULL) {
         delete [] m_vArg.pszArg;
         return true;

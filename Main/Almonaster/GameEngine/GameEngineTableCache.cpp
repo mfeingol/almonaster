@@ -166,9 +166,11 @@ int GameEngine::CacheTournamentTables(const unsigned int* piTournamentKey, unsig
     for (unsigned int i = 0; i < iNumTournaments; i ++)
     {
         pcCols[i].Name = SystemTournamentEmpires::TournamentKey;
+        pcCols[i].Data.Initialize();
         pcCols[i].Data = piTournamentKey[i];
 
         pcCols[i + iNumTournaments].Name = SystemTournamentTeams::TournamentKey;
+        pcCols[i + iNumTournaments].Data.Initialize();
         pcCols[i + iNumTournaments].Data = piTournamentKey[i];
 
         pcEntries[i].Table.Name = SYSTEM_TOURNAMENT_EMPIRES;
@@ -275,8 +277,10 @@ int GameEngine::CacheGameData(const int* piGameClass, const int* piGameNumber, i
     for (unsigned int i = 0; i < iNumGames; i ++)
 	{
         pcGameCols[i*cGameDataCols + 0].Name = GameData::GameClass;
+        pcGameCols[i*cGameDataCols + 0].Data.Initialize();
         pcGameCols[i*cGameDataCols + 0].Data = piGameClass[i];
         pcGameCols[i*cGameDataCols + 1].Name = GameData::GameNumber;
+        pcGameCols[i*cGameDataCols + 1].Data.Initialize();
         pcGameCols[i*cGameDataCols + 1].Data = piGameNumber[i];
 
         pcEntries[i + iNumGames * 0].Table.Name = GAME_DATA;
@@ -322,10 +326,13 @@ int GameEngine::CacheGameData(const int* piGameClass, const int* piGameNumber, i
         if (iEmpireKey != NO_KEY)
         {
             pcGameEmpireCols[i*cGameEmpireDataCols + 0].Name = GameEmpireData::GameClass;
+            pcGameEmpireCols[i*cGameEmpireDataCols + 0].Data.Initialize();
             pcGameEmpireCols[i*cGameEmpireDataCols + 0].Data = piGameClass[i];
             pcGameEmpireCols[i*cGameEmpireDataCols + 1].Name = GameEmpireData::GameNumber;
+            pcGameEmpireCols[i*cGameEmpireDataCols + 1].Data.Initialize();
             pcGameEmpireCols[i*cGameEmpireDataCols + 1].Data = piGameNumber[i];
             pcGameEmpireCols[i*cGameEmpireDataCols + 2].Name = GameEmpireData::EmpireKey;
+            pcGameEmpireCols[i*cGameEmpireDataCols + 2].Data.Initialize();
             pcGameEmpireCols[i*cGameEmpireDataCols + 2].Data = iEmpireKey;
 
             pcEntries[i + iNumGames * (cNumGameTables + 0)].Table.Name = GAME_EMPIRE_MESSAGES;
@@ -354,10 +361,13 @@ int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant** ppv
         int iGameNumber = ppvGames[i][1].GetInteger();
 
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Name = GameEmpireData::GameClass;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Data.Initialize();
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Data = iGameClass;
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 1].Name = GameEmpireData::GameNumber;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 1].Data.Initialize();
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 1].Data = iGameNumber;
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Name = GameEmpireData::EmpireKey;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Data.Initialize();
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Data = iEmpireKey;
 
         pcEntries[i].Table.Name = GAME_EMPIRE_DATA;
@@ -386,6 +396,7 @@ int GameEngine::CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsig
 
         ColumnEntry* pCol = (ColumnEntry*)StackAlloc(sizeof(ColumnEntry));
         pCol->Name = SystemEmpireActiveGames::EmpireKey;
+        pCol->Data.Initialize();
         pCol->Data = piEmpireKey[i];
 
         pcEntries[iNumEmpires + i].Table.Name = SYSTEM_EMPIRE_ACTIVE_GAMES;
@@ -415,10 +426,13 @@ int GameEngine::CacheEmpiresAndGameMessages(int iGameClass, int iGameNumber, con
 
         ColumnEntry* pCols = (ColumnEntry*)StackAlloc(3 * sizeof(ColumnEntry));
         pCols[0].Name = GameEmpireMessages::GameClass;
+        pCols[0].Data.Initialize();
         pCols[0].Data = iGameClass;
         pCols[1].Name = GameEmpireMessages::GameNumber;
+        pCols[1].Data.Initialize();
         pCols[1].Data = iGameNumber;
         pCols[2].Name = GameEmpireMessages::EmpireKey;
+        pCols[2].Data.Initialize();
         pCols[2].Data = piEmpireKey[i];
 
         pcEntries[iNumEmpires + i].Table.Name = GAME_EMPIRE_MESSAGES;
@@ -446,6 +460,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
 
         ColumnEntry* pActiveGamesCol = (ColumnEntry*)StackAlloc(sizeof(ColumnEntry));
         pActiveGamesCol->Name = SystemEmpireActiveGames::EmpireKey;
+        pActiveGamesCol->Data.Initialize();
         pActiveGamesCol->Data = piEmpireKey[i];
 
         pcEntries[iNumEmpires + i].Table.Name = SYSTEM_EMPIRE_ACTIVE_GAMES;
@@ -458,6 +473,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
 
         ColumnEntry* pMessagesCol = (ColumnEntry*)StackAlloc(sizeof(ColumnEntry));
         pMessagesCol->Name = SystemEmpireMessages::EmpireKey;
+        pMessagesCol->Data.Initialize();
         pMessagesCol->Data = piEmpireKey[i];
 
         pcEntries[2 * iNumEmpires + i].Table.Name = SYSTEM_EMPIRE_MESSAGES;
@@ -470,6 +486,7 @@ int GameEngine::CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEm
 
         ColumnEntry* pNukeListCol = (ColumnEntry*)StackAlloc(sizeof(ColumnEntry));
         pNukeListCol->Name = SystemEmpireNukeList::EmpireKey;
+        pNukeListCol->Data.Initialize();
         pNukeListCol->Data = piEmpireKey[i];
 
         pcEntries[3 * iNumEmpires + i].Table.Name = SYSTEM_EMPIRE_NUKER_LIST;
@@ -551,6 +568,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i].CrossJoin = NULL;
 
             pcColumns[i].Name = SystemEmpireActiveGames::EmpireKey;
+            pcColumns[i].Data.Initialize();
             pcColumns[i].Data = pvEmpireKey[i];
 
             pEntries[countof(entries) + i + iNumEmpires].Table.Name = SYSTEM_EMPIRE_ACTIVE_GAMES;
@@ -562,6 +580,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires].CrossJoin = NULL;
 
             pcColumns[i + iNumEmpires].Name = SystemEmpireMessages::EmpireKey;
+            pcColumns[i + iNumEmpires].Data.Initialize();
             pcColumns[i + iNumEmpires].Data = pvEmpireKey[i];
 
             pEntries[countof(entries) + i + iNumEmpires * 2].Table.Name = SYSTEM_EMPIRE_MESSAGES;
@@ -573,6 +592,7 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
             pEntries[countof(entries) + i + iNumEmpires * 2].CrossJoin = NULL;
 
             pcColumns[i + iNumEmpires * 2].Name = SystemEmpireNukeList::EmpireKey;
+            pcColumns[i + iNumEmpires * 2].Data.Initialize();
             pcColumns[i + iNumEmpires * 2].Data = pvEmpireKey[i];
 
             pEntries[countof(entries) + i + iNumEmpires * 3].Table.Name = SYSTEM_EMPIRE_NUKED_LIST;
@@ -893,8 +913,10 @@ int GameEngine::CacheGameEmpireTables(const Variant** ppvGames, unsigned int iNu
 
         ColumnEntry* pCols = (ColumnEntry*)StackAlloc(2 * sizeof(ColumnEntry));
         pCols[0].Name = GameEmpires::GameClass;
+        pCols[0].Data.Initialize();
         pCols[0].Data = iGameClass;
         pCols[1].Name = GameEmpires::GameNumber;
+        pCols[1].Data.Initialize();
         pCols[1].Data = iGameNumber;
 
         pcEntries[i].Table.Name = GAME_EMPIRES;

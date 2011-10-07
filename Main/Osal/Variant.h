@@ -55,6 +55,8 @@ public:
 
     ~Variant();
 
+    void Initialize();
+
     // =
     Variant& operator= (const Variant& vRhs);
     Variant& operator= (int iVal);
