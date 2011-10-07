@@ -185,7 +185,6 @@ copy /y SqlDatabase.h "%DropSdk%"
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
       <PreprocessorDefinitions>WIN32;NTDDI_VERSION=NTDDI_WINXPSP3;_WIN32_WINNT=_WIN32_WINNT_WINXP;SQL_DATABASE_BUILD;_CRT_SECURE_NO_WARNINGS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>..\Drop\$(Platform)\$(Configuration)\sdk;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalUsingDirectories>..\Drop\$(Platform)\$(Configuration)\bin</AdditionalUsingDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -239,6 +238,11 @@ copy /y SqlDatabase.h "%DropSdk%"
     <ClCompile Include="SqlDatabaseConnection.cpp" />
     <ClCompile Include="TableCacheCollection.cpp" />
     <ClCompile Include="Utils.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SqlDatabase\SqlDatabase.csproj">
+      <Project>{33e1c5b1-3e11-4371-ab7f-3337da02a45b}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

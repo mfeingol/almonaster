@@ -22,9 +22,7 @@
 #include <vcclr.h>
 #include "SqlDatabase.h"
 
-#using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;
-
 using namespace System::Collections::Generic;
 
 class SqlDatabaseBridge : public IDatabase

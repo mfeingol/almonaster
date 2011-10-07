@@ -6245,11 +6245,10 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
     int iBegin = 0, iNumToSort;
     int iCurrentGameClass = piGameClass[0];
 
-    unsigned int i;
-    for (i = 1; i < iNumActiveGames; i ++) {
-
-        if (piGameClass[i] != iCurrentGameClass) {
-
+    for (unsigned int i = 1; i < iNumActiveGames; i ++)
+    {
+        if (piGameClass[i] != iCurrentGameClass)
+        {
             iNumToSort = i - iBegin;
             if (iNumToSort > 1) {
                 Algorithm::QSortTwoAscending<int, int> (piGameNumber + iBegin, piGameClass + iBegin, iNumToSort);
@@ -6260,7 +6259,7 @@ int HtmlRenderer::WriteActiveGameAdministration(const Variant** ppvGames, unsign
         }
     }
 
-    iNumToSort = i - iBegin;
+    iNumToSort = iNumActiveGames - iBegin;
     if (iNumToSort > 1) {
         Algorithm::QSortTwoAscending<int, int> (piGameNumber + iBegin, piGameClass + iBegin, iNumToSort);
     }

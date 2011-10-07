@@ -22,7 +22,6 @@
 #include <vcclr.h>
 #include "SqlDatabase.h"
 
-#using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;
 
 #include "TableCacheCollection.h"

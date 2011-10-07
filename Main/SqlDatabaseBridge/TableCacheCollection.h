@@ -23,7 +23,6 @@
 #include "SqlDatabase.h"
 #include "CachedTable.h"
 
-#using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;
 
 #include "Osal/HashTable.h"

@@ -23,8 +23,6 @@
 #include "SqlDatabase.h"
 
 using namespace System::Collections::Generic;
-
-#using <SqlDatabase.dll>
 using namespace Almonaster::Database::Sql;
 
 class CachedTable : public ICachedTable

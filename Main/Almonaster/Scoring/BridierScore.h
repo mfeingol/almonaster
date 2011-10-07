@@ -32,13 +32,12 @@ protected:
 public:
 
     BridierObject(GameEngine* pGameEngine);
-    ~BridierObject();
 
     int IsBridierGame (int iGameClass, int iGameNumber, bool* pbBridier);
     int CompareScores (const Variant* pvLeft, const Variant* pvRight);
 
-    static void GetScoreChanges (int iNukerRank, int iNukerIndex, int iNukedRank, int iNukedIndex,
-        int* piNukerRankChange, int* piNukerIndexChange, int* piNukedRankChange, int* piNukedIndexChange);
+    static void GetScoreChanges(int iNukerRank, int iNukerIndex, int iNukedRank, int iNukedIndex,
+                                int* piNukerRankChange, int* piNukerIndexChange, int* piNukedRankChange, int* piNukedIndexChange);
 
     int GetEmpireScore (unsigned int iEmpireKey, Variant* pvScore);
 
