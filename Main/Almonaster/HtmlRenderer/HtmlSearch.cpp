@@ -552,16 +552,16 @@ int HtmlRenderer::RenderSearchResults(SearchDefinition& sd,
         {
             OutputText("<strong>");
             m_pHttpResponse->WriteText(iNumSearchEmpires);
-            OutputText("</strong> empire ");
+            OutputText("</strong> empire");
             if (iNumEmpiresFoundSoFar == 1)
             {
-                OutputText("was");
+                OutputText(" was");
             }
             else
             {
                 OutputText("s were");
             }
-            OutputText("found:");
+            OutputText(" found:");
         }
     }
     else
@@ -570,7 +570,7 @@ int HtmlRenderer::RenderSearchResults(SearchDefinition& sd,
         {
             OutputText("More than <strong>");
             m_pHttpResponse->WriteText(iNumEmpiresFoundSoFar);
-            OutputText("</strong> empires have been found. The next <strong>");
+            OutputText("</strong> empires have been found. Empires <strong>");
             m_pHttpResponse->WriteText(iNumEmpiresFoundSoFar - iNumSearchEmpires);
             OutputText("</strong> to <strong>");
             m_pHttpResponse->WriteText(iNumEmpiresFoundSoFar);

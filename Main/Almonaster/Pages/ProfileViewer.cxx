@@ -114,6 +114,9 @@ SearchResults:
                 (pszStart = pHttpForm->GetName()) != NULL &&
                 sscanf (pszStart, "ViewProfile.%d.%d", &iTargetEmpireKey, &iHash) == 2)
             {
+                iErrCode = CacheProfileData(iTargetEmpireKey);
+                RETURN_ON_ERROR(iErrCode);
+
                 bool bVerified;
                 iErrCode = VerifyEmpireNameHash(iTargetEmpireKey, iHash, &bVerified);
                 RETURN_ON_ERROR(iErrCode);
