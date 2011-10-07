@@ -191,7 +191,7 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
 
         // Handle session id
         bool bUpdateSessionId, bUpdateCookie;
-        iErrCode = InitializeSessionId (&bUpdateSessionId, &bUpdateCookie);
+        iErrCode = InitializeSessionId(&bUpdateSessionId, &bUpdateCookie);
         RETURN_ON_ERROR(iErrCode);
 
         if (!m_bAuthenticated)
@@ -271,7 +271,7 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
         if (bUpdateSessionId)
         {
             // Write the empire's new session id
-            iErrCode = SetEmpireSessionId (m_iEmpireKey, m_i64SessionId);
+            iErrCode = SetEmpireSessionId(m_iEmpireKey, m_i64SessionId);
             RETURN_ON_ERROR(iErrCode);
         }
         
@@ -279,15 +279,15 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
         if (bUpdateCookie)
         {
             // Best effort set a new cookie
-            char pszSessionId [128];
-            String::I64toA (m_i64SessionId, pszSessionId, 10);
+            char pszSessionId[128];
+            String::I64toA(m_i64SessionId, pszSessionId, 10);
             
-            iErrCode = m_pHttpResponse->CreateCookie ("SessionId", pszSessionId, 31536000, NULL);
+            iErrCode = m_pHttpResponse->CreateCookie(SESSION_ID_COOKIE, pszSessionId, ONE_MONTH_IN_SECONDS, NULL);
             RETURN_ON_ERROR(iErrCode);
         }
         
         // Update IP address
-        if (strcmp(m_pHttpRequest->GetClientIP(), m_vPreviousIPAddress.GetCharPtr()) != 0)
+        if (String::StrCmp(m_pHttpRequest->GetClientIP(), m_vPreviousIPAddress.GetCharPtr()) != 0)
         {
             iErrCode = SetEmpireIPAddress(m_iEmpireKey, m_pHttpRequest->GetClientIP());
             RETURN_ON_ERROR(iErrCode);

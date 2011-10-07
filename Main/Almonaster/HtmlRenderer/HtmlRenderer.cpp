@@ -977,17 +977,17 @@ void HtmlRenderer::ReportEmpireCreation (const char* pszEmpireName)
     global.WriteReport (TRACE_INFO, pszMessage);
 }
 
-int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCookie) {
-
+int HtmlRenderer::InitializeSessionId(bool* pbUpdateSessionId, bool* pbUpdateCookie)
+{
     int iErrCode;
 
     // Check for force reset
-    if (m_iSystemOptions & RESET_SESSION_ID) {
-
-        iErrCode = GetNewSessionId (&m_i64SessionId);
+    if (m_iSystemOptions & RESET_SESSION_ID)
+    {
+        iErrCode = GetNewSessionId(&m_i64SessionId);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = EndResetEmpireSessionId (m_iEmpireKey);
+        iErrCode = EndResetEmpireSessionId(m_iEmpireKey);
         RETURN_ON_ERROR(iErrCode);
 
         *pbUpdateSessionId = *pbUpdateCookie = true;
@@ -997,45 +997,43 @@ int HtmlRenderer::InitializeSessionId (bool* pbUpdateSessionId, bool* pbUpdateCo
     *pbUpdateSessionId = *pbUpdateCookie = false;
     
     // First, get the empire's session id
-    iErrCode = GetEmpireSessionId (m_iEmpireKey, &m_i64SessionId);
+    iErrCode = GetEmpireSessionId(m_iEmpireKey, &m_i64SessionId);
     RETURN_ON_ERROR(iErrCode);
 
     // Now, see if the request brought a cookie with a session id
-    ICookie* pCookie = m_pHttpRequest->GetCookie ("SessionId");
+    ICookie* pCookie = m_pHttpRequest->GetCookie(SESSION_ID_COOKIE);
     int64 i64CookieSessionId = NO_SESSION_ID;
     
-    if (pCookie != NULL) {
+    if (pCookie)
+    {
         i64CookieSessionId = pCookie->GetInt64Value();
     }
     
-    if (i64CookieSessionId == NO_SESSION_ID) {
-        
-        if (m_i64SessionId == NO_SESSION_ID) {
-            
+    if (i64CookieSessionId == NO_SESSION_ID)
+    {
+        if (m_i64SessionId == NO_SESSION_ID)
+        {
             // Generate a new session id
             iErrCode = GetNewSessionId (&m_i64SessionId);
-            if (iErrCode != OK) {
-                Assert(false);
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
             *pbUpdateSessionId = true;
         }
         
         *pbUpdateCookie = true;
-        
-    } else {
-        
+    }
+    else
+    {
         // We have a cookie with a valid value
-        if (i64CookieSessionId != m_i64SessionId) {
-            
+        if (i64CookieSessionId != m_i64SessionId)
+        {
             // For some reason the cookie has a different value than the stored value
             // This could happen if a player is on a new machine and uses a different empire
             // to generate a new value, uses the original empire, then reverts to the old machine 
             // with the old empire.  We'll believe the cookie's value, in this case, to ensure that
             // all empires on the same machine have the same session id
             //
-            // This decision will have to be revised if we absolutely require that session id's be unique
+            // This decision will have to be revised if we absolutely require that session ids be unique
             // in the future for some feature or other, since people can easily edit their cookie files and 
             // change the values
             

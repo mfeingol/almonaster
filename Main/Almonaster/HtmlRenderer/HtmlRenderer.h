@@ -1060,6 +1060,7 @@ public:
 #define UNLIMITED_STRING        "Unlimited"
 
 // Cookies
+#define SESSION_ID_COOKIE           "SessionId"
 #define LAST_EMPIRE_USED_COOKIE     "LastEmpireUsed"
 #define AUTOLOGON_EMPIREKEY_COOKIE  "AutoLogonEmpireKey"
 #define AUTOLOGON_PASSWORD_COOKIE   "AutoLogonPassword"
