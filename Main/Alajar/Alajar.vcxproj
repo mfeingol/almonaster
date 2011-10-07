@@ -168,8 +168,7 @@
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
-copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -245,8 +244,7 @@ copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
-copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -313,8 +311,7 @@ copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
-copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -382,8 +379,7 @@ copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
-copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
+copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -394,23 +390,6 @@ copy /y $(OutDir)alajar.exe.config "%DropBin%"</Command>
       <Project>{a5498f4e-4124-4680-b43a-d105aa64c814}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <CustomBuild Include="app.config">
-      <FileType>Document</FileType>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">copy /y app.config "$(OutDir)\alajar.exe.config"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">copy /y app.config "$(OutDir)\alajar.exe.config"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">copy /y app.config "$(OutDir)\alajar.exe.config"</Command>
-      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">copy /y app.config "$(OutDir)\alajar.exe.config"</Command>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">alajar.exe.config</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">alajar.exe.config</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">alajar.exe.config</Outputs>
-      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">alajar.exe.config</Outputs>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Copying alajar.exe.config...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Copying alajar.exe.config...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Copying alajar.exe.config...</Message>
-      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Copying alajar.exe.config...</Message>
-    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
