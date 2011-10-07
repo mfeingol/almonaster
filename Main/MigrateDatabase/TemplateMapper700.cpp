@@ -71,6 +71,8 @@ TemplateMapper700::TemplateMapper700()
     m_templates["SystemNukeList"]->RenamedColumns->Add(Tuple::Create("NukedAlienKey", "NukedAlienAddress"));
 
     m_templates["SystemSuperClassData"] = CreateTemplateMetadata(SystemSuperClassData::Template);
+    m_templates["SystemSuperClassData"]->DeletedColumns->Add(gcnew FileDatabaseElement("NumGameClasses", nullptr));
+
     m_templates["SystemThemes"] = CreateTemplateMetadata(SystemThemes::Template);
     m_templates["SystemTournamentEmpires"] = CreateTemplateMetadata(SystemTournamentEmpires::Template);
     

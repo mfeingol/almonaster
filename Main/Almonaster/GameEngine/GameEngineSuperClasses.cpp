@@ -25,16 +25,10 @@
 //
 // Create a new super class
 
-int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
-    
+int GameEngine::CreateSuperClass (const char* pszName, int* piKey)
+{
     unsigned int iKey = NO_KEY;
-    int iErrCode = t_pCache->GetFirstKey(
-        SYSTEM_SUPERCLASS_DATA, 
-        SystemSuperClassData::Name, 
-        pszName, 
-        &iKey
-        );
-    
+    int iErrCode = t_pCache->GetFirstKey(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Name, pszName, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         iErrCode = OK;
@@ -45,11 +39,10 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
         return ERROR_SUPERCLASS_ALREADY_EXISTS;
     }
 
-    Variant pvSuperClass[SystemSuperClassData::NumColumns] = {
+    Variant pvSuperClass[SystemSuperClassData::NumColumns] =
+    {
         pszName,
-        0
     };
-
     Assert(pvSuperClass[SystemSuperClassData::iName].GetCharPtr());
         
     iErrCode = t_pCache->InsertRow(SYSTEM_SUPERCLASS_DATA, SystemSuperClassData::Template, pvSuperClass, (unsigned int*) piKey);
@@ -57,7 +50,6 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
 
     return iErrCode;
 }
-
 
 // Input:
 // iSuperClassKey -> Key of superclass to be deleted
@@ -67,26 +59,26 @@ int GameEngine::CreateSuperClass (const char* pszName, int* piKey) {
 //
 // Delete a super class 
 
-int GameEngine::DeleteSuperClass (int iSuperClassKey, bool* pbResult) {
-
+int GameEngine::DeleteSuperClass(int iSuperClassKey, bool* pbResult)
+{
     *pbResult = false;
 
-    Variant vGameClasses;
-    int iErrCode = t_pCache->ReadData(SYSTEM_SUPERCLASS_DATA, iSuperClassKey, SystemSuperClassData::NumGameClasses, &vGameClasses);
-    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-        return ERROR_SUPERCLASS_DOES_NOT_EXIST;
-    RETURN_ON_ERROR(iErrCode);
-
-    if (vGameClasses.GetInteger() == 0)
+    unsigned int iGameClassKey;
+    int iErrCode = t_pCache->GetFirstKey(SYSTEM_GAMECLASS_DATA, SystemGameClassData::SuperClassKey, iSuperClassKey, &iGameClassKey);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
+        // No gameclasses belong to the superclass, so delete it
         iErrCode = t_pCache->DeleteRow(SYSTEM_SUPERCLASS_DATA, iSuperClassKey);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        {
+            return ERROR_SUPERCLASS_DOES_NOT_EXIST;
+        }
         RETURN_ON_ERROR(iErrCode);
         *pbResult = true;
     }
     
     return iErrCode;
 }
-
 
 // Output:
 // **ppiKey -> Keys

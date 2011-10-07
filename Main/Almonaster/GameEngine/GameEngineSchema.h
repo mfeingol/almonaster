@@ -1372,30 +1372,25 @@ namespace SystemAlienIcons
 namespace SystemSuperClassData
 {
     static const char* const Name = "Name";
-    static const char* const NumGameClasses = "NumGameClasses";
 
     enum Columns
     {
         iName,
-        iNumGameClasses
     };
 
     static const char* const ColumnNames[] = 
     {
         Name,
-        NumGameClasses,
     };
 
     static const VariantType Types[] = 
     {
         V_STRING,
-        V_INT,
     };
 
     static const unsigned int Sizes[] = 
     {
         MAX_SUPER_CLASS_NAME_LENGTH,
-        0,
     };
 
     static const unsigned int NumColumns = countof(Sizes);

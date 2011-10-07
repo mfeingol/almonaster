@@ -195,26 +195,6 @@ int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted)
     }
     else
     {
-        // Get owner
-        Variant vOwner;
-        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Owner, &vOwner);
-        RETURN_ON_ERROR(iErrCode);
-
-        if (vOwner.GetInteger() == SYSTEM)
-        {
-            // Decrement super class counter
-            Variant vSuperClassKey;
-            iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::SuperClassKey, &vSuperClassKey);
-            RETURN_ON_ERROR(iErrCode);
-
-            Assert(vSuperClassKey.GetInteger() != NO_KEY && vSuperClassKey.GetInteger() != TOURNAMENT && vSuperClassKey.GetInteger() != PERSONAL_GAME);
-
-            iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, vSuperClassKey.GetInteger(), SystemSuperClassData::NumGameClasses, -1);
-            RETURN_ON_ERROR(iErrCode);
-            
-            *pbDeleted = true;
-        }
-
         // Delete row from SystemGameClassData
         iErrCode = t_pCache->DeleteRow(SYSTEM_GAMECLASS_DATA, iGameClass);
         RETURN_ON_ERROR(iErrCode);
@@ -417,18 +397,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
     }
     RETURN_ON_ERROR(iErrCode);
 
-    // Check super class
-    if (IS_KEY(iSuperClass))
-    {
-        // Increment NumGameClasses in superclass, if applicable
-        iErrCode = t_pCache->Increment(SYSTEM_SUPERCLASS_DATA, iSuperClass, SystemSuperClassData::NumGameClasses, 1);
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-        {
-            return ERROR_GAMECLASS_HAS_NO_SUPERCLASS;
-        }
-        RETURN_ON_ERROR(iErrCode);
-    }
-
     // Insert new row into SystemGameClassData and obtain key to that row
     iErrCode = t_pCache->InsertRow(SYSTEM_GAMECLASS_DATA, SystemGameClassData::Template, pvGameClassData, &iGameClass);
     RETURN_ON_ERROR(iErrCode);
@@ -437,7 +405,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
 
     return iErrCode;
 }
-
 
 // Input:
 // iGameClass -> Gameclass key
