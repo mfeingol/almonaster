@@ -154,33 +154,57 @@ int SqlDatabaseConnection::GetNumPhysicalRows(const char* pszTableName, unsigned
     return OK;
 }
 
-int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey)
+int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const SearchDefinition& sd, const OrderByDefinition* psdOrderBy,
+                                         unsigned int** ppiKey, unsigned int* piNumHits, bool* pbMore)
 {
     Trace(TRACE_VERBOSE, "GetSearchKeys %s", pszTableName);
 
-    array<RangeSearchColumn>^ cols = gcnew array<RangeSearchColumn>(sdRange.iNumColumns);
+    array<SearchColumnMetadata>^ searchCols = gcnew array<SearchColumnMetadata>(sd.iNumColumns);
 
-    for (unsigned int i = 0; i < sdRange.iNumColumns; i ++)
+    for (unsigned int i = 0; i < sd.iNumColumns; i ++)
     {
-        cols[i].ColumnName = gcnew System::String(sdRange.pscColumns[i].pszColumn);
-        cols[i].GreaterThanOrEqual = Convert(sdRange.pscColumns[i].vData);
-        if (sdRange.pscColumns[i].vData.GetType() == V_STRING)
-        {
-            cols[i].LessThanOrEqual = cols[i].GreaterThanOrEqual;
-        }
-        else
-        {
-            cols[i].LessThanOrEqual = Convert(sdRange.pscColumns[i].vData2);
-        }
+        searchCols[i].ColumnName = gcnew System::String(sd.pscColumns[i].pszColumn);
+        searchCols[i].Field1 = Convert(sd.pscColumns[i].vData);
 
-        // TODO - 611 - Implement or remove search flags and skip hits
+        switch(sd.pscColumns[i].iType)
+        {
+        case SEARCH_RANGE_INCLUSIVE:
+            searchCols[i].Type = SearchType::RangeInclusive;
+            searchCols[i].Field2 = Convert(sd.pscColumns[i].vData2);
+            break;
+        case SEARCH_EQUALITY:
+            searchCols[i].Type = SearchType::Equality;
+            break;
+        case SEARCH_CONTAINS_STRING:
+            searchCols[i].Type = SearchType::ContainsString;
+            break;
+        case SEARCH_BEGINS_WITH_STRING:
+            searchCols[i].Type = SearchType::BeginsWithString;
+            break;
+        case SEARCH_ENDS_WITH_STRING:
+            searchCols[i].Type = SearchType::EndsWithString;
+            break;
+        default:
+            return ERROR_INVALID_ARGUMENT;
+        }
     }
 
-    int64 maxHits = sdRange.iMaxNumHits == 0 ? System::Int32::MaxValue : sdRange.iMaxNumHits + 1;
-    IEnumerable<int64>^ results;
+    array<OrderBySearchColumn>^ orderByCols = nullptr;
+    if (psdOrderBy)
+    {
+        orderByCols = gcnew array<OrderBySearchColumn>(psdOrderBy->iNumColumns);
+        for (unsigned int i = 0; i < psdOrderBy->iNumColumns; i ++)
+        {
+            orderByCols[i].ColumnName = gcnew System::String(psdOrderBy->pscColumns[i].pszColumn);
+            orderByCols[i].Ascending = psdOrderBy->pscColumns[i].bAscending;
+        }
+    }
+
+    unsigned int maxHits = sd.iMaxNumHits == 0 ? 0 : sd.iMaxNumHits + 1;
+    IEnumerable<System::Object^>^ results;
     try
     {
-        results = m_cmd->Search(gcnew System::String(pszTableName), gcnew System::String(ID_COLUMN_NAME), maxHits, sdRange.iSkipHits, cols, nullptr);
+        results = m_cmd->Search(gcnew System::String(pszTableName), gcnew System::String(ID_COLUMN_NAME), maxHits, sd.iSkipHits, searchCols, orderByCols);
     }
     catch (SqlDatabaseException^ e)
     {
@@ -191,80 +215,20 @@ int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSe
     unsigned int iNumHits;
     *ppiKey = ConvertIdsToKeys(results, &iNumHits);
 
-    if (sdRange.iMaxNumHits > 0 && iNumHits > sdRange.iMaxNumHits)
+    if (iNumHits == 0)
     {
-        if (piStopKey != NULL)
-        {
-            *piStopKey = (*ppiKey)[iNumHits - 1];
-        }
+        return ERROR_DATA_NOT_FOUND;
+    }
 
-        *piNumHits = sdRange.iMaxNumHits;
-        return ERROR_TOO_MANY_HITS;
+    if (sd.iMaxNumHits > 0 && iNumHits > sd.iMaxNumHits)
+    {
+        *pbMore = true;
+        *piNumHits = sd.iMaxNumHits;
     }
     else
     {
-        if (piStopKey != NULL)
-        {
-            *piStopKey = NO_KEY;
-        }
-
+        *pbMore = false;
         *piNumHits = iNumHits;
-        return OK;
     }
-}
-
-int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits)
-{
-    Trace(TRACE_VERBOSE, "GetSearchKeys %s", pszTableName);
-
-    array<RangeSearchColumn>^ rangeCols = gcnew array<RangeSearchColumn>(sdRange.iNumColumns);
-
-    for (unsigned int i = 0; i < sdRange.iNumColumns; i ++)
-    {
-        rangeCols[i].ColumnName = gcnew System::String(sdRange.pscColumns[i].pszColumn);
-        rangeCols[i].GreaterThanOrEqual = Convert(sdRange.pscColumns[i].vData);
-        if (sdRange.pscColumns[i].vData.GetType() == V_STRING)
-        {
-            rangeCols[i].LessThanOrEqual = rangeCols[i].GreaterThanOrEqual;
-        }
-        else
-        {
-            rangeCols[i].LessThanOrEqual = Convert(sdRange.pscColumns[i].vData2);
-        }
-
-        // TODO - 611 - Implement or remove search flags and skip hits
-    }
-
-    array<OrderBySearchColumn>^ orderByCols = gcnew array<OrderBySearchColumn>(sdOrderBy.iNumColumns);
-    for (unsigned int i = 0; i < sdOrderBy.iNumColumns; i ++)
-    {
-        orderByCols[i].ColumnName = gcnew System::String(sdOrderBy.pscColumns[i].pszColumn);
-        orderByCols[i].Ascending = sdOrderBy.pscColumns[i].bAscending;
-    }
-
-    int64 maxHits = sdRange.iMaxNumHits == 0 ? System::Int32::MaxValue : sdRange.iMaxNumHits + 1;
-    IEnumerable<int64>^ results;
-    try
-    {
-        results = m_cmd->Search(gcnew System::String(pszTableName), gcnew System::String(ID_COLUMN_NAME), maxHits, sdRange.iSkipHits, rangeCols, orderByCols);
-    }
-    catch (SqlDatabaseException^ e)
-    {
-        TraceException(e);
-        return ERROR_DATABASE_EXCEPTION;
-    }
-
-    unsigned int iNumHits;
-    *ppiKey = ConvertIdsToKeys(results, &iNumHits);
-
-    if (sdRange.iMaxNumHits > 0 && iNumHits > sdRange.iMaxNumHits)
-    {
-        *piNumHits = sdRange.iMaxNumHits;
-        return ERROR_TOO_MANY_HITS;
-    }
-    else
-    {
-        *piNumHits = iNumHits;
-        return OK;
-    }
+    return OK;
 }

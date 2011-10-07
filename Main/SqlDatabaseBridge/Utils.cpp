@@ -127,9 +127,10 @@ System::Object^ Increment(System::Object^ original, const Variant& inc)
     }
 }
 
-unsigned int* ConvertIdsToKeys(IEnumerable<int64>^ ids, unsigned int* piCount)
+unsigned int* ConvertIdsToKeys(IEnumerable<System::Object^>^ ids, unsigned int* piCount)
 {
     unsigned int* piKey = NULL;
+
     unsigned int iCount = Enumerable::Count(ids);
     if (iCount > 0)
     {
@@ -137,9 +138,9 @@ unsigned int* ConvertIdsToKeys(IEnumerable<int64>^ ids, unsigned int* piCount)
         Assert(piKey != NULL);
 
         unsigned int i = 0;
-        for each (int64 id in ids)
+        for each (System::Object^ id in ids)
         {
-            piKey[i++] = (unsigned int)id;
+            piKey[i++] = (unsigned int)(int64)id;
         }
     }
 

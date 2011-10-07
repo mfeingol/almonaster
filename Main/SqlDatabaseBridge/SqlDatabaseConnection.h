@@ -55,6 +55,6 @@ public:
     int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows);
 
     // Searches
-    int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
-    int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits);
+    int GetSearchKeys(const char* pszTableName, const SearchDefinition& sd, const OrderByDefinition* psdOrderBy,
+                      unsigned int** ppiKey, unsigned int* piNumHits, bool* pbMore);
 };

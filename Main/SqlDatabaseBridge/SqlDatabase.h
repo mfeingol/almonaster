@@ -57,21 +57,29 @@ struct TemplateDescription
     unsigned int* IndexFlags;
 };
 
-struct RangeSearchColumnDefinition
+enum SearchColumnType
+{
+    SEARCH_RANGE_INCLUSIVE,
+    SEARCH_EQUALITY,
+    SEARCH_CONTAINS_STRING,
+    SEARCH_BEGINS_WITH_STRING,
+    SEARCH_ENDS_WITH_STRING,
+};
+
+struct SearchColumnDefinition
 {
     const char* pszColumn;
-    unsigned int iFlags;
+    SearchColumnType iType;
     Variant vData;
     Variant vData2;
 };
 
-struct RangeSearchDefinition
+struct SearchDefinition
 {
-    unsigned int iStartKey;
     unsigned int iSkipHits;
     unsigned int iMaxNumHits;
     unsigned int iNumColumns;
-    RangeSearchColumnDefinition* pscColumns;
+    SearchColumnDefinition* pscColumns;
 };
 
 struct OrderByColumnDefinition
@@ -117,16 +125,6 @@ struct TableCacheEntry
 
 #define ID_COLUMN_NAME "Id"
 
-//
-// Search flags
-//
-
-// Strings
-#define SEARCH_SUBSTRING       (0x00000001)
-#define SEARCH_EXACT           (0x00000002)
-#define SEARCH_BEGINS_WITH     (0x00000004)
-#define SEARCH_ENDS_WITH       (0x00000008)
-
 // Size
 const unsigned int VARIABLE_LENGTH_STRING = 0xffffffff;
 
@@ -144,7 +142,7 @@ const unsigned int VARIABLE_LENGTH_STRING = 0xffffffff;
 //#define ERROR_ONE_ROW_CANNOT_BE_INDEXED (-100012)
 //#define ERROR_INVALID_TYPE (-1000013)
 //#define ERROR_TRANSACTION_IN_PROGRESS (-1000014)
-#define ERROR_TOO_MANY_HITS (-1000015)
+//#define ERROR_TOO_MANY_HITS (-1000015)
 //#define ERROR_INVALID_RANGE (-1000016)
 //#define ERROR_UNKNOWN_TEMPLATE_NAME (-1000017)
 //#define ERROR_COULD_NOT_CREATE_TEMPLATE (-1000018)
@@ -326,8 +324,8 @@ public:
 
     virtual int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows) = 0;
 
-    virtual int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey) = 0;
-    virtual int GetSearchKeys(const char* pszTableName, const RangeSearchDefinition& sdRange, const OrderByDefinition& sdOrderBy, unsigned int** ppiKey, unsigned int* piNumHits) = 0;
+    virtual int GetSearchKeys(const char* pszTableName, const SearchDefinition& sd, const OrderByDefinition* psdOrderBy,
+                              unsigned int** ppiKey, unsigned int* piNumHits, bool* pbMore) = 0;
 };
 
 enum TransactionIsolationLevel

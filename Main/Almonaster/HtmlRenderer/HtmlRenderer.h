@@ -783,30 +783,26 @@ public:
     void WriteButton (ButtonId bidButton);
 
     // Search interface
-    int HandleSearchSubmission (
-        RangeSearchDefinition& sd,
-
+    int HandleSearchSubmission(
+        SearchDefinition& sd,
         const char** pszFormName,
         const char** pszColName1,
         const char** pszColName2,
-        
         unsigned int** ppiSearchEmpireKey,
         unsigned int* piNumSearchEmpires,
-        unsigned int* piLastKey
+        bool* pbMore
         );
 
     int RenderSearchForms (bool fAdvanced);
 
-    int RenderSearchResults (
-        RangeSearchDefinition& sd,
-
+    int RenderSearchResults(
+        SearchDefinition& sd,
         const char** pszFormName,
         const char** pszColName1,
         const char** pszColName2,
-
         unsigned int* piSearchEmpireKey,
         unsigned int iNumSearchEmpires,
-        unsigned int iLastKey
+        bool bMore
         );
 
     int RenderEmpireInformation (int iGameClass, int iGameNumber, bool bAdmin);

@@ -426,7 +426,6 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     <ClCompile Include="GameEngine\GameEnginePlanets.cpp" />
     <ClCompile Include="GameEngine\GameEngineRules.cpp" />
     <ClCompile Include="GameEngine\GameEngineScore.cpp" />
-    <ClCompile Include="GameEngine\GameEngineSearch.cpp" />
     <ClCompile Include="GameEngine\GameEngineSecurity.cpp" />
     <ClCompile Include="GameEngine\GameEngineSetup.cpp" />
     <ClCompile Include="GameEngine\GameEngineShips.cpp" />

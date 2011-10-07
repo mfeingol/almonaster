@@ -86,9 +86,6 @@
     <ClCompile Include="GameEngine\GameEngineScore.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
-    <ClCompile Include="GameEngine\GameEngineSearch.cpp">
-      <Filter>GameEngine Source</Filter>
-    </ClCompile>
     <ClCompile Include="GameEngine\GameEngineSecurity.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>

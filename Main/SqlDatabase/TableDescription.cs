@@ -34,11 +34,21 @@ namespace Almonaster.Database.Sql
         public object Value;
     }
 
-    public struct RangeSearchColumn
+    public enum SearchType
+    {
+        RangeInclusive,
+        Equality,
+        ContainsString,
+        BeginsWithString,
+        EndsWithString
+    }
+
+    public struct SearchColumnMetadata
     {
         public string ColumnName;
-        public object GreaterThanOrEqual;
-        public object LessThanOrEqual;
+        public SearchType Type;
+        public object Field1;
+        public object Field2;
     }
 
     public struct OrderBySearchColumn

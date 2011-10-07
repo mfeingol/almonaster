@@ -1254,7 +1254,6 @@ int GameEngine::IsPasswordCorrect(int iEmpireKey, const char* pszPassword)
     return String::StrCmp(vActualPasswordHash, vTestPasswordHash) == 0 ? OK : ERROR_PASSWORD;
 }
 
-
 // Input:
 // iEmpireKey -> Integer key of empire
 // pszBrowser -> Browser used to request login

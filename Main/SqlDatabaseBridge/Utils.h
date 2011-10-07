@@ -31,7 +31,7 @@ SqlDbType Convert(VariantType type);
 IsolationLevel Convert(TransactionIsolationLevel);
 System::Object^ Increment(System::Object^ original, const Variant& inc);
 
-unsigned int* ConvertIdsToKeys(System::Collections::Generic::IEnumerable<int64>^ ids, unsigned int* piCount);
+unsigned int* ConvertIdsToKeys(System::Collections::Generic::IEnumerable<System::Object^>^ ids, unsigned int* piCount);
 
 extern ITraceLog* g_pTrace;
 void Trace(TraceInfoLevel level, const char* pszFormat, ...);

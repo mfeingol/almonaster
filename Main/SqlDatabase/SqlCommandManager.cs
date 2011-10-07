@@ -422,20 +422,54 @@ namespace Almonaster.Database.Sql
             }
         }
 
-        public IEnumerable<long> Search(string tableName, string idColumnName, long maxResults, long skipResults,
-                                        IEnumerable<RangeSearchColumn> rangeCols, IEnumerable<OrderBySearchColumn> orderByCols)
+        public IEnumerable<object> Search(string tableName, string selectColumnName, uint maxResults, uint skipResults,
+                                          IEnumerable<SearchColumnMetadata> searchCols, IEnumerable<OrderBySearchColumn> orderByCols)
         {
-            // TODO - 611 - Implement or remove search flags and skip hits
-
             int index = 0;
             using (SqlCommand cmd = new SqlCommand())
             {
-                StringBuilder where = new StringBuilder();
+                StringBuilder selectTop = new StringBuilder();
+                if (maxResults == 0)
+                {
+                    selectTop.Append(selectColumnName);
+                }
+                else
+                {
+                    selectTop.AppendFormat("TOP({0}) [{1}]", maxResults, selectColumnName);
+                }
 
-                if (rangeCols != null)
+                StringBuilder orderBy = new StringBuilder();
+                if (orderByCols != null)
                 {
                     bool first = true;
-                    foreach (RangeSearchColumn col in rangeCols)
+                    foreach (OrderBySearchColumn orderByCol in orderByCols)
+                    {
+                        if (first)
+                        {
+                            first = false;
+                            orderBy.AppendFormat("ORDER BY [{0}]", orderByCol.ColumnName);
+                        }
+                        else
+                        {
+                            orderBy.AppendFormat(",[{0}]", orderByCol.ColumnName);
+                        }
+                        orderBy.Append(orderByCol.Ascending ? " ASC" : " DESC");
+                    }
+                }
+                else if (searchCols.Count() > 0)
+                {
+                    orderBy.AppendFormat("ORDER BY [{0}]", searchCols.First().ColumnName);
+                }
+                else
+                {
+                    orderBy.AppendFormat("ORDER BY [{0}]", selectColumnName);
+                }
+
+                StringBuilder where = new StringBuilder();
+                if (searchCols != null)
+                {
+                    bool first = true;
+                    foreach (SearchColumnMetadata col in searchCols)
                     {
                         if (first)
                         {
@@ -447,72 +481,66 @@ namespace Almonaster.Database.Sql
                             where.Append(" AND ");
                         }
 
-                        if (col.LessThanOrEqual == col.GreaterThanOrEqual)
-                        {
-                            string param = "@p" + index++;
-                            where.AppendFormat("[{0}] = {1}", col.ColumnName, param);
-                            cmd.Parameters.Add(new SqlParameter(param, col.LessThanOrEqual));
-                        }
-                        else
-                        {
-                            string lessThanParam = "@p" + index++;
-                            string greaterThanParam = "@p" + index++;
+                        string param = "@p" + index++;
+                        cmd.Parameters.Add(new SqlParameter(param, col.Field1));
 
-                            where.AppendFormat("[{0}] >= {1} AND [{0}] <= {2}", col.ColumnName, greaterThanParam, lessThanParam);
+                        switch (col.Type)
+                        {
+                            case SearchType.RangeInclusive:
+                                string lessThanParam = "@p" + index++;
+                                cmd.Parameters.Add(new SqlParameter(lessThanParam, col.Field1));
+                                where.AppendFormat("[{0}] >= {1} AND [{0}] <= {2}", col.ColumnName, lessThanParam, param);
+                                break;
 
-                            cmd.Parameters.Add(new SqlParameter(lessThanParam, col.LessThanOrEqual));
-                            cmd.Parameters.Add(new SqlParameter(greaterThanParam, col.GreaterThanOrEqual));
+                            case SearchType.Equality:
+                                where.AppendFormat("[{0}] = {1}", col.ColumnName, param);
+                                break;
+
+                            case SearchType.ContainsString:
+                                where.AppendFormat("[{0}] LIKE '%' + {1} + '%'", col.ColumnName, param);
+                                break;
+
+                            case SearchType.BeginsWithString:
+                                where.AppendFormat("[{0}] LIKE {1} + '%'", col.ColumnName, param);
+                                break;
+
+                            case SearchType.EndsWithString:
+                                where.AppendFormat("[{0}] LIKE '%' + {1}", col.ColumnName, param);
+                                break;
+
+                            default:
+                                throw new InvalidArgumentException();
                         }
                     }
                 }
 
-                StringBuilder orderOrGroupBy = new StringBuilder();
-                if (orderByCols != null)
+                StringBuilder tableNameWithSkip = new StringBuilder();
+                if (skipResults == 0)
                 {
-                    bool first = true;
-                    foreach (OrderBySearchColumn orderByCol in orderByCols)
-                    {
-                        if (first)
-                        {
-                            first = false;
-                            orderOrGroupBy.AppendFormat("ORDER BY [{0}]", orderByCol.ColumnName);
-                        }
-                        else
-                        {
-                            orderOrGroupBy.AppendFormat(",[{0}]", orderByCol.ColumnName);
-                        }
-                        orderOrGroupBy.Append(orderByCol.Ascending ? " ASC" : " DESC");
-                    }
+                    tableNameWithSkip.AppendFormat("[{0}]", tableName);
                 }
                 else
                 {
-                    orderOrGroupBy.AppendFormat("GROUP BY [{0}]", idColumnName);
+                    tableNameWithSkip.AppendFormat("(SELECT row_number() OVER ({0}) AS row_number, * FROM [{1}] {2}) t1 WHERE row_number > {3}",
+                                                    orderBy, tableName, where, skipResults);
+
+                    orderBy = null;
+                    where = null;
                 }
 
-                string cmdText;
-                if (maxResults == Int32.MaxValue)
-                {
-                    cmdText = String.Format("SELECT [{0}] FROM [{1}] {2} {3};", idColumnName, tableName, where.ToString(), orderOrGroupBy.ToString());
-                }
-                else
-                {
-                    cmdText = String.Format("SELECT TOP({0}) [{1}] FROM [{2}] {3} {4};", maxResults, idColumnName, tableName, where.ToString(), orderOrGroupBy.ToString());
-                }
-
-                cmd.CommandText = cmdText;
+                cmd.CommandText = String.Format("SELECT {0} FROM {1} {2} {3};", selectTop, tableNameWithSkip, where, orderBy);
                 cmd.Connection = this.conn;
                 cmd.Transaction = this.tx;
-
                 try
                 {
                     using (SqlDataReader reader = cmd.ExecuteReader())
                     {
-                        List<long> ids = new List<long>();
+                        List<object> results = new List<object>();
                         while (reader.Read())
                         {
-                            ids.Add((long)reader[0]);
+                            results.Add(reader[0]);
                         }
-                        return ids;
+                        return results;
                     }
                 }
                 catch (SqlException e)

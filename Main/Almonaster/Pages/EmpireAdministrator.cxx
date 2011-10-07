@@ -31,7 +31,8 @@ if (!bInitialized)
 IHttpForm* pSearchForm, * pHttpForm;
 
 int iEmpireAdminPage = 0;
-unsigned int iLastKey = NO_KEY, * piSearchEmpireKey = NULL, iNumSearchEmpires = 0, iTargetEmpireKey = NO_KEY;
+unsigned int* piSearchEmpireKey = NULL, iNumSearchEmpires = 0, iTargetEmpireKey = NO_KEY;
+bool bMoreHits = false;
 AutoFreeKeys free_piSearchEmpireKey(piSearchEmpireKey);
 
 // Make sure that the unprivileged don't abuse this:
@@ -40,8 +41,8 @@ if (m_iPrivilege < ADMINISTRATOR) {
     return Redirect (LOGIN);
 }
 
-RangeSearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
-RangeSearchDefinition sd;
+SearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
+SearchDefinition sd;
 sd.pscColumns = sc;
 
 const char* pszFormName [MAX_NUM_SEARCH_COLUMNS];
@@ -87,58 +88,45 @@ if (m_bOwnPost && !m_bRedirection) {
 
             } else {
 
-                if (WasButtonPressed (BID_SEARCH)) {
+                if (WasButtonPressed (BID_SEARCH))
+                {
 SearchResults:
                     iEmpireAdminPage = 0;
 
-                    iErrCode = HandleSearchSubmission (
+                    iErrCode = HandleSearchSubmission(
                         sd,
                         pszFormName,
                         pszColName1,
                         pszColName2,
                         &piSearchEmpireKey,
                         &iNumSearchEmpires,
-                        &iLastKey
+                        &bMoreHits
                         );
 
-                    switch (iErrCode) {
-
-                    case OK:
-                    case ERROR_TOO_MANY_HITS:
-
-                        if (iNumSearchEmpires > 0) {
-
-                            if (iNumSearchEmpires == 1 && iLastKey == NO_KEY)
-                            {
-                                iTargetEmpireKey = piSearchEmpireKey[0];
-                            
-                                // Cache profile data
-                                iErrCode = CacheProfileData(iTargetEmpireKey);
-                                RETURN_ON_ERROR(iErrCode);
-
-                                piSearchEmpireKey = NULL;
-                                iEmpireAdminPage = 3;
-                            } else {
-                                iEmpireAdminPage = 1;
-                            }
-                            break;
-                        }
-
-                        // Fall through if 0 empires
-
-                    case ERROR_DATA_NOT_FOUND:
-                        AddMessage ("No empires matched your search criteria");
-                        break;
-
-                    case ERROR_INVALID_QUERY:
-                        AddMessage ("You submitted an invalid query");
+                    if (iErrCode == ERROR_INVALID_QUERY)
+                    {
+                        AddMessage("Invalid query");
                         goto Redirection;
-
-                    default:
-                        RETURN_ON_ERROR(iErrCode);
-                        break;
                     }
-                    iErrCode = OK;
+                    RETURN_ON_ERROR(iErrCode);
+                        
+                    if (iNumSearchEmpires == 0)
+                    {
+                        AddMessage("No empires matched your search criteria");
+                    }
+                    else if (iNumSearchEmpires == 1 && !bMoreHits)
+                    {
+                        // Cache profile data
+                        iTargetEmpireKey = piSearchEmpireKey[0];
+                        iErrCode = CacheProfileData(iTargetEmpireKey);
+                        RETURN_ON_ERROR(iErrCode);
+
+                        iEmpireAdminPage = 3;
+                    }
+                    else
+                    {
+                        iEmpireAdminPage = 1;
+                    }
                 }
             }
 
@@ -155,6 +143,9 @@ SearchResults:
                 (pszStart = pHttpForm->GetName()) != NULL &&
                 sscanf (pszStart, "ViewProfile.%d.%d", &iTargetEmpireKey, &iHash) == 2)
             {
+                iErrCode = CacheProfileData(iTargetEmpireKey);
+                RETURN_ON_ERROR(iErrCode);
+
                 bool bVerified;
                 iErrCode = VerifyEmpireNameHash(iTargetEmpireKey, iHash, &bVerified);
                 RETURN_ON_ERROR(iErrCode);
@@ -597,25 +588,21 @@ case 0:
     break;
 
 case 1:
-    {
 
     %><input type="hidden" name="EmpireAdminPage" value="1"><%
 
     Assert(piSearchEmpireKey != NULL);
 
-    iErrCode = RenderSearchResults (
+    iErrCode = RenderSearchResults(
         sd,
         pszFormName,
         pszColName1,
         pszColName2,
         piSearchEmpireKey,
         iNumSearchEmpires,
-        iLastKey
+        bMoreHits
         );
-
     RETURN_ON_ERROR(iErrCode);
-    }
-
     break;
 
 case 2:

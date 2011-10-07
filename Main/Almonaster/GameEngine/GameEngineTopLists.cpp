@@ -50,10 +50,10 @@ int GameEngine::GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey
         { SystemEmpireData::Nukes, false },
     };
 
-    const RangeSearchColumnDefinition bridierScoreRangeCol = { SystemEmpireData::BridierIndex, 0, 0, BRIDIER_TOPLIST_INDEX };
-    const RangeSearchColumnDefinition bridierEstablishedScoreRangeCol = { SystemEmpireData::BridierIndex, 0, 0, BRIDIER_ESTABLISHED_TOPLIST_INDEX };
+    const SearchColumnDefinition bridierScoreCol = { SystemEmpireData::BridierIndex, SEARCH_RANGE_INCLUSIVE, 0, BRIDIER_TOPLIST_INDEX };
+    const SearchColumnDefinition bridierEstablishedScoreCol = { SystemEmpireData::BridierIndex, SEARCH_RANGE_INCLUSIVE, 0, BRIDIER_ESTABLISHED_TOPLIST_INDEX };
 
-    RangeSearchDefinition rangeSd = { NO_KEY, 0, TOPLIST_SIZE, 0, NULL};
+    SearchDefinition rangeSd = { 0, TOPLIST_SIZE, 0, NULL};
     OrderByDefinition orderByDef = { 0, NULL };
 
     switch (ssListType)
@@ -72,14 +72,14 @@ int GameEngine::GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey
         orderByDef.iNumColumns = countof(scBridierCols);
         orderByDef.pscColumns = (OrderByColumnDefinition*)scBridierCols;
         rangeSd.iNumColumns = 1;
-        rangeSd.pscColumns = (RangeSearchColumnDefinition*)&bridierScoreRangeCol;
+        rangeSd.pscColumns = (SearchColumnDefinition*)&bridierScoreCol;
         break;
 
     case BRIDIER_SCORE_ESTABLISHED:
         orderByDef.iNumColumns = countof(scBridierCols);
         orderByDef.pscColumns = (OrderByColumnDefinition*)scBridierCols;
         rangeSd.iNumColumns = 1;
-        rangeSd.pscColumns = (RangeSearchColumnDefinition*)&bridierEstablishedScoreRangeCol;
+        rangeSd.pscColumns = (SearchColumnDefinition*)&bridierEstablishedScoreCol;
         break;
 
     default:
@@ -87,8 +87,9 @@ int GameEngine::GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey
         break;
     }
 
-    int iErrCode = t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, rangeSd, orderByDef, ppiEmpireKey, piNumEmpires);
-    if (iErrCode == ERROR_TOO_MANY_HITS)
+    bool bMore;
+    int iErrCode = t_pConn->GetSearchKeys(SYSTEM_EMPIRE_DATA, rangeSd, &orderByDef, ppiEmpireKey, piNumEmpires, &bMore);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         iErrCode = OK;
     }

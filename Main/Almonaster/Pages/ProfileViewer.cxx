@@ -32,11 +32,12 @@ if (!bInitialized)
 IHttpForm* pHttpForm;
 
 int iProfileViewerPage = 0;
-unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iLastKey = 0, iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
+unsigned int iTargetEmpireKey = NO_KEY, * piSearchEmpireKey = NULL, iNumSearchEmpires = 0, iGameClassKey = NO_KEY;
+bool bMoreHits = false;
 AutoFreeKeys free_piSearchEmpireKey(piSearchEmpireKey);
 
-RangeSearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
-RangeSearchDefinition sd;
+SearchColumnDefinition sc [MAX_NUM_SEARCH_COLUMNS];
+SearchDefinition sd;
 sd.pscColumns = sc;
 
 const char* ppszFormName [MAX_NUM_SEARCH_COLUMNS];
@@ -75,38 +76,28 @@ SearchResults:
                     ppszColName2,
                     &piSearchEmpireKey,
                     &iNumSearchEmpires,
-                    &iLastKey
+                    &bMoreHits
                     );
 
-                switch (iErrCode)
+                if (iErrCode == ERROR_INVALID_QUERY)
                 {
-                case OK:
-                case ERROR_TOO_MANY_HITS:
-
-                    if (iNumSearchEmpires > 0)
-                    {
-                        if (iNumSearchEmpires == 1 && iLastKey == NO_KEY) {
-                            iTargetEmpireKey = piSearchEmpireKey[0];
-                            iProfileViewerPage = 2;
-                        } else {
-                            iProfileViewerPage = 1;
-                        }
-                        break;
-                    }
-
-                    // Fall through if 0 empires
-
-                case ERROR_DATA_NOT_FOUND:
-                    AddMessage ("No empires matched your search criteria");
-                    break;
-
-                case ERROR_INVALID_QUERY:
-                    AddMessage ("You submitted an invalid query");
+                    AddMessage("Invalid query");
                     goto Redirection;
-
-                default:
-                    RETURN_ON_ERROR(iErrCode);
-                    break;
+                }
+                RETURN_ON_ERROR(iErrCode);
+                        
+                if (iNumSearchEmpires == 0)
+                {
+                    AddMessage("No empires matched your search criteria");
+                }
+                else if (iNumSearchEmpires == 1 && !bMoreHits)
+                {
+                    iTargetEmpireKey = piSearchEmpireKey[0];
+                    iProfileViewerPage = 2;
+                }
+                else
+                {
+                    iProfileViewerPage = 1;
                 }
             }
 
@@ -545,7 +536,7 @@ case 1:
         ppszColName2,
         piSearchEmpireKey,
         iNumSearchEmpires,
-        iLastKey
+        bMoreHits
         );
 
     RETURN_ON_ERROR(iErrCode);

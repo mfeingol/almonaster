@@ -1282,9 +1282,6 @@ public:
     // Top Lists
     int GetTopList(ScoringSystem ssListType, unsigned int** ppiEmpireKey, unsigned int* piNumEmpires);
 
-    // Search
-    int PerformMultipleSearch(const RangeSearchDefinition& sdSearch, unsigned int** ppiKey, unsigned int* piNumHits, unsigned int* piStopKey);
-
     // Updates
     int CheckGameForUpdates(int iGameClass, int iGameNumber, bool* pbUpdate);
     int CheckAllGamesForUpdates();
