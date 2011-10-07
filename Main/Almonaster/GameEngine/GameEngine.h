@@ -921,6 +921,7 @@ public:
     int CheckGameForEndConditions (int iGameClass, int iGameNumber, const char* pszAdminMessage, bool* pbEndGame);
     int DeleteGame (int iGameClass, int iGameNumber, int iEmpireKey, const char* pszMessage, int iReason);
     
+    int GetGameClassNumActiveGames(int iGameClass, unsigned int* piNumGames);
     int GetNumActiveGames(unsigned int* piNumGames);
     int GetNumOpenGames(unsigned int* piNumGames);
     int GetNumClosedGames(unsigned int* piNumGames);

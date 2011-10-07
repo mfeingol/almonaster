@@ -791,14 +791,17 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
     m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iOpenGameNum].GetInteger());
     OutputText ("</strong></font>");
     
-    if (m_iPrivilege >= NOVICE) {
-        
+    if (m_iPrivilege >= NOVICE)
+    {
+        unsigned int iNumActiveGames;
+        iErrCode = GetGameClassNumActiveGames(iGameClass, &iNumActiveGames);
+        RETURN_ON_ERROR(iErrCode);
+
         if (!(pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_HALTED) &&
             !(pvGameClassInfo[SystemGameClassData::iOptions].GetInteger() & GAMECLASS_MARKED_FOR_DELETION) &&
             (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger() == INFINITE_ACTIVE_GAMES ||
-            pvGameClassInfo[SystemGameClassData::iNumActiveGames].GetInteger() < 
-            pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger())) {
-            
+            iNumActiveGames < (unsigned int)pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger()))
+        {
             OutputText ("<p>");
             
             sprintf(pszForm, "Start%i", iGameClass);
@@ -825,21 +828,20 @@ int HtmlRenderer::WriteSystemGameListData (int iGameClass, const Variant* pvGame
             }
         }
         
-        if (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger() != INFINITE_ACTIVE_GAMES) {
-            
-            if (pvGameClassInfo[SystemGameClassData::iNumActiveGames].GetInteger() >= 
-                pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger()) {
-                
+        if (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger() != INFINITE_ACTIVE_GAMES)
+        {
+            if (iNumActiveGames >= (unsigned int)pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger())
+            {
                 OutputText ("<p>(Active game limit of <strong>");
                 m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger());
                 OutputText ("</strong> reached)");
-                
-            } else {
-                
+            }
+            else
+            {
                 OutputText ("<p>(<strong>");
-                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iNumActiveGames].GetInteger());
+                m_pHttpResponse->WriteText(iNumActiveGames);
                 OutputText ("</strong> of <strong>");
-                m_pHttpResponse->WriteText (pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger());
+                m_pHttpResponse->WriteText(pvGameClassInfo[SystemGameClassData::iMaxNumActiveGames].GetInteger());
                 OutputText ("</strong> active games)");
             }
         }

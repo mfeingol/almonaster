@@ -1066,8 +1066,8 @@ namespace SystemAvailability
 
 #define SYSTEM_GAMECLASS_DATA "SystemGameClassData"
 
-namespace SystemGameClassData {
-
+namespace SystemGameClassData
+{
     static const char* const Name = "Name";
     static const char* const MaxNumEmpires = "MaxNumEmpires";
     static const char* const MaxNumPlanets = "MaxNumPlanets";
@@ -1104,7 +1104,6 @@ namespace SystemGameClassData {
     static const char* const Description = "Description";
     static const char* const MaxAgRatio = "MaxAgRatio";
     static const char* const MaxNumActiveGames = "MaxNumActiveGames";
-    static const char* const NumActiveGames = "NumActiveGames";
     static const char* const NumUpdatesForIdle = "NumUpdatesForIdle";
     static const char* const NumUpdatesForRuin = "NumUpdatesForRuin";
     static const char* const RuinFlags = "RuinFlags";
@@ -1149,7 +1148,6 @@ namespace SystemGameClassData {
         iDescription,
         iMaxAgRatio,
         iMaxNumActiveGames,
-        iNumActiveGames,
         iNumUpdatesForIdle,
         iNumUpdatesForRuin,
         iRuinFlags,
@@ -1195,7 +1193,6 @@ namespace SystemGameClassData {
         Description,
         MaxAgRatio,
         MaxNumActiveGames,
-        NumActiveGames,
         NumUpdatesForIdle,
         NumUpdatesForRuin,
         RuinFlags,
@@ -1245,7 +1242,6 @@ namespace SystemGameClassData {
         V_INT,
         V_INT,
         V_INT,
-        V_INT,
         V_STRING,
         V_INT,
     };
@@ -1285,7 +1281,6 @@ namespace SystemGameClassData {
         0,
         0,
         VARIABLE_LENGTH_STRING,
-        0,
         0,
         0,
         0,

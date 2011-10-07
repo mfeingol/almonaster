@@ -585,11 +585,11 @@ int GameEngine::VerifyMarkedGameClasses() {
 
         if (vOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION)
         {
-            Variant vActiveGames;
-            iErrCode = GetGameClassProperty(piGameClassKey[i], SystemGameClassData::NumActiveGames, &vActiveGames);
+            unsigned int iNumActiveGames;
+            iErrCode = GetGameClassNumActiveGames(piGameClassKey[i], &iNumActiveGames);
             RETURN_ON_ERROR(iErrCode);
 
-            if (vActiveGames.GetInteger() == 0)
+            if (iNumActiveGames == 0)
             {
                 // This game class needs to be deleted
                 bool bDeleted;
@@ -1674,7 +1674,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -1727,7 +1726,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -1778,7 +1776,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -1831,7 +1828,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -1885,7 +1881,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -1938,7 +1933,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -1991,7 +1985,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2043,7 +2036,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2095,7 +2087,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2148,7 +2139,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2201,7 +2191,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2252,7 +2241,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2304,7 +2292,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2357,7 +2344,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2410,7 +2396,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;
@@ -2461,7 +2446,6 @@ int GameEngine::SetupDefaultSystemGameClasses()
     pvSubmitArray[SystemGameClassData::iDescription] = "";
     pvSubmitArray[SystemGameClassData::iMaxAgRatio] = MAX_RATIO;
     pvSubmitArray[SystemGameClassData::iMaxNumActiveGames] = INFINITE_ACTIVE_GAMES;
-    pvSubmitArray[SystemGameClassData::iNumActiveGames] = 0;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForIdle] = 2;
     pvSubmitArray[SystemGameClassData::iNumUpdatesForRuin] = 10;
     pvSubmitArray[SystemGameClassData::iRuinFlags] = RUIN_ALMONASTER;

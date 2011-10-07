@@ -176,20 +176,18 @@ int GameEngine::GetNextGameNumber (int iGameClass, int* piGameNumber) {
 //
 // Halt the given gameclass and delete it if no active games are left
 
-int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted) {
+int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted)
+{
+    int iErrCode;
 
     *pbDeleted = false;
 
     // Make sure gameclass has no active games
-    Variant vNumActiveGames;
-    int iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, &vNumActiveGames);
-    if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
-    {
-        return ERROR_GAMECLASS_DOES_NOT_EXIST;
-    }
+    unsigned int iNumActiveGames;
+    iErrCode = GetGameClassNumActiveGames(iGameClass, &iNumActiveGames);
     RETURN_ON_ERROR(iErrCode);
 
-    if (vNumActiveGames.GetInteger() != 0)
+    if (iNumActiveGames > 0)
     {
         // Mark the gameclass for deletion
         iErrCode = t_pCache->WriteOr(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::Options, GAMECLASS_MARKED_FOR_DELETION);
@@ -394,9 +392,6 @@ int GameEngine::CreateGameClass (int iCreator, Variant* pvGameClassData, int* pi
             }
         }
     }
-
-    // Set num active games to zero
-    pvGameClassData[SystemGameClassData::iNumActiveGames] = 0;
 
     // Make sure tournament exists
     iTournamentKey = pvGameClassData[SystemGameClassData::iTournamentKey].GetInteger();

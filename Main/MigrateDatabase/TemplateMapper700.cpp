@@ -62,6 +62,7 @@ TemplateMapper700::TemplateMapper700()
     m_templates["SystemGameClassData"] = CreateTemplateMetadata(SystemGameClassData::Template);
     m_templates["SystemGameClassData"]->DeletedColumns->Add(gcnew FileDatabaseElement("fRESERVED2", nullptr));
     m_templates["SystemGameClassData"]->DeletedColumns->Add(gcnew FileDatabaseElement("fRESERVED3", nullptr));
+    m_templates["SystemGameClassData"]->DeletedColumns->Add(gcnew FileDatabaseElement("NumActiveGames", nullptr));
 
     m_templates["SystemLatestGames"] = CreateTemplateMetadata(SystemLatestGames::Template);
     

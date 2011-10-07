@@ -351,16 +351,19 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
         }
     }
 
-    // Decrement number of games in gameclass
-    iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, -1, &vNumGames);
-    RETURN_ON_ERROR(iErrCode);
-
     // Attempt to delete gameclass if it's marked for deletion
-    if (vNumGames.GetInteger() == 1 && vGameClassOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION)
+    if (vGameClassOptions.GetInteger() & GAMECLASS_MARKED_FOR_DELETION)
     {
-        bool bDeleted;
-        iErrCode = DeleteGameClass(iGameClass, &bDeleted);
+        unsigned int iNumActiveGames;
+        iErrCode = GetGameClassNumActiveGames(iGameClass, &iNumActiveGames);
         RETURN_ON_ERROR(iErrCode);
+
+        if (iNumActiveGames == 0)
+        {
+            bool bDeleted;
+            iErrCode = DeleteGameClass(iGameClass, &bDeleted);
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
     return iErrCode;
@@ -399,6 +402,17 @@ int GameEngine::GetGameState (int iGameClass, int iGameNumber, int* piGameState)
 
     *piGameState = vValue.GetInteger();
     
+    return iErrCode;
+}
+
+int GameEngine::GetGameClassNumActiveGames(int iGameClass, unsigned int* piNumGames)
+{
+    int iErrCode = t_pCache->GetEqualKeys(SYSTEM_ACTIVE_GAMES, SystemActiveGames::GameClass, iGameClass, NULL, piNumGames);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }
 
@@ -726,11 +740,11 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
 
     if (vMaxNumActiveGames.GetInteger() != INFINITE_ACTIVE_GAMES)
     {
-        Variant vNumActiveGames;
-        iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, &vNumActiveGames);
+        unsigned int iNumActiveGames;
+        iErrCode = GetGameClassNumActiveGames(iGameClass, &iNumActiveGames);
         RETURN_ON_ERROR(iErrCode);
-
-        if (vNumActiveGames.GetInteger() >= vMaxNumActiveGames.GetInteger())
+        
+        if (iNumActiveGames >= (unsigned int)vMaxNumActiveGames.GetInteger())
         {
             return ERROR_TOO_MANY_GAMES;
         }
@@ -759,10 +773,6 @@ int GameEngine::CreateGame(int iGameClass, int iEmpireCreator, const GameOptions
         }
     }
 
-    // Increment number of active games
-    iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::NumActiveGames, 1);
-    RETURN_ON_ERROR(iErrCode);
-    
     // Get unique game number and increment it
     iErrCode = t_pCache->Increment(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::OpenGameNum, 1, &vGameNumber);
     RETURN_ON_ERROR(iErrCode);
