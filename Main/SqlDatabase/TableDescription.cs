@@ -4,12 +4,20 @@ using System.Data;
 
 namespace Almonaster.Database.Sql
 {
+    public enum IndexType
+    {
+        None,
+        PrimaryKey,
+        IndexUnique,
+        Index,
+    }
+
     public struct ColumnDescription
     {
         public string Name;
         public SqlDbType Type;
         public int Size;
-        public bool IsPrimaryKey;
+        public IndexType IndexType;
     }
 
     public struct TableDescription

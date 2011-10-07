@@ -1,5 +1,5 @@
 //
-// Almonaster
+// Almonaster.dll:  a component of Almonaster
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -836,7 +836,8 @@ namespace SystemEmpireData
         Age,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_STRING,
         V_STRING,
         V_INT,
@@ -914,7 +915,8 @@ namespace SystemEmpireData
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         MAX_EMPIRE_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         0,
@@ -992,12 +994,14 @@ namespace SystemEmpireData
         0,
     };
 
-    static const char* const IndexColumns[] = {
+    static const char* const IndexColumns[] =
+    {
         Name,
     };
 
-    static unsigned int IndexFlags[] = {
-        INDEX_UNIQUE_DATA,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX_UNIQUE,
     };
 
     static const unsigned int NumColumns = countof(Sizes);
@@ -1011,7 +1015,7 @@ namespace SystemEmpireData
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags
+        IndexTypes
     };
 };
 
@@ -1111,7 +1115,8 @@ namespace SystemGameClassData
     static const char* const OwnerName = "OwnerName";
     static const char* const NumInitialTechDevs = "NumInitialTechDevs";
 
-    enum Columns {
+    enum Columns
+    {
         iName,
         iMaxNumEmpires,
         iMaxNumPlanets,
@@ -1156,7 +1161,8 @@ namespace SystemGameClassData
         iNumInitialTechDevs,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         Name,
         MaxNumEmpires,
         MaxNumPlanets,
@@ -1201,7 +1207,8 @@ namespace SystemGameClassData
         NumInitialTechDevs,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_STRING,
         V_INT,
         V_INT,
@@ -1246,7 +1253,8 @@ namespace SystemGameClassData
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         MAX_GAME_CLASS_NAME_LENGTH,
         0,
         0,
@@ -1291,14 +1299,6 @@ namespace SystemGameClassData
         0,
     };
 
-    static const char* const IndexColumns[] = {
-        Owner
-    };
-
-    static unsigned int IndexFlags[] = {
-        0,
-    };
-
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
@@ -1307,9 +1307,9 @@ namespace SystemGameClassData
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        countof(IndexColumns),
-        (char**)IndexColumns,
-        IndexFlags
+        0,
+        NULL,
+        NULL
     };
 };
 
@@ -1319,8 +1319,8 @@ namespace SystemGameClassData
 
 #define SYSTEM_ALIEN_ICONS "SystemAlienIcons"
 
-namespace SystemAlienIcons {
-
+namespace SystemAlienIcons
+{
     static const char* const Address = "Address";
     static const char* const AuthorName = "AuthorName";
 
@@ -1330,27 +1330,22 @@ namespace SystemAlienIcons {
         iAuthorName
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         Address,
         AuthorName,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_INT,
         V_STRING
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         0,
         MAX_ALIEN_AUTHOR_NAME_LENGTH
-    };
-
-    static const char* const IndexColumns[] = {
-        Address
-    };
-
-    static unsigned int IndexFlags[] = {
-        0,
     };
 
     static const unsigned int NumColumns = countof(Sizes);
@@ -1362,9 +1357,9 @@ namespace SystemAlienIcons {
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        countof(IndexColumns),
-        (char**)IndexColumns,
-        IndexFlags
+        0,
+        NULL,
+        NULL
     };
 };
 
@@ -1374,34 +1369,39 @@ namespace SystemAlienIcons {
 
 #define SYSTEM_SUPERCLASS_DATA "SystemSuperClassData"
 
-namespace SystemSuperClassData {
-
+namespace SystemSuperClassData
+{
     static const char* const Name = "Name";
     static const char* const NumGameClasses = "NumGameClasses";
 
-    enum Columns {
+    enum Columns
+    {
         iName,
         iNumGameClasses
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] = 
+    {
         Name,
         NumGameClasses,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] = 
+    {
         V_STRING,
         V_INT,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] = 
+    {
         MAX_SUPER_CLASS_NAME_LENGTH,
         0,
     };
 
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template = 
+    {
         "SystemSuperClassData",
         NumColumns,
         (char**)ColumnNames,
@@ -1412,7 +1412,6 @@ namespace SystemSuperClassData {
         NULL
     };
 };
-
 
 //////////////////
 // SystemThemes //
@@ -1523,7 +1522,6 @@ namespace SystemThemes
     };
 };
 
-
 ///////////////////////
 // SystemActiveGames //
 ///////////////////////
@@ -1569,20 +1567,6 @@ namespace SystemActiveGames
         0,
     };
 
-    static const char* const IndexColumns[] =
-    {
-        GameClass,
-        GameNumber,
-        TournamentKey,
-    };
-
-    static unsigned int IndexFlags[] = 
-    {
-        0,
-        0,
-        0,
-    };
-
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = 
@@ -1592,9 +1576,9 @@ namespace SystemActiveGames
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        countof(IndexColumns),
-        (char**)IndexColumns,
-        IndexFlags,
+        0,
+        NULL,
+        NULL
     };
 };
 
@@ -1637,6 +1621,16 @@ namespace SystemEmpireAssociations
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        EmpireKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
@@ -1646,9 +1640,9 @@ namespace SystemEmpireAssociations
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -1674,7 +1668,8 @@ namespace SystemEmpireMessages
     static const char* const Type = "Type";
     static const char* const Data = "Data";
 
-    enum Columns {
+    enum Columns
+    {
         iEmpireKey,
         iUnread,
         iSourceKey,
@@ -1686,7 +1681,8 @@ namespace SystemEmpireMessages
         iData,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         EmpireKey,
         Unread,
         SourceKey,
@@ -1698,7 +1694,8 @@ namespace SystemEmpireMessages
         Data,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_INT,
         V_INT,
         V_INT,
@@ -1710,7 +1707,8 @@ namespace SystemEmpireMessages
         V_STRING,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         0,
         0,
         0,
@@ -1722,6 +1720,16 @@ namespace SystemEmpireMessages
         VARIABLE_LENGTH_STRING,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        EmpireKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
@@ -1730,9 +1738,9 @@ namespace SystemEmpireMessages
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -1821,6 +1829,16 @@ namespace SystemEmpireNukeList
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        EmpireKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
@@ -1830,9 +1848,9 @@ namespace SystemEmpireNukeList
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -1842,8 +1860,8 @@ namespace SystemEmpireNukeList
 
 #define SYSTEM_NUKE_LIST "SystemNukeList"
 
-namespace SystemNukeList {
-
+namespace SystemNukeList
+{
     static const char* const NukerAlienKey = "NukerAlienKey";
     static const char* const NukerAlienAddress = "NukerAlienAddress";
     static const char* const NukerEmpireName = "NukerEmpireName";
@@ -1856,7 +1874,8 @@ namespace SystemNukeList {
     static const char* const GameNumber = "GameNumber";
     static const char* const TimeStamp = "TimeStamp";
 
-    enum Columns {
+    enum Columns
+    {
         iNukerAlienKey,
         iNukerAlienAddress,
         iNukerEmpireName,
@@ -1870,7 +1889,8 @@ namespace SystemNukeList {
         iTimeStamp,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         NukerAlienKey,
         NukerAlienAddress,
         NukerEmpireName,
@@ -1884,7 +1904,8 @@ namespace SystemNukeList {
         TimeStamp,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_INT,
         V_INT,
         V_STRING,
@@ -1898,7 +1919,8 @@ namespace SystemNukeList {
         V_INT64,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
@@ -1914,7 +1936,8 @@ namespace SystemNukeList {
 
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemNukeList",
         NumColumns,
         (char**)ColumnNames,
@@ -2056,6 +2079,16 @@ namespace SystemEmpireActiveGames
         0
     };
 
+    static const char* const IndexColumns[] =
+    {
+        EmpireKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
@@ -2065,9 +2098,9 @@ namespace SystemEmpireActiveGames
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -2112,7 +2145,8 @@ namespace SystemTournaments
         OwnerName,
     };
 
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_STRING,
         V_STRING,
         V_STRING,
@@ -2123,7 +2157,8 @@ namespace SystemTournaments
         V_STRING,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         MAX_TOURNAMENT_NAME_LENGTH,
         VARIABLE_LENGTH_STRING,
         VARIABLE_LENGTH_STRING,
@@ -2132,14 +2167,6 @@ namespace SystemTournaments
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
-    };
-
-    static const char* const IndexColumns[] = {
-        Owner
-    };
-
-    static unsigned int IndexFlags[] = {
-        0,
     };
 
     static const unsigned int NumColumns = countof(Sizes);
@@ -2151,9 +2178,9 @@ namespace SystemTournaments
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        countof(IndexColumns),
-        (char**)IndexColumns,
-        IndexFlags
+        0,
+        NULL,
+        NULL
     };
 };
 
@@ -2241,6 +2268,16 @@ namespace SystemTournamentTeams
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        TournamentKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = 
@@ -2250,9 +2287,9 @@ namespace SystemTournamentTeams
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -2325,6 +2362,16 @@ namespace SystemTournamentEmpires
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        TournamentKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
@@ -2334,9 +2381,9 @@ namespace SystemTournamentEmpires
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -2379,6 +2426,16 @@ namespace SystemEmpireTournaments
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        EmpireKey,
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template =
@@ -2388,9 +2445,9 @@ namespace SystemEmpireTournaments
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -2407,28 +2464,32 @@ namespace SystemChatroomData
     static const char* const Speaker = "Speaker";
     static const char* const Message = "Message";
 
-    enum Columns {
+    enum Columns
+    {
         iFlags,
         iTime,
         iSpeaker,
         iMessage,
     };
 
-    static const char* const ColumnNames[] = {
+    static const char* const ColumnNames[] =
+    {
         Flags,
         Time,
         Speaker,
         Message,
     };
     
-    static const VariantType Types[] = {
+    static const VariantType Types[] =
+    {
         V_INT,
         V_INT64,
         V_STRING,
         V_STRING,
     };
 
-    static const unsigned int Sizes[] = {
+    static const unsigned int Sizes[] =
+    {
         0,
         0,
         MAX_EMPIRE_NAME_LENGTH,
@@ -2437,7 +2498,8 @@ namespace SystemChatroomData
 
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "SystemChatroomData",
         NumColumns,
         (char**)ColumnNames,
@@ -2710,6 +2772,18 @@ namespace GameData
         0,
         0,
     };
+
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX
+    };
     
     static const unsigned int NumColumns = countof(Sizes);
 
@@ -2719,9 +2793,9 @@ namespace GameData
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -2798,6 +2872,18 @@ namespace GameSecurity
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
     static const TemplateDescription Template = {
@@ -2806,9 +2892,9 @@ namespace GameSecurity
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -2864,17 +2950,22 @@ namespace GameEmpires
         MAX_EMPIRE_NAME_LENGTH,
     };
     
-    static const char* const IndexColumns[] = {
-        EmpireKey
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber
     };
 
-    static unsigned int IndexFlags[] = {
-        0,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX
     };
 
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameEmpires",
         NumColumns,
         (char**)ColumnNames,
@@ -2882,13 +2973,13 @@ namespace GameEmpires
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags
+        IndexTypes
     };
 };
 
-//////////////////////////
+///////////////////////////
 // GameNukedEmpires(I.I) //
-//////////////////////////
+///////////////////////////
 
 #define GAME_NUKED_EMPIRES "GameNukedEmpires"
 
@@ -2963,17 +3054,30 @@ namespace GameNukedEmpires
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameNukedEmpires",
         NumColumns,
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -3145,19 +3249,22 @@ namespace GameMap
         0,
     };
 
-    static const char* const IndexColumns[] = {
-        Owner,
-        Coordinates
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber
     };
 
-    static unsigned int IndexFlags[] = {
-        0,
-        0,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX
     };
     
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameMap",
         NumColumns,
         (char**)ColumnNames,
@@ -3165,7 +3272,7 @@ namespace GameMap
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags
+        IndexTypes
     };
 };
 
@@ -3471,6 +3578,20 @@ namespace GameEmpireData
         0,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber,
+        EmpireKey
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX,
+        INDEX
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
     
     static const TemplateDescription Template = {
@@ -3479,9 +3600,9 @@ namespace GameEmpireData
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -3563,17 +3684,32 @@ namespace GameEmpireMessages
         VARIABLE_LENGTH_STRING,
     };
 
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber,
+        EmpireKey
+    };
+
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX,
+        INDEX
+    };
+
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameEmpireMessages",
         NumColumns,
         (char**)ColumnNames,
         (VariantType*)Types,
         (unsigned int*)Sizes,
-        0,
-        NULL,
-        NULL
+        countof(IndexColumns),
+        (char**)IndexColumns,
+        IndexTypes
     };
 };
 
@@ -3655,17 +3791,24 @@ namespace GameEmpireMap
         0,
     };
 
-    static const char* const IndexColumns[] = {
-        PlanetKey
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber,
+        EmpireKey
     };
 
-    static unsigned int IndexFlags[] = {
-        0,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX,
+        INDEX
     };
 
     static const unsigned int NumColumns = countof(Sizes);
 
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameEmpireMap",
         NumColumns,
         (char**)ColumnNames,
@@ -3673,10 +3816,9 @@ namespace GameEmpireMap
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags
+        IndexTypes
     };
 };
-
 
 ////////////////////////////////
 // GameEmpireDiplomacy(I.I.I) //
@@ -3705,8 +3847,8 @@ namespace GameEmpireDiplomacy
     static const char* const SubjectiveMil = "SubjectiveMil";
     static const char* const LastMessageTargetFlag = "LastMessageTargetFlag";
 
-   enum Columns
-   {
+    enum Columns
+    {
         iGameClass,
         iGameNumber,
         iEmpireKey,
@@ -3765,19 +3907,24 @@ namespace GameEmpireDiplomacy
         0,
     };
 
-    static const char* const IndexColumns[] = {
-        ReferenceEmpireKey,
-        CurrentStatus
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber,
+        EmpireKey
     };
 
-    static unsigned int IndexFlags[] = {
-        0,
-        0,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX,
+        INDEX
     };
 
     static const unsigned int NumColumns = countof(Sizes);
     
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameEmpireDiplomacy",
         NumColumns,
         (char**)ColumnNames,
@@ -3785,7 +3932,7 @@ namespace GameEmpireDiplomacy
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags
+        IndexTypes
     };
 };
 
@@ -3892,20 +4039,24 @@ namespace GameEmpireShips
         0,
     };
 
-    static const char* const IndexColumns[] = 
+    static const char* const IndexColumns[] =
     {
-        CurrentPlanet,
-        FleetKey
+        GameClass,
+        GameNumber,
+        EmpireKey
     };
 
-    static unsigned int IndexFlags[] = {
-        0,
-        0,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX,
+        INDEX
     };
 
     static const unsigned int NumColumns = countof(Sizes);
     
-    static const TemplateDescription Template = {
+    static const TemplateDescription Template =
+    {
         "GameEmpireShips",
         NumColumns,
         (char**)ColumnNames,
@@ -3913,10 +4064,9 @@ namespace GameEmpireShips
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags
+        IndexTypes
     };
 };
-
 
 /////////////////////////////
 // GameEmpireFleets(I.I.I) //
@@ -3995,12 +4145,18 @@ namespace GameEmpireFleets
         0,
     };
 
-    static const char* const IndexColumns[] = {
-        CurrentPlanet
+    static const char* const IndexColumns[] =
+    {
+        GameClass,
+        GameNumber,
+        EmpireKey
     };
 
-    static unsigned int IndexFlags[] = {
-        0,
+    static unsigned int IndexTypes[] =
+    {
+        INDEX,
+        INDEX,
+        INDEX
     };
 
     static const unsigned int NumColumns = countof(Sizes);
@@ -4013,6 +4169,6 @@ namespace GameEmpireFleets
         (unsigned int*)Sizes,
         countof(IndexColumns),
         (char**)IndexColumns,
-        IndexFlags,
+        IndexTypes,
     };
 };

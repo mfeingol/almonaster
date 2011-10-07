@@ -42,8 +42,12 @@ SQL_DATABASE_EXPORT extern const Uuid IID_ICachedTable;
 SQL_DATABASE_EXPORT extern const Uuid IID_IDatabase;
 SQL_DATABASE_EXPORT extern const Uuid IID_IDatabaseConnection;
 
-// Index flags
-#define INDEX_UNIQUE_DATA    (0x00000001)
+enum IndexDescription
+{
+    INDEX             = 0,
+    INDEX_UNIQUE      = 1,
+    INDEX_PRIMARY_KEY = 2,
+};
 
 struct TemplateDescription
 {
@@ -319,11 +323,7 @@ public:
     virtual ICachedTableCollection* GetCache() = 0;
 
     virtual int DoesTableExist(const char* pszTableName, bool* pbExist) = 0;
-    virtual int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate) = 0;
-    virtual int DeleteTable(const char* pszTableName) = 0;
-
     virtual int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows) = 0;
-
     virtual int GetSearchKeys(const char* pszTableName, const SearchDefinition& sd, const OrderByDefinition* psdOrderBy,
                               unsigned int** ppiKey, unsigned int* piNumHits, bool* pbMore) = 0;
 };

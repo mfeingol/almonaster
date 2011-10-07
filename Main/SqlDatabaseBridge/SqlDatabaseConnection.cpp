@@ -79,64 +79,6 @@ int SqlDatabaseConnection::DoesTableExist(const char* pszTableName, bool* pbExis
     return OK;
 }
 
-int SqlDatabaseConnection::CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate)
-{
-    Trace(TRACE_VERBOSE, "CreateTable %s", pszTableName);
-
-    List<ColumnDescription>^ cols = gcnew List<ColumnDescription>();
-
-    TableDescription tableDesc;
-    tableDesc.Name = gcnew System::String(pszTableName);
-    tableDesc.Columns = cols;
-
-    ColumnDescription colDesc;
-    colDesc.Name = gcnew System::String(ID_COLUMN_NAME);
-    colDesc.Type = SqlDbType::BigInt;
-    colDesc.Size = 0;
-    colDesc.IsPrimaryKey = true;
-    cols->Add(colDesc);
-
-    for (unsigned int i = 0; i < ttTemplate.NumColumns; i ++)
-    {
-        colDesc.Name = gcnew System::String(ttTemplate.ColumnNames[i]);
-        colDesc.Type = Convert(ttTemplate.Type[i]);
-        colDesc.Size = ttTemplate.Size[i] == VARIABLE_LENGTH_STRING ? System::Int32::MaxValue : ttTemplate.Size[i];
-        colDesc.IsPrimaryKey = false;
-        cols->Add(colDesc);
-    }
-
-    try
-    {
-        m_cmd->CreateTable(tableDesc);
-    }
-    catch (SqlDatabaseException^ e)
-    {
-        TraceException(e);
-        return ERROR_DATABASE_EXCEPTION;
-    }
-
-    // TODO - 494 - Add database indexes
-
-    return OK;
-}
-
-int SqlDatabaseConnection::DeleteTable(const char* pszTableName)
-{
-    Trace(TRACE_VERBOSE, "DeleteTable %s", pszTableName);
-    
-    System::String^ tableName = gcnew System::String(pszTableName);
-    try
-    {
-        m_cmd->DeleteTable(tableName);
-    }
-    catch (SqlDatabaseException^ e)
-    {
-        TraceException(e);
-        return ERROR_DATABASE_EXCEPTION;
-    }
-    return OK;
-}
-
 // Row operations
 int SqlDatabaseConnection::GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows)
 {

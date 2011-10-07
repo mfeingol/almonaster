@@ -82,14 +82,15 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
 
                     const char* pszFileName = pHttpForm->GetValue();
-                    if (pszFileName == NULL) {
-                        AddMessage ("You didn't upload a file");
-                    } else {
-
+                    if (pszFileName == NULL)
+                    {
+                        AddMessage ("Please upload an alien icon GIF");
+                    }
+                    else
+                    {
                         bool bGoodGIF;
                         iErrCode = VerifyGIF(pszFileName, &bGoodGIF);
                         RETURN_ON_ERROR(iErrCode);
-
                         if (bGoodGIF)
                         {
                             // The gif was OK, so insert the key and copy it to its destination
@@ -103,11 +104,13 @@ if (m_bOwnPost && !m_bRedirection) {
                                 // Compensate
                                 iErrCode = DeleteAlienIcon(iNewKey);
                                 RETURN_ON_ERROR(iErrCode);
-                                AddMessage("The file could not be copied to its destination");
+                                AddMessage("The alien icon file could not be copied to its destination");
                             }
                             else
                             {
-                                AddMessage ("The alien icon was created successfully");
+                                AddMessage("Alien icon ");
+                                AppendMessage(iNewAddress);
+                                AppendMessage(" was successfully created");
                             }
                             break;
                         }
@@ -118,21 +121,29 @@ if (m_bOwnPost && !m_bRedirection) {
             // Delete alien
             if (WasButtonPressed (BID_DELETEALIENICON)) {
 
-                if ((pHttpForm = m_pHttpRequest->GetForm ("OldAlienKey")) == NULL)
+                if ((pHttpForm = m_pHttpRequest->GetForm ("OldAlienIcon")) == NULL)
                 {
                     goto Redirection;
                 }
                 iNewValue = pHttpForm->GetIntValue();
-                switch (DeleteAlienIcon(iNewValue))
+                if (iNewValue < FIRST_ADDRESS || pHttpForm->GetValue() == NULL)
+                {
+                    AddMessage("Please enter an alien icon to delete");
+                }
+                else switch (DeleteAlienIconByAddress(iNewValue))
                 {
                 case OK:
                     if (DeleteAlienFile(iNewValue))
                     {
-                        AddMessage("The alien icon was deleted successfully");
+                        AddMessage("Alien icon ");
+                        AppendMessage(iNewValue);
+                        AppendMessage(" was deleted successfully");
                     }
                     else
                     {
-                        AddMessage("The alien icon was deleted successfully, but the file could not be removed. Please remove it manually.");
+                        AddMessage("Alien icon ");
+                        AppendMessage(iNewValue);
+                        AppendMessage(" was deleted successfully, but the file could not be removed. Please remove it manually.");
                     }
                     break;
 
@@ -141,11 +152,11 @@ if (m_bOwnPost && !m_bRedirection) {
                     break;
 
                 case ERROR_ALIEN_ICON_DOES_NOT_EXIST:
-                    AddMessage("The alien icon key does not exist");
+                    AddMessage("The alien icon does not exist");
                     break;
 
                 case ERROR_DEFAULT_ALIEN_ICON:
-                    AddMessage("The default alien icon cannot be deleted");
+                    AddMessage("The system default alien icon cannot be deleted");
                     break;
 
                 default:
@@ -1468,7 +1479,7 @@ case 0:
     WriteButton (BID_CREATEALIENICON);
     %></table></tr><tr><td>Delete an alien icon:</td><td><table><%
 
-    %><tr><td>Key:</td><td><input type="text" size="6" maxlength="6" name="OldAlienKey"></td></tr><tr><td><% 
+    %><tr><td>Icon id:</td><td><input type="text" size="6" maxlength="6" name="OldAlienIcon"></td><td><% 
     WriteButton (BID_DELETEALIENICON);
     %></table></tr><%
 

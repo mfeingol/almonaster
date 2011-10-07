@@ -133,7 +133,7 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
     colDesc.Name = gcnew System::String(ID_COLUMN_NAME);
     colDesc.Type = SqlDbType::BigInt;
     colDesc.Size = 0;
-    colDesc.IsPrimaryKey = true;
+    colDesc.IndexType = IndexType::PrimaryKey;
     cols->Add(colDesc);
 
     for (unsigned int i = 0; i < ttTemplate.NumColumns; i ++)
@@ -141,11 +141,33 @@ int TableCacheCollection::CreateTable(const char* pszTableName, const TemplateDe
         colDesc.Name = gcnew System::String(ttTemplate.ColumnNames[i]);
         colDesc.Type = Convert(ttTemplate.Type[i]);
         colDesc.Size = ttTemplate.Size[i] == VARIABLE_LENGTH_STRING ? System::Int32::MaxValue : ttTemplate.Size[i];
-        colDesc.IsPrimaryKey = false;
+        colDesc.IndexType = IndexType::None;
+
+        for (unsigned int j = 0; j < ttTemplate.NumIndexes; j ++)
+        {
+            if (strcmp(ttTemplate.IndexColumns[j], ttTemplate.ColumnNames[i]) == 0)
+            {
+                switch (ttTemplate.IndexFlags[j])
+                {
+                case INDEX:
+                    colDesc.IndexType = IndexType::Index;
+                    break;
+                case INDEX_UNIQUE:
+                    colDesc.IndexType = IndexType::IndexUnique;
+                    break;
+                case INDEX_PRIMARY_KEY:
+                    colDesc.IndexType = IndexType::PrimaryKey;
+                    break;
+                default:
+                    return ERROR_INVALID_ARGUMENT;
+                }
+                break;
+            }
+        }
+
         cols->Add(colDesc);
     }
 
-    // TODO - 494 - Add database indexes
     try
     {
         m_cmd->CreateTable(tableDesc);

@@ -709,7 +709,7 @@ int CachedTable::DeleteRow(unsigned int iKey)
 {
     Trace(TRACE_VERBOSE, "CachedTable :: DeleteRows %s", m_result->TableName);
 
-    // First delete the actual row
+    // First, try to delete the actual row
     // We can't defer this to commit time if we want unique constraints to work
     try
     {
@@ -721,7 +721,7 @@ int CachedTable::DeleteRow(unsigned int iKey)
         return ERROR_DATABASE_EXCEPTION;
     }
 
-    // Second, remove the row from cache
+    // Second, remove the row from cache; if this fails, it's because the row never existed
     int iErrCode;
     IDictionary<System::String^, System::Object^>^ row = GetRow(iKey, &iErrCode);
     if (iErrCode == OK)
@@ -730,7 +730,7 @@ int CachedTable::DeleteRow(unsigned int iKey)
         m_result->Rows->Remove(row);
     }
 
-    return OK;
+    return iErrCode;
 }
 
 int CachedTable::DeleteAllRows()

@@ -48,8 +48,6 @@ public:
 
     // Table operations
     int DoesTableExist(const char* pszTableName, bool* pbExist);
-    int CreateTable(const char* pszTableName, const TemplateDescription& ttTemplate);
-    int DeleteTable(const char* pszTableName);
 
     // Row operations
     int GetNumPhysicalRows(const char* pszTableName, unsigned int* piNumRows);

@@ -118,19 +118,50 @@ namespace Almonaster.Database.Sql
                 DataType dt = TypeMap.Convert(colDesc.Type, colDesc.Size);
                 Column col = new Column(table, colDesc.Name, dt)
                 {
-                    Identity = colDesc.IsPrimaryKey
+                    Identity = colDesc.IndexType == IndexType.PrimaryKey
                 };
 
                 table.Columns.Add(col);
 
-                if (colDesc.IsPrimaryKey)
+                Index index = null;
+                switch (colDesc.IndexType)
                 {
-                    Index index = new Index(table, tableDesc.Name + "_PK")
-                    {
-                        IndexKeyType = IndexKeyType.DriPrimaryKey,
-                        IsClustered = true,
-                        IsUnique = true,
-                    };
+                    case IndexType.None:
+                        break;
+
+                    case IndexType.Index:
+                        index = new Index(table, String.Format("{0}_{1}_idx", tableDesc.Name, colDesc.Name))
+                        {
+                            IndexKeyType = IndexKeyType.None,
+                            IsClustered = false,
+                            IsUnique = false,
+                        };
+                        break;
+
+                    case IndexType.IndexUnique:
+                        index = new Index(table, String.Format("{0}_{1}_idx_Unique", tableDesc.Name, colDesc.Name))
+                        {
+                            IndexKeyType = IndexKeyType.None,
+                            IsClustered = false,
+                            IsUnique = true,
+                        };
+                        break;
+
+                    case IndexType.PrimaryKey:
+                        index = new Index(table, String.Format("{0}_{1}_PK", tableDesc.Name, colDesc.Name))
+                        {
+                            IndexKeyType = IndexKeyType.DriPrimaryKey,
+                            IsClustered = true,
+                            IsUnique = true,
+                        };
+                        break;
+
+                    default:
+                        throw new InvalidArgumentException();
+                }
+
+                if (index != null)
+                {
                     index.IndexedColumns.Add(new IndexedColumn(index, colDesc.Name));
                     indexes.Add(index);
                 }
@@ -152,8 +183,6 @@ namespace Almonaster.Database.Sql
                 }
             }
 
-            // TODO - 494 - Add database indexes
-
             try
             {
                 table.Create();
@@ -171,15 +200,6 @@ namespace Almonaster.Database.Sql
             catch (FailedOperationException e)
             {
                 throw new SqlDatabaseException(e);
-            }
-        }
-
-        public void DeleteTable(string tableName)
-        {
-            string cmdText = String.Format("DROP TABLE [{0}]", tableName);
-            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
-            {
-                cmd.ExecuteNonQuery();
             }
         }
 
