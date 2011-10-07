@@ -277,23 +277,29 @@ int HtmlRenderer::WriteServerRules()
                 m_pHttpResponse->WriteText (iNumGamingEmpires);
                 OutputText ("</strong> empires are in games on the server</li>");
             }
-
-            iErrCode = GetNumRecentActiveEmpiresInGames(&iNumGamingEmpires);
-            RETURN_ON_ERROR(iErrCode);
-
-            if (iNumGamingEmpires == 0) {
-                OutputText ("<li>No empires have played recently on the server</li>");
-            }
-            else if (iNumGamingEmpires == 1) {
-                OutputText ("<li><strong>1</strong> empire has played recently on the server</li>");
-            }
-            else {
-                OutputText ("<li><strong>");
-                m_pHttpResponse->WriteText (iNumGamingEmpires);
-                OutputText ("</strong> empires have played recently on the server</li>");
-            }
         }
     }
+
+    // TODO - 377 - GetNumRecentActiveEmpiresInGames needs implementation
+#if 0
+    iErrCode = GetNumRecentActiveEmpiresInGames(&iNumGamingEmpires);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iNumGamingEmpires == 0)
+    {
+        OutputText ("<li>No empires have played recently on the server</li>");
+    }
+    else if (iNumGamingEmpires == 1)
+    {
+        OutputText ("<li><strong>1</strong> empire has played recently on the server</li>");
+    }
+    else
+    {
+        OutputText ("<li><strong>");
+        m_pHttpResponse->WriteText (iNumGamingEmpires);
+        OutputText ("</strong> empires have played recently on the server</li>");
+    }
+#endif
     
     // Machine information
     OutputText ("</ul><p><center><h2>Machine information</h2></center><ul>");
