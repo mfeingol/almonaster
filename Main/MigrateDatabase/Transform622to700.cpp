@@ -601,7 +601,7 @@ bool Transform622to700::TransformSystemGameClassData(TableNameInfo^ nameInfo, ID
 
 bool Transform622to700::TransformSystemThemes(TableNameInfo^ nameInfo, IDataRow^ original, List<IDataElement^>^ accepted)
 {
-    accepted->Insert(0, gcnew FileDatabaseElement("Address", IdToKey(original->Id)));
+    accepted->Insert(0, gcnew FileDatabaseElement("Address", IdToKey(original->Id) + 1));
     return true;
 }
 
