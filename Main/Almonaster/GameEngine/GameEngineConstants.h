@@ -30,7 +30,8 @@
 #define BACKUP_BLOCK_REASON "The server is being backed up"
 
 // Ship types
-enum ShipType {
+enum ShipType
+{
     ATTACK,
     SCIENCE,
     COLONY,
@@ -113,7 +114,6 @@ enum SurrenderType {
 #define IGNORE_EMPIRE           (0x00000001)
 #define ONCE_ALLIED_WITH        (0x00000002)
 
-
 // Graphical themes
 enum Graphics
 {
@@ -123,6 +123,8 @@ enum Graphics
     CUSTOM_COLORS       = -40,
     UPLOADED_ICON       = -50,
 };
+
+#define FIRST_ADDRESS 1
 
 // Default builder planets
 enum BuilderPlanets {

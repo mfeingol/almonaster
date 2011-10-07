@@ -71,7 +71,7 @@ int GameEngine::CreateAlienIcon(const char* pszAuthorName, int* piAddress, unsig
     }
     RETURN_ON_ERROR(iErrCode);
 
-    int iNewAddress = 1;
+    int iNewAddress = FIRST_ADDRESS;
     for (unsigned int i = 0; i < iNumIcons; i ++)
     {
         if (iNewAddress <= pvAddress[i].GetInteger())
@@ -114,6 +114,14 @@ int GameEngine::DeleteAlienIcon(unsigned int iKey)
         return ERROR_DEFAULT_ALIEN_ICON;
     }
 
+    iErrCode = t_pCache->ReadData(SYSTEM_DATA, SystemData::SystemMessagesAlienKey, &vDefaultAlienKey);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (vDefaultAlienKey.GetInteger() == (int)iKey)
+    {
+        return ERROR_DEFAULT_ALIEN_ICON;
+    }
+
     unsigned int iNumAliens;
     iErrCode = GetNumAliens(&iNumAliens);
     if (iNumAliens == 1)
@@ -126,6 +134,24 @@ int GameEngine::DeleteAlienIcon(unsigned int iKey)
     {
         return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
     }
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
+}
+
+int GameEngine::DeleteAlienIconByAddress(int iAddress)
+{
+    unsigned int* piKeys = NULL, iNumKeys;
+    AutoFreeKeys free_piKeys(piKeys);
+
+    int iErrCode = t_pCache->GetEqualKeys(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Address, iAddress, &piKeys, &iNumKeys);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
+    }
+    Assert(iNumKeys == 1);
+
+    iErrCode = DeleteAlienIcon(piKeys[0]);
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;

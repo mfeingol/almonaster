@@ -85,7 +85,7 @@ int GameEngine::CreateTheme(Variant* pvData, unsigned int* piKey, int* piAddress
     }
     RETURN_ON_ERROR(iErrCode);
 
-    int iNewAddress = 1;
+    int iNewAddress = FIRST_ADDRESS;
     for (unsigned int i = 0; i < iNumThemes; i ++)
     {
         if (iNewAddress <= pvAddress[i].GetInteger())

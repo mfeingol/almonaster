@@ -1276,6 +1276,7 @@ public:
     int GetAliens(Variant*** pppvData, unsigned int** ppiKey, unsigned int* piNumAliens);
     int CreateAlienIcon(const char* pszAuthorName, int* piAddress, unsigned int* piKey);
     int DeleteAlienIcon(unsigned int iKey);
+    int DeleteAlienIconByAddress(int iAddress);
     int GetAlienData(unsigned int iAlienKey, Variant** ppvData);
     int SetEmpireAlienIcon(int iEmpireKey, unsigned int iKey, int* piAddress);
     int GetAlienIconAddress(unsigned int iKey, int* piAddress);
