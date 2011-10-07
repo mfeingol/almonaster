@@ -141,19 +141,15 @@ int GameEngine::DeleteAlienIcon(unsigned int iKey)
 
 int GameEngine::DeleteAlienIconByAddress(int iAddress)
 {
-    unsigned int* piKeys = NULL, iNumKeys;
-    AutoFreeKeys free_piKeys(piKeys);
-
-    int iErrCode = t_pCache->GetEqualKeys(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Address, iAddress, &piKeys, &iNumKeys);
+    unsigned int iKey;
+    int iErrCode = t_pCache->GetFirstKey(SYSTEM_ALIEN_ICONS, SystemAlienIcons::Address, iAddress, &iKey);
     if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
         return ERROR_ALIEN_ICON_DOES_NOT_EXIST;
     }
-    Assert(iNumKeys == 1);
 
-    iErrCode = DeleteAlienIcon(piKeys[0]);
+    iErrCode = DeleteAlienIcon(iKey);
     RETURN_ON_ERROR(iErrCode);
-
     return iErrCode;
 }
 
