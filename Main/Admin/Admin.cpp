@@ -140,14 +140,10 @@ int Admin::OnFinalize()
 
 int Admin::OnGet (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
 
-    pHttpResponse->SetNoBuffering();
-
     return RenderAdminPage (pHttpRequest, pHttpResponse, "");
 }
 
 int Admin::OnPost (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse) {
-
-    pHttpResponse->SetNoBuffering();
 
     String strMessage;
 
