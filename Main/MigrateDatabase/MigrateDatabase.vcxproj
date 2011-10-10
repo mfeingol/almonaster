@@ -216,6 +216,7 @@ copy /y $(ProjectDir)app.config "%DropBin%\$(TargetFileName).config</Command>
     <ClInclude Include="GameEngineStrings622.h" />
     <ClInclude Include="GameEngineStrings700.h" />
     <ClInclude Include="Interface.h" />
+    <ClInclude Include="RenameUploadedAlienIcons.h" />
     <ClInclude Include="SqlDatabaseDestination.h" />
     <ClInclude Include="TableNameInfo.h" />
     <ClInclude Include="TemplateMapper700.h" />
@@ -231,6 +232,7 @@ copy /y $(ProjectDir)app.config "%DropBin%\$(TargetFileName).config</Command>
     <ClCompile Include="FileDatabaseTable.cpp" />
     <ClCompile Include="FileDatabaseTableEnumerator.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="RenameUploadedAlienIcons.cpp" />
     <ClCompile Include="SqlDatabaseDestination.cpp" />
     <ClCompile Include="TableNameInfo.cpp" />
     <ClCompile Include="TemplateMapper700.cpp" />

@@ -4,6 +4,7 @@
 #include "FileDatabaseSource.h"
 #include "SqlDatabaseDestination.h"
 #include "Transform622to700.h"
+#include "RenameUploadedAlienIcons.h"
 
 using namespace System::Configuration;
 using namespace System::Collections::Specialized;
@@ -45,6 +46,9 @@ int main(int argc, char* argv[])
 
         Transform622to700^ xform = gcnew Transform622to700(source, dest);
         xform->Transform();
+
+        //RenameUploadedAlienIcons^ rename = gcnew RenameUploadedAlienIcons(source, sqlDb, appSettings["ResourceDirectory"]);
+        //rename->Run();
     }
     catch (System::ApplicationException^ e)
     {
