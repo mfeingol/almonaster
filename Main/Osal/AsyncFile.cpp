@@ -119,8 +119,23 @@ int AsyncFile::Write(const void* pBuffer, unsigned int cbSize)
 
 int AsyncFile::Tail(void* pBuffer, unsigned int* pcbSize)
 {
-    int iOffset = *pcbSize;
-    if (SetFilePointer(m_hReadFile, -iOffset, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
+    LARGE_INTEGER liSize;
+    BOOL ret = GetFileSizeEx(m_hReadFile, &liSize);
+    if (!ret)
+    {
+        return ERROR_FAILURE;
+    }
+    
+    int64 i64Size = liSize.QuadPart;
+    int64 i64Offset = *pcbSize;
+    if (i64Size < i64Offset)
+    {
+        i64Offset = i64Size;
+    }
+
+    LARGE_INTEGER liDistanceToMove;
+    liDistanceToMove.QuadPart = -i64Offset;
+    if (SetFilePointerEx(m_hReadFile, liDistanceToMove, NULL, FILE_END) == INVALID_SET_FILE_POINTER)
     {
         return ERROR_FAILURE;
     }
