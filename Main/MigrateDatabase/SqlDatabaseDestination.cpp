@@ -82,7 +82,7 @@ __int64 SqlDatabaseDestination::InsertRow(System::String^ tableName, IEnumerable
     return m_cmd->Insert(tableName, insertList)[0];
 }
 
-void SqlDatabaseDestination::WriteRecord(System::String^ tableName, IEnumerable<BulkTableReadRequestColumn>^ matchColumns, System::String^ columnName, System::Object^ value)
+void SqlDatabaseDestination::BulkWrite(IEnumerable<BulkTableWriteRequest>^ write)
 {
-    m_cmd->WriteRecord(tableName, matchColumns, columnName, value);
+    m_cmd->BulkWrite(write, "Id");
 }

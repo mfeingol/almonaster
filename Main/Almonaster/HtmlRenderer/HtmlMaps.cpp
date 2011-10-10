@@ -1505,10 +1505,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 &iNeighbourKey
                 );
             
-            if (iErrCode != OK) {
-                Assert(false);
-                return iErrCode;
-            }
+            RETURN_ON_ERROR(iErrCode);
             
             Assert(iNeighbourKey != NO_KEY);
             

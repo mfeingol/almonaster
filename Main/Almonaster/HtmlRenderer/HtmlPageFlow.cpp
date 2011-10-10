@@ -1142,8 +1142,7 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
             if (bAccept || bDecline)
             {
                 iErrCode = CacheTournamentTables(&iTournamentKey, 1);
-                if (iErrCode != OK)
-                    return iErrCode;
+                RETURN_ON_ERROR(iErrCode);
 
                 iErrCode = RespondToTournamentJoinRequest(m_iEmpireKey, iMessageKey, bAccept);
                 if (iErrCode == OK)

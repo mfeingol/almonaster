@@ -1229,8 +1229,8 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
 
                 iErrCode = UnhaltGameClass(pHttpForm->GetIntValue());
-                switch (iErrCode) {
-
+                switch (iErrCode)
+                {
                 case OK:
                     AddMessage ("The GameClass is no longer halted");
                     break;
@@ -1253,24 +1253,27 @@ if (m_bOwnPost && !m_bRedirection) {
             }
 
             // Handle pause all games
-            if (WasButtonPressed (BID_PAUSEALLGAMES)) {
-
+            if (WasButtonPressed (BID_PAUSEALLGAMES))
+            {
                 iErrCode = PauseAllGames();
                 RETURN_ON_ERROR(iErrCode);
+                AddMessage("All games were paused");
             }
 
             // Handle unpause all games
-            if (WasButtonPressed (BID_UNPAUSEALLGAMES)) {
-
+            if (WasButtonPressed (BID_UNPAUSEALLGAMES))
+            {
                 iErrCode = UnpauseAllGames();
                 RETURN_ON_ERROR(iErrCode);
+                AddMessage("All games were unpaused");
             }
 
             // Handle reset update times on all games
-            if (WasButtonPressed (BID_RESET)) {
-
+            if (WasButtonPressed (BID_RESET))
+            {
                 iErrCode = ResetAllGamesUpdateTime();
                 RETURN_ON_ERROR(iErrCode);
+                AddMessage("All game update times were reset");
             }
 
             }

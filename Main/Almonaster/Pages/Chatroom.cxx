@@ -192,11 +192,8 @@ if (iInChatroom == CHATROOM_OUT) {
 
             %><tr><td align="left" width="25%" bgcolor="#331111"><font color="#ffff00"><% 
             iErrCode = Time::GetDateString (tTime, pszDate);
-            if (iErrCode != OK) {
-                %>Time Error<%
-            } else {
-                Write (pszDate);
-            }
+            RETURN_ON_ERROR(iErrCode);
+            Write (pszDate);
             %></font></td><td align="left" width="55%" bgcolor="#331111"><strong><% 
 
             if (iFlags & CHATROOM_MESSAGE_SYSTEM) {

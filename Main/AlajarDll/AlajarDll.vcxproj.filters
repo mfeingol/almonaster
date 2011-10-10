@@ -92,7 +92,4 @@
       <Filter>Headers</Filter>
     </ClInclude>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="Alajar.conf" />
-  </ItemGroup>
 </Project>

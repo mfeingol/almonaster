@@ -369,15 +369,29 @@ int GameEngine::ResetAllGamesUpdateTime()
     unsigned int iNumGames;
 
     iErrCode = GetActiveGames(&ppvGame, &iNumGames);
-    RETURN_ON_ERROR(iErrCode);
-
-    for (unsigned int i = 0; i < iNumGames; i ++)
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        int iGameClass = ppvGame[i][0].GetInteger();
-        int iGameNumber = ppvGame[i][1].GetInteger();
-
-        iErrCode = ResetGameUpdateTime(iGameClass, iGameNumber);
+        iErrCode = OK;
+    }
+    else
+    {
         RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = CacheGameData((const Variant**)ppvGame, NO_KEY, iNumGames);
+        RETURN_ON_ERROR(iErrCode);
+
+        for (unsigned int i = 0; i < iNumGames; i ++)
+        {
+            int iGameClass = ppvGame[i][0].GetInteger();
+            int iGameNumber = ppvGame[i][1].GetInteger();
+
+            iErrCode = ResetGameUpdateTime(iGameClass, iGameNumber);
+            if (iErrCode == ERROR_GAME_PAUSED)
+            {
+                iErrCode = OK;
+            }
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
     return iErrCode;

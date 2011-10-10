@@ -499,9 +499,7 @@ int TableCacheCollection::GetTable(const char* pszCacheTableName, CachedTable** 
         return OK;
     }
 
-    // TODOTODO
-    Assert(false);
-
+    Trace(TRACE_ERROR, "TableCacheCollection::GetTable returning ERROR_UNKNOWN_TABLE_NAME for %s", pszCacheTableName);
     return ERROR_UNKNOWN_TABLE_NAME;
 }
 

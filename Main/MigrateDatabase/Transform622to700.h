@@ -105,7 +105,7 @@ private:
     System::String^ ComputePasswordHash(System::String^ password);
 
     void RemapGameMapPlanetKeys();
-    void RemapGameMapPlanetKey(int gameClassKey, int gameNumber, int planetKey, System::String^ column);
+    void RemapGameMapPlanetKey(int gameClassKey, int gameNumber, __int64 planetId622, System::String^ column, int referencePlanetKey622);
 
     bool IsGameActive(int gameClass, int gameNumber);
     void InsertAssociationRows();

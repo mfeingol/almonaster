@@ -3183,13 +3183,10 @@ case 2:
             %><tr><td>Time: <% 
 
             iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::iTimeStamp].GetInteger64(), pszDate);
-            if (iErrCode != OK) {
-                %>Unknown date<%
-            } else {
-                Write (pszDate);
-            }
+            RETURN_ON_ERROR(iErrCode);
+            Write (pszDate);
 
-                %><br>Sender: <% 
+            %><br>Sender: <% 
 
             if (iFlags & MESSAGE_SYSTEM) {
 

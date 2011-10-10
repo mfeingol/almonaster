@@ -1542,7 +1542,7 @@ void Transform622to700::RemapGameMapPlanetKeys()
     Console::WriteLine();
     Console::WriteLine("Remapping GameMap cardinal point key columns...");
 
-    int cPlanets = 0;
+    int cPlanets = 0, cPlanetKeys = 0;
     for each (IDataTable^ table in m_source)
     {
         TableNameInfo^ nameInfo = gcnew TableNameInfo(table->Name);
@@ -1550,6 +1550,8 @@ void Transform622to700::RemapGameMapPlanetKeys()
         {
             for each (IDataRow^ row in table)
             {
+                cPlanets ++;
+
                 int cFound = 0;
                 for each (IDataElement^ data in row)
                 {
@@ -1559,12 +1561,12 @@ void Transform622to700::RemapGameMapPlanetKeys()
                         System::String::Compare(data->Name, "WestPlanetKey") == 0)
                     {
                         cFound ++;
-                        cPlanets ++;
+                        cPlanetKeys ++;
                         
                         int key = (int)data->Value;
                         if (key != NO_KEY)
                         {
-                            RemapGameMapPlanetKey(nameInfo->GameClass, nameInfo->GameNumber, (int)data->Value, data->Name);
+                            RemapGameMapPlanetKey(nameInfo->GameClass, nameInfo->GameNumber, row->Id, data->Name, (int)data->Value);
                         }
                     }
                 }
@@ -1577,21 +1579,28 @@ void Transform622to700::RemapGameMapPlanetKeys()
         }
     }
 
-    Console::WriteLine("Remapped {0} cardinal point keys...", cPlanets);
+    Console::WriteLine("Remapped {0} cardinal point keys for {1} planets...", cPlanetKeys, cPlanets);
 }
 
-void Transform622to700::RemapGameMapPlanetKey(int gameClassKey, int gameNumber, int planetKey, System::String^ column)
+void Transform622to700::RemapGameMapPlanetKey(int gameClassKey, int gameNumber, __int64 planetId622, System::String^ column, int referencePlanetKey622)
 {
-    array<BulkTableReadRequestColumn>^ cols = gcnew array<BulkTableReadRequestColumn>(2);
+    __int64 planetId700 = m_planetKeyMapper[Tuple::Create(KeyToId(gameClassKey), gameNumber, planetId622)];
+    __int64 referencePlanetId700 = m_planetKeyMapper[Tuple::Create(KeyToId(gameClassKey), gameNumber, KeyToId(referencePlanetKey622))];
 
-    cols[0].ColumnName = "GameClass";
-    cols[0].ColumnValue = gameClassKey;
-    cols[1].ColumnName = "GameNumber";
-    cols[1].ColumnValue = gameNumber;
+    Dictionary<System::String^, System::Object^>^ values = gcnew Dictionary<System::String^, System::Object^>();
+    values[column] = IdToKey(referencePlanetId700);
 
-    __int64 id = m_planetKeyMapper[Tuple::Create(KeyToId(gameClassKey), gameNumber, KeyToId(planetKey))];
+    Dictionary<__int64, IDictionary<System::String^, System::Object^>^>^ rows = gcnew Dictionary<__int64, IDictionary<System::String^, System::Object^>^>();
+    rows[planetId700] = values;
 
-    m_dest->WriteRecord("GameMap", cols, column, id);
+    BulkTableWriteRequest req;
+    req.TableName = "GameMap";
+    req.Rows = rows;
+
+    List<BulkTableWriteRequest>^ bulkWrite = gcnew List<BulkTableWriteRequest>();
+    bulkWrite->Add(req);
+
+    m_dest->BulkWrite(bulkWrite);
 }
 
 bool Transform622to700::IsGameActive(int gameClassKey, int gameNumber)

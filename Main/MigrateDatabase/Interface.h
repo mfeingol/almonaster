@@ -47,5 +47,5 @@ public:
     void Commit();
 
     __int64 InsertRow(System::String^ tableName, IEnumerable<IDataElement^>^ row);
-    void WriteRecord(System::String^ tableName, IEnumerable<BulkTableReadRequestColumn>^ matchColumns, System::String^ columnName, System::Object^ value);
+    void BulkWrite(IEnumerable<BulkTableWriteRequest>^ write);
 };

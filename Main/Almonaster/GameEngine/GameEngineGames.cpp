@@ -3046,6 +3046,9 @@ int GameEngine::PauseAllGames()
     {
         RETURN_ON_ERROR(iErrCode);
         
+        iErrCode = CacheGameData((const Variant**)ppvActiveGame, NO_KEY, iNumGames);
+        RETURN_ON_ERROR(iErrCode);
+
         for (unsigned int i = 0; i < iNumGames; i ++)
         {
             int iGameClass = ppvActiveGame[i][0].GetInteger();
@@ -3090,6 +3093,9 @@ int GameEngine::UnpauseAllGames()
     }
     else
     {
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = CacheGameData((const Variant**)ppvActiveGame, NO_KEY, iNumGames);
         RETURN_ON_ERROR(iErrCode);
 
         for (unsigned int i = 0; i < iNumGames; i ++)

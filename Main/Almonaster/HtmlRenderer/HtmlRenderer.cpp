@@ -6536,16 +6536,21 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
     {
         OutputText ("<tr><td>Restore a resigned empire to the game:</td><td><select name=\"RestoreEmpireKey\">");
 
-        for (i = 0; i < iNumResigned; i ++) {
-
-            Variant vName;
-            iErrCode = GetEmpireName(piResignedKey[i], &vName);
-            RETURN_ON_ERROR(iErrCode);
-
+        for (i = 0; i < iNumResigned; i ++)
+        {
             OutputText ("<option value=\"");
             m_pHttpResponse->WriteText (piResignedKey[i]);
             OutputText ("\">");
-            m_pHttpResponse->WriteText (vName.GetCharPtr());
+
+            for (unsigned int j = 0; j < iNumActiveEmpires; j ++)
+            {
+                if (piResignedKey[i] == (unsigned int)ppvEmpiresInGame[j][GameEmpires::iEmpireKey].GetInteger())
+                {
+                    m_pHttpResponse->WriteText(ppvEmpiresInGame[j][GameEmpires::iEmpireName].GetCharPtr());
+                    break;
+                }
+            }
+            
             OutputText ("</option>");
         }
 
@@ -6556,11 +6561,12 @@ int HtmlRenderer::WriteAdministerGame(int iGameClass, int iGameNumber, bool bAdm
 
     OutputText ("<tr><td>Delete an empire from the game:</td><td><select name=\"DeleteEmpireKey\">");
 
-    for (i = 0; i < iNumActiveEmpires; i ++) {
+    for (i = 0; i < iNumActiveEmpires; i ++)
+    {
         OutputText ("<option value=\"");
-        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
+        m_pHttpResponse->WriteText(ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger());
         OutputText ("\">");
-        m_pHttpResponse->WriteText (ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
+        m_pHttpResponse->WriteText(ppvEmpiresInGame[i][GameEmpires::iEmpireName].GetCharPtr());
         OutputText ("</option>");
     }
     OutputText (" ");
