@@ -9,6 +9,9 @@
       <UniqueIdentifier>{10d201ab-24d7-4d7a-88fd-61486f82be03}</UniqueIdentifier>
       <Extensions>h</Extensions>
     </Filter>
+    <Filter Include="Text">
+      <UniqueIdentifier>{85e02a96-122e-4013-a854-1af46040716a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CachedFile.cpp">
@@ -91,5 +94,10 @@
     <ClInclude Include="Report.h">
       <Filter>Headers</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Text\Documentation.html">
+      <Filter>Text</Filter>
+    </None>
   </ItemGroup>
 </Project>
