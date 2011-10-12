@@ -13,8 +13,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Almonaster", "Almonaster\Al
 		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB} = {FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AlmonasterHook", "AlmonasterHook\AlmonasterHook.vcxproj", "{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Asfpp", "Asfpp\Asfpp.vcxproj", "{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Osal", "Osal\Osal.vcxproj", "{E57B328E-DC3B-4030-8B96-058326205BD5}"
@@ -36,7 +34,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FileDatabase", "FileDatabas
 EndProject
 Global
 	GlobalSection(TeamFoundationVersionControl) = preSolution
-		SccNumberOfProjects = 13
+		SccNumberOfProjects = 12
 		SccEnterpriseProvider = {4CA58AB2-18FA-4F8D-95D4-32DDF27D184C}
 		SccTeamFoundationServer = https://tfs.codeplex.com/tfs/tfs29
 		SccLocalPath0 = .
@@ -55,27 +53,24 @@ Global
 		SccProjectUniqueName5 = Almonaster\\Almonaster.vcxproj
 		SccLocalPath5 = .
 		SccProjectFilePathRelativizedFromConnection5 = Almonaster\\
-		SccProjectUniqueName6 = AlmonasterHook\\AlmonasterHook.vcxproj
-		SccProjectName6 = AlmonasterHook
-		SccLocalPath6 = AlmonasterHook
-		SccProjectUniqueName7 = Asfpp\\Asfpp.vcxproj
-		SccProjectName7 = Asfpp
-		SccLocalPath7 = Asfpp
-		SccProjectUniqueName8 = Osal\\Osal.vcxproj
-		SccProjectName8 = Osal
-		SccLocalPath8 = Osal
-		SccProjectUniqueName9 = SqlDatabase\\SqlDatabase.csproj
-		SccProjectName9 = SqlDatabase
-		SccLocalPath9 = SqlDatabase
-		SccProjectUniqueName10 = SqlDatabaseBridge\\SqlDatabaseBridge.vcxproj
-		SccProjectName10 = SqlDatabaseBridge
-		SccLocalPath10 = SqlDatabaseBridge
-		SccProjectUniqueName11 = MigrateDatabase\\MigrateDatabase.vcxproj
-		SccProjectName11 = MigrateDatabase
-		SccLocalPath11 = MigrateDatabase
-		SccProjectUniqueName12 = FileDatabase\\FileDatabase.vcxproj
-		SccProjectName12 = FileDatabase
-		SccLocalPath12 = FileDatabase
+		SccProjectUniqueName6 = Asfpp\\Asfpp.vcxproj
+		SccProjectName6 = Asfpp
+		SccLocalPath6 = Asfpp
+		SccProjectUniqueName7 = Osal\\Osal.vcxproj
+		SccProjectName7 = Osal
+		SccLocalPath7 = Osal
+		SccProjectUniqueName8 = SqlDatabase\\SqlDatabase.csproj
+		SccProjectName8 = SqlDatabase
+		SccLocalPath8 = SqlDatabase
+		SccProjectUniqueName9 = SqlDatabaseBridge\\SqlDatabaseBridge.vcxproj
+		SccProjectName9 = SqlDatabaseBridge
+		SccLocalPath9 = SqlDatabaseBridge
+		SccProjectUniqueName10 = MigrateDatabase\\MigrateDatabase.vcxproj
+		SccProjectName10 = MigrateDatabase
+		SccLocalPath10 = MigrateDatabase
+		SccProjectUniqueName11 = FileDatabase\\FileDatabase.vcxproj
+		SccProjectName11 = FileDatabase
+		SccLocalPath11 = FileDatabase
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -158,20 +153,6 @@ Global
 		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Release|Win32.Build.0 = Release|Win32
 		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Release|x64.ActiveCfg = Release|x64
 		{270BC0D9-0681-47F1-A7D1-155ADCF51DE4}.Release|x64.Build.0 = Release|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|Mixed Platforms.Build.0 = Debug|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|Win32.ActiveCfg = Debug|Win32
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|Win32.Build.0 = Debug|Win32
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|x64.ActiveCfg = Debug|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Debug|x64.Build.0 = Debug|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|Any CPU.ActiveCfg = Release|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|Mixed Platforms.ActiveCfg = Release|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|Mixed Platforms.Build.0 = Release|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|Win32.ActiveCfg = Release|Win32
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|Win32.Build.0 = Release|Win32
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|x64.ActiveCfg = Release|x64
-		{E13C35FF-D504-4AA3-8D45-BA00BC07E65C}.Release|x64.Build.0 = Release|x64
 		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Debug|Any CPU.ActiveCfg = Debug|x64
 		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
 		{FF9D7AA2-F295-4696-8655-2E3E3FC3B3CB}.Debug|Mixed Platforms.Build.0 = Debug|x64
