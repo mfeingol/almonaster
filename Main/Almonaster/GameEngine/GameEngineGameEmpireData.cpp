@@ -1971,6 +1971,11 @@ int GameEngine::UpdateGameEmpireNotepad (int iGameClass, int iGameNumber, int iE
         pbTruncated
         );
 
+    if (iErrCode == WARNING)
+    {
+        return iErrCode;
+    }
+
     RETURN_ON_ERROR(iErrCode);
     return iErrCode;
 }
