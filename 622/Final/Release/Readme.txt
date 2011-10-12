@@ -1,4 +1,3 @@
-Alajar 1.80, with Almonaster Build 621.3
+Alajar 1.8.3, with Almonaster Build 700 alpha
 
-Alajar documentation can be found at http://almonaster.sourceforge.net/alajar.html
-Almonaster documentation can be found at http://almonaster.sourceforge.net/
+Documentation can be found at http://almonaster.codeplex.com/documentation
