@@ -83,7 +83,6 @@ private:
     // Configuration data
     bool m_bBrowsingAllowed;
     bool m_bDefaultFile;
-    bool m_bUseSSI;
     bool m_bUsePageSourceLibrary;
     bool m_bUseLogging;
     bool m_bUseCommonLogFormat;
@@ -208,7 +207,6 @@ public:
     bool OverrideError (HttpStatus sStatus);
 
     bool UsePageSourceLibrary();
-    bool UseSSI();
     bool UseLogging();
     bool UseCommonLogFormat();
     ConfigFile* GetCounterFile();

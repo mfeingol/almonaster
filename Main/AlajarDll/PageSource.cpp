@@ -135,7 +135,6 @@ void PageSource::Reset() {
     memset (m_pbOverrideError, 0, sizeof (m_pbOverrideError));
     memset (m_ppCachedFile, 0, sizeof (m_ppCachedFile));
 
-    m_bUseSSI = false;
     m_bUsePageSourceLibrary = false;
     m_bUseLogging = false;
     m_bUseCommonLogFormat = false;
@@ -515,10 +514,6 @@ bool PageSource::OverrideError (HttpStatus sStatus) {
 
 bool PageSource::UsePageSourceLibrary() {
     return m_bUsePageSourceLibrary;
-}
-
-bool PageSource::UseSSI() {
-    return m_bUseSSI;
 }
 
 bool PageSource::UseLogging() {
@@ -996,18 +991,6 @@ int PageSource::Configure (const char* pszConfigFileName, String* pstrErrorMessa
         *pstrErrorMessage = "The UseDefaultFile value could not be read";
         return ERROR_FAILURE;
     }
-        
-    // UseSSI
-    /*
-    if (m_pcfConfig->GetParameter ("UseSSI", &pszRhs) == OK && pszRhs != NULL) {
-        
-        m_bUseSSI = atoi (pszRhs) != 0;
-
-    } else {
-        *pstrErrorMessage = "The UseSSI value could not be read";
-        return ERROR_FAILURE;
-    }
-    */
 
     // Set up counter file
     sprintf (pszErrorFile, "%s/%s.counters", m_pHttpServer->GetCounterPath(), m_pszName);
