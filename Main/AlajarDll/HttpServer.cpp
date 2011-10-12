@@ -840,8 +840,6 @@ int HttpServer::Run() {
             }
         }
 
-        else if (!m_bExit) ReportEvent ("Select failed");
-
         // Check for exit
         if (m_bExit) {
             break;
