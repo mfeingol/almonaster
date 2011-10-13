@@ -505,9 +505,19 @@ int GameEngine::SendGameMessage(int iGameClass, int iGameNumber, int iEmpireKey,
         iErrCode = GetEmpireIgnoreMessages(iGameClass, iGameNumber, iEmpireKey, iSourceKey, &bFlag);
         if (iErrCode == ERROR_EMPIRE_IS_NOT_IN_DIPLOMACY)
         {
-            return iErrCode;
+            if (!(iFlags & MESSAGE_BROADCAST))
+            {
+                // Can't send message if not in diplomacy table
+                return iErrCode;
+            }
+            // Broadcasting to unknown empires is in fact expected
+            iErrCode = OK;
+            bFlag = false;
         }
-        RETURN_ON_ERROR(iErrCode);
+        else
+        {
+            RETURN_ON_ERROR(iErrCode);
+        }
         if (bFlag)
         {
             return ERROR_EMPIRE_IS_IGNORING_SENDER;
