@@ -1939,33 +1939,28 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     iErrCode = t_pCache->GetTable(pszGameMap, &pRead);
     RETURN_ON_ERROR(iErrCode);
 
-    if (piPlanetKey[NORTH] != NO_KEY) {
-        
+    if (piPlanetKey[NORTH] != NO_KEY)
+    {
         iErrCode = pRead->ReadData(piPlanetKey[NORTH], GameMap::EastPlanetKey, &iGameMapKey);
         RETURN_ON_ERROR(iErrCode);
     }
-    else if (piPlanetKey[EAST] != NO_KEY) {
-        
+    else if (piPlanetKey[EAST] != NO_KEY)
+    {
         iErrCode = pRead->ReadData(piPlanetKey[EAST], GameMap::NorthPlanetKey, &iGameMapKey);
         RETURN_ON_ERROR(iErrCode);
     }
-    else {
-        
-        if (iX == MIN_COORDINATE) {
-            
+    else
+    {
+        if (iX == MIN_COORDINATE)
+        {
             iErrCode = pRead->ReadData(iCenterKey, GameMap::Coordinates, &vCoordinates);
             RETURN_ON_ERROR(iErrCode);
             GetCoordinates (vCoordinates.GetCharPtr(), &iX, &iY);
         }
 
-        GetCoordinates (iX + 1, iY + 1, pszSearchCoord);
+        GetCoordinates(iX + 1, iY + 1, pszSearchCoord);
 
-        iErrCode = pRead->GetFirstKey(
-            GameMap::Coordinates, 
-            pszSearchCoord, 
-            (unsigned int*)&iGameMapKey
-            );
-
+        iErrCode = pRead->GetFirstKey(GameMap::Coordinates, pszSearchCoord, (unsigned int*)&iGameMapKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
             iErrCode = OK;
@@ -1976,13 +1971,20 @@ int GameEngine::GetVisitedSurroundingPlanetKeys (int iGameClass, int iGameNumber
     if (iGameMapKey != NO_KEY)
     {
         iErrCode = t_pCache->GetFirstKey(pszGameEmpireMap, GameEmpireMap::PlanetKey, iGameMapKey, &iKey);
-        RETURN_ON_ERROR(iErrCode);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
+        else
+        {
+            RETURN_ON_ERROR(iErrCode);
 
-        pbPlanetInLine[NORTH] = pbPlanetInLine[EAST] = true;
-        pvPlanetKey[iNumPlanets] = iGameMapKey;
-        piProxyKey[iNumPlanets ++] = iKey;
+            pbPlanetInLine[NORTH] = pbPlanetInLine[EAST] = true;
+            pvPlanetKey[iNumPlanets] = iGameMapKey;
+            piProxyKey[iNumPlanets ++] = iKey;
+        }
     }
-    
+
     // Get planet SE of center
     SafeRelease (pRead);
     iErrCode = t_pCache->GetTable(pszGameMap, &pRead);

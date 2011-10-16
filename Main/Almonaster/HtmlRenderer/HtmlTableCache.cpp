@@ -368,6 +368,10 @@ void HtmlRenderer::RegisterCache_Options(Vector<TableCacheEntry>& cache)
 {
     const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
     Cache(cache, gameMap);
+
+    // Ratios line
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
+    Cache(cache, gameEmpireDiplomacy);
 }
 
 void HtmlRenderer::RegisterCache_Build(Vector<TableCacheEntry>& cache)

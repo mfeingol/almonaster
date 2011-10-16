@@ -753,8 +753,8 @@ int GameEngine::SearchForDuplicates (int iGameClass, int iGameNumber, const char
     Variant* pvEmpireKey = NULL, * pvData = NULL, * pvGameData = NULL;
     bool* pbDup, bListStarted;
 
-    AutoFreeData free(pvEmpireKey);
-    Algorithm::AutoDelete<Variant> del(pvData, true);
+    AutoFreeData free_pvEmpireKey(pvEmpireKey);
+    Algorithm::AutoDelete<Variant> del_pvData(pvData, true);
 
     GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
 
@@ -764,6 +764,9 @@ int GameEngine::SearchForDuplicates (int iGameClass, int iGameNumber, const char
 
     if (iNumEmpires == 0)
         return OK;
+
+    iErrCode = CacheEmpires((const Variant*)pvEmpireKey, iNumEmpires);
+    RETURN_ON_ERROR(iErrCode);
 
     // Allocate memory
     if (pszGameEmpireDataColumn != NULL)

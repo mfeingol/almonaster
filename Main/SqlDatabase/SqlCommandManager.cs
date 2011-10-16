@@ -18,12 +18,19 @@ namespace Almonaster.Database.Sql
 
         internal SqlCommandManager(string connString, IsolationLevel isoLevel)
         {
-            this.conn = new SqlConnection(connString);
-            this.conn.Open();
-
-            if (isoLevel != IsolationLevel.Unspecified)
+            try
             {
-                this.tx = this.conn.BeginTransaction(isoLevel);
+                this.conn = new SqlConnection(connString);
+                this.conn.Open();
+
+                if (isoLevel != IsolationLevel.Unspecified)
+                {
+                    this.tx = this.conn.BeginTransaction(isoLevel);
+                }
+            }
+            catch (SqlException e)
+            {
+                throw new SqlDatabaseException(e);
             }
         }
 
