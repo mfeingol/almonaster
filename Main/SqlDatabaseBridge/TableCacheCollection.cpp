@@ -278,8 +278,11 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
             const char* pszCacheEntryPrefix = ppszCacheEntryName[iActual];
             if (entry.CrossJoin)
             {
-                // Just use the table name as a prefix...  The partitioned results are identical
-                pszCacheEntryPrefix = entry.Table.Name;
+                // If the cross-joined tables are different, just use the main table name as a prefix for partitioned results
+                if (strcmp(entry.Table.Name, entry.CrossJoin->Table.Name) != 0)
+                {
+                    pszCacheEntryPrefix = entry.Table.Name;
+                }
             }
             CreateTablePartitions(result, pszCacheEntryPrefix, entry.PartitionColumn);
         }

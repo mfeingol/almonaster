@@ -306,10 +306,6 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
     const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireFleets);
 
-    // Diplomacy coloring
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
-
     // When another empire's ship appears on a planet, we need their SystemEmpireData row
     m_crossJoinEntry.LeftColumnName = ID_COLUMN_NAME;
     m_crossJoinEntry.RightColumnName = GameEmpireData::EmpireKey;
@@ -320,6 +316,20 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
 
     const TableCacheEntry systemEmpireDataFromGame = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, NULL, ID_COLUMN_NAME, &m_crossJoinEntry };
     Cache(cache, systemEmpireDataFromGame);
+
+    // Diplomacy coloring and ratios
+    m_crossJoinEntry2.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
+    m_crossJoinEntry2.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
+    m_crossJoinEntry2.Table.Name = GAME_EMPIRE_DIPLOMACY;
+    m_crossJoinEntry2.Table.Key = NO_KEY;
+    m_crossJoinEntry2.Table.NumColumns = countof(m_gameEmpireCols);
+    m_crossJoinEntry2.Table.Columns = m_gameEmpireCols;
+
+    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry2 };
+    Cache(cache, gameEmpireContactDiplomacy);
+
+    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
+    Cache(cache, gameEmpireDiplomacy);
 }
 
 int HtmlRenderer::AfterCache_Map()

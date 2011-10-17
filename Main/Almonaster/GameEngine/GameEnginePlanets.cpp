@@ -1159,7 +1159,7 @@ int GameEngine::GetPlanetNameWithSecurity(int iGameClass, int iGameNumber, int i
         RETURN_ON_ERROR(iErrCode);
     }
 
-    return GetPlanetName(iGameClass, iGameNumber, iEmpireKey, pvPlanetName);
+    return GetPlanetName(iGameClass, iGameNumber, iPlanetKey, pvPlanetName);
 }
 
 

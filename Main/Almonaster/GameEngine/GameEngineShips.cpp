@@ -1022,7 +1022,7 @@ int GameEngine::GetShipOrders(unsigned int iGameClass, unsigned int iGameNumber,
             // Check next BR
             if (fNextBR >= gcConfig.fStargateGateCost) {
 
-                unsigned int iNumPlanets, * piKey, iKey;
+                unsigned int iNumPlanets, * piKey = NULL, iKey;
                 AutoFreeKeys free(piKey);
 
                 int iSrcX = 0, iSrcY = 0, iDestX, iDestY;
@@ -1082,8 +1082,6 @@ int GameEngine::GetShipOrders(unsigned int iGameClass, unsigned int iGameNumber,
                         iNumOrders ++;
                     }
                 }
-
-                t_pCache->FreeKeys(piKey);
             }
 
             break;
