@@ -193,6 +193,8 @@ int TableCacheCollection::CreateEmpty(const char* pszTableName, const char* pszC
         return ERROR_TABLE_ALREADY_EXISTS;
     }
 
+    Trace(TRACE_VERBOSE, "TableCacheCollection creating empty cache entry %s", pszTableName);
+
     CachedTable* pTable = CreateEmptyTable(pszTableName, false);
     InsertTable(pszCachedTableName, pTable);
     SafeRelease(pTable);
@@ -215,8 +217,11 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     if (ppTable)
         *ppTable = NULL;
 
-    char** ppszCacheEntryName = (char**)StackAlloc(iNumEntries * sizeof(char*));
     const TableCacheEntry** ppcActualCacheEntry = (const TableCacheEntry**)StackAlloc(iNumEntries * sizeof(TableCacheEntry*));
+
+    String* pstrCacheEntry = new String[iNumEntries * 2];
+    Algorithm::AutoDelete<String> auto_pstrCacheEntry(pstrCacheEntry, true);
+    String* pstrPartitionCachePrefix = pstrCacheEntry + iNumEntries;
 
     List<BulkTableReadRequest>^ requests = gcnew List<BulkTableReadRequest>(iNumEntries);
 
@@ -226,11 +231,12 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
     unsigned int iActual = 0;
     for (unsigned int i = 0; i < iNumEntries; i ++)
     {
-        char* pszEntryName = EnsureNewCacheEntry(pcCacheEntry[i], &pExistingCachedTable);
-        if (!pszEntryName)
+        if (!EnsureNewCacheEntry(pcCacheEntry[i], &pExistingCachedTable, pstrCacheEntry[iActual], pstrPartitionCachePrefix[iActual]))
+        {
+            Trace(TRACE_VERBOSE, "TableCacheCollection - table %s already in cache", pstrCacheEntry[iActual].GetCharPtr());
             continue;
+        }
 
-        ppszCacheEntryName[iActual] = pszEntryName;
         ppcActualCacheEntry[iActual] = pcCacheEntry + i;
         iActual ++;
 
@@ -270,21 +276,12 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
         pTable = new CachedTable(m_cmd, result, entry.Table.NumColumns == 0 && entry.CrossJoin == NULL);
         Assert(pTable);
 
-        InsertTableNoDup(ppszCacheEntryName[iActual], pTable);
+        InsertTable(pstrCacheEntry[iActual].GetCharPtr(), pTable);
         pTable->Release();
 
         if (entry.PartitionColumn)
         {
-            const char* pszCacheEntryPrefix = ppszCacheEntryName[iActual];
-            if (entry.CrossJoin)
-            {
-                // If the cross-joined tables are different, just use the main table name as a prefix for partitioned results
-                if (strcmp(entry.Table.Name, entry.CrossJoin->Table.Name) != 0)
-                {
-                    pszCacheEntryPrefix = entry.Table.Name;
-                }
-            }
-            CreateTablePartitions(result, pszCacheEntryPrefix, entry.PartitionColumn);
+            CreateTablePartitions(result, pstrPartitionCachePrefix[iActual], entry.PartitionColumn);
         }
 
         if (entry.Table.NumColumns > 0 && Enumerable::Count(result->Rows) == 1)
@@ -346,6 +343,7 @@ void TableCacheCollection::CreateTablePartitions(BulkTableReadResult^ result, co
         // We might have already processed the cache entry
         if (m_htTableViews.Contains(pszPartitionCacheName))
         {
+            Trace(TRACE_VERBOSE, "TableCacheCollection - table %s already in cache (partitioned)", pszPartitionCacheName);
             OS::HeapFree(pszPartitionCacheName);
         }
         else
@@ -400,78 +398,70 @@ void TableCacheCollection::ConvertToRequest(const TableCacheEntry& entry, List<B
     requests->Add(request);
 }
 
-char* TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry, CachedTable** ppCachedTable)
+void AppendColumnText(String& s, const ColumnEntry* pcColumns, unsigned int iNumColumns)
 {
-    String s;
-    char* pszCacheEntryName;
+    for (unsigned int i = 0; i < iNumColumns; i ++)
+    {
+        s += "_";
+        s += pcColumns[i].Name;
+        s += "_";
+        s += (String)pcColumns[i].Data;
+    }
+}
 
+void AppendCrossJoinText(String& s, CrossJoinEntry* pCrossJoin)
+{
+    s += "_x_";
+    s += pCrossJoin->Table.Name;
+
+    if (pCrossJoin->Table.Key == NO_KEY)
+    {
+        AppendColumnText(s, pCrossJoin->Table.Columns, pCrossJoin->Table.NumColumns);
+    }
+    else
+    {
+        s += "_";
+        s += ID_COLUMN_NAME;
+        s += "_";
+        s += pCrossJoin->Table.Key;
+    }
+}
+
+bool TableCacheCollection::EnsureNewCacheEntry(const TableCacheEntry& entry, CachedTable** ppCachedTable, String& strCacheEntry, String& strPartitionCachePrefix)
+{
     // Compute cache entry name
     if (entry.Table.Key == NO_KEY)
     {
         if (entry.Table.NumColumns == 0)
         {
-            if (entry.CrossJoin)
-            {
-                s = entry.Table.Name;
-                s += "_x_";
-                s += entry.CrossJoin->Table.Name;
-                
-                if (entry.Table.Key == NO_KEY)
-                {
-                    for (unsigned int i = 0; i < entry.CrossJoin->Table.NumColumns; i ++)
-                    {
-                        s += "_";
-                        s += entry.CrossJoin->Table.Columns[i].Name;
-                        s += "_";
-                        s += (String)entry.CrossJoin->Table.Columns[i].Data;
-                    }
-                }
-                else
-                {
-                    s += "_";
-                    s += ID_COLUMN_NAME;
-                    s += "_";
-                    s += entry.Table.Key;
-                }
-                pszCacheEntryName = s.GetCharPtr();
-            }
-            else
-            {
-                pszCacheEntryName = (char*)entry.Table.Name;
-            }
+            strCacheEntry = (char*)entry.Table.Name;
         }
         else
         {
-            s = entry.Table.Name;
-            for (unsigned int i = 0; i < entry.Table.NumColumns; i ++)
-            {
-                s += "_";
-                s += entry.Table.Columns[i].Name;
-                s += "_";
-                s += (String)entry.Table.Columns[i].Data;
-            }
-            pszCacheEntryName = s.GetCharPtr();
+            strCacheEntry = entry.Table.Name;
+            AppendColumnText(strCacheEntry, entry.Table.Columns, entry.Table.NumColumns);
         }
     }
     else
     {
         Assert(entry.Table.NumColumns == 0);
 
-        pszCacheEntryName = (char*)StackAlloc((strlen(entry.Table.Name) + 32) * sizeof(char));
+        char* pszCacheEntryName = (char*)StackAlloc((strlen(entry.Table.Name) + 32) * sizeof(char));
         sprintf(pszCacheEntryName, "%s_%s_%i", entry.Table.Name, ID_COLUMN_NAME, entry.Table.Key);
+        strCacheEntry = pszCacheEntryName;
+    }
+    
+    Assert(strCacheEntry.GetCharPtr());
+    strPartitionCachePrefix = strCacheEntry;
+    Assert(strPartitionCachePrefix.GetCharPtr());
+
+    if (entry.CrossJoin)
+    {
+        AppendCrossJoinText(strCacheEntry, entry.CrossJoin);
     }
 
     // We might have already processed the cache entry
-    Assert(pszCacheEntryName);
-    if (m_htTableViews.FindFirst(pszCacheEntryName, ppCachedTable))
-    {
-        // No addref
-        return NULL;
-    }
-    
-    char* pszRet = String::StrDup(pszCacheEntryName);
-    Assert(pszRet);
-    return pszRet;
+    return !m_htTableViews.FindFirst(strCacheEntry.GetCharPtr(), ppCachedTable);
 }
 
 bool TableCacheCollection::IsCached(const char* pszCacheTableName)

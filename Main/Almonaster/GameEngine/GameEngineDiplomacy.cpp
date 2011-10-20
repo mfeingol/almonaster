@@ -92,7 +92,7 @@ int GameEngine::GetVisibleDiplomaticStatus(int iGameClass, int iGameNumber, int 
         *pbMet = true;
     }
 
-    if (piWeOffer || piCurrent)
+    if (pbMet || piWeOffer || piCurrent)
     {
         GET_GAME_EMPIRE_DIPLOMACY (strEmpireDiplomacy, iGameClass, iGameNumber, iEmpireKey);
         iErrCode = t_pCache->GetTable(strEmpireDiplomacy, &pTable);
@@ -138,11 +138,7 @@ int GameEngine::GetVisibleDiplomaticStatus(int iGameClass, int iGameNumber, int 
         iErrCode = pTable->GetFirstKey(GameEmpireDiplomacy::ReferenceEmpireKey, iEmpireKey, &iKey);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
-            Assert(piWeOffer == NULL && piCurrent == NULL);
-            if (pbMet)
-            {
-                *pbMet = false;
-            }
+            Assert(pbMet == NULL && piWeOffer == NULL && piCurrent == NULL);
             return OK;
         }
         RETURN_ON_ERROR(iErrCode);

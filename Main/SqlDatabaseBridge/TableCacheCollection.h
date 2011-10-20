@@ -54,7 +54,7 @@ private:
     int GetTable(const char* pszCacheTableName, CachedTable** ppTable);
     int Cache(const TableCacheEntry* pcCacheEntry, unsigned int iNumEntries, ICachedTable** ppTable);
 
-    char* EnsureNewCacheEntry(const TableCacheEntry& entry, CachedTable** ppCachedTable);
+    bool EnsureNewCacheEntry(const TableCacheEntry& entry, CachedTable** ppCachedTable, String& strCacheEntry, String& strPartitionCachePrefix);
     array<BulkTableReadRequestColumn>^ ConvertToRequestColumns(const TableEntry& table);
     void ConvertToRequest(const TableCacheEntry& entry, List<BulkTableReadRequest>^ requests);
     void CreateTablePartitions(BulkTableReadResult^ result, const char* pszCacheEntryName, const char* pszPartitionColumn);

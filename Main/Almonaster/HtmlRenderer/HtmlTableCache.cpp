@@ -334,7 +334,7 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
 
 int HtmlRenderer::AfterCache_Map()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY | EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS);
 }
 
 void HtmlRenderer::RegisterCache_Planets(Vector<TableCacheEntry>& cache)

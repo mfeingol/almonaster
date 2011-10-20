@@ -2331,6 +2331,7 @@ int GameEngine::GetLowestDiplomacyLevelForShipsOnPlanet (int iGameClass, int iGa
 
             if (iErrCode == ERROR_DATA_NOT_FOUND)
             {
+                iErrCode = OK;
                 vDipLevel = WAR;
             }
             else
