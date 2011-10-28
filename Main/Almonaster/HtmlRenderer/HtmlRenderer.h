@@ -463,7 +463,6 @@ protected:
     ColumnEntry m_gameEmpireCols[3];
 
     CrossJoinEntry m_crossJoinEntry;
-    CrossJoinEntry m_crossJoinEntry2;
 
 public:
 

@@ -115,7 +115,6 @@ struct TableEntry
 struct CrossJoinEntry
 {
     TableEntry Table;
-    const char* LeftColumnName;
     const char* RightColumnName;
 };
 

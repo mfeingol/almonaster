@@ -390,7 +390,7 @@ void TableCacheCollection::ConvertToRequest(const TableCacheEntry& entry, List<B
     {
         request.CrossJoin = gcnew CrossJoinRequest();
         request.CrossJoin->TableName = gcnew System::String(entry.CrossJoin->Table.Name);
-        request.CrossJoin->LeftColumnName = entry.CrossJoin->LeftColumnName ? gcnew System::String(entry.CrossJoin->LeftColumnName) : m_strID_COLUMN_NAME;
+        request.CrossJoin->LeftColumnName = gcnew System::String(entry.PartitionColumn);
         request.CrossJoin->RightColumnName = gcnew System::String(entry.CrossJoin->RightColumnName);
         request.CrossJoin->Columns = ConvertToRequestColumns(entry.CrossJoin->Table);
     }

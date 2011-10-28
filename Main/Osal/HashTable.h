@@ -183,6 +183,24 @@ public:
         return false;
     }
 
+    bool FindFirstReference(CKey key, CData** ppcData)
+    {
+        *ppcData = NULL;
+        unsigned int iBucket = HashValue::GetHashValue (key, m_iNumBuckets, m_pHashHint);
+
+        ListIterator<HashTableNode<CKey, CData>*> liIterator;
+        while (m_pBuckets[iBucket].GetNextIterator (&liIterator))
+        {
+            if (Equals::Equals(liIterator.GetData()->Key, key, m_pEqualsHint))
+            {
+                *ppcData = &liIterator.GetData()->Data;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     bool FindFirst (CKey key, HashTableIterator<CKey, CData>* phtIterator) {
 
         unsigned int iBucket = HashValue::GetHashValue (key, m_iNumBuckets, m_pHashHint);

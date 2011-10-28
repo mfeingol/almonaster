@@ -40,13 +40,20 @@ namespace Almonaster.Database.Sql
             {
                 if (this.tx != null)
                 {
-                    if (this.setComplete)
+                    try
                     {
-                        this.tx.Commit();
+                        if (this.setComplete)
+                        {
+                            this.tx.Commit();
+                        }
+                        else
+                        {
+                            this.tx.Rollback();
+                        }
                     }
-                    else
+                    catch (SqlException e)
                     {
-                        this.tx.Rollback();
+                        throw new SqlDatabaseException(e);
                     }
                 }
             }

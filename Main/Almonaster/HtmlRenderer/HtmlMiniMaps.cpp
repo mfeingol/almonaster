@@ -84,18 +84,19 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
     Assert(iNumPlanets > 0);
 
     // Put all planets onto the grid
-    for (i = 0; i < iNumPlanets; i ++) {
-
+    for (i = 0; i < iNumPlanets; i ++)
+    {
         int iX, iY;
         unsigned int iPlanetKey = pvPlanetKey[i].GetInteger();
 
         Variant vValue;
 
-        iErrCode = GetPlanetCoordinates (iGameClass, iGameNumber, iPlanetKey, &iX, &iY);
+        iErrCode = GetPlanetCoordinates(iGameClass, iGameNumber, iPlanetKey, &iX, &iY);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Owner, &vValue);
+        iErrCode = GetPlanetProperty(iGameClass, iGameNumber, iPlanetKey, GameMap::Owner, &vValue);
         RETURN_ON_ERROR(iErrCode);
+        unsigned int iOwnerKey = vValue.GetInteger();
 
         Assert(iX >= iMapMinX && iX <= iMapMaxX);
         Assert(iY >= iMapMinY && iY <= iMapMaxY);
@@ -106,16 +107,15 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
         Assert(iIndexX < iNumHorz);
         Assert(iIndexY < iNumVert);
 
-        ppMiniMap[iIndexX][iIndexY].iOwnerKey = vValue.GetInteger();
+        ppMiniMap[iIndexX][iIndexY].iOwnerKey = iOwnerKey;
         ppMiniMap[iIndexX][iIndexY].iPlanetKey = iPlanetKey;
         ppMiniMap[iIndexX][iIndexY].iPlanetProxyKey = piProxyKey[i];
         ppMiniMap[iIndexX][iIndexY].iX = iX;
         ppMiniMap[iIndexX][iIndexY].iY = iY;
 
-        switch (vValue.GetInteger()) {
-            
+        switch (iOwnerKey)
+        {
         case SYSTEM:
-
             iErrCode = GetPlanetProperty (iGameClass, iGameNumber, iPlanetKey, GameMap::Annihilated, &vValue);
             RETURN_ON_ERROR(iErrCode);
 
@@ -127,19 +127,17 @@ int HtmlRenderer::RenderMiniMap (unsigned int iGameClass, int iGameNumber, unsig
             break;
 
         case INDEPENDENT:
-
             ppMiniMap[iIndexX][iIndexY].iiIcon = ICON_INDEPENDENT;
             break;
 
         default:
-
             ppMiniMap[iIndexX][iIndexY].iiIcon = ICON_EMPIREPLANET;
 
-            iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienKey, &vValue);
+            iErrCode = GetEmpireProperty(iOwnerKey, SystemEmpireData::AlienKey, &vValue);
             RETURN_ON_ERROR(iErrCode);
             ppMiniMap[iIndexX][iIndexY].iAlienKey = vValue.GetInteger();
 
-            iErrCode = GetEmpireProperty (vValue.GetInteger(), SystemEmpireData::AlienAddress, &vValue);
+            iErrCode = GetEmpireProperty(iOwnerKey, SystemEmpireData::AlienAddress, &vValue);
             RETURN_ON_ERROR(iErrCode);
             ppMiniMap[iIndexX][iIndexY].iAlienAddress = vValue.GetInteger();
             break;

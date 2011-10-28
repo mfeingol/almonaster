@@ -214,7 +214,7 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
 
     float fTechDelta;
 
-    unsigned int iNumObliterations = 0, iNumSurrenders = 0, iNumRuins = 0, iNumNewDraws = 0, * piOriginalPlanetOwner = NULL, * piOriginalNumObliterations;
+    unsigned int iNumObliterations = 0, iNumSurrenders = 0, iNumRuins = 0, iNumNewDraws = 0;
 
     Variant vMaxBR, vTechLevel, vTechDevs, vNumOwnShips, vMaint, vBuild, vFuel, vTheme;
     int iBR1, iBR2;
@@ -493,15 +493,14 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
     iErrCode = t_pCache->GetAllKeys(strGameMap, &piPlanetKey, &iNumPlanets);
     RETURN_ON_ERROR(iErrCode);
 
-    // Hit the heap for stack safety
-    piOriginalPlanetOwner = new unsigned int[iNumPlanets * 2];
-    Assert(piOriginalPlanetOwner);
-    Algorithm::AutoDelete<unsigned int> auto_piOriginalPlanetOwner(piOriginalPlanetOwner, true);
-
-    piOriginalNumObliterations = piOriginalPlanetOwner + iNumPlanets;
-
-    memset(piOriginalPlanetOwner, NO_KEY, iNumPlanets * sizeof (unsigned int));
-    memset(piOriginalNumObliterations, ANNIHILATED_UNKNOWN, iNumPlanets * sizeof (unsigned int));
+    HashTable<unsigned int, OriginalPlanetData, GenericHashValue<unsigned int>, GenericEquals<unsigned int> > htPlanetKeyToOriginalData(NULL, NULL);
+    bool ret = htPlanetKeyToOriginalData.Initialize(iNumPlanets);
+    Assert(ret);
+    OriginalPlanetData original = { NO_KEY, ANNIHILATED_UNKNOWN };
+    for (i = 0; i < iNumPlanets; i ++)
+    {
+        htPlanetKeyToOriginalData.Insert(piPlanetKey[i], original);
+    }
 
     iErrCode = UpdatePlanetPopulations(iNumEmpires, piEmpireKey, pbAlive, pfAgRatio, strGameMap, 
         pstrEmpireData, pstrEmpireMap, pstrUpdateMessage, piPlanetKey, iNumPlanets, piTotalMin, piTotalFuel,
@@ -570,11 +569,10 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
 
     iErrCode = PerformSpecialActions (iGameClass, iGameNumber, iNumEmpires, piEmpireKey, pvGoodColor,
         pvBadColor, pvEmpireName, 
-        pbAlive, iNumPlanets, piPlanetKey, piOriginalPlanetOwner, piOriginalNumObliterations,
+        pbAlive, iNumPlanets, piPlanetKey, htPlanetKeyToOriginalData,
         pstrEmpireShips, pstrEmpireFleets, pstrEmpireData, pstrEmpireMap, 
         pstrUpdateMessage, strGameMap, strGameData, piTotalAg, piTotalMin, piTotalFuel, pstrEmpireDip, 
-        piObliterator, 
-        piObliterated, &iNumObliterations, pszGameClassName, iNewUpdateCount, iGameClassOptions,
+        piObliterator, piObliterated, &iNumObliterations, pszGameClassName, iNewUpdateCount, iGameClassOptions,
         ppiShipNukeKey, ppiEmpireNukeKey, piNukedPlanetKey, piNumNukingShips, &iNumNukedPlanets, gcConfig);
 
     RETURN_ON_ERROR(iErrCode);
@@ -592,8 +590,7 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
     /////////////////////
 
     iErrCode = ProcessGates (iGameClass, iGameNumber, iNumEmpires, piEmpireKey, pbAlive, 
-        pstrUpdateMessage, pvGoodColor, pvBadColor, pvEmpireName, piOriginalPlanetOwner,
-        piOriginalNumObliterations, pstrEmpireShips, pstrEmpireFleets, 
+        pstrUpdateMessage, pvGoodColor, pvBadColor, pvEmpireName, htPlanetKeyToOriginalData, pstrEmpireShips, pstrEmpireFleets, 
         pstrEmpireMap, pstrEmpireData, pstrEmpireDip, strGameMap, gcConfig, iGameClassOptions);
     
     RETURN_ON_ERROR(iErrCode);
@@ -1659,13 +1656,13 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
 }
 
 
-int GameEngine::UpdatePlanetPopulations (int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, 
-                                         float* pfAgRatio, const char* strGameMap, const char** pstrEmpireData, 
-                                         const char** pstrEmpireMap, String* pstrUpdateMessage, 
-                                         unsigned int* piPlanetKey, int iNumPlanets, int* piTotalMin, 
-                                         int* piTotalFuel, Variant* pvGoodColor, Variant* pvBadColor,
-                                         float fMaxAgRatio) {
-
+int GameEngine::UpdatePlanetPopulations(int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, 
+                                        float* pfAgRatio, const char* strGameMap, const char** pstrEmpireData, 
+                                        const char** pstrEmpireMap, String* pstrUpdateMessage, 
+                                        unsigned int* piPlanetKey, int iNumPlanets, int* piTotalMin, 
+                                        int* piTotalFuel, Variant* pvGoodColor, Variant* pvBadColor,
+                                        float fMaxAgRatio)
+{
     int i, j, iErrCode = OK, iNewPop, iX, iY, iColBuildCost;
     unsigned int iKey;
 
@@ -5176,8 +5173,8 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                                        unsigned int* piEmpireKey, 
                                        const Variant* pvGoodColor, const Variant* pvBadColor,
                                        const Variant* pvEmpireName, bool* pbAlive, unsigned int iNumPlanets, 
-                                       unsigned int* piPlanetKey, unsigned int* piOriginalPlanetOwner,
-                                       unsigned int* piOriginalNumObliterations,
+                                       unsigned int* piPlanetKey,
+                                       HashTable<unsigned int, OriginalPlanetData, GenericHashValue<unsigned int>, GenericEquals<unsigned int> >& htPlanetKeyToOriginalData,
                                        const char** pstrEmpireShips, const char** pstrEmpireFleets,
                                        const char** pstrEmpireData, const char** pstrEmpireMap, 
                                        String* pstrUpdateMessage, 
@@ -5611,8 +5608,12 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         iErrCode = t_pCache->WriteData(strGameMap, iPlanetKey, GameMap::Owner, (int)piEmpireKey[i]);
                         RETURN_ON_ERROR(iErrCode);
 
-                        if (piOriginalPlanetOwner [iPlanetKey] == NO_KEY) {
-                            piOriginalPlanetOwner [iPlanetKey] = vOwner.GetInteger();
+                        OriginalPlanetData* pOriginalPlanetData; 
+                        bool ret = htPlanetKeyToOriginalData.FindFirstReference(iPlanetKey, &pOriginalPlanetData);
+                        Assert(ret);
+                        if (pOriginalPlanetData->iOwner == NO_KEY)
+                        {
+                            pOriginalPlanetData->iOwner = vOwner.GetInteger();
                         }
 
                         // Increase number of empire's planets
@@ -6158,17 +6159,15 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         ////////////////////////
                         
                         // Change owner
-                        iErrCode = t_pCache->WriteData(
-                            strGameMap, 
-                            iPlanetKey, 
-                            GameMap::Owner, 
-                            (int)piEmpireKey[i]
-                            );
-
+                        iErrCode = t_pCache->WriteData(strGameMap, iPlanetKey, GameMap::Owner, (int)piEmpireKey[i]);
                         RETURN_ON_ERROR(iErrCode);
 
-                        if (piOriginalPlanetOwner [iPlanetKey] == NO_KEY) {
-                            piOriginalPlanetOwner [iPlanetKey] = vOwner.GetInteger();
+                        OriginalPlanetData* pOriginalPlanetData; 
+                        bool ret = htPlanetKeyToOriginalData.FindFirstReference(iPlanetKey, &pOriginalPlanetData);
+                        Assert(ret);
+                        if (pOriginalPlanetData->iOwner == NO_KEY)
+                        {
+                            pOriginalPlanetData->iOwner = vOwner.GetInteger();
                         }
 
                         // Reduce planet pop
@@ -6422,8 +6421,12 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         iErrCode = t_pCache->WriteData(strGameMap, iPlanetKey, GameMap::Owner, (int)SYSTEM);
                         RETURN_ON_ERROR(iErrCode);
 
-                        if (piOriginalPlanetOwner [iPlanetKey] == NO_KEY) {
-                            piOriginalPlanetOwner [iPlanetKey] = vOwner.GetInteger();
+                        OriginalPlanetData* pOriginalPlanetData; 
+                        bool ret = htPlanetKeyToOriginalData.FindFirstReference(iPlanetKey, &pOriginalPlanetData);
+                        Assert(ret);
+                        if (pOriginalPlanetData->iOwner == NO_KEY)
+                        {
+                            pOriginalPlanetData->iOwner = vOwner.GetInteger();
                         }
                         
                         // Reduce planet pop
@@ -6527,12 +6530,15 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                     }
 
                     // Take note for jumpgate calculations
-                    if (piOriginalNumObliterations [iPlanetKey] == ANNIHILATED_UNKNOWN) {
-                        
+                    OriginalPlanetData* pOriginalPlanetData; 
+                    bool ret = htPlanetKeyToOriginalData.FindFirstReference(iPlanetKey, &pOriginalPlanetData);
+                    Assert(ret);
+                    if (pOriginalPlanetData->iNumObliterations == ANNIHILATED_UNKNOWN)
+                    {
                         iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Annihilated, &vTemp);
                         RETURN_ON_ERROR(iErrCode);
-                        
-                        piOriginalNumObliterations [iPlanetKey] = vTemp.GetInteger();
+
+                        pOriginalPlanetData->iNumObliterations = vTemp.GetInteger();
                     }
 
                     // Reduce ag to zero
@@ -7894,8 +7900,7 @@ int GameEngine::ProcessGates (int iGameClass, int iGameNumber,
                               unsigned int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive,
                               String* pstrUpdateMessage, const Variant* pvGoodColor, 
                               const Variant* pvBadColor, const Variant* pvEmpireName, 
-                              unsigned int* piOriginalPlanetOwner,
-                              unsigned int* piOriginalNumObliterations,
+                              HashTable<unsigned int, OriginalPlanetData, GenericHashValue<unsigned int>, GenericEquals<unsigned int> >& htPlanetKeyToOriginalData,
                               const char** pstrEmpireShips, const char** pstrEmpireFleets, 
                               const char** pstrEmpireMap, const char** pstrEmpireData, 
                               const char** pstrEmpireDip,
@@ -7993,14 +7998,17 @@ int GameEngine::ProcessGates (int iGameClass, int iGameNumber,
             if (vShipType.GetInteger() == STARGATE) {
 
                 // Get original owner
-                if (piOriginalPlanetOwner [vNewPlanetKey.GetInteger()] == NO_KEY) {
-                    
+                OriginalPlanetData* pOriginalPlanetData; 
+                bool ret = htPlanetKeyToOriginalData.FindFirstReference(vNewPlanetKey.GetInteger(), &pOriginalPlanetData);
+                Assert(ret);
+                if (pOriginalPlanetData->iOwner == NO_KEY)
+                {
                     iErrCode = t_pCache->ReadData(strGameMap, vNewPlanetKey.GetInteger(), GameMap::Owner, &vOwner);
                     RETURN_ON_ERROR(iErrCode);
-
-                } else {
-                    
-                    vOwner = piOriginalPlanetOwner [vNewPlanetKey.GetInteger()];
+                }
+                else
+                {
+                    vOwner = pOriginalPlanetData->iOwner;
                 }
 
                 fGateCost = gcConfig.fStargateGateCost;
@@ -8015,14 +8023,17 @@ int GameEngine::ProcessGates (int iGameClass, int iGameNumber,
                 bRangeLimited = (gcConfig.iShipBehavior & JUMPGATE_LIMIT_RANGE) != 0;
 
                 // Enforce annihilation rules
-                if (piOriginalNumObliterations [vNewPlanetKey.GetInteger()] == ANNIHILATED_UNKNOWN) {
-
+                OriginalPlanetData* pOriginalPlanetData; 
+                bool ret = htPlanetKeyToOriginalData.FindFirstReference(vNewPlanetKey.GetInteger(), &pOriginalPlanetData);
+                Assert(ret);
+                if (pOriginalPlanetData->iNumObliterations == ANNIHILATED_UNKNOWN)
+                {
                     iErrCode = t_pCache->ReadData(strGameMap, vNewPlanetKey.GetInteger(), GameMap::Annihilated, &vAnnihilated);
                     RETURN_ON_ERROR(iErrCode);
-
-                } else {
-
-                    vAnnihilated = piOriginalNumObliterations [vNewPlanetKey.GetInteger()];
+                }
+                else
+                {
+                    vAnnihilated = pOriginalPlanetData->iNumObliterations;
                 }
             }
             else Assert(!"Non-gate cannot gate");

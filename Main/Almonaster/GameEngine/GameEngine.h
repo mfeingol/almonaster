@@ -538,6 +538,12 @@ private:
     int CheckForDelayedPause (int iGameClass, int iGameNumber, const UTCTime& tNow, bool* pbNewlyPaused);
 
     // Updates
+    struct OriginalPlanetData
+    {
+        unsigned int iOwner;
+        unsigned int iNumObliterations;
+    };
+
     int RunUpdate (int iGameClass, int iGameNumber, const UTCTime& tUpdateTime, bool* pbGameOver);
 
     int UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigned int iNumEmpires, unsigned int* piEmpireKey, 
@@ -547,7 +553,8 @@ private:
         int* piWinner, int* piLoser, unsigned int* piNumSurrenders, const char* pszGameClassName, 
         int iNewUpdateCount, Variant* pvGoodColor, Variant* pvBadColor);
 
-    int UpdatePlanetPopulations (int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, float* pfAgRatio, 
+    int UpdatePlanetPopulations (
+        int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, float* pfAgRatio, 
         const char* strGameMap, const char** pstrEmpireData, const char** pstrEmpireMap, String* pstrUpdateMessage, 
         unsigned int* piPlanetKey, int iNumPlanets, int* piTotalMin, int* piTotalFuel, Variant* pvGoodColor, 
         Variant* pvBadColor, float fMaxAgRatio);
@@ -589,8 +596,9 @@ private:
 
     int PerformSpecialActions (int iGameClass, int iGameNumber, int iNumEmpires, unsigned int* piEmpireKey, 
         const Variant* pvGoodColor, const Variant* pvBadColor, const Variant* pvEmpireName, bool* pbAlive, 
-        unsigned int iNumPlanets, unsigned int* piPlanetKey, unsigned int* piOriginalPlanetOwner, 
-        unsigned int* piOriginalNumObliterations, const char** pstrEmpireShips, const char** pstrEmpireFleets,
+        unsigned int iNumPlanets, unsigned int* piPlanetKey, 
+        HashTable<unsigned int, OriginalPlanetData, GenericHashValue<unsigned int>, GenericEquals<unsigned int> >& htPlanetKeyToOriginalData, 
+        const char** pstrEmpireShips, const char** pstrEmpireFleets,
         const char** pstrEmpireData, const char** pstrEmpireMap, String* pstrUpdateMessage, 
         const char* strGameMap, const char* strGameData, int* piTotalAg, int* piTotalMin, int* piTotalFuel,
         const char** pstrEmpireDip, int* piObliterator, int* piObliterated, unsigned int* piNumObliterations, 
@@ -629,7 +637,7 @@ private:
 
     int ProcessGates (int iGameClass, int iGameNumber, unsigned int iNumEmpires, unsigned int* piEmpireKey, 
         bool* pbAlive, String* pstrUpdateMessage, const Variant* pvGoodColor, const Variant* pvBadColor,
-        const Variant* pvEmpireName, unsigned int* piOriginalPlanetOwner, unsigned int* piOriginalNumObliterations,
+        const Variant* pvEmpireName, HashTable<unsigned int, OriginalPlanetData, GenericHashValue<unsigned int>, GenericEquals<unsigned int> >& htPlanetKeyToOriginalData,
         const char** pstrEmpireShips, const char** pstrEmpireFleets, const char** pstrEmpireMap, 
         const char** pstrEmpireData, const char** pstrEmpireDip,
         const char* strGameMap, const GameConfiguration& gcConfig, int iGameClassOptions);

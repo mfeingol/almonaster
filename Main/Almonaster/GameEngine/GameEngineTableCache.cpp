@@ -196,7 +196,7 @@ int GameEngine::CacheTournamentTables(const unsigned int* piTournamentKey, unsig
 int GameEngine::CacheTournamentAndEmpireTables(unsigned int iTournamentKey)
 {
     ColumnEntry tournamentCol = { SystemTournamentEmpires::TournamentKey, iTournamentKey };
-    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &tournamentCol }, ID_COLUMN_NAME, SystemTournamentEmpires::EmpireKey };
+    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &tournamentCol }, SystemTournamentEmpires::EmpireKey };
 
     const TableCacheEntry entries[] =
     {
@@ -213,7 +213,7 @@ int GameEngine::CacheTournamentAndEmpireTables(unsigned int iTournamentKey)
 int GameEngine::CacheTournamentEmpireTables(unsigned int iTournamentKey)
 {
     ColumnEntry crossJoinCol = { SystemTournamentEmpires::TournamentKey, iTournamentKey };
-    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &crossJoinCol }, ID_COLUMN_NAME, SystemTournamentEmpires::EmpireKey };
+    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &crossJoinCol }, SystemTournamentEmpires::EmpireKey };
 
     const TableCacheEntry entries[] =
     {
@@ -229,7 +229,7 @@ int GameEngine::CacheTournamentEmpireTables(unsigned int iTournamentKey)
 int GameEngine::CacheTournamentEmpiresForGame(unsigned int iTournamentKey)
 {
     ColumnEntry crossJoinCol = { SystemTournamentEmpires::TournamentKey, iTournamentKey };
-    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &crossJoinCol }, ID_COLUMN_NAME, SystemTournamentEmpires::EmpireKey };
+    CrossJoinEntry crossJoin = { { SYSTEM_TOURNAMENT_EMPIRES, NO_KEY, 1, &crossJoinCol }, SystemTournamentEmpires::EmpireKey };
 
     const TableCacheEntry entries[] =
     {
@@ -765,7 +765,7 @@ int GameEngine::CreateEmptyGameCacheEntries(int iGameClass, int iGameNumber, int
     }
     else if (iEmpireKey != NO_KEY)
     {
-        Assert(iGameClass == NO_KEY && iGameNumber == 0 && iTournamentKey == NO_KEY && iDiplomacyKey == NO_KEY);
+        Assert(iTournamentKey == NO_KEY && iDiplomacyKey == NO_KEY);
         vTemp = iEmpireKey;
         pvEmpireKey = &vTemp;
         iNumEmpires = 1;

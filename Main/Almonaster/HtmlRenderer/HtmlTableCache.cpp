@@ -216,78 +216,53 @@ void HtmlRenderer::RegisterCache_Info(Vector<TableCacheEntry>& cache)
     Cache(cache, gameEmpireShips);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
-
-    // Ratios line
-    m_crossJoinEntry.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
-    m_crossJoinEntry.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
-    m_crossJoinEntry.Table.Name = GAME_EMPIRE_DIPLOMACY;
-    m_crossJoinEntry.Table.Key = NO_KEY;
-    m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
-    m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
-
-    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
-    Cache(cache, gameEmpireDiplomacyContacts);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
 }
 
 int HtmlRenderer::AfterCache_Info()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_SHIPS);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_Tech(Vector<TableCacheEntry>& cache)
 {
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
-
-    // Ratios line
-    m_crossJoinEntry.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
-    m_crossJoinEntry.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
-    m_crossJoinEntry.Table.Name = GAME_EMPIRE_DIPLOMACY;
-    m_crossJoinEntry.Table.Key = NO_KEY;
-    m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
-    m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
-
-    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
-    Cache(cache, gameEmpireDiplomacyContacts);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
 }
 
 int HtmlRenderer::AfterCache_Tech()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
 
 void HtmlRenderer::RegisterCache_Diplomacy(Vector<TableCacheEntry>& cache)
 {
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
 
-    m_crossJoinEntry.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
     m_crossJoinEntry.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
     m_crossJoinEntry.Table.Name = GAME_EMPIRE_DIPLOMACY;
     m_crossJoinEntry.Table.Key = NO_KEY;
     m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
     m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
 
-    const TableCacheEntry gameEmpireDiplomacyContacts = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
-    Cache(cache, gameEmpireDiplomacyContacts);
-
-    m_crossJoinEntry2.LeftColumnName = ID_COLUMN_NAME;
-    m_crossJoinEntry2.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
-    m_crossJoinEntry2.Table.Name = GAME_EMPIRE_DIPLOMACY;
-    m_crossJoinEntry2.Table.Key = NO_KEY;
-    m_crossJoinEntry2.Table.NumColumns = countof(m_gameEmpireCols);
-    m_crossJoinEntry2.Table.Columns = m_gameEmpireCols;
-
-    const TableCacheEntry systemEmpireDataContacts = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, NULL, ID_COLUMN_NAME, &m_crossJoinEntry2 };
+    const TableCacheEntry systemEmpireDataContacts = { { SYSTEM_EMPIRE_DATA, NO_KEY, 0, NULL}, NULL, ID_COLUMN_NAME, &m_crossJoinEntry };
     Cache(cache, systemEmpireDataContacts);
 }
 
 int HtmlRenderer::AfterCache_Diplomacy()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
 }
 
 void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
@@ -307,7 +282,6 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
     Cache(cache, gameEmpireFleets);
 
     // When another empire's ship appears on a planet, we need their SystemEmpireData row
-    m_crossJoinEntry.LeftColumnName = ID_COLUMN_NAME;
     m_crossJoinEntry.RightColumnName = GameEmpireData::EmpireKey;
     m_crossJoinEntry.Table.Name = GAME_EMPIRE_DATA;
     m_crossJoinEntry.Table.Key = NO_KEY;
@@ -318,23 +292,21 @@ void HtmlRenderer::RegisterCache_Map(Vector<TableCacheEntry>& cache)
     Cache(cache, systemEmpireDataFromGame);
 
     // Diplomacy coloring and ratios
-    m_crossJoinEntry2.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
-    m_crossJoinEntry2.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
-    m_crossJoinEntry2.Table.Name = GAME_EMPIRE_DIPLOMACY;
-    m_crossJoinEntry2.Table.Key = NO_KEY;
-    m_crossJoinEntry2.Table.NumColumns = countof(m_gameEmpireCols);
-    m_crossJoinEntry2.Table.Columns = m_gameEmpireCols;
-
-    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry2 };
-    Cache(cache, gameEmpireContactDiplomacy);
-
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
 }
 
 int HtmlRenderer::AfterCache_Map()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY | EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS);
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_FLEETS);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_Planets(Vector<TableCacheEntry>& cache)
@@ -353,12 +325,11 @@ void HtmlRenderer::RegisterCache_Planets(Vector<TableCacheEntry>& cache)
     const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireFleets);
 
-    // Diplomacy coloring
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
-    
+    // Diplomacy coloring and ratios
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
+
     // When another empire's ship appears on a planet, we need their SystemEmpireData row
-    m_crossJoinEntry.LeftColumnName = ID_COLUMN_NAME;
     m_crossJoinEntry.RightColumnName = GameEmpireData::EmpireKey;
     m_crossJoinEntry.Table.Name = GAME_EMPIRE_DATA;
     m_crossJoinEntry.Table.Key = NO_KEY;
@@ -371,7 +342,15 @@ void HtmlRenderer::RegisterCache_Planets(Vector<TableCacheEntry>& cache)
 
 int HtmlRenderer::AfterCache_Planets()
 {
-    return OK;
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_FLEETS);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_Options(Vector<TableCacheEntry>& cache)
@@ -399,24 +378,21 @@ void HtmlRenderer::RegisterCache_Build(Vector<TableCacheEntry>& cache)
     Cache(cache, gameEmpireFleets);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
-
-    // Ratios line
-    m_crossJoinEntry.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
-    m_crossJoinEntry.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
-    m_crossJoinEntry.Table.Name = GAME_EMPIRE_DIPLOMACY;
-    m_crossJoinEntry.Table.Key = NO_KEY;
-    m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
-    m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
-
-    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
-    Cache(cache, gameEmpireContactDiplomacy);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
 }
 
 int HtmlRenderer::AfterCache_Build()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_MAP | EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_FLEETS);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_Ships(Vector<TableCacheEntry>& cache)
@@ -428,19 +404,8 @@ void HtmlRenderer::RegisterCache_Ships(Vector<TableCacheEntry>& cache)
     Cache(cache, gameEmpireFleets);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
-
-    // Ratios line
-    m_crossJoinEntry.LeftColumnName = GameEmpireDiplomacy::EmpireKey;
-    m_crossJoinEntry.RightColumnName = GameEmpireDiplomacy::ReferenceEmpireKey;
-    m_crossJoinEntry.Table.Name = GAME_EMPIRE_DIPLOMACY;
-    m_crossJoinEntry.Table.Key = NO_KEY;
-    m_crossJoinEntry.Table.NumColumns = countof(m_gameEmpireCols);
-    m_crossJoinEntry.Table.Columns = m_gameEmpireCols;
-
-    const TableCacheEntry gameEmpireContactDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols}, NULL, GameEmpireDiplomacy::EmpireKey, &m_crossJoinEntry };
-    Cache(cache, gameEmpireContactDiplomacy);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
 
     // Cancel builds
     const TableCacheEntry gameMap = { { GAME_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, NULL, NULL };
@@ -452,7 +417,15 @@ void HtmlRenderer::RegisterCache_Ships(Vector<TableCacheEntry>& cache)
 
 int HtmlRenderer::AfterCache_Ships()
 {
-    return CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, m_iEmpireKey, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_FLEETS | EMPTY_GAME_EMPIRE_MAP);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_GameServerRules(Vector<TableCacheEntry>& cache)

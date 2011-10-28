@@ -90,7 +90,7 @@ int SqlDatabaseConnection::GetNumPhysicalRows(const char* pszTableName, unsigned
     catch (SqlDatabaseException^ e)
     {
         TraceException(e);
-        return ERROR_UNKNOWN_TABLE_NAME;
+        return ERROR_DATABASE_EXCEPTION;
     }
 
     return OK;
