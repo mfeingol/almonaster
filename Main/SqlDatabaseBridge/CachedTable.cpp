@@ -93,7 +93,7 @@ int CachedTable::GetNextKey(unsigned int iKey, unsigned int* piNextKey)
 
     if (m_result->Rows->Count == 0)
     {
-        return iKey == NO_KEY ? ERROR_DATA_NOT_FOUND : ERROR_UNKNOWN_ROW_KEY;
+        return (iKey == NO_KEY) ? ERROR_DATA_NOT_FOUND : ERROR_UNKNOWN_ROW_KEY;
     }
 
     if (iKey == NO_KEY)

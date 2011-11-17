@@ -45,6 +45,20 @@ typedef enum HttpAuthenticationType {
 class HttpServer;
 class HttpRequest;
 class HttpResponse;
+class PageSource;
+
+class ReportWrapper : public ITraceLog, public ITraceLogReader
+{
+private:
+    PageSource* m_pPageSource;
+
+    IMPLEMENT_TWO_INTERFACES(ITraceLog, ITraceLogReader);
+
+public:
+    ReportWrapper(PageSource* pPageSource);
+    virtual int Write(TraceInfoLevel level, const char* pszMessage);
+    virtual int GetTail(char* pszBuffer, unsigned int cbSize);
+};
 
 class PageSource : public IPageSourceControl, public IPageSource
 {
@@ -74,6 +88,7 @@ private:
 
     Report* m_pLog;
     Report* m_pReport;
+    ReportWrapper* m_pReportWrapper;
 
     UTCTime m_tLogTime;
     UTCTime m_tReportTime;
@@ -213,6 +228,8 @@ public:
 
     bool IsIPAddressAllowedAccess (const char* pszIPAddress);
     bool IsUserAgentAllowedAccess (const char* pszUserAgent);
+
+    ITraceLog* GetReportInternal();
 
     DECLARE_IOBJECT;
 

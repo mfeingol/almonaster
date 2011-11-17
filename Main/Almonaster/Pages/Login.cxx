@@ -78,21 +78,21 @@ if (m_pHttpRequest->GetMethod() == GET)
                 }
             }
         }
-    }
 
-    // Autologon failed
-    m_iEmpireKey = NO_KEY;
-    AddMessage("Autologon failed and was disabled");
+        // Autologon failed
+        m_iEmpireKey = NO_KEY;
+        AddMessage("Autologon failed and was disabled");
 
-    // Best effort delete invalid cookies
-    if (pAutoLogonEmpire)
-    {
-        m_pHttpResponse->DeleteCookie(AUTOLOGON_EMPIREKEY_COOKIE, NULL);
-    }
+        // Best effort delete invalid cookies
+        if (pAutoLogonEmpire)
+        {
+            m_pHttpResponse->DeleteCookie(AUTOLOGON_EMPIREKEY_COOKIE, NULL);
+        }
 
-    if (pPasswordCookie)
-    {
-        m_pHttpResponse->DeleteCookie(AUTOLOGON_PASSWORD_COOKIE, NULL);
+        if (pPasswordCookie)
+        {
+            m_pHttpResponse->DeleteCookie(AUTOLOGON_PASSWORD_COOKIE, NULL);
+        }
     }
 }
 

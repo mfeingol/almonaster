@@ -4905,9 +4905,8 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
         return OK;
     }
     
-    unsigned int* piOwnerData = NULL;
-    Algorithm::AutoDelete<unsigned int> free_piOwnerData(piOwnerData, true);
-
+    Vector<unsigned int> vecOwnerData;
+    
     iErrCode = GetPlanetShipOwnerData (
         iGameClass,
         iGameNumber,
@@ -4917,11 +4916,12 @@ int HtmlRenderer::GetSensitiveMapText (int iGameClass, int iGameNumber, int iEmp
         iTotalNumShips,
         bVisibleBuilds,
         bIndependence,
-        &piOwnerData
+        vecOwnerData
         );
     
     RETURN_ON_ERROR(iErrCode);
     
+    const unsigned int* piOwnerData = vecOwnerData.GetData();
     unsigned int iNumOwners = piOwnerData[0];
     if (iNumOwners > 0)
     {

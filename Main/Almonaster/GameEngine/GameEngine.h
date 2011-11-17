@@ -1383,8 +1383,7 @@ public:
     int HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, bool* pbVisited);
 
     int GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-        int iPlanetProxyKey, unsigned int iTotalNumShips, bool bVisibleBuilds, bool bIndependence, 
-        unsigned int** ppiShipOwnerData);
+        int iPlanetProxyKey, unsigned int iTotalNumShips, bool bVisibleBuilds, bool bIndependence, Vector<unsigned int>& vecShipOwnerData);
 
     int GetPlanetName (int iGameClass, int iGameNumber, int iPlanetKey, Variant* pvPlanetName);
     int GetPlanetNameWithSecurity (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey,  

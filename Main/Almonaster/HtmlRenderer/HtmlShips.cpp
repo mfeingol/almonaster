@@ -1044,6 +1044,11 @@ int HtmlRenderer::HandleShipMenuSubmissions()
         if (sscanf (pHttpForm->GetName(), "FltClpse%c%d", &cSign, &iFleetKey) == 2)
         {
             iErrCode = SetFleetFlag(m_iGameClass, m_iGameNumber, m_iEmpireKey, iFleetKey, FLEET_COLLAPSED_DISPLAY, cSign == '-');
+            if (iErrCode == ERROR_FLEET_DOES_NOT_EXIST)
+            {
+                // Just ignore the error
+                iErrCode = OK;
+            }
             RETURN_ON_ERROR(iErrCode);
         }
     }

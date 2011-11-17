@@ -1563,8 +1563,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     
     if (iTotalNumShips > 0)
     {
-        unsigned int* piOwnerData = NULL;
-        Algorithm::AutoDelete<unsigned int> free_piOwnerData(piOwnerData, true);
+        Vector<unsigned int> vecOwnerData;
 
         iErrCode = GetPlanetShipOwnerData (
             m_iGameClass, 
@@ -1575,13 +1574,14 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
             iTotalNumShips, 
             bVisibleBuilds, 
             bIndependence, 
-            &piOwnerData
+            vecOwnerData
             );
         RETURN_ON_ERROR(iErrCode);
 
+        const unsigned int* piOwnerData = vecOwnerData.GetData();
         int iNumOwners = piOwnerData[0];
-        if (iNumOwners > 0) {
-            
+        if (iNumOwners > 0)
+        {
             m_pHttpResponse->WriteText (
                 "<tr><td></td><td></td>"\
                 "<td colspan=\"10\">"\

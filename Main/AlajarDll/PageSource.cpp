@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 //
-// HttpObjects.dll:  a component of Alajar 1.0
+// Alajar.dll:  a component of Alajar 1.0
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
@@ -55,8 +55,36 @@ PageSource::AccessControlElement::~AccessControlElement() {
     }
 }
 
-PageSource::PageSource (HttpServer* pHttpServer) {
+ReportWrapper::ReportWrapper(PageSource* pPageSource)
+{
+    m_iNumRefs = 1;
+    m_pPageSource = pPageSource; // Weak ref
+}
 
+int ReportWrapper::Write(TraceInfoLevel level, const char* pszMessage)
+{
+    ITraceLog* pLog = m_pPageSource->GetReportInternal();
+    AutoRelease<ITraceLog> release_pLog(pLog);
+    return pLog->Write(level, pszMessage);
+}
+
+int ReportWrapper::GetTail(char* pszBuffer, unsigned int cbSize)
+{
+    ITraceLog* pLog = m_pPageSource->GetReportInternal();
+    AutoRelease<ITraceLog> release_pLog(pLog);
+
+    ITraceLogReader* pReader;
+    int iErrCode = pLog->QueryInterface(IID_ITraceLogReader, (void**)&pReader);
+    if (iErrCode != OK)
+    {
+        return iErrCode;
+    }
+
+    return pReader->GetTail(pszBuffer, cbSize);
+}
+
+PageSource::PageSource (HttpServer* pHttpServer)
+{
     m_pHttpServer = pHttpServer;
 
     m_pszName = NULL;
@@ -116,6 +144,10 @@ int PageSource::Init() {
     if (m_pcfConfig == NULL) {
         return ERROR_OUT_OF_MEMORY;
     }
+    m_pReportWrapper = new ReportWrapper(this);
+    if (m_pReportWrapper == NULL) {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
     return OK;
 }
@@ -168,6 +200,8 @@ PageSource::~PageSource() {
     if (m_pszConfigFileName != NULL) {
         OS::HeapFree (m_pszConfigFileName);
     }
+
+    SafeRelease(m_pReportWrapper);
 }
 
 void PageSource::Clean() {
@@ -398,6 +432,12 @@ IConfigFile* PageSource::GetConfigFile() {
 }
 
 ITraceLog* PageSource::GetReport()
+{
+    m_pReportWrapper->AddRef();
+    return m_pReportWrapper;
+}
+
+ITraceLog* PageSource::GetReportInternal()
 {
     UTCTime tNow;
     Time::GetTime(&tNow);

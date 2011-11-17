@@ -1,4 +1,4 @@
-// PageSourceEnumerator.h: interface for the PageSourceEnumeratora class.
+// PageSourceEnumerator.h: interface for the PageSourceEnumerator class.
 //
 //////////////////////////////////////////////////////////////////////
 //

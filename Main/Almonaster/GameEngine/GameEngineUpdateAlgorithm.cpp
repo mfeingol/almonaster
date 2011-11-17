@@ -4775,51 +4775,39 @@ int GameEngine::AddShipSightings (unsigned int iNumEmpires, unsigned int* piEmpi
 }
 
 
-int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, 
-                                   const char* strGameMap, const char** pstrEmpireShips, 
-                                   const char** pstrEmpireFleets, const char** pstrEmpireMap,
-                                     String* pstrUpdateMessage) {
+int GameEngine::UpdateFleetOrders(unsigned int iNumEmpires, unsigned int* piEmpireKey, bool* pbAlive, 
+                                  const char* strGameMap, const char** pstrEmpireShips, 
+                                  const char** pstrEmpireFleets, const char** pstrEmpireMap, String* pstrUpdateMessage)
+{
+    int iErrCode = OK;
 
-    int iDirection, iErrCode = OK;
-    unsigned int i, iFleetKey, * piShipKey = NULL, k, iNumShips;
-    AutoFreeKeys free_piShipKey(piShipKey);
-
-    bool bFlag;
-    float fStrength, fMaxStrength;
-    Variant vTemp, vFleetPlanet, vAction;
-    
-    for (i = 0; i < iNumEmpires; i ++) {
-        
-        if (!pbAlive[i]) {
+    for (unsigned int i = 0; i < iNumEmpires; i ++)
+    {
+        if (!pbAlive[i])
+        {
             continue;
         }
 
-        iFleetKey = NO_KEY;
-        while (true)
+        // Get fleets
+        unsigned int* piFleetKey = NULL, iNumFleets = 0;
+        AutoFreeKeys free_piFleetKey(piFleetKey);
+
+        iErrCode = t_pCache->GetAllKeys(pstrEmpireFleets[i], &piFleetKey, &iNumFleets);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
-            iErrCode = t_pCache->GetNextKey (pstrEmpireFleets[i], iFleetKey, &iFleetKey);
-            if (iErrCode == ERROR_DATA_NOT_FOUND) {
-                iErrCode = OK;
-                break;
-            }
+            iErrCode = OK;
+            continue;
+        }
 
-            RETURN_ON_ERROR(iErrCode);
-
-            if (piShipKey)
-            {
-                t_pCache->FreeKeys(piShipKey);
-                piShipKey = NULL;
-            }
+        for (unsigned int j = 0; j < iNumFleets; j ++)
+        {
+            unsigned int iFleetKey = piFleetKey[j];
 
             // Get ships in fleet
-            iErrCode = t_pCache->GetEqualKeys (
-                pstrEmpireShips[i],
-                GameEmpireShips::FleetKey,
-                iFleetKey,
-                &piShipKey,
-                &iNumShips
-                );
+            unsigned int* piShipKey = NULL, iNumShips = 0;
+            AutoFreeKeys free_piShipKey(piShipKey);
 
+            iErrCode = t_pCache->GetEqualKeys(pstrEmpireShips[i], GameEmpireShips::FleetKey, iFleetKey, &piShipKey, &iNumShips);
             if (iErrCode == ERROR_DATA_NOT_FOUND)
             {
                 iErrCode = OK;
@@ -4829,7 +4817,8 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
             if (iNumShips == 0)
             {
                 // Check for auto-disband
-                iErrCode = GetEmpireOption2 (piEmpireKey[i], DISBAND_EMPTY_FLEETS_ON_UPDATE, &bFlag);
+                bool bFlag;
+                iErrCode = GetEmpireOption2(piEmpireKey[i], DISBAND_EMPTY_FLEETS_ON_UPDATE, &bFlag);
                 RETURN_ON_ERROR(iErrCode);
 
                 if (bFlag)
@@ -4849,93 +4838,54 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
             }
 
             // Get fleet location
-            iErrCode = t_pCache->ReadData(
-                pstrEmpireFleets[i], 
-                iFleetKey, 
-                GameEmpireFleets::CurrentPlanet, 
-                &vFleetPlanet
-                );
-
+            Variant vFleetPlanet;
+            iErrCode = t_pCache->ReadData(pstrEmpireFleets[i], iFleetKey, GameEmpireFleets::CurrentPlanet, &vFleetPlanet);
             RETURN_ON_ERROR(iErrCode);
             
             // Get fleet action
-            iErrCode = t_pCache->ReadData(
-                pstrEmpireFleets[i], 
-                iFleetKey, 
-                GameEmpireFleets::Action, 
-                &vAction
-                );
+            Variant vAction;
+            iErrCode = t_pCache->ReadData(pstrEmpireFleets[i], iFleetKey, GameEmpireFleets::Action, &vAction);
             RETURN_ON_ERROR(iErrCode);
 
             if (vAction.GetInteger() <= MOVE_NORTH && vAction.GetInteger() >= MOVE_WEST)
             {
-                iDirection = MOVE_NORTH - vAction.GetInteger();
+                int iDirection = MOVE_NORTH - vAction.GetInteger();
                 Assert(iDirection >= NORTH && iDirection <= WEST);
                 
-                iErrCode = t_pCache->ReadData(
-                    strGameMap, 
-                    vFleetPlanet.GetInteger(), 
-                    GameMap::ColumnNames[GameMap::iNorthPlanetKey + iDirection],
-                    &vFleetPlanet
-                    );
+                iErrCode = t_pCache->ReadData(strGameMap, vFleetPlanet.GetInteger(), GameMap::ColumnNames[GameMap::iNorthPlanetKey + iDirection], &vFleetPlanet);
                 RETURN_ON_ERROR(iErrCode);
                 Assert(vFleetPlanet.GetInteger() != NO_KEY);
 
 #ifdef _DEBUG
                 unsigned int iPlanetKey;
-                iErrCode = t_pCache->GetFirstKey(
-                    pstrEmpireMap[i],
-                    GameEmpireMap::PlanetKey,
-                    vFleetPlanet.GetInteger(),
-                    &iPlanetKey
-                    );
+                iErrCode = t_pCache->GetFirstKey(pstrEmpireMap[i], GameEmpireMap::PlanetKey, vFleetPlanet, &iPlanetKey);
                 RETURN_ON_ERROR(iErrCode);
                 Assert(iPlanetKey != NO_KEY);
 #endif
-
-                iErrCode = t_pCache->WriteData(
-                    pstrEmpireFleets[i], 
-                    iFleetKey, 
-                    GameEmpireFleets::CurrentPlanet, 
-                    vFleetPlanet
-                    );
+                iErrCode = t_pCache->WriteData(pstrEmpireFleets[i], iFleetKey, GameEmpireFleets::CurrentPlanet, vFleetPlanet);
                 RETURN_ON_ERROR(iErrCode);
             }
             
             // Calculate fleet's current strength, max strength
-            fStrength = (float) 0.0;
-            fMaxStrength = (float) 0.0;
+            float fStrength = (float) 0.0;
+            float fMaxStrength = (float) 0.0;
             
-            for (k = 0; k < iNumShips; k ++)
+            for (unsigned int k = 0; k < iNumShips; k ++)
             {
-                iErrCode = t_pCache->ReadData(
-                    pstrEmpireShips[i], 
-                    piShipKey[k], 
-                    GameEmpireShips::CurrentPlanet, 
-                    &vTemp
-                    );
+                Variant vTemp;
+                iErrCode = t_pCache->ReadData(pstrEmpireShips[i], piShipKey[k], GameEmpireShips::CurrentPlanet, &vTemp);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (vTemp.GetInteger() != vFleetPlanet.GetInteger()) {
-                    
+                if (vTemp.GetInteger() != vFleetPlanet.GetInteger())
+                {
                     // Defect from fleet
-                    iErrCode = t_pCache->WriteData(
-                        pstrEmpireShips[i], 
-                        piShipKey[k], 
-                        GameEmpireShips::FleetKey, 
-                        (int)NO_KEY
-                        );
+                    iErrCode = t_pCache->WriteData(pstrEmpireShips[i], piShipKey[k], GameEmpireShips::FleetKey, (int)NO_KEY);
                     RETURN_ON_ERROR(iErrCode);
-
-                } else {
-
+                }
+                else
+                {
                     // Keep in fleet
-                    iErrCode = t_pCache->WriteData(
-                        pstrEmpireShips[i], 
-                        piShipKey[k], 
-                        GameEmpireShips::Action, 
-                        FLEET
-                        );
+                    iErrCode = t_pCache->WriteData(pstrEmpireShips[i], piShipKey[k], GameEmpireShips::Action, FLEET);
                     RETURN_ON_ERROR(iErrCode);
                     
                     // Strength counts
@@ -4952,29 +4902,14 @@ int GameEngine::UpdateFleetOrders (unsigned int iNumEmpires, unsigned int* piEmp
             }
 
             // Write new fleet strengths
-            iErrCode = t_pCache->WriteData(
-                pstrEmpireFleets[i], 
-                iFleetKey, 
-                GameEmpireFleets::MaxStrength, 
-                fMaxStrength
-                );
+            iErrCode = t_pCache->WriteData(pstrEmpireFleets[i], iFleetKey, GameEmpireFleets::MaxStrength, fMaxStrength);
             RETURN_ON_ERROR(iErrCode);
             
-            iErrCode = t_pCache->WriteData(
-                pstrEmpireFleets[i], 
-                iFleetKey, 
-                GameEmpireFleets::CurrentStrength, 
-                fStrength
-                );
+            iErrCode = t_pCache->WriteData(pstrEmpireFleets[i], iFleetKey, GameEmpireFleets::CurrentStrength, fStrength);
             RETURN_ON_ERROR(iErrCode);
             
             // Write standby as the new default action for the fleet
-            iErrCode = t_pCache->WriteData(
-                pstrEmpireFleets[i], 
-                iFleetKey, 
-                GameEmpireFleets::Action, 
-                STAND_BY
-                );
+            iErrCode = t_pCache->WriteData(pstrEmpireFleets[i], iFleetKey, GameEmpireFleets::Action, STAND_BY);
             RETURN_ON_ERROR(iErrCode);
         }
 

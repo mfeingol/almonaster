@@ -91,6 +91,12 @@ public:
     unsigned int GetNumElements() {
         return m_iNumElts;
     }
+
+    T& operator[](const unsigned int iIndex)
+    {
+        Assert(iIndex < m_iNumElts);
+        return m_pData[iIndex];
+    }
     
 private:
     

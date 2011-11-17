@@ -1390,26 +1390,25 @@ int GameEngine::HasEmpireVisitedPlanet (int iGameClass, int iGameNumber, int iEm
 //
 // Output:
 // **ppvPlanetData -> Planet data
-// **ppiShipOwnerData -> Data about the ships on a given planet.
+// **pvecShipOwnerData -> Data about the ships on a given planet.
 //  [0] -> Number of owners
 //  [1] -> Key of first owner
 //  [2] -> Number of ships owner has
 //  [3] -> Number of ship types owner has
 //  [4] -> First type key
 //  [5] -> Number of ships of first type
-//  repeat 4-5
-//  repeat 1-5
+//  repeat 4-5 as needed
+//  repeat 1-5 as needed
 //
 // Returns data about a given visited planet
 
-int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
-                                        int iPlanetProxyKey, unsigned int iTotalNumShips, bool bVisibleBuilds, 
-                                        bool bIndependence, unsigned int** ppiShipOwnerData)
+int GameEngine::GetPlanetShipOwnerData(int iGameClass, int iGameNumber, int iEmpireKey, int iPlanetKey, 
+                                       int iPlanetProxyKey, unsigned int iTotalNumShips, bool bVisibleBuilds, 
+                                       bool bIndependence, Vector<unsigned int>& vecShipOwnerData)
 {
     int iErrCode;
     Assert(iTotalNumShips > 0);
-
-    *ppiShipOwnerData = NULL;
+    Assert(vecShipOwnerData.GetNumElements() == 0);
 
     // Get number of empires
     GET_GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
@@ -1430,14 +1429,7 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
     AutoRelease<ICachedTable> rel1(pShips);
     AutoRelease<ICachedTable> rel2(pMap);
 
-    unsigned int iSlotsAllocated = 1 + min(iNumEmpires + (bIndependence ? 1 : 0), iTotalNumShips) * (3 + 2 * min(NUM_SHIP_TYPES, iTotalNumShips));
-
-    unsigned int* piShipOwnerData = new unsigned int[iSlotsAllocated];
-    Assert(piShipOwnerData);
-    Algorithm::AutoDelete<unsigned int> free_piShipOwnerData(piShipOwnerData, true);
-
-    piShipOwnerData[0] = 0;
-    unsigned int iCounter = 1;
+    vecShipOwnerData.Add(0);
 
     // Scan through all players' ship lists
     for (i = 0; i <= iNumEmpires; i ++)
@@ -1573,52 +1565,37 @@ int GameEngine::GetPlanetShipOwnerData (int iGameClass, int iGameNumber, int iEm
                 
                 }   // End ships on planet loop
 
-                if (iNumDisplayShips > 0) {
-
+                if (iNumDisplayShips > 0)
+                {
                     // Increment number of owners
-                    piShipOwnerData[0] ++;
+                    vecShipOwnerData[0] ++;
 
                     // Write owner's key
-                    Assert(iCounter < iSlotsAllocated);
-                    piShipOwnerData[iCounter] = (i == iNumEmpires) ? INDEPENDENT : pvKey[i].GetInteger();
-                    iCounter ++;
+                    vecShipOwnerData.Add((i == iNumEmpires) ? INDEPENDENT : pvKey[i].GetInteger());
 
                     // Write number of ships owner has
-                    Assert(iCounter < iSlotsAllocated);
-                    piShipOwnerData[iCounter] = iNumDisplayShips;
-                    iCounter ++;
+                    vecShipOwnerData.Add(iNumDisplayShips);
 
                     // Start off type count at zero
-                    unsigned int iTypeCountIndex = iCounter;
-
-                    Assert(iCounter < iSlotsAllocated);
-                    piShipOwnerData[iCounter] = 0;
-                    iCounter ++;
+                    unsigned int iTypeCountIndex = vecShipOwnerData.GetNumElements();
+                    vecShipOwnerData.Add(0);
 
                     ENUMERATE_SHIP_TYPES (iType)
                     {
                         if (piIndex[iType] > 0)
                         {
                             // Increment type count
-                            piShipOwnerData[iTypeCountIndex] ++;
+                            vecShipOwnerData[iTypeCountIndex] ++;
 
                             // Add type and count
-                            Assert(iCounter < iSlotsAllocated);
-                            piShipOwnerData[iCounter] = iType;
-                            iCounter ++;
-
-                            Assert(iCounter < iSlotsAllocated);
-                            piShipOwnerData[iCounter] = piIndex[iType];
-                            iCounter ++;
+                            vecShipOwnerData.Add(iType);
+                            vecShipOwnerData.Add(piIndex[iType]);
                         }
                     }
                 }
             }   // End if ships on planet
         }   // End if empire has ships
     }   // End for each empire
-
-    *ppiShipOwnerData = piShipOwnerData;
-    piShipOwnerData = NULL;
 
     return iErrCode;
 }

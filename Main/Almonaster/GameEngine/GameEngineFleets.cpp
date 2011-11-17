@@ -105,11 +105,19 @@ int GameEngine::SetFleetFlag (int iGameClass, int iGameNumber, int iEmpireKey, i
     if (bFlag)
     {
         iErrCode = t_pCache->WriteOr(strGameEmpireFleets, iFleetKey, GameEmpireFleets::Flags, iFlag);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        {
+            return ERROR_FLEET_DOES_NOT_EXIST;
+        }
         RETURN_ON_ERROR(iErrCode);
     }
     else
     {
         iErrCode = t_pCache->WriteAnd(strGameEmpireFleets, iFleetKey, GameEmpireFleets::Flags, ~iFlag);
+        if (iErrCode == ERROR_UNKNOWN_ROW_KEY)
+        {
+            return ERROR_FLEET_DOES_NOT_EXIST;
+        }
         RETURN_ON_ERROR(iErrCode);
     }
 
@@ -1068,9 +1076,9 @@ int GameEngine::UpdateFleetName(int iGameClass, int iGameNumber, int iEmpireKey,
 //
 // Updates the fleet's orders
 
-int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
-                                   unsigned int iFleetKey, const FleetOrder& foOrder) {
-
+int GameEngine::UpdateFleetOrders(unsigned int iGameClass, int iGameNumber, unsigned int iEmpireKey, 
+                                  unsigned int iFleetKey, const FleetOrder& foOrder)
+{
     int iErrCode;
     unsigned int i, iPlanetProxyKey, * piShipKey = NULL, iNumShips;
     AutoFreeKeys free(piShipKey);
@@ -1094,7 +1102,7 @@ int GameEngine::UpdateFleetOrders (unsigned int iGameClass, int iGameNumber, uns
 
     if (iOrderKey == vOldAction.GetInteger())
     {
-        return ERROR_SAME_FLEET_ORDER;
+        return OK;
     }
 
     switch (fotType) {

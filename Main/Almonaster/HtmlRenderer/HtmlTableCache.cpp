@@ -145,6 +145,9 @@ void HtmlRenderer::RegisterCache_TopLists(Vector<TableCacheEntry>& cache)
 
 void HtmlRenderer::RegisterCache_ProfileViewer(Vector<TableCacheEntry>& cache)
 {
+    // Needed to render personal game lists
+    Cache(cache, systemActiveGames);
+
     // Needed because when you enter a game, the system needs to know if you're in any games, and if so, whether you're idle
     Assert(m_iEmpireKey != NO_KEY);
 
@@ -359,8 +362,18 @@ void HtmlRenderer::RegisterCache_Options(Vector<TableCacheEntry>& cache)
     Cache(cache, gameMap);
 
     // Ratios line
-    const TableCacheEntry gameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols}, NULL, NULL, NULL };
-    Cache(cache, gameEmpireDiplomacy);
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
+}
+
+int HtmlRenderer::AfterCache_Options()
+{
+    int iErrCode;
+
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_Build(Vector<TableCacheEntry>& cache)
@@ -454,6 +467,22 @@ void HtmlRenderer::RegisterCache_Quit(Vector<TableCacheEntry>& cache)
     // When you resign, interesting things happen to your stuff
     const TableCacheEntry gameEmpireShips = { { GAME_EMPIRE_SHIPS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
     Cache(cache, gameEmpireShips);
+
+    const TableCacheEntry gameEmpireFleets = { { GAME_EMPIRE_FLEETS, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
+    Cache(cache, gameEmpireFleets);
+
+    const TableCacheEntry allGameEmpireMaps = { { GAME_EMPIRE_MAP, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireMap::EmpireKey, NULL };
+    Cache(cache, allGameEmpireMaps);
+}
+
+int HtmlRenderer::AfterCache_Quit()
+{
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, m_iEmpireKey, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_SHIPS | EMPTY_GAME_EMPIRE_FLEETS | EMPTY_GAME_EMPIRE_MAP);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_LatestNukes(Vector<TableCacheEntry>& cache)
@@ -617,11 +646,6 @@ int HtmlRenderer::AfterCache_SystemNews()
     return OK;
 }
 
-int HtmlRenderer::AfterCache_Options()
-{
-    return OK;
-}
-
 int HtmlRenderer::AfterCache_GameServerRules()
 {
     return OK;
@@ -638,11 +662,6 @@ int HtmlRenderer::AfterCache_GameNews()
 }
 
 int HtmlRenderer::AfterCache_GameProfileViewer()
-{
-    return OK;
-}
-
-int HtmlRenderer::AfterCache_Quit()
 {
     return OK;
 }

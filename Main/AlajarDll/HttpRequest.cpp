@@ -2,7 +2,7 @@
 //
 //////////////////////////////////////////////////////////////////////
 //
-// HttpObjects.dll:  a component of Alajar 1.0
+// Alajar.dll:  a component of Alajar 1.0
 // Copyright (c) 1998 Max Attar Feingold (maf6@cornell.edu)
 //
 // This program is free software; you can redistribute it and/or
