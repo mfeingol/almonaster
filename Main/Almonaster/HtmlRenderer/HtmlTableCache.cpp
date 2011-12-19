@@ -457,6 +457,19 @@ void HtmlRenderer::RegisterCache_GameProfileViewer(Vector<TableCacheEntry>& cach
 {
     const TableCacheEntry systemEmpireAssociationsN = { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &m_systemEmpireCol }, NULL, NULL, NULL };
     Cache(cache, systemEmpireAssociationsN);
+
+    const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+    Cache(cache, allGameEmpireDiplomacy);
+}
+
+int HtmlRenderer::AfterCache_GameProfileViewer()
+{
+    int iErrCode;
+  
+    iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
 }
 
 void HtmlRenderer::RegisterCache_Quit(Vector<TableCacheEntry>& cache)
@@ -657,11 +670,6 @@ int HtmlRenderer::AfterCache_GameFAQ()
 }
 
 int HtmlRenderer::AfterCache_GameNews()
-{
-    return OK;
-}
-
-int HtmlRenderer::AfterCache_GameProfileViewer()
 {
     return OK;
 }

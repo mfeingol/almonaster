@@ -149,11 +149,18 @@ int GameEngine::CacheEmpireForDeletion(unsigned int iEmpireKey)
 {
     const ColumnEntry systemEmpireActiveGamesCol = { SystemEmpireActiveGames::EmpireKey, iEmpireKey };
     const ColumnEntry systemEmpireNukeListCol = { SystemEmpireNukeList::EmpireKey, iEmpireKey };
+    const ColumnEntry systemEmpireAssoc = { SystemEmpireAssociations::EmpireKey, iEmpireKey };
+    const ColumnEntry systemEmpireMessagesCol = { SystemEmpireMessages::EmpireKey, iEmpireKey };
+    const ColumnEntry systemEmpireTournamentsCol = { SystemEmpireTournaments::EmpireKey, iEmpireKey };
+
     const TableCacheEntry systemEmpireEntries[] =
     {
         { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemEmpireActiveGamesCol }, NULL, NULL, NULL },
         { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
         { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_ASSOCIATIONS, NO_KEY, 1, &systemEmpireAssoc }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_MESSAGES, NO_KEY, 1, &systemEmpireMessagesCol }, NULL, NULL, NULL },
+        { { SYSTEM_EMPIRE_TOURNAMENTS, NO_KEY, 1, &systemEmpireTournamentsCol }, NULL, NULL, NULL },
     };
 
     return t_pCache->Cache(systemEmpireEntries, countof(systemEmpireEntries));

@@ -4233,14 +4233,15 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
                 RETURN_ON_ERROR(iErrCode);
                     
                 OutputText ("</td><td align=\"center\">");
-                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
+                m_pHttpResponse->WriteText(ppvData[i][SystemEmpireNukeList::iGameClassName].GetCharPtr());
                 OutputText (" ");
-                m_pHttpResponse->WriteText (ppvData[i][SystemEmpireNukeList::iGameNumber].GetInteger());
+                m_pHttpResponse->WriteText(ppvData[i][SystemEmpireNukeList::iGameNumber].GetInteger());
                 OutputText ("</td><td align=\"center\">");
                     
                 iErrCode = Time::GetDateString(ppvData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64(), pszDateString);
                 Assert(iErrCode == OK);
-                    
+
+                m_pHttpResponse->WriteText(pszDateString);
                 OutputText ("</td></tr>");
             }
                 
@@ -4300,7 +4301,8 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
                     
                 iErrCode = Time::GetDateString(ppvData[i][SystemEmpireNukeList::iTimeStamp].GetInteger64(), pszDateString);
                 Assert(iErrCode == OK);
-                    
+
+                m_pHttpResponse->WriteText(pszDateString);
                 OutputText ("</td></tr>");
             }
                 
@@ -6146,7 +6148,7 @@ int HtmlRenderer::HandleIconSelection(unsigned int* piAlienKey, const char* pszU
         if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith("Alien")) == NULL ||
             (pszStart = pHttpForm->GetName()) == NULL || sscanf (pszStart, "Alien%d", piAlienKey) != 1)
         {
-            return ERROR_MISSING_FORM;
+            return OK;
         }
     }
 

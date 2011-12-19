@@ -576,7 +576,6 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
         memcpy (pszKeyName + 1, pszExtension, stExtLen);
         
         char pszRegInfo [MAX_MIME_TYPE_LENGTH];
-        DWORD dwTypeLen = 0;
         HKEY hKey = NULL;
 
         LONG lErrCode = ::RegOpenKeyEx (
@@ -587,8 +586,9 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
             &hKey
             );
 
-        if (lErrCode == ERROR_SUCCESS) {
-
+        if (lErrCode == ERROR_SUCCESS)
+        {
+            DWORD dwTypeLen = countof(pszRegInfo)-1;
             lErrCode = ::RegQueryValueEx (
                 hKey, 
                 "Content Type", 
@@ -598,12 +598,13 @@ int File::GetFileMimeType (const char* pszFileName, char pszMimeType [OS::MaxMim
                 &dwTypeLen
                 );
 
+            pszRegInfo[MAX_MIME_TYPE_LENGTH-1] = '\0';
             ::RegCloseKey (hKey);
         }
         
-        // If not found in the registry, default to plaintext
+        // If not found in the registry, default to binary
         if (lErrCode != ERROR_SUCCESS) {
-            pszFinalMimeType = "text/plain";
+            pszFinalMimeType = "application/octet-stream";
         } else {
             pszFinalMimeType = (char*) pszRegInfo;
         }

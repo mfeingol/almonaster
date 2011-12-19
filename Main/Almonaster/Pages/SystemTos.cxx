@@ -48,31 +48,40 @@ if (m_bOwnPost && !m_bRedirection) {
 
             AddMessage ("You accepted the Terms of Service");
 
-	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
-	        sprintf(pszText, "%s accepted the Terms of Service", m_vEmpireName.GetCharPtr());
+	          char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
+	          sprintf(pszText, "%s accepted the Terms of Service", m_vEmpireName.GetCharPtr());
             global.WriteReport(TRACE_INFO, pszText);
 
             return Redirect (ACTIVE_GAME_LIST);
         }
 
-        if (WasButtonPressed (BID_TOS_DECLINE)) {
+        if (WasButtonPressed (BID_TOS_DECLINE))
+        {
             iTosPage = 1;
             m_bRedirectTest = false;
-
-	        char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
-	        sprintf(pszText, "%s declined the Terms of Service", m_vEmpireName.GetCharPtr());
-            global.WriteReport(TRACE_WARNING, pszText);
         }
         break;
 
     case 1:
 
         if (WasButtonPressed (BID_TOS_DECLINE)) {
-            
-            iErrCode = DeleteEmpire(m_iEmpireKey, NULL, true, false);
-            RETURN_ON_ERROR(iErrCode);
-            return Redirect (LOGIN);
-        }
+
+              iErrCode = CacheEmpireForDeletion(m_iEmpireKey);
+	            RETURN_ON_ERROR(iErrCode);
+	            
+	            iErrCode = DeleteEmpire(m_iEmpireKey, NULL, true, false);
+	            RETURN_ON_ERROR(iErrCode);
+
+              char pszText [MAX_EMPIRE_NAME_LENGTH + 128];
+	            sprintf(pszText, "%s declined the Terms of Service and was deleted", m_vEmpireName.GetCharPtr());
+              global.WriteReport(TRACE_WARNING, pszText);
+
+              AddMessage("The ");
+              AppendMessage(m_vEmpireName.GetCharPtr());
+              AppendMessage(" empire was deleted from the server");
+
+	            return Redirect (LOGIN);
+	        }
 
         break;
 

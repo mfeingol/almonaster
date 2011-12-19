@@ -97,7 +97,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
 {
     unsigned int i, iKey = NO_KEY;
 
-    int64 i64SecretKey = 0;
+    int64 iParent64SecretKey = 0;
 
     int iOptions = 0, iAlmonasterScoreSignificance, iErrCode;
     float fScore;
@@ -142,7 +142,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     }
     else
     {
-        iErrCode = CacheEmpire(iParentKey);
+        iErrCode = CacheEmpireForDeletion(iParentKey);
         RETURN_ON_ERROR(iErrCode);
 
         // Read parent empire's secret key
@@ -152,7 +152,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
             return ERROR_EMPIRE_DOES_NOT_EXIST;
         RETURN_ON_ERROR(iErrCode);
         
-        i64SecretKey = vTemp.GetInteger64();
+        iParent64SecretKey = vTemp.GetInteger64();
 
         // Make sure we can delete the parent empire
         unsigned int iNumGames;
@@ -222,7 +222,7 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     iOptions |= DISPLAY_FATAL_UPDATE_MESSAGES;
 
     // Generate a random secret key for the empire
-    i64SecretKey = 0;
+    int64 i64SecretKey = 0;
     iErrCode = Crypto::GetRandomData(&i64SecretKey, sizeof(i64SecretKey));
     RETURN_ON_ERROR(iErrCode);
 
@@ -342,6 +342,25 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
         return ERROR_EMPIRE_ALREADY_EXISTS;
     }
 
+    // Delete parent empire
+    if (iParentKey != NO_KEY)
+    {
+        iErrCode = DeleteEmpire(iParentKey, &iParent64SecretKey, false, false);
+        switch (iErrCode)
+        {
+        case ERROR_EMPIRE_DOES_NOT_EXIST:
+            return iErrCode;
+        case ERROR_EMPIRE_IS_IN_GAMES:
+            return iErrCode;
+        default:
+            RETURN_ON_ERROR(iErrCode);
+        }
+    }
+
+    //
+    // No soft errors beyond this point!
+    //
+
     // Insert row into SystemEmpireData
     iErrCode = pNewEmpire->InsertRow(SystemEmpireData::Template, pvColVal, &iKey);
     RETURN_ON_ERROR(iErrCode);
@@ -349,13 +368,6 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     // Populate the cache with the row we just inserted
     iErrCode = CacheEmpire(iKey);
     RETURN_ON_ERROR(iErrCode);
-
-    // Delete parent empire
-    if (iParentKey != NO_KEY)
-    {
-        iErrCode = DeleteEmpire (iParentKey, &i64SecretKey, false, false);
-        RETURN_ON_ERROR(iErrCode);
-    }
 
     // Notification
     global.GetEventSink()->OnCreateEmpire (iKey);

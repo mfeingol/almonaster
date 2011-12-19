@@ -1349,17 +1349,19 @@ int HttpResponse::Send() {
     }
 
     // Connection
-    // TODO - blocks reusing connections for HTTP 1.1
-    m_bConnectionClosed = true || !m_pHttpRequest->GetKeepAlive();
-    if (m_bConnectionClosed && m_iResponseHttpVersion >= HTTP11) {
+    m_bConnectionClosed = !m_pHttpRequest->GetKeepAlive();
+    if (!m_bConnectionClosed)
+    {
+        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
+    }
+    else if (m_iResponseHttpVersion >= HTTP11)
+    {
         strcat (pszBuffer, "\r\nConnection: close");
     }
-    /*else {
-        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
-    }*/
 
     // Send custom headers
-    if (m_pszCustomHeaders != NULL) {
+    if (m_pszCustomHeaders != NULL)
+    {
         strcat (pszBuffer, m_pszCustomHeaders);
     }
 
