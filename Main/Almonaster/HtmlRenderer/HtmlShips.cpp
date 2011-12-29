@@ -1028,6 +1028,11 @@ int HtmlRenderer::HandleShipMenuSubmissions()
                         iErrCode = OK;
                         AddMessage("The fleet cannot be set to nuke");
                     }
+                    else if (iErrCode == ERROR_WRONG_NUMBER_OF_SHIPS)
+                    {
+                        iErrCode = OK;
+                        AddMessage("There are no ships that can be picked up");
+                    }
                     RETURN_ON_ERROR(iErrCode);
                 }
             }
