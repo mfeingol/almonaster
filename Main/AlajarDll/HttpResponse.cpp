@@ -1348,8 +1348,8 @@ int HttpResponse::Send() {
         strcat (pszBuffer, "\r\nAccept-Ranges: none");
     }
 
-    // Connection
-    m_bConnectionClosed = !m_pHttpRequest->GetKeepAlive();
+    // Connection - TODO - blocks HTTP 1.1 keep-alives
+    m_bConnectionClosed = true; //!m_pHttpRequest->GetKeepAlive();
     if (!m_bConnectionClosed)
     {
         strcat (pszBuffer, "\r\nConnection: Keep-Alive");
