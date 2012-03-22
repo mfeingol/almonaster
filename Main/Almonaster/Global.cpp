@@ -360,9 +360,11 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
         }
     }
 
-    Assert(iErrCode != OK);
-    TRACE_ERROR(iErrCode);
-    pReport->Write(TRACE_ERROR, "Timed out initializing database after 10 retries");
+    if (iErrCode != OK && iErrCode != WARNING)
+    {
+        TRACE_ERROR(iErrCode);
+        pReport->Write(TRACE_ERROR, "Timed out initializing database after 10 retries");
+    }
     return iErrCode;
 }
 
