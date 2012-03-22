@@ -96,7 +96,15 @@ if (m_bOwnPost && !m_bRedirection) {
                     String strFilter;
                     HTMLFilter(pszMessage, &strFilter, MAX_NUM_SPACELESS_CHARS, false);
                     iErrCode = pChatroom->PostMessage(m_vEmpireName.GetCharPtr(), strFilter, 0);
-                    RETURN_ON_ERROR(iErrCode);
+                    if (iErrCode == WARNING)
+                    {
+                        AddMessage("Your message was shortened so it would fit");
+                        iErrCode = OK;
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+                    }
                 }
 
             } else {

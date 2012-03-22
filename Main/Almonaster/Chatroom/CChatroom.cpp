@@ -173,7 +173,7 @@ int Chatroom::PostMessageWithTime(const char* pszSpeakerName, const char* pszMes
     {
         // Truncate message
         char* pszSubMessage = (char*)StackAlloc(m_ccConf.iMaxMessageLength * sizeof(char) + sizeof(char));
-        strcpy(pszSubMessage, pszMessage);
+        String::StrnCpy(pszSubMessage, pszMessage, m_ccConf.iMaxMessageLength);
         pszMessage = pszSubMessage;
         bTruncated = true;
     }

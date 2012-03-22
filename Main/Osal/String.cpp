@@ -637,6 +637,7 @@ char* String::StrnCpy (char* pszDest, const char* pszSrc, size_t stLen) {
             *pszDest = '\0';
         } else {
             strncpy (pszDest, pszSrc, stLen);
+            pszDest[stLen-1] = '\0';
         }
     }
 
