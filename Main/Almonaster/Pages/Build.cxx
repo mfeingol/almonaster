@@ -337,7 +337,7 @@ if (!bMapGenerated)
     goto Close;
 }
 
-if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS)
+if (ShouldDisplayGameRatios())
 {
     RatioInformation ratInfo;
     iErrCode = WriteRatiosString(&ratInfo);

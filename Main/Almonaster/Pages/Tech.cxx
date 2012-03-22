@@ -79,7 +79,7 @@ if (!(m_iGameState & STARTED)) {
     %><p>You cannot develop new technologies before the game begins<%
 } else {
 
-    if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS)
+    if (ShouldDisplayGameRatios())
     {
         iErrCode = WriteRatiosString(NULL);
         RETURN_ON_ERROR(iErrCode);

@@ -188,7 +188,7 @@ int iLivePlanetAddress, iDeadPlanetAddress;
 iErrCode = GetEmpirePlanetIcons(m_iEmpireKey, &iLivePlanetKey, &iLivePlanetAddress, &iDeadPlanetKey, &iDeadPlanetAddress);
 RETURN_ON_ERROR(iErrCode);
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+if (bGameStarted && ShouldDisplayGameRatios())
 {
     iErrCode = WriteRatiosString(NULL);
     RETURN_ON_ERROR(iErrCode);

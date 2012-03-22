@@ -189,6 +189,25 @@ bool HtmlRenderer::IsGamePage (PageId pageId) {
     return (pageId >= INFO && pageId <= QUIT);
 }
 
+bool HtmlRenderer::ShouldDisplayGameRatios()
+{
+    switch (g_pageGameRatioSetting[m_pgPageId])
+    {
+    case RATIOS_DISPLAY_NEVER:
+        // If the page says 'never', we never display ratios
+        return false;
+    case RATIOS_DISPLAY_ON_RELEVANT_SCREENS:
+        // If the page says 'relevant', we display if the user selected relevant or always
+        return m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS;
+    case RATIOS_DISPLAY_ALWAYS:
+        // If the page says 'always', we display if the user selected always
+        return m_iGameRatios >= RATIOS_DISPLAY_ALWAYS;
+    default:
+        Assert(false);
+        return false;
+    }
+}
+
 bool HtmlRenderer::StandardizeEmpireName (const char* pszName, char pszFinalName[MAX_EMPIRE_NAME_LENGTH + 1])
 {
     char pszCopy [MAX_EMPIRE_NAME_LENGTH + 1];

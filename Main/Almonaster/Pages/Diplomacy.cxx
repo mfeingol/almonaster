@@ -458,7 +458,7 @@ iErrCode = OpenGamePage();
 RETURN_ON_ERROR(iErrCode);
 
 // Individual page stuff starts here
-if (m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+if (bGameStarted && ShouldDisplayGameRatios())
 {
     iErrCode = WriteRatiosString (NULL);
     RETURN_ON_ERROR(iErrCode);

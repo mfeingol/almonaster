@@ -77,6 +77,54 @@ enum PageId
     MAX_PAGE_ID = 43,
 };
 
+static GameRatioSetting g_pageGameRatioSetting[] = 
+{
+    RATIOS_DISPLAY_NEVER, //MIN_PAGE_ID = 0,
+    RATIOS_DISPLAY_NEVER, //ACTIVE_GAME_LIST = 1,
+    RATIOS_DISPLAY_NEVER, //LOGIN = 2,
+    RATIOS_DISPLAY_NEVER, //NEW_EMPIRE = 3,
+    RATIOS_DISPLAY_NEVER, //OPEN_GAME_LIST = 4,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_GAME_LIST = 5,
+    RATIOS_DISPLAY_NEVER, //PROFILE_EDITOR = 6,
+    RATIOS_DISPLAY_NEVER, //TOP_LISTS = 7,
+    RATIOS_DISPLAY_NEVER, //PROFILE_VIEWER = 8,
+    RATIOS_DISPLAY_NEVER, //SERVER_ADMINISTRATOR = 9,
+    RATIOS_DISPLAY_NEVER, //EMPIRE_ADMINISTRATOR = 10,
+    RATIOS_DISPLAY_NEVER, //GAME_ADMINISTRATOR = 11,
+    RATIOS_DISPLAY_NEVER, //THEME_ADMINISTRATOR = 12,
+    RATIOS_DISPLAY_NEVER, //PERSONAL_GAME_CLASSES = 13,
+    RATIOS_DISPLAY_NEVER, //CHATROOM = 14,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_SERVER_INFORMATION = 15,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_DOCUMENTATION = 16,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_NEWS = 17,
+    RATIOS_DISPLAY_ALWAYS, //INFO = 18,
+    RATIOS_DISPLAY_ON_RELEVANT_SCREENS, //TECH = 19,
+    RATIOS_DISPLAY_ALWAYS, //DIPLOMACY = 20,
+    RATIOS_DISPLAY_ALWAYS, //MAP = 21,
+    RATIOS_DISPLAY_ALWAYS, //PLANETS = 22,
+    RATIOS_DISPLAY_ALWAYS, //OPTIONS = 23,
+    RATIOS_DISPLAY_ON_RELEVANT_SCREENS, //BUILD = 24,
+    RATIOS_DISPLAY_ON_RELEVANT_SCREENS, //SHIPS = 25,
+    RATIOS_DISPLAY_ALWAYS, //GAME_SERVER_INFORMATION = 26,
+    RATIOS_DISPLAY_ALWAYS, //GAME_DOCUMENTATION = 27,
+    RATIOS_DISPLAY_ALWAYS, //GAME_NEWS = 28,
+    RATIOS_DISPLAY_ALWAYS, //GAME_PROFILE_VIEWER = 29,
+    RATIOS_DISPLAY_ALWAYS, //GAME_CONTRIBUTIONS = 30,
+    RATIOS_DISPLAY_ALWAYS, //GAME_CREDITS = 31,
+    RATIOS_DISPLAY_ALWAYS, //GAME_TERMS_OF_SERVICE = 32,
+    RATIOS_DISPLAY_ALWAYS, //QUIT = 33,
+    RATIOS_DISPLAY_NEVER, //LATEST_NUKES = 34,
+    RATIOS_DISPLAY_NEVER, //SPECTATOR_GAMES = 35,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_CONTRIBUTIONS = 36,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_CREDITS = 37,
+    RATIOS_DISPLAY_NEVER, //LATEST_GAMES = 38,
+    RATIOS_DISPLAY_NEVER, //TOURNAMENT_ADMINISTRATOR = 39,
+    RATIOS_DISPLAY_NEVER, //PERSONAL_TOURNAMENTS = 40,
+    RATIOS_DISPLAY_NEVER, //TOURNAMENTS = 41,
+    RATIOS_DISPLAY_NEVER, //SYSTEM_TERMS_OF_SERVICE = 42,
+    RATIOS_DISPLAY_NEVER, //MAX_PAGE_ID = 43,
+};
+
 #define OutputText(string) m_pHttpResponse->WriteText (string, sizeof(string) - 1);
 
 struct PartialMapInfo {
@@ -486,6 +534,7 @@ public:
     void GatherCacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache);
     void GatherCacheTablesForSystemPage(Vector<TableCacheEntry>& cache);
     void GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache);
+    int AfterCacheTablesForGamePage();
 
     int Render();
     int Redirect(PageId pageId);
@@ -496,6 +545,7 @@ public:
     void RestartAlmonaster();
 
     bool IsGamePage(PageId pageId);
+    bool ShouldDisplayGameRatios();
 
     static int OnCreateEmpire (int iEmpireKey);
     static int OnDeleteEmpire (int iEmpireKey);
@@ -1000,6 +1050,9 @@ public:
     int AfterCache_Tournaments();
     int AfterCache_GameTos();
     int AfterCache_SystemTos();
+
+    void RegisterCacheRatioTablesIfNecessary(Vector<TableCacheEntry>& cache);
+    int AfterCacheRatioTablesIfNecessary();
 };
 
 #define DEFAULT_MESSAGE_FONT_SIZE           "-1"

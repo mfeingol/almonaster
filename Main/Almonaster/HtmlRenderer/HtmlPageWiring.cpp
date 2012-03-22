@@ -861,6 +861,12 @@ int HtmlRenderer::CacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache)
     int iErrCode = t_pCache->Cache(cache.GetData(), cache.GetNumElements());
     RETURN_ON_ERROR(iErrCode);
 
+    if (IsGamePage(pgPageId))
+    {
+        iErrCode = AfterCacheTablesForGamePage();
+        RETURN_ON_ERROR(iErrCode);
+    }
+
     iErrCode = g_pfxnAfterCachePage[pgPageId](this);
     RETURN_ON_ERROR(iErrCode);
 

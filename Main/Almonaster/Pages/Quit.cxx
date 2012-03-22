@@ -219,6 +219,13 @@ if (m_bRedirectTest)
 iErrCode = OpenGamePage();
 RETURN_ON_ERROR(iErrCode);
 
+bool bGameStarted = (m_iGameState & STARTED) != 0;
+if (bGameStarted && ShouldDisplayGameRatios())
+{
+    iErrCode = WriteRatiosString(NULL);
+    RETURN_ON_ERROR(iErrCode);
+}
+
 // Individual page starts here
 
 // Determine state

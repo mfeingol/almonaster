@@ -91,8 +91,8 @@ if (!bMapGenerated) {
     int iBR;
     float fMaintRatio, fNextMaintRatio;
 
-    if (m_iGameRatios >= RATIOS_DISPLAY_ON_RELEVANT_SCREENS) {
-
+    if (ShouldDisplayGameRatios())
+    {
         RatioInformation ratInfo;
         iErrCode = WriteRatiosString (&ratInfo);
         RETURN_ON_ERROR(iErrCode);
@@ -100,9 +100,9 @@ if (!bMapGenerated) {
         iBR = ratInfo.iBR;
         fMaintRatio = ratInfo.fMaintRatio;
         fNextMaintRatio = ratInfo.fNextMaintRatio;
-
-    } else {
-
+    }
+    else
+    {
         iErrCode = GetEmpireBR (m_iGameClass, m_iGameNumber, m_iEmpireKey, &iBR);
         RETURN_ON_ERROR(iErrCode);
 

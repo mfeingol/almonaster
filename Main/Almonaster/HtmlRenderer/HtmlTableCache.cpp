@@ -97,6 +97,13 @@ void HtmlRenderer::GatherCacheTablesForGamePage(Vector<TableCacheEntry>& cache)
         const TableCacheEntry gameEmpireMessages = { { GAME_EMPIRE_MESSAGES, NO_KEY, countof(m_gameEmpireCols), m_gameEmpireCols }, NULL, NULL, NULL };
         Cache(cache, gameEmpireMessages);
     }
+
+    RegisterCacheRatioTablesIfNecessary(cache);
+}
+
+int HtmlRenderer::AfterCacheTablesForGamePage()
+{
+    return AfterCacheRatioTablesIfNecessary();
 }
 
 void HtmlRenderer::RegisterCache_ActiveGameList(Vector<TableCacheEntry>& cache)
@@ -445,12 +452,45 @@ void HtmlRenderer::RegisterCache_GameServerRules(Vector<TableCacheEntry>& cache)
 {
 }
 
+int HtmlRenderer::AfterCache_GameServerRules()
+{
+    return OK;
+}
+
 void HtmlRenderer::RegisterCache_GameFAQ(Vector<TableCacheEntry>& cache)
 {
 }
 
+int HtmlRenderer::AfterCache_GameFAQ()
+{
+    return OK;
+}
+
 void HtmlRenderer::RegisterCache_GameNews(Vector<TableCacheEntry>& cache)
 {
+}
+
+int HtmlRenderer::AfterCache_GameNews()
+{
+    return OK;
+}
+
+void HtmlRenderer::RegisterCache_GameContributions(Vector<TableCacheEntry>& cache)
+{
+}
+
+int HtmlRenderer::AfterCache_GameContributions()
+{
+    return OK;
+}
+
+void HtmlRenderer::RegisterCache_GameCredits(Vector<TableCacheEntry>& cache)
+{
+}
+
+int HtmlRenderer::AfterCache_GameCredits()
+{
+    return OK;
 }
 
 void HtmlRenderer::RegisterCache_GameProfileViewer(Vector<TableCacheEntry>& cache)
@@ -506,14 +546,6 @@ void HtmlRenderer::RegisterCache_LatestNukes(Vector<TableCacheEntry>& cache)
 void HtmlRenderer::RegisterCache_SpectatorGames(Vector<TableCacheEntry>& cache)
 {
     Cache(cache, systemActiveGames);
-}
-
-void HtmlRenderer::RegisterCache_GameContributions(Vector<TableCacheEntry>& cache)
-{
-}
-
-void HtmlRenderer::RegisterCache_GameCredits(Vector<TableCacheEntry>& cache)
-{
 }
 
 void HtmlRenderer::RegisterCache_SystemContributions(Vector<TableCacheEntry>& cache)
@@ -659,37 +691,12 @@ int HtmlRenderer::AfterCache_SystemNews()
     return OK;
 }
 
-int HtmlRenderer::AfterCache_GameServerRules()
-{
-    return OK;
-}
-
-int HtmlRenderer::AfterCache_GameFAQ()
-{
-    return OK;
-}
-
-int HtmlRenderer::AfterCache_GameNews()
-{
-    return OK;
-}
-
 int HtmlRenderer::AfterCache_LatestNukes()
 {
     return OK;
 }
 
 int HtmlRenderer::AfterCache_SpectatorGames()
-{
-    return OK;
-}
-
-int HtmlRenderer::AfterCache_GameContributions()
-{
-    return OK;
-}
-
-int HtmlRenderer::AfterCache_GameCredits()
 {
     return OK;
 }
@@ -731,5 +738,27 @@ int HtmlRenderer::AfterCache_GameTos()
 
 int HtmlRenderer::AfterCache_SystemTos()
 {
+    return OK;
+}
+
+void HtmlRenderer::RegisterCacheRatioTablesIfNecessary(Vector<TableCacheEntry>& cache)
+{
+    if (ShouldDisplayGameRatios())
+    {
+        // Ratios line
+        const TableCacheEntry allGameEmpireDiplomacy = { { GAME_EMPIRE_DIPLOMACY, NO_KEY, countof(m_gameCols), m_gameCols }, NULL, GameEmpireDiplomacy::EmpireKey, NULL };
+        Cache(cache, allGameEmpireDiplomacy);
+    }
+}
+
+int HtmlRenderer::AfterCacheRatioTablesIfNecessary()
+{
+    if (ShouldDisplayGameRatios())
+    {
+        int iErrCode;
+
+        iErrCode = CreateEmptyGameCacheEntries(m_iGameClass, m_iGameNumber, NO_KEY, NO_KEY, NO_KEY, EMPTY_GAME_EMPIRE_DIPLOMACY);
+        RETURN_ON_ERROR(iErrCode);
+    }
     return OK;
 }

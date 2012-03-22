@@ -54,7 +54,7 @@ RETURN_ON_ERROR(iErrCode);
 // Individual page stuff starts here
 bool bGameStarted = (m_iGameState & STARTED) != 0;
 
-if (bGameStarted && m_iGameRatios >= RATIOS_DISPLAY_ALWAYS)
+if (bGameStarted && ShouldDisplayGameRatios())
 {
     iErrCode = WriteRatiosString(NULL);
     RETURN_ON_ERROR(iErrCode);
