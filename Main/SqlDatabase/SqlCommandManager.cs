@@ -546,8 +546,8 @@ namespace Almonaster.Database.Sql
                         {
                             case SearchType.RangeInclusive:
                                 string lessThanParam = "@p" + index++;
-                                cmd.Parameters.Add(new SqlParameter(lessThanParam, col.Field1));
-                                where.AppendFormat("[{0}] >= {1} AND [{0}] <= {2}", col.ColumnName, lessThanParam, param);
+                                cmd.Parameters.Add(new SqlParameter(lessThanParam, col.Field2));
+                                where.AppendFormat("[{0}] >= {1} AND [{0}] <= {2}", col.ColumnName, param, lessThanParam);
                                 break;
 
                             case SearchType.Equality:

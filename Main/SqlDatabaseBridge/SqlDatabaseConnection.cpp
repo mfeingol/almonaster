@@ -105,7 +105,8 @@ int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const SearchD
 
     for (unsigned int i = 0; i < sd.iNumColumns; i ++)
     {
-        searchCols[i].ColumnName = gcnew System::String(sd.pscColumns[i].pszColumn);
+        searchCols[i].ColumnName = sd.pscColumns[i].pszColumn != NULL ? gcnew System::String(sd.pscColumns[i].pszColumn) :
+                                                                        gcnew System::String(ID_COLUMN_NAME);
         searchCols[i].Field1 = Convert(sd.pscColumns[i].vData);
 
         switch(sd.pscColumns[i].iType)
