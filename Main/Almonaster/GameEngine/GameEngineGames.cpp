@@ -143,15 +143,13 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
 {
     int iErrCode;
 
-    Variant vEmpireKey, vName, vGameState, vNumGames, vGameOptions, vGameClassOptions, * pvEmpireKey = NULL, * pvEmpireName = NULL;
+    Variant vEmpireKey, vName, vGameState, vNumGames, vGameOptions, vGameClassOptions, * pvEmpireKey = NULL, * pvLoserEmpireName = NULL;
     AutoFreeData free1(pvEmpireKey);
-    AutoFreeData free2(pvEmpireName);
+    AutoFreeData free2(pvLoserEmpireName);
 
     GET_GAME_EMPIRES (strGameEmpires, iGameClass, iGameNumber);
     GET_GAME_NUKED_EMPIRES (strGameDeadEmpires, iGameClass, iGameNumber);
     GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
-
-    String strList;
 
     // Notification
     global.GetEventSink()->OnCleanupGame(iGameClass, iGameNumber);
@@ -181,40 +179,41 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
         iErrCode = OK;
     RETURN_ON_ERROR(iErrCode);
 
+    String strWinnerList;
     for (unsigned int i = 0; i < iNumEmpires; i ++)
     {
         GET_SYSTEM_EMPIRE_DATA(strEmpire, pvEmpireKey[i].GetInteger());
         iErrCode = t_pCache->ReadData(strEmpire, pvEmpireKey[i].GetInteger(), SystemEmpireData::Name, &vName);
         RETURN_ON_ERROR(iErrCode);
 
-        if (!strList.IsBlank())
+        if (!strWinnerList.IsBlank())
         {
-            strList += ", ";
+            strWinnerList += ", ";
         }
-        strList += vName.GetCharPtr();
+        strWinnerList += vName.GetCharPtr();
 
         iErrCode = DeleteEmpireFromGame(iGameClass, iGameNumber, pvEmpireKey[i].GetInteger(), EMPIRE_GAME_ENDED, NULL);
         RETURN_ON_ERROR(iErrCode);
     }
 
-    // Add the winner's name, if provided
+    // Add the additional winner's name, if provided
     if (pszWinnerName != NULL)
     {
-        if (!strList.IsBlank())
+        if (!strWinnerList.IsBlank())
         {
-            strList += ", ";
+            strWinnerList += ", ";
         }
-        strList += pszWinnerName;
+        strWinnerList += pszWinnerName;
     }
     
     // Report the game ending
-    char* pszMessage = (char*) StackAlloc (strList.GetLength() + 80 + MAX_FULL_GAME_CLASS_NAME_LENGTH);
+    char* pszMessage = (char*)StackAlloc(strWinnerList.GetLength() + 80 + MAX_FULL_GAME_CLASS_NAME_LENGTH);
     sprintf (
         pszMessage,
         "%s %i ended with the following empires still alive: %s",
         pszGameClass,
         iGameNumber,
-        strList.GetCharPtr() == NULL ? "" : strList.GetCharPtr()
+        strWinnerList.GetCharPtr() == NULL ? "" : strWinnerList.GetCharPtr()
         );
     global.WriteReport(TRACE_INFO, pszMessage);
 
@@ -232,11 +231,7 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
         pvLatestGame[SystemLatestGames::iResult] = (int) grResult;
         pvLatestGame[SystemLatestGames::iEnded] = tNow;
         pvLatestGame[SystemLatestGames::iTournamentKey] = iTournamentKey;
-        pvLatestGame[SystemLatestGames::iWinners] = strList.GetCharPtr();
-        if (strList.GetCharPtr())
-        {
-            Assert(pvLatestGame[SystemLatestGames::iWinners].GetCharPtr());
-        }
+        pvLatestGame[SystemLatestGames::iWinners] = strWinnerList.GetCharPtr() ? strWinnerList : "";
 
         // Created
         iErrCode = t_pCache->ReadData(strGameData, GameData::CreationTime, pvLatestGame + SystemLatestGames::iCreated);
@@ -247,27 +242,30 @@ int GameEngine::CleanupGame(int iGameClass, int iGameNumber, GameResult grResult
         RETURN_ON_ERROR(iErrCode);
 
         // Loser list
-        iErrCode = t_pCache->ReadColumn(strGameDeadEmpires, GameNukedEmpires::Name, NULL, &pvEmpireName, &iNumEmpires);
+        iErrCode = t_pCache->ReadColumn(strGameDeadEmpires, GameNukedEmpires::Name, NULL, &pvLoserEmpireName, &iNumEmpires);
         if (iErrCode == ERROR_DATA_NOT_FOUND)
         {
             iErrCode = OK;
+            pvLatestGame[SystemLatestGames::iLosers] = "";
         }
         else
         {
             RETURN_ON_ERROR(iErrCode);
 
+            String strLoserList;
             for (unsigned int i = 0; i < iNumEmpires; i ++)
             {
-                if (!strList.IsBlank())
+                if (!strLoserList.IsBlank())
                 {
-                    strList += ", ";
+                    strLoserList += ", ";
                 }
-                strList += pvEmpireName[i].GetCharPtr();
+                strLoserList += pvLoserEmpireName[i].GetCharPtr();
             }
-
-            pvLatestGame[SystemLatestGames::iLosers] = strList;
-            Assert(pvLatestGame[SystemLatestGames::iLosers].GetCharPtr());
+            pvLatestGame[SystemLatestGames::iLosers] = strLoserList;
         }
+
+        Assert(pvLatestGame[SystemLatestGames::iWinners].GetCharPtr());
+        Assert(pvLatestGame[SystemLatestGames::iLosers].GetCharPtr());
 
         iErrCode = AddToLatestGames(pvLatestGame);
         RETURN_ON_ERROR(iErrCode);
