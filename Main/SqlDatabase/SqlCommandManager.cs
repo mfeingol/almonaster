@@ -326,44 +326,10 @@ namespace Almonaster.Database.Sql
             // SET [Column1] = @p0, [Column2] = @p1
             // WHERE [Id] = @p2
 
-            StringBuilder cmdText = new StringBuilder();
-            int index = 0;
-            string param;
-
-            using (SqlCommand cmd = new SqlCommand())
+            foreach (SqlCommand cmd in ToCommands(tableWriteRequests, idColumnName))
             {
-                foreach (BulkTableWriteRequest writeReq in tableWriteRequests)
-                {
-                    foreach (KeyValuePair<long, IDictionary<string, object>> sparseRow in writeReq.Rows)
-                    {
-                        cmdText.AppendFormat("UPDATE [{0}] ", writeReq.TableName);
-
-                        bool first = true;
-                        foreach (KeyValuePair<string, object> value in sparseRow.Value)
-                        {
-                            param = "@p" + index++;
-                            if (first)
-                            {
-                                cmdText.AppendFormat("SET [{0}] = {1}", value.Key, param);
-                                first = false;
-                            }
-                            else
-                            {
-                                cmdText.AppendFormat(", [{0}] = {1}", value.Key, param);
-                            }
-                            cmd.Parameters.AddWithValue(param, value.Value);
-                        }
-
-                        param = "@p" + index++;
-                        cmdText.AppendFormat(" WHERE [{0}] = {1}; ", idColumnName, param);
-                        cmd.Parameters.AddWithValue(param, sparseRow.Key);
-                    }
-                }
-
-                cmd.CommandText = cmdText.ToString();
                 cmd.Connection = this.conn;
                 cmd.Transaction = this.tx;
-
                 try
                 {
                     cmd.ExecuteNonQuery();
@@ -373,6 +339,64 @@ namespace Almonaster.Database.Sql
                     throw new SqlDatabaseException(e);
                 }
             }
+        }
+
+        List<SqlCommand> ToCommands(IEnumerable<BulkTableWriteRequest> tableWriteRequests, string idColumnName)
+        {
+            // A limitation of SQL Server is that it only accepts commands with <= 2100 parameters.
+            const int MaxParams = 2000;
+            List<SqlCommand> commandList = new List<SqlCommand>();
+
+            SqlCommand command = new SqlCommand();
+            StringBuilder commandText = new StringBuilder();
+            int index = 0;
+            
+            foreach (BulkTableWriteRequest writeReq in tableWriteRequests)
+            {
+                int cParams = 1;
+                foreach (KeyValuePair<long, IDictionary<string, object>> sparseRow in writeReq.Rows)
+                {
+                    cParams += sparseRow.Value.Count;
+                }
+                if (command.Parameters.Count + cParams > MaxParams)
+                {
+                    command.CommandText = commandText.ToString();
+                    commandList.Add(command);
+
+                    command = new SqlCommand();
+                    commandText.Clear();
+                }
+                foreach (KeyValuePair<long, IDictionary<string, object>> sparseRow in writeReq.Rows)
+                {
+                    commandText.AppendFormat("UPDATE [{0}] ", writeReq.TableName);
+
+                    string param;
+                    bool first = true;
+                    foreach (KeyValuePair<string, object> value in sparseRow.Value)
+                    {
+                        param = "@p" + index++;
+                        if (first)
+                        {
+                            commandText.AppendFormat("SET [{0}] = {1}", value.Key, param);
+                            first = false;
+                        }
+                        else
+                        {
+                            commandText.AppendFormat(", [{0}] = {1}", value.Key, param);
+                        }
+                        command.Parameters.AddWithValue(param, value.Value);
+                    }
+
+                    param = "@p" + index++;
+                    commandText.AppendFormat(" WHERE [{0}] = {1}; ", idColumnName, param);
+                    command.Parameters.AddWithValue(param, sparseRow.Key);
+                }
+            }
+
+            command.CommandText = commandText.ToString();
+            commandList.Add(command);
+
+            return commandList;
         }
 
         public IList<long> Insert(string tableName, IEnumerable<IEnumerable<InsertValue>> rows)
