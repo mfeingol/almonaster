@@ -732,7 +732,7 @@ int GameEngine::DeleteEmpireMsg(AsyncTask* pMessage) {
 
     GameEngine gameEngine;
 
-    int iErrCode = gameEngine.CacheEmpire(pid->iEmpireKey);
+    int iErrCode = gameEngine.CacheEmpireForDeletion(pid->iEmpireKey);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = gameEngine.DeleteEmpire(pid->iEmpireKey, &pid->i64SecretKey, false, false);

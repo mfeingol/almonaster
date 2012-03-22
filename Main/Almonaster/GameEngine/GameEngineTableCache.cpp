@@ -155,6 +155,7 @@ int GameEngine::CacheEmpireForDeletion(unsigned int iEmpireKey)
 
     const TableCacheEntry systemEmpireEntries[] =
     {
+        { { SYSTEM_EMPIRE_DATA, iEmpireKey, 0, NULL }, NULL, NULL, NULL },
         { { SYSTEM_EMPIRE_ACTIVE_GAMES, NO_KEY, 1, &systemEmpireActiveGamesCol }, NULL, NULL, NULL },
         { { SYSTEM_EMPIRE_NUKER_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },
         { { SYSTEM_EMPIRE_NUKED_LIST, NO_KEY, 1, &systemEmpireNukeListCol }, NULL, NULL, NULL },

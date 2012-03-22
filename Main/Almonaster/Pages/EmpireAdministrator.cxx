@@ -500,8 +500,7 @@ SearchResults:
                 }
                 iTargetEmpireKey = pHttpForm->GetIntValue();
 
-                // Cache profile data
-                iErrCode = CacheProfileData(iTargetEmpireKey);
+                iErrCode = CacheEmpireForDeletion(iTargetEmpireKey);
                 RETURN_ON_ERROR(iErrCode);
 
                 if ((pHttpForm = m_pHttpRequest->GetForm ("TargetEmpireSecret")) == NULL) {

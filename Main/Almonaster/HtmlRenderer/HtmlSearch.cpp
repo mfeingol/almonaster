@@ -764,6 +764,11 @@ int HtmlRenderer::RenderSearchResults(SearchDefinition& sd,
 
 void HtmlRenderer::RenderHiddenSearchVariant (const char* pszColumn, const char* pszColName, const Variant& vData) {
 
+    if (pszColumn == NULL)
+    {
+        pszColumn = g_AdvancedSearchFields[1].pszName;
+    }
+
     if (strcmp(pszColumn, SystemEmpireData::LastLoginTime) == 0 ||
         strcmp(pszColumn, SystemEmpireData::CreationTime) == 0 ||
         strcmp(pszColumn, SystemEmpireData::LastBridierActivity) == 0)
