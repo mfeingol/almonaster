@@ -307,7 +307,7 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
     ITraceLog* pReport = GetReport();
     AutoRelease<ITraceLog> release_pReport(pReport);
 
-    pReport->Write(TRACE_ERROR, "Loading the database library");
+    pReport->Write(TRACE_ALWAYS, "Loading the database library");
 
     int iErrCode = m_libDatabase.Open(pszLibDatabase);
     if (iErrCode != OK)
@@ -331,23 +331,38 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
         return iErrCode;
     }
 
-    pReport->Write(TRACE_ERROR, "Loaded the database library");
-    pReport->Write(TRACE_ERROR, "Initializing the database");
+    pReport->Write(TRACE_ALWAYS, "Loaded the database library");
+    pReport->Write(TRACE_ALWAYS, "Initializing the database");
 
-    iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString, pReport);
-    switch (iErrCode)
+    for (int i = 0; i < 10; i ++)
     {
-    case OK:
-        pReport->Write(TRACE_ERROR, "Reloaded database sucessfully");
-        break;
-    case WARNING:
-        pReport->Write(TRACE_ERROR, "New database successfully created");
-        break;
-    default:
-        RETURN_ON_ERROR(iErrCode);
-        break;
+        iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString, pReport);
+        if (iErrCode == OK)
+        {
+            pReport->Write(TRACE_ALWAYS, "Reloaded database sucessfully");
+            break;
+        }
+        else if (iErrCode == WARNING)
+        {
+            pReport->Write(TRACE_ALWAYS, "New database successfully created");
+            break;
+        }
+        else if (iErrCode == ERROR_DATABASE_EXCEPTION)
+        {
+            // We may be booting, and SQL Server may not be accepting connections yet
+            // Wait a second and keep trying; maybe we'll get lucky...
+            pReport->Write(TRACE_ALWAYS, "Initializing database failed with ERROR_DATABASE_EXCEPTION");
+            OS::Sleep(1000);
+        }
+        else
+        {
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
+    Assert(iErrCode != OK);
+    TRACE_ERROR(iErrCode);
+    pReport->Write(TRACE_ERROR, "Timed out initializing database after 10 retries");
     return iErrCode;
 }
 
