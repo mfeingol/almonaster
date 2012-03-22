@@ -319,7 +319,7 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
 // Return the system version string
 const char* GameEngine::GetSystemVersion()
 {
-    return "Almonaster Build 700 alpha";
+    return "Almonaster Build 700 beta 1";
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId)
