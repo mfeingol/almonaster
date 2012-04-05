@@ -8966,7 +8966,7 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
 
                                             ) {
 
-    Variant vDipStatus, vDipLevel;
+    Variant vDipStatus;
     unsigned int iNumAcquaintances, i, j, iNewPlanetKey, iProxyKey;
 
     char pszCoord [MAX_COORDINATE_LENGTH + 1];
@@ -9045,52 +9045,37 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
     pvGameMap[GameMap::iMaxPop] = GetMaxPop(pvGameMap[GameMap::iMinerals].GetInteger(), pvGameMap[GameMap::iFuel].GetInteger());
 
     // Surrounding keys
-    ENUMERATE_CARDINAL_POINTS(i) {
-
-        if (i == (unsigned int) OPPOSITE_CARDINAL_POINT [iDirection]) {
-
+    ENUMERATE_CARDINAL_POINTS(i)
+    {
+        if (i == (unsigned int) OPPOSITE_CARDINAL_POINT [iDirection])
+        {
             pvGameMap[GameMap::iNorthPlanetKey + i] = piNeighbourKey[i] = iPlanetKey;
-        
-        } else {
-
+        }
+        else
+        {
             AdvanceCoordinates (iNewX, iNewY, &iNeighbourX, &iNeighbourY, i);
-
-            iErrCode = GetPlanetKeyFromCoordinates (
-                iGameClass, 
-                iGameNumber, 
-                iNeighbourX, 
-                iNeighbourY, 
-                piNeighbourKey + i
-                );
-
+            iErrCode = GetPlanetKeyFromCoordinates(iGameClass, iGameNumber, iNeighbourX, iNeighbourY, piNeighbourKey + i);
             RETURN_ON_ERROR(iErrCode);
+            pvGameMap[GameMap::iNorthPlanetKey + i] = piNeighbourKey[i];
         }
 
-        pvGameMap[GameMap::iNorthPlanetKey + i] = piNeighbourKey[i];
-
-        if (piNeighbourKey[i] != NO_KEY) {
-            
+        if (piNeighbourKey[i] != NO_KEY)
+        {
             // Have we explored our neighbour?
-            iErrCode = t_pCache->GetFirstKey(
-                strGameEmpireMap,
-                GameEmpireMap::PlanetKey,
-                piNeighbourKey[i],
-                &iProxyKey
-                );
-
+            iErrCode = t_pCache->GetFirstKey(strGameEmpireMap, GameEmpireMap::PlanetKey, piNeighbourKey[i], &iProxyKey);
             if (iErrCode == ERROR_DATA_NOT_FOUND)
             {
-                return OK;
+                iErrCode = OK;
             }
             else
             {
                 RETURN_ON_ERROR(iErrCode);
-            
-                iExplored |= EXPLORED_X[i];
-                
+
                 // Set neighbour's explored bit
                 iErrCode = t_pCache->WriteOr(strGameEmpireMap, iProxyKey, GameEmpireMap::Explored, OPPOSITE_EXPLORED_X[i]);
                 RETURN_ON_ERROR(iErrCode);
+
+                iExplored |= EXPLORED_X[i];
             }
         }
     }
@@ -9100,18 +9085,12 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
     RETURN_ON_ERROR(iErrCode);
     
     // Set link planet's link bit
-    iErrCode = t_pCache->WriteOr(
-        strGameMap,
-        iPlanetKey,
-        GameMap::Link,
-        LINK_X[iDirection]
-        );
-    
+    iErrCode = t_pCache->WriteOr(strGameMap, iPlanetKey, GameMap::Link, LINK_X[iDirection]);
     RETURN_ON_ERROR(iErrCode);
     
     // Set neighbours' cardinal point keys
-    ENUMERATE_CARDINAL_POINTS(i) {
-
+    ENUMERATE_CARDINAL_POINTS(i)
+    {
         if (piNeighbourKey[i] != NO_KEY)
         {
             iErrCode = t_pCache->WriteData(
@@ -9150,16 +9129,11 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
     RETURN_ON_ERROR(iErrCode);
 
     // If mapshare, add new planet to fellow sharer's maps
-    iErrCode = t_pCache->ReadData(
-        SYSTEM_GAMECLASS_DATA, 
-        iGameClass, 
-        SystemGameClassData::MapsShared, 
-        &vDipLevel
-        );
-
+    Variant vMapsShared;
+    iErrCode = t_pCache->ReadData(SYSTEM_GAMECLASS_DATA, iGameClass, SystemGameClassData::MapsShared, &vMapsShared);
     RETURN_ON_ERROR(iErrCode);
     
-    if (vDipLevel != NO_DIPLOMACY)
+    if (vMapsShared.GetInteger() != NO_DIPLOMACY)
     {
         Variant* pvAcquaintanceKey = NULL;
         AutoFreeData free_pvAcquaintanceKey(pvAcquaintanceKey);
@@ -9185,16 +9159,10 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
             
             for (i = 0; i < iNumAcquaintances; i ++) {
                 
-                iErrCode = t_pCache->ReadData(
-                    strEmpireDip, 
-                    piProxyKey[i], 
-                    GameEmpireDiplomacy::CurrentStatus, 
-                    &vDipStatus
-                    );
-
+                iErrCode = t_pCache->ReadData(strEmpireDip, piProxyKey[i], GameEmpireDiplomacy::CurrentStatus, &vDipStatus);
                 RETURN_ON_ERROR(iErrCode);
                 
-                if (vDipStatus.GetInteger() >= vDipLevel.GetInteger()) {
+                if (vDipStatus.GetInteger() >= vMapsShared.GetInteger()) {
                     
                     GetEmpireIndex (j, pvAcquaintanceKey[i]);
                     
@@ -9209,7 +9177,7 @@ int GameEngine::CreateNewPlanetFromBuilder (const GameConfiguration& gcConfig,
                         strGameMap,
                         iNumEmpires,
                         piEmpireKey, 
-                        vDipLevel.GetInteger(),
+                        vMapsShared.GetInteger(),
                         NULL,
                         NULL,
                         -1,
