@@ -344,7 +344,7 @@ namespace Almonaster.Database.Sql
         List<SqlCommand> ToCommands(IEnumerable<BulkTableWriteRequest> tableWriteRequests, string idColumnName)
         {
             // A limitation of SQL Server is that it only accepts commands with <= 2100 parameters.
-            const int MaxParams = 2000;
+            const int MaxParams = 1050;
             List<SqlCommand> commandList = new List<SqlCommand>();
 
             SqlCommand command = new SqlCommand();
