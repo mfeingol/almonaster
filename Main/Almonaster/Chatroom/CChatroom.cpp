@@ -193,9 +193,52 @@ int Chatroom::PostMessageWithTime(const char* pszSpeakerName, const char* pszMes
     int iErrCode = t_pCache->InsertRow(SYSTEM_CHATROOM_DATA, SystemChatroomData::Template, pvColVal, NULL);
     RETURN_ON_ERROR(iErrCode);
 
+    unsigned int iNumMessages;
+    iErrCode = t_pCache->GetNumCachedRows(SYSTEM_CHATROOM_DATA, &iNumMessages);
+    RETURN_ON_ERROR(iErrCode);
+
+    while (iNumMessages > m_ccConf.iMaxNumMessages)
+    {
+        unsigned int iOldestMessage;
+        iErrCode = GetOldestMessage(&iOldestMessage);
+        RETURN_ON_ERROR(iErrCode);
+
+        if (iOldestMessage == NO_KEY)
+          break;
+
+        iErrCode = t_pCache->DeleteRow(SYSTEM_CHATROOM_DATA, iOldestMessage);
+        RETURN_ON_ERROR(iErrCode);
+
+        iNumMessages --;
+    }
+
     return bTruncated ? WARNING : OK ;
 }
 
+int Chatroom::GetOldestMessage(unsigned int* piMessageKey)
+{
+    *piMessageKey = NO_KEY;
+
+    unsigned int iNumMessages, * piKey = NULL;
+    Variant* pvData = NULL;
+    AutoFreeKeys auto_piKey(piKey);
+    AutoFreeData auto_ppvData(pvData);
+
+    int iErrCode = t_pCache->ReadColumn(SYSTEM_CHATROOM_DATA, SystemChatroomData::Time, &piKey, &pvData, &iNumMessages);
+    if (iErrCode == ERROR_DATA_NOT_FOUND)
+    {
+        iErrCode = OK;
+    }
+    else
+    {
+        RETURN_ON_ERROR(iErrCode);
+
+        Algorithm::QSortTwoAscending<Variant, unsigned int>(pvData, piKey, iNumMessages);
+        *piMessageKey = piKey[0];
+    }
+
+    return iErrCode;
+}
 
 int Chatroom::EnterChatroom(const char* pszSpeakerName)
 {

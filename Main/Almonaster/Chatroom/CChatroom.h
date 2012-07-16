@@ -76,11 +76,9 @@ private:
 
     // Rules
     ChatroomConfig m_ccConf;
-    int PostMessageWithTime(const char* pszSpeakerName,
-                            const char* pszMessage,
-                            const UTCTime& tTime, 
-                            int iFlags,
-                            unsigned int iKey);
+
+    int PostMessageWithTime(const char* pszSpeakerName, const char* pszMessage, const UTCTime& tTime, int iFlags, unsigned int iKey);
+    int GetOldestMessage(unsigned int* piMessageKey);
 
 public:
 
