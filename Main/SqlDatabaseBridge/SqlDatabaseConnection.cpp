@@ -34,7 +34,6 @@ SqlDatabaseConnection::SqlDatabaseConnection(SqlDatabase^ sqlDatabase, Transacti
 
 SqlDatabaseConnection::~SqlDatabaseConnection()
 {
-    delete m_cmd;
 }
 
 int SqlDatabaseConnection::Commit()
@@ -45,6 +44,8 @@ int SqlDatabaseConnection::Commit()
         try
         {
             m_cmd->SetComplete();
+            delete m_cmd;
+            m_cmd = nullptr;
         }
         catch (SqlDatabaseException^ e)
         {
