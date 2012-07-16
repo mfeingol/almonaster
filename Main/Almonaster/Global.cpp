@@ -334,7 +334,7 @@ int Global::InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatab
     pReport->Write(TRACE_ALWAYS, "Loaded the database library");
     pReport->Write(TRACE_ALWAYS, "Initializing the database");
 
-    for (int i = 0; i < 10; i ++)
+    for (int i = 0; i < 30; i ++)
     {
         iErrCode = m_pDatabase->Initialize(pszDatabaseConnectionString, pReport);
         if (iErrCode == OK)
