@@ -54,10 +54,6 @@ Global::Global()
 
 void Global::Close()
 {
-    // Weak refs
-    //SafeRelease(m_pHttpServer);
-    //SafeRelease(m_pPageSourceControl);
-    
     m_asyncManager.Close();
 
     // Strong refs
@@ -68,13 +64,15 @@ void Global::Close()
     m_libDatabase.Close();
 }
 
-void Global::TlsOpenConnection()
+int Global::TlsOpenConnection()
 {
     t_pConn = m_pDatabase->CreateConnection(SERIALIZABLE);
-    Assert(t_pConn);
+    if (t_pConn == NULL)
+      return ERROR_NO_CONNECTION;
 
     t_pCache = t_pConn->GetCache();
     Assert(t_pCache);
+    return OK;
 }
 
 int Global::TlsCommitTransaction()
@@ -194,7 +192,12 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
         return iErrCode;
     }
 
-    TlsOpenConnection();
+    iErrCode = TlsOpenConnection();
+    if (iErrCode != OK)
+    {
+        pReport->Write(TRACE_ERROR, "Failed to open initialization connection");
+        return iErrCode;
+    }
 
     GameEngine gameEngine;
     iErrCode = gameEngine.Setup();

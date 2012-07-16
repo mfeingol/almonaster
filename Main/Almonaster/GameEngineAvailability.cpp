@@ -20,9 +20,8 @@
 
 int GameEngine::WriteAvailability()
 {
-    int iErrCode;
-
-    global.TlsOpenConnection();
+    int iErrCode = global.TlsOpenConnection();
+    RETURN_ON_ERROR(iErrCode);
 
     iErrCode = CacheSystemAvailability();
     if (iErrCode == OK)

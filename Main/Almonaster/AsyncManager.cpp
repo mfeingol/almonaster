@@ -95,16 +95,23 @@ int AsyncManager::AsyncTaskLoop()
                 break;
             }
 
-            global.TlsOpenConnection();
-
-            int iErrCode = plrqMessage->pQueryCall(plrqMessage);
-            if (iErrCode == OK)
+            int iErrCode = global.TlsOpenConnection();
+            if (iErrCode != OK)
             {
-                global.TlsCommitTransaction();
+                // Repost the message
+                m_tsfqQueryQueue.Push(plrqMessage);
             }
+            else
+            {
+                iErrCode = plrqMessage->pQueryCall(plrqMessage);
+                if (iErrCode == OK)
+                {
+                    global.TlsCommitTransaction();
+                }
 
-            delete plrqMessage;
-            global.TlsCloseConnection();
+                global.TlsCloseConnection();
+                delete plrqMessage;
+            }
         }
     }
 

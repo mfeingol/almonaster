@@ -56,7 +56,7 @@ public:
     Global();
 
     // Thread-static
-    void TlsOpenConnection();
+    int TlsOpenConnection();
     int TlsCommitTransaction();
     void TlsCloseConnection();
 

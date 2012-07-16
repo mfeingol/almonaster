@@ -882,9 +882,10 @@ int HtmlRenderer::Render()
     Vector<TableCacheEntry> cache;
     GatherCacheTables(m_pgPageId, cache);
     
-    global.TlsOpenConnection();
+    int iErrCode = global.TlsOpenConnection();
+    RETURN_ON_ERROR(iErrCode);
     
-    int iErrCode = CacheTables(m_pgPageId, cache);
+    iErrCode = CacheTables(m_pgPageId, cache);
     if (iErrCode == OK)
     {
         // Render the page

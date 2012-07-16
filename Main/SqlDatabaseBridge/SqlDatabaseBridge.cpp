@@ -69,5 +69,13 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, ITraceLog* pTrace)
 
 IDatabaseConnection* SqlDatabaseBridge::CreateConnection(TransactionIsolationLevel isoLevel)
 {
-    return new SqlDatabaseConnection(m_sqlDatabase, isoLevel);
+    try
+    {
+        return new SqlDatabaseConnection(m_sqlDatabase, isoLevel);
+    }
+    catch (SqlDatabaseException^ e)
+    {
+        TraceException(e);
+        return NULL;
+    }
 }
