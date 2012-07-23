@@ -390,8 +390,19 @@ int CachedTable::ReadColumnWhereEqual(const char* pszEqualColumn, const Variant&
     }
 
     *piNumRows = index;
-    *ppvData = pvData;
-
+    if (index > 0)
+    {
+        *ppvData = pvData;
+    }
+    else
+    {
+        delete [] pvData;
+        if (ppiKey)
+        {
+            delete [] (*ppiKey);
+            *ppiKey = NULL;
+        }
+    }
     return OK;
 }
 
@@ -465,9 +476,21 @@ int CachedTable::ReadColumnsWhereEqual(const char* pszEqualColumn, const Variant
     }
 
     *piNumRows = index;
-
-    if (pppvData)
-        *pppvData = ppvData;
+    if (index > 0)
+    {
+        if (pppvData)
+            *pppvData = ppvData;
+    }
+    else
+    {
+        delete [] pvData;
+        delete [] ppvData;
+        if (ppiKey)
+        {
+            delete [] (*ppiKey);
+            *ppiKey = NULL;
+        }
+    }
 
     return OK;
 }
