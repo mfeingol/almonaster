@@ -169,6 +169,9 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
             AddMessage ("You cannot surrender until the game has closed");
         } else {
 
+            iErrCode = CacheAllGameTables(m_iGameClass, m_iGameNumber);
+            RETURN_ON_ERROR(iErrCode);
+
             // Surrender
             iErrCode = SurrenderEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, sType);
             RETURN_ON_ERROR(iErrCode);
