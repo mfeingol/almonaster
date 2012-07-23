@@ -52,10 +52,18 @@ if (m_bOwnPost && !m_bRedirection) {
         m_bRedirectTest = false;
 
         iErrCode = RegisterNewTechDevelopment (m_iGameClass, m_iGameNumber, m_iEmpireKey, iTechKey);
-        RETURN_ON_ERROR(iErrCode);
-        AddMessage ("You have developed ");
-        AppendMessage (SHIP_TYPE_STRING[iTechKey]);
-        AppendMessage (" technology");
+        if (iErrCode == ERROR_NO_TECHNOLOGY_AVAILABLE)
+        {
+            iErrCode = OK;
+            AddMessage("You have no undeveloped technologies available");
+        }
+        else
+        {
+            RETURN_ON_ERROR(iErrCode);
+            AddMessage ("You have developed ");
+            AppendMessage (SHIP_TYPE_STRING[iTechKey]);
+            AppendMessage (" technology");
+        }
     }
 }
 
