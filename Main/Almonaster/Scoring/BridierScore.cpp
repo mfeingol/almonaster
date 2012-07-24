@@ -278,7 +278,7 @@ int BridierScore::On30StyleSurrender (int iGameClass, int iGameNumber, int iLose
     int iErrCode;
     bool bBridier;
 
-    Variant* pvEmpireKey;
+    Variant* pvEmpireKey = NULL;
     AutoFreeData free_pvEmpireKey(pvEmpireKey);
     unsigned int iNumEmpires;
 
