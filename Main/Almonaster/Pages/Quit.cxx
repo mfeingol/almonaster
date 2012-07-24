@@ -55,6 +55,9 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
         } else {
 
             // Resign
+            iErrCode = CacheAllGameTables(m_iGameClass, m_iGameNumber);
+            RETURN_ON_ERROR(iErrCode);
+
             iErrCode = ResignEmpireFromGame(m_iGameClass, m_iGameNumber, m_iEmpireKey);
             RETURN_ON_ERROR(iErrCode);
 
@@ -169,10 +172,10 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
             AddMessage ("You cannot surrender until the game has closed");
         } else {
 
+            // Surrender
             iErrCode = CacheAllGameTables(m_iGameClass, m_iGameNumber);
             RETURN_ON_ERROR(iErrCode);
 
-            // Surrender
             iErrCode = SurrenderEmpireFromGame (m_iGameClass, m_iGameNumber, m_iEmpireKey, sType);
             RETURN_ON_ERROR(iErrCode);
 

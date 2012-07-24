@@ -1081,12 +1081,12 @@ int GameEngine::ResignEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     }
 
     GET_GAME_EMPIRE_DATA (strEmpireData, iGameClass, iGameNumber, iEmpireKey);
-    GET_GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
-
-    unsigned int iShipKey = NO_KEY;
 
     char pszMessage [256];
     Variant vOldResigned, vEmpireName;
+
+    unsigned int* piShipKey = NULL, iNumShips;
+    AutoFreeKeys auto_piShipKey(piShipKey);
 
     // Set empire to paused
     int iGameState;
@@ -1114,15 +1114,17 @@ int GameEngine::ResignEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     RETURN_ON_ERROR(iErrCode);
 
     // Dismantle all ships
-    while (true)
+    GET_GAME_EMPIRE_SHIPS (strEmpireShips, iGameClass, iGameNumber, iEmpireKey);
+    iErrCode = t_pCache->GetAllKeys(strEmpireShips, &piShipKey, &iNumShips);
+    if (iErrCode != ERROR_DATA_NOT_FOUND)
     {
-        iErrCode = t_pCache->GetNextKey (strEmpireShips, iShipKey, &iShipKey);
-        if (iErrCode == ERROR_DATA_NOT_FOUND)
-            break;
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, iShipKey);
-        RETURN_ON_ERROR(iErrCode);
+        for (unsigned int i = 0; i < iNumShips; i ++)
+        {
+            iErrCode = DeleteShip (iGameClass, iGameNumber, iEmpireKey, piShipKey[i]);
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
     // Broadcast to other players
