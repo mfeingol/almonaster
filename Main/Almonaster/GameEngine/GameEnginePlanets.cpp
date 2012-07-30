@@ -1413,7 +1413,7 @@ int GameEngine::GetPlanetShipOwnerData(int iGameClass, int iGameNumber, int iEmp
     // Get number of empires
     GET_GAME_EMPIRES (strEmpires, iGameClass, iGameNumber);
 
-    unsigned int iNumEmpires, iNumShips, iTotalShips, * piShipKey = NULL, i, j;
+    unsigned int iNumEmpires, iNumShips, * piShipKey = NULL, i, j;
     AutoFreeKeys freeKeys(piShipKey);
 
     int iType, iTemp;
@@ -1434,7 +1434,7 @@ int GameEngine::GetPlanetShipOwnerData(int iGameClass, int iGameNumber, int iEmp
     // Scan through all players' ship lists
     for (i = 0; i <= iNumEmpires; i ++)
     {
-        iTotalShips = 0;
+        unsigned int iTotalShips = 0;
 
         if (i != iNumEmpires)
         {
@@ -1492,7 +1492,7 @@ int GameEngine::GetPlanetShipOwnerData(int iGameClass, int iGameNumber, int iEmp
         }
         else if (bIndependence)
         {
-            GET_GAME_EMPIRE_SHIPS(strTheirShips, iGameClass, iGameNumber, INDEPENDENT);
+            COPY_GAME_EMPIRE_SHIPS(strTheirShips, iGameClass, iGameNumber, INDEPENDENT);
             iErrCode = t_pCache->GetNumCachedRows(strTheirShips, &iTotalShips);
             if (iErrCode == ERROR_DATA_NOT_FOUND)
             {
