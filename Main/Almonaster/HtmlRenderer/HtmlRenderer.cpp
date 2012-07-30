@@ -2983,7 +2983,7 @@ int HtmlRenderer::ProcessCreateDynamicGameClassForms (unsigned int iOwnerKey, in
     iErrCode = ParseGameConfigurationForms (NO_KEY, NO_KEY, pvSubmitArray, &goOptions);
     if (iErrCode == WARNING)
     {
-        iErrCode = OK;
+        return OK;
     }
     RETURN_ON_ERROR(iErrCode);
     
