@@ -1283,7 +1283,7 @@ int HtmlRenderer::ParseGameConfigurationForms (int iGameClass, unsigned int iTou
 
     if (!(mgMapGen & mgSupportedMapGen)) {
         AddMessage ("The game type does not support the selected map generation algorithm");
-        return ERROR_MISSING_FORM;
+        return WARNING;
     }
 
     if (mgMapGen == MAPGEN_MIRRORED) {
