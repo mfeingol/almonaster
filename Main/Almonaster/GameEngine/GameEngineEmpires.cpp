@@ -1301,40 +1301,24 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
         }
     }
 
-    // Get the time
+    // Write login info
+    char pszCutBrowser [MAX_BROWSER_NAME_LENGTH + 1];
+    if (String::StrLen (pszBrowser) > MAX_BROWSER_NAME_LENGTH)
+    {
+        memcpy(pszCutBrowser, pszBrowser, MAX_BROWSER_NAME_LENGTH);
+        pszCutBrowser [MAX_BROWSER_NAME_LENGTH] = '\0';
+        pszBrowser = pszCutBrowser;
+    }
+    
     UTCTime tTime;
     Time::GetTime(&tTime);
 
-    if (String::StrLen (pszBrowser) > MAX_BROWSER_NAME_LENGTH)
-    {
-        char pszCutBrowser [MAX_BROWSER_NAME_LENGTH + 1];
-        memcpy(pszCutBrowser, pszBrowser, MAX_BROWSER_NAME_LENGTH);
-        pszCutBrowser [MAX_BROWSER_NAME_LENGTH] = '\0';
-
-        iErrCode = pEmpire->WriteData(iEmpireKey, SystemEmpireData::Browser, pszCutBrowser);
-        RETURN_ON_ERROR(iErrCode);
-    }
-    else
-    {
-        iErrCode = pEmpire->WriteData(iEmpireKey, SystemEmpireData::Browser, pszBrowser);
-        RETURN_ON_ERROR(iErrCode);
-    }
-
-    // Write IP address
-    iErrCode = pEmpire->WriteData(iEmpireKey, SystemEmpireData::IPAddress, pszIPAddress);
-    RETURN_ON_ERROR(iErrCode);
-
-    // Write LastLoginTime
-    iErrCode = pEmpire->WriteData(iEmpireKey, SystemEmpireData::LastLoginTime, tTime);
-    RETURN_ON_ERROR(iErrCode);
-
-    // Increment the number of logins
-    iErrCode = pEmpire->Increment(iEmpireKey, SystemEmpireData::NumLogins, 1);
+    iErrCode = QueueWriteEmpireLoginInfo(iEmpireKey, pszIPAddress, pszBrowser, tTime);
     RETURN_ON_ERROR(iErrCode);
 
     // Notification
     global.GetEventSink()->OnLoginEmpire (iEmpireKey);
-        
+
     if (vPriv.GetInteger() >= ADMINISTRATOR)
     {
         global.GetAsyncManager()->QueueTask(CheckAllGamesForUpdatesMsg, NULL);
@@ -1343,6 +1327,60 @@ int GameEngine::LoginEmpire (int iEmpireKey, const char* pszBrowser, const char*
     return iErrCode;
 }
 
+int GameEngine::QueueWriteEmpireLoginInfo(int iEmpireKey, const char* pszIPAddress, const char* pszBrowser, UTCTime tLastLogin)
+{
+    EmpireLoginInfo* login = new EmpireLoginInfo;
+    Assert(login);
+    login->iEmpireKey = iEmpireKey;
+    login->strIPAddress = pszIPAddress;
+    login->strBrowser = pszBrowser;
+    login->tLastLogin = tLastLogin;
+
+    if (pszIPAddress)
+        Assert(login->strIPAddress.GetCharPtr());
+
+    if (pszBrowser)
+        Assert(login->strBrowser.GetCharPtr());
+
+    return global.GetAsyncManager()->QueueTask(WriteEmpireLoginInfo, login, READ_UNCOMMITTED);
+}
+
+int GameEngine::WriteEmpireLoginInfo(AsyncTask* pMessage)
+{
+    int iErrCode;
+
+    EmpireLoginInfo* login = (EmpireLoginInfo*)pMessage->pArguments;
+    Algorithm::AutoDelete<EmpireLoginInfo> del(login, false);
+
+    ICachedTable* pEmpire = NULL;
+    AutoRelease<ICachedTable> release(pEmpire);
+
+    GameEngine gameEngine;
+    iErrCode = gameEngine.CacheEmpire(login->iEmpireKey);
+    RETURN_ON_ERROR(iErrCode);
+    
+    GET_SYSTEM_EMPIRE_DATA(strEmpire, login->iEmpireKey);
+    iErrCode = t_pCache->GetTable(strEmpire, &pEmpire);
+    RETURN_ON_ERROR(iErrCode);
+
+    // Write IP address
+    iErrCode = pEmpire->WriteData(login->iEmpireKey, SystemEmpireData::IPAddress, login->strIPAddress.GetCharPtr());
+    RETURN_ON_ERROR(iErrCode);
+
+    // Write browser
+    iErrCode = pEmpire->WriteData(login->iEmpireKey, SystemEmpireData::Browser, login->strBrowser.GetCharPtr());
+    RETURN_ON_ERROR(iErrCode);
+
+    // Write LastLoginTime
+    iErrCode = pEmpire->WriteData(login->iEmpireKey, SystemEmpireData::LastLoginTime, login->tLastLogin);
+    RETURN_ON_ERROR(iErrCode);
+
+    // Increment the number of logins
+    iErrCode = pEmpire->Increment(login->iEmpireKey, SystemEmpireData::NumLogins, 1);
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
+}
 
 int GameEngine::CheckAllGamesForUpdatesMsg(AsyncTask* pMessage)
 {

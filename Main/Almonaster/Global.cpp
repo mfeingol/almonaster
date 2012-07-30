@@ -66,7 +66,12 @@ void Global::Close()
 
 int Global::TlsOpenConnection()
 {
-    t_pConn = m_pDatabase->CreateConnection(SERIALIZABLE);
+    return TlsOpenConnection(SERIALIZABLE);
+}
+
+int Global::TlsOpenConnection(TransactionIsolationLevel isoLevel)
+{
+    t_pConn = m_pDatabase->CreateConnection(isoLevel);
     if (t_pConn == NULL)
       return ERROR_NO_CONNECTION;
 

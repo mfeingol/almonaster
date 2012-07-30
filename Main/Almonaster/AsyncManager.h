@@ -29,6 +29,7 @@ struct AsyncTask
 {
     Fxn_QueryCallBack pQueryCall;
     void* pArguments;
+    TransactionIsolationLevel isoLevel;
 };
 
 class AsyncManager
@@ -53,5 +54,6 @@ public:
     void Close();
 
     int QueueTask(Fxn_QueryCallBack pfxFunction, void* pVoid);
+    int QueueTask(Fxn_QueryCallBack pfxFunction, void* pVoid, TransactionIsolationLevel isoLevel);
 };
 

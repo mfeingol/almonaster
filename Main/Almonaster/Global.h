@@ -57,6 +57,7 @@ public:
 
     // Thread-static
     int TlsOpenConnection();
+    int TlsOpenConnection(TransactionIsolationLevel isoLevel);
     int TlsCommitTransaction();
     void TlsCloseConnection();
 

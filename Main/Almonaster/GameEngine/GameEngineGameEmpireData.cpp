@@ -719,6 +719,7 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
 int GameEngine::QueueDeleteEmpire (int iEmpireKey, int64 i64SecretKey) {
 
     EmpireIdentity* pid = new EmpireIdentity;
+    Assert(pid);
     pid->iEmpireKey = iEmpireKey;
     pid->i64SecretKey = i64SecretKey;
 

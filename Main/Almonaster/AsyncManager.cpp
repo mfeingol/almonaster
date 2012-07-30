@@ -95,7 +95,7 @@ int AsyncManager::AsyncTaskLoop()
                 break;
             }
 
-            int iErrCode = global.TlsOpenConnection();
+            int iErrCode = global.TlsOpenConnection(plrqMessage->isoLevel);
             if (iErrCode != OK)
             {
                 // Repost the message
@@ -106,7 +106,11 @@ int AsyncManager::AsyncTaskLoop()
                 iErrCode = plrqMessage->pQueryCall(plrqMessage);
                 if (iErrCode == OK)
                 {
-                    global.TlsCommitTransaction();
+                    iErrCode = global.TlsCommitTransaction();
+                    if (iErrCode != OK)
+                    {
+                        global.WriteReport(TRACE_ERROR, "AsyncTaskLoop: CommitTransaction failed");
+                    }
                 }
 
                 global.TlsCloseConnection();
@@ -118,13 +122,19 @@ int AsyncManager::AsyncTaskLoop()
     return OK;
 }
 
-int AsyncManager::QueueTask(Fxn_QueryCallBack pfxnFunction, void* pVoid) {
+int AsyncManager::QueueTask(Fxn_QueryCallBack pfxnFunction, void* pVoid)
+{
+  return QueueTask(pfxnFunction, pVoid, SERIALIZABLE);
+}
 
+int AsyncManager::QueueTask(Fxn_QueryCallBack pfxnFunction, void* pVoid, TransactionIsolationLevel isoLevel)
+{
     // Build the message
     AsyncTask* pMessage = new AsyncTask;
     Assert(pMessage);
     pMessage->pArguments = pVoid;
     pMessage->pQueryCall = pfxnFunction;
+    pMessage->isoLevel = isoLevel;
 
     // Push message into the queue
     bool ret = m_tsfqQueryQueue.Push(pMessage);

@@ -53,6 +53,23 @@ struct EmpireIdentity
     int64 i64SecretKey;
 };
 
+struct GameLoginInfo
+{
+    int iGameClass;
+    int iGameNumber;
+    int iEmpireKey;
+    UTCTime tLastLogin;
+    bool bLoggedInThisUpdate;
+};
+
+struct EmpireLoginInfo
+{
+    int iEmpireKey;
+    String strIPAddress;
+    String strBrowser;
+    UTCTime tLastLogin;
+};
+
 struct GameConfiguration
 {
     int iShipBehavior;
@@ -985,6 +1002,8 @@ public:
     int UnpauseGame (int iGameClass, int iGameNumber, bool bAdmin, bool bBroadcast);
 
     int LogEmpireIntoGame (int iGameClass, int iGameNumber, int iEmpireKey, int* piIdleUpdates);
+    int QueueWriteGameLoginInfo(int iGameClass, int iGameNumber, int iEmpireKey, UTCTime tLastLogin, bool bLoggedInThisUpdate);
+    static int THREAD_CALL WriteGameLoginInfo(AsyncTask* pMessage);
 
     int RuinGame (int iGameClass, int iGameNumber, const char* pszWinnerName);
     int ResignGame (int iGameClass, int iGameNumber);
@@ -1106,7 +1125,9 @@ public:
     int IsPasswordCorrect (int iEmpireKey, const char* pszPassword);
 
     int LoginEmpire (int iEmpireKey, const char* pszBrowser, const char* pszIPAddress);
-    
+    int QueueWriteEmpireLoginInfo(int iEmpireKey, const char* pszIPAddress, const char* pszBrowser, UTCTime tLastLogin);
+    static int THREAD_CALL WriteEmpireLoginInfo(AsyncTask* pMessage);
+
     int GetNumEmpiresOnServer(unsigned int* piNumEmpires);
     int GetDefaultEmpireShipNames (int iEmpireKey, const char*** pppszShipName);
 

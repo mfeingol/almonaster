@@ -893,6 +893,10 @@ int HtmlRenderer::Render()
         if (iErrCode == OK)
         {
             iErrCode = global.TlsCommitTransaction();
+            if (iErrCode != OK)
+            {
+                global.WriteReport(TRACE_ERROR, "CommitTransaction failed");
+            }
         }
         else
         {
