@@ -207,44 +207,38 @@ int FairMapGenerator::GetStandardDeviationPercentageOfMean(GameFairnessOption gf
 
     Assert(iNumEmpires > 1);
 
-    if (iNumEmpires < 3) {
-
-        switch (gfoFairness) {
-        case GAME_FAIRNESS_VERY_FAIR:
+    if (iNumEmpires < 3)
+    {
+        if (gfoFairness == GAME_FAIRNESS_VERY_FAIR)
             return 5;
-        case GAME_FAIRNESS_SOMEWHAT_FAIR:
+        if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_FAIR)
             return 15;
-        case GAME_FAIRNESS_SOMEWHAT_UNFAIR:
+        if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_UNFAIR)
             return -5;
-        case GAME_FAIRNESS_VERY_UNFAIR:
+        if (gfoFairness == GAME_FAIRNESS_VERY_UNFAIR)
             return -15;
-        }
-
-    } else if (iNumEmpires < 9) {
-
-        switch (gfoFairness) {
-        case GAME_FAIRNESS_VERY_FAIR:
+    }
+    else if (iNumEmpires < 9)
+    {
+        if (gfoFairness == GAME_FAIRNESS_VERY_FAIR)
             return 10;
-        case GAME_FAIRNESS_SOMEWHAT_FAIR:
+        if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_FAIR)
             return 20;
-        case GAME_FAIRNESS_SOMEWHAT_UNFAIR:
+        if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_UNFAIR)
             return -10;
-        case GAME_FAIRNESS_VERY_UNFAIR:
+        if (gfoFairness == GAME_FAIRNESS_VERY_UNFAIR)
             return -20;
-        }
-
-    } else {
-
-        switch (gfoFairness) {
-        case GAME_FAIRNESS_VERY_FAIR:
+    }
+    else
+    {
+        if (gfoFairness == GAME_FAIRNESS_VERY_FAIR)
             return 20;
-        case GAME_FAIRNESS_SOMEWHAT_FAIR:
+        if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_FAIR)
             return 35;
-        case GAME_FAIRNESS_SOMEWHAT_UNFAIR:
+        if (gfoFairness == GAME_FAIRNESS_SOMEWHAT_UNFAIR)
             return -20;
-        case GAME_FAIRNESS_VERY_UNFAIR:
+        if (gfoFairness == GAME_FAIRNESS_VERY_UNFAIR)
             return -35;
-        }
     }
 
     Assert(false);
