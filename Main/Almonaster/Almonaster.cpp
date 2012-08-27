@@ -146,7 +146,8 @@ int Almonaster::OnPost(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse)
     // Render the page
     HtmlRenderer renderer(pageId, pHttpRequest, pHttpResponse);
     iErrCode = renderer.Render();
-    RETURN_ON_ERROR(iErrCode);
+    if (iErrCode != ERROR_MISSING_FORM)
+        RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }

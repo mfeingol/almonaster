@@ -804,7 +804,7 @@ const AfterCacheFunction g_pfxnAfterCachePage[] = {
 // Wiring
 //
 
-void HtmlRenderer::ReadStandardForms()
+int HtmlRenderer::ReadStandardForms()
 {
     IHttpForm* pHttpForm;
    
@@ -826,6 +826,9 @@ void HtmlRenderer::ReadStandardForms()
         {
             m_iGameNumber = pHttpForm->GetUIntValue();
         }
+
+        if (m_iGameClass < 0 || m_iGameNumber < 1)
+            return ERROR_MISSING_FORM;
     }
 
     // Get tournament key
@@ -837,6 +840,8 @@ void HtmlRenderer::ReadStandardForms()
     {
         m_iTournamentKey = pHttpForm->GetUIntValue();
     }
+
+    return OK;
 }
 
 void HtmlRenderer::GatherCacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache)
@@ -875,14 +880,17 @@ int HtmlRenderer::CacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache)
 
 int HtmlRenderer::Render()
 {
+    int iErrCode;
     Assert(m_pgPageId > MIN_PAGE_ID && m_pgPageId < MAX_PAGE_ID);
 
-    ReadStandardForms();
+    iErrCode = ReadStandardForms();
+    if (iErrCode != OK)
+        return iErrCode;
 
     Vector<TableCacheEntry> cache;
     GatherCacheTables(m_pgPageId, cache);
     
-    int iErrCode = global.TlsOpenConnection();
+    iErrCode = global.TlsOpenConnection();
     RETURN_ON_ERROR(iErrCode);
     
     iErrCode = CacheTables(m_pgPageId, cache);

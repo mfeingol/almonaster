@@ -529,7 +529,7 @@ public:
     HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);
 
     // Wiring
-    void ReadStandardForms();
+    int ReadStandardForms();
 
     void GatherCacheTables(PageId pgPageId, Vector<TableCacheEntry>& cache);
     void GatherCacheTablesForSystemPage(Vector<TableCacheEntry>& cache);
