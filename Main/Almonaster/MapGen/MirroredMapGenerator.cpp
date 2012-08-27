@@ -18,12 +18,6 @@
 
 #include "MirroredMapGenerator.h"
 
-MirroredMapGenerator::MirroredMapGenerator(GameEngine* pGameEngine) 
-    :
-    BaseMapGenerator(pGameEngine)
-{
-}
-
 int MirroredMapGenerator::CreatePlanetChains() {
 
     // Initialize

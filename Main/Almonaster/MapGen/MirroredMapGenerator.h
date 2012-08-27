@@ -45,8 +45,4 @@ protected:
 
     void MirrorPlanet(int iOldX, int iOldY, int iOldLink, CardinalPoint cpEdge, int* piX, int* piY, int* piLink);
     int MirrorLinks(int iOldLink, CardinalPoint cpEdge);
-
-public:
-
-    MirroredMapGenerator(GameEngine* pGameEngine);
 };

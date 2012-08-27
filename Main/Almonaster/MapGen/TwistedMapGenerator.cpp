@@ -18,9 +18,7 @@
 
 #include "TwistedMapGenerator.h"
 
-TwistedMapGenerator::TwistedMapGenerator(GameEngine* pGameEngine) 
-    :
-    MirroredMapGenerator(pGameEngine)
+TwistedMapGenerator::TwistedMapGenerator() 
 {
     memset(m_ed, 0, sizeof(m_ed));
 }

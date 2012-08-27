@@ -73,7 +73,7 @@ class BaseMapGenerator : public IMapGenerator {
 
 protected:
 
-    GameEngine* m_pGameEngine;
+    GameEngine m_gameEngine;
 
     //
     // Data provided by caller
@@ -177,7 +177,7 @@ protected:
 
 public:
 
-    BaseMapGenerator(GameEngine* pGameEngine);
+    BaseMapGenerator();
     virtual ~BaseMapGenerator();
 
     int CreatePlanets(

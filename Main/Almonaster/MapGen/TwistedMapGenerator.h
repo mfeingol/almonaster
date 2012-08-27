@@ -70,6 +70,6 @@ private:
 
 public:
 
-    TwistedMapGenerator(GameEngine* pGameEngine);
+    TwistedMapGenerator();
     virtual ~TwistedMapGenerator();
 };

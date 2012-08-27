@@ -178,9 +178,8 @@ int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKe
     unsigned int* piPlanetKey = NULL, iNumPlanets = 0, iNumNewPlanets;
     AutoFreeKeys freeKeys(piPlanetKey);
 
-    IMapGenerator* pMapGen = NULL, * pInner = NULL;
+    IMapGenerator* pMapGen = NULL;
     Algorithm::AutoDelete<IMapGenerator> auto1(pMapGen, false);
-    Algorithm::AutoDelete<IMapGenerator> auto2(pInner, false);
 
     // Read gameclass data
     iErrCode = t_pCache->ReadRow (SYSTEM_GAMECLASS_DATA, iGameClass, &pvGameClassData);
@@ -193,17 +192,16 @@ int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKe
 
     // Create a new map generator
     if (iGameOptions & GAME_MIRRORED_MAP) {
-        pMapGen = new MirroredMapGenerator(this);
+        pMapGen = new MirroredMapGenerator();
     } else if (iGameOptions & GAME_TWISTED_MAP) {
-        pMapGen = new TwistedMapGenerator(this);
+        pMapGen = new TwistedMapGenerator();
     } else {
-        pMapGen = new DefaultMapGenerator(this);
+        pMapGen = new DefaultMapGenerator();
     }
     Assert(pMapGen);
 
     // Wrap map generator in a fair map generator
-    pInner = pMapGen;
-    pMapGen = new FairMapGenerator(pInner, gfoFairness);
+    FairMapGenerator fair(pMapGen, gfoFairness);
 
     // Get existing map
     iErrCode = t_pCache->ReadColumns (
@@ -222,7 +220,7 @@ int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKe
     RETURN_ON_ERROR(iErrCode);
 
     // Call into the map generator to get new planets
-    iErrCode = pMapGen->CreatePlanets(
+    iErrCode = fair.CreatePlanets(
         iGameClass,
         iGameNumber,
         piEmpireKey,

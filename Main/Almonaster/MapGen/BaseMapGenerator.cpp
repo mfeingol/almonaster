@@ -22,13 +22,10 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-BaseMapGenerator::BaseMapGenerator(GameEngine* pGameEngine) 
+BaseMapGenerator::BaseMapGenerator() 
     : 
-    m_htCoordinates (NULL, NULL)
+    m_htCoordinates(NULL, NULL)
 {
-    Assert(pGameEngine != NULL);
-    m_pGameEngine = pGameEngine;
-
     m_iGameClass = NO_KEY;
     m_iGameNumber = 0;
 
@@ -132,7 +129,7 @@ int BaseMapGenerator::CreatePlanets (
     }
 
     // Read map configuration
-    iErrCode = m_pGameEngine->GetMapConfiguration(&m_mcConfig);
+    iErrCode = m_gameEngine.GetMapConfiguration(&m_mcConfig);
     RETURN_ON_ERROR(iErrCode);
 
     // Cache gameclass options
@@ -652,10 +649,10 @@ int BaseMapGenerator::GetFirstPlanetLocation(PlanetLocation* plLocation) {
 
         int iErrCode, iUpdatesBeforeClose;
         unsigned int iNumEmpiresInGame;
-        iErrCode = m_pGameEngine->GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpiresInGame);
+        iErrCode = m_gameEngine.GetNumEmpiresInGame (m_iGameClass, m_iGameNumber, &iNumEmpiresInGame);
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = m_pGameEngine->GetNumUpdatesBeforeGameCloses (m_iGameClass, m_iGameNumber, &iUpdatesBeforeClose);
+        iErrCode = m_gameEngine.GetNumUpdatesBeforeGameCloses (m_iGameClass, m_iGameNumber, &iUpdatesBeforeClose);
         RETURN_ON_ERROR(iErrCode);
 
         // TODO - this is a guess - I think we can live with negative coordinates...

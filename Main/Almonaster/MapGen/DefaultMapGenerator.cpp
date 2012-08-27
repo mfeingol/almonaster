@@ -22,11 +22,6 @@
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-DefaultMapGenerator::DefaultMapGenerator(GameEngine* pGameEngine) 
-    :
-    BaseMapGenerator(pGameEngine) {
-}
-
 int DefaultMapGenerator::CreatePlanetChains() {
 
     AllocateDefaultPlanetData();
