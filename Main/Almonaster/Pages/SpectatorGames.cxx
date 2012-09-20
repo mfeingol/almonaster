@@ -30,8 +30,8 @@ if (!bInitialized)
 
 IHttpForm* pHttpForm;
 
-int iSpectatorGamesPage = 0, iGameNumber = -1;
-unsigned int i, iGameClassKey = NO_KEY, iClickedPlanetKey = NO_KEY, iClickedProxyPlanetKey = NO_KEY;
+int iSpectatorGamesPage = 0, iGameClassKey = NO_KEY, iGameNumber = -1;
+unsigned int i, iClickedPlanetKey = NO_KEY, iClickedProxyPlanetKey = NO_KEY;
 
 // Handle a submission
 if (m_bOwnPost && !m_bRedirection) {
@@ -59,7 +59,10 @@ if (m_bOwnPost && !m_bRedirection) {
 
             if ((pHttpForm = m_pHttpRequest->GetFormBeginsWith ("Spectate")) != NULL && 
                 (pszSpectator = pHttpForm->GetName()) != NULL &&
-                sscanf (pszSpectator, "Spectate%d.%d", &iGameClassKey, &iGameNumber) == 2) {
+                sscanf (pszSpectator, "Spectate%d.%d", &iGameClassKey, &iGameNumber) == 2)
+            {
+                iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
 
                 iSpectatorGamesPage = 1;
                 m_bRedirectTest = false;
@@ -75,7 +78,10 @@ if (m_bOwnPost && !m_bRedirection) {
                 (pszSpectator = pHttpForm->GetName()) != NULL &&
                 sscanf (pszSpectator, "Planet%d.%d.x", &iClickedPlanetKey, &iClickedProxyPlanetKey) == 2 &&
                 iGameClassKey != NO_KEY && iGameNumber != -1
-                ) {
+                )
+            {
+                iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
 
                 iSpectatorGamesPage = 2;
                 m_bRedirectTest = false;
@@ -83,7 +89,11 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // View Empire Information
             if (WasButtonPressed (BID_VIEWEMPIREINFORMATION) &&
-                iGameClassKey != NO_KEY && iGameNumber != -1) {
+                iGameClassKey != NO_KEY && iGameNumber != -1)
+            {
+                iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+
                 iSpectatorGamesPage = 3;
                 m_bRedirectTest = false;
             }
@@ -94,14 +104,22 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // View map
             if (WasButtonPressed (BID_VIEWMAP) &&
-                iGameClassKey != NO_KEY && iGameNumber != -1) {
+                iGameClassKey != NO_KEY && iGameNumber != -1)
+            {
+                iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+
                 iSpectatorGamesPage = 1;
                 m_bRedirectTest = false;
             }
 
             // View Empire Information
             if (WasButtonPressed (BID_VIEWEMPIREINFORMATION) &&
-                iGameClassKey != NO_KEY && iGameNumber != -1) {
+                iGameClassKey != NO_KEY && iGameNumber != -1)
+            {
+                iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+
                 iSpectatorGamesPage = 3;
                 m_bRedirectTest = false;
             }
@@ -112,7 +130,11 @@ if (m_bOwnPost && !m_bRedirection) {
 
             // View map
             if (WasButtonPressed (BID_VIEWMAP) &&
-                iGameClassKey != NO_KEY && iGameNumber != -1) {
+                iGameClassKey != NO_KEY && iGameNumber != -1)
+            {
+                iErrCode = CacheAllGameTables(iGameClassKey, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+
                 iSpectatorGamesPage = 1;
                 m_bRedirectTest = false;
             }
