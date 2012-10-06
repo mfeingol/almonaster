@@ -1698,33 +1698,25 @@ int GameEngine::UpdatePlanetPopulations(int iNumEmpires, unsigned int* piEmpireK
                     
                     GetCoordinates (vCoord.GetCharPtr(), &iX, &iY);
                     
-                    for (j = 0; j < iNumEmpires; j ++) {
-                        
-                        if (pbAlive[j]) {
-                            
-                            iErrCode = t_pCache->GetFirstKey(
-                                pstrEmpireMap[j], 
-                                GameEmpireMap::PlanetKey, 
-                                piPlanetKey[i], 
-                                &iKey
-                                );
+                    for (j = 0; j < iNumEmpires; j ++)
+                    {
+                        if (!pbAlive[j])
+                            continue;
 
-                            if (iErrCode == ERROR_DATA_NOT_FOUND)
-                            {
-                                iErrCode = OK;
-                            }
-                            RETURN_ON_ERROR(iErrCode);
-
+                        iErrCode = t_pCache->GetFirstKey(pstrEmpireMap[j], GameEmpireMap::PlanetKey, piPlanetKey[i], &iKey);
+                        if (iErrCode == ERROR_DATA_NOT_FOUND)
+                        {
+                            iErrCode = OK;
+                        }
+                        else if (iErrCode == OK)
+                        {
                             pstrUpdateMessage[j] += BEGIN_GOOD_FONT(j);
-
-                            AddPlanetNameAndCoordinates (
-                                pstrUpdateMessage[j], 
-                                vPlanetName.GetCharPtr(),
-                                iX,
-                                iY
-                                );
-
+                            AddPlanetNameAndCoordinates(pstrUpdateMessage[j], vPlanetName.GetCharPtr(), iX, iY);
                             pstrUpdateMessage[j] += " is now safe for colonization" END_FONT "\n";
+                        }
+                        else
+                        {
+                            RETURN_ON_ERROR(iErrCode);
                         }
                     }
                 }
@@ -5958,60 +5950,47 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                 iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Owner, &vOwner);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (vOwner.GetInteger() == (int) piEmpireKey[i] || vOwner.GetInteger() == SYSTEM) {
-                
+                if (vOwner.GetInteger() == (int) piEmpireKey[i] || vOwner.GetInteger() == SYSTEM)
+                {
                     bActionFlag = false;
-                
-                } else {
-
+                }
+                else
+                {
                     bActionFlag = true;
-                    
-                    if (vOwner.GetInteger() != INDEPENDENT) {
-                        
-                        iErrCode = t_pCache->GetFirstKey(
-                            pstrEmpireDip[i], 
-                            GameEmpireDiplomacy::ReferenceEmpireKey, 
-                            vOwner, 
-                            &iKey
-                            );
+
+                    if (vOwner.GetInteger() != INDEPENDENT)
+                    {
+                        iErrCode = t_pCache->GetFirstKey(pstrEmpireDip[i], GameEmpireDiplomacy::ReferenceEmpireKey, vOwner, &iKey);
                         RETURN_ON_ERROR(iErrCode);
                         
-                        iErrCode = t_pCache->ReadData(
-                            pstrEmpireDip[i], 
-                            iKey, 
-                            GameEmpireDiplomacy::CurrentStatus, 
-                            &vTemp
-                            );
+                        iErrCode = t_pCache->ReadData(pstrEmpireDip[i], iKey, GameEmpireDiplomacy::CurrentStatus, &vTemp);
                         RETURN_ON_ERROR(iErrCode);
                         
-                        if (vTemp.GetInteger() != WAR) {
+                        if (vTemp.GetInteger() != WAR)
+                        {
                             bActionFlag = false;
+
+                            // Couldn't invade
+                            pstrUpdateMessage[i] += BEGIN_BAD_FONT(i);
+                            pstrUpdateMessage[i].AppendHtml (vShipName.GetCharPtr(), 0, false);
+                            pstrUpdateMessage[i] += " of " BEGIN_STRONG;
+                            pstrUpdateMessage[i] += pvEmpireName[i].GetCharPtr();
+                            pstrUpdateMessage[i] += END_STRONG " could not invade ";
+                    
+                            AddPlanetNameAndCoordinates (
+                                pstrUpdateMessage[i],
+                                vPlanetName.GetCharPtr(), 
+                                iX, 
+                                iY
+                                );
+
+                            pstrUpdateMessage[i] += "\n" END_FONT;
                         }
                     }
                 }
 
-                if (!bActionFlag) {
-
-                    // Couldn't invade
-                    pstrUpdateMessage[i] += BEGIN_BAD_FONT(i);
-                    pstrUpdateMessage[i].AppendHtml (vShipName.GetCharPtr(), 0, false);
-                    pstrUpdateMessage[i] += " of " BEGIN_STRONG;
-                    pstrUpdateMessage[i] += pvEmpireName[i].GetCharPtr();
-                    pstrUpdateMessage[i] += END_STRONG " could not invade ";
-                    
-                    AddPlanetNameAndCoordinates (
-                        pstrUpdateMessage[i],
-                        vPlanetName.GetCharPtr(), 
-                        iX, 
-                        iY
-                        );
-
-                    pstrUpdateMessage[i] += "\n" END_FONT;
-
-                } else {
-
-                    int iMaxPop;
-                    
+                if (bActionFlag)
+                {
                     // Attempt invasion
                     iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
                     RETURN_ON_ERROR(iErrCode);
@@ -6022,34 +6001,27 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                     iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
                     RETURN_ON_ERROR(iErrCode);
 
-                    iMaxPop = GetMaxPop (vMin.GetInteger(), vFuel.GetInteger());
+                    int iMaxPop = GetMaxPop (vMin.GetInteger(), vFuel.GetInteger());
                     
-                    iInvadePop = GetTroopshipPop (
-                        gcConfig.fTroopshipInvasionFactor,
-                        vBR.GetFloat()
-                        );
-                    
-                    if (iInvadePop < vPop.GetInteger()) {
-                        
+                    iInvadePop = GetTroopshipPop(gcConfig.fTroopshipInvasionFactor, vBR.GetFloat());
+                    if (iInvadePop < vPop.GetInteger())
+                    {
                         /////////////////////
                         // Invasion failed //
                         /////////////////////
 
                         // Reduce pop
-                        iTemp = GetTroopshipFailurePopDecrement (
-                            gcConfig.fTroopshipFailureFactor,
-                            vBR.GetFloat()
-                            );
-                        
+                        iTemp = GetTroopshipFailurePopDecrement(gcConfig.fTroopshipFailureFactor, vBR.GetFloat());
+
                         iErrCode = t_pCache->Increment (strGameMap, iPlanetKey, GameMap::Pop, iTemp);
                         RETURN_ON_ERROR(iErrCode);
                         
                         // Reduce owner's total pop
-                        if (vOwner.GetInteger() != INDEPENDENT) {
+                        if (vOwner.GetInteger() != INDEPENDENT)
+                        {
+                            GetEmpireIndex(k, vOwner);
                             
-                            GetEmpireIndex (k, vOwner);
-                            
-                            iErrCode = t_pCache->Increment (pstrEmpireData[k], GameEmpireData::TotalPop, iTemp);
+                            iErrCode = t_pCache->Increment(pstrEmpireData[k], GameEmpireData::TotalPop, iTemp);
                             RETURN_ON_ERROR(iErrCode);
                             
                             // Reduce owner's resources and econ
@@ -6067,17 +6039,11 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         strMessage += " of " BEGIN_STRONG;
                         strMessage += pvEmpireName[i].GetCharPtr();
                         strMessage += END_STRONG " was destroyed attempting to invade ";
-                        
-                        AddPlanetNameAndCoordinates (
-                            strMessage,
-                            vPlanetName.GetCharPtr(),
-                            iX,
-                            iY
-                            );
-                        
+                        AddPlanetNameAndCoordinates(strMessage, vPlanetName.GetCharPtr(), iX, iY);
                         strMessage += "\n" END_FONT;
                         
-                        for (k = 0; k < iNumWatcherEmpires; k ++) {
+                        for (k = 0; k < iNumWatcherEmpires; k ++)
+                        {
                             pstrUpdateMessage [piWatcherEmpire[k]] += strMessage;
                         }
                         
