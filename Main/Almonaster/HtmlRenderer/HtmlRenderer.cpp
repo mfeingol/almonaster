@@ -5178,6 +5178,7 @@ static const char* const g_pszEmpireInfoHeadersSpectator[] = {
     "Mil",
     "Planets",
     "Pause",
+    "Draw",
     "Last Access",
     "Ready for Update",
 };
