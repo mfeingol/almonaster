@@ -1061,13 +1061,13 @@ int HtmlRenderer::HandleShipMenuSubmissions()
     return iErrCode;
 }
 
-int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, unsigned int iIndex, bool bFleet,
-                             const GameConfiguration& gcConfig, const ShipOrderPlanetInfo& planetInfo, 
-                             const ShipOrderShipInfo& shipInfo, const ShipOrderGameInfo& gameInfo,
-                             const BuildLocation* pblLocations, unsigned int iNumLocations) {
-
+int HtmlRenderer::WriteShip(unsigned int iShipKey, const Variant* pvShipData, unsigned int iIndex, bool bFleet,
+                            const GameConfiguration& gcConfig, const ShipOrderPlanetInfo& planetInfo, 
+                            const ShipOrderShipInfo& shipInfo, const ShipOrderGameInfo& gameInfo,
+                            const BuildLocation* pblLocations, unsigned int iNumLocations)
+{
     int iErrCode, iType, iState, iSelectedOrder;
-    float fCurrentBR, fMaxBR, fNextBR, fAfterNextBR;
+    float fNextBR, fAfterNextBR;
 
     ShipOrder* psoOrder = NULL;
     unsigned int iNumOrders = 0, j;
@@ -1099,57 +1099,50 @@ int HtmlRenderer::WriteShip (unsigned int iShipKey, const Variant* pvShipData, u
     m_pHttpResponse->WriteText (strHtml, strHtml.GetLength());
     OutputText ("\"></td><td align=\"center\"><font color=\"");
 
-    fCurrentBR = pvShipData[GameEmpireShips::iCurrentBR].GetFloat();
-    fMaxBR = pvShipData[GameEmpireShips::iMaxBR].GetFloat();
-
-    if (fCurrentBR < fMaxBR) {
+    if (shipInfo.fBR < shipInfo.fMaxBR) {
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
     } else {
         m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
     }
     OutputText ("\">");
-    m_pHttpResponse->WriteText (fCurrentBR);
+    m_pHttpResponse->WriteText(shipInfo.fBR);
     OutputText ("</font></td><td align=\"center\">");
 
     // Next BR
-    fNextBR = gameInfo.fMaintRatio * fCurrentBR;
+    fNextBR = gameInfo.fMaintRatio * shipInfo.fBR;
     OutputText ("<font color=\"");
-    if (fNextBR < fMaxBR) {
+    if (fNextBR < shipInfo.fMaxBR) {
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
         OutputText ("\">");
         m_pHttpResponse->WriteText (fNextBR);
     } else {
         m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
         OutputText ("\">");
-        m_pHttpResponse->WriteText (fMaxBR);
+        m_pHttpResponse->WriteText (shipInfo.fMaxBR);
     }
 
     // After Next BR
     fAfterNextBR = gameInfo.fNextMaintRatio * fNextBR;
     OutputText ("</font></td><td align=\"center\"><font color=\"");
-    if (fAfterNextBR < fMaxBR) {
+    if (fAfterNextBR < shipInfo.fMaxBR) {
         m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
         OutputText ("\">");
         m_pHttpResponse->WriteText (fAfterNextBR);
     } else {
         m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
         OutputText ("\">");
-        m_pHttpResponse->WriteText (fMaxBR);
+        m_pHttpResponse->WriteText (shipInfo.fMaxBR);
     }
 
     // Max BR
     OutputText ("</font></td><td align=\"center\"><font color=\"");
-    if (fMaxBR < shipInfo.fBR) {
-        m_pHttpResponse->WriteText (m_vBadColor.GetCharPtr());
-    } else {
-        m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
-    }
+    m_pHttpResponse->WriteText (m_vGoodColor.GetCharPtr());
     OutputText ("\">");
-    m_pHttpResponse->WriteText (fMaxBR);
+    m_pHttpResponse->WriteText (shipInfo.fMaxBR);
     OutputText ("</font></td>");
     
-    if (!bFleet) {
-
+    if (!bFleet)
+    {
         OutputText ("<td align=\"center\">");
         m_pHttpResponse->WriteText (planetInfo.pszName);
         OutputText (" (");
