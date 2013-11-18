@@ -1086,6 +1086,7 @@ public:
     int CacheGameData(const int* piGameClass, const int* piGameNumber, int iEmpireKey, unsigned int iNumGames);
     int CacheGameData(const Variant** ppvGame, int iEmpireKey, unsigned int iNumGames);
     int CacheGameEmpireData(unsigned int iEmpireKey, const Variant** pvGames, unsigned int iNumGames);
+    int CacheGameEmpiresAndGameEmpireData(unsigned int iEmpireKey, const Variant** ppvGames, unsigned int iNumGames);
     int CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsigned int iNumEmpires);
     int CacheEmpiresAndGameMessages(int iGameClass, int iGameNumber, const unsigned int* piEmpireKey, unsigned int iNumEmpires);
     int CacheEmpireActiveGamesMessagesNukeLists(const unsigned int* piEmpireKey, unsigned int iNumEmpires);

@@ -1003,7 +1003,7 @@ int GameEngine::ObliterateEmpire(unsigned int iEmpireKey, int64 i64SecretKey, un
 
     if (iNumGames > 0)
     {
-        iErrCode = CacheGameEmpireData(iEmpireKey, (const Variant**)ppvActiveGames, iNumGames);
+        iErrCode = CacheGameEmpiresAndGameEmpireData(iEmpireKey, (const Variant**)ppvActiveGames, iNumGames);
         RETURN_ON_ERROR(iErrCode);
 
         for (unsigned int i = 0; i < iNumGames; i ++)
@@ -1017,6 +1017,9 @@ int GameEngine::ObliterateEmpire(unsigned int iEmpireKey, int64 i64SecretKey, un
 
             if (bFlag)
             {
+                iErrCode = CacheAllGameTables(iGameClass, iGameNumber);
+                RETURN_ON_ERROR(iErrCode);
+
                 // Try to quit the empire from the game nicely
                 iErrCode = QuitEmpireFromGameInternal (iGameClass, iGameNumber, iEmpireKey, iKillerEmpire);
                 if (iErrCode == ERROR_GAME_HAS_STARTED)

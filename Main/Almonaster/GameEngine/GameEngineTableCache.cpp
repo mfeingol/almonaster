@@ -364,7 +364,7 @@ int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant** ppv
     TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumGames * sizeof(TableCacheEntry));
 
     for (unsigned int i = 0; i < iNumGames; i ++)
-	{
+    {
         int iGameClass = ppvGames[i][0].GetInteger();
         int iGameNumber = ppvGames[i][1].GetInteger();
 
@@ -379,15 +379,66 @@ int GameEngine::CacheGameEmpireData(unsigned int iEmpireKey, const Variant** ppv
         pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Data = iEmpireKey;
 
         pcEntries[i].Table.Name = GAME_EMPIRE_DATA;
-		pcEntries[i].Table.Key = NO_KEY;
-		pcEntries[i].Table.NumColumns = cGameEmpireDataCols;
-		pcEntries[i].Table.Columns = pcGameEmpireDataCols + i*cGameEmpireDataCols;
+        pcEntries[i].Table.Key = NO_KEY;
+        pcEntries[i].Table.NumColumns = cGameEmpireDataCols;
+        pcEntries[i].Table.Columns = pcGameEmpireDataCols + i*cGameEmpireDataCols;
         pcEntries[i].Reserved = NULL;
         pcEntries[i].PartitionColumn = NULL;
         pcEntries[i].CrossJoin = NULL;
 	}
 
 	return t_pCache->Cache(pcEntries, iNumGames);
+}
+
+int GameEngine::CacheGameEmpiresAndGameEmpireData(unsigned int iEmpireKey, const Variant** ppvGames, unsigned int iNumGames)
+{
+    const unsigned int cGameEmpireDataCols = 3;
+    const unsigned int cGameEmpiresCols = 2;
+
+    ColumnEntry* pcGameEmpireDataCols = (ColumnEntry*)StackAlloc(cGameEmpireDataCols * iNumGames * sizeof(ColumnEntry));
+    ColumnEntry* pcGameEmpiresCols = (ColumnEntry*)StackAlloc(cGameEmpiresCols * iNumGames * sizeof(ColumnEntry));
+    TableCacheEntry* pcEntries = (TableCacheEntry*)StackAlloc(iNumGames * 2 * sizeof(TableCacheEntry));
+
+    for (unsigned int i = 0; i < iNumGames; i ++)
+    {
+        int iGameClass = ppvGames[i][0].GetInteger();
+        int iGameNumber = ppvGames[i][1].GetInteger();
+
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Name = GameEmpireData::GameClass;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Data.Initialize();
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 0].Data = iGameClass;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 1].Name = GameEmpireData::GameNumber;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 1].Data.Initialize();
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 1].Data = iGameNumber;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Name = GameEmpireData::EmpireKey;
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Data.Initialize();
+        pcGameEmpireDataCols[i*cGameEmpireDataCols + 2].Data = iEmpireKey;
+
+        pcEntries[i*2].Table.Name = GAME_EMPIRE_DATA;
+        pcEntries[i*2].Table.Key = NO_KEY;
+        pcEntries[i*2].Table.NumColumns = cGameEmpireDataCols;
+        pcEntries[i*2].Table.Columns = pcGameEmpireDataCols + i*cGameEmpireDataCols;
+        pcEntries[i*2].Reserved = NULL;
+        pcEntries[i*2].PartitionColumn = NULL;
+        pcEntries[i*2].CrossJoin = NULL;
+
+        pcGameEmpiresCols[i*cGameEmpireDataCols + 0].Name = GameEmpires::GameClass;
+        pcGameEmpiresCols[i*cGameEmpireDataCols + 0].Data.Initialize();
+        pcGameEmpiresCols[i*cGameEmpireDataCols + 0].Data = iGameClass;
+        pcGameEmpiresCols[i*cGameEmpireDataCols + 1].Name = GameEmpires::GameNumber;
+        pcGameEmpiresCols[i*cGameEmpireDataCols + 1].Data.Initialize();
+        pcGameEmpiresCols[i*cGameEmpireDataCols + 1].Data = iGameNumber;
+
+        pcEntries[i*2+1].Table.Name = GAME_EMPIRES;
+        pcEntries[i*2+1].Table.Key = NO_KEY;
+        pcEntries[i*2+1].Table.NumColumns = cGameEmpiresCols;
+        pcEntries[i*2+1].Table.Columns = pcGameEmpiresCols + i*cGameEmpiresCols;
+        pcEntries[i*2+1].Reserved = NULL;
+        pcEntries[i*2+1].PartitionColumn = NULL;
+        pcEntries[i*2+1].CrossJoin = NULL;
+	}
+
+	return t_pCache->Cache(pcEntries, iNumGames * 2);
 }
 
 int GameEngine::CacheEmpireAndActiveGames(const unsigned int* piEmpireKey, unsigned int iNumEmpires)
@@ -639,6 +690,47 @@ int GameEngine::CacheAllGameTables(int iGameClass, int iGameNumber)
         }
         iErrCode = CacheEmpireActiveGamesMessagesNukeLists(piEmpireKey, iNumEmpires);
         RETURN_ON_ERROR(iErrCode);
+    }
+
+    int iGameClassOptions;
+    iErrCode = GetGameClassOptions(iGameClass, &iGameClassOptions);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (iGameClassOptions & USE_SC30_SURRENDERS)
+    {
+        ICachedTable* pGameMap = NULL;
+        AutoRelease<ICachedTable> autoRelease(pGameMap);
+
+        GET_GAME_MAP(strGameMap, iGameClass, iGameNumber);
+        iErrCode = t_pCache->GetTable(strGameMap, &pGameMap);
+        RETURN_ON_ERROR(iErrCode);
+
+        Vector<unsigned int> nukedEmpires;
+        unsigned int iKey = NO_KEY;
+        while (true)
+        {
+            iErrCode = pGameMap->GetNextKey(iKey, &iKey);
+            if (iErrCode == ERROR_DATA_NOT_FOUND)
+            {
+                iErrCode = OK;
+                break;
+            }
+            RETURN_ON_ERROR(iErrCode);
+
+            Variant vHW;
+            iErrCode = pGameMap->ReadData(iKey, GameMap::HomeWorld, &vHW);
+            RETURN_ON_ERROR(iErrCode);
+
+            if (vHW.GetInteger() != HOMEWORLD && vHW.GetInteger() != NOT_HOMEWORLD)
+              nukedEmpires.Add(vHW.GetInteger());
+        }
+
+        if (nukedEmpires.GetNumElements() > 0)
+        {
+            unsigned int iRead;
+            iErrCode = CacheEmpires(nukedEmpires.GetData(), nukedEmpires.GetNumElements(), &iRead);
+            RETURN_ON_ERROR(iErrCode);
+        }
     }
 
     Assert(pvEmpireKey && iNumEmpires);
