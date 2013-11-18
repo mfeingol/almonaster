@@ -180,6 +180,8 @@ void HtmlRenderer::RegisterCache_ServerAdministrator(Vector<TableCacheEntry>& ca
 
 void HtmlRenderer::RegisterCache_EmpireAdministrator(Vector<TableCacheEntry>& cache)
 {
+    // Needed to obliterate empires
+    Cache(cache, systemActiveGames);
 }
 
 void HtmlRenderer::RegisterCache_GameAdministrator(Vector<TableCacheEntry>& cache)
