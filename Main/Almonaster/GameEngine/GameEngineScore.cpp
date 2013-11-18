@@ -65,7 +65,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
     {
         iErrCode = OK;
         iNukedAlienKey = NO_KEY;
-        iNukedAlienAddress = -1;
+        iNukedAlienAddress = NO_KEY;
     }
     else
     {
@@ -84,7 +84,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukerKey,
         NULL,
         NO_KEY,
-        -1,
+        NO_KEY,
         iNukedKey,
         pszNukedName,
         iNukedAlienKey,
@@ -99,7 +99,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
     {
         iErrCode = OK;
         iNukerAlienKey = NO_KEY;
-        iNukerAlienAddress = -1;
+        iNukerAlienAddress = NO_KEY;
     }
     else
     {
@@ -118,7 +118,7 @@ int GameEngine::UpdateScoresOnNuke(int iNukerKey, int iNukedKey, const char* psz
         iNukedKey,
         NULL,
         NO_KEY,
-        -1,
+        NO_KEY,
         iNukerKey,
         pszNukerName,
         iNukerAlienKey,

@@ -508,6 +508,16 @@ int HtmlRenderer::WriteProfileAlienString(unsigned int iAlienKey, int iAddress, 
     }
     else
     {
+        if (iAddress == NO_KEY)
+        {
+            Variant vDefaultAlienAddress;
+            GameEngine gameEngine;
+            iErrCode = gameEngine.GetSystemProperty(SystemData::DefaultAlienAddress, &vDefaultAlienAddress);
+            RETURN_ON_ERROR(iErrCode);
+
+            iAddress = vDefaultAlienAddress.GetInteger();
+        }
+
         OutputText (BASE_ALIEN_DIR ALIEN_NAME);
         m_pHttpResponse->WriteText(iAddress);
         OutputText (DEFAULT_IMAGE_EXTENSION);
