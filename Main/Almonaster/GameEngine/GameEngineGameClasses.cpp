@@ -198,6 +198,8 @@ int GameEngine::DeleteGameClass(int iGameClass, bool* pbDeleted)
         // Delete row from SystemGameClassData
         iErrCode = t_pCache->DeleteRow(SYSTEM_GAMECLASS_DATA, iGameClass);
         RETURN_ON_ERROR(iErrCode);
+
+        *pbDeleted = true;
     }
 
     return iErrCode;
