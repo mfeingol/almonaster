@@ -215,7 +215,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
                                                             int iGameNumber, int iUpdate,
                                                             const char* pszGameClassName) {
 
-    int iErrCode, iLoserKey;
+    int iErrCode;
 
     GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
 
@@ -246,37 +246,33 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     iErrCode = t_pCache->Increment(strWinner, iWinnerKey, SystemEmpireData::Nukes, 1);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = t_pCache->ReadData(
-        strGameMap, 
-        iPlanetKey, 
-        GameMap::SurrenderEmpireSecretKey, 
-        &vEmpireSecretKey
-        );
-
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = t_pCache->ReadData(
-        strGameMap, 
-        iPlanetKey, 
-        GameMap::HomeWorld, 
-        &vNukedKey
-        );
-
+    // See if nuked empire still exists
+    iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::HomeWorld, &vNukedKey);
     RETURN_ON_ERROR(iErrCode);
 
     Assert(vNukedKey.GetInteger() != NO_KEY);
 
-    iErrCode = CheckSecretKey (vNukedKey.GetInteger(), vEmpireSecretKey.GetInteger64(), &bValid, NULL, NULL);
+    bool bLoserExists;
+    iErrCode = DoesEmpireExist(vNukedKey.GetInteger(), &bLoserExists, NULL);
     RETURN_ON_ERROR(iErrCode);
 
-    if (bValid) {
-        iLoserKey = vNukedKey.GetInteger();
-    } else {
-        iLoserKey = NO_KEY;
+    unsigned int iLoserKey = NO_KEY;
+    if (bLoserExists)
+    {
+        // Verify empire is the one we want
+        iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::SurrenderEmpireSecretKey, &vEmpireSecretKey);
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = CheckSecretKey (vNukedKey.GetInteger(), vEmpireSecretKey.GetInteger64(), &bValid, NULL, NULL);
+        RETURN_ON_ERROR(iErrCode);
+
+        if (bValid)
+        {
+            iLoserKey = vNukedKey.GetInteger();
+        }
     }
 
     GET_SYSTEM_EMPIRE_DATA(strWinnerEmpire, iWinnerKey);
-    GET_SYSTEM_EMPIRE_DATA(strLoserEmpire, iLoserKey);
 
     // Parse out empire's name
     int scanf = sscanf (vPlanetName.GetCharPtr(), RUINS_OF, pszNukedName);
@@ -301,6 +297,8 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
     }
     else
     {
+        GET_SYSTEM_EMPIRE_DATA(strLoserEmpire, iLoserKey);
+
         iErrCode = t_pCache->ReadData(strLoserEmpire, iLoserKey, SystemEmpireData::AlienKey, &vTemp);
         RETURN_ON_ERROR(iErrCode);
         iNukedAlienKey = vTemp.GetInteger();
@@ -309,7 +307,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         RETURN_ON_ERROR(iErrCode);
         iNukedAlienAddress = vTemp.GetInteger();
 
-        // Add to nuked's nuke history
+        // Add to loser's nuke history
         iErrCode = AddNukeToHistory (
             NUKER_LIST,
             pszGameClassName,
@@ -340,7 +338,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         NULL,
         NO_KEY,
         -1,
-        iLoserKey,
+        vNukedKey.GetInteger(),
         pszNukedName,
         iNukedAlienKey,
         iNukedAlienAddress
@@ -357,7 +355,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         pszWinnerName,
         iNukerAlienKey,
         iNukerAlienAddress,
-        iLoserKey,
+        vNukedKey.GetInteger(),
         pszNukedName,
         iNukedAlienKey,
         iNukedAlienAddress

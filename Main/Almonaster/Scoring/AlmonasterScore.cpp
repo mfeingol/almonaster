@@ -199,31 +199,24 @@ int AlmonasterScore::On30StyleSurrenderColonization (int iGameClass, int iGameNu
     pscChanges->fAlmonasterNukerScore = fWinnerScore;
     pscChanges->fAlmonasterNukerChange = fWinnerIncrease;
 
-    // Try to find the loser
-    // This doesn't really belong here, but it's a convenient place to do it for perf
-    iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
+    // Try to find the loser, validate it's the right empire
+    GameEngine gameEngine;
+    iErrCode = gameEngine.DoesEmpireExist(iLoserKey, &bValid, NULL);
     RETURN_ON_ERROR(iErrCode);
 
-    if (bValid) {
-
+    if (bValid)
+    {
+        iErrCode = m_pGameEngine->CheckSecretKey (iLoserKey, i64EmpireSecretKey, &bValid, NULL, NULL);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    if (bValid)
+    {
         GET_SYSTEM_EMPIRE_DATA(strLoser, iLoserKey);
 
-        iErrCode = t_pCache->Increment(
-            strLoser, 
-            iLoserKey, 
-            SystemEmpireData::AlmonasterScore, 
-            - fLoserDecrease
-            );
-        
+        iErrCode = t_pCache->Increment(strLoser, iLoserKey, SystemEmpireData::AlmonasterScore, - fLoserDecrease);
         RETURN_ON_ERROR(iErrCode);
         
-        iErrCode = t_pCache->Increment(
-            strLoser, 
-            iLoserKey, 
-            SystemEmpireData::AlmonasterScoreSignificance, 
-            1
-            );
-        
+        iErrCode = t_pCache->Increment(strLoser, iLoserKey, SystemEmpireData::AlmonasterScoreSignificance, 1);
         RETURN_ON_ERROR(iErrCode);
         
         // Do accounting for loser
