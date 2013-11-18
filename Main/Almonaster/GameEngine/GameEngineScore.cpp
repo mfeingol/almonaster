@@ -275,7 +275,7 @@ int GameEngine::UpdateScoresOn30StyleSurrenderColonization (int iWinnerKey, int 
         iLoserKey = NO_KEY;
     }
 
-    GET_SYSTEM_EMPIRE_DATA(strWinnerEmpire, iLoserKey);
+    GET_SYSTEM_EMPIRE_DATA(strWinnerEmpire, iWinnerKey);
     GET_SYSTEM_EMPIRE_DATA(strLoserEmpire, iLoserKey);
 
     // Parse out empire's name
@@ -1181,7 +1181,14 @@ int GameEngine::AddNukeToHistory(NukeList nlNukeList, const char* pszGameClassNa
 
     // Get the table
     iErrCode = t_pCache->GetTable(pszTable, &pWriteTable);
-    RETURN_ON_ERROR(iErrCode);
+    if (iErrCode == ERROR_UNKNOWN_TABLE_NAME)
+    {
+      iErrCode = t_pCache->CreateEmpty(SYSTEM_EMPIRE_NUKER_LIST, pszTable);
+      RETURN_ON_ERROR(iErrCode);
+
+      iErrCode = t_pCache->GetTable(pszTable, &pWriteTable);
+      RETURN_ON_ERROR(iErrCode);
+    }
 
     //
     // Delete the oldest nuke if the limit has been reached
