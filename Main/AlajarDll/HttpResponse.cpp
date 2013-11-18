@@ -1650,21 +1650,18 @@ int HttpResponse::ProcessMethod() {
 
     case GET:
     case HEAD:
-
         return ProcessGet();
 
     case POST:
-
         return ProcessPost();
         break;
 
     case UNSUPPORTED_HTTP_METHOD:
-
         return OK;
 
+    case PUT:
+    case TRACE:
     default:
-
-        Assert (false);
         return ERROR_FAILURE;
     }
 }
