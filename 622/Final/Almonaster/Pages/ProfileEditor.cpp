@@ -2017,11 +2017,11 @@ int HtmlRenderer::Render_ProfileEditor() {
 	            AddMessage ("Your empire's statistics have been blanked");
 
 	            SystemConfiguration scConfig;
-		        if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
-		            char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
-		            sprintf (pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
+	            if (g_pGameEngine->GetSystemConfiguration (&scConfig) == OK && scConfig.bReport) {
+	                char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
+	                sprintf (pszText, "%s statistics were blanked", m_vEmpireName.GetCharPtr());
 	                g_pReport->WriteReport (pszText);
-		        }
+	            }
 
 	            break;
 
@@ -2161,9 +2161,9 @@ int HtmlRenderer::Render_ProfileEditor() {
 	    
 	Write ("</font><p><table width=\"90%\"><tr><td align=\"center\" colspan=\"2\"><h3>Empire Information:</h3></td></tr><tr><td align=\"left\">Recase empire name:</td><td align=\"left\"><input type=\"text\" name=\"RecasedEmpireName\" size=\"", sizeof ("</font><p><table width=\"90%\"><tr><td align=\"center\" colspan=\"2\"><h3>Empire Information:</h3></td></tr><tr><td align=\"left\">Recase empire name:</td><td align=\"left\"><input type=\"text\" name=\"RecasedEmpireName\" size=\"") - 1);
 	stLen = strlen (m_vEmpireName.GetCharPtr());
-	    Write ((uint64) stLen); 
+	    Write ((int64)stLen); 
 	Write ("\" maxlength=\"", sizeof ("\" maxlength=\"") - 1);
-	Write ((uint64) stLen); 
+	Write ((int64)stLen); 
 	    
 	Write ("\" value=\"", sizeof ("\" value=\"") - 1);
 	Write (m_vEmpireName.GetCharPtr()); 
@@ -3220,7 +3220,7 @@ int HtmlRenderer::Render_ProfileEditor() {
 
 	        for (i = 0; i < (int) iNumMessages; i ++) {
 	            piIndex[i] = i;
-	            ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetUTCTime();
+	            ptTime[i] = ppvMessage[i][SystemEmpireMessages::TimeStamp].GetInteger64();
 	        }
 
 	        Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
@@ -3265,7 +3265,7 @@ int HtmlRenderer::Render_ProfileEditor() {
 	Write ("\" value =\"", sizeof ("\" value =\"") - 1);
 	Write (pszSender); 
 	Write ("\"><tr><td>Time: ", sizeof ("\"><tr><td>Time: ") - 1);
-	iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::TimeStamp], pszDate);
+	iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][SystemEmpireMessages::TimeStamp].GetInteger64(), pszDate);
 	                if (iErrCode != OK) {
 	                    
 	Write ("Unknown date", sizeof ("Unknown date") - 1);

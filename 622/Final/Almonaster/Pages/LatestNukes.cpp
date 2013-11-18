@@ -66,7 +66,7 @@ int HtmlRenderer::Render_LatestNukes() {
 
 	    // Sort by timestamp
 	    for (i = 0; i < iNumNukes; i ++) {
-	        ptTime[i] = ppvNukeData[i][SystemNukeList::TimeStamp].GetUTCTime();
+	        ptTime[i] = ppvNukeData[i][SystemNukeList::TimeStamp].GetInteger64();
 	        ppvData[i] = ppvNukeData[i];
 	    }
 
@@ -147,7 +147,7 @@ int HtmlRenderer::Render_LatestNukes() {
 	Write (ppvData[i][SystemNukeList::GameNumber].GetInteger()); 
 	Write ("</td><td align=\"center\">", sizeof ("</td><td align=\"center\">") - 1);
 	iErrCode = Time::GetDateString (
-	            ppvData[i][SystemNukeList::TimeStamp].GetUTCTime(), 
+	            ppvData[i][SystemNukeList::TimeStamp].GetInteger64(), 
 	            pszDateString
 	            );
 

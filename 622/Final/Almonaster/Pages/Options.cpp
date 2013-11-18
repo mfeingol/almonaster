@@ -1735,7 +1735,7 @@ int HtmlRenderer::Render_Options() {
 
 	        for (i = 0; i < iNumMessages; i ++) {
 	            piIndex[i] = i;
-	            ptTime[i] = ppvMessage[i][GameEmpireMessages::TimeStamp].GetUTCTime();
+	            ptTime[i] = ppvMessage[i][GameEmpireMessages::TimeStamp].GetInteger64();
 	        }
 
 	        Algorithm::QSortTwoDescending<UTCTime, int> (ptTime, piIndex, iNumMessages);
@@ -1784,7 +1784,7 @@ int HtmlRenderer::Render_Options() {
 	Write (pszSender);
 	                
 	Write ("\"><tr><td><strong>Time: </strong> ", sizeof ("\"><tr><td><strong>Time: </strong> ") - 1);
-	iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][GameEmpireMessages::TimeStamp], pszDate);
+	iErrCode = Time::GetDateString (ppvMessage[piIndex[i]][GameEmpireMessages::TimeStamp].GetInteger64(), pszDate);
 	                if (iErrCode != OK) {
 	                    
 	Write ("Could not read date", sizeof ("Could not read date") - 1);
