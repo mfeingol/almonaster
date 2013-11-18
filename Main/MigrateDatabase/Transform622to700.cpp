@@ -299,8 +299,8 @@ void Transform622to700::TransformTables(System::String^ currentTemplate,
 
         switch (nameInfo->Type)
         {
-        case TableType::Game:
-        case TableType::GameEmpire:
+        case TableNameInfo::TableType::Game:
+        case TableNameInfo::TableType::GameEmpire:
             if (!IsGameActive(nameInfo->GameClass, nameInfo->GameNumber))
             {
                 Console::WriteLine("Skipping table {0}", table->Name);
@@ -322,19 +322,19 @@ void Transform622to700::TransformTables(System::String^ currentTemplate,
 
             switch (nameInfo->Type)
             {
-            case TableType::System:
+            case TableNameInfo::TableType::System:
                 break;
-            case TableType::SystemEmpire:
+            case TableNameInfo::TableType::SystemEmpire:
                 accepted->Insert(0, gcnew FileDatabaseElement("EmpireKey", IdToKey(m_empireKeyMapper[KeyToId(nameInfo->EmpireKey)])));
                 break;
-            case TableType::SystemTournament:
+            case TableNameInfo::TableType::SystemTournament:
                 accepted->Insert(0, gcnew FileDatabaseElement("TournamentKey", IdToKey(m_tournamentKeyMapper[KeyToId(nameInfo->TournamentKey)])));
                 break;
-            case TableType::Game:
+            case TableNameInfo::TableType::Game:
                 accepted->Insert(0, gcnew FileDatabaseElement("GameClass", IdToKey(m_gameClassKeyMapper[KeyToId(nameInfo->GameClass)])));               
                 accepted->Insert(1, gcnew FileDatabaseElement("GameNumber", nameInfo->GameNumber));
                 break;
-            case TableType::GameEmpire:
+            case TableNameInfo::TableType::GameEmpire:
                 accepted->Insert(0, gcnew FileDatabaseElement("GameClass", IdToKey(m_gameClassKeyMapper[KeyToId(nameInfo->GameClass)])));
                 accepted->Insert(1, gcnew FileDatabaseElement("GameNumber", nameInfo->GameNumber));
                 accepted->Insert(2, gcnew FileDatabaseElement("EmpireKey", IdToKey(m_empireKeyMapper[KeyToId(nameInfo->EmpireKey)])));

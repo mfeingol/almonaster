@@ -1,17 +1,18 @@
 #pragma once
 
-enum class TableType
-{
-    System,
-    SystemEmpire,
-    SystemTournament,
-    Game,
-    GameEmpire,
-};
-
 ref class TableNameInfo
 {
 public:
+
+    enum class TableType
+    {
+        System,
+        SystemEmpire,
+        SystemTournament,
+        Game,
+        GameEmpire,
+    };
+
     TableNameInfo(System::String^ tableName);
 
     property System::String^ Name;
