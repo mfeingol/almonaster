@@ -81,6 +81,10 @@ OsalInitialization OsalInitialization::init;
 // OS functionality
 //
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4996)
+#endif
+
 int OS::GetOSVersion (char pszOSVersion[OS::MaxOSVersionLength]) {
 
 #ifdef __LINUX__
@@ -138,6 +142,10 @@ int OS::GetOSVersion (char pszOSVersion[OS::MaxOSVersionLength]) {
     return OK;
 #endif
 }
+
+#ifdef _MSC_VER
+#pragma warning(default: 4996)
+#endif
 
 int OS::GetMemoryStatistics (size_t* pstTotalPhysicalMemory, size_t* pstTotalFreePhysicalMemory, 
                              size_t* pstTotalVirtualMemory, size_t* pstTotalFreeVirtualMemory) {
@@ -289,13 +297,6 @@ int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLe
 
 #else if defined __WIN32__
 
-    OSVERSIONINFOEX osVer;
-    osVer.dwOSVersionInfoSize = sizeof (osVer);
-
-    if (!::GetVersionEx ((OSVERSIONINFO*) &osVer)) {
-        return ERROR_FAILURE;
-    }
-
     SYSTEM_INFO siInfo;
     ::GetSystemInfo (&siInfo);
 
@@ -341,51 +342,20 @@ int OS::GetProcessorInformation (char pszProcessorInformation[MaxProcessorInfoLe
 
     *piMHz = g_iMHz;
 
-    switch (osVer.dwPlatformId) {
-    
-    case VER_PLATFORM_WIN32_WINDOWS:
-        
-        // Win9X
-        switch (siInfo.dwProcessorType) {
-
-        case PROCESSOR_INTEL_386:
-            StrNCpy (pszProcessorInformation, "Intel 80386 or compatible");
-            break;
-        case PROCESSOR_INTEL_486:
-            StrNCpy (pszProcessorInformation, "Intel 80486 or compatible");
-            break;
-        case PROCESSOR_INTEL_PENTIUM:
-            StrNCpy (pszProcessorInformation, "Intel Pentium or compatible");
-            break;
-        default:
-            StrNCpy (pszProcessorInformation, "Unknown processor");
-            break;
-        }
-        return OK;
-
-    case VER_PLATFORM_WIN32_NT:
-        
-        // NT
-        char pszProc [1024], pszRev [1024];
-        if (::GetEnvironmentVariable ("PROCESSOR_IDENTIFIER", pszProc, sizeof (pszProc)) == 0) {
-            return ERROR_FAILURE;
-        }
-            
-        if (::GetEnvironmentVariable ("PROCESSOR_REVISION", pszRev, sizeof (pszRev)) == 0) {
-            strcpy (pszProcessorInformation, pszProc);
-        } else {
-            sprintf (pszProcessorInformation, "%s revision %s", pszProc, pszRev);
-        }
-
-        return OK;
-
-    default:
-
-        Assert (false);
+    char pszProc [1024], pszRev [1024];
+    if (::GetEnvironmentVariable ("PROCESSOR_IDENTIFIER", pszProc, sizeof (pszProc)) == 0) {
         return ERROR_FAILURE;
     }
-#endif
+            
+    if (::GetEnvironmentVariable ("PROCESSOR_REVISION", pszRev, sizeof (pszRev)) == 0) {
+        strcpy (pszProcessorInformation, pszProc);
+    } else {
+        sprintf (pszProcessorInformation, "%s revision %s", pszProc, pszRev);
+    }
 
+    return OK;
+
+#endif
 }
 
 void OS::Sleep (MilliSeconds iMs) {
