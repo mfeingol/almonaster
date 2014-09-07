@@ -12,7 +12,7 @@ namespace FixDatabase
         static void Main(string[] args)
         {
             //const string DSN = @"Data Source=.\SQLExpress;Integrated Security=SSPI;Initial Catalog=Almonaster";
-            const string DSN = @"Data Source=.;Integrated Security=SSPI;Initial Catalog=Almonaster";
+            const string DSN = @"Server=(localdb)\MSSQLLocalDB;Integrated Security=true;Initial Catalog=Almonaster;AttachDbFileName=C:\Users\mfeingol\Documents\Build\Almonaster\Main\Drop\x64\Debug\site\Almonaster.mdf";
 
             using (TransactionScope ts = new TransactionScope())
             {
@@ -36,13 +36,13 @@ namespace FixDatabase
                             }
                         }
 
-                        foreach (var update in updates)
-                        {
-                            RewriteWinnersLosers(conn, update.Item1, update.Item2, update.Item3);
-                        }
+                        //foreach (var update in updates)
+                        //{
+                        //    RewriteWinnersLosers(conn, update.Item1, update.Item2, update.Item3);
+                        //}
                     }
                 }
-                ts.Complete();
+                //ts.Complete();
             }
         }
 
