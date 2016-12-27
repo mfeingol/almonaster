@@ -1,0 +1,2457 @@
+<h2 align="center">Documentation for <em>Almonaster</em> Build 700</h2>
+<h3 align="center">Author: Max Feingold</h3>
+<h2><strong>Table of contents:</strong></h2>
+<ul>
+<li><a href="#Introduction">1.0 Introduction</a>
+<ul>
+<li><a href="#Credits">1.1 Credits</a></li>
+<li><a href="#Objective">1.2 Basic objective</a></li>
+<li><a href="#Basic">1.3 Basic rules</a></li>
+<li><a href="#Strategies">1.4 Basic strategies</a></li>
+</ul>
+</li>
+<li><a href="#SystemInterface">2.0 The System Interface</a>
+<ul>
+<li><a href="#Login">2.1 The Login screen</a></li>
+<li><a href="#NewEmpire">2.2 The New Empire screen</a></li>
+<li><a href="#ActiveGameList">2.3 The Active Game List</a></li>
+<li><a href="#OpenGameList">2.4 The Open Game List</a></li>
+<li><a href="#SystemGameList">2.5 The System Game List</a>
+<ul>
+<li><a href="#GameClassOptions">2.5.1 Game class options</a></li>
+<li><a href="#GamePlay">2.5.2 How game class options affect game play</a></li>
+<li><a href="#ResourceAssignment">2.5.3 How resources are assigned to planets</a></li>
+<li><a href="#MapGen">2.5.4 How maps are created</a>
+<ul>
+<li><a href="#MapGen_Mirrored">2.5.4.1 Mirrored and Twisted maps</a></li>
+<li><a href="#MapGen_Fair">2.5.4.2 Fair maps</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#ProfileViewer">2.6 The Profile Viewer</a></li>
+<li><a href="#ProfileEditor">2.7 The Profile Editor</a>
+<ul>
+<li><a href="#associations">2.7.1 Empire Associations</a></li>
+</ul>
+</li>
+<li><a href="#TopLists">2.8 The Top Lists</a>
+<ul>
+<li><a href="#ClassicScore">2.8.1 Classic Score</a></li>
+<li><a href="#AlmonasterScore">2.8.2 <em>Almonaster </em>Score</a></li>
+<li><a href="#BridierScore">2.8.3 Bridier Score</a></li>
+</ul>
+</li>
+<li><a href="#Chatroom">2.9 The Chatroom</a></li>
+<li><a href="#Exit">2.10 Exit</a></li>
+<li><a href="#Spectators">2.11 Spectator Games</a></li>
+<li><a href="#TournamentsPage">2.12 Tournaments</a></li>
+<li><a href="#LatestNukes">2.13 Latest Games</a></li>
+<li><a href="#LatestNukes">2.14 Latest Nukes</a></li>
+<li><a href="#PersonalGameClassesPage">2.15 Personal GameClasses</a></li>
+<li><a href="#PersonalTournaments">2.16 Personal Tournaments</a></li>
+<li><a href="#ServerNews">2.17 Server News</a></li>
+<li><a href="#ServerRules">2.18 Server Information</a></li>
+<li><a href="#Documentation">2.19 Documentation</a></li>
+<li><a href="#Contributions">2.20 Contributions</a></li>
+<li><a href="#Credits">2.21 Credits</a></li>
+<li><a href="#TOS">2.22 TOS</a></li>
+<li><a href="#Privileges">2.23 Privileges</a></li>
+<li><a href="#Autologon">2.24 Empire autologon</a></li>
+<li><a href="#AdvancedOptions">2.25 Advanced Options</a></li>
+</ul>
+</li>
+<li><a href="#Gaming">3.0 Gameplay</a>
+<ul>
+<li><a href="#Info">3.1 The Info screen</a>
+<ul>
+<li><a href="#NextRatios">3.1.1 Next Ratios</a></li>
+<li><a href="#Technology">3.1.2 Technological levels</a></li>
+<li><a href="#ShipTypes">3.1.3 Ship types</a></li>
+<li><a href="#ShipCosts">3.1.4 Ship costs</a></li>
+</ul>
+</li>
+<li><a href="#Options">3.2 The Options screen</a></li>
+<li><a href="#Map">3.3 The Map screen</a></li>
+<li><a href="#Planets">3.4 The Planets screen</a></li>
+<li><a href="#Diplomacy">3.5 The Diplomacy screen</a>
+<ul>
+<li><a href="#Diplomatic">3.5.1 Diplomatic levels</a></li>
+</ul>
+</li>
+<li><a href="#Ships">3.6 The Ships screen</a>
+<ul>
+<li><a href="#Fleets">3.6.1 Fleets</a></li>
+<li><a href="#Color">3.6.2 Color coding</a></li>
+</ul>
+</li>
+<li><a href="#Build">3.7 The Build screen</a></li>
+<li><a href="#Tech">3.8 The Tech screen</a></li>
+<li><a href="#Quit">3.9 The Quit button</a></li>
+<li><a href="#ExitGame">3.10 The Exit button</a></li>
+<li><a href="#Ruins">3.11 Ruins</a></li>
+<li><a href="#Surrenders">3.12 Surrenders</a></li>
+<li><a href="#Randomization">3.13 Randomization</a></li>
+<li><a href="#Independence">3.14 Independence</a></li>
+<li><a href="#Etiquette">3.15 Etiquette</a></li>
+</ul>
+</li>
+<li><a href="#Advanced">4.0 Advanced Topics</a>
+<ul>
+<li><a href="#ShipCombat">4.1 Ship combat</a>
+<ul>
+<li><a href="#ShipCombat2">4.1.1 Ship combat details</a></li>
+</ul>
+</li>
+<li><a href="#OverBuild">4.2 Overbuilding</a></li>
+<li><a href="#PopTrick">4.3 The Pop Trick</a></li>
+<li><a href="#CustomGETs">4.4 Custom GETs</a></li>
+<li><a href="#Security">4.5 Security</a>
+<ul>
+<li><a href="#HTMLFiltering">4.5.1 HTML Filtering</a></li>
+<li><a href="#SessionIds">4.5.2 Session Ids</a></li>
+<li><a href="#PasswordHashing">4.5.3 Password hashing</a></li>
+<li><a href="#GameEntrySecurity">4.5.4 Game entry filtering</a></li>
+<li><a href="#InGameMessageFiltering">4.5.6 In-game message filtering</a></li>
+</ul>
+</li>
+<li><a href="#TournamentDesc">4.6 Tournaments</a></li>
+</ul>
+</li>
+<li><a href="#Administration">5.0 Administration</a>
+<ul>
+<li><a href="#ServerAdmin">5.1 The Server Administrator screen</a></li>
+<li><a href="#EmpireAdmin">5.2 The Empire Administrator screen</a></li>
+<li><a href="#GameAdmin">5.3 The Game Administrator screen</a></li>
+<li><a href="#ThemeAdmin">5.4 The Theme Administrator screen</a></li>
+<li><a href="#TournamentAdmin">5.5 The Tournament Administrator screen</a></li>
+</ul>
+</li>
+<li><a href="#InstallationMaintenance">6.0 Installation and Maintenance</a>
+<ul>
+<li><a href="#Requirements">6.1 System Requirements</a></li>
+<li><a href="#Setup">6.2 Setting up the server</a></li>
+<li><a href="#Database">6.3 The Almonaster database</a></li>
+<li><a href="#Maintaining">6.4 Maintaining the server</a></li>
+<li><a href="#Admin">6.5 The admin page source</a></li>
+</ul>
+</li>
+<li><a href="#Development">7.0 Development</a>
+<ul>
+<li><a href="#Architecture">7.1 System Architecture</a></li>
+<li><a href="#Source">7.2 Source Code</a></li>
+<li><a href="#Compilation">7.3 Compilation</a></li>
+<li><a href="#Graphics">7.4 Graphics</a>
+<ul>
+<li><a href="#Buttons">7.4.1 Buttons</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h2><a name="Introduction"></a><strong>1.0 Introduction</strong></h2>
+<p><em>Almonaster</em> is a turn-based multi-player war game that runs on a web server and can be played from a web browser. No scripts, downloads, plugins, Flash or ActiveX controls are required. If you are reading this page, then you can probably play <em>Almonaster</em> games.</p>
+<p><em>Almonaster </em>was inspired by a long line of space-themed strategy games.</p>
+<p>In the eighties, there was <em><a href="http://www.generation-msx.nl/msxdb/softwareinfo/972">Daiva Story V</a></em> for the MSX2 computer. You controlled a galactic empire, built fleets of ships, engaged in tactical ship battles with the enemy, and taxed your subjects to the point of rebellion. It's still a fun game, and you can use an emulator like <a href="http://openmsx.sourceforge.net/">openMSX</a> to <a href="http://www.msxarchive.nl/pub/msx/games/msx2/disk/daivas5.lzh"> play</a> it on a PC.</p>
+<p>In the nineties, there was <em>Stellar Crisis</em>, the first interactive war game to appear on the web. Connectivity had opened up new social possibilities, and the new gaming experience was pioneering for its time.</p>
+<p>The look and feel of <em>Almonaster</em> has been designed to pay homage to these games, and will be familiar to those who played the classic 2.x versions of <em>Stellar Crisis</em>. No source code from <em>Stellar Crisis </em>or from any other program was used to create <em>Almonaster</em>. Graphical elements common to both games are used thanks to permission generously granted by the original authors.</p>
+<p><em>Stellar Crisis</em> resources that may be useful for a better understanding of <em>Almonaster </em>culture and gameplay include:</p>
+<ul>
+<li>The Yahoo <a href="http://games.groups.yahoo.com/group/stellarcrisisclub/">Stellar Crisis Club</a></li>
+<li>Al Camp's <a href="http://sc-room.stellar-crisis.net/SC.main.shtml">Stellar Crisis Room</a></li>
+<li>The original <em>Stellar Crisis</em> <a href="http://sc-room.stellar-crisis.net/SC.FAQintro.shtml"> FAQ</a>, maintained by Al Camp</li>
+<li>Erick Beck's <a href="http://erick.freeshell.org/sc/faces.php">Faces of Stellar Crisis</a> and <a href="http://erick.freeshell.org/sc/etiq.html">Guide to Stellar Crisis Etiquette</a></li>
+</ul>
+<p><em>Almonaster</em> is free software, released under the <a href="http://www.gnu.org/copyleft/gpl.html"> GNU Public License</a>.</p>
+<h2><a name="Credits"></a><strong>1.1 Credits</strong></h2>
+<p>The following people are responsible for the existence of <em>Almonaster</em>:</p>
+<ul>
+<li>Max Feingold: design, programming and user interface</li>
+<li>Jens Klavsen: graphics, icons, user interface, bug reports</li>
+<li>Tim Rowles: many hours of testing, hosting and bug reports</li>
+<li>Bryan Bush: hosting and testing of the early versions</li>
+<li>Austin Che: Linux port</li>
+<li>Ken Eppstein, Ron Kinion, Chris John, Michel Lemieux, Simon Gillbee, Ella Elman, Haavard Fledsberg: icons</li>
+<li>Peter Bortas: some script code</li>
+<li>Jerome Zago, Aleksandr Sidorenko, Clinton Carr, many others: ideas</li>
+</ul>
+<h2><a name="Objective"></a><strong>1.2 Basic objectives</strong></h2>
+<p><em>Almonaster </em>is a game of strategy played on a galactic scale, in which multiple empires vie for the control of a set of planetary systems.</p>
+<p>The objective of an <em>Almonaster</em> game is to develop a small planetary civilization into a galactic empire, overcoming enemy aliens and creating powerful coalitions with friendly races. There is no artificial intelligence built into <em>Almonaster</em> (yet): every empire that one might encounter belongs to another player logged in somewhere on the Internet. An<em> Almonaster </em>game ends when there are no more enemies left in the galaxy: either one empire remains, or those who remain are all in a state of alliance. Empires are eliminated by destroying their home world with a ship or fleet of ships.</p>
+<p>However, <em>Almonaster</em> is more than a simple war game. It allows the establishment of diplomatic relationships with other empires, ranging from all-out war to resource-sharing alliances. Different players have different means of achieving the goal of supreme domination of the universe: some prefer to establish multiple liaisons and use teamwork to defeat their opponents, while others opt for more individualistic approaches. There are game types that allow and encourage alliances and others that force empires to survive on their own. The primary virtue of <em>Almonaster</em> gameplay is that there is a great diversity of roles, strategies and options to explore, so no two games are ever alike.</p>
+<h2><a name="Basic"></a>1.3 Basic rules</h2>
+<p>An <em>Almonaster</em> game is assigned a predetermined amount of time that serves as an interval between turns or "updates." When an update is executed by the server, the orders entered by a player on behalf of his empire are processed. These orders include such actions as building or moving ships, executing special actions such as colonizing a planet, nuking a planet, terraforming a planet or changing diplomatic status with another empire.</p>
+<p><em>Almonaster</em> games take place on a map of planets, which can be thought of in computer science terms as a connected graph. Each planet is a node in the graph and each link between planets a connection between one node and another. Links between planets indicate paths along which ships can travel. A ship can stand by, move from one planet to another or perform one special action per update. There are several different types of ships, each of which can perform a different type of special action. For example, science ships can explore along previously uncovered links; colony ships can colonize unclaimed planets; minefields are immobile ships that explode, taking all ships with them; etc. All mobile ships can nuke, which is the action that returns colonized planets to unclaimed status, as well as reducing their resource levels. All <em>Almonaster</em> ship types are discussed in <a href="#ShipTypes"> section 3.1.3</a>.</p>
+<p>Each empire begins with the ownership of one planet, which is called a "homeworld". The links off the home world will usually be unexplored at the beginning of the game, so the first action of an empire in any game will be to construct science ships and begin exploring the galaxy. When ships from different empires meet for the first time, combat will occur and the empires will be inserted into each other's "diplomacy" screens, allowing them to establish different diplomatic levels: war, truce, trade or alliance.</p>
+<p>Ship combat resolution in <em>Almonaster</em> is rather complex. A simple formulation is as follows: ships fight until the greater force has eliminated the lesser force. (Note that there are some advanced scenarios where this might not be the case, but the vast majority of combat situations are resolved with only a single side surviving.) Ships belonging to empires at truce or better with one another will fight as a unit against a common foe. There is no random element in ship combat resolution, with the exception of the order in which ships are considered for destruction. A more detailed discussion of ship combat can be found in <a href="#ShipCombat"> section 4.1</a> and <a href="#ShipCombat2"> section 4.1.1</a>.</p>
+<p>The economic aspect of <em>Almonaster</em> is also important. Each planet possesses three different resource parameters: agriculture, fuel and minerals. The first allows population to increase on a planet and exploit the other two, which allow empires to build and repair ships. Agriculture is pooled among all planets colonized by an empire, so planets with great agricultural resources but small amounts of minerals or fuel are still very valuable. Ships can only be built on planets that have reached a high population level, so it is important to colonize planets with agriculture early in a game in allow to grow the populations of planets located near the front where battles will occur and ships will be needed.</p>
+<p>A further aspect of the game is technological development. An empire develops a certain technological level based upon the amount of resources (fuel and minerals) that it has and the amount that it does not consume each update in the building and maintenance of ships. At certain fixed intervals (when the technology level reaches certain values) an empire gains the capacity to build stronger ships, which can give it decisive advantages in combat with other empires.</p>
+<p>An <em>Almonaster</em> game ends when one empire or coalition of allied empires obliterates every other empire. An empire is obliterated when its home world is nuked by an opponent, in which case all of its colonized planets become unclaimed.</p>
+<h2><a name="Strategies"></a>1.4 Basic strategies</h2>
+<p>Successful<em> Almonaster </em>play requires players to balance the following considerations:</p>
+<ul>
+<li><strong>Exploration</strong> - The greater the percentage of the full map available to a player, the better his chances of success. Exploration is needed to find resource-laden planets to colonize, as well as to view the activities of enemy empires.</li>
+<li><strong>Colonization</strong> - Once explored, planets must be colonized and defended against enemy ships that may be in the vicinity. The more planets colonized, the better an empire's economy and the higher its chances of success.</li>
+<li><strong>Terraforming</strong> - Not all planets offer the appropriate conditions to support life. Terraformer ships exist that can in some cases increase the agricultural capabilities of a planet.</li>
+<li><strong>Defense</strong> - Other empires will compete for planets in deep space and will attempt to weaken each other by nuking their already-colonized planets. Defensive measures will be required to defeat invaders.</li>
+<li><strong>Attack </strong>- The best defense is a good attack; the best way to keep an empire busy is to attack it and force it to defend itself.</li>
+<li><strong>Technological development</strong> - If an empire spends too many resources building ships, then its technological development will suffer and more frugal empires will in the long run be able to develop stronger fleets and win the decisive battles.</li>
+<li><strong>Diplomacy</strong> - Sometimes the best way to "beat" a strong enemy is to join him. Successful choices of alliance partners can lead to victories that would otherwise be impossible.</li>
+</ul>
+<p>The experienced <em>Almonaster</em> player will learn to balance these aspects and develop a healthy economy through exploration and colonization while maintaining a high technological level, preventing enemy probes from exploring his territory and establishing relationships of alliance with other empires of similar potency.</p>
+
+<h2><a name="SystemInterface"></a><strong>2.0 The System Interface</strong></h2>
+<p>The first thing that has to be done in order to play on an <em>Almonaster</em> server is to create a new empire with a password. Once this is done a player can begin to use the resources on the server: he can edit his profile, search for other empires, chat with fellow players, join games currently in progress or start new games.</p>
+<h2><a name="Login"></a>2.1 The Login screen</h2>
+<p>This is the first screen that players see when they connect to an <em>Almonaster</em> server. This screen allows players who have already created empires to access the server by simply typing in a valid empire's name and password. New empires can be created by typing in an otherwise unused empire name and a password to be used with it, and selecting the <strong>Create Empire</strong> button. If the empire name is not already in use on the server, then the player will be directed to the New Empire screen.</p>
+<p>Empire names are case insensitive and all initial and trailing spaces will be stripped by the server when it canonicalizes the name. Therefore, the names "PlanetCrusher" and " pLaNeTcRuShEr " correspond to the same empire. In addition, names and passwords containing characters from outside the range between ASCII character 35 (#) and ASCII character 126 (~) will be rejected. Unicode characters are not supported.</p>
+<p>After an empire has successfully logged in, the <a href="#ActiveGameList"> Active Game List</a> will appear.</p>
+<h2><a name="NewEmpire"></a>2.2 The New Empire screen</h2>
+<p>This screen is reached when a new empire is created. It requires the player who is creating the new empire to verify (retype) the password that he or she entered in the Login screen. No other information is requested at this screen.</p>
+<p>An option available to experienced players who wish to start off a new empire with the same privileges as their old empire is the ability to cause newly created empires to inherit a previous empire's <em>Almonaster</em> score and privileges. This can be accomplished by typing in the name and password of the "parent" empire into the forms at the bottom of the screen. The parent empire will be deleted during this process. Therefore, it must not be in any games at the time, or else the new empire will not be able to inherit from it.</p>
+<p>After an empire has been successfully created, the server's <a href="#TOS"> Terms of Service</a> will appears. Once they have been read and accepted, the <a href="#ActiveGameList"> Active Game List</a> will appear. Rejecting the <a href="#TOS"> Terms of Service</a> will result in the destruction of the new empire.</p>
+<h2><a name="ActiveGameList"></a>2.3 The Active Game List</h2>
+<p>The Active Game List provides a list of the games that the logged-in empire is currently playing. Clicking on the "Login" button for a game will lead to the information screen for the selected game.</p>
+<h2><a name="OpenGameList"></a>2.4 The Open Game List</h2>
+<p>The Open Game List provides a list of games that are currently being played on the server and that the logged-in empire has permission to view. Clicking on the "Enter" button for a game will allow the empire to join the selected game.</p>
+<h2><a name="SystemGameList"></a>2.5 The System Game List</h2>
+<p>The System Game List provides a list of the game classes that are currently available on the server and that the logged-in empire has permission to view. Clicking on the "Start Game" button for a gameclass will allow the player to start a new game. The advanced checkbox exists to provide the player with detailed options concerning the nature of the game to be created, and should be left unchecked by the novice player.</p>
+<p>The System Game List also allows empires with privilege levels equal or superior to a certain privilege (usually 'Apprentice') to create their own custom games. More information about custom games and privileges is available in <a href="#Privileges"> section 2.23</a>.</p>
+<h2><a name="GameClassOptions"></a>2.5.1 Game class options</h2>
+<p>A game class is a type of game. The following attributes define a game class:</p>
+<table>
+<tbody>
+<tr>
+<td><strong>Name</strong></td>
+<td>The name of the gameclass. Usually gives some hint about the nature of the game. For example, "Daily Galaxy" implies a game with many planets and long intervals between turns. "Blitz Battle," on the other hand, is probably a fast paced game with a small map.</td>
+</tr>
+<tr>
+<td><strong>Update period</strong></td>
+<td>The length of time each update lasts. Most games are either short terms or blitzes (with updates lasting about 3 minutes) or long terms or dailies (with updates lasting 24 hours or more). If the game has a first update delay, then that time will be displayed in this field.</td>
+</tr>
+<tr>
+<td><strong>Empires</strong></td>
+<td>The number of empires allowed to participate in the game. This parameter has a maximum and minimum value: when the minimum is reached, the game begins and a section of the map is created for each empire. When the maximum is reached, no more empires can join and the game closes. Gameclasses created by experienced empires can be set to allow an unlimited number of empires.</td>
+</tr>
+<tr>
+<td><strong>Planets</strong></td>
+<td>The number of planets per empire that the map contains. Common values range anywhere between 1 and 40. Unless the "Fully Colonized" option is selected, empires do not begin each game owning this number of planets. This number merely tells the map generator how many planets to create, as well as approximately how spaced out the home worlds should be from each other. If this number is variable, then a random value will be chosen from the displayed range for each individual game when the map is generated. This value will be the same for each empire.
+<p>The map can be generated either when the minimum number of empires is reached (the default setting) or when the first update occurs. The difference between the two possibilities is that the latter allows a period betwen the start of the game and the creation of the map where empires can join an already-started game without their planet allocation being performed upon an existing map.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Tech></strong></td>
+<td>This field contains three values: (1) the initial technology level that each empire begins with; (2) the maximum technology increase that an empire can experience in one update; (3) the number of available technologies each empire begins with.
+<p>The technology level is explained in <a href="#Technology"> section 3.1.2</a>.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Dip</strong></td>
+<td>The diplomacy levels that are available in this game. A diplomacy level can be followed by a value in parenthesis that indicates a limit on the number of empires with which that level can be established. This can be a a static fixed maximum or a dynamic "fair" limit, enforced as (N - 2) / 2 empires, where N is the greatest number of empires that were ever simultaneously in the game. Diplomacy levels are explained in <a href="#diplomatic"> section 3.5.1</a>.
+<p>If alliances are allowed by the game class and they are marked as unbreakable, then empires at alliance cannot drop down to any other diplomatic level.</p>
+<p>If alliance limits are set to count for the entire game, then any alliance that ceases to exist (due to an annihilation, or an empire dropping down to a lower level) will count for the entire game and will limit the ability of the affected empires to establish new alliances. Empires who were previously allied can ally with each other again with no additional counts added.</p>
+<p>If surrenders are available, they may either be available always, only when two players remain, or as classic SC-style surrenders (explained in <a href="#surrenders"> section 3.12</a>).</p>
+</td>
+</tr>
+<tr>
+<td><strong>Resources</strong></td>
+<td>How many resources does the average planet receive? Resources (minerals, fuel and agriculture) are explained in <a href="#Info"> section 3.1</a>. If this number is variable, then a random value will be chosen from the displayed range for each individual game.</td>
+</tr>
+<tr>
+<td><strong>Initial techs</strong></td>
+<td>The ship types that are available to all empires at the beginning of the game. The different ship types are explained in <a href="#ShipTypes"> section 3.1.3</a>.</td>
+</tr>
+<tr>
+<td><strong>Possible techs</strong></td>
+<td>The ship types that can be developed by all empires during the course of the game. Note that all initial techs must be developable.</td>
+</tr>
+</tbody>
+</table>
+<p>The "Options" field contains the following values. <strike>Scratched</strike> values are inactive and non-scratched values are active.</p>
+<table>
+<tbody>
+<tr>
+<td><strong>VisibleBuilds</strong></td>
+<td>If this option is active, ships being built by one empire can be seen by other empires that have explored the planet on which the ships are located. Otherwise, the ships will only be visible after an update has occurred.</td>
+</tr>
+<tr>
+<td><strong>VisibleDip</strong></td>
+<td>If this option is active, diplomatic offers are only visible after an update has transpired. Otherwise, they are visible immediately.</td>
+</tr>
+<tr>
+<td><strong>BuildPop</strong></td>
+<td>The population a planet requires to be able to build ships.</td>
+</tr>
+<tr>
+<td><strong>MaxShips</strong></td>
+<td>The maximum number of ships an empire can own simultaneously. If this option is not active, there is no limit.</td>
+</tr>
+<tr>
+<td><strong>MaxAgRatio</strong></td>
+<td>The maximum possible agriculture ratio an empire can have. Ratios are explained in <a href="#Info"> section 3.1</a>. This value is important because of the <a href="#PopTrick"> pop trick</a>.</td>
+</tr>
+<tr>
+<td><strong>FriendlyGates</strong></td>
+<td>If this option is active, stargates and jumpgates can transport allied ships and fleets. Otherwise, they can only transport the owner's ships and fleets.</td>
+</tr>
+<tr>
+<td><strong>FriendlyScis</strong></td>
+<td>If this option is active, science ships cannot nuke planets. Otherwise, they can nuke just like any other mobile ship.</td>
+</tr>
+<tr>
+<td><strong>SuicidalDooms</strong></td>
+<td>If this option is active, doomsdays can annihilate planets belonging to their owner (except a homeworld). Otherwise, they cannot.</td>
+</tr>
+<tr>
+<td><strong>FriendlyDooms</strong></td>
+<td>If this option is active, doomsdays can annihilate planets belonging to allied empires (except a homeworld). Otherwise, they cannot.</td>
+</tr>
+<tr>
+<td><strong>PermanentDooms</strong></td>
+<td>If this option is active, the quarantine period during which a planet can not be colonized after being annihilated by a doomsday lasts until the end of the game (as in classic <em>Stellar Crisis</em>). Otherwise, it will last a gameclass-specific number of updates.</td>
+</tr>
+<tr>
+<td><strong>Weekend</strong></td>
+<td>If this option is active, the game will continue to update on weekends. Otherwise, it will not update on weekends: if an update is scheduled for a weekend time, it will be postponed until the following Monday.</td>
+</tr>
+<tr>
+<td><strong>PrivateMsg</strong></td>
+<td>If this option is active, private messages can be sent between empires. Otherwise, only broadcast messages can be sent. (Private messages are only seen by the specific recipients, while broadcasts are delivered to every empire.)</td>
+</tr>
+<tr>
+<td><strong>DipExposed</strong></td>
+<td>If this option is active, all empires in the game will have met each other when the game begins; i.e., each empire will be automatically listed in every other empire's <a href="#Diplomacy"> Diplomacy</a> screen. Otherwise, empires only appear on this screen when their ships have met each other or reached each other's planets.</td>
+</tr>
+<tr>
+<td><strong>MapExposed</strong></td>
+<td>If this option is active, all planets on the map are visible to all empires when the game begins. If this option is active, the map will be fully available to all empires at the beginning of play. Otherwise, each empire will begin with only its initially colonized planets visible on its map.</td>
+</tr>
+<tr>
+<td><strong>MapShared</strong></td>
+<td>If this option is active, empires with a given diplomatic level can share their maps: when an empire explores a previously unexplored planet, the empire's partners will see it appear automatically on their maps as well. Otherwise, each empire will need to explore each planet for itself.</td>
+</tr>
+<tr>
+<td><strong>FullCol</strong></td>
+<td>If this option is active, empires begin the game with their allocated planets already colonized. Otherwise, only their homeworld will be initially colonized. If the <strong>MapShared</strong> option is not enabled but <strong>FullCol</strong> is, then each empire will begin the game having explored its own planets but no others.</td>
+</tr>
+<tr>
+<td><strong>Disconnected</strong></td>
+<td>If this option is active, each empire's allocated planets will begin the game disconnected from the rest of the map. This option requires engineer technology to be developable.</td>
+</tr>
+<tr>
+<td><strong>Independence</strong></td>
+<td>If this option is active, when an empire is nuked, its territories remain alive and populated as independent planets that cannot simply be re-colonized by other empires. Similarly, the empire's ships either remain independent (hostile to all other empires) or revert to belonging to the owner of the planet at which they were located.</td>
+</tr>
+<tr>
+<td><strong>Subjective</strong></td>
+<td>If this option is active, then the economy and military totals displayed in the diplomacy screen for each empire represent the portion of the empire's resources that can be seen by the each player in his or her map. Otherwise, they will represent the empire's true totals.</td>
+</tr>
+<tr>
+<td><strong>IdleUpdates</strong></td>
+<td>The number of updates an empire can be absent from the game before it becomes idle. Idle empires are automatically ready for each update. They also automatically request draw and pause. Idle empires cease to be idle not when they log in again, but when the next update occurs.
+<p>When all empires are idle in a game, and then one or more empires return, that empire will not be able to pause, draw or prematurely end the update via end turn until the next update occurs. This is because these empires are internally considered to be idle until the next update. This prevents games in which all empires are idle from prematurely pausing or drawing when they should ordinarily have ended in a ruin.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Ruins</strong></td>
+<td>Games with <strong>simple</strong> ruins enabled will behave just like classic <em>Stellar Crisis</em>: if an empire has been idle for a gameclass-specific number of updates, then it will fall into ruin and be removed from the game. The maximum number of updates this value can be set to is 25.
+<p>Games with <strong>complex</strong> ruins enabled function as follows: if all empires or all empires except one are idle for a gameclass-specific number of updates, then the idle empires will fall into ruin, but only if more than two empires were in the game at some point during its lifetime.</p>
+<p>Empires in games with no ruins enabled will never ruin unless all empires in the game are idle, in which case all empires will ruin.</p>
+<p>In all cases where all empires are idle, the usual update times will be respected even though all empires are ready for an update. Such a game will not end until the empires actually fall into ruin.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>If the game has a limit on the number of possible concurrent active games, that information will be displayed on the System Game List or the Personal Game Classes list.</p>
+<p>Fields displayed only in the Open Game List that refer to a particular game are explained in the following table:</p>
+<table>
+<tbody>
+<tr>
+<td><strong>Missed updates</strong></td>
+<td>The number of updates already transpired inside the game.</td>
+</tr>
+<tr>
+<td><strong>Next update</strong></td>
+<td>The amount of time remaining until the next update.</td>
+</tr>
+<tr>
+<td><strong>Bridier</strong></td>
+<td>Indicates if the game counts for the <a href="#BridierScore"> Bridier</a> scoring system, what the restrictions are and what the potential rank reward would be for winning of losing the game.</td>
+</tr>
+<tr>
+<td><strong>Score</strong></td>
+<td>The set of restrictions imposed by the game's creator on the scores of empires allowed to enter the game.</td>
+</tr>
+<tr>
+<td><strong>Security</strong></td>
+<td>The behavior of the game with respect to empires with the same IP addresses or <a href="#SessionId"> Session Ids</a> as other empires already in the game. <strong>Warn</strong> will allow entry, but will broadcast a message to all empires should such an event occur. <strong>Block</strong> will prevent the duplicate empire from entering the game.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="GamePlay"></a>2.5.2 How game class options affect game play</h2>
+<p><em>Almonaster</em> allows administrators to create game classes (game types) designed with custom parameters. Among these parameters are some that greatly affect game play:</p>
+<ul>
+<li><strong>Update time</strong> - Blitzes (games that update once every several minutes) demand different strategies than longterms (games that update every day).<br /> The former require succinct communications between allies and rapid decision-making skills, because players may not have the time to examine the map and the game situation exhaustively before they are forced to make a decision. The latter require a more reasoned approach to the game and more developed diplomatic skills, which might allow players to obtain temporary cease-fires or trade agreements with otherwise non-friendly empires.<br /> Other requirements of long-term games include superior strategic planning abilities, because every player in the game will have greater opportunities to analyze the situation of his empire or coalition and plan accordingly.</li>
+<li><strong>Number of empires</strong> - Game classes can have different maximum and minimum numbers of empires. The minimum number needed for a game is two, and the maximum number can be as high as the administrator's whim. In general, however, more than fifteen or twenty empires per game would be terribly confusing in anything but a longterm.<br /> Games with only two players (grudge matches) are different from other types of games because diplomatic considerations are unimportant.</li>
+<li><strong>Number of planets</strong> - The number of planets per empire in a game can range from three to about twenty. The opening strategies for small numbers of planets are different from those for large number of planets because large galaxies lead to situations where some empires, through luck of the map layout or diplomatic inability, are allowed to expand freely while others run into competing neighbors immediately.<br /> This leads to inequalities in resource distribution that are not as present in games with smaller maps. These inequalities lead to the existence of exceptional diplomatic situations, such as temporary alliances and coalitions, back-stabbing and information leaking.</li>
+<li><strong>Technology delta</strong> - Different game classes can have different default technology increases per update. Games with larger increases will lead to greater technological differences between different empires, but these differences will rarely be decisive because technology can be acquired easily. On the other hand, games with smaller increases will usually allow technological parity to be maintained between empires. However, should a difference occur, it would be almost decisive in determining which empire or coalition would win.</li>
+<li><strong>Diplomatic settings</strong> - There are games that do not allow the full set of diplomatic settings (war, truce, trade, alliance) to be used. Some games fix diplomatic settings at "war," thus impeding all diplomatic arrangements outside of tacit non-aggression agreements. Other games only allow "war" and "truce" or "trade," which leads to situations where coalitions may be formed, but they can never be permanent and every action must be performed with the idea that one will eventually be forced to attempt to destroy one's partners and vice-versa. This type of game makes for interesting relationships of trust.</li>
+<li><strong>Shared maps</strong> - Some game classes allow maps to be shared between empires at a given diplomatic level. What this means is that if an empire explores a planet, all empires at that diplomacy level or higher with the exploring empire will see the new planet added to their maps. This allows more effective sharing of information between empires. It also increases the uncertainty concerning which empires have explored which planets.</li>
+<li><strong>Invisible builds</strong> - It is possible for <em>Almonaster</em> administrators to create game classes that by default do not display ships built during the current update on the map screen. This further reduces the amount of information available to players concerning each other's activities, and it allows empires to experiment with building fleets without leaking this information to the outside.</li>
+<li><strong>Available ship types</strong> - Some game classes do not allow empires to develop and build all of the different ship types available in <em>Almonaster </em>in general. The effects of this restriction depend on the ship types that are eliminated. For example, if stargates or jumpgates (which are ships that teleport other ships from one planet to another) cannot be built, then the acquisition of build-capable planets near the battle front becomes essential.</li>
+<li><strong>Private messages</strong> - In some game classes, empires are not allowed to send private messages to other empires. In these games, they are forced to communicate sensitive information through the use of insecure channels such as open broadcasts, planet and ship renaming, or through the development of special codes.</li>
+</ul>
+<h2><a name="ResourceAssignment"></a>2.5.3 How resources are assigned to planets</h2>
+<p>When a game begins and the game's map is generated, resources (amounts of minerals, fuel and agriculture units) are assigned to each planet. These numbers are obtained in the following manner:</p>
+<ol>
+<li>If the average resource totals for each planet are variable, a random number is chosen between the minimum and maximum limits for each resource. Otherwise, the fixed average resources totals are used.</li>
+<li>The average resource total for each planet is multiplied by the number of planets to be created per empire: this returns the total number of resources to be assigned to the group of planets, for each resource type.</li>
+<li>Random numbers between 0 and the average resource total for a planet (multiplied by a server-wide variable known as the Resource Allocation Randomization Factor) are chosen for each planet and for each resource type. The random values are added together, normalized to the desired total calculated in step 2 and adjusted for floating point errors.</li>
+</ol>
+<h2><a name="MapGen"></a>2.5.4 How maps are generated</h2>
+<h3><a name="MapGen_Mirrored"></a>2.5.4.1 Mirrored and Twisted maps</h3>
+<p>The following map options are available to players when creating a new game with an exact, even number of empires:</p>
+<ul>
+<li>Standard</li>
+<li>Mirrored</li>
+<li>Twisted</li>
+</ul>
+<p>A standard map will simply create a planet graph in a random fashion.</p>
+<p>The mirrored map generation algorithm works by creating planet chains for half the empires in the game, picking the edge with the greatest connectivity, then mirroring the map along that edge, adding a layer of buffer planets.</p>
+<p>The twisted generation algorithm works by creating planet chains for half the empires in the game, creating a copy of the half-map map, rotating it 180 degrees, and finding the location for the second half-map that maximizes connectivity without joining a planet with its mirror. No buffer planets are created.</p>
+<h3><a name="MapGen_Fair"></a>2.5.4.2 Fair maps</h3>
+<p>The following map fairness options are available to players when creating a new game:</p>
+<ul>
+<li>Random</li>
+<li>Somewhat fair</li>
+<li>Very fair</li>
+<li>Somewhat unfair</li>
+<li>Very unfair</li>
+</ul>
+<p>A random map will simply create the planet graph in a random fashion.</p>
+<p>Other types of maps will be generated using an algorithm that retries random map generation until the map is deemed to meet specific fairness characteristics.</p>
+<p>Fairness is computed by first evaluating the number of resources that can be claimed by each empire, given a specific map and using Dijkstra's algorithm to compute the shortest path from the empire's homeworld to each planet. Planet resources are pooled (with Agriculture considered to be 25% more important than Minerals or Fuel) and claimed on an inverse basis to distance to homeworld (the closer the planet, the better the claim) as well as comparative distance of the planet to other empires' homeworlds.</p>
+<p>Claims with no realistic chance of realization are discarded. For example, a planet next to one empire's homeworld and ten hops away from another, or a planet where the shortest path is through another empire's homeworld.</p>
+<p>The fairness of the map is determined by the ratio between the standard deviation and the arithmetic mean of all empires' resource claims. Fair maps will have small deviations, while unfair maps will have fairly large ones.</p>
+<p>Fair maps can be combined with mirrored or twisted maps. As described above, mirrored or twisted maps are generated until a map is created that meets the specified fairness characteristics.</p>
+<h2><a name="ProfileViewer"></a>2.6 The Profile Viewer</h2>
+<p>The Profile Viewer is designed to allow players to search for other empires and view their profile information. <a href="#Privileges"> Novice</a> empires can only search for other empires by name, but those with privilege levels greater than novice can choose a more advanced search form that allows searching for empires by many characteristics</p>
+<p>If multiple empires are found in a search, a choice is offered as to which profile to display.
+
+<ul>
+<li>The Empire Key is a unique numerical identifier for the empire on the server.</li>
+<li>The Privilege Level is explained in section <a href="#Privileges"> section 2.23</a>.</li>
+<li>Broadcasting is the ability to broadcast messages in games and to send system messages to other empires. This privilege is granted by default, but can be revoked by an administrator. Empires inheriting from another empire will inherit their broadcast settings.</li>
+<li>The Login Count field is the number of times the empire has successfully logged on to the server</li>
+<li>The Browser field is simply the string that web browsers use to identify themselves to the server. It can obviously be spoofed.</li>
+<li>IP addresses are hashed (scrambled) in order to preserve privacy, but this field is useful because two identical addresses will be hashed in the same way and will thus be converted to the same values.</li>
+<li>The Max Econ and Max Mil fields represent the greatest Econ and Mil values that the empire has reached in all the games it has played. These values are cached until empires leave a game, in order to prevent information about empires' current totals from leaking out during the game. (Econ and Mil values are explained in <a href="#Diplomacy"> section 3.5</a>.)</li>
+<li>Wins, Nukes, Nuked, Draws and scoring are explained in <a href="#TopLists"> section 2.8</a>.</li>
+<li>The Unread Messages field indicates the number of system messages the empire has in its queue. It does not count unread game messages.</li>
+<li>The Games and Tournaments fields represent the number of games and tournaments the empire is currently participating in.</li>
+</ul>
+<p>Private system messages can be sent from the Profile Viewer to any empire whose profile is being displayed. System messages (as distinguished from game messages) are those displayed outside of games in the system interface.</p>
+<p>An empire's personal game classes can be accessed from the Profile Viewer. Personal game classes are discussed in <a href="#Privileges"> section 2.23</a>. Nuke histories can also be accessed from this screen.</p>
+<h2><a name="ProfileEditor"></a><strong>2.7 The Profile Editor</strong></h2>
+<p>The Profile Editor allows players to customize their empires' profiles. Actions that can be performed from this screen include the following:</p>
+<p>Empire Information:</p>
+<ul>
+<li>The empire's name can be recased. E.g., "BigB" can become "bIGb" and vice-versa.</li>
+<li>The empire's password and can be changed.</li>
+<li>The empire's personal details can be changed:
+<ul>
+<li>Real name</li>
+<li>Age</li>
+<li>Gender</li>
+<li>Location</li>
+<li>E-mail address</li>
+<li>Private e-mail address</li>
+<li>Instant Messenger</li>
+<li>Webpage</li>
+</ul>
+</li>
+<li>The empire's tournament membership details can be changed.</li>
+<li>Empire <a href="#Autologon"> autologon</a> can be turned on or off.</li>
+<li>Empires can be added and removed from the empire's <a href="#associations"> associations</a>.</li>
+</ul>
+<p>System User Interface:</p>
+<ul>
+<li>The empire's alien icon can either be chosen from the server's set or uploaded by the player. An alien icon is used to identify the empire within a game: it appears on the in-game map in the place of the planets that the empire has colonized. In order to be accepted, the size of an uploaded alien icon must be less than a server defined size, and it must be a correctly formatted <strong>40x40</strong> transparent gif in <strong>GIF89a</strong> format. An empire can only have one uploaded icon at a time: previously uploaded icons will be over-written. Uploaded icons are also deleted when an empire is deleted.</li>
+<li>The empire's graphical theme can be changed. Graphical themes are described in section <a href="#Graphics"> 5.14</a>. Graphical themes can be chosen from the following options:
+<ul>
+<li>Individual graphical elements: the player can pick and choose elements from among all the themes available on the server</li>
+<li>Graphics from an alternative path: the player can use a URL of a file path on his local computer as the theme directory, and all game graphics will be read from there. All server themes can be downloaded and used this effect. This provides some performance improvements, as well as a fully customizable environment, but care must be taken not to provide an erroneous directory or to access the server from a machine lacking the correct directory, or graphics will not be displayed properly. This option should only be used by advanced computer users.</li>
+<li>The Null Theme: this is a low bandwidth theme designed for modem users, slow servers and minimalists. It is available on all <em>Almonaster</em> systems.</li>
+<li>Various full themes provided by the default <em>Almonaster</em> installation or added by an administrator</li>
+</ul>
+</li>
+<li>Command buttons can be displayed at the top and bottom of the screen, or just at the top, on game or system screens.</li>
+<li>The current server time can be displayed on game or system screens.</li>
+<li>The empire's saved system messages can be viewed.</li>
+<li>The number of system messages that the system will save can be changed.</li>
+<li>The background can be made fixed (<a href="http://www.microsoft.com/ie/">Internet Explorer</a> only).</li>
+<li>Uploaded icons can be blocked from display, and replaced by the server's default icon. This option also applies to the empire's own icon.</li>
+<li>If the empire is not a novice, the player can choose between simple and advanced search interfaces in the <a href="#ProfileViewer"> Profile Viewer</a>.</li>
+<li>Confirmation prompts when performing actions such as deleting an empire, entering, quitting or resigning a game can be enabled or disabled.</li>
+</ul>
+<p>Game User Interface:</p>
+<ul>
+<li>Refresh on update countdown refresh. This option requires JavaScript, and will cause the current page being displayed to be automatically refreshed when the update countdown ends.</li>
+<li>Visual update countdown. This option requires JavaScript, and provides a visual countdown in a text box for the remaining update time.</li>
+<li>Refresh unstarted game screens every two minutes. This option requires JavaScript, and will cause the current page being displayed to be automatically refreshed every two minutes before a game starts. This option can prevent players from being taken by surprise while waiting for others to join a game.</li>
+<li>Displace End Turn button to corner. This option will make it more difficult to press the End Turn button unintentionally.</li>
+<li>Map coloring by diplomatic status. If enabled, planet text on the empire's maps will be colored according to the diplomatic status of the empires who own the planets being displayed.</li>
+<li>Ship coloring by diplomatic status. If enabled, ship count text will be colored according to the diplomatic status of the empires who own the ships located at the planets being displayed.</li>
+<li>Ship highlighting on the map screen. If enabled, ship count text will be larger and bolder than other text on the screen.</li>
+<li>Sensitive maps (<a href="http://www.microsoft.com/ie/">Internet Explorer</a> only). If enabled, each planet will contain an ALT tag displaying a detailed list of the ships located at the planet.</li>
+<li>Partial maps. This option will cause only small portions of maps to be displayed at a time.</li>
+<li>Local maps in up-close <a href="#Map"> map</a> views.</li>
+<li>Ship menus in up-close <a href="#Map"> map</a> views or on the <a href="#Planets"> Planets</a> screen.</li>
+<li>Build menus in up-close <a href="#Map"> map</a> views or on the <a href="#Planets"> Planets</a> screen.</li>
+<li>Ship type descriptions in tech screens. This option can be useful for new players who are still unfamiliar with all the different ship types.</li>
+<li>Ratio lines in game screens.</li>
+<li>Game screen password hashing. See <a href="#PasswordHashing"> Section 4.5.2</a> for more details on this option.</li>
+</ul>
+<p>Gameplay:</p>
+<ul>
+<li>Default game message target. This option selects the default recipient of messages selected in the <a href="#Diplomacy"> Diplomacy</a> screen.</li>
+<li>Default builder planet. This option defines the default builder planet selected in the <a href="#Build"> Build</a> screen.</li>
+<li>The maximum number of ships that can be built at once from the <a href="#Build"> Build</a> screen.</li>
+<li>Independent ship gifts. In games where <a href="#GameClassOptions"> Independence</a> is enabled, if an empire is nuked with ships located on other empire's planets, those ships can revert to the ownership of those empires, or they can be dismantled. This option allows players to reject or accept such gifts.</li>
+<li>Disband empty fleets on update.</li>
+<li>Collapse or expand fleets by default.</li>
+<li>Send message with score information on nuke. Players can choose to view messages with changes to scoring when a nuke occurs.</li>
+<li>Send update messages on obliteration. Players can choose to view the game update message from the update in which their empires are obliterated. This allows them to see what actually happened during the update in which they were nuked.</li>
+</ul>
+<p>Text:</p>
+<ul>
+<li>The empire's quote and victory sneer can be changed.</li>
+</ul>
+<p>Default ship names:</p>
+<ul>
+<li>The empire's default ship names can be changed. Default ship names are used in the <a href="#Build"> Build</a> screen.</li>
+</ul>
+<p>Actions:</p>
+<p>The empire's statistics can be blanked. This includes Wins, Nukes, Nuked, Draws, Max Econ, Max Mil, the various scores, and Privilege Level.</p>
+<p>The empire can be deleted. Empires can only delete themselves if they are no longer in any games. Otherwise, they will be <strong>marked for deletion</strong>: their personal information will be deleted and they will not be able to join new games. When they leave their last game they will be automatically deleted by the system. Such empires can be <strong>undeleted</strong> from the Profile Editor and restored to their normal state.</p>
+<h2><a name="associations"></a><strong>2.7.1 Empire Associations</strong></h2>
+<p>An empire association is a two way relationship that is established between two empires. These associations provide a mechanism for quickly switching between different empires belonging to the same player. New empire associations can be established through the Profile Editor by entering the name and password of another empire. When this is done, each of the two empires involved in the association will be able to log in as the other empire without entering a password, even if the empires' passwords change. Associations may be deleted by either empire involved in the association. There is no limit on the number of empires that may be associated with one another.</p>
+<p>Associations are used by navigating to the current empire's profile and selecting the desired empire from the dropdown list. This list will only appear when the empire forms an association with another.</p>
+<h2><a name="TopLists"></a><strong>2.8 Top Lists</strong></h2>
+<p>The Top Lists screen allows players to view lists of empires ranked using various scoring systems.</p>
+<p>For novices to understand the contents of this screen, it should be explained that an empire can only defeat another empire by obliterating the latter's homeworld. This is accomplished by using one or more uncontested ships to nuke the homeworld in question. An empire obtains a <em>nuke </em>when it obliterates another empire. The obliterated empire in turn obtains a <em>nuked</em>. If an empire ends a game as a member of the winning coalition it obtains a <em>win</em>. A <em>draw </em>is obtained when all remaining empires agree to cease all hostilities and end the game without a winner. If an empire is idle for enough updates, it will fall into <em>ruin</em> and be removed from the game if the gameclass allows ruins to occur.</p>
+<h2><a name="ClassicScore"></a>2.8.1 Classic Score</h2>
+<p>Classic Score is defined as the following simple formula:</p>
+<p><code>Wins + 0.25 * Draws + 0.5 * (Nukes - Nuked) - Ruins</code></p>
+<p>This scoring system is a relic of <em>Stellar Crisis</em> gameplay and is primarily a measure of games played. It is more significant to old-timers than to beginning players.</p>
+<h2><a name="AlmonasterScore"></a>2.8.2 <em>Almonaster</em> Score</h2>
+<p><em>Almonaster</em> Score is far more complicated than Classic Score, and is used to restrict game access. It is intended to be a more accurate measure of player quality than the Classic Score, which measures mostly quantity.</p>
+<p>The core notion of <em>Almonaster</em> Score is the concept of a Base Unit (BU). The BU is the amount of points that is given to an empire that nukes another empire of equal quality and with an equal number of allies and trade partners. It is also the amount that is subtracted from an empire nuked by another of equal quality and with an equal number of allies and trade partners.</p>
+<p>The quality of an empire, of course, is measured in <em>Almonaster </em>points, so the <em>Almonaster </em>Score can be thought of as a recursively defined ladder system. If the interacting empires are not equivalent in quality, then the quotient of their scores is used to multiple the BU. E.g., if empire A with 10 points nukes empire B with 20, A will gain BU * (20 / 10) points and B will lose BU * (20 / 10) points.</p>
+<p>However, a good quality empire can easily be nuked by a low quality opponent, if that opponent has allies to support it and outnumber the better empire. The <em>Almonaster </em>Score takes this problem into account with the notion of an alliance ratio (AR), which is the number of allies and trade partners the nuked empire has divided by the number of allies and trade partners the nuking empire has. The alliance ratio is capped by the system's minimum alliance ratio and maximum alliance ratio.</p>
+<p>Furthermore, a good quality empire with many games on a server and a high score can be nuked by an empire with no record (and thus, a low score) whose owner is actually quite good. To solve this problem, the <em>Almonaster</em> score uses two separate significance ratios: the Nuker's Significance Ratio (RSR) and the Nuked Significance Ratio (DSR), which are separately capped by system defined minimum and maximum values.</p>
+<p>Other important constants that are used:</p>
+<ul>
+<li>The Minimum Score (mS), usually defined as 10. No empire's score can drop below the mS.</li>
+<li>The Maximum Decrease Factor (MDF): with an equal number of allies and equal score significance, an empire can lose a maximum MDF * BU points from a single nuke.</li>
+<li>The Maximum Increase Factor (MIF): with an equal number of allies and equal score significance, an empire can gain a maximum of MIF * BU points from a single nuke.</li>
+</ul>
+<p>The latter two are introduced to reduce the results of score disparities to reasonable levels.</p>
+<p>To summarize, one could express the <em>Almonaster </em>Score in <strong>C</strong> in the following manner:</p>
+<p><code>void GetAlmonasterScoreChanges (<br /> &nbsp;&nbsp; float fNukerScore,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Empire's current score<br /> &nbsp;&nbsp; float fNukedScore,<br /> &nbsp;&nbsp; int iNukerSignificance,&nbsp;&nbsp; // Nukes + nuked<br /> &nbsp;&nbsp; int iNukedSignificance,<br /> &nbsp;&nbsp; int iNumNukerAllies,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; // Number of allies and trade partners empire has<br /> &nbsp;&nbsp; int iNumNukedAllies,<br /> &nbsp;&nbsp; float* pfNukerIncrease,&nbsp;&nbsp; // Final increase in nuker's score<br /> &nbsp;&nbsp; float* pfNukedDecrease&nbsp;&nbsp;&nbsp; // Final decrease in nuked empire's score<br /> &nbsp;&nbsp; ) {</code></p>
+<blockquote>
+<p><code>float fIncreaseFactor, fDecreaseFactor, fAllianceRatio, fNukerSignificanceRatio, fNukedSignificanceRatio; </code></p>
+<p>// Prevent division by zero<br /> iNumNukedAllies += 2;<br /> iNumNukerAllies += 2;<br /> <br /> iNukerSignificance += 2;<br /> iNukedSignificance += 2;<br /> <br /> // Calculate initial increase / decrease factors<br /> fIncreaseFactor = fNukedScore / fNukerScore;<br /> fDecreaseFactor = fIncreaseFactor;<br /> <br /> // Normalize increase factor<br /> if (fIncreaseFactor &gt; ALMONASTER_MAX_INCREASE_FACTOR) {<br /> &nbsp;&nbsp; fIncreaseFactor = ALMONASTER_MAX_INCREASE_FACTOR;<br /> }<br /> <br /> // Normalize decrease factor<br /> if (fDecreaseFactor &gt; ALMONASTER_MAX_DECREASE_FACTOR) {<br /> &nbsp;&nbsp; fDecreaseFactor = ALMONASTER_MAX_DECREASE_FACTOR;<br /> }<br /> <br /> // Calculate alliance ratio<br /> fAllianceRatio = (float) iNumNukedAllies / iNumNukerAllies;<br /> if (fAllianceRatio &gt; ALMONASTER_MAX_ALLIANCE_RATIO) {<br /> &nbsp;&nbsp; fAllianceRatio = ALMONASTER_MAX_ALLIANCE_RATIO;<br /> }<br /> else if (fAllianceRatio &lt; ALMONASTER_MIN_ALLIANCE_RATIO) {<br /> &nbsp;&nbsp; fAllianceRatio = ALMONASTER_MIN_ALLIANCE_RATIO;<br /> }<br /> <br /> // Calculate significance ratios&nbsp;<br /> fNukerSignificanceRatio = (float) iNukerSignificance / iNukedSignificance;<br /> fNukedSignificanceRatio = fNukerSignificanceRatio;<br /> <br /> if (fNukerSignificanceRatio &gt; ALMONASTER_MAX_NUKER_SIGNIFICANCE_RATIO) {<br /> &nbsp;&nbsp; fNukerSignificanceRatio = ALMONASTER_MAX_NUKER_SIGNIFICANCE_RATIO;<br /> }<br /> else if (fNukerSignificanceRatio &lt; ALMONASTER_MIN_NUKER_SIGNIFICANCE_RATIO) {<br /> &nbsp;&nbsp; fNukerSignificanceRatio = ALMONASTER_MIN_NUKER_SIGNIFICANCE_RATIO;<br /> }<br /> <br /> if (fNukedSignificanceRatio &gt; ALMONASTER_MAX_NUKED_SIGNIFICANCE_RATIO) {<br /> &nbsp;&nbsp; fNukedSignificanceRatio = ALMONASTER_MAX_NUKED_SIGNIFICANCE_RATIO;<br /> }<br /> else if (fNukedSignificanceRatio &lt; ALMONASTER_MIN_NUKED_SIGNIFICANCE_RATIO) {<br /> &nbsp;&nbsp; fNukedSignificanceRatio = ALMONASTER_MIN_NUKED_SIGNIFICANCE_RATIO;<br /> }<br /> <br /> // Calculate nuker empire's increase<br /> *pfNukerIncrease = ALMONASTER_BASE_UNIT * fIncreaseFactor * fAllianceRatio * fNukerSignificanceRatio;<br /> <br /> // Calculate nuked empire's decrease<br /> *pfNukedDecrease = ALMONASTER_BASE_UNIT * fDecreaseFactor * fAllianceRatio * fNukedSignificanceRatio;<br /> <br /> // Make sure decrease doesn't drop nuked empire below min score<br /> if (fNukedScore - *pfNukedDecrease &lt; ALMONASTER_MIN_SCORE) {<br /> &nbsp;&nbsp; *pfNukedDecrease = fNukedScore - ALMONASTER_MIN_SCORE;<br /> }</p>
+</blockquote>
+<p><code>}</code></p>
+
+<p>A ruin affects an empire's <em>Almonaster </em>score as if the ruined empire had been nuked by the empire in the game whose nuke would have cost the ruined empire the most, had the latter nuked the former with no alliance considerations.</p>
+<h2><a name="BridierScore"></a>2.8.3 Bridier Score</h2>
+<p>The <strong>Bridier scoring system</strong> was designed for chess and adapted for Stellar Crisis 3.x by <a href="http://agt.nerim.net/">Jerome Zago</a>. It attempts to perform the same type of evaluation of an empire's quality that the Almonaster Score does, but only for selected one-on-one (grudge) games. More information about the Bridier scoring system can be found on Jerome's <a href="http://agt.nerim.net/scrank.php">website</a>.</p>
+<p>If a server is down for longer than a week, the timestamps that record their last Bridier activity, which are used to calculate Bridier Index decay, will be updated accordingly.</p>
+<h2><a name="Chatroom"></a>2.9 The Chatroom</h2>
+<p>The chatroom is a simple implementation of an IRC-like message board designed for those who wish to find a quick opponent for a game or are unable to access real IRC channels. The chatroom keeps a certain number of messages stored in memory and has an upper limit on the number of empires who can share the room simultaneously. Empires who enter the chat room and do not post a message for a certain period of time will time out.</p>
+<p>Needless to say, the basic rules of civility that govern all Internet communications also apply to the <em>Almonaster</em> chatroom.</p>
+<h2><a name="Exit"></a>2.10 Exit</h2>
+<p>The exit button will take players who press it back to the <a href="#Login"> Login</a> screen and allow them to use different empires or create new ones.</p>
+<h2><a name="Spectators"></a>2.11 Spectator Games</h2>
+<p>The Spectator Games screen lists all active games that have been created with settings that enable them to be viewed by spectators. From this page, players can view the full maps of these games, as well as some information about the empires playing the games. In order for a game to be displayed on this page, it must:</p>
+<ul>
+<li>Have an exposed map</li>
+<li>Have exposed diplomacy</li>
+<li>Have been made available to spectators from the <a href="#AdvancedOptions"> Advanced Options</a> page, or have been started on a server with spectator availability enabled as the default.</li>
+</ul>
+<h2><a name="TournamentsPage"></a>2.12 Tournaments</h2>
+<p>The Tournaments screen lists the system tournaments that are currently active on the server. System tournaments are created by empires with administrative privileges. Empires can join and quit tournaments from this page, as well as view empire and team participation statistics for the various tournaments. Tournaments are explained in detail in <a href="#TournamentDesc"> section 4.6</a>.</p>
+<h2><a name="LatestGames"></a>2.13 Latest Games</h2>
+<p>The Latest Games screen provides a list of the latest games that have taken place on the server. The information displayed includes the number of updates and the results of the game, including the complete list of winners and losers for each game. Up to an administrator-defined number of games will be displayed</p>
+<h2><a name="LatestNukes"></a>2.14 Latest Nukes</h2>
+<p>The Latest Nukes screen displays a summary of the latest nukes that have occurred on the server. It lists empire names, game names and numbers, and the time that the nukes occurred.</p>
+<h2><a name="PersonalGameClassesPage"></a>2.15 Personal GameClasses</h2>
+<p>The Personal GameClasses screen appears to empires who have attained the level of <a href="#Privileges"> Adept</a>. This screen allows empires to create and administer personal gameclasses.</p>
+<h2><a name="PersonalTournaments"></a>2.16 Personal Tournaments</h2>
+<p>The Personal Tournaments screen appears to empires who have attained the level of <a href="#Privileges"> Adept</a>. This screen allows empires to create and administer their own tournaments. Tournaments are explained in detail in <a href="#TournamentDesc"> section 4.6</a>.</p>
+<h2><a name="ServerNews"></a>2.17 Server News</h2>
+<p>The Server News screen displays a news page edited by the server's administrators. The content will vary depending on the server. Users of a particular server are advised to check the Server News page once in a while to inform themselves of important occurrences concerning the server and the game. When the server news page is updated, empires that log in or autologin afterwards will receive notifications that the server news has been updated.</p>
+<h2><a name="ServerRules"></a>2.18 Server Information</h2>
+<p>The Server Information screen provides information about system and game variables that are specific to the server or the version of <em>Almonaster</em>. It also provides data concerning the state of the server process and the traffic the web server has serviced since it last started up. This information is required reading for players new to <em>Almonaster</em> or to a particular server.</p>
+<h2><a name="Documentation"></a>2.19 Documentation</h2>
+<p>The Documentation screen displays this very document, which should be synchronized with the version of <em>Almonaster </em>running on the server.</p>
+<h2><a name="Contributions"></a>2.20 Contributions</h2>
+<p>The Contributions screen explains how the player can contribute resources to the server's administrators. Generally, gifts of money, hardware or time are much appreciated buy those who provide a free service such as <em>Almonaster</em> at their own expense.</p>
+<h2><a name="Credits"></a>2.21 Credits</h2>
+<p>The Credits screen attempts to give credit where credit is due, by mentioning the people responsible for the important work that led to the existence of <em>Almonaster</em> and <em>Stellar Crisis</em>. This page is of course a work in progress, just like the games themselves.</p>
+<h2><a name="TOS"></a>2.22 TOS</h2>
+<p>The TOS (Terms of Service) screen provides a description of the contract between the server administrators and the users. It attempts to regulate player behavior by establishing for them a set of rights and responsibilities. All players must accept the TOS in order to play on a server. The TOS text distributed with <em>Almonaster is</em> generic, but can me modified and adapted to suit the needs of a given server and its administrators. A player who is new to a server should read its TOS to verify that its terms are reasonable and acceptable.</p>
+<h2><a name="Privileges"></a>2.23 Privileges</h2>
+<p>There are five levels of privilege that an empire can be assigned in <em>Almonaster</em>:</p>
+<ul>
+<li><strong>Novice</strong>: this is the default privilege level assigned to all newly created empires. Novices can play any game that their score allows them to play, and can customize their profiles to their hearts' desires.</li>
+<li><strong>Apprentice</strong>: this level is attained when an empire has won a few games and can be considered to be somewhat knowledgeable about the game. Apprentices can create their own personal games from the <a href="#SystemGameList"> System Game List</a>. Personal games are individual games that do not belong to a specific gameclass, but which can have the settings that the player wishes within administrator-configured restrictions. Regardless of security or scoring restrictions, the creators of personal games can always enter their own games. Apprentices also have access to the parameterized advanced search interface in the <a href="#ProfileViewer"> Profile Viewer</a>.</li>
+<li><strong>Adept</strong>: this level is attained when an empire reaches an accomplished degree of expertise with the game, as measured by its <em>Almonaster</em> Score. Adepts have all the privileges of Apprentices plus the ability to create personal gameclasses. Personal gameclasses are similar to system gameclasses, but they are configured by the player and can be started from the empire's <a href="#ProfileViewer"> profile</a> screen. There is an upper limit on the number of personal gameclasses an empire can create, and their characteristics are limited by the same restrictions that custom games are. Regardless of any security or scoring restrictions, the creators of personal gameclasses can always enter their own games.</li>
+<li><strong>Administrator</strong>: there is one default administrator created when a server is set up, but there can be any number of empires on a server with administrative privileges. An administrator has the following abilities beyond the privileges of Adepthood:
+<ul>
+<li>Server administration: administrators can rename the server, introduce new alien icons, change server parameters, backup and restore the database, change the default ship names, change the default themes, etc.</li>
+<li>Game administration: administrators can create and delete superclasses (which are groupings of gameclasses) and individual gameclasses, as well as view information about active games, kill active games, etc.</li>
+<li>Empire administration: administrators can broadcast messages to all empires, change empire settings and delete empires.</li>
+<li>Theme administration: administrators can add, rename, delete and configure the system themes.</li>
+</ul>
+<p>Administrators can also join any game, regardless of score limitations and have the right to delete other empires' personal game classes.</p>
+</li>
+<li><strong>Guest</strong>: this is a privilege level that is used for the default guest empire and as a punishment for empires whose right to enter games is to be removed without actually deleting the empires. Guest empires cannot enter or create games, even games they are already in. However, guest empires can view all open games, regardless of score restrictions. There is one default guest created when the server is set up, but there can be any number of empires on a server with guest privileges.</li>
+</ul>
+<p>The empire named 'root' is the default administrative empire created during new server setup. This empire is considered special by the server: it cannot be deleted, downgraded from administrative status, prevented from broadcasting, have its password changed, have its scores changed or blanked, or have its personal game classes deleted, even by another administrator.</p>
+<p>The empire named 'guest' is the default guest empire created during new server setup. It exists to allow applications such as the <a href="http://sc.lugdunum.net:9108/scgap.html">game availability page</a> which poll SC and Almonaster servers for active games. This empire is considered special by the server: it cannot be deleted, upgraded from Guest status, allowed to broadcast, change its own password, have its scores changed or blanked, create or enter games, create personal game classes.</p>
+<p>It is recommended that players understand the meaning of the different <a href="#GameClassOptions"> game class options</a> available to them before creating their own custom games or game classes.</p>
+<h2><a name="Autologon"></a>2.24 Empire autologon</h2>
+<p>The option exists on <em>Almonaster</em> servers to configure an empire for autologon. This option can be both activated and deactivated in the <a href="#ProfileEditor"> Profile Editor</a>. Only one empire per user per web browser can be set to autologon at a time.</p>
+<p>When autologon is enabled, the player's web browser will provide the server with the identity of the desired empire and its hashed password in the form of a cookie. The player will be directly presented with the <a href="#ActiveGameList"> Active Game List</a>, directly bypassing the login screen. A failure in the autologon process will cause autologon to be turned off, and the player be presented with the standard login screen.</p>
+<h2><a name="AdvancedOptions"></a>2.25 Advanced Options</h2>
+<p>When a game is created from the <a href="#SystemGameList"> System Game List</a> with the Advanced checkbox selected, a menu will appear with options that the player can use to configure the new game:</p>
+<table>
+<tbody>
+<tr>
+<td><strong>Updates before game closes</strong></td>
+<td>The number of updates that will occur before the game closes. If the game fills up before this numbe of updates, the game will close. While a game is still open, other empires can still join and the game cannot end.</td>
+</tr>
+<tr>
+<td><strong>First update delay</strong></td>
+<td>An additional period of time that is added to the first update of the game. This option is usually used to allow additional time for empires to join a game before it closes.</td>
+</tr>
+<tr>
+<td><strong>Message sent to empires entering the game</strong></td>
+<td>A message from the game's creator that is sent to each empire that joins the game.</td>
+</tr>
+<tr>
+<td><strong>Empire names exposed</strong></td>
+<td>The names of the empires in the game can either be hidden or exposed in the game list. This option also determines if empire names will be broadcasted to the other participants when they enter the game.</td>
+</tr>
+<tr>
+<td><strong>Game available to spectators</strong></td>
+<td>Only available for games with exposed maps and diplomacy, this option determines if a game will be visible from the <a href="#SpectatorGames"> Spectator Games </a>screen.</td>
+</tr>
+<tr>
+<td><strong>Password protection</strong></td>
+<td>Entrance into the game can be restricted to players who know the password selected by the creator.</td>
+</tr>
+<tr>
+<td><strong>Empire filtering by scores</strong></td>
+<td>Entrance into the game can be restricted to those empires whose scores fall within the ranges selected by the creator. Restrictions defined here do not apply to administrators, to the owner of the game class, or to the creator of the game.</td>
+</tr>
+<tr>
+<td><strong>Empire filtering by IP address and Session Id</strong></td>
+<td>Entrance into the game can be restricted to empires whose IP addresses and Session Ids are not duplicates of other empires already in the game. The creator of a game can choose to allow all empires access to the game, to deny access to the game to empires with duplicate IP addresses or Session Ids, or simply to warn the other empires in the game that an empire with a duplicate IP address or Session Id has entered the game.
+<p>Needless to say, because of the disconnected nature of the HTTP protocol, it is not possible to prevent multiple empires belonging to the same player from joining a game, but these options can make it somewhat more difficult for players to cheat in this manner without being detected. The <a href="#Options"> Options</a> screen also allows players to search their current games for empires with duplicate IP addresses or Session Ids. Restrictions defined here do not apply to administrators, to the owner of the game class, or to the creator of the game.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Block idle empires</strong></td>
+<td>Entrance into the game can be restricted to empires that are not idle in another game on the server. When this option is selected, empires that are currently idle in at least one game will not be able to see the game in their <a href="#OpenGameList"> Open Game List</a> and will be prevented from joining.&nbsp;An empire is idle in a game if it has not logged into that game for a gameclass-specific number of updates.
+<p>Empires with the same IP address and Session Id as the blocked empire can also be blocked from entering the game. The server will compare both the current values for these fields to all entering empires, as well as the values at which these fields were set when the game was created. This option is very powerful and should be used with some caution.</p>
+<p>Any restrictions defined here do not apply to administrators, to the owner of the game class, or to the creator of the game.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Block specific empires</strong></td>
+<td>This option allows the creator of a game to identify specific empires who will not be allowed to enter the game. Empires with the same IP address or Session Id can also be blocked. Restrictions defined here do not apply to administrators, to the owner of the game class, or to the creator of the game.</td>
+</tr>
+</tbody>
+</table>
+
+<h2><a name="Gaming"></a><strong>3.0 Gameplay</strong></h2>
+<h2><a name="Info"></a>3.1 The Info screen</h2>
+<p>The Info screen provides information about the empire's current state in the game.</p>
+
+<p>The next update time is calculated in the following manner:</p>
+<ul>
+<li>If the game has not started, take the full update period and add the game's first update delay.</li>
+<li>If the game has started, it is the following:
+<ul>
+<li>Take the last update time and add the full update period.</li>
+<li>If still the first update, add the game's first update delay.</li>
+<li>If the game does not update on weekends, and the time falls on a weekend, add the remaining weekend time plus the server's after weekend delay.</li>
+</ul>
+</li>
+<li>Calculate the timespan between the calculated time and the current time.</li>
+</ul>
+<p>If an empire is "ready for an update", then the empire has finished making its moves for the current update and has clicked on the End Turn button, signaling its readiness to move on to the next turn or update. When all empires have Ended Turn, an update will occur, regardless of the time remaining in the current update period. This ensures that games move along quickly and time is not wasted waiting for the game's update timer to run down. If an empire is ready for an update but wishes to make changes, it has the option of clicking on the Unend Turn button, which sets the empire back to an unready state.</p>
+<ul>
+<li><strong>Minerals </strong>are used to build and maintain ships. The total listed here is the sum of the exploited mineral units of each planet owned by the empire. A planet can exploit mineral units in a number equivalent to its population size. For example, a planet with 60 mineral units and 42 population units will provide 42 mineral units to the empire's total. One with 42 minerals and 60 population will provide 42 mineral units.</li>
+<li><strong>Fuel </strong>is used to provide power to existing ships. The total listed here is the sum of the exploited fuel units of each planet owned by the empire. Fuel units are exploited by a planet's population exactly like mineral units. Both minerals and fuel are consumed automatically by the ships the empire has built. Excess minerals and fuel are used to develop <a href="#Technology"> technology</a>.</li>
+<li><strong>Agriculture </strong>is used to feed planetary populations. One unit of agriculture feeds one unit of population. Excess agriculture leads to population growth, which in turn allows planetary resources to be exploited at the fullest, which makes the empire stronger. Agriculture does not require exploiting, so the total agricultural units an empire possesses is simply the sum of the agriculture units of all planets owned by the empire.</li>
+<li><strong>Population </strong>is the sum of the individual planetary populations of all planets are owned by an empire.</li>
+<li><strong>Target population</strong> is the sum of the individual maximum populations of all the planets that are owned by the empire. The maximum population of a planet is a value specified by the player in the <a href="#Map"> Map</a> or <a href="#Planets"> Planets</a> screen that limits the population growth on a given planet. This maximum population of a planet defaults to the agriculture level of the planet. The reason an empire would want to limit the population of its planets is because there is a limited amount of agriculture to go around, and if a planet's population is already exploiting the mineral and fuel units of the planet to their fullest, there is rarely a reason to have more population units on that planet.</li>
+<li>The<strong> tech level</strong>,<strong> tech increase</strong> and <strong>battle rank</strong> are explained in <a href="#Technology"> section 3.11</a>.</li>
+<li>The <strong>next tech level</strong> is defined as the tech level that the empire will have after the next update occurs.</li>
+<li>The <strong>next battle rank</strong> is defined as the battle rank that the empire will have after the next update occurs.</li>
+<li><strong>Planets</strong> and <strong>ships</strong> refer respectively to the number of planets and ships that the empire owns.</li>
+<li>The <strong>maintenance ratio</strong> is the number of mineral units divided by the number of mineral units in use. The use of this ratio is described in <a href="#Ships"> section 3.6</a>.</li>
+<li>The <strong>fuel use ratio</strong> is the number of fuel units divided by the number of fuel units in use. The use of this ratio is described in <a href="#ShipCombat2"> section 4.11</a>.</li>
+<li>The <strong>agriculture ratio</strong> is the number of agriculture units divided by the total number of population units. This ratio multiplies the population of every planet at each update and increases the population of the planet by that amount (capped at the planet's max pop). If the ratio is less than 1, then a Malthusian situation has occurred and populations will decline.</li>
+<li>The <strong>total build cost</strong> is the number of mineral units used in building ships during the current update.</li>
+<li>The <strong>total maintenance cost</strong> is the number of mineral units used in repairing and maintaining ships' battle readiness.</li>
+<li>The<strong> total fuel use </strong>is the number of fuel units used to provider power to all currently existing ships. Ships do not consume fuel until they are launched, which is during the next update after they are built.</li>
+</ul>
+<h2><a name="NextRatios"></a>3.1.1 Next Ratios</h2>
+<p>The <strong>next maintenance</strong>, <strong>next fuel use </strong>and <strong> next agriculture ratios</strong> are defined as the system's best guess at the values of these ratios after the next update. These values take into account deterministic factors such as max population settings, colony construction, visible upcoming trade settings, colonies set to colonize or minefields set to detonate. They do not consider non-deterministic events such as ship combat, most special actions such as terraforming, invasion or planet colonization.</p>
+<p>The reason special actions are not considered is because it is not possible to predict if the ship in question will successfully act. There are two reasons why it might fail:</p>
+<ul>
+<li>Special actions occur in random order. Another ship might act first.</li>
+<li>The ship might be destroyed.</li>
+</ul>
+<p>The first can easily be discarded if there are no other ships on the planet. The second, however, depends on ship combat outcomes, which use random input (namely, the order in which ships are destroyed). One would think that the system could notice those cases where ship combat is simply not possible, and adjust the next ratio accordingly, but that would provide the colonizing empire with an information leak: the knowledge that there are no cloakers on the planet he's about to colonize, and no enemy ships located at adjacent but unexplored planets. Consequently, special actions are ignored when computing next ratios.</p>
+<p>The next ratios are primarily useful as references when <a href="#OverBuild"> overbuilding</a> or <a href="#PopTrick"> pop tricking</a>.</p>
+<h2><a name="Technology"></a>3.1.2 Technological levels</h2>
+<p>The technological level of an empires is a floating point number that begins each game set at an initial level (usually at least 1.0). As the updates progress, each empire's level increases depending on the amount of resources (minerals and fuel) that it is using and the maximum tech increase allowed by the gameclass. This formula can be expressed as follows:</p>
+<div align="center"><code>Tech Increase = (1 - Resources used / Total Resources) * Maximum Tech Increase for the gameclass</code></div>
+<p>This allows empires that use few resources in building or maintaining existing ships to develop high technological levels. On the other hand, over-ambitious empires that build too many ships are penalized as time passes, because their technological levels will be inferior to those of their opponents and this disadvantage may not be outweighed by the economic benefits the additional ships might have brought.</p>
+<p>Technological development is useful for two different reasons:</p>
+<ol>
+<li>Ships built by empires with higher technological levels are more effective in battle.</li>
+<li>As empires reach higher levels, they can develop new types of ships not available at the beginning of the game.</li>
+</ol>
+<p>The important notion to grasp is that <strong>effective technology levels </strong>increase by cut-off points. The floor of the square root of an empire's technological level (the battle rank, or <strong>BR</strong>) is the relevant number in determining both ship capacity and the availability of new ship types. When this number increases (as it does when the technological level reaches 4.0, 9.0, 16.0, 25.0, 36.0, etc.), the BR of the empires will increase (to 2, 3, 4, 5 and 6, respectively). As a consequence of the BR increase, an additional ship type can be developed and more powerful ships can be built.</p>
+<p>If an empire builds enough ships, it will over-spend on ship maintenance and will actually see a negative technological development. This can cause the empire to slip back to a lower <strong>BR</strong>. If this occurs, the empire will not lose the new ship type that it can develop, but its ships will be built with the lower BR and will be less effective in combat situations.</p>
+<p>The rationale for using a geometric system rather than a linear one is simple: the intention was to make it increasingly difficult to reach the next BR level. There are two ways to explain why this is desirable:</p>
+<ol>
+<li>The "realistic" explanation is that once a certain level of ship building expertise is achieved, it becomes increasingly harder to build better ships. Once every ship has a warp drive, a photon cannon and nuclear bombing capabilities, what else can one add? In other words, it takes more R&amp;D efforts to improve more advanced ship designs than it does to improve more primitive ship designs.</li>
+<li>The "game-play" explanation is that a linear system would lead to constant imbalance between empires at different technological levels. The increasing "space" between BR levels helps to balance out inequalities between empires with different resource levels and building needs.</li>
+</ol>
+<p>The effectiveness of a ship in combat is actually the square of its current-BR. So a BR6 ship will fight with 36 combat "points." The most important consequence of this is that ships with higher BR's are <em>much</em> more effective in combat that ships with lower BR's, and this difference in effectiveness increases as the respective BR's are higher. The "realistic" rationale here is that once the massive R&amp;D efforts described in explanation (1) are made, the result is actually quite worth the expenditure.</p>
+<p>One might think that this squaring of the current-BR simply eliminates the square-root formula for calculating BR, and therefore contradicts explanation (2) above. This is not the case: ships built by an empire with technological level 48.0 are no more powerful than those built by an empire with technological level 36.0. Therefore, technological inequalities between different empires are not so much balanced out as <em>dampened </em>through the use of the geometric BR scale.</p>
+<h2><a name="ShipTypes"></a>3.1.3 Ship types</h2>
+<p>There are sixteen different ship types in <em>Almonaster</em>. All ship types have the same offensive and defensive capabilities at the same BR, but many have special abilities that differentiate them from the others:</p>
+<table>
+<tbody>
+<tr>
+<td><strong>Attack</strong></td>
+<td>Has no special abilities, but is cheap to produce and is therefore useful for creating large mobile fleets.</td>
+</tr>
+<tr>
+<td><strong>Science</strong></td>
+<td>Can traverse unexplored links and increase the visible map area available to the empire.</td>
+</tr>
+<tr>
+<td><strong>Colony</strong></td>
+<td>Can colonize unclaimed planets and settle already colonized planets. Building a colony induces a server-defined population cost at the planet where a colony is built. This cost is deferred until the next update and is subtracted from the planets population after the agriculture ratio has been applied.
+<p>As in classic <em>Stellar Crisis</em>, in <em>Almonaster </em>a colony will always be destroyed when depositing population on a planet. Regardless of the maximum population at a planet, the maximum capacity of the colony will always be deposited.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Stargate</strong></td>
+<td>Can teleport ships and fleets to other planets colonized by its owner in a single update. Stargates are immobile, in that they cannot be moved from the planet upon which they were built. Stargates lose a server-defined amount of BR every time they are used. They can also suffer from range limitations. If a planet's ownership changed during the update in which it was being gated to, the gate action will still succeed.</td>
+</tr>
+<tr>
+<td><strong>Cloaker</strong></td>
+<td>Can become invisible and move around without being detected by friends or enemies. Cloakers cannot nuke a planet or participate in ship combat unless they are uncloaked.</td>
+</tr>
+<tr>
+<td><strong>Satellite</strong></td>
+<td>Does not consume fuel and is cheap to build. Satellites are used mainly for creating large defensive fleets (satellite walls). Like stargates, satellites are immobile.</td>
+</tr>
+<tr>
+<td><strong>Terraformer</strong></td>
+<td>Can increase the agriculture level of a planet to the greater of the planet's fuel and mineral units. The amount that is increased is equivalent to the terraformer's BR multiplied by a server defined amount. Unlike classic <em>Stellar Crisis</em>, in <em>Almonaster </em>multiple terraformers can act upon the same planet during the same update. Terraforming a planet will typically destroy a terraformer, although terraformers can survive with reduced BR if the planet's resource increase is below the capacity of the terraformer.</td>
+</tr>
+<tr>
+<td><strong>Troopship</strong></td>
+<td>Can invade planets owned by other empires and independent planets. Invasions are successful if the troopship's BR multiplied by a server-defined number is greater than the total population of the planet. A failed invasion destroys the ship and removes a server-defined number of population units on the planet (usually a multiple of the troopship's BR). Troopships can survive a successful invasion with reduced BR if the planet's population is below the capacity of the troopship.</td>
+</tr>
+<tr>
+<td><strong>Doomsday</strong></td>
+<td>Can annihilate a planet, reducing its agriculture level to zero and placing it in a quarantined state for a number of updates equivalent to the doomsday's BR multiplied by a server-defined value. A doomsday can act upon un-colonized planets, <a href="#GameClassOptions"> independent</a> planets, the empire's own planets (with the exception of its homeworld) or planets belonging to warring empires. Some restrictions on doomsday use may apply from server-defined or gameclass-defined settings.</td>
+</tr>
+<tr>
+<td><strong>Minefield</strong></td>
+<td>When destroyed, it detonates and destroys every other ship on the planet, unless a minesweeper belonging to any empire is present at the planet after the ship battle ends. Minefields can also be detonated intentionally by their owners. If a minefield is detonated and a minesweeper is present, the minefield will be destroyed with no ill effects to other ships. Minefields are immobile ships.</td>
+</tr>
+<tr>
+<td><strong>Minesweeper</strong></td>
+<td>Nullifies the effects of exploding minefields. Minesweepers are present in any serious offensive fleet. Minesweepers act passively and do not require special orders to operate.</td>
+</tr>
+<tr>
+<td><strong>Engineer</strong></td>
+<td>Can open and close links between planets, at a server-defined cost to its BR.</td>
+</tr>
+<tr>
+<td><strong>Carrier</strong></td>
+<td>Behaves like an advanced attack ship that can absorb large amounts of damage inflicted by opponents during fleet battles. Carriers are expensive to build.</td>
+</tr>
+<tr>
+<td><strong>Builder</strong></td>
+<td>Can create new planets from empty space. The resource levels of the new planets depend on the BR of the builder. Creating a planet will destroy a builder.</td>
+</tr>
+<tr>
+<td><strong>Morpher</strong></td>
+<td>Can change its configuration from one ship type to another, choosing from among all the technologies developed by the empire. Each metamorphosis induces a server-defined cost to the BR of the morpher. Morphers change shape early in the update, before ship combat occurs.</td>
+</tr>
+<tr>
+<td><strong>Jumpgate</strong></td>
+<td>Behaves similarly to a stargate, but can teleport ships and fleets to any planet, not just to those colonized by the owner. Jumpgates cannot send ships and fleets to planets under quarantine after being annihilated by a doomsday. Jumpgates lose a server-defined amount of BR every time they are used. They can also suffer from range limitations.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="ShipCosts"></a>3.1.4 Ship costs</h2>
+<p>The following table displays the costs of building and keeping ships alive. The build and maintenance costs count against the empire's minerals, while the fuel cost counts (logically) against the empire's fuel. All costs will detract from technology development. If a ship loses MaxBR through special actions or other mechanisms, it will cost its owner the same amount of resources as the same ship type built at the new MaxBR level.</p>
+<table>
+<tbody>
+<tr><th width="105">Ship</th><th width="163">Build Cost</th><th width="130">Maintenance Cost</th><th width="88">Fuel Cost</th></tr>
+<tr>
+<td width="105"><strong>Attack</strong></td>
+<td width="163">(BR + 4 ) ^ 2</td>
+<td width="130">BR * 2</td>
+<td width="88">BR * 4</td>
+</tr>
+<tr>
+<td width="105"><strong>Science</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 25</td>
+<td width="130">BR * 2 + 4</td>
+<td width="88">BR * 4 + 8</td>
+</tr>
+<tr>
+<td width="105"><strong>Colony</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 25</td>
+<td width="130">BR * 2 + 4</td>
+<td width="88">BR * 4 + 8</td>
+</tr>
+<tr>
+<td width="105"><strong>Stargate</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 100</td>
+<td width="130">BR * 2 + 16</td>
+<td width="88">BR * 4 + 32</td>
+</tr>
+<tr>
+<td width="105"><strong>Cloaker</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 25</td>
+<td width="130">BR * 2 + 4</td>
+<td width="88">BR * 4 + 8</td>
+</tr>
+<tr>
+<td width="105"><strong>Satellite</strong></td>
+<td width="163">((BR + 4 ) ^ 2) - 10</td>
+<td width="130">BR * 2 - 2 (*)</td>
+<td width="88">0</td>
+</tr>
+<tr>
+<td width="105"><strong>Terraformer</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 25</td>
+<td width="130">BR * 2 + 4</td>
+<td width="88">BR * 4 + 8</td>
+</tr>
+<tr>
+<td width="105"><strong>Troopship</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 25</td>
+<td width="130">BR * 2 + 4</td>
+<td width="88">BR * 4 + 8</td>
+</tr>
+<tr>
+<td width="105"><strong>Doomsday</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 10</td>
+<td width="130">BR * 2 + 2</td>
+<td width="88">BR * 4 + 4</td>
+</tr>
+<tr>
+<td width="105"><strong>Minefield</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 10</td>
+<td width="130">BR * 2 + 2</td>
+<td width="88">0</td>
+</tr>
+<tr>
+<td width="105"><strong>Minesweeper</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 25</td>
+<td width="130">BR * 2 + 4</td>
+<td width="88">BR * 4 + 8</td>
+</tr>
+<tr>
+<td width="105"><strong>Engineer</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 100</td>
+<td width="130">BR * 2 + 16</td>
+<td width="88">BR * 4 + 32</td>
+</tr>
+<tr>
+<td width="105"><strong>Carrier</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 75</td>
+<td width="130">BR * 2 + 12</td>
+<td width="88">BR * 4 + 24</td>
+</tr>
+<tr>
+<td width="105"><strong>Builder</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 50</td>
+<td width="130">BR * 2 + 8</td>
+<td width="88">BR * 4 + 16</td>
+</tr>
+<tr>
+<td width="105"><strong>Morpher</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 35</td>
+<td width="130">BR * 2 + 6</td>
+<td width="88">BR * 4 + 12</td>
+</tr>
+<tr>
+<td width="105"><strong>Jumpgate</strong></td>
+<td width="163">((BR + 4 ) ^ 2) + 150</td>
+<td width="130">BR * 2 + 24</td>
+<td width="88">BR * 4 + 48</td>
+</tr>
+<tr>
+<td colspan="4" align="center">(*) If this value falls below 2, it becomes 2</td>
+</tr>
+</tbody>
+</table>
+<p>(Note: the costs listed here are generally the same as for classic <em>Stellar Crisis</em>. However, doomsdays in <em>Almonaster</em> are cheaper than their <em>SC</em> counterparts.)</p>
+<h2><a name="Options"></a>3.2 The Options screen</h2>
+<p>The options screen allows players to choose various options for the current game:</p>
+<table>
+<tbody>
+<tr>
+<td><strong>Placement of command buttons</strong></td>
+<td>The command buttons can be repeated at the bottom of the screen if the player wishes it. This is useful for large screens in which a lot of scrolling is needed to go from the bottom back to the top to issue the next command.</td>
+</tr>
+<tr>
+<td><strong>Server time display</strong></td>
+<td>The server's current time can be displayed on each screen under the command buttons.</td>
+</tr>
+<tr>
+<td><strong>End Turn button displacement</strong></td>
+<td>The End Turn button can be placed with the other command buttons or off to the right under the <a href="#ExitGame"> Exit</a> button.</td>
+</tr>
+<tr>
+<td><strong>Refresh upon update countdown </strong></td>
+<td>The screen can automatically refresh itself when the update timer counts down to zero. This option requires a JavaScript-enabled browser.</td>
+</tr>
+<tr>
+<td><strong>Visual update countdown</strong></td>
+<td>A form field can be displayed on each screen, with a graphical countdown timer indicating exactly how much time remains in the current update. This option requires a JavaScript-enabled browser.</td>
+</tr>
+<tr>
+<td><strong>Map coloring by diplomatic status</strong></td>
+<td>The <a href="#Map"> Map</a> screen can be rendered with colored text in planet representations, corresponding to the diplomatic status of the empire with owner of the planet: <a href="#Color"> good</a> color for allies, <a href="#Color"> bad</a> color for foes, standard <a href="#Color"> text</a> color for truces, trades, independent and un-colonized planets.</td>
+</tr>
+<tr>
+<td><strong>Ship coloring by diplomatic status</strong></td>
+<td>Per-planet ship counts on the <a href="#Map"> Map</a> screen can be colored according to the lowest respective diplomacy level with the viewing empire of all empires who have ships at the planet. If that level is war, then the color will be <a href="#Color"> bad</a>. If the level is alliance then it will be <a href="#Color"> good</a>. Otherwise, it will be the standard <a href="#Color"> text</a> color chosen by the empire.</td>
+</tr>
+<tr>
+<td><strong>Ship highlighting on map screen</strong></td>
+<td>Per-planet ship totals on the <a href="#Map"> Map</a> screen can be displayed with a larger font and in boldface, if the total is greater than zero.</td>
+</tr>
+<tr>
+<td><strong>Sensitive maps</strong></td>
+<td>The <a href="#Map"> Map</a> screen can display alt-tag based tool-tips displaying the ships present at a given planet. This can save time switching from the map screen to up-close views of individual planets. Currently, this option only works well with Internet Explorer and Lynx.</td>
+</tr>
+<tr>
+<td><strong>Partial maps</strong></td>
+<td>The <a href="#Map"> Map</a> screen can display a menu at the top allowing the player to choose the center of the map that should be displayed, as well as its X and Y radius. This allows players in games with very large maps to reduce the size of the map screen. This can be useful for users with slow connections, older computers, low resolution displays, buggy browsers or <a href="http://www.webtv.com/">WebTV</a>.</td>
+</tr>
+<tr>
+<td><strong>Mini-maps</strong></td>
+<td>The map screen can be viewed as a reduced-size map with small planets and no links or statistical text. This is another way to deal with rendering large maps.</td>
+</tr>
+<tr>
+<td><strong>Display ship menus in planet views</strong></td>
+<td>Ship menus can be displayed in the <a href="#Planets"> Planets</a> or up-close <a href="#Map"> Map</a> screens.</td>
+</tr>
+<tr>
+<td><strong>Display build menus in planet views</strong></td>
+<td>Build menus can be displayed in the <a href="#Planets"> Planets</a> or up-close <a href="#Map"> Map</a> screens.</td>
+</tr>
+<tr>
+<td><strong>Display local maps in up-close map views</strong></td>
+<td>Up-close views on the <a href="#Map"> Map</a> screen can contain a small local (3x3) map centered around the specific selected planet. This map is interactive and can be clicked on to obtain up-close views of the surrounding planets. This option provides a means of easily viewing the up-close properties of adjacent planets.</td>
+</tr>
+<tr>
+<td><strong>Display ratios line</strong></td>
+<td>A line at the top of the screen describing the empire's current ratios can be displayed on every screen, on selected screens, or not at all.</td>
+</tr>
+<tr>
+<td><strong>Default builder planet</strong></td>
+<td>Different planets can be selected as the default builder planet on the <a href="#Build"> Build</a> screen. Options include the empire's homeworld, the last planet used to build ships or a specific planet owned by the empire.</td>
+</tr>
+<tr>
+<td><strong>Default message target</strong></td>
+<td>A default target selection can be chosen for messages sent via the <a href="#Diplomacy"> Diplomacy </a>screen. The options include none, broadcast, all at war, all at truce, all at trade, all at alliance and last target used. Some of these options may not be available if they do not apply to the gameclass.</td>
+</tr>
+<tr>
+<td><strong>Game messages saved</strong></td>
+<td>Stored game messages can be viewed.</td>
+</tr>
+<tr>
+<td><strong>Maximum saved game messages</strong></td>
+<td>The number of game messages to save can be selected. Messages are saved in FIFO order (first-in, first-out).</td>
+</tr>
+<tr>
+<td><strong>Ignore broadcasts</strong></td>
+<td>All messages sent as broadcasts can be ignored. Important information can be lost when this option is selected, but it can help preserve sanity when a particularly annoying empire is broadcasting distracting messages.</td>
+</tr>
+<tr>
+<td><strong>Search for empires with duplicate IP addresses </strong></td>
+<td>Empires with duplicate IP addresses can be detected. See <a href="#EmpireFiltering"> section 2.5.4</a> for more details.</td>
+</tr>
+<tr>
+<td><strong>Search for empires with duplicate Session Ids </strong></td>
+<td>Empires with duplicate Session Ids can be detected. See <a href="#EmpireFiltering"> section 2.5.4</a> for more details.</td>
+</tr>
+<tr>
+<td><strong>Request pause</strong></td>
+<td>Empires can request that the game be paused for a period of time. If all empires agree to pause the game, then its update countdown will stop until at least one of the empires in the game is no longer requesting pause. A paused game can also be updated if all empires choose to end turn.
+<p>A game can only be paused after it has started. When a game is paused, the number of seconds elapsed from the last update is recorded, and the update timer will display the time that would remain until the next update if the game were to be unpaused. This value will increase over the weekend if the game has no weekends updates. When the game is unpaused, the last update time is set to the current time minus the elapsed update time. The timer is restarted and the next update will occur at the displayed time.</p>
+<p>When an empire becomes idle, it will automatically request a pause. This allows games with idle empires to be paused. However, if all empires in the game are idle, the game will not pause itself even if all empires are requesting pause. This prevents games with all empires idle from remaining alive on the server forever in a paused state.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Request draw</strong></td>
+<td>Empires can request that the game be resolved as a draw. If all empires agree to this, then the game will end. Only those games for which draw is enabled will have this option.
+<p>When an empire becomes idle, it will automatically request a draw if there is still at least one empire in the game who is not idle. This allows games with idle empires to be drawn, while preventing games with all empires idle from drawing out when a ruin is appropriate.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Keep game notes here</strong></td>
+<td>A scratch pad can be used to keep game notes of importance: diplomatic situations or coordinates of interest.</td>
+</tr>
+<tr>
+<td><strong>Resign from the game</strong></td>
+<td>Empires can resign from a game, which causes them to unilaterally leave the game. A message of resignation will be broadcasted to the other empires in the game. The resigned empire's ships will be immediately dismantled, but its planets will remain as they are until the empire falls into ruin or is nuked. The resigned empire will also automatically request a pause and be automatically ready for updates. Only an administrator can revoke an empire resignation, so this option should be used with caution. Players can activate the confirmations option in the <a href="#ProfileEditor"> Profile Editor</a> if they want to be prompted before the resignation takes effect.
+<p>Resigned empires are displayed in the <a href="#Diplomacy"> Diplomacy</a> and empire information screens as <strike>crossed out</strike>.</p>
+</td>
+</tr>
+<tr>
+<td><strong>Surrender from the game</strong></td>
+<td>Empires can surrender from a game, which causes them to be unilaterally nuked from the game. This option will appear in games that have enabled classic <em>SC</em>-style <a href="#Surrenders"> surrenders</a>, or in games where only two empires remain.</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="Map"></a>3.3 The Map screen</h2>
+<p>The map screen allows players to view the planets that their science ships have explored in a two-dimensional graphical form.</p>: The representation of a planet should be interpreted in the following manner:</p>
+
+<ul>
+<li>The number on the top left is the planet's mineral units.</li>
+<li>The number on the top right is the planet's fuel units.</li>
+<li>The number on the bottom left is the planet's agriculture units.</li>
+<li>The number on the bottom right is the planet's population units.</li>
+<li>The number in parenthesis on the left bottom is the number of ships belonging to the empire that are located at the planet.</li>
+<li>The number in parenthesis on the right bottom is the number of ships belonging to other empires that are currently located at the planet.</li>
+<li>The string at the bottom is the name of the planet.</li>
+<li>The links protruding from the planet represent jumps to other planets. If the planet is not displayed on the map, then is has not yet been explored and a science ship will be required. Otherwise, any ship that can move will be able to jump from one planet to its linked neighbour during an update.</li>
+</ul>
+<p>Each planet also has a pair of X-Y coordinates that uniquely identify it in the galaxy. The X coordinates increase towards the East, while the Y coordinates increase towards the North, just like standard Cartesian coordinates.</p>
+<p>If mini-maps have been enabled in the <a href="#Options"> Options</a> screen, they will display a smaller version of the map without planetary statistics, links or ship information. When maps are very large, setting the default map display to mini-maps can improve load times and visibility.</p>
+<p>Clicking on a planet will lead to an up-close screen where the planet's characteristics are displayed in more detail.</p>
+
+<p>If an empire owns the planet, the user can change both the name and the max population of the planet:</p>
+<p>The Next Pop field represents the system's prediction of how much population will be at a planet the next update. This does not take into account factors that cannot be easily predicted, such as ship combat results. As a security measure, neither the Max Pop or the Next Pop fields of another empire's planets can be viewed.</p>
+<p>The Max Pop field represents a maximum on the population the planet can have. There is usually no reason to waste resources on maintaining more population on a planet than its mineral and fuel units, unless the planet is meant to be a builder of ships and is below the building limit. If the Max Pop field is set to zero, then the planet can be colonized by other empires, friends or foes alike.</p>
+<p>The population a planet will have after an update is calculated as follows:</p>
+<ul>
+<li>If the planet is uncolonized, its population will remain at zero.</li>
+<li>If the planet is independent, its population will increase or decrease according to the agriculture ratio calculated with the planet's own resources.</li>
+<li>If the planet is colonized, the following steps will take place:
+<ul>
+<li>Begin with the planet's current population.</li>
+<li>Subtract the population lost to building colonies.</li>
+<li>Apply the agriculture ratio to this value.</li>
+<li>Cap the value with the Max Pop.</li>
+</ul>
+</li>
+</ul>
+<p>If a planet is marked as quarantined, the up-close view will display the number of updates during which the planet will remain in that state. A planet can become quarantined if a doomsday annihilates it or a planet is nuked a server-defined number of times.</p>
+<p>If there are ships located on the planet, their owner, type and number will be displayed below the planet's information. When <a href="#ShipTypes"> morphers</a> are present on the screen, their type will be displayed as their current type followed by "(<em>Morpher</em>)"</p>
+<p>If the options to display ships and build in these views are enabled, ship and build menus will appear.</p>
+<h2><a name="Planets"></a>3.4 The Planets screen</h2>
+<p>The Planets screen displays up-close views of every planet that has been explored by the empire.</p>
+<h2><a name="Diplomacy"></a>3.5 The Diplomacy screen</h2>
+<p>The diplomacy screen displays all empires that the player's empire has met. If the gameclass has the <a href="#GameClassOptions"> DipExposed</a> option activated, then all empires will be listed on this screen from the beginning of the game. The list will be sorted by diplomatic status.</p>
+<p>The diplomacy screen allows the player to view each visible empire's statistics and state.</p>
+
+<p>The <strong>They offer</strong> field is the diplomatic level currently being offered by the empire in question to the player's empire. The <strong>You offer</strong> field is the diplomatic level currently being offered to the other empire. The <strong>status</strong> is the current diplomatic level between the two, which is the level at which agreement has been reached. That level is always the lower of the two offered, and is changed only when an update occurs.</p>
+<p>Diplomatic levels are discussed in <a href="#Diplomatic"> section 3.5.1</a>.</p>
+<p>The <strong>Hashed IP Address</strong> is a mangled version of the player's real IP address. It can be used to determine if two empires are being controlled by same player (or at least from the same network address). The "last access" field displays the amount of time that has passed since the player last requested a screen in the current game. If several updates have occurred since that time, the number of updates the empire has been idle will also be displayed.</p>
+<p>The <strong>Econ</strong> level is an expression of the empire's economic strength. It is obtained from the following formula:</p>
+<div align="center"><code>Econ = floor ((Fuel + Min + Ag) / 100)</code></div>
+<p>The <strong>Mil</strong> level is an expression of the empire's current military strength. It is obtained from the following formula:</p>
+<div align="center"><code>Mil = floor (sum (all ship's BR's squared) / 50)</code></div>
+<p>Both the econ and mil levels are only changed during updates, so the effects on these totals of ship builds or dismantles will only be seen after the subsequent update.</p>
+<p>The <strong>Hear</strong>/<strong>Ignore</strong> option allows players to decide if they want to view private messages and broadcasts coming from the selected empire.</p>
+<p>The Diplomacy screen displays information at the top of the screen about the visibility of diplomatic settings, diplomacy restrictions, and the number of empires requesting a pause in the game.</p>
+<p>Messages to other empires can be also sent from the Diplomacy screen. Messages can either be broadcast to all, or sent as private messages. The option also exists to send messages to all empires who are at a given diplomatic status with the empire.</p>
+<h2><a name="Diplomatic"></a>3.5.1 Diplomatic levels</h2>
+<p>There are four separate diplomatic levels:</p>
+<table>
+<tbody>
+<tr>
+<td><strong>War</strong></td>
+<td>When empires are at war, their ships will fight and destroy each other whenever they encounter one another. Their ships can also nuke, annihilate and invade each other's planets.</td>
+</tr>
+<tr>
+<td><strong>Truce</strong></td>
+<td>When empires are at truce, their ships will not attack one another and they cannot nuke each other's planets. There are no other benefits from this setting.</td>
+</tr>
+<tr>
+<td><strong>Trade</strong></td>
+<td>When empires are at trade, they receive the benefits of truce as well as additional economic benefits: a server-specific percentage of their resource totals for the first trade partner (typically 10%), and a certain percentage of that for each additional partner (typically 90%). Trade bonuses do not stack on top of one another.</td>
+</tr>
+<tr>
+<td><strong>Alliance</strong></td>
+<td>When empires are at alliance, they receive the benefits of trade. They can also win games when no other empires remain.</td>
+</tr>
+</tbody>
+</table>
+<p>There are two other settings that can be offered to another empire:</p>
+<ul>
+<li><strong>Surrender</strong>: if an empire offers surrender to another empire and is accepted, then the result is equivalent to the latter nuking the former.</li>
+<li><strong>Accept Surrender</strong>: this option accepts an offered surrender.</li>
+</ul>
+<p>These settings are processed during an update just like the real diplomatic settings. However, these settings are not real diplomatic levels and will not change the status between the empires. It is important to note that surrender and accept surrender are not diplomatic status settings. For example, if two empires are at war, but are offering to accept each other's surrender, they will still remain at war for all effective purposes. Empires can only offer to surrender to another empire if they are currently at war with one another and have never been allied.</p>
+<p>In order for a coalition of allied empires win a game, they all need to be allied with one another. In other words, <em>n! </em>alliances are needed, where <em>n</em> is the number of empires. In games where there are limits imposed on the number of empires an empire can keep at a given diplomatic level, higher levels count as lower levels (for example, a trade counts as both a trade and a truce). When an empire is at one level and drops down to another, the superior level's count is only decremented at the end of the update.</p>
+<p>Diplomatic levels are only known to the empires involved in them, although their effects are visible by all: increased economic levels in some cases, ships not engaging in combat in others. It is considered good ethical practice to disclose details of alliances to other empires, as this leads to games that are more fair and balanced, but there is no physical obligation to do so. The non-disclosure of an alliance might in certain circumstances lead to advantageous positions for the empires engaging such secret agreements, so private double-crossings can never be ruled out.</p>
+<p>It is important to observe that an empire can break an alliance at any time, except in games where alliances are unbreakable. One can never rest easily on one's laurels because at any moment one's allies may move over to the other side. Trust is always a matter of game circumstances and of convenience, never a permanent asset.</p>
+<p>One might think that with rules like these, anarchy would soon reign in every game (as it does in other online games or communities with lax rules. However, it should be remembered that double-crossing players will be remembered by their victims and their actions will perhaps even be disclosed and discussed publicly. Subsequent games will be harder for the double-crosser, because their empires will be viewed with suspicion and only the naive will ally with them. Empires who wish to be respected by the community generally find themselves behaving honorably in most cases.</p>
+<p>Because every game begins with the galaxy's resources distributed more or less equally among all empires, there is no real incentive to constantly sack and pillage one's allies. Consequently, the short-term gain that can be obtained from double-crossing is balanced out by the long-term damage to an empire's reputation. Because games of this type encourage role-playing, it seems likely that both well-known honorable empires and shady, double-crossing empires will co-exist, perhaps even under the aegis of the same human player.</p>
+<p>All things considered, it appears that this situation is of benefit to the gameplay, and not a drawback.</p>
+
+<h2><a name="Ships"></a>3.6 The Ships screen</h2>
+<p>The ships screen allows empires to give their ships orders for the next update.</p>
+<p>The <strong>BR</strong> field is described in <a href="#Technology"> section 3.1.2</a>.</p>
+<p>The <strong>Next BR</strong> field is the BR at which the ships will be the following update. This total is reached by multiplying the BR by the maintenance ratio and reducing the total to the Max BR if it is greater than this value. If the maintenance ratio is less than 1.0, ships will operate at a weaker combat level than their potential maximum. This circumstance can be understood as the ship being in a state of disrepair. Furthermore, the options available to a ship in a given update are those that the ship will be able to perform during the next update, as judged by the current Next BR.</p>
+<p>The <strong>After BR</strong> field is the BR at which the ships will be the update following the next.</p>
+<p>The <strong>Max BR</strong> field is the maximum BR that the ships can reach. It corresponds to the BR at which they were <a href="#Build"> built</a>.</p>
+<p>When <a href="#ShipTypes"> morphers</a> are present on the ships screen, their type will be displayed as their current type followed by "(<em>Morpher</em>)"</p>
+<h2><a name="Fleets"></a>3.6.1 Fleets</h2>
+<p>Ships can be inserted into fleets, which can be created from the <a href="#Build"> Build</a> screen. Fleets can be moved like regular ships and all the ships in the fleet will perform exactly the same action. Fleets are useful for managing empires with large numbers of ships performing similar actions, such as moving to another planet or nuking a planet.</p>
+<p>Fleets can be collapsed or expanded.</p>
+
+<p>If all ships in a fleet are colonies, terraformers, troopships or doomsdays, the fleet will offer these ships' special actions as fleet options. Fleets can be merged and can pick up all unaffiliated ships located on the same planet. Fleets containing only ships that are being built can be moved from one builder planet to another.</p>
+<p>Disbanding will destroy the fleet and will leave all ships in the fleet standing by at the planet. Disbanding and dismantling will destroy the fleet and set all ships to dismantle, except for ships being build, which will be cancelled.</p>
+<h2><a name="Color"></a>3.6.2 Color coding</h2>
+<p>In the various <em>Almonaster</em> game screens, the observant player will notice that some values are coded with different colors, depending on their values. There is a reason for this:</p>
+<ul>
+<li><strong>Good</strong> colors represent values that are positive for an empire. For example, ships that are at full strength (that is, their current BR is equal to their Max BR) will have their BR marked in good-colored text. Similarly, in the <a href="#Planets"> Planets</a> screen, significantly high resource totals will use good color-ed text.</li>
+<li><strong>Normal</strong> colors represent values that are factual or average, neither good nor bad.</li>
+<li><strong>Bad</strong> colors represent values that are negative for an empire. In this case of the Ships screen, the Next BR values displayed above are below the Max BR and therefore represent a non-optimal situation where ships will not be at full strength next update.</li>
+</ul>
+<p>This scheme extends itself to such aspects as <a href="#Diplomatic"> diplomatic settings</a>. For example, allied empires will be represented in good-colored text, while warring empires will be in bad-colored text. Map coloring will also use these schemes to represent planets belonging to empires at various diplomatic levels.</p>
+<p>The actual colors used to represent good and bad colors are selected by the empire's graphical theme.</p>
+
+<h2><a name="Build"></a>3.7 The Build screen</h2>
+<ul>
+<li>The <strong>number</strong> is the number of ships of a given type that will be built.</li>
+<li>The <strong>name</strong> is the name that all the ships of a given type will receive. This name defaults to the default values specified by the empire in its <a href="#ProfileEditor"> Profile Editor</a>.</li>
+<li>The <strong>BR</strong> is the Max BR at which ships of a given type will be built. More powerful ships are more costly, and sometimes it makes sense to build less powerful ships for certain situations.</li>
+<li>The <strong>location </strong>is the planet upon which the ships will be built. Planets must have a certain population level in order to build ships; this level is defined by the game class.</li>
+</ul>
+<p>When a fleet is created, it starts out with no ships assigned to it. Ships can either join the fleet via the <a href="#Ships">Ships</a> screen or be built into the fleet via the <strong>location </strong>drop-down menu, which will include this option if a fleet is located on a builder planet. When ships are built into a new fleet, a new fleet with a random number as its name will be created to contain the ships. If different ship types are build into a new fleet in the same submission, all ships will end up in the same fleet.</p>
+<p>The Build screen displays information at the top of the screen about whether builds are visible or invisible in the game.</p>
+
+<h2><a name="Tech"></a>3.8 The Tech screen</h2>
+<p>The Tech screen allows empires to choose new <a href="#ShipTypes">ship types</a> that can then be <a href="#Build">built</a>. New technologies can be developed when new BR levels are reached.</p>
+
+<h2><a name="Quit"></a>3.9 The Quit button</h2>
+<p>The quit button is only available to an empire when the game it is in has not yet started. It allows empires to cleanly leave a game without being given a loss or a nuke.</p>
+<h2><a name="ExitGame"></a>3.10 The Exit button</h2>
+<p>The exit button allows a player to take a break from the game that he or she is in and join another game or edit his or her empire's profile, without actually quitting the empire from the first game.</p>
+<h2><a name="Ruins"></a>3.11 Ruins</h2>
+<p>When an empire becomes idle in a game, sometimes it will be removed from the game as if it had been nuked. This is generally referred to as "falling into ruin". The circumstances under which an empire will fall into ruin are highly gameclass-specific.</p>
+<p>If a game has "simple" ruins enabled, it will behave just like classic <em>Stellar Crisis</em>: any empire that has been idle for a gameclass-specific number of updates will fall into ruin and be removed from the game.</p>
+<p>If a game has "complex" ruins enabled, then ruins can only occur if all empires except one are idle for a gameclass-specific number of updates. In this case, the idle empires will only fall into ruin if more than two empires were in the game at some point during its lifetime.</p>
+<p>When an empire falls into ruin, it is removed from the game as if it had been obliterated, and its <em>Almonaster </em>score is modified as if an empire with identical statistics had nuked it. The Classic Score cost of a ruin is by default -1.0. Empires who win games in which other empires fall into ruin will not gain any nuking or scoring credit for their elimination.</p>
+<p>If all empires in a game are idle, then they will all fall into ruin and the game will end.</p>
+<h2><a name="Surrenders"></a>3.12 Surrenders</h2>
+<p>In <em>Almonaster</em> games in which the Surrender option is enabled, an empire can surrender to another empire at any moment after the game has started. In order to surrender,&nbsp;</p>
+<ul>
+<li>The recipient empire must be at war with the surrendering empire.</li>
+<li>The recipient empire must never have been allied with the surrendering empire.</li>
+<li>The recipient empire must accept the surrender.</li>
+</ul>
+<p>If surrender is enabled and only two empires remain, these restrictions are relaxed. The remaining empires can surrender via the <a href="#Options"> Options</a> page and no acceptance is required. In this case, the game will end immediately.</p>
+<p>The surrendering empire is considered to be nuked by the recipient empire in terms of all relevant statistics and scores. When an empire surrenders, its homeworld resources are reduced by one half, as if the planet had been nuked (note that if an empire's homeworld is annihilated with a doomsday, invaded with a troopship or colonized, its resources are not halved).</p>
+<p>In games where <em>classic SC</em>-style surrenders are enabled, any empire can surrender at any time by using the button located in the <a href="#Options"> Options</a> screen. Surrendering empires receive a <strong>nuked</strong> and are removed from the game. Their homeworlds are labeled "Ruins of &lt;empire name&gt;", and when colonized they give their colonizers a <strong>nuke</strong> (which counts for all scoring systems). If a surrendered homeworld is not colonized before the game ends, then there are three possible scenarios:</p>
+<ul>
+<li>When the game ends, no empires remain: in this case, no empire is credited with the <em>nuke</em>.</li>
+<li>When the game ends, only one empire remains: in this case the survivor is considered to have nuked the owner of the surrendered empire.</li>
+<li>When the game ends, more than one empire remains: in this case no one gets a <em> nuke</em>, but the winners receive a partial increase to their <em>Almonaster</em> scores proportional to the amount they would have obtained had they nuked the surrendered empire themselves. Similarly, the surrendered empire loses an amount of <em>Almonaster</em> score points equivalent to the average of the amount it would have lost had it been nuked individually by each of the survivors.</li>
+</ul>
+<p>Empires can only surrender in games that have already closed.</p>
+<h2><a name="Randomization"></a>3.13 Randomization</h2>
+<p>The following actions in <em>Almonaster</em> game play are fully randomized:</p>
+<ul>
+<li>The order of empire addition to the map during map generation</li>
+<li>The order of empire action processing during an update</li>
+<li>The order of ship movement processing during an update</li>
+<li>The order of ship special action and nuke processing during an update</li>
+<li>The order of stargates and jumpgates processed during an update</li>
+<li>The order of diplomacy resolutions during an update</li>
+</ul>
+<h2><a name="Independence"></a>3.14 Independence</h2>
+<p>If the <strong>independence</strong> option is enabled for a particular game, then when an empire is nuked its surviving planets remain alive and populated as so-called independent planets, and they cannot simply be re-colonized by other empires. Since they have a life of their own, they must be nuked or invaded in order to be used by other empires. The population of an independent planet will grow or shrink according to the amount of agricultural units the planet possesses. Planets with zero agriculture units will not become independent.</p>
+<p>In a game with independence enabled, a dead empire's ships may either disappear, remain independent, or revert to the ownership of the empire who owns of the planet at which the ships were located. The logic is as follows:</p>
+<ul>
+<li>If the ship is a cloaker, it uncloaks.</li>
+<li>If the planet a ship is on is unpopulated, the ship will disappear, unless it's a colony, in which case it will attempt to colonize it.</li>
+<li>If the planet a ship is on is independent, the ship remains alive as an independent ship, and its BR never changes.</li>
+<li>If the planet a ship is on belongs to a different empire, the ship reverts to the ownership of that empire, regardless of the latter's tech developments. Empires do have the right to reject such independent ship gifts - this can be configured via the <a href="#ProfileEditor"> Profile Editor</a> and <a href="#Options"> Options</a> screens - in which case the ship will disappear.</li>
+</ul>
+<p>The realistic idea behind independence is that when an empire's homeworld is destroyed, the rest of the planets become local fiefdoms with no affiliation with their fellow planets. Ships' crews will go "mercenary" and will either affiliate themselves with their local planets or surrender.</p>
+<h2><a name="Etiquette"></a>3.15 Etiquette</h2>
+<p><em>Almonaster</em> game playing etiquette does not differ greatly from basic <em> Stellar Crisis </em>etiquette. Erick Beck's <a href="http://erick.freeshell.org/sc/etiq.html"> Guide to Stellar Crisis Etiquette</a> provides an excellent summary of the latter. There are several things I would add, however:</p>
+<ul>
+<li>Communication is a fundamental part of the game, especially in the case of alliances. Many players will ally with someone and not inform them of their ship movements or overall strategy. This is a mistake.</li>
+<li>HTML abuse is not a problem in <em>Almonaster </em>because the game does not allow it. Any HTML usage that can affect fellow players is a bug that should be reported and fixed.</li>
+<li>The ignore option in the <a href="#Diplomacy"> Diplomacy</a> screen can be used to filter out messages from unpleasant empires.</li>
+<li>The game is intended to be fun. Winning, acquiring nukes and incrementing one's scores is only a small part of the game. The larger part is enjoyment, both one's own and that of others. This should be one's guiding factor when deciding how to behave and which persona to adopt while playing. So one should feel free to send lots of messages, joke around, use funny empire names, upload humorous icons and have an all-around good time. But one shouldn't be upset by losses or nukes. It is, after all, just a game.</li>
+<li>Players shouldn't just leave a game, even if they're losing badly. Many players will just stop playing when they know they've lost, which costs the other players a few updates' worth of time before the game ends. The best shortcut for the losing player to resolve this situation is to go to the <a href="#Options"> Options </a>screen and resign.</li>
+</ul>
+
+<h2><a name="Advanced"></a><strong>4.0 Advanced Topics</strong></h2>
+<p>This section discusses several topics that users will need to understand in order to become quality <em>Almonaster</em> players. However, novice players may not understanding them fully before acquiring some hands-on experience with the game.</p>
+<h2><a name="ShipCombat"></a>4.1 Ship combat</h2>
+<p>The formula that decides ship combat is rather complex. A high level overview of the combat sequence can be expressed as follows:</p>
+<ol>
+<li>For each set of ships involved in combat (where each empire owns a set), two numbers are calculated:<br /> a) The sum of the set's combat points, where the combat points for each ship is the square of its current BR.<br /> b) The sum of all the opposing ship sets' combat points. Only empires at war are counted in this total.</li>
+<li>The damage done to an empire's ships by another empire's ships is a percentage of the latter's combat points. This percentage is calculated by dividing the former's combat points by the total number of enemy combat points attacking the latter. In other words, empire A will attack empire B in direct proportion to the significance of empire B in the set of empires that are attacking empire A.</li>
+<li>Ships are destroyed until the opposing empire's combat points no longer suffice to destroy any of the remaining ships. At this point, the remaining damage is distributed equally among the remaining ships. With the exception of combat involving carriers, no opposing factions can remain at the end of combat. The only randomization in the algorithm is in the part that decides which ships are destroyed. Therefore, the strongest faction always wins.</li>
+<li>If at any point a ship's BR falls below 0.001, it will be automatically dismantled. This will occur early in the update, before ship combat. Ships dismantled in this way will not perform special actions or influence the update in any way.</li>
+</ol>
+<h2><a name="ShipCombat2"></a>4.1.1 Ship combat details</h2>
+<p>Almonaster ship combat follows the <em>Stellar Crisis </em>combat resolution algorithm in all but two details:</p>
+<p>From the <em>Stellar Crisis</em> FAQ:</p>
+<p>Combat takes place between warring ships in the same system. Combat is resolved in the following manner:</p>
+<p>Preliminary calculations:</p>
+<dl><dt>Each empire determines their Battle Points.</dt><dd>BP = (sum of the squares of the current BR's of you ships) * (fuel use ratio (if less then one))</dd><dt>A list of all of the empires you are at war with is then made, call it enemy_list.</dt><dt>All of the BP's from those empires on the enemy_list are totaled together, call it enemy_BP_tot.</dt><dt>For each empire in the enemy_list, determine the percentage of enemy_BP_tot that their BP represents, and assign a similar percentage of your BP (call this %_DMG) to their ships' total damage sustained (TOT_DMG).</dt><dt>After this is done for every empire, everyone will have a TOT_DMG.</dt><dt>Combat resolution:
+<p>The TOT_DMG is then cut in half. One half of which, is the destruction value for that empire (DEST). The other half of TOT_DMG is the secondary damage value (2DV).</p>
+</dt><dt>The DEST is then checked against the square of a ship's current BR. If DEST is higher then this then the ship is destroyed. (subtracting the BP of that ship from DEST) This is continued until either the DEST is two small to destroy any more ships, or there are no more ships.</dt><dt>The remaining DEST is then added back onto the 2DV. This is then used to check every ship once again to see if it is destroyed from secondary fire. This can result in destruction of all your remaining ships, of course.</dt><dt>the current_BP for your ship is then determined.</dt><dt>Then your opponent's 2DV is divided by your current_BP to determine the amount of damage sustained by your ships.</dt><dt>Damage Ratio= Opponents 2DV/ Your current_BP</dt><dt>Empires with Damage Ratios above one, have their entire fleet destroyed.</dt><dt>The current BR for the surviving ships is determined by:</dt><dd>Current BR = (1-damage ratio) * Initial BR"</dd></dl>
+<p>The first difference is that in <em>Almonaster</em>, the percentage of TOT_DMG that is converted to DEST can be configured by the administrator, while in classic <em>Stellar Crisis</em> it is always set to 50%.</p>
+<p>The second difference is that if an empire's fuel ratio is below 1.0, <em>Almonaster</em> also multiplies each ship's individual BP by its owner's fuel ratio when calculating the damage done to the ship, while classic <em>Stellar Crisis</em> only applies the fuel ratio to each empire's total BP. In other words, a BR 2.0 ship with a 0.75 fuel ratio can be destroyed with 2.0 * 2.0 * 0.75 = 3.0 DEST points. The advantage of the <em>Almonaster</em> approach is that if two full strength ships of equal BR and sub-1.0 fuel ratios collide, at least one will be destroyed, while in <em>Stellar Crisis</em> both may remain alive. In recent versions of classic <em>Stellar Crisis </em>(3.2.11 onwards) this behavior has been changed to be identical to the <em>Almonaster</em> version.</p>
+<p>It should be noted that fuel ratio is only used during ship combat. It does not affect other ship operations such as military level or special actions. When an empire's fuel ratio is below 1.0, it will affect ship combat on the next update. After ship combat is resolved, a new fuel ratio is calculated, which will be used during the following update.</p>
+<h2><a name="OverBuild"></a>4.2 Overbuilding</h2>
+<p>Beginning players who have mastered the basics of ship deployment will usually be careful to keep their maintenance ratios above 1.0, in order to keep their ships prepared for engaging in combat at full strength. However, players using this strategy will soon find their ships overwhelmed by larger fleets belonging to more experienced players, created in the blink of an eye to the surprise of the beginners. This happens because experienced players know about overbuilding and are capable of taking advantage of the mathematics of the game.</p>
+<p>The reasoning behind overbuilding is simple: if an empire builds a fleet with enough ships to send its maintenance ratio below 1.0, during the next update all ships belonging to that empire will be very weak and will be easily defeated in combat by inferior forces. However, given an update or two to recover, that fleet will recover its full strength and will be large enough to be capable of defeating fleets that were built with more conservative maintenance ratios.</p>
+<p>Some players will overbuild fleets that take two or even three updates to recover, but usually only in desperate situations since the technological cost of building such large fleets is usually very high.</p>
+<p>The <strong>Next Maintenance Ratio</strong> displayed in the ratios bar and on the Info screen can be used to calculate what the strength of a fleet will be in two updates, and is therefore a most valuable tool for the eager overbuilder.</p>
+<h2><a name="PopTrick"></a>4.3 The Pop Trick</h2>
+<p>Another observation that newer players will make, when confronted with grizzled veterans, is the facility of the latter to take advantage of a momentary lull in hostilities to manipulate the population on their planets. While the beginner's planets will slowly grow from their original population of colonists to full builder status, the experienced player will be able to build at his or her frontier planets in a mere couple of updates, and will therefore have a large advantage in the subsequent war.</p>
+<p>The reason this is possible is again due to the mathematics of the game. Given the way the Ag Ratio is calculated (essentially Total Agriculture divided by Total Population), the savvy player can manipulate his or her planets' populations so that in a subsequent update the Agriculture Ratio will be very large and by the next update the planets' populations will be greatly increased. This procedure is known as the <strong>pop trick</strong>.</p>
+<p>For example, an empire has three planets with the following characteristics:</p>
+<ol>
+<li>100 agriculture, 100 population</li>
+<li>60 agriculture, 5 population</li>
+<li>20 agriculture, 16 population</li>
+</ol>
+<p>A successful pop trick at this stage will look like this:</p>
+<ol>
+<li>Set the planets' maximum populations to 4, 2, 1 respectively.</li>
+<li>End turn: after the update the planets' populations will be 4, 2, 1, respectively. The agriculture ratio will be 180 / 7 = 25.814</li>
+<li>Set the planets' maximum populations to 100, 50, 20, respectively.</li>
+<li>End turn: after the update, the planets' populations will be 100, 50 and 20, respectively</li>
+</ol>
+<p>The risk here is that during the update in which the planets' populations are low, the empire cannot have a significant number ships alive, or its maintenance and fueling demands will far outstrip its available resources, which will lead to a large technology decrease. Consequently, the empire will be vulnerable to a stray science ship or a well-placed cloaker.</p>
+<p>Experienced players usually know how to find the best time to perform a pop trick, but even they can sometimes be burned. A pop trick can be risky, but it does bring great advantages when used successfully.</p>
+<h2><a name="CustomGETs"></a>4.4 Custom GETs</h2>
+<p>It is possible for players to reach screens inside an <em>Almonaster </em>server without passing through the login screen. This can be done by submitting a GET request with a URI formed in the following manner:</p>
+<code>https://server/pagesourcename/?EmpireName=X&amp;ClearTextPassword=Y&amp;PageId=Z</code>
+<p>where X is the empire's name, Y is its password and Z is the desired page id.</p>
+<p>In a regular web browser, an sample URL would look like this:</p>
+<code>https://server/almonaster/?EmpireName=Destroyer&amp;ClearTextPassword=ofplanets99&amp;PageId=4</code>
+<p>Here, the empire name is "Destroyer" and the password is "ofplanets99". The page id requested is that of the Open Game List.</p>
+<p>To request a page from an active game, the gameclass id and game number must be known. The URL would look like this:</p>
+<code>https://server/almonaster/?EmpireName=Destroyer&amp;ClearTextPassword=ofplanets99&amp;PageId=18&amp;GameClass=31&amp;GameNumber=1&amp;Updates=0</code>
+<p>The page ids that can be requested are the following:</p>
+<table>
+<tbody>
+<tr>
+<td>Active Game List</td>
+<td>1</td>
+<td>&nbsp;</td>
+<td>Planets</td>
+<td>22</td>
+</tr>
+<tr>
+<td>Login</td>
+<td>2</td>
+<td>&nbsp;</td>
+<td>Options</td>
+<td>23</td>
+</tr>
+<tr>
+<td>New Empire</td>
+<td>3</td>
+<td>&nbsp;</td>
+<td>Build</td>
+<td>24</td>
+</tr>
+<tr>
+<td>Open Game List</td>
+<td>4</td>
+<td>&nbsp;</td>
+<td>Ships</td>
+<td>25</td>
+</tr>
+<tr>
+<td>System Game List</td>
+<td>5</td>
+<td>&nbsp;</td>
+<td>Game Server Information</td>
+<td>26</td>
+</tr>
+<tr>
+<td>Profile Editor</td>
+<td>6</td>
+<td>&nbsp;</td>
+<td>Game Documentation</td>
+<td>27</td>
+</tr>
+<tr>
+<td>Top Lists</td>
+<td>7</td>
+<td>&nbsp;</td>
+<td>Game Server News</td>
+<td>28</td>
+</tr>
+<tr>
+<td>Profile Viewer</td>
+<td>8</td>
+<td>&nbsp;</td>
+<td>Game Profile Viewer</td>
+<td>29</td>
+</tr>
+<tr>
+<td>Server Administrator</td>
+<td>9</td>
+<td>&nbsp;</td>
+<td>Game Contributions</td>
+<td>30</td>
+</tr>
+<tr>
+<td>Empire Administrator</td>
+<td>10</td>
+<td>&nbsp;</td>
+<td>Game Credits</td>
+<td>31</td>
+</tr>
+<tr>
+<td>Game Administrator</td>
+<td>11</td>
+<td>&nbsp;</td>
+<td>Game TOS</td>
+<td>32</td>
+</tr>
+<tr>
+<td>Theme Administrator</td>
+<td>12</td>
+<td>&nbsp;</td>
+<td>Game Quit</td>
+<td>33</td>
+</tr>
+<tr>
+<td>Personal GameClasses</td>
+<td>13</td>
+<td>&nbsp;</td>
+<td>Latest Nukes</td>
+<td>34</td>
+</tr>
+<tr>
+<td>Chatroom</td>
+<td>14</td>
+<td>&nbsp;</td>
+<td>Spectator Games</td>
+<td>35</td>
+</tr>
+<tr>
+<td>System Server Information</td>
+<td>15</td>
+<td>&nbsp;</td>
+<td>System Contributions</td>
+<td>36</td>
+</tr>
+<tr>
+<td>System Documentation</td>
+<td>16</td>
+<td>&nbsp;</td>
+<td>System Credits</td>
+<td>37</td>
+</tr>
+<tr>
+<td>System Server News</td>
+<td>17</td>
+<td>&nbsp;</td>
+<td>Latest Games</td>
+<td>38</td>
+</tr>
+<tr>
+<td>Info</td>
+<td>18</td>
+<td>&nbsp;</td>
+<td>Tournament Administrator</td>
+<td>39</td>
+</tr>
+<tr>
+<td>Tech</td>
+<td>19</td>
+<td>&nbsp;</td>
+<td>Personal Tournaments</td>
+<td>40</td>
+</tr>
+<tr>
+<td>Diplomacy</td>
+<td>20</td>
+<td>&nbsp;</td>
+<td>Tournaments</td>
+<td>41</td>
+</tr>
+<tr>
+<td>Map</td>
+<td>21</td>
+<td>&nbsp;</td>
+<td>System TOS</td>
+<td>42</td>
+</tr>
+</tbody>
+</table>
+<h2><a name="Security"></a>4.5 Security</h2>
+<p>There are several aspects to security in <em>Almonaster</em>:</p>
+<h2><a name="HTMLFiltering"></a>4.5.1 HTML filtering</h2>
+<p>When a screen is rendered for a player, strings provided by other players such as empire names or messages may be used to provide content. All such strings are filtered for HTML or script tags before being displayed. If a player is capable of injecting HTML or script into another player's screens, then it is a bug in the server.</p>
+<h2><a name="SessionIds"></a>4.5.2 Session Ids</h2>
+<p>Each empire on an Almonaster server is assigned a 64-bit integer called a Session Id, which is stored in the server's database in association with the empire's information. Session Ids are used for game screen <a href="#PasswordHashing"> password hashing</a> and for security measures involving the detection of multiple empires in the same game. A Session Id is also stored on a player's hard drive as a cookie, so it is common for multiple empires owned by one player to use the same Session Id. When the Session Id in the cookie conflicts with the Session Id stored in the database, the version stored in the cookie wins and overwrites the version stored in the database.</p>
+<p>If a player 'loans' an empire to another player by giving the latter its password, it is possible that the server might conclude that the empire in question really does belong to the second player. This can lead to situations where the second player's empires is denied access to games in which the shared empire is participating. In these cases, manual editing of cookies or administrative intervention are usually the only means of resolving the problem.</p>
+<h2><a name="PasswordHashing"></a>4.5.3 Passwords</h2>
+<p>Players often find themselves wanting to save game screens, especially maps, in order to document a game or show off their nuking prowess. In most versions of <em>Stellar Crisis</em>, it is necessary to remove the password field from the HTML text before making it public, because the value could be used by other players to hack into the empire used to generate the screen.</p>
+<p><em>Almonaster</em> solves this problem by using the player's IP address and <a href="#SessionIds"> Session Id</a> to provide uniqueness to the password hash stored in each game page. This additional security can be configured by selecting the respective options in the <a href="#ProfileEditor"> Profile Editor</a>. If an attacker wanted to use the password value stored in such a page, he would have to guess the empire's Session Id and the IP address from which the empire generated the posted screen. A further means of defense is accomplished by including a 'salt' value in the password hash that represents the time at which the hash was generated. Hashes with salt older than 24 hours are rejected by the server as timed out submissions, so the attacker would either have to be operating within a day of the page generation, or find a time in the last day for which the hash computation is identical. The former is impossible if the page is older than a day, and the latter is either impossible or computationally impractical.</p>
+<h2><a name="GameEntrySecurity"></a>4.5.4 Game entry filtering</h2>
+<p>As described in <a href="#AdvancedOptions"> section 2.25</a>, the creators of a game can choose to exclude specific empires from entering that game. They can also block empires with duplicate Session Ids and IP addresses and filter empires by score.</p>
+<h2><a name="InGameMessageFiltering"></a>4.5.6 In-game message filtering</h2>
+<p>Players can choose to block the messages from specific empires. They can also choose to block all broadcasts.</p>
+<h2><a name="TournamentDesc"></a>4.6 Tournaments</h2>
+<p>The goal of the Tournaments feature is to allow administrators and privileged players the opportunity to organize games with pre-defined sets of empires and alliances. Tournaments were originally conceived as a means of providing server-side support for the Stellar Kings Team Challenge, but they have many other uses.</p>
+<p>Tournaments consist of the following elements:</p>
+<ul>
+<li>A name, an icon, a description, a webpage link and recent news items</li>
+<li>A set of gameclasses belonging to the tournament.</li>
+<li>A set of empires who have joined the tournament.</li>
+<li>A set of teams to which empires can be assigned.</li>
+<li>A set of active games.</li>
+<li>For each empire and each team, a record of wins, nukes, nuked, draws and ruins incurred while playing tournament games.</li>
+</ul>
+<p>The creator of a tournament is its owner, with the exception of system tournaments which are owned by all empires with administrative privileges. Only the owner of a tournament can administer it. Tournament administration consists of setting the tournament parameters, creating or deleting gameclasses, inviting or deleting empires, creating teams, assigning empires to teams, starting games and administering games.</p>
+<p>Gameclasses created for a personal tournament do not count against the empire's overall limit of personal gameclasses. There is a limit to the number of personal tournaments an empire can create, and there is a limit to the number of gameclasses that can be created per personal tournament.</p>
+<p>In order for an empire to join a tournament, both the empire and the tournament owner must agree. A tournament owner can issue an invitation to the empire, which the latter must accept, or the empire can request to join the tournament, after which the owner can accept or decline. Empires can mark themselves as being unavailable for tournament games, which means that tournament owners cannot use their empires to create a new tournament game. Empires can remove themselves from tournaments they have joined through the <a href="#ProfileEditor"> Profile Editor</a>.</p>
+<p>It is up to the discretion of the tournament owner to place joined empires within the teams created for the tournament. Empires can be added and removed from teams, or moved between teams. When an empires leaves a team, it carries its score along with it, but the team's score will remain the same. Therefore, a team's score will not always be the sum of its component empires' scores.</p>
+<p>Tournament games have the following unique properties:</p>
+<ul>
+<li>Tournament games must have a fixed number of empires; i.e., the minimum and maximum number of empires must be equal.</li>
+<li>Tournament games always begin and close at the same time (when all players are joined).</li>
+<li>Tournament games never have any latecomers.</li>
+<li>There is no password protection, empire filtering or blocking in tournamnet games.</li>
+<li>Empire names are always exposed.</li>
+</ul>
+<p>When the tournament creator starts a game, he or she can choose from among the empires and teams belonging to the tournament to populate the game with empires. If there is a team with more than one empire, the creator has the option to select from the following options:</p>
+<ul>
+<li>Empires begin the game already allied with their teammates.</li>
+<li>Empires begin the game having already met their teammates. This option is only available if the gameclass does not have exposed diplomacy.</li>
+<li>No special team options.</li>
+</ul>
+<p>Aside from this, games created within tournaments are played in identical fashion to any other game on the server. The tournament creator, however, can administer games created through his tournament as if he were an administrator. This includes:</p>
+<ul>
+<li>Viewing the full game map.</li>
+<li>Forcing an update in the game.</li>
+<li>Pausing the game.</li>
+<li>Viewing full empire information inside the game.</li>
+<li>Deleting empires from the game.</li>
+<li>Sending messages to all empires in the game.</li>
+<li>Killing the game.</li>
+</ul>
+
+<h2><a name="Administration"></a>5.0 Administration</h2>
+<p>This section describes <em>Almonaster</em>'s administrative interface (i.e., the set of additional screens available to empires with administrative privileges)</p>
+<h2><a name="ServerAdmin"></a>5.1 The Server Administrator screen</h2>
+<p>This screen allows an administrator to perform the following tasks:</p>
+<ul>
+<li>Change the server's name.</li>
+<li>Change the administrative email address displayed on every screen.</li>
+<li>Change the default alien icon.</li>
+<li>Choose the system's default UI elements.</li>
+<li>Create a new empire.</li>
+<li>Change the way privileges work on the server (either administratively assigned, or score-based).</li>
+<li>Change the <em>Almonaster</em> score needed to reach the status of <a href="#Privileges"> apprentice </a>or <a href="#Privileges"> adept</a>.</li>
+<li>Change the icon used for system messages.</li>
+<li>Change the maximum allowed number of saved game and system messages.</li>
+<li>Change the default maximum allowed number of saved game and system messages.</li>
+<li>Change the maximum allowed size of uploaded alien icons.</li>
+<li>Change the number of nukes listed in an empire's nuke history.</li>
+<li>Change the number of nukes listed on the <a href="#LatestNukes"> Latest Nukes</a> screen.</li>
+<li>Change the number of games listed on the <a href="#LatestGames"> Latest Games</a> screen.</li>
+<li>Change the number of updates the server must be down before a game is deleted (except if the game is a longterm).</li>
+<li>Change the update duration for a game to be considered a longterm.</li>
+<li>Change the frequency with which the server scans for <a href="#BridierScore"> Bridier Index</a> decay.</li>
+<li>Rebuild the system Top Lists, on the unlikely event that they become corrupted.</li>
+<li>Enable / disable non admin empire logins, new empire creation, new game creation and access to the server for non administrative empires.</li>
+<li>Shutdown the server, restart the server and restart the <em>Almonaster</em> page source.</li>
+<li>Flush the database's dirty pages to disk.</li>
+<li>Purge the database of empires that match certain characteristics. Purges can be tested before being put into effect.</li>
+<li>Backup the database, view all backups and restore or delete a database backup</li>
+<li>Create a new alien icon by providing the new key, the author's name and an uploaded file (which must be a transparent gif within the size parameters accepted by the server).</li>
+<li>Delete an alien icon by providing its key</li>
+<li>Change the default ship names provided to new empires</li>
+<li>Edit the text above and below the name/password form on the <a href="#Login"> Login</a> screen.</li>
+<li>Edit the news displayed in the <a href="#ServerNews"> Server News</a> page.</li>
+</ul>
+<h2><a name="EmpireAdmin"></a>5.2 The Empire Administrator screen</h2>
+<p>This screen allows an administrator perform advanced searches for empires, based upon various criteria. The chosen fields are AND'ed together, which means that a search with multiple fields selected is understood as a query of the type "list all empires whose names contain the letter 'w' and whose email addresses contain the string 'aol.com' and who have between 3 and 6 wins".</p>
+<p>The administrator can perform the following actions upon an empire:</p>
+<ul>
+<li>Change their privilege levels, privilege types (score-based or fixed), passwords and scores</li>
+<li>
+<p>Toggle their broadcast privilege</p>
+</li>
+<li>
+<p>Reset their session ids</p>
+</li>
+<li>
+<p>Look up the DNS names for their IP addresses</p>
+</li>
+<li>
+<p>Obliterate them (obliterated empires are removed from any games they are participating in and deleted from the server).</p>
+</li>
+</ul>
+<p>The Empire Administrator screen also allows administrators to broadcast a message to all empires on the server.</p>
+<h2><a name="GameAdmin"></a>5.3 The Game Administrator screen</h2>
+<p>This screen allows an administrator to perform the following tasks:</p>
+<ul>
+<li>Pause and un-pause all games.</li>
+<li>Reset the update periods on all games</li>
+<li>Create, rename and delete superclasses.</li>
+<li>Create, halt, un-halt and delete gameclasses.</li>
+<li>Change the default limits on system and personal gameclass characteristics.</li>
+<li>View and modify any active games:
+<ul>
+<li>Pause a game.</li>
+<li>Delete a game.</li>
+<li>Reset the update period on a game.</li>
+<li>Broadcast messages to all empires in a game.</li>
+<li>Force a game to update.</li>
+<li>Removed empires from a game.</li>
+<li>Restore resigned empires to a game.</li>
+<li>Search for empires with matching IP addresses or Session Ids in a game.</li>
+<li>View the full map of the game.</li>
+<li>View a table with the full statistics of all empires in a game.</li>
+</ul>
+</li>
+<li>Change server-wide settings for games and gameclasses.</li>
+</ul>
+<p>The server-wide settings that can be changed listed below.</p>
+<p>Gameclass parameters:</p>
+<ul>
+<li>The maximum number of empires in a system gameclass.</li>
+<li>The maximum number of planets in a system gameclass.</li>
+<li>The maximum average number of resources per attribute per planet in a system gameclass.</li>
+<li>The maximum initial tech level in a system gameclass.</li>
+<li>The maximum tech development in a system gameclass.</li>
+<li>The minimum update time in a system gameclass.</li>
+<li>The maximum update time in a system gameclass.</li>
+<li>The maximum number of personal gameclasses per empire.</li>
+<li>The maximum number of personal tournaments per empire.</li>
+<li>The maximum number of gameclasses per personal tournament.</li>
+<li>The maximum number of empires in a personal gameclass</li>
+<li>The maximum number of planets in a personal gameclass.</li>
+<li>The maximum average number of resources per attribute per planet in a personal gameclass.</li>
+<li>The maximum initial tech level in a personal gameclass.</li>
+<li>The maximum tech development in a personal gameclass.</li>
+<li>The minimum update time in a personal gameclass.</li>
+<li>The maximum update time in a personal gameclass.</li>
+<li>The privilege level required to create <a href="#SystemGameList"> personal games</a> and <a href="#PersonalGameClassesPage"> gameclasses</a> with unlimited empires.</li>
+<li>The initial state of games (paused or not paused).</li>
+</ul>
+<p>Game parameters:</p>
+<ul>
+<li>The Percent of damage used to destroy (DEST). This is the percentage of TOT_DMG is converted to DEST during ship combat (see <a href="#ShipCombat2"> section 4.11</a> for more details on this). As this value increases, more ships are destroyed during combat, and the BR of the surviving ships becomes higher. On classic <em>Stellar Crisis</em> servers, this value is typically 50%. On <em>Almonaster</em> servers, it is usually 60%.</li>
+<li>The Percent econ increase on first trade. This is the percentage by which an empire's resources increase when its first trade agreement is established.</li>
+<li>Percent of previous econ increase on next trade. This is the percentage of the previous increase in an empire's resources when its last trade agreement was established that should be used to calculate the increase for the next trade agreement. For example, if the first increase was 10% and this value is set to 90%, then the second trade agreement will give an 9% increase, the third 8.1%, etc. All percentages apply to the original totals, not the stacked totals.</li>
+<li>Percent of full tech increase for late entrances. This is the percentage of the maximum possible tech increase given to latecomers in a game. The maximum possible tech increase is the maximum tech development for an update, as defined by the gameclass, multiplied by the number of updates the newly arrived empire has missed. This value is then multiplied by the percentage to given the final tech increase for the latecomer.</li>
+<li>Number of nukes before planet is quarantined. This is the number of nukes it takes for a planet to become temporarily annihilated. After this number is reached, the planet is considered to have been ecologically damaged. Any subsequent nuke will result in an immediate period of quarantine.</li>
+<li>Number of updates in quarantine after planet is nuked. This is the number of updates a planet will be in quarantine after it is nuked the number of times selected in the previous option.</li>
+<li>Update delay after a weekend for non-weekend-update games. This is the time added to the weekend update period of all non-weekend-update games. The additional time is added to avoid updates that would occur before players with no weekend access were able to access the server. Most servers will have players logging in from all possible time zones, some with completely different schedules to the local time the server is set to. This value can be set to at most 12 hours.</li>
+<li>Maximum number of updates before games close. This is the value used to make sure that games close after a reasonable period of time. Because open games cannot end, games with unreasonably large values for this setting can consume server resources unnecessarily. This value provides a cap on such resource usage.</li>
+<li>Default number of updates before games close.</li>
+<li>Default Bridier configuration for grudge games (count for Bridier or not)</li>
+<li>Default configuration for exposing empire names in game lists.</li>
+<li>Default configuration for exposing appropriate games to spectators</li>
+<li>Default entry blocking of empires based on duplicate IP addresses and Session Ids.</li>
+<li>Default entry blocking of empires that are idle in other games.</li>
+</ul>
+<p>Ship parameters:</p>
+<ul>
+<li>Colony settings. They determine the population cost of a colony ship, as well as the population a colony will deposit. Build costs can be either simple (a fixed value) or multiplied (a fixed value times the ship's BR), while population deposit can be either multiplied (a fixed value times the ship's BR) or exponential (the ship's BR to a fixed power).</li>
+<li>Engineer BR cost of opening of closing links.</li>
+<li>Stargate settings. They determine if range limitations are enabled, the range factor and the BR cost of gating ships. The range factor is multiplied by the distance to a planet to give the BR the gate needs to reach the planet. The distance between two planets is the greater of the differences between their X coordinates and their Y coordinates. E.g., the distance between Planet 3,4 and Planet 7,16 is 16 - 4, which is 12. With a range factor of 0.5, a 12 * 0.5 is 6, so a BR6 gate is required to send ships from one planet to the other.</li>
+<li>Jumpgate settings. They are determined by the same parameters used for stargates.</li>
+<li>Terraformer agriculture multiplier. This is the factor that multiplies a terraformer's BR to determine the agriculture increase that it will provide when terraforming a planet. This value is capped by the maximum of the fuel and mineral totals available to the planet.</li>
+<li>Troopship invasion multiplier. This is the factor that multiplies a troopship's BR to determine the planetary population it can successfully invade.</li>
+<li>Troopship failure factor. This is the factor that multiplies a troopship's BR to determine the planetary population it will kill when an invasion fails.</li>
+<li>Troopship success factor is the factor that multiplies a planetary population to determine how many units are killed when an invasion is successful.</li>
+<li>Doomsday annihilation multiplier. This is the factor that multiplies a doomsday's BR to determine the number of updates a planet it annihilates will remain in quarantine. Quarantine is defined in section <a href="#GameClassOptions"> 2.5.1</a>.</li>
+<li>Carrier battle cost. This is the BR a carrier will lose after engaging in a battle in which its special DEST absorption abilities are used. Carriers absorb the square of their BR in DEST when targeted for DEST damage, but are otherwise unaffected, aside from their battle cost. See <a href="#ShipCombat2"> section 4.11</a> for more details on ship combat and how DEST operates.</li>
+<li>Builder minimum BR. This is the minimum BR needed for a builder to be able to create a planet. Planets created by builders with BR above this minimum will be allocated resource totals according to the following formula: BuilderResourceMultiplier * (average planet for game) * ((BR - BuilderBRDampeningFactor + 1) / BR) ^ 2.</li>
+<li>Builder Resource Multiplier. This is the factor mentioned in the formula above.</li>
+<li>Builder BR Dampening Factor. This is the factor mentioned in the formula above.</li>
+<li>Cloaker behavior. This determines if cloakers are built cloaked or uncloaked by default.</li>
+<li>Morpher behavior. This determines if morphers are cloaked or uncloaked by default when they morph into cloakers.</li>
+<li>Morpher morphing cost. This is the BR cost of changing a morpher from one ship type to another.</li>
+<li>Compatibility flags. These are options that enable server administrators to disable new ship behavior present in <em>Almonaster</em> but not in classic <em>Stellar Crisis</em>. These flags include:
+<ul>
+<li>Disable terraforming non-owned planets</li>
+<li>Disable multiple terraformers acting on one planet during an update</li>
+<li>Disable terraformer survival after terraforming</li>
+<li>Disable troopship survival after invading</li>
+<li>Disable minefield detonation</li>
+</ul>
+</li>
+</ul>
+<p>Map parameters:</p>
+<ul>
+<li>Percent chance a planet will be a linked to an adjacent planet. This represents the chance that a new link will form after a new planet is created next to an old planet that it was not initially linked to. This defines the degree of 'connectedness' of maps.</li>
+<li>Resource allocation deviation multiplier. This is the factor that multiplies the average resource totals for a planet and determines the maximum number of resources available to a planet. For example, if average agriculture value is 30, and the deviation multiplier is 6, then a planet can have up to 30 * 6 = 180 units of agriculture, minerals or fuel. In a nutshell: the greater this value, the greater the disparity between resources allocated to different planets on the same map.</li>
+<li>Maximum map deviation. This is the number that places a cap on the random deviation of the first planet placed on the map from the central X,Y coordinate. This is important because if this value is small sometimes empires can use the coordinates of their homeworld to determine their location and the probable direction of their foes even before exploring their map.</li>
+<li>Percent chance a new planet will be linked to the last created planet (large map). This represents the chance that, when generating a map, a new planet will be linked to the last created planet, instead of a random planet in the new chain. This value applies to large maps.</li>
+<li>Percent chance a new planet will be linked to the last created planet (small map)&nbsp;is the same value applied to small maps. These two values determine how spread out the map will be, how many planetary chains will form and how much empty space will appear between clusters of planets. In general, the larger these percentages, the smaller the chance of large planetary clusters forming.</li>
+<li>Large map threshold. This is the number of planets per empire required for a map to be considered "large".</li>
+</ul>
+<h2><a name="ThemeAdmin"></a>5.4 The Theme Administrator screen</h2>
+<p>This screen allows an administrator to perform the following tasks:</p>
+<ul>
+<li>Add a new theme</li>
+<li>Delete an existing theme</li>
+<li>Configure the system's themes and change any of their parameters:
+<ul>
+<li>Name</li>
+<li>Version</li>
+<li>Filename</li>
+<li>Author's name</li>
+<li>Author's email</li>
+<li>Description</li>
+<li>Checkboxes for the following elements
+<ul>
+<li>Background</li>
+<li>Live planet</li>
+<li>Dead planet</li>
+<li>Separator</li>
+<li>Buttons</li>
+<li>Horizontal link</li>
+<li>Vertical link</li>
+</ul>
+</li>
+<li>Text color and table color</li>
+</ul>
+</li>
+</ul>
+<h2><a name="TournamentAdmin"></a>5.5 The Tournament Administrator screen</h2>
+<p>This screen allows an administrator to create and administer system tournaments. Tournaments are explained in detail in <a href="#TournamentDesc"> section 4.6</a>.</p>
+<h2><a name="InstallationMaintenance"></a>6.0 Installation and Maintenance</h2>
+<p>This section describes aspects of <em>Almonaster</em> useful to system administrators.</p>
+<h2><a name="Requirements"></a>6.1 System Requirements</h2>
+<p>Minimal system requirements for an <em>Almonaster</em> server are as follows:</p>
+<ul>
+<li>Windows 7 or higher</li>
+<li>100 MB of dedicated RAM</li>
+<li>250MB of disk space</li>
+<li>A reasonably fast computer</li>
+<li>A fast network connection</li>
+</ul>
+<h2><a name="Setup"></a>6.2 Setting up an <em>Almonaster</em> server</h2>
+<p>Installing <em>Al&aacute;jar </em>and <em>Almonaster</em> is a straightforward procedure:</p>
+<ol>
+<li>Ensure TCP/IP is working.</li>
+<li>Install a flavor of SQL Server.</li>
+<li>Unzip the binary distribution into an unused directory. Ensure all file names and directory structures are preserved.</li>
+<li>Edit the configuration files in bin\alajar.conf and site\config\*.conf. Each parameter is commented in its respective file. The following parameters need special attention:<ol>
+<li>Edit site\config\admin.conf to change the default remote administrator's password.</li>
+<li>Edit site\config\default.conf to set the connection string for database access.</li>
+</ol></li>
+<li>Run alajar.exe from a command prompt, or install the alajarsvc.exe service.</li>
+<li>The first run of the program will create the default database using the connection string information in site\config\default.conf. Needless to say, the process will need access to the database. One technique that works well is to run first as a database admin to create the default database and tables, then grant access to a standard user and run <em>Al&aacute;jar</em> as that user.</li>
+<li>
+<p>Log into <em>Almonaster</em> and change the default root empire's password. The default credentials are:</p>
+<p>Login: root<br /> Password: neil:young</p>
+</li>
+<li>To shut the server down, log into <a href="admin/">http://localhost/admin/</a> with the username and password from admin.conf and select the server showdown option, or type ctrl-c in the alajar.exe console window, or stop the alajarsvc.exe service.</li>
+<li>Using SSL with a signed certificate is highly recommended.</li>
+</ol>
+<p>Uninstalling<em> Al&aacute;jar </em>and <em>Almonaster</em> is even more straightforward:</p>
+<ul>
+<li>Delete the directory in which the server was installed.</li>
+<li>Delete the database used by the server.</li>
+</ul>
+<p>To run <em>Al&aacute;jar</em> as a system service, open a command prompt with administrative permissions and run &ldquo;alajarsvc.exe -install&rdquo; to install the service. Then use the Services MMC to set the service to autostart, restart on failure, and depend on the relevant SQL Server service.</p>
+<p>After this, connecting to <a href="./">http://localhost/</a> or <a href="http://127.0.0.1/"> http://127.0.0.1/</a> in any web<br /> browser should display the <em>Almonaster</em> login screen. The server&rsquo;s port number can be changed in the site\config\Alajar.conf file.</p>
+<p>More detailed information on configuring <em>Al&aacute;jar</em> can be found on <a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation&amp;referringTitle=Documentation"> CodePlex</a>.</p>
+<p>The <em>Almonaster</em> page source contains the following specific parameters inside its page source configuration file:</p>
+<ul>
+<li><strong>DatabaseLibrary</strong> is the name of the binary that implements ISqlDatabase. This should always be SqlDatabaseBridge.dll</li>
+<li><strong>DatabaseClsid</strong> is the Uuid of the class that implements ISqlDatabase. This should always be F0E65B48-F797-4E57-8459-C0EE4FC7BE9C.</li>
+<li><strong>DatabaseConnectionString</strong> is the connection string to the SQL Server database used to store game data. This must be set by the local system administrator.</li>
+<li><strong>ResourceDirectory</strong> is the directory where system resources are kept. This directory must be placed below the <strong>BasePath</strong>.</li>
+<li><strong>ChatroomMaxNumSpeakers</strong> is the maximum number of simultaneous speakers allowed in the chatroom.</li>
+<li><strong>ChatroomNumMessages</strong> is the number of messages kept in the chatroom's message buffer.</li>
+<li><strong>ChatroomMaxMessageLength</strong> is the length that long chatroom messages will be truncated to.</li>
+<li><strong>ChatroomTimeOut</strong> is the number of seconds a speaker may remain in the database without refreshing the screen or posting a message.</li>
+<li><strong>ChatroomPostSystemMessages</strong> is 1 if the system should post messages concerning enter, leave and timeout events, 0 if not.</li>
+</ul>
+<p>If errors occur during startup or during execution, extended error information will be available in the various site\report files.</p>
+<p>In addition to root, another default empire is guest. This empire provides read only access to the Open Game list, and its password does not need to be changed. The default credentials are:</p>
+<p style="margin-left: 40px;">Login:&nbsp;guest<br /> Password:&nbsp;crazy:horse</p>
+<p>The text displayed on the server's login screen can be customized by editing the <strong>resource\text\intro.html</strong> file, which contains the text printed on the left-hand side of the screen. Other files of interest can be updated through the <a href="#ServerAdmin"> Server Administrator</a> page when the server is active.</p>
+<h2><a name="Database"></a>6.3 The Almonaster database</h2>
+<p>In builds 700 and above, Almonaster uses SQL Server as its database store. All requests are executed transactionally against the database. In general, the contents of the database should not be modified manually while the game is actively running.</p>
+<h2><a name="Maintaining"></a>6.4 Maintaining the server</h2>
+<p>Once the server is up and running, some tasks need to be performed in order to maintain it adequately:</p>
+<ul>
+<li>The administrator should establish the correct number of server threads to use with the server. If users report delays in the servicing of requests, but the reported average scripting times are normal, then the threadpool should be assigned more threads in bin\alajar.conf.</li>
+<li>If the server is thrashing the disk, in all likelihood it is because there is not enough physical memory on the computer for &lt;emAlmonaster to run properly and for SQL Server to cache the <em>Almonaster </em>database.</li>
+<li>The administrator should ensure that there is enough disk space available for the database to expand as needed.</li>
+<li>The administrator should log onto the server every once in a while to check for messages from other empires.</li>
+<li>The <em>Almonaster </em>code generally does a good job of imposing limits and quotas on empire activity. However, <em>Almonaster</em>, like any other online games, can be vulnerable to spamming and un-sportsmanlike behavior on the part of players. If a player are is to be over-using server resources in some fashion, or making games unpleasant for other players, the administrator is encouraged to delete their empires from the server database and report the players to their ISP's. If certain IP addresses are determined to be responsible for any kind of unacceptable behavior, the administrator can block these users via the <em>Al&aacute;jar</em> IP address blocking feature.</li>
+<li>The administrator should configure SQL Server to back up the database automatically and frequently. While the game's transactional code should be sufficient to avoid data corruption, hard drives do fail.</li>
+<li>Bugs, crashes and memory leaks that can be pinned down to specific actions and reproduced should be brought to the attention of the developer or current maintainer of the <em>Almonaster</em> source code.</li>
+</ul>
+<h2><a name="Admin"></a>6.5 The administrative page source</h2>
+<p>The <em>Al&aacute;jar</em> web server provides a password protected administrative page source that allows remote administration of the server. <em>Almonaster</em> administrators may find this useful to:</p>
+<ul>
+<li>View server statistics.</li>
+<li>Restart or shut down page sources.</li>
+<li>View page source logs and report files.</li>
+<li>Restart or shutdown the server.</li>
+<li>Release files from the file cache.</li>
+<li>Change page source config file parameters.</li>
+</ul>
+<p>The administrative page source can be accessed in a web browser via <a href="http://servername/admin/"> http://servername/admin/</a>.</p>
+<h2><a name="Development"></a>7.0 Development</h2>
+<p>This section describes aspects of <em>Almonaster</em> useful to developers.</p>
+<h2><a name="Architecture"></a>7.1 System Architecture</h2>
+<p><em>Almonaster </em>is a page source plug-in for the <em><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation&amp;referringTitle=Documentation">Al&aacute;jar</a></em> web server. The <em>Almonaster</em> game code registers itself as the recipient of HTTP requests directed at specific URLs, and responds by supplying HTML code to return to the client.</p>
+<p><em>Almonaster</em> itself is essentially a three-tier system. Its modular design incorporates the following components:</p>
+<ol>
+<li>The <em>page source</em> module implements <em>Al&aacute;jar</em>'s event-driven interface.</li>
+<li>Various <em>webpage</em> modules implement the functionality of the different game pages.</li>
+<li>The <em>GameEngine</em> module controls the rules of the game and serves information to the web pages.</li>
+<li>The <em>Database</em> module stores data for each empire and each game, and provides data caching to ensure responsive performance..</li>
+</ol>
+<p>This is a simple ASCII art flow-chart of the modules:</p>
+<div align="center">
+<p>HTTP clients ----------------&gt; Al&aacute;jar HTTP endpoints&lt;----------------- HTTP clients</p>
+<p>|</p>
+<p>Almonaster page source</p>
+<p>/ | \</p>
+<p>Webpage modules</p>
+<p>|</p>
+<p>GameEngine</p>
+<p>|</p>
+<p>Database</p>
+</div>
+<p>The system operates as follows:</p>
+<ol>
+<li>A form submission is received by <em>Al&aacute;jar</em>, which determines the appropriate page source recipient by decoding the URL from the HTTP headers.<br /> </li>
+<li>If the recipient is <em>Almonaster</em>, information about the request is sent to the <em>Almonaster</em> page source, which determines which page the client is interacting with by examining the form values contained in the request.<br /> </li>
+<li>Once this is determined, the web page module code processes the incoming request and generates a response.&nbsp;The game engine is queried for specific information needed to construct the page. The database is called in order to read or write game or empire-specific information.<br /> </li>
+<li>When the page generation process has completed, a response is sent back to <em>Al&aacute;jar</em> in HTML form for transmission to the client.</li>
+</ol>
+<h2><a name="Source"></a>7.2 Source Code</h2>
+<p><em><em>Al&aacute;jar</em> </em>and <em>Almonaster</em> are free software. Their source code can be downloaded and inspected, and custom modifications can be made.</p>
+<p>The vast majority of the game code is platform independent, and platform specifics are well abstracted in various libraries. To encapsulate advanced functionality such as threading and synchronization, the codebase uses a library called OSAL (Operating System Abstraction Library). The database library used by <em>Almonaster </em>is written in managed C++ and depends directly on SQL Server.</p>
+<p>Because of this, ports to other operating systems should be relatively simple, since they only require a port of the Osal libraries and the SqlDatabase. While the source distribution also contains a partial Linux port contributed by Austin Che, it has not been maintained recently. If you are interested in improving the existing ports or working on new ones, please contact the current maintainer.</p>
+<h2><a name="Compilation"></a>7.3 Compilation</h2>
+<p>To build Almonaster for Windows, obtain the source code from CodePlex, open the Almonaster.sln solution and compile it.</p>
+<p>At the time of writing, <em>Almonaster</em> is compiled and tested with Visual C++.</p>
+<h2><a name="Graphics"></a>7.4 Graphics</h2>
+<p>It is possible to dynamically add new themes to an Almonaster installation. <em> Almonaster</em> graphics consist of a set of themes, enumerated in the resource directory. A theme contains some of the following elements:</p>
+<ul>
+<li>A live planet icon, 40x40: <strong>planet.gif</strong></li>
+<li>A dead planet icon, 40x40: <strong>planet2.gif</strong></li>
+<li>A separator bar, approximately 500x16: <strong>separator.gif</strong></li>
+<li>A background, of a reasonable file size: <strong>background.jpg</strong>.</li>
+<li>A set of <a href="#Buttons"> buttons</a>.</li>
+<li>A horizontal link bar, 7x1: <strong>horz.gif</strong></li>
+<li>A vertical link bar, 1x7: <strong>vert.gif</strong></li>
+<li>Various colors, expressed in HTML RGB format (e.g., <strong>FF40A2</strong>):
+<ul>
+<li>A text color, used for most text on the screen</li>
+<li>A good color, used to indicate positive statistics and facts (see <a href="#Color"> Section 3.6.2</a> for more details)</li>
+<li>A bad color, used to indicate negative statistics and facts</li>
+<li>A private color, used for the text of private messages (with the exception of messages sent inside a game by the system)</li>
+<li>A broadcast color, used for the text of broadcast messages</li>
+<li>A table color, used for tables with background colors</li>
+</ul>
+</li>
+</ul>
+<p>All gif's used for both icons and themes should be in <strong>GIF'89 transparent format</strong>.</p>
+<p>The Null Theme is stored in the resource directory, as is the <em>Almonaster </em> logo (almonaster.gif) and the independent planet icon (independent.gif). The dot.gif file is used to enable login using the return button. The paypal.gif is used in the contributions page.</p>
+<h2><a name="Buttons"></a>7.4.1 Buttons</h2>
+<p>The following buttons are used in an <em>Almonaster</em> theme:</p>
+<table>
+<tbody>
+<tr><th align="center">
+<p align="center">File name</p>
+</th><th align="center">
+<p align="center">Text</p>
+</th></tr>
+<tr>
+<td align="center">
+<p align="center">ActiveGameList.gif</p>
+</td>
+<td align="center">
+<p align="center">Active Game List</p>
+</td>
+</tr>
+<tr>
+<td align="center">Add.gif</td>
+<td align="center">Add</td>
+</tr>
+<tr>
+<td align="center">AdministerGame.gif</td>
+<td align="center">Administer Game</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">AdvancedSearch.gif</p>
+</td>
+<td align="center">
+<p align="center">Advanced Search</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">All.gif</p>
+</td>
+<td align="center">
+<p align="center">All</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">AlmonasterScore.gif</p>
+</td>
+<td align="center">
+<p align="center">Almonaster Score</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Attack.gif</p>
+</td>
+<td align="center">
+<p align="center">Attack</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Backup.gif</p>
+</td>
+<td align="center">
+<p align="center">Backup</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">BlankEmpireStatistics.gif</p>
+</td>
+<td align="center">
+<p align="center">Blank Empire Statistics</p>
+</td>
+</tr>
+<tr>
+<td align="center">Block.gif</td>
+<td align="center">Block</td>
+</tr>
+<tr>
+<td align="center">BridierScore.gif</td>
+<td align="center">Bridier Score</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Build.gif</p>
+</td>
+<td align="center">
+<p align="center">Build</p>
+</td>
+</tr>
+<tr>
+<td align="center">Builder.gif</td>
+<td align="center">
+<p align="center">Builder</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Cancel.gif</p>
+</td>
+<td align="center">Cancel</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">CancelAllBuilds.gif</p>
+</td>
+<td align="center">
+<p align="center">Cancel All Builds</p>
+</td>
+</tr>
+<tr>
+<td align="center">Carrier.gif</td>
+<td align="center">Carrier</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ChangeEmpiresPassword.gif</p>
+</td>
+<td align="center">
+<p align="center">Change Empire's Password</p>
+</td>
+</tr>
+<tr>
+<td align="center">ChangePassword.gif</td>
+<td align="center">Change Password</td>
+</tr>
+<tr>
+<td align="center">Chatroom.gif</td>
+<td align="center">Chatroom</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Choose.gif</p>
+</td>
+<td align="center">
+<p align="center">Choose</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ClassicScore.gif</p>
+</td>
+<td align="center">
+<p align="center">Classic Score</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Cloaker.gif</p>
+</td>
+<td align="center">
+<p align="center">Cloaker</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Colony.gif</p>
+</td>
+<td align="center">
+<p align="center">Colony</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">CreateAlienIcon.gif</p>
+</td>
+<td align="center">
+<p align="center">Create Alien Icon</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">CreateEmpire.gif</p>
+</td>
+<td align="center">
+<p align="center">Create Empire</p>
+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">CreateNewGameClass.gif</p>
+</td>
+<td align="center">
+<p align="center">Create New GameClass</p>
+</td>
+</tr>
+<tr>
+<td align="center">CreateNewSuperClass.gif</td>
+<td align="center">Create New SuperClass</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">CreateNewTheme.gif</p>
+</td>
+<td align="center">Create New Theme</td>
+</tr>
+<tr>
+<td align="center">DeleteAlienIcon.gif</td>
+<td align="center">Delete Alien Icon</td>
+</tr>
+<tr>
+<td align="center">DeleteBackp.gif</td>
+<td align="center">Delete Backup</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">DeleteEmpire.gif</p>
+</td>
+<td align="center">Delete Empire</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">DeleteGameClass.gif</p>
+</td>
+<td align="center">Delete GameClass</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">DeleteSuperClass.gif</p>
+</td>
+<td align="center">Delete SuperClass</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">DeleteTheme.gif</p>
+</td>
+<td align="center">Delete Theme</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Diplomacy.gif</p>
+</td>
+<td align="center">Diplomacy</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Doomsday.gif</p>
+</td>
+<td align="center">Doomsday</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Empire.gif</p>
+</td>
+<td align="center">Empire</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">EmpireAdministrator.gif</p>
+</td>
+<td align="center">Empire Administrator</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">EndTurn.gif</p>
+</td>
+<td align="center">End Turn</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Engineer.gif</p>
+</td>
+<td align="center">Engineer</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Enter.gif</p>
+</td>
+<td align="center">Enter</td>
+</tr>
+<tr>
+<td align="center">EstablishedBridierScore.gif</td>
+<td align="center">Established Bridier Score</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Exit.gif</p>
+</td>
+<td align="center">Exit</td>
+</tr>
+<tr>
+<td align="center">FAQ.gif</td>
+<td align="center">FAQ</td>
+</tr>
+<tr>
+<td align="center">Flush.gif</td>
+<td align="center">Flush</td>
+</tr>
+<tr>
+<td align="center">ForceUpdate.gif</td>
+<td align="center">Force an Update</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">GameAdministrator.gif</p>
+</td>
+<td align="center">Game Administrator</td>
+</tr>
+<tr>
+<td align="center">HaltGameClass.gif</td>
+<td align="center">Halt GameClass</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Info.gif</p>
+</td>
+<td align="center">Info</td>
+</tr>
+<tr>
+<td align="center">Join.gif</td>
+<td align="center">Join</td>
+</tr>
+<tr>
+<td align="center">Jumpgate.gif</td>
+<td align="center">Jumpgate</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">KillGame.gif</p>
+</td>
+<td align="center">Kill Game</td>
+</tr>
+<tr>
+<td align="center">LatestNukes.gif</td>
+<td align="center">Latest Nukes</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">LeaveTheChatroom.gif</p>
+</td>
+<td align="center">Leave the Chatroom</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Login.gif</p>
+</td>
+<td align="center">Login</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Map.gif</p>
+</td>
+<td align="center">Map</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Minefield.gif</p>
+</td>
+<td align="center">Minefield</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Minesweeper.gif</p>
+</td>
+<td align="center">Minesweeper</td>
+</tr>
+<tr>
+<td align="center">Minus.gif</td>
+<td align="center">-</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Morpher.gif</p>
+</td>
+<td align="center">Morpher</td>
+</tr>
+<tr>
+<td align="center">ObliterateEmpire.gif</td>
+<td align="center">Obliterate Empire</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">OpenGameList.gif</p>
+</td>
+<td align="center">Open Game List</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Options.gif</p>
+</td>
+<td align="center">Options</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">PersonalGameClasses.gif</p>
+</td>
+<td align="center">Personal GameClasses</td>
+</tr>
+<tr>
+<td align="center">PauseAllGames.gif</td>
+<td align="center">Pause All Games</td>
+</tr>
+<tr>
+<td align="center">PauseGame.gif</td>
+<td align="center">Pause Game</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Planets.gif</p>
+</td>
+<td align="center">Planets</td>
+</tr>
+<tr>
+<td align="center">Plus.gif</td>
+<td align="center">+</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ProfileEditor.gif</p>
+</td>
+<td align="center">Profile Editor</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ProfileViewer.gif</p>
+</td>
+<td align="center">Profile Viewer</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Purge.gif</p>
+</td>
+<td align="center">Purge</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Quit.gif</p>
+</td>
+<td align="center">Quit</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">RefreshMessages.gif</p>
+</td>
+<td align="center">Refresh Messages</td>
+</tr>
+<tr>
+<td align="center">Remove.gif</td>
+<td align="center">Remove</td>
+</tr>
+<tr>
+<td align="center">RenameSuperClass.gif</td>
+<td align="center">Rename SuperClass</td>
+</tr>
+<tr>
+<td align="center">Reset.gif</td>
+<td align="center">Reset</td>
+</tr>
+<tr>
+<td align="center">Resign.gif</td>
+<td align="center">Resign</td>
+</tr>
+<tr>
+<td align="center">RestartAlmonaster.gif</td>
+<td align="center">Restart Almonaster</td>
+</tr>
+<tr>
+<td align="center">RestartServer.gif</td>
+<td align="center">Restart Server</td>
+</tr>
+<tr>
+<td align="center">RestoreBackup.gif</td>
+<td align="center">Restore Backup</td>
+</tr>
+<tr>
+<td align="center">RestoreEmpire.gif</td>
+<td align="center">Restore Empire</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Satellite.gif</p>
+</td>
+<td align="center">Satellite</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Science.gif</p>
+</td>
+<td align="center">Science</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Search.gif</p>
+</td>
+<td align="center">Search</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Selection.gif</p>
+</td>
+<td align="center">Selection</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">SendMessage.gif</p>
+</td>
+<td align="center">Send Message</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ServerAdministrator.gif</p>
+</td>
+<td align="center">Server Administrator</td>
+</tr>
+<tr>
+<td align="center">ServerNews.gif</td>
+<td align="center">Server News</td>
+</tr>
+<tr>
+<td align="center">ServerRules.gif</td>
+<td align="center">Server Rules</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Ships.gif</p>
+</td>
+<td align="center">Ships</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ShutdownServer.gif</p>
+</td>
+<td align="center">Shutdown Server</td>
+</tr>
+<tr>
+<td align="center">Speak.gif</td>
+<td align="center">Speak</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Stargate.gif</p>
+</td>
+<td align="center">Stargate</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Start.gif</p>
+</td>
+<td align="center">Start</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">System.gif</p>
+</td>
+<td align="center">System</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">SystemGameList.gif</p>
+</td>
+<td align="center">System Game List</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Tech.gif</p>
+</td>
+<td align="center">Tech</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Terraformer.gif</p>
+</td>
+<td align="center">Terraformer</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ThemeAdministrator.gif</p>
+</td>
+<td align="center">Theme Administrator</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">TopLists.gif</p>
+</td>
+<td align="center">Top Lists</td>
+</tr>
+<tr>
+<td align="center">TOS.gif</td>
+<td align="center">TOS</td>
+</tr>
+<tr>
+<td align="center">Tournaments.gif</td>
+<td align="center">Tournaments</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">Troopship.gif</p>
+</td>
+<td align="center">Troopship</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">UndeleteEmpire.gif</p>
+</td>
+<td align="center">Undelete Empire</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">UndeleteGameClass.gif</p>
+</td>
+<td align="center">Undelete GameClass</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">UnendTurn.gif</p>
+</td>
+<td align="center">Unend Turn</td>
+</tr>
+<tr>
+<td align="center">UnhaltGameClass.gif</td>
+<td align="center">Unhalt GameClass</td>
+</tr>
+<tr>
+<td align="center">UnpauseAllGames.gif</td>
+<td align="center">Unpause All Games</td>
+</tr>
+<tr>
+<td align="center">UnpauseGame.gif</td>
+<td align="center">Unpause Game</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ViewEmpiresGameClasses.gif</p>
+</td>
+<td align="center">View Empire's GameClasses</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ViewEmpiresNukeHistory.gif</p>
+</td>
+<td align="center">View Empire's Nuke History</td>
+</tr>
+<tr>
+<td align="center">ViewEmpiresTournaments.gif</td>
+<td align="center">View Empire's Tournaments</td>
+</tr>
+<tr>
+<td align="center">ViewGameInformation.gif</td>
+<td align="center">View Game Information</td>
+</tr>
+<tr>
+<td align="center">ViewMap.gif</td>
+<td align="center">View Map</td>
+</tr>
+<tr>
+<td align="center">ViewMessages.gif</td>
+<td align="center">View Messages</td>
+</tr>
+<tr>
+<td align="center">
+<p align="center">ViewProfile.gif</p>
+</td>
+<td align="center">View Profile</td>
+</tr>
+</tbody>
+</table>

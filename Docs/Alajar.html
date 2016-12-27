@@ -1,0 +1,329 @@
+<h2 align="center">Documentation for <em>Al&aacute;jar</em> 1.8.3</h2>
+<h3 align="center">Author: Max Feingold</h3>
+<h2>Table of Contents</h2>
+<ul>
+<li><a href="#Introduction">Introduction</a></li>
+<li><a href="#Features">Features</a></li>
+<li><a href="#Server">Server requirements</a></li>
+<li><a href="#Configuration">Configuration</a></li>
+<li><a href="#Compile">Compilation</a></li>
+<li><a href="#Implementation">Implementation details</a></li>
+<li><a href="#Development">Development</a></li>
+<li><a href="#Tools">Tools</a></li>
+<li><a href="#Administration">Administration</a></li>
+</ul>
+<h2><a name="Introduction"></a>Introduction</h2>
+<p><em>Al&aacute;jar</em> is a small, portable, componentized HTTP server that implements a subset of the HTTP protocol and provides a foundation upon which powerful web-based applications can be built. The objective of <em>Al&aacute;jar</em> is to make it easy for developers to generate high-performance interactive HTML content.</p>
+<p>Under the <em>Al&aacute;jar</em> programming model, compiled web application code is executed in-process by dynamically linked libraries that implement the standard C++ <em>Al&aacute;jar</em> interfaces. In this way the application controls exactly what the web server will send back to the client.</p>
+<h2><a name="Features"></a>Features</h2>
+<p><em>Al&aacute;jar</em> can operate both as a standard web server and as a framework for developers to write custom web applications. Through the creation of simple text configuration files, web administrators can create virtual domains (hereafter referred to as <em><strong>page sources</strong></em>) under which incoming requests from clients can either be treated as simple HTTP requests or be passed along to application code in order to generate a custom response.</p>
+<p>Using this scheme, <em>Al&aacute;jar</em> allows interactive HTML pages to be built on the fly in a fast and scalable manner. It should be noted that both Java applets and JavaScript / Dynamic HTML can be used with <em>Al&aacute;jar</em>, as they are client side technologies that are merely delivered by the server through text or binary files. The services offered by <em>Al&aacute;jar</em> include the following:</p>
+<ul>
+<li>SSL-encrypted connections</li>
+<li><strong>GET</strong> requests: <em>Al&aacute;jar</em> can operate as a simple web server, allowing clients to request HTML files, text documents, images, compressed archives and multimedia files.</li>
+<li><strong>POST</strong> requests: <em>Al&aacute;jar</em> will parse the results of POST operations (both textual form submissions and file uploads) and pass them through to the corresponding page source.</li>
+<li><strong>HEAD</strong>, <strong>TRACE</strong> and all the other standard HTTP methods (with the exception of <strong>PUT</strong> and <strong>DELETE</strong>).</li>
+<li>Basic and Digest HTTP authentication: each page source can choose to require authentication from clients in order to access their content. The actual authentication decisions are delegated to the page sources themselves.</li>
+<li>Form parsing and handling, including forms submitted via GET query strings.</li>
+<li>Cookie parsing.</li>
+<li>Request logging.</li>
+<li>Statistics collection.</li>
+<li>File caching.</li>
+<li>A configurable dynamic thread pool.</li>
+<li>Configuration file access.</li>
+<li>Report files to which diagnostic information can be written.</li>
+</ul>
+<h2><a name="Server"></a>Server requirements</h2>
+<p>Minimal system requirements for a basic <em>Al&aacute;jar</em> server are:</p>
+<ul>
+<li>A supported operating system</li>
+<li>About 25MB of dedicated RAM, in addition to the requirements of any active page sources</li>
+</ul>
+<h2><a name="Configuration"></a>Configuration</h2>
+<p>A configuration file called <em>Alajar.conf </em>must exist in the same directory as the <em>Al&aacute;jar</em> executable. This file must contain the following parameters (the values given are examples). Order does not matter, spaces before and after the '='sign are forbidden and no slashes at the end of directory names should be used:</p>
+<ul>
+<li><strong>HttpPort</strong>=80</li>
+<li><strong>EnableHttpsPort=1</strong></li>
+<li><strong>HttpsPort</strong>=443</li>
+<li><strong>HttpsPublicKeyFile</strong>=server.cer</li>
+<li><strong>HttpsPrivateKeyFile</strong>=server.pfx</li>
+<li><strong>FileCache</strong>=1</li>
+<li><strong>ApproxNumFilesInFileCache</strong>=2000</li>
+<li><strong>MemoryCache</strong>=1</li>
+<li><strong>InitNumThreads</strong>=5</li>
+<li><strong>MaxNumThreads</strong>=30</li>
+<li><strong>DefaultThreadPriority</strong>=Normal</li>
+<li><strong>CounterPath</strong>=Counters</li>
+<li><strong>LogPath</strong>=Logs</li>
+<li><strong>PageSourcePath</strong>=PageSources</li>
+<li><strong>ConfigPath</strong>=Config</li>
+<li><strong>ReportPath</strong>=Reports</li>
+<li><strong>StatisticsPath</strong>=Statistics The directories specified must exist on the computer running <em>Al&aacute;jar</em>. Path names can be absolute or relative to the path of the<em> Al&aacute;jar</em> executable.</li>
+<li><strong>EnableHttpPort </strong>is 1 if HTTP traffic should be enabled; 0 if not.</li>
+<li><strong>HttpPort </strong>is the TCP port to be used for HTTP traffic.</li>
+<li><strong>EnableHttpsPort </strong>is 1 if HTTPS traffic should be enabled; 0 if not.</li>
+<li><strong>HttpsPort </strong>is the TCP port to be used for HTTPS traffic.</li>
+<li><strong>HttpsPublicKeyFile </strong>is the public key file for HTTPS traffic. On Windows, this should be a .cer file using DER encoding. If OpenSSL is used, this should be an OpenSSL .pem file.</li>
+<li><strong>HttpsPrivateKeyFile </strong>is the private key file for HTTPS traffic. On Windows, this should be a .pfx file using PCS12 encoding. If OpenSSL is used, this should be an OpenSSL .key file.</li>
+<li><strong>FileCache</strong> is 1 if the file cache is to be used; 0 if not</li>
+<li><strong>ApproxNumFilesInFileCache</strong> is a guess of the maximum number of files that the file cache will contain at any one time.</li>
+<li><strong>MemoryCache</strong> is 1 if internal memory caches are to be used by <em>Al&aacute;jar</em>; 0 if not. In general, this option should only be disabled in order to facilitate tracking down in-process memory leaks.</li>
+<li><strong>InitNumThreads </strong>is the base number of worker threads that are used by the thread pool.</li>
+<li><strong>MaxNumThreads </strong>is the maximum number of worker threads that can be used by the thread pool.</li>
+<li><strong>DefaultThreadPriority </strong>is the default priority of thread pool threads. It can be set to one of the following values:
+<ul>
+<li>Lowest</li>
+<li>Lower</li>
+<li>Normal</li>
+<li>Higher</li>
+<li>Highest</li>
+</ul>
+</li>
+<li><strong>CounterPath </strong>is the directory in which the SSI counter files are placed</li>
+<li><strong>LogPath</strong> is the directory in which the logs are placed</li>
+<li><strong>PageSourcePath </strong>is the directory in which page source DLL's are placed</li>
+<li><strong>ConfigPath </strong>is the directory in which page source configuration files are placed. A file called <em>Default.conf </em>must be present to specify the properties of the default page source</li>
+<li><strong>ReportPath</strong> is the directory in which report files are stored</li>
+<li><strong>StatisticsPath</strong> is the directory in which statistics files are stored</li>
+</ul>
+<p>The configuration files in the ConfigPath directory must contain the following parameters (the values provided are examples):</p>
+<ul>
+<li><strong>401File</strong>=Errors/401.html</li>
+<li><strong>403File</strong>=Errors/403.html</li>
+<li><strong>404File</strong>=Errors/404.html</li>
+<li><strong>500File</strong>=Errors/500.html</li>
+<li><strong>501File</strong>=Errors/501.html</li>
+<li><strong>Override401</strong>=0</li>
+<li><strong>Override403</strong>=0</li>
+<li><strong>Override404</strong>=0</li>
+<li><strong>Override500</strong>=0</li>
+<li><strong>AllowDirectoryBrowsing</strong>=1</li>
+<li><strong>BasePath</strong>=www_root</li>
+<li><strong>UseDefaultFile</strong>=1</li>
+<li><strong>DefaultFile</strong>=index.html</li>
+<li><strong>UsePageSourceLibrary</strong>=1</li>
+<li><strong>PageSourceLibrary</strong>=Admin.dll</li>
+<li><strong>PageSourceClsId</strong>=8B631302-8CFA-11d3-A240-0050047FE2E2</li>
+<li><strong>OverrideGet</strong>=1</li>
+<li><strong>OverridePost</strong>=1</li>
+<li><strong>UseAuthentication</strong>=Digest</li>
+<li><strong>DigestAuthenticationNonceLifetime</strong>=30</li>
+<li><strong>UseLogging</strong>=1</li>
+<li><strong>UseCommonLogFormat</strong>=1</li>
+<li><strong>DenyIPAddressAccess</strong>=</li>
+<li><strong>OnlyAllowIPAddressAccess</strong>=127.0.0.1@192.168.0.*</li>
+<li><strong>DenyUserAgentAccess</strong>=Mozilla/2.0 (Compatible; AOL-IWENG 3.0; Win16)</li>
+<li><strong>OnlyAllowUserAgentAccess</strong>=</li>
+<li><strong>FilterGets</strong>=1</li>
+<li><strong>FilterGetExtensions</strong>=gif;jpg</li>
+<li><strong>FilterGetAllowReferers</strong>=http://localhost*;https://localhost*;</li>
+</ul>
+<p>These parameters are used to configure the default page source, which is the one used when no other page source matches the request URI. Each page source must have a file with identical contents in the ConfigPath directory (<em>*.conf</em>) in order to be registered with <em>Al&aacute;jar </em>upon startup.</p>
+<ul>
+<li><strong>Name</strong> is the name of the page source, the name of the "virtual directory" that will be requested by clients. Page source names are case insensitive</li>
+<li><strong>xxxFile </strong>is the file to be sent to the client when error xxx occurs.</li>
+<li><strong>Overridexxx</strong> is 1 if xxx errors should be overridden.</li>
+<li><strong>AllowDirectoryBrowsing </strong>is 1 if directory browsing should be allowed and directory indexes generated; 0 if not</li>
+<li><strong>BasePath </strong>is the root path of the page source where its files are placed. I.e., <em><a href="http://server/pagesource/file.html">http://server/pagesource/file.html</a> </em>maps to <em>BasePath/file.html</em> on the local disk</li>
+<li><strong>UseDefaultFile</strong> is 1 if the server should look for the default file before testing whether or not directory browsing is allowed; 0 if not</li>
+<li><strong>DefaultFile </strong>is the default file to be loaded when a directory is requested, if <strong>UseDefaultFile</strong> is 1</li>
+<li><strong>UsePageSourceLibrary</strong> is 1 if a page source DLL should be used; 0 if not</li>
+<li><strong>PageSourceLibrary </strong>is the name of the DLL (with no extension: .dll is assumed) to be associated with the page source. The DLL should be placed in the PageSourcePath directory. If <strong>UsePageSource </strong>is 0 then this parameter is ignored.</li>
+<li><strong>PageSourceClsid </strong>is the universally unique identifier associated with the class that implements the page source. Multiple page sources to be implemented in the same library by using different CLSIDs.</li>
+<li><strong>OverrideGet</strong> is 1 if GET operations should be overridden by the page source library; 0 if not</li>
+<li><strong>OverridePost </strong>is 1 if POST operations should be overridden by the page source library; 0 if not</li>
+<li><strong>UseAuthentication</strong>determines the type of HTTP authentication used by the page source. It can be set to one of the following values:
+<ul>
+<li>None</li>
+<li>Basic</li>
+<li>Digest</li>
+</ul>
+</li>
+<li><strong>DigestAuthenticationNonceLifetime </strong>is the number of seconds that nonces should live when Digest authentication is enabled.</li>
+<li><strong>UseLogging</strong> is 1 if requests to this page source should be logged; 0 if not</li>
+<li><strong>UseCommonLogFormat </strong>is 1 if the page source's log should be written using the standard Common Log Format, 0 if the default Alajar format is preferred. This value is ignored if UseLogging is 0.</li>
+<li><strong>Threading</strong> is Free if the page source can be accessed by multiple threads simultaneously, Single if only one thread should access the page source code at the same time. This value is ignored unless <strong>UsePageSourceLibrary</strong> is set to 1</li>
+<li><strong>DenyIPAddressAccess</strong> is a list of IP addresses that should be blocked from the web server. Any request coming from these addresses will be denied access to server resources. The IP addresses should be separated by @ characters, and can use * as a wildcard parameter. For example, <strong>DenyIPAddressAccess</strong> =127*@192*; will deny access to all addresses beginning with 127 and 192. The wildcard terminates parsing, so 127.*.0.1 will block 127.0.0.2 also.</li>
+<li><strong>OnlyAllowIPAddressAccess </strong>specifies a list of IP addresses that are granted access to the server to the exclusion of all others. <strong>OnlyAllowIPAddressAccess </strong>overrides <strong>DenyIPAddressAccess</strong>, so any excluded addresses in the <strong>DenyIPAddressAccess</strong> list will be ignored. The syntax for <strong> OnlyAllowIPAddressAccess </strong>is the same as for <strong>DenyIPAddressAccess</strong>.</li>
+<li><strong>DenyUserAgentAccess</strong> is a list of user agents (web browsers) that should be blocked from the web server. Any request coming from these user agents will be denied access to server resources. The syntax for <strong>DenyUserAgentAccess</strong> is the same as for <strong>DenyIPAddressAccess</strong>.</li>
+<li><strong>OnlyAllowUserAgentAccess </strong>specifies a list of user agents that are granted access to the server to the exclusion of all others. <strong>OnlyAllowUserAgentAccess </strong>overrides <strong>DenyUserAgentAccess</strong>, so any excluded user agents in the <strong>DenyUserAgentAccess</strong> list will be ignored. The syntax for <strong> OnlyAllowUserAgentAccess </strong>is the same as for <strong>DenyIPAddressAccess</strong>.</li>
+<li><strong>FilterGets</strong> is 1 if GET operations should be filtered - i.e. restricted by extension and referers; 0 if not. This option is useful primarily to avoid deep linking to images within a web site.</li>
+<li><strong>FilterGetExtensions</strong> is a semi-colon separated list of file extensions whose GET operations should be filtered.</li>
+<li><strong>FilterGetAllowReferers</strong> is a semi-colon separated list of valid referers that can be used for the files being filtered. Entries may end in a wildcard character (*).</li>
+</ul>
+<h2><a name="Logging"></a>Logging and reporting</h2>
+<p>Daily log and report files are written on a per-page source basis into the server's log directory.</p>
+<h2><a name="Statistics"></a>Statistics</h2>
+<p>Daily statistics files are written on a global basis into the server's log directory.</p>
+<h2><a name="Implementation"></a>Implementation details</h2>
+<p>The heart of <em>Al&aacute;jar </em>is the HttpServer object, which contains the core functionality of the web server. An HttpServer object contains a FileCache object that provides it with file I/O, a ThreadPool object to which a main socket delegates client requests, and a hash table of PageSource objects.</p>
+<p>The FileCache provides a standard GetFile() / Release() interface for its clients. The backend is a hash table containing CachedFile objects corresponding to the files in the cache. The FileCache relies on the OS for memory mapped I/O and page replacement policies.</p>
+<p>The HttpServer object uses two special classes to communicate with the page sources: HttpRequest and HttpResponse. An HttpRequest object is assigned to each new client connection; it contains logic that, given an open socket, decodes the HTTP headers from the client and makes the information available to the page source. HttpResponse objects contain the logic that handles the server responses: they allow page sources to specify the nature of the response that the client should receive. Responses can be HTTP error codes, URL redirects, files or data buffers with an associated mime type. Response objects also contain lists of cookies to be associated with the client or deleted.</p>
+<p>Execution of <em>Al&aacute;jar </em>proceeds as follows: an HttpServer object is created and started, after which the main server thread is spawned and the main function blocks until a termination signal is received.</p>
+<p>When the server starts it configures itself according to the Alajar.conf configuration file and the page source configuration files found in the Config directory, after which it opens a socket and listens on the specified port number. When an incoming connection is received, the task of responding is passed on to the ThreadPool, which stores the task in a FIFO queue. Eventually a worker thread will pick up the task, and obtain an HttpRequest object that will decode the HTTP request and hand it off to an HttpResponse object. If the request falls under the control of a particular page source (as determined by the first directory name referenced in the request's URI), then that page source is called and its response is passed along to the client. Otherwise, the request is handled like a normal HTTP request by the default page source, the response being either a file or an error message.</p>
+<p>When data is POST'ed by a client, the server passes the data on to the appropriate page source for processing. If a file is submitted via a file requester form, then the file is saved as a temporary file and the name is passed to the page source. If no page source can be identified, then the server discards the submitted data and returns a standard error message.</p>
+<p>It is important to observe that if a page source is configured to be free-threaded, there are no guarantees that the same thread will consistently call into the same page source for all requests. Consequently,no data should be stored by the page source in thread local storage and no thread specific operations should be performed. However, if the page source is configured to be single threaded, it is guaranteed that it will be called into with the same thread.</p>
+<h2><a name="Development"></a>Development</h2>
+<p>Download the sdk to obtain the headers and libs needed to develop for <em>Al&aacute;jar</em>.</p>
+<p><em>Al&aacute;jar </em>provides a plug-in architecture for web applications in which custom code can be invoked when the client requests a resource from a particular URL. <em>Al&aacute;jar </em>plug-ins are called page sources, and are implemented in page source DLL's. Multiple page sources can be implemented in one DLL. Each page source is a C++ object that implements the IPageSource interface, as defined in Alajar.h. The sample Admin and Almonaster page sources that ship with <em>Al&aacute;jar </em>provide good examples of development methodology.</p>
+<p>Every page source DLL must provide the following export function:</p>
+<p><span style="font-family: Courier New; font-size: x-small;">extern "C" int <strong> CreateInstance</strong>(const Uuid&amp; uuidClsid, const Uuid&amp; uuidIid, void** ppObject);</span></p>
+<p>The <em>Uuid</em> type referenced below is a universally unique identifier, defined in Osal's IObject.h. The <em>uuidClsid</em> argument is the Uuid specified in the page source's configuration file. If a library implements several page sources, this function will be called once for each different page source. The <em>uuidIid</em> argument is the Uuid of the interface that Alajar expects the class referenced by uuidClsid to implement. At present, this argument will always be IID_IPageSource and will refer to the IPageSource interface as defined in Alajar.h.</p>
+<p>The actual definition of IID_IPagesource is in Alajar.lib.</p>
+<p>If the page source recognizes the class id and interface id, it returns an instance of the interface in ppObject and returns OK. Otherwise, it returns an error code such as ERROR_FAILURE.</p>
+<p>The IPageSource interface contains the following methods:</p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnInitialize</strong>(IHttpServer* pHttpServer, IPageSourceControl* pControl);</span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnFinalize</strong>();</span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnGet</strong>(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse); </span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnPost</strong>(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);</span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnError</strong>(IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse);</span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnBasicAuthenticate</strong>(IHttpRequest* pHttpRequest, bool* pbAuthenticated);</span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">int <strong>OnDigestAuthenticate</strong>(IHttpRequest* pHttpRequest, bool* pbAuthenticated);</span></p>
+<p><span style="font-family: Courier New; font-size: x-small;">const char* <strong>GetAuthenticationRealm </strong>(IHttpRequest* pHttpRequest); </span></p>
+<p><strong>OnGet</strong> and <strong>OnPost</strong> are called when the corresponding events are generated by a client request. All available information about the request is provided through the IHttpRequest interface, and all information about what the web server's response should be is provided to the server via the IHttpResponse interface. The value returned should <strong>OK</strong> if all is well and <strong>ERROR_FAILURE</strong> if an internal error occurred (the report can be used to provide more information concerning the error).</p>
+<p><strong>OnInitialize</strong> is called when the web server is starting up, while <strong>OnFinalize</strong> is called when the web server is shutting down. These two functions allow page sources (which may contain complex data structures and file I/O schemes) to execute construction and destruction code when appropriate. The interface pointers provided in <strong>OnInitialize</strong> are should be copied and stored by the page source, and there is no need to AddRef and Release them. The same rules as with <strong>OnGet </strong>apply in terms of return values.</p>
+<p><strong>OnError</strong> is called when an HTTP error is generated by a client request, even when returned by the <strong>OnGet</strong> or <strong>OnPost </strong>methods. The same rules as with <strong>OnGet </strong>apply in terms of return values.</p>
+<p><strong>OnBasicAuthenticate</strong> and <strong>OnDigestAuthenticate </strong> are called when authentication is requested by a page source and a client requires authentication in order to proceed. If the page source accepts the user's credentials, it should set the *pbAuthenticated field to true and return OK.</p>
+<h3><a name="IHttpRequest"></a>The IHttpRequest interface</h3>
+<p>The IHttpRequest interface is used by page sources to obtain information about the client's request. The following methods can be used:</p>
+<ul>
+<li><strong>GetMethod</strong> returns the HTTP method requested: <strong>GET</strong>, <strong>POST</strong>, <strong>PUT</strong>, <strong>HEAD</strong>, or <strong>TRACE</strong>.</li>
+<li><strong>GetVersion</strong> returns the HTTP version requested: <strong>HTTP09</strong>, <strong>HTTP10</strong>, or <strong>HTTP11</strong>.</li>
+<li><strong>GetUri</strong> returns the URI requested (e.g., /directory/subdirectory/file.html).</li>
+<li><strong>GetFileName</strong> returns the name of the requested file, resolved to a full path on the local machine.</li>
+<li><strong>IsFileNameCanonical</strong> returns true if the requested file name could be resolved to a full path by the server; false if not.</li>
+<li><strong>GetBrowserName</strong> returns the name of the browser that the client used to make the request.</li>
+<li><strong>GetClientIP</strong> returns the IP address of the client.</li>
+<li><strong>GetReferer </strong>returns the request's referer field.</li>
+<li><strong>GetNumForms</strong> returns the total number of forms submitted by the client</li>
+<li><strong>GetForm</strong> returns an IHttpForm interface pointer representing the form submitted with the given name or index, or NULL if the form was not submitted.</li>
+<li><strong>GetFormNames</strong> returns an array of all submitted form names, or NULL if no forms were submitted</li>
+<li><strong>GetFormBeginsWith</strong> returns an IHttpForm interface pointer representing the first form submitted with the given string as a valid prefix in its name, or NULL if no such form could be found.</li>
+<li><strong>GetNumCookies</strong> returns the total number of cookies submitted by the client</li>
+<li><strong>GetCookieNames</strong> returns an array of all submitted cookie names, or NULL if no cookies were submitted</li>
+<li><strong>GetCookie</strong> returns an ICookie interface representing the cookie submitted with the given name or index, or NULL if the cookie was not submitted.</li>
+<li><strong>GetCookieBeginsWith</strong> returns an ICookie interface representing the first cookie submitted with the given string as a valid prefix in its name, or NULL if no such cookie could be found.</li>
+<li><strong>GetAuthenticationUserName </strong>returns the login name provided by the client, if authentication is being used.</li>
+<li><strong>BasicAuthenticate</strong> and <strong>DigestAuthenticate</strong> used to check the password provided by the client against the password stored by the page source.</li>
+<li><strong>GetHeaders</strong> returns the headers sent by the client; the string returned by this method is not guaranteed to be the complete set of headers submitted, including all forms and cookies.</li>
+</ul>
+<h3><a name="IHttpResponse"></a>The IHttpResponse interface</h3>
+<p>The IHttpResponse interface is used by page sources to define the response that will be sent back to the client. The following methods can are used:</p>
+<ul>
+<li><strong>GetStatusCode </strong>returns the status code the response will use when it is sent.</li>
+<li><strong>SetStatusCode</strong>is called to specify the response's HTTP status code. The allowed codes are:
+<ul>
+<li><strong>HTTP_200</strong> OK</li>
+<li><strong>HTTP_301</strong> Moved Permanently (use the <strong>SetRedirect</strong> call instead)</li>
+<li><strong>HTTP_400 </strong>Bad Request</li>
+<li><strong>HTTP_401 </strong>Not Authorized</li>
+<li><strong>HTTP_403</strong> Forbidden</li>
+<li><strong>HTTP_404</strong> Not Found</li>
+<li><strong>HTTP_500</strong> Internal Server Error</li>
+<li><strong>HTTP_501</strong> Not Implemented</li>
+<li><strong>HTTP_503</strong> Service Not Available</li>
+</ul>
+</li>
+<li><strong>GetStatusCodeReason </strong>returns the reason for the HTTP status code the response will use when it is sent.</li>
+<li><strong>SetStatusCodeReason</strong>is called to specify the reason for the response's HTTP status code. The allowed reasons are:
+<ul>
+<li><strong>HTTP_REASON_NONE</strong></li>
+<li><strong>HTTP_REASON_IPADDRESS_BLOCKED</strong></li>
+<li><strong>HTTP_REASON_USER_AGENT_BLOCKED</strong></li>
+<li><strong>HTTP_REASON_GET_REFERER_BLOCKED</strong></li>
+<li><strong>HTTP_REASON_STALE_NONCE</strong></li>
+</ul>
+</li>
+<li><strong>SetMimeType </strong>specifies the MIME type of the response if it is a dynamically generated response.</li>
+<li><strong>SetFile</strong> specifies the name of the file to be used as response content.</li>
+<li><strong>SetRedirect</strong> specifies the URI to be used for a redirection. This function also sets the status code to <strong>HTTP_301</strong>.</li>
+<li><strong>SetNoBuffering </strong>specifies that the response should be streamed to the client and not buffered until complete.</li>
+<li><strong>Clear </strong>removes all existing response data. This can only be called if buffering is still enabled.</li>
+<li><strong>Flush </strong>sends all existing buffered data. This can only be called if buffering has been disabled.</li>
+<li><strong>WriteData </strong>and <strong>WriteText</strong> can be used to add dynamically generated data to the response.</li>
+<li><strong>WriteTextFile</strong> and <strong>WriteDataFile</strong> can be used to send a text or binary file in response to a request, respectively.</li>
+<li><strong>CreateCookie</strong> and <strong>DeleteCookie</strong> can be used to create or update and delete cookies, respectively.</li>
+<li><strong>AddHeader</strong> can be used to add a header to the response. This can only be called before buffering is disabled.</li>
+<li><strong>AddCustomLogMessage</strong> can be used to add a custom text field to the server's log. This will only show up if the common logging format has been disabled.</li>
+<li><strong>GetCustomLogMessages</strong> returns the custom log messages that were added to the response.</li>
+</ul>
+<p>Aside from these constraints, page sources can more or less do whatever they want. However, some care must be taken not to corrupt memory or generate unhandled exceptions, since the page source code runs in the same process as the<em> Al&aacute;jar </em>executable and other page sources.</p>
+<h3><a name="IHttpServer"></a>The IHttpServer interface</h3>
+<p>The IHttpServer interface is used by page sources to obtain information about the server that they are operating under. The following methods can be used:</p>
+<ul>
+<li><strong>GetHttpPort</strong> returns the HTTP port on which server is accepting requests.</li>
+<li><strong>GetHttpsPort</strong> returns the HTTPS port on which server is accepting requests.</li>
+<li><strong>GetHostName</strong> returns the server's host name.</li>
+<li><strong>GetIPAddress</strong> returns the IP address that the server machine is using.</li>
+<li><strong>GetServerName</strong> returns the name and version of the HTTP server.</li>
+<li><strong>GetNumThreads</strong> returns the number of threads in the server's thread pool.</li>
+<li><strong>GetStatistics </strong>returns a structure containing server statistics.</li>
+<li><strong>GetNumPageSources</strong> returns the number of page sources registered with the server.</li>
+<li><strong>EnumeratePageSources </strong>returns an IPageSourceEnumerator interface pointer that can be used to enumerate the various page sources registered with the server.</li>
+<li><strong>GetReport</strong> returns the web server's report file.</li>
+<li><strong>GetConfigFile</strong> returns the web server's configuration file.</li>
+<li><strong>GetFileCache</strong> returns the web servers's file cache.</li>
+<li><strong>Start</strong> starts the web server.</li>
+<li><strong>Shutdown</strong> shuts down the web server.</li>
+<li><strong>Restart</strong> restarts the web server.</li>
+</ul>
+<p>The IHttpForm interface is used to obtain information about a given form submission:</p>
+<ul>
+<li><strong>GetNumForms</strong> returns the number of forms with submitted by the client.</li>
+<li><strong>GetForm</strong> returns a sub form corresponding to the given index. Multiple forms with the same name may be submitted by a client.</li>
+<li><strong>GetName</strong> returns the name of the form</li>
+<li><strong>GetValue</strong> returns the value submitted in the form as a string</li>
+<li><strong>GetIntValue</strong> returns the value submitted in the form as an integer</li>
+<li><strong>GetFloatValue</strong> returns the value submitted in the form as a floating point number</li>
+<li><strong>GetTimeValue</strong> returns the value submitted in the form as a UTCTime type</li>
+<li><strong>GetType</strong>returns the type of the form. There are three possible types:
+<ul>
+<li><strong>SIMPLE_FORM</strong></li>
+<li><strong>FILE_FORM</strong></li>
+<li><strong>LARGE_SIMPLE_FORM</strong></li>
+</ul>
+</li>
+<li><strong>GetFileName</strong> returns the name of the file on the local machine if the form is of type FILE_FORM</li>
+</ul>
+<h2><a name="Tools"></a>Tools</h2>
+<p>To facilitate the development of simple applications, <em>Al&aacute;jar</em> provides a text preprocessor called <em>Asfpp</em>, which takes as input a text file in a specific format and produces C++ code as output. To illustrate this procedure, a file with the following content:</p>
+<pre>&lt;% #include &lt;stdio.h&gt; %&gt;
+ &lt;html&gt;
+ &lt;% for (int i = 0; i &lt; 100; i ++) { %&gt;
+     &lt;p&gt;&lt;% Write (i);
+ } %&gt;
+ &lt;/html&gt;</pre>
+<p>... produces the following C++ code: &lt;small&gt;#include "Alajar.h"&lt;/small&gt;</p>
+<pre>#include &lt;stdio.h&gt;
+#define Write pHttpResponse-&gt;WriteText
+
+int RenderTest (IHttpRequest* pHttpRequest, IHttpResponse* pHttpResponse, Context* pContext)
+{
+    pHttpResponse-&gt;WriteData ("\n\n&lt;html&gt;\n\n");
+    for (int i = 0; i &lt; 100; i ++) {
+        pHttpResponse-&gt;WriteData ("\n&lt;p&gt;");
+        pHttpResponse-&gt;WriteData(i);
+    }
+    pHttpResponse-&gt;WriteData ("\n\n&lt;/html&gt;");
+}</pre>
+<p>The result, when compiled and executed by a page source, is an HTML file containing the following text:</p>
+<pre>&lt;html&gt;
+
+&lt;p&gt;0
+&lt;p&gt;1
+&lt;p&gt;2
+...
+&lt;p&gt;99
+&lt;/html&gt;</pre>
+<p>The ASF format was designed to resemble other popular scripting language formats and facilitate the conversion of code from these to <em>Al&aacute;jar</em>. The <strong>&lt;%</strong> and <strong>%&gt;</strong> markers are used to encapsulate C++ code, while the rest of the text is the HTML to be sent to the IHttpResponse object. <em>Asfpp </em>is included in the standard <em>Al&aacute;jar </em>distribution.</p>
+<h2><a name="Administration"></a>Administration</h2>
+<p><em>Al&aacute;jar </em>includes a page source called <em>admin</em> that provides basic administrative functionality. access to /admin is password protected via <em>Al&aacute;jar<em>'</em></em>s built-in support for basic authentication. Through the admin page source, administrators can:</p>
+<ul>
+<li>View a complete statistical breakdown of the requests the server has received since startup</li>
+<li>View page source logs and report files</li>
+<li>View the server report file</li>
+<li>Restart and shut down page sources</li>
+<li>Restart and shut down the server</li>
+<li>Change server config file parameters</li>
+<li>Change page source config file parameters</li>
+</ul>
