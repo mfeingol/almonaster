@@ -102,6 +102,10 @@ int SqlDatabaseConnection::GetSearchKeys(const char* pszTableName, const SearchD
 {
     Trace(TRACE_VERBOSE, "GetSearchKeys %s", pszTableName);
 
+    *pbMore = false;
+    *piNumHits = 0;
+    *ppiKey = NULL;
+
     array<SearchColumnMetadata>^ searchCols = gcnew array<SearchColumnMetadata>(sd.iNumColumns);
 
     for (unsigned int i = 0; i < sd.iNumColumns; i ++)
