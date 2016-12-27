@@ -1,0 +1,11 @@
+Win32/
+x64/
+Debug/
+Release/
+Source/Drop/
+Source/Almonaster/Pages/*.cpp
+.suo
+ipch/
+*.vcxproj.user
+*.VC.opendb
+*.VC.db
