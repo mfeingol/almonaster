@@ -82,6 +82,7 @@ namespace Almonaster.Database.Sql
             ServerConnection serverConn = new ServerConnection(this.conn);
             Server server = new Server(serverConn);
 
+            // If this hangs, it's because the mixed debugger is attached. Choose managed or unmanaged (!)
             if (!server.Databases.Contains(databaseName))
             {
                 var database = new Microsoft.SqlServer.Management.Smo.Database(server, databaseName);

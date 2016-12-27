@@ -99,7 +99,7 @@ int Database::ImportTable (IDatabase* pSrcDatabase, const char* pszTableName) {
     unsigned int i, j, iNumRows, * piRowKey = NULL, iMinNumCols;
 
     ITemplate* pSrcTemplate = NULL, * pDestTemplate = NULL;
-    TemplateDescription ttSrcTemplate, ttDestTemplate;
+    FileTemplateDescription ttSrcTemplate, ttDestTemplate;
 
     IReadTable* pReadTable = NULL;
     IWriteTable* pWriteTable = NULL;

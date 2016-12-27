@@ -320,10 +320,10 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
     }
     else
     {
-        bool bExists;
-        iErrCode = DoesEmpireExist (m_iEmpireKey, &bExists, NULL);
+        bool bEmpireExists;
+        iErrCode = DoesEmpireExist (m_iEmpireKey, &bEmpireExists, NULL);
         RETURN_ON_ERROR(iErrCode);
-        if (!bExists) {
+        if (!bEmpireExists) {
             AddMessage("That empire no longer exists");
             return OK;
         }

@@ -28,8 +28,6 @@
 #include "Osal/Socket.h"
 #include "Osal/Event.h"
 
-#define SHUTDOWN_THREAD_POOL ((Socket*) 0xffffffff)
-
 class HttpServer;
 
 class HttpPoolThread : public Thread {

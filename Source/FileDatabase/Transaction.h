@@ -49,7 +49,7 @@ public:
 
 /*  int Initialize (const char* pszDatabaseName, unsigned int iOptions);
 
-    int CreateTemplate (const TemplateDescription& ttTemplate);
+    int CreateTemplate (const FileTemplateDescription& ttTemplate);
     int DeleteTemplate (const char* pszTemplateName);
 
     int GetTemplate (const char* pszTemplateName, ITemplate** ppTemplate);
@@ -79,7 +79,7 @@ public:
     ITableEnumerator* GetTableEnumerator();
     ITemplateEnumerator* GetTemplateEnumerator();
 
-    bool IsTemplateEqual (const char* pszTemplateName, const TemplateDescription& ttTemplate);
+    bool IsTemplateEqual (const char* pszTemplateName, const FileTemplateDescription& ttTemplate);
 
     int Flush();
 

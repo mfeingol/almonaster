@@ -461,7 +461,7 @@ namespace SystemData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemData",
         NumColumns,
         (VariantType*)Types,
@@ -804,7 +804,7 @@ namespace SystemEmpireData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemEmpireData",
         NumColumns,
         (VariantType*)Types,
@@ -1107,7 +1107,7 @@ namespace SystemGameClassData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemGameClassData",
         NumColumns,
         (VariantType*)Types,
@@ -1159,7 +1159,7 @@ namespace SystemAlienIcons {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemAlienIcons",
         NumColumns,
         (VariantType*)Types,
@@ -1199,7 +1199,7 @@ namespace SystemSystemGameClassData {
 
     static const unsigned int NumColumns = GameClass + 1;
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemSystemGameClassData",
         NumColumns,
         (VariantType*)Types,
@@ -1243,7 +1243,7 @@ namespace SystemSuperClassData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemSuperClassData",
         NumColumns,
         (VariantType*)Types,
@@ -1330,7 +1330,7 @@ namespace SystemThemes {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemThemes",
         NumColumns,
         (VariantType*)Types,
@@ -1382,7 +1382,7 @@ namespace SystemActiveGames {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemActiveGames",
         NumColumns,
         (VariantType*)Types,
@@ -1453,7 +1453,7 @@ namespace SystemEmpireMessages {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemEmpireMessages",
         NumColumns,
         (VariantType*)Types,
@@ -1529,7 +1529,7 @@ namespace SystemEmpireNukeList {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemEmpireNukeList",
         NumColumns,
         (VariantType*)Types,
@@ -1600,7 +1600,7 @@ namespace SystemNukeList {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemNukeList",
         NumColumns,
         (VariantType*)Types,
@@ -1668,7 +1668,7 @@ namespace SystemLatestGames {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemLatestGames",
         NumColumns,
         (VariantType*)Types,
@@ -1714,7 +1714,7 @@ namespace SystemEmpireActiveGames {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemEmpireActiveGames",
         NumColumns,
         (VariantType*)Types,
@@ -1785,7 +1785,7 @@ namespace SystemTournaments {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemTournaments",
         NumColumns,
         (VariantType*)Types,
@@ -1863,7 +1863,7 @@ namespace SystemTournamentTeams {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemTournamentTeams",
         NumColumns,
         (VariantType*)Types,
@@ -1933,7 +1933,7 @@ namespace SystemTournamentEmpires {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemTournamentEmpires",
         NumColumns,
         (VariantType*)Types,
@@ -1979,7 +1979,7 @@ namespace SystemTournamentActiveGames {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemTournamentActiveGames",
         NumColumns,
         (VariantType*)Types,
@@ -2040,7 +2040,7 @@ namespace SystemEmpireTournaments {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemEmpireTournaments",
         NumColumns,
         (VariantType*)Types,
@@ -2262,7 +2262,7 @@ namespace GameData {
     
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameData",
         NumColumns,
         (VariantType*)Types,
@@ -2329,7 +2329,7 @@ namespace GameSecurity {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameSecurity",
         NumColumns,
         (VariantType*)Types,
@@ -2383,7 +2383,7 @@ namespace GameEmpires {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpires",
         NumColumns,
         (VariantType*)Types,
@@ -2449,7 +2449,7 @@ namespace GameDeadEmpires {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameDeadEmpires",
         NumColumns,
         (VariantType*)Types,
@@ -2602,7 +2602,7 @@ namespace GameMap {
     
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameMap",
         NumColumns,
         (VariantType*)Types,
@@ -2860,7 +2860,7 @@ namespace GameEmpireData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
     
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpireData",
         NumColumns,
         (VariantType*)Types,
@@ -2923,7 +2923,7 @@ namespace GameEmpireMessages {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpireMessages",
         NumColumns,
         (VariantType*)Types,
@@ -3010,7 +3010,7 @@ namespace GameEmpireMap {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpireMap",
         NumColumns,
         (VariantType*)Types,
@@ -3095,7 +3095,7 @@ namespace GameEmpireDiplomacy {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
     
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpireDiplomacy",
         NumColumns,
         (VariantType*)Types,
@@ -3192,7 +3192,7 @@ namespace GameEmpireShips {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
     
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpireShips",
         NumColumns,
         (VariantType*)Types,
@@ -3275,7 +3275,7 @@ namespace GameEmpireFleets {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameEmpireFleets",
         NumColumns,
         (VariantType*)Types,
@@ -3358,7 +3358,7 @@ namespace GameIndependentShips {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "GameIndependentShips",
         NumColumns,
         (VariantType*)Types,
@@ -3409,7 +3409,7 @@ namespace SystemAlmonasterScoreTopList {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemAlmonasterScoreTopList",
         NumColumns,
         (VariantType*)Types,
@@ -3444,7 +3444,7 @@ namespace SystemClassicScoreTopList {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemClassicScoreTopList",
         NumColumns,
         (VariantType*)Types,
@@ -3487,7 +3487,7 @@ namespace SystemBridierScoreTopList {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemBridierScoreTopList",
         NumColumns,
         (VariantType*)Types,
@@ -3530,7 +3530,7 @@ namespace SystemBridierScoreEstablishedTopList {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemBridierScoreEstablishedTopList",
         NumColumns,
         (VariantType*)Types,
@@ -3581,7 +3581,7 @@ namespace SystemChatroomData {
 
     static const unsigned int NumColumns = sizeof(Sizes) / sizeof(Sizes[0]);
 
-    static const TemplateDescription Template = {
+    static const FileTemplateDescription Template = {
         "SystemChatroomData",
         NumColumns,
         (VariantType*)Types,

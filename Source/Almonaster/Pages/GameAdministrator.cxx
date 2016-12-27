@@ -1313,12 +1313,7 @@ if (m_bOwnPost && !m_bRedirection) {
             break;
 
         case 3:
-
             {
-
-            bool bExist;
-            const char* pszMessage;
-
             // Get game class, game number
             if ((pHttpForm  = m_pHttpRequest->GetForm ("GameClass")) == NULL ||
                 (pHttpForm2 = m_pHttpRequest->GetForm ("GameNumber")) == NULL) {
@@ -1343,7 +1338,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 if (pHttpForm == NULL) {
                     break;
                 }
-                pszMessage = pHttpForm->GetValue();
+                const char* pszMessage = pHttpForm->GetValue();
 
                 if (!String::IsBlank (pszMessage) && !VerifyPassword(pszMessage))
                 {
@@ -1365,6 +1360,7 @@ if (m_bOwnPost && !m_bRedirection) {
             // Force update
             if (WasButtonPressed (BID_FORCEUPDATE)) {
 
+                bool bExist;
                 iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
                 RETURN_ON_ERROR(iErrCode);
 
@@ -1411,6 +1407,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     AddMessage ("The game's update time was reset");
                 }
 
+                bool bExist;
                 iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
                 RETURN_ON_ERROR(iErrCode);
                 if (bExist) {
@@ -1489,6 +1486,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                 }
 
+                bool bExist;
                 iErrCode = DoesGameExist(iGameClass, iGameNumber, &bExist);
                 RETURN_ON_ERROR(iErrCode);
                 if (bExist)

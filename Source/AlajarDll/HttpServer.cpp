@@ -442,21 +442,23 @@ int HttpServer::StartServer()
     ReportEvent ((String) "Reading config files from " + m_pszConfigPath);
 
     if (m_pConfigFile->GetParameter ("StatisticsPath", &pszRhs) == OK && pszRhs != NULL) {
-        
+
         if (File::ResolvePath (pszRhs, m_pszStatisticsPath) != OK) {
             ReportEvent ((String) "Error: The StatisticsPath value was invalid: " + pszRhs);
             goto ErrorExit;
         }
-        
         if (!File::DoesDirectoryExist (m_pszStatisticsPath)) {
-            ReportEvent ((String) "Error: The StatisticsPath " + m_pszStatisticsPath + " could not be found");
-            goto ErrorExit;
+            if (File::CreateDirectory (m_pszStatisticsPath) != OK) {
+                ReportEvent ((String) "Error: Could not create StatisticsPath directory " + m_pszStatisticsPath);
+                goto ErrorExit;
+            }
+            ReportEvent ((String) "Warning: The StatisticsPath " + m_pszStatisticsPath + " was created");
         }
     } else {
         ReportEvent ("Error: Could not read the StatisticsPath from Alajar.conf");
         goto ErrorExit;
     }
-    
+
     bool bEnableNonSSLPort;
     if (m_pConfigFile->GetParameter ("EnableHttpPort", &pszRhs) == OK && pszRhs != NULL) {
         bEnableNonSSLPort = (atoi (pszRhs) == 1);
@@ -1080,7 +1082,6 @@ int HttpServer::ConfigurePageSources() {
     // Get data for all page sources //
     ///////////////////////////////////
 
-    PageSource* pPageSource;
     const char* pszPageSourceName;
 
     String strErrorMessage;
@@ -1093,7 +1094,7 @@ int HttpServer::ConfigurePageSources() {
         strcat (pszConfigFilePath, "/");
         strcat (pszConfigFilePath, ppszFileName[i]);
         
-        pPageSource = new PageSource (this);
+        PageSource* pPageSource = new PageSource (this);
         if (pPageSource == NULL) {
             return ERROR_OUT_OF_MEMORY;
         }
@@ -1699,7 +1700,7 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
 
             printed = snprintf (
                 pszText, countof(pszText) - 1,
-                "%s - %s [%s/%s/%d:%s:%s:%s %s] \"%s %s%s%s\" %d %u",
+                "%s - %s [%s/%s/%d:%s:%s:%s %s] \"%s %s%s%s\" %d %zu",
                 pszIP,
                 pszUserName,
                 String::ItoA (iDay, pszDay, 10, 2),
@@ -1745,7 +1746,7 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
             {
                 printed = snprintf (
                     pszText, countof(pszText) - 1,
-                    "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s\t%d uploa%s (%u bytes)", 
+                    "[%s:%s:%s] %s\t%s\t%i%s\t%s\t%s\t%d uploa%s (%zu bytes)",
                     String::ItoA (iHour, pszHour, 10, 2),
                     String::ItoA (iMin, pszMin, 10, 2),
                     String::ItoA (iSec, pszSec, 10, 2),

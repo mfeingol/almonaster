@@ -241,24 +241,24 @@ case 0:
 
             for (i = 0; i < (int)iNumClosedGames; i ++)
             {
-                int iGameClass = ppvGame[i][0].GetInteger();
-                int iGameNumber = ppvGame[i][1].GetInteger();
+                int iThisGameClass = ppvGame[i][0].GetInteger();
+                int iThisGameNumber = ppvGame[i][1].GetInteger();
 
                 // Check everything
-                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bFlag);
+                iErrCode = CheckGameForUpdates(iThisGameClass, iThisGameNumber, &bFlag);
                 RETURN_ON_ERROR(iErrCode);
                 
-                iErrCode = DoesGameExist(iGameClass, iGameNumber, &bFlag);
+                iErrCode = DoesGameExist(iThisGameClass, iThisGameNumber, &bFlag);
                 RETURN_ON_ERROR(iErrCode);
 
                 if (bFlag)
                 {
-                    iErrCode = IsSpectatorGame(iGameClass, iGameNumber, &bFlag);
+                    iErrCode = IsSpectatorGame(iThisGameClass, iThisGameNumber, &bFlag);
                     RETURN_ON_ERROR(iErrCode);
                     
                     if (bFlag)
                     {
-                        iErrCode = GetGameClassSuperClassKey (iGameClass, &iSuperClassKey);
+                        iErrCode = GetGameClassSuperClassKey (iThisGameClass, &iSuperClassKey);
                         RETURN_ON_ERROR(iErrCode);
 
                         for (j = 0; j < iNumSuperClasses; j ++)
@@ -268,8 +268,8 @@ case 0:
                                 // We found a match, so write down the game in question
                                 ppiTable [j][ppiTable [j][iNumClosedGames]] = i;
 
-                                ppiGameClass[j][ppiTable [j][iNumClosedGames]] = iGameClass;
-                                ppiGameNumber[j][ppiTable [j][iNumClosedGames]] = iGameNumber;
+                                ppiGameClass[j][ppiTable [j][iNumClosedGames]] = iThisGameClass;
+                                ppiGameNumber[j][ppiTable [j][iNumClosedGames]] = iThisGameNumber;
 
                                 ppiTable [j][iNumClosedGames] ++;
                                 bDraw = true;
@@ -282,8 +282,8 @@ case 0:
                             // No superclass was found, so it must be a personal game
                             ppiTable [iNumSuperClasses][ppiTable [iNumSuperClasses][iNumClosedGames]] = i;
 
-                            ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumClosedGames]] = iGameClass;
-                            ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumClosedGames]] = iGameNumber;
+                            ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumClosedGames]] = iThisGameClass;
+                            ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumClosedGames]] = iThisGameNumber;
 
                             ppiTable [iNumSuperClasses][iNumClosedGames] ++;
                             bDraw = true;
@@ -352,16 +352,16 @@ case 0:
 
                     for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumClosedGames]; j ++)
                     {
-                        int iGameClass = ppiGameClass[iNumSuperClasses][j];
-                        int iGameNumber = ppiGameNumber[iNumSuperClasses][j];
+                        int iThisGameClass = ppiGameClass[iNumSuperClasses][j];
+                        int iThisGameNumber = ppiGameNumber[iNumSuperClasses][j];
 
                         Variant* pvGameClassInfo = NULL;
                         AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                        iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                        iErrCode = GetGameClassData(iThisGameClass, &pvGameClassInfo);
                         RETURN_ON_ERROR(iErrCode);
 
-                        iErrCode = WriteSpectatorGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                        iErrCode = WriteSpectatorGameListData(iThisGameClass, iThisGameNumber, pvGameClassInfo);
                         RETURN_ON_ERROR(iErrCode);
                     }
 
@@ -425,16 +425,16 @@ case 0:
 
                         for (j = 0; j < iNumGamesInSuperClass; j ++) {
 
-                            int iGameClass = ppiGameClass[i][j];
-                            int iGameNumber = ppiGameNumber[i][j];
+                            int iThisGameClass = ppiGameClass[i][j];
+                            int iThisGameNumber = ppiGameNumber[i][j];
 
                             Variant* pvGameClassInfo = NULL;
                             AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                            iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                            iErrCode = GetGameClassData(iThisGameClass, &pvGameClassInfo);
                             RETURN_ON_ERROR(iErrCode);
 
-                            iErrCode = WriteSpectatorGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                            iErrCode = WriteSpectatorGameListData(iThisGameClass, iThisGameNumber, pvGameClassInfo);
                             RETURN_ON_ERROR(iErrCode);
                         }
 
@@ -453,7 +453,6 @@ case 1:
     %><input type="hidden" name="SpectSubPage" value="1"><%
 
     bool bTrue;
-
     iErrCode = IsSpectatorGame(iGameClassKey, iGameNumber, &bTrue);
     RETURN_ON_ERROR(iErrCode);
     if (!bTrue)
@@ -493,7 +492,6 @@ case 2:
     {
 
     int iGameClassOptions, iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
-    bool bTrue;
 
     GET_GAME_MAP (pszGameMap, iGameClassKey, iGameNumber);
 

@@ -137,7 +137,7 @@ if (m_bOwnPost && !m_bRedirection) {
         if (m_iPrivilege >= PRIVILEGE_FOR_PERSONAL_GAMES &&
             (WasButtonPressed (BID_START) || WasButtonPressed (BID_BLOCK))) {
 
-            int iGameClassKey, iGameNumber;
+            int iGameNumber;
             bool bGameCreated;
 
             iErrCode = ProcessCreateDynamicGameClassForms(m_iEmpireKey, &iGameClassKey, &iGameNumber, &bGameCreated);

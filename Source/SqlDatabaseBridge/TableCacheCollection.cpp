@@ -19,7 +19,9 @@
 
 #include "TableCacheCollection.h"
 #include "Utils.h"
+#include <msclr/marshal.h>
 
+using namespace msclr::interop;
 using namespace System::Collections::Generic;
 using namespace System::Linq;
 
@@ -289,7 +291,11 @@ int TableCacheCollection::Cache(const TableCacheEntry* pcCacheEntry, unsigned in
             // One row found via column search, so allow the table to be looked up by key as well
             char* pszCacheEntryName = (char*)StackAlloc((result->TableName->Length + 32) * sizeof(char));
             unsigned int iKey = (unsigned int)(int64)Enumerable::First(result->Rows)[m_strID_COLUMN_NAME];
-            sprintf(pszCacheEntryName, "%s_%s_%i", result->TableName, ID_COLUMN_NAME, iKey);
+
+            marshal_context^ context = gcnew marshal_context();
+            const char* tableName = context->marshal_as<const char*>(result->TableName);
+            sprintf(pszCacheEntryName, "%s_%s_%i", tableName, ID_COLUMN_NAME, iKey);
+            delete context;
 
             InsertTable(pszCacheEntryName, pTable);
         }

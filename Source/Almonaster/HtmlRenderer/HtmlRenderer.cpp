@@ -4019,19 +4019,19 @@ int HtmlRenderer::ParseCreateGameClassForms(Variant* pvSubmitArray, int iOwnerKe
     default:
         return ERROR_MISSING_FORM;
     }
-    
+
     // Alliance limit options without limits
-    if (pvSubmitArray[SystemGameClassData::iMaxNumAlliances].GetInteger() == UNRESTRICTED_DIPLOMACY) {
-        
-        int iOptions = pvSubmitArray[SystemGameClassData::iOptions].GetInteger();
-        
-        if (iOptions & PERMANENT_ALLIANCES) {
+    if (pvSubmitArray[SystemGameClassData::iMaxNumAlliances].GetInteger() == UNRESTRICTED_DIPLOMACY)
+    {
+        int iSystemOptions = pvSubmitArray[SystemGameClassData::iOptions].GetInteger();
+        if (iSystemOptions & PERMANENT_ALLIANCES)
+        {
             AddMessage ("There are no alliance limits, so alliances will not count for the entire game");
-            iOptions &= ~PERMANENT_ALLIANCES;
-            pvSubmitArray[SystemGameClassData::iOptions] = iOptions;
+            iSystemOptions &= ~PERMANENT_ALLIANCES;
+            pvSubmitArray[SystemGameClassData::iOptions] = iSystemOptions;
         }
     }
-    
+
     // InitDevShips
     iNumInitTechDevs = 0;
     ENUMERATE_TECHS(i) {
@@ -4195,7 +4195,7 @@ int HtmlRenderer::WriteNukeHistory(int iTargetEmpireKey)
             
         char pszDateString [OS::MaxDateLength];
             
-        int iErrCode, iAlloc = max (iNumNukers, iNumNuked);
+        int iAlloc = max (iNumNukers, iNumNuked);
             
         UTCTime* ptTime = (UTCTime*) StackAlloc (iAlloc * sizeof (UTCTime));
         Variant** ppvData = (Variant**) StackAlloc (iAlloc * sizeof (Variant*));
@@ -4550,7 +4550,7 @@ void HtmlRenderer::WriteGameAdministratorGameData (const char* pszGameClassName,
 int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int iDeadPlanetKey, int iSeparatorKey,
                                    int iButtonKey, int iHorzKey, int iVertKey, int iColorKey) {
     
-    const unsigned int piUIKey[] =
+    const int piUIKey[] =
     {
         iBackgroundKey,
         iColorKey,
@@ -4850,7 +4850,7 @@ int HtmlRenderer::RenderThemeInfo (int iBackgroundKey, int iLivePlanetKey, int i
                 m_pHttpResponse->WriteText (pszTableColor);
                 OutputText ("\" align=\"center\"><input");
                 
-                if (piUIKey[j] == piThemeKey[i]) {
+                if (piUIKey[j] == (int)piThemeKey[i]) {
                     OutputText (" checked");
                 }
                 

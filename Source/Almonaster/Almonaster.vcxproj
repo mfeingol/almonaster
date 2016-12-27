@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -33,7 +33,7 @@
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>false</CLRSupport>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -41,7 +41,7 @@
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>false</CLRSupport>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -49,7 +49,7 @@
     <UseOfAtl>false</UseOfAtl>
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>false</CLRSupport>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -57,7 +57,7 @@
     <CharacterSet>MultiByte</CharacterSet>
     <CLRSupport>false</CLRSupport>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v140</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -132,7 +132,6 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
@@ -176,9 +175,14 @@
       <Message>Copying public files...</Message>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
+
+set DropSite=..\Drop\$(Platform)\$(Configuration)\site
+if not exist "%DropSite%" mkdir "%DropSite%"
+if not exist "%DropSite%\Config" mkdir "%DropSite%\Config"
+
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
 copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-</Command>
+copy /y $(ProjectDir)Default.conf "%DropSite%\Config"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -211,7 +215,6 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -251,9 +254,14 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <Message>Copying public files...</Message>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
+
+set DropSite=..\Drop\$(Platform)\$(Configuration)\site
+if not exist "%DropSite%" mkdir "%DropSite%"
+if not exist "%DropSite%\Config" mkdir "%DropSite%\Config"
+
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
 copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-</Command>
+copy /y $(ProjectDir)Default.conf "%DropSite%\Config"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -286,7 +294,6 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <AdditionalOptions>
       </AdditionalOptions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -325,9 +332,14 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <Message>Copying public files...</Message>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
+
+set DropSite=..\Drop\$(Platform)\$(Configuration)\site
+if not exist "%DropSite%" mkdir "%DropSite%"
+if not exist "%DropSite%\Config" mkdir "%DropSite%\Config"
+
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
 copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-</Command>
+copy /y $(ProjectDir)Default.conf "%DropSite%\Config"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -355,7 +367,6 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <AdditionalOptions>
       </AdditionalOptions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <WarningLevel>Level4</WarningLevel>
       <TreatWarningAsError>true</TreatWarningAsError>
@@ -395,18 +406,23 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
       <Message>Copying public files...</Message>
       <Command>set DropBin=..\Drop\$(Platform)\$(Configuration)\bin
 if not exist "%DropBin%" mkdir "%DropBin%"
+
+set DropSite=..\Drop\$(Platform)\$(Configuration)\site
+if not exist "%DropSite%" mkdir "%DropSite%"
+if not exist "%DropSite%\Config" mkdir "%DropSite%\Config"
+
 copy /y $(OutDir)$(TargetFileName) "%DropBin%"
 copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
-</Command>
+copy /y $(ProjectDir)Default.conf "%DropSite%\Config"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="AlmonasterEventSink.cpp" />
     <ClCompile Include="AsyncManager.cpp" />
-    <ClCompile Include="GameEngineAvailability.cpp" />
     <ClCompile Include="GameEngine\GameEngine.cpp" />
     <ClCompile Include="GameEngine\GameEngineAliens.cpp" />
     <ClCompile Include="GameEngine\GameEngineAssociations.cpp" />
+    <ClCompile Include="GameEngine\GameEngineAvailability.cpp" />
     <ClCompile Include="GameEngine\GameEngineBuild.cpp" />
     <ClCompile Include="GameEngine\GameEngineConstants.cpp" />
     <ClCompile Include="GameEngine\GameEngineDatabase.cpp" />
@@ -1476,6 +1492,7 @@ copy /y $(OutDir)$(ProjectName).pdb "%DropBin%"
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Default.conf" />
     <None Include="Text\Documentation.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

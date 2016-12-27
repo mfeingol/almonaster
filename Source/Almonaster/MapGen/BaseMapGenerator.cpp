@@ -369,10 +369,10 @@ void BaseMapGenerator::AssignResources(unsigned int iHWIndex,
     unsigned int iTotalMin = 0;
     unsigned int iTotalFuel = 0;
 
-    unsigned int i, iTemp;
+    unsigned int iTemp;
 
     // Allocate resources
-    for (i = 0; i < iNumNonHWPlanets; i ++) {
+    for (unsigned int i = 0; i < iNumNonHWPlanets; i ++) {
 
         iTemp = Algorithm::GetRandomInteger(iAgCap);
         piAg[i] = iTemp;
@@ -400,7 +400,7 @@ void BaseMapGenerator::AssignResources(unsigned int iHWIndex,
 
     iTotalAg = iTotalMin = iTotalFuel = 0;
 
-    for (i = 0; i < iNumNonHWPlanets; i ++) {
+    for (unsigned int i = 0; i < iNumNonHWPlanets; i ++) {
 
         iTemp = (unsigned int)((float)piAg[i] * fAgFactor);
         piAg[i] = iTemp;

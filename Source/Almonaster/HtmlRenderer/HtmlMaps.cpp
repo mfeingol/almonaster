@@ -26,27 +26,27 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     AutoFreeData free_pvPlanetKey(pvFreePlanetKey);
     AutoFreeData free_pvEmpireKey(pvEmpireKey);
     AutoFreeData free_pvPlanetData(pvPlanetData);
-    
+
     int iErrCode, iMinX, iMaxX, iMinY, iMaxY, iNumJumps, iMapMinX = 0, iMapMaxX = 0, iMapMinY = 0, iMapMaxY = 0;
-    
+
     unsigned int iNumPlanets, * piPlanetKey = NULL, i, j, * piProxyKey = NULL, * piFreeProxyKey = NULL, iLivePlanetKey, iDeadPlanetKey;
     AutoFreeKeys free_piPlanetKey(piPlanetKey);
     AutoFreeKeys free_piProxyKey(piFreeProxyKey);
 
     size_t stTemp;
-    
+
     GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
     GET_GAME_EMPIRE_MAP (strGameEmpireMap, iGameClass, iGameNumber, iEmpireKey);
 
     unsigned int piEasyProxyKeys[9], iGridX, iGridY, iGridLocX, iGridLocY, iNumEmpires;
 
     int iHorzKey, iVertKey, iNumOwnShips, iNumOtherShips, iAlienKey, iAccountingNumOtherShips, iDiplomacyLevel,
-        iCenterX = MAX_COORDINATE, iCenterY = MAX_COORDINATE, iNumUncloakedShips, iNumCloakedShips, 
-        iNumUncloakedBuildShips, iNumCloakedBuildShips, iWeOffer, iTheyOffer, iCurrent, iX, iY, iOwner, iLink, 
+        iCenterX = MAX_COORDINATE, iCenterY = MAX_COORDINATE, iNumUncloakedShips, iNumCloakedShips,
+        iNumUncloakedBuildShips, iNumCloakedBuildShips, iCurrent, iX, iY, iOwner, iLink,
         iProxyKey, iPlanetKey;
-    
+
     bool bPartialMapShortcut = false;
-    
+
     String* pstrGrid = NULL, ** ppstrGrid, strPlanetString, strImage, strHorz, strVert, strFilter, strAltTag;
     Algorithm::AutoDelete<String> free_pstrGrid(pstrGrid, true);
 
@@ -54,7 +54,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
     const char* pszColor;
 
     bool bLinkNorth, bLinkEast, bLinkSouth, bLinkWest, bVisible, bIndependence, bSensitive, bMapColoring, bShipColoring, bHighlightShips;
-    
+
     Assert(!(bSpectators && bAdmin));
 
     if (!bAdmin && !bSpectators) {
@@ -65,7 +65,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
         bMapColoring = (iOptions & MAP_COLORING) != 0;
         bShipColoring = (iOptions & SHIP_MAP_COLORING) != 0;
         bHighlightShips = (iOptions & SHIP_MAP_HIGHLIGHTING) != 0;
-        
+
         // Get map geography information
         iErrCode = GetMapLimits(iGameClass, iGameNumber, iEmpireKey, &iMapMinX, &iMapMaxX, &iMapMinY, &iMapMaxY);
         RETURN_ON_ERROR(iErrCode);
@@ -489,6 +489,7 @@ int HtmlRenderer::RenderMap (int iGameClass, int iGameNumber, int iEmpireKey, bo
                         pszColor = NULL;
                     } else {
                         
+                        int iWeOffer, iTheyOffer;
                         iErrCode = GetVisibleDiplomaticStatus(
                             iGameClass,
                             iGameNumber,
@@ -1101,7 +1102,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     m_pHttpResponse->WriteText (pszTableColor);
     OutputText ("\">Jumps</th></tr><tr><td align=\"center\">");
     
-    int iData, iWeOffer, iTheyOffer, iCurrent, iAlienKey;
+    int iData, iCurrent, iAlienKey;
     unsigned int iAnnihilated = pvPlanetData[GameMap::iAnnihilated].GetInteger();
     unsigned int iOwner = pvPlanetData[GameMap::iOwner].GetInteger();
 
@@ -1149,14 +1150,15 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 if (!bMapColoring) {
                     iCurrent = TRUCE;
                 } else {
-                    
+
+                    int iWeOffer, iTheyOffer;
                     iErrCode = GetVisibleDiplomaticStatus(
-                        m_iGameClass, 
-                        m_iGameNumber, 
-                        iEmpireKey, 
-                        iOwner, 
-                        &iWeOffer, 
-                        &iTheyOffer, 
+                        m_iGameClass,
+                        m_iGameNumber,
+                        iEmpireKey,
+                        iOwner,
+                        &iWeOffer,
+                        &iTheyOffer,
                         &iCurrent,
                         NULL
                         );
@@ -1271,10 +1273,10 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
     
     // Owner name
     if (iOwner != SYSTEM) {
-        
-        Variant vEmpireName;
+
+        Variant vTemp;
         const char* pszEmpireName;
-        
+
         if (iOwner == iEmpireKey) {
             pszEmpireName = m_vEmpireName.GetCharPtr();
         } else {
@@ -1283,9 +1285,9 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 pszEmpireName = INDEPENDENT_NAME;
             } else {
                 
-                iErrCode = GetEmpireName (iOwner, &vEmpireName);
+                iErrCode = GetEmpireName (iOwner, &vTemp);
                 RETURN_ON_ERROR(iErrCode);
-                pszEmpireName = vEmpireName.GetCharPtr();
+                pszEmpireName = vTemp.GetCharPtr();
             }
         }
         
@@ -1636,12 +1638,10 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                 }
             }
             OutputText ("</tr>");
-            
-            int iDip, iWeOffer, iTheyOffer;
-            
-            Variant vEmpireName;
+
+            int iDip;
             const char* pszEmpireName;
-            
+
             for (i = 0; i < iNumOwners; i ++) {
                 
                 OutputText ("<tr><td align=\"right\">");
@@ -1664,7 +1664,7 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         RETURN_ON_ERROR(iErrCode);
 
                     } else {
-                        
+
                         Variant vTemp;
 
                         iErrCode = GetEmpireProperty (piOwnerKey[i], SystemEmpireData::AlienKey, &vTemp);
@@ -1675,30 +1675,28 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         RETURN_ON_ERROR(iErrCode);
                         int iAlienAddress = vTemp.GetInteger();
 
-                        iErrCode = GetEmpireName (piOwnerKey[i], &vEmpireName);
+                        iErrCode = GetEmpireName (piOwnerKey[i], &vTemp);
                         RETURN_ON_ERROR(iErrCode);
 
                         char pszProfile [128 + MAX_EMPIRE_NAME_LENGTH];
-                        sprintf(pszProfile, "View the profile of %s", vEmpireName.GetCharPtr());
-                        
+                        sprintf(pszProfile, "View the profile of %s", vTemp.GetCharPtr());
+
                         iErrCode = WriteProfileAlienString (
                             iAlienKey,
                             iAlienAddress,
                             piOwnerKey[i],
-                            vEmpireName.GetCharPtr(),
-                            0, 
+                            vTemp.GetCharPtr(),
+                            0,
                             "ProfileLink",
                             pszProfile,
                             false,
                             true
                             );
                         RETURN_ON_ERROR(iErrCode);
-                        
+
                         NotifyProfileLink();
                     }
-                    
                 } else {
-                    
                     WriteIndependentPlanetString();
                 }
                 
@@ -1723,14 +1721,15 @@ int HtmlRenderer::WriteUpClosePlanetString (unsigned int iEmpireKey, int iPlanet
                         if (!bMapColoring) {
                             iDip = TRUCE;
                         } else {
-                            
+
+                            int iWeOffer, iTheyOffer;
                             iErrCode = GetVisibleDiplomaticStatus(
-                                m_iGameClass, 
-                                m_iGameNumber, 
-                                iEmpireKey, 
-                                piOwnerKey[i], 
-                                &iWeOffer, 
-                                &iTheyOffer, 
+                                m_iGameClass,
+                                m_iGameNumber,
+                                iEmpireKey,
+                                piOwnerKey[i],
+                                &iWeOffer,
+                                &iTheyOffer,
                                 &iDip,
                                 NULL
                                 );

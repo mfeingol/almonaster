@@ -48,7 +48,7 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, ITraceLog* pTrace)
 {
     m_pTrace = pTrace;
     m_pTrace->AddRef();
-    
+
     // HACKHACK - Major hackery to enable static Trace() methods
     g_pTrace = m_pTrace;
 

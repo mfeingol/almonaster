@@ -137,7 +137,7 @@ int GameEngine::VerifyTableExistenceWithRows(const char* pszTable, bool bNewData
     if (bTableExists)
     {
         unsigned int iNumRows;
-        int iErrCode = t_pConn->GetNumPhysicalRows(pszTable, &iNumRows);
+        iErrCode = t_pConn->GetNumPhysicalRows(pszTable, &iNumRows);
         Assert(iErrCode == OK);
 
         if (iNumRows < 1)
@@ -1163,7 +1163,6 @@ int GameEngine::SetupDefaultThemes(unsigned int* piDefaultThemeKey)
         pvColVal[SystemThemes::iPrivateMessageColor] = "";
         pvColVal[SystemThemes::iBroadcastMessageColor] = "";
 
-        unsigned int iKey;
         iErrCode = t_pCache->InsertRow(SYSTEM_THEMES, SystemThemes::Template, pvColVal, &iKey);
         RETURN_ON_ERROR(iErrCode);
 

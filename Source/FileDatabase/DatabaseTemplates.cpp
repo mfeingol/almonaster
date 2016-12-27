@@ -20,7 +20,7 @@
 #include "CDatabase.h"
 #include "Template.h"
 
-int Database::CreateTemplate (const TemplateDescription& ttTemplate) {
+int Database::CreateTemplate (const FileTemplateDescription& ttTemplate) {
 
     bool bFlag;
     int iErrCode;
@@ -138,7 +138,7 @@ Template* Database::FindTemplate (const char* pszTemplateName) {
     return pTemplate;
 }
 
-bool Database::IsTemplateEqual (const char* pszTemplateName, const TemplateDescription& ttTemplate) {
+bool Database::IsTemplateEqual (const char* pszTemplateName, const FileTemplateDescription& ttTemplate) {
 
     bool bRetVal = false;
 

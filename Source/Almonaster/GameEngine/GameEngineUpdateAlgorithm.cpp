@@ -148,7 +148,7 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
         RETURN_ON_ERROR(iErrCode);
 
         GameFairnessOption gfoFairness = (GameFairnessOption)vTemp.GetInteger();
-        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, (int*) piEmpireKey, iNumEmpires, gfoFairness);
+        iErrCode = AddEmpiresToMap (iGameClass, iGameNumber, (int*)piEmpireKey, iNumEmpires, gfoFairness);
         RETURN_ON_ERROR(iErrCode);
 
         iErrCode = t_pCache->WriteOr(strGameData, GameData::State, GAME_MAP_GENERATED);
@@ -913,9 +913,9 @@ int GameEngine::RunUpdate(int iGameClass, int iGameNumber, const UTCTime& tUpdat
         {
             GameUpdateInformation guInfo = 
             {
-                iNewUpdateCount,
+                (unsigned int)iNewUpdateCount,
                 iNumEmpires,
-                (int*) piEmpireKey,
+                (int*)piEmpireKey,
                 pbAlive,
                 pstrUpdateMessage
             };
@@ -1581,7 +1581,7 @@ int GameEngine::UpdateDiplomaticStatus (int iGameClass, int iGameNumber, unsigne
         // We treat surrenders just like nukes //
         /////////////////////////////////////////
 
-        GameUpdateInformation guInfo = { iNewUpdateCount, iNumEmpires, (int*) piEmpireKey, pbAlive, pstrUpdateMessage };
+        GameUpdateInformation guInfo = { (unsigned int)iNewUpdateCount, iNumEmpires, (int*)piEmpireKey, pbAlive, pstrUpdateMessage };
         
         // Randomize surrenders
         if (*piNumSurrenders > 1)
@@ -3835,24 +3835,24 @@ int GameEngine::MakeShipsFight (int iGameClass, int iGameNumber, const char* str
                 int iCounted = 0;
                 ENUMERATE_SHIP_TYPES (iType) {
 
-                    int iNumShips = piShipsByType [iType];
-                    if (iNumShips > 0) {
+                    int iNumShipsByType = piShipsByType [iType];
+                    if (iNumShipsByType > 0) {
 
                         if (iCounted > 0) {
                             strBattleEmpires += ", ";
                         }
 
                         //strBattleEmpires += BEGIN_STRONG;
-                        strBattleEmpires += iNumShips;
+                        strBattleEmpires += iNumShipsByType;
                         //strBattleEmpires += END_STRONG;
                         strBattleEmpires += " ";
-                        if (iNumShips == 1) {
+                        if (iNumShipsByType == 1) {
                             strBattleEmpires += SHIP_TYPE_STRING_LOWERCASE [iType];
                         } else {
                             strBattleEmpires += SHIP_TYPE_STRING_LOWERCASE_PLURAL [iType];
                         }
 
-                        iCounted += iNumShips;
+                        iCounted += iNumShipsByType;
                     }
                 }
 
@@ -5117,8 +5117,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                                        unsigned int* piNumNukingShips, unsigned int* piNumNukedPlanets,
                                        const GameConfiguration& gcConfig) {
 
-    Variant vAction, vPlanetName, vShipName, vPop, vOwner, vTemp, vShipType, vAg, 
-        vMin, vFuel, vBR, vMaxBR, vLinkPlanetKey, vLinkPlanetName, vCoord, vTechs;
+    Variant vAction, vPlanetName, vShipName, vPop, vOwner, vTemp, vShipType, vBR, vMaxBR, vLinkPlanetKey, vLinkPlanetName, vCoord, vTechs;
 
     int iNumShips, i, j, k, l, iTemp, iErrCode = OK, iNumWatcherEmpires, iTerraform, iDiff, iInvadePop, iLinkX, iLinkY, iX, iY;
     
@@ -5134,7 +5133,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
     int* piWatcherEmpire = (int*) StackAlloc (iNumEmpires * sizeof (int));
     bool* pbTerraformed = (bool*) StackAlloc (iNumPlanets * sizeof (bool));
 
-    GameUpdateInformation guInfo = { iNewUpdateCount, iNumEmpires, (int*) piEmpireKey, pbAlive, pstrUpdateMessage };
+    GameUpdateInformation guInfo = { (unsigned int)iNewUpdateCount, (unsigned int)iNumEmpires, (int*) piEmpireKey, pbAlive, pstrUpdateMessage };
 
     *piNumNukedPlanets = 0;
 
@@ -5404,17 +5403,18 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         // Colonize planet //
                         /////////////////////
 
-                        Variant vMin, vFuel;
-
                         int iMaxPop;
 
                         // Get planet ag, min, fuel
+                        Variant vAg;
                         iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Ag, &vAg);
                         RETURN_ON_ERROR(iErrCode);
 
+                        Variant vMin;
                         iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
                         RETURN_ON_ERROR(iErrCode);
 
+                        Variant vFuel;
                         iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
                         RETURN_ON_ERROR(iErrCode);
 
@@ -5766,7 +5766,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                 break;
                                 
             case TERRAFORMER:
-                    
+            {
                 if (vAction.GetInteger() != TERRAFORM) {
                     
                     if (vAction.GetInteger() == TERRAFORM_AND_DISMANTLE) {
@@ -5776,13 +5776,16 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         continue;
                     }
                 }
-                
+
+                Variant vAg;
                 iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Ag, &vAg);
                 RETURN_ON_ERROR(iErrCode);
-                
+
+                Variant vFuel;
                 iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
                 RETURN_ON_ERROR(iErrCode);
-                
+
+                Variant vMin;
                 iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
                 RETURN_ON_ERROR(iErrCode);
 
@@ -5934,7 +5937,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
 
                 bUpdated = true;
                 break;
-
+            }
             case TROOPSHIP:
 
                 if (vAction.GetInteger() != INVADE) {
@@ -5995,9 +5998,11 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                     iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Pop, &vPop);
                     RETURN_ON_ERROR(iErrCode);
 
+                    Variant vMin;
                     iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
                     RETURN_ON_ERROR(iErrCode);
-                    
+
+                    Variant vFuel;
                     iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
                     RETURN_ON_ERROR(iErrCode);
 
@@ -6094,6 +6099,7 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                         RETURN_ON_ERROR(iErrCode);
 
                         // Get planet resources
+                        Variant vAg;
                         iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Ag, &vAg);
                         RETURN_ON_ERROR(iErrCode);
 
@@ -6349,12 +6355,15 @@ int GameEngine::PerformSpecialActions (int iGameClass, int iGameNumber, int iNum
                             GetEmpireIndex (k, vOwner);
                             
                             // Read planet resources
+                            Variant vAg;
                             iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Ag, &vAg);
                             RETURN_ON_ERROR(iErrCode);
 
+                            Variant vMin;
                             iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Minerals, &vMin);
                             RETURN_ON_ERROR(iErrCode);
 
+                            Variant vFuel;
                             iErrCode = t_pCache->ReadData(strGameMap, iPlanetKey, GameMap::Fuel, &vFuel);
                             RETURN_ON_ERROR(iErrCode);
 
@@ -7194,7 +7203,7 @@ int GameEngine::ProcessNukes (int iNumEmpires, unsigned int* piEmpireKey, bool* 
 
     int iNukedIndex = iNumEmpires;
 
-    GameUpdateInformation guInfo = { iNewUpdateCount, iNumEmpires, (int*) piEmpireKey, pbAlive, pstrUpdateMessage };
+    GameUpdateInformation guInfo = { (unsigned int)iNewUpdateCount, (unsigned int)iNumEmpires, (int*) piEmpireKey, pbAlive, pstrUpdateMessage };
 
     for (i = 0; i < iNumNukedPlanets; i ++) {
         
@@ -8792,10 +8801,10 @@ int GameEngine::ProcessEmpireSubjectiveView (int iGameClass, int iGameNumber,
             // Scan for unaccounted ships
             for (j = 0; j < iNumEmpires; j ++) {
 
-                GET_GAME_EMPIRE_MAP (pszEmpireMap, iGameClass, iGameNumber, pvEmpireKey[j].GetInteger());
+                GET_GAME_EMPIRE_MAP (pszThisEmpireMap, iGameClass, iGameNumber, pvEmpireKey[j].GetInteger());
 
                 iErrCode = t_pCache->GetFirstKey(
-                    pszEmpireMap,
+                    pszThisEmpireMap,
                     GameEmpireMap::PlanetKey,
                     pvPlanetKey[i],
                     &iKey
@@ -8810,7 +8819,7 @@ int GameEngine::ProcessEmpireSubjectiveView (int iGameClass, int iGameNumber,
                 if (iKey != NO_KEY) {
 
                     iErrCode = t_pCache->ReadData(
-                        pszEmpireMap,
+                        pszThisEmpireMap,
                         iKey, 
                         GameEmpireMap::NumUncloakedShips, 
                         &vTemp

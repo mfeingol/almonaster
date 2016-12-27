@@ -114,22 +114,22 @@ const char* const SHIP_TYPE_DESCRIPTION[] = {
 };
 
 const int FLEET_ACTION_FOR_TECH [NUM_SHIP_TYPES] = {
-    NO_KEY,
-    NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
     COLONIZE,
-    NO_KEY,
-    NO_KEY,
-    NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
     TERRAFORM,
     INVADE,
     ANNIHILATE,
-    NO_KEY,
-    NO_KEY,
-    NO_KEY,
-    NO_KEY,
-    NO_KEY,
-    NO_KEY,
-    NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
+    (int)NO_KEY,
 };
 
 

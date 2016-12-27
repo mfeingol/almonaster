@@ -70,19 +70,19 @@ ALAJAR_EXPORT extern const Uuid IID_IShutdownSink;
 ALAJAR_EXPORT extern const Uuid IID_IPageSourceEnumerator;
 ALAJAR_EXPORT extern const Uuid IID_IPageSource;
 
-typedef enum HttpFormType {
-    SIMPLE_FORM, 
+enum HttpFormType {
+    SIMPLE_FORM,
     FILE_FORM,
     LARGE_SIMPLE_FORM,
     UNSUPPORTED_FORM_TYPE
 };
 
-typedef enum HttpMethod {
-    GET, 
-    POST, 
-    PUT, 
-    HEAD, 
-    TRACE, 
+enum HttpMethod {
+    GET,
+    POST,
+    PUT,
+    HEAD,
+    TRACE,
     UNSUPPORTED_HTTP_METHOD
 };
 
@@ -95,14 +95,14 @@ static const char* const HttpMethodText[] = {
     "UNSUPPORTED"
 };
 
-typedef enum HttpVersion {
+enum HttpVersion {
     HTTP09,
-    HTTP10, 
-    HTTP11, 
+    HTTP10,
+    HTTP11,
     UNSUPPORTED_HTTP_VERSION
 };
 
-typedef enum HttpStatus { 
+enum HttpStatus {
     HTTP_200,
     HTTP_301,
     HTTP_304,
@@ -118,7 +118,7 @@ typedef enum HttpStatus {
     UNSUPPORTED_HTTP_STATUS
 };
 
-typedef enum HttpStatusReason {
+enum HttpStatusReason {
     HTTP_REASON_NONE,
     HTTP_REASON_IPADDRESS_BLOCKED,
     HTTP_REASON_USER_AGENT_BLOCKED,
@@ -128,7 +128,7 @@ typedef enum HttpStatusReason {
 
 #define NUM_STATUS_CODES ((unsigned int) UNSUPPORTED_HTTP_STATUS + 1)
 
-static const int HttpStatusValue[] = { 
+static const int HttpStatusValue[] = {
     200,
     301,
     304,
@@ -208,7 +208,7 @@ struct HttpServerStatistics {
     unsigned int NumHeads;
     unsigned int NumTraces;
     unsigned int NumUndefinedMethods;
-    
+
     unsigned int Num200s;
     unsigned int Num301s;
     unsigned int Num304s;

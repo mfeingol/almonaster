@@ -143,7 +143,7 @@ void HtmlRenderer::WriteGameListHeader (const char** ppszHeaders, size_t stNumHe
 
 int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, const Variant* pvGameClassInfo) {
     
-    int iErrCode, iEmpireKey = m_iEmpireKey, i, iNumUpdates, iSecondsSince, iSecondsUntil, iState, iGameOptions,
+    int iErrCode, i, iNumUpdates, iSecondsSince, iSecondsUntil, iState, iGameOptions,
         iNumUpdatesBeforeGameCloses, iEmpireGameOptions, iNumUpdatedEmpires = 0;
 
     GameFairnessOption gfoFairness;
@@ -187,7 +187,7 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
 
     RETURN_ON_ERROR(iErrCode);
     
-    iErrCode = GetNumUnreadGameMessages (iGameClass, iGameNumber, iEmpireKey, &iNumUnreadMessages);
+    iErrCode = GetNumUnreadGameMessages (iGameClass, iGameNumber, m_iEmpireKey, &iNumUnreadMessages);
     RETURN_ON_ERROR(iErrCode);
 
     iErrCode = IsGameOpen (iGameClass, iGameNumber, &bOpen);
@@ -418,9 +418,8 @@ int HtmlRenderer::WriteActiveGameListData (int iGameClass, int iGameNumber, cons
         // Empire names may fail; halted empire quits
         int iLoopGuard = iNumActiveEmpires - 1;
         for (i = 0; i <= iLoopGuard; i ++) {
-            
-            unsigned int iEmpireKey = ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger();
-            iErrCode = GetEmpireGameProperty(iGameClass, iGameNumber, iEmpireKey, GameEmpireData::Options, &vOptions);
+
+            iErrCode = GetEmpireGameProperty(iGameClass, iGameNumber, ppvEmpiresInGame[i][GameEmpires::iEmpireKey].GetInteger(), GameEmpireData::Options, &vOptions);
             RETURN_ON_ERROR(iErrCode);
 
             bool bUpdated = (vOptions.GetInteger() & UPDATED) != 0;
@@ -972,7 +971,7 @@ int HtmlRenderer::AddGameClassDescription (int iWhichList, const Variant* pvGame
     if (iWhichList == OPEN_GAME_LIST) {
         
         Seconds sDelay;
-        int iErrCode = GetFirstUpdateDelay (iGameClass, iGameNumber, &sDelay);
+        iErrCode = GetFirstUpdateDelay (iGameClass, iGameNumber, &sDelay);
         RETURN_ON_ERROR(iErrCode);
 
         if (sDelay > 0) {
@@ -1148,7 +1147,7 @@ int HtmlRenderer::AddBridierGame (int iGameClass, int iGameNumber, const Variant
         
         if (bDisplayGainLoss) {
             
-            int iErrCode, iGain, iLoss;
+            int iGain, iLoss;
             
             iErrCode = GetBridierRankPotentialGainLoss(
                 iGameClass, 

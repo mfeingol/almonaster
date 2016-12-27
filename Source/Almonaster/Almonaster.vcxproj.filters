@@ -9,9 +9,6 @@
       <UniqueIdentifier>{8f51e8cc-c7fc-47d0-8f52-66e957c88e8f}</UniqueIdentifier>
       <Extensions>h</Extensions>
     </Filter>
-    <Filter Include="Almonaster">
-      <UniqueIdentifier>{b502b552-7a14-4a79-9782-da2ebaf00741}</UniqueIdentifier>
-    </Filter>
     <Filter Include="HtmlRenderer">
       <UniqueIdentifier>{3c10ea63-62e1-495d-b47d-59e5750e4047}</UniqueIdentifier>
     </Filter>
@@ -121,9 +118,6 @@
     </ClCompile>
     <ClCompile Include="GameEngine\GameEngineUpdateAlgorithm.cpp">
       <Filter>GameEngine Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Almonaster.cpp">
-      <Filter>Almonaster</Filter>
     </ClCompile>
     <ClCompile Include="Scoring\AlmonasterScore.cpp">
       <Filter>Scoring</Filter>
@@ -341,21 +335,6 @@
     <ClCompile Include="Pages\Tournaments.cpp">
       <Filter>PagesGenerated</Filter>
     </ClCompile>
-    <ClCompile Include="Interface.cpp">
-      <Filter>Almonaster</Filter>
-    </ClCompile>
-    <ClCompile Include="Global.cpp">
-      <Filter>Almonaster</Filter>
-    </ClCompile>
-    <ClCompile Include="AlmonasterEventSink.cpp">
-      <Filter>Almonaster</Filter>
-    </ClCompile>
-    <ClCompile Include="AsyncManager.cpp">
-      <Filter>Almonaster</Filter>
-    </ClCompile>
-    <ClCompile Include="StdAfx.cpp">
-      <Filter>Almonaster</Filter>
-    </ClCompile>
     <ClCompile Include="HtmlRenderer\HtmlPageFlow.cpp">
       <Filter>HtmlRenderer</Filter>
     </ClCompile>
@@ -368,9 +347,15 @@
     <ClCompile Include="GameEngine\GameEngineTableCache.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
-    <ClCompile Include="GameEngineAvailability.cpp">
+    <ClCompile Include="GameEngine\GameEngineAvailability.cpp">
       <Filter>GameEngine Source</Filter>
     </ClCompile>
+    <ClCompile Include="Almonaster.cpp" />
+    <ClCompile Include="AlmonasterEventSink.cpp" />
+    <ClCompile Include="AsyncManager.cpp" />
+    <ClCompile Include="Global.cpp" />
+    <ClCompile Include="Interface.cpp" />
+    <ClCompile Include="StdAfx.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameEngine\GameEngine.h">
@@ -387,9 +372,6 @@
     </ClInclude>
     <ClInclude Include="GameEngine\GameEngineUI.h">
       <Filter>GameEngine Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="Almonaster.h">
-      <Filter>Almonaster</Filter>
     </ClInclude>
     <ClInclude Include="Scoring\AlmonasterScore.h">
       <Filter>Scoring</Filter>
@@ -430,21 +412,12 @@
     <ClInclude Include="Chatroom\CChatroom.h">
       <Filter>Chatroom</Filter>
     </ClInclude>
-    <ClInclude Include="Global.h">
-      <Filter>Almonaster</Filter>
-    </ClInclude>
-    <ClInclude Include="AlmonasterEventSink.h">
-      <Filter>Almonaster</Filter>
-    </ClInclude>
-    <ClInclude Include="AsyncManager.h">
-      <Filter>Almonaster</Filter>
-    </ClInclude>
-    <ClInclude Include="StdAfx.h">
-      <Filter>Almonaster</Filter>
-    </ClInclude>
-    <ClInclude Include="IAlmonasterEventSink.h">
-      <Filter>Almonaster</Filter>
-    </ClInclude>
+    <ClInclude Include="Almonaster.h" />
+    <ClInclude Include="AlmonasterEventSink.h" />
+    <ClInclude Include="AsyncManager.h" />
+    <ClInclude Include="Global.h" />
+    <ClInclude Include="IAlmonasterEventSink.h" />
+    <ClInclude Include="StdAfx.h" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="Pages\ActiveGameList.cxx">
@@ -578,5 +551,6 @@
     <None Include="Text\Documentation.html">
       <Filter>Text</Filter>
     </None>
+    <None Include="Default.conf" />
   </ItemGroup>
 </Project>

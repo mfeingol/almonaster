@@ -192,8 +192,6 @@ int BridierObject::UpdateBridierScore (int iEmpireKey, int iRankChange, int iInd
 
     if (iNewRank != iOldRank || iNewIndex != iOldIndex) {
 
-        GET_SYSTEM_EMPIRE_DATA(strEmpire, iEmpireKey);
-
         if (iNewRank != iOldRank) {
 
             iErrCode = t_pCache->WriteData(

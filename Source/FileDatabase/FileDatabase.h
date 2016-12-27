@@ -37,7 +37,7 @@ FILE_DATABASE_EXPORT extern const Uuid IID_ITemplate;
 #define INDEX_CASE_SENSITIVE (0x00000001)
 #define INDEX_UNIQUE_DATA    (0x00000002)
 
-struct TemplateDescription {
+struct FileTemplateDescription {
     char* Name;
     unsigned int NumColumns;
     VariantType* Type;
@@ -314,7 +314,7 @@ public:
 class ITemplate : virtual public IObject {
 public:
 
-    virtual int GetDescription (TemplateDescription* pttTemplate) = 0;
+    virtual int GetDescription (FileTemplateDescription* pttTemplate) = 0;
 };
 
 class ITransaction;
@@ -324,7 +324,7 @@ public:
 
     virtual int Initialize (const char* pszDatabaseName, unsigned int iOptions) = 0;
 
-    virtual int CreateTemplate (const TemplateDescription& ttTemplate) = 0;
+    virtual int CreateTemplate (const FileTemplateDescription& ttTemplate) = 0;
     virtual int DeleteTemplate (const char* pszTemplateName) = 0;
 
     virtual int GetTemplate (const char* pszTemplateName, ITemplate** ppTemplate) = 0;
@@ -354,7 +354,7 @@ public:
     virtual ITableEnumerator* GetTableEnumerator() = 0;
     virtual ITemplateEnumerator* GetTemplateEnumerator() = 0;
 
-    virtual bool IsTemplateEqual (const char* pszTemplateName, const TemplateDescription& ttTemplate) = 0;
+    virtual bool IsTemplateEqual (const char* pszTemplateName, const FileTemplateDescription& ttTemplate) = 0;
 
     virtual int Flush() = 0;
 

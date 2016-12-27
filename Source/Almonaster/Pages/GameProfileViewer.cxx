@@ -130,7 +130,6 @@ if (m_bOwnPost && !m_bRedirection) {
                         return Redirect(LOGIN);
                     }
 
-                    bool bInitialized;
                     iErrCode = InitializeEmpire(false, &bInitialized);
                     RETURN_ON_ERROR(iErrCode);
 
@@ -442,8 +441,6 @@ if (m_bOwnPost && !m_bRedirection) {
 Redirection:
 if (m_bRedirectTest)
 {
-    bool bRedirected;
-    PageId pageRedirect;
     iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
     if (bRedirected)
     {

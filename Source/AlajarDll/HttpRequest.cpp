@@ -783,8 +783,8 @@ int HttpRequest::ParseHeader (char* pszLine) {
                     m_atAuth = AUTH_DIGEST;
 
                     char* pszAttribute = pszValue + cchDigestSpaceLen;
-                    char* pszEnd = pszValue + strlen (pszValue);
-                    while (pszAttribute < pszEnd) {
+                    char* pszEndAttribute = pszValue + strlen (pszValue);
+                    while (pszAttribute < pszEndAttribute) {
 
                         if (String::StrniCmp (pszAttribute, "username", countof ("username") - 1) == 0) {
                             pszAttribute = ParseAuthenticationAttribute (pszAttribute, &m_strAuthUserName);

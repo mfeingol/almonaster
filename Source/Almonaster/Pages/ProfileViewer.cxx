@@ -254,7 +254,6 @@ SearchResults:
                         RETURN_ON_ERROR(iErrCode);
                         if (bLoggedIn)
                         {
-                            bool bInitialized;
                             iErrCode = InitializeEmpire(false, &bInitialized);
                             RETURN_ON_ERROR(iErrCode);
                             if (bInitialized)

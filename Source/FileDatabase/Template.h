@@ -37,7 +37,7 @@ private:
     Offset m_oBaseOffset;
     void* m_pDataBlock;
 
-    static int VerifyIndices (const TemplateDescription& ttTemplate);
+    static int VerifyIndices (const FileTemplateDescription& ttTemplate);
     static bool HasBadTypes (unsigned int iNumColumns, VariantType* pvtType);
 
     int FinalConstruct (size_t stBlockSize, const char* pszName, size_t stNameLen,
@@ -49,22 +49,22 @@ public:
     ~Template();
 
     int Reload (Offset oTemplate);
-    int Create (const TemplateDescription& ttTemplate);
+    int Create (const FileTemplateDescription& ttTemplate);
 
     inline void DeleteOnDisk() { m_bDelete = true; }
 
     // IObject
     IMPLEMENT_INTERFACE (ITemplate);
 
-    static int VerifyTemplate (const TemplateDescription& ttTemplate);
-    bool IsEqual (const TemplateDescription& ttTemplate);
+    static int VerifyTemplate (const FileTemplateDescription& ttTemplate);
+    bool IsEqual (const FileTemplateDescription& ttTemplate);
 
     // ITemplate
-    int GetDescription (TemplateDescription* pttTemplate);
+    int GetDescription (FileTemplateDescription* pttTemplate);
 
     inline const char* GetName() { return TemplateData.Name; }
 
-    TemplateDescription TemplateData;
+    FileTemplateDescription TemplateData;
 
     // Extra Data
     Size RowSize;

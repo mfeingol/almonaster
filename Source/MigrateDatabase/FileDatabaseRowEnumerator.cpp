@@ -14,7 +14,7 @@ FileDatabaseRowEnumerator::FileDatabaseRowEnumerator(IDatabase* pDatabase, IRead
     m_currentKey = NO_KEY;
     m_current = nullptr;
 
-    TemplateDescription desc;
+    FileTemplateDescription desc;
     int iErrCode = m_pTemplate->GetDescription(&desc);
     THROW_ON_ERROR(iErrCode);
 

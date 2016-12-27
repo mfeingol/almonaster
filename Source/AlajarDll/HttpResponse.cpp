@@ -1926,7 +1926,7 @@ int HttpResponse::BuildDirectoryIndex (const char* pszDirName, TempFile* ptfTemp
             
             sprintf (
                 pszTempBuf, 
-                "</a></td>\n<td align = \"right\">%u</td><td align = \"left\"> bytes</td>", 
+                "</a></td>\n<td align = \"right\">%zu</td><td align = \"left\"> bytes</td>", 
                 stSize
                 );
             ptfTempFile->Write (pszTempBuf);

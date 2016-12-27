@@ -5,7 +5,7 @@ FileDatabaseElementEnumerator::FileDatabaseElementEnumerator(ITemplate* pTemplat
     m_index = -1;
     m_data = gcnew array<IDataElement^>(data->Length);
 
-    TemplateDescription desc;
+    FileTemplateDescription desc;
     int iErrCode = pTemplate->GetDescription(&desc);
     THROW_ON_ERROR(iErrCode);
 

@@ -43,6 +43,7 @@ unsigned int i, j;
 
 Variant vPlanetName;
 String strFilter;
+char* pszRet;
 
 BuildLocation* pblBuildLocation = NULL;
 Algorithm::AutoDelete<BuildLocation> del_pblBuildLocation (pblBuildLocation, true);
@@ -296,8 +297,6 @@ if (m_bOwnPost && !m_bRedirection) {
 Redirection:
 if (m_bRedirectTest)
 {
-    bool bRedirected;
-    PageId pageRedirect;
     GameCheck(RedirectOnSubmitGame(&pageRedirect, &bRedirected));
     if (bRedirected)
     {
@@ -416,7 +415,7 @@ for (i = 0; i < iNumLocations; i ++)
     iErrCode = GetPlanetName(m_iGameClass, m_iGameNumber, iPlanetKey, &vTemp);
     RETURN_ON_ERROR(iErrCode);
     
-    char* pszRet = String::AtoHtml(vTemp.GetCharPtr(), &strPlanetName, 0, false);
+    pszRet = String::AtoHtml(vTemp.GetCharPtr(), &strPlanetName, 0, false);
     Assert(pszRet);
 
     iErrCode = GetPlanetCoordinates(m_iGameClass, m_iGameNumber, iPlanetKey, &iX, &iY);
@@ -453,7 +452,7 @@ for (i = 0; i < iNumLocations; i ++)
         iErrCode = GetFleetProperty(m_iGameClass, m_iGameNumber, m_iEmpireKey, iFleetKey, GameEmpireFleets::Name, &vTemp);
         RETURN_ON_ERROR(iErrCode);
         
-        char* pszRet = String::AtoHtml(vTemp.GetCharPtr(), &strFleetName, 0, false);
+        pszRet = String::AtoHtml(vTemp.GetCharPtr(), &strFleetName, 0, false);
         Assert(pszRet);
 
         snprintf (
@@ -702,7 +701,7 @@ if (iNumPlanets > 0)
         iErrCode = GetPlanetCoordinates (m_iGameClass, m_iGameNumber, piPlanetKey[0], &iX, &iY);
         RETURN_ON_ERROR(iErrCode);
 
-        char* pszRet = String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false);
+        pszRet = String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false);
         Assert(pszRet);
 
         Write (strPlanetName.GetCharPtr(), strPlanetName.GetLength());
@@ -720,7 +719,7 @@ if (iNumPlanets > 0)
             iErrCode = GetPlanetCoordinates (m_iGameClass, m_iGameNumber, piPlanetKey[i], &iX, &iY);
             RETURN_ON_ERROR(iErrCode);
 
-            char* pszRet = String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false);
+            pszRet = String::AtoHtml (vTemp.GetCharPtr(), &strPlanetName, 0, false);
             Assert(pszRet);
 
             %><option value="<% Write (piPlanetKey[i]); %>"><%

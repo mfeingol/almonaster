@@ -815,7 +815,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     AutoFreeData free_pvEmpireKey(pvEmpireKey);
     AutoFreeData free_pvTeamEmpireKey(pvTeamEmpireKey);
 
-    unsigned int i, j, iGameClass, iCheckKey, iTotalEmpires = 0, iMaxNumEmpires, iNumTeams, iNumEmpires;
+    unsigned int i, j, iGameClass, iCheckKey, iTotalEmpires = 0, iMaxNumEmpires, iNumEmpires;
     unsigned int* piTeamKey = NULL, * piJoinedTeamKey, * piJoinedKey = NULL;
     AutoFreeKeys free_piTeamKey(piTeamKey);
 
@@ -826,7 +826,8 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     AutoClearGameOptions clear_goOptions(goOptions);
 
     // Get teams
-    iErrCode = GetTournamentTeams(iTournamentKey, &piTeamKey, NULL, &iNumTeams);
+    unsigned int iNumTournamentTeams;
+    iErrCode = GetTournamentTeams(iTournamentKey, &piTeamKey, NULL, &iNumTournamentTeams);
     RETURN_ON_ERROR(iErrCode);
 
     // Get empires
@@ -857,7 +858,7 @@ int HtmlRenderer::StartTournamentGame(unsigned int iTournamentKey, int iTeamOpti
     piJoinedTeamKey = (unsigned int*) piJoinedKey + iMaxNumEmpires;
 
     // Get team list
-    for (i = 0; i < iNumTeams; i ++)
+    for (i = 0; i < iNumTournamentTeams; i ++)
     {
         char pszTeam [64];
         sprintf(pszTeam, "TeamSel%i", piTeamKey[i]);

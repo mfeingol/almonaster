@@ -1226,10 +1226,9 @@ if (m_bOwnPost && !m_bRedirection) {
             Variant vOldShipName;
             int iUpdate = 0;
 
-            char pszForm[128];
-
             ENUMERATE_SHIP_TYPES(i) {
 
+                char pszForm[128];
                 sprintf(pszForm, "ShipName%i", i);
                 if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                     goto Redirection;
@@ -1532,8 +1531,6 @@ if (m_bOwnPost && !m_bRedirection) {
             iNumTestMessages = pHttpForm->GetIntValue();
 
             // Check for delete all
-            char pszForm [128];
-
             if (WasButtonPressed (BID_ALL)) {
 
                 m_bRedirectTest = false;
@@ -1541,6 +1538,7 @@ if (m_bOwnPost && !m_bRedirection) {
                 for (i = 0; i < iNumTestMessages; i ++) {
 
                     // Get message key
+                    char pszForm [128];
                     sprintf(pszForm, "MsgKey%i", i);
                     if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) == NULL) {
                         goto Redirection;
@@ -1563,6 +1561,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     for (i = 0; i < iNumTestMessages; i ++) {
 
                         // Get selected status of message's delete checkbox
+                        char pszForm[128];
                         sprintf(pszForm, "DelChBx%i", i);
                         if ((pHttpForm = m_pHttpRequest->GetForm (pszForm)) != NULL) {
 
@@ -2007,7 +2006,6 @@ if (m_bOwnPost && !m_bRedirection) {
                 AddMessage ("Your personal information has been cleared");
                 m_iSystemOptions |= EMPIRE_MARKED_FOR_DELETION;
 
-                char pszText [MAX_EMPIRE_NAME_LENGTH + 256];
                 sprintf(pszText, "%s was marked for deletion", m_vEmpireName.GetCharPtr());
                 global.WriteReport(TRACE_INFO, pszText);
 

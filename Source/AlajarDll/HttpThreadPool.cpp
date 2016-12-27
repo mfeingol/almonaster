@@ -135,7 +135,7 @@ int HttpThreadPool::Stop() {
     // Try to tolerate transient failures
     for (i = 0; i < m_iMaxNumThreads; i ++) {
 
-        if (!m_tsfqTaskQueue.Push (SHUTDOWN_THREAD_POOL)) {
+        if (!m_tsfqTaskQueue.Push (NULL)) {
             if (++ iRetries == 100) {
                 // We couldn't push anything onto the queue.
                 // Just give up. We don't want to wait forever below
@@ -168,7 +168,7 @@ int HttpThreadPool::Stop() {
 
 int HttpThreadPool::QueueTask (Socket* pSocket) {
 
-    Assert (pSocket != NULL && pSocket != SHUTDOWN_THREAD_POOL);
+    Assert (pSocket != NULL);
 
     // Add socket to queue
     if (!m_tsfqTaskQueue.Push (pSocket)) {
@@ -248,11 +248,6 @@ Socket* HttpThreadPool::WaitForTask (HttpPoolThread* pSelf) {
 
         // Pop socket off queue
         if (m_tsfqTaskQueue.Pop (&pSocket)) {
-
-            // Exit signal
-            if (pSocket == SHUTDOWN_THREAD_POOL) {
-                pSocket = NULL;
-            }
             break;
         }
 

@@ -607,7 +607,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         iErrCode = t_pCache->GetTable(strEmpireFleets, &pFleets);
         RETURN_ON_ERROR(iErrCode);
 
-        unsigned int i, iNumFleets;
+        unsigned int iNumFleets;
         iErrCode = pFleets->GetEqualKeys(GameEmpireFleets::CurrentPlanet, iPlanetKey, &piFleetKey, &iNumFleets);
         // We should always find at least ourselves
         RETURN_ON_ERROR(iErrCode);
@@ -704,7 +704,7 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
         }
 
         String strFleetName;
-        int iX = 0, iY = 0;
+        int iPlanetX = 0, iPlanetY = 0;
         unsigned int iCachedPlanetKey = NO_KEY;
         
         for (i = 0; i < iNumLocations; i ++) {
@@ -724,13 +724,13 @@ int GameEngine::GetFleetOrders (unsigned int iGameClass, int iGameNumber, unsign
                     Assert(false);
                 }
 
-                iErrCode = GetPlanetCoordinates (iGameClass, iGameNumber, pblBuildLoc[i].iPlanetKey, &iX, &iY);
+                iErrCode = GetPlanetCoordinates (iGameClass, iGameNumber, pblBuildLoc[i].iPlanetKey, &iPlanetX, &iPlanetY);
                 RETURN_ON_ERROR(iErrCode);
 
                 iCachedPlanetKey = pblBuildLoc[i].iPlanetKey;
             }
 
-            sprintf(pszOrder, "Build at %s (%i,%i)", strPlanetName.GetCharPtr(), iX, iY);
+            sprintf(pszOrder, "Build at %s (%i,%i)", strPlanetName.GetCharPtr(), iPlanetX, iPlanetY);
 
             if (pblBuildLoc[i].iFleetKey == NO_KEY) {
 

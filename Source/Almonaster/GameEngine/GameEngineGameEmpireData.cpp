@@ -329,7 +329,7 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
         }
         else
         {
-            Variant vOwner, vType, vBR, vMaxPop, vPop, vShipBehavior, vColonyMultipliedDepositFactor, vColonyExponentialDepositFactor, vTemp;
+            Variant vOwner, vType, vBR, vMaxPop, vPop, vShipBehavior, vColonyMultipliedDepositFactor, vColonyExponentialDepositFactor;
 
             unsigned int iInitPop, iOwnerKey;
             float fDecrease;
@@ -697,11 +697,11 @@ int GameEngine::DeleteEmpireFromGame(int iGameClass, int iGameNumber, int iEmpir
     // If last game, empire should be checked for deletion
     if (iGames == 1)
     {
-        Variant vOptions;
-        iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::Options, &vOptions);
+        Variant vSystemOptions;
+        iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::Options, &vSystemOptions);
         RETURN_ON_ERROR(iErrCode);
         
-        if (vOptions.GetInteger() & EMPIRE_MARKED_FOR_DELETION)
+        if (vSystemOptions.GetInteger() & EMPIRE_MARKED_FOR_DELETION)
         {
             Variant vSecretKey;
             iErrCode = t_pCache->ReadData(strSystemEmpireData, iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
@@ -815,19 +815,19 @@ int GameEngine::RemoveEmpireFromGame(int iGameClass, int iGameNumber, unsigned i
     iErrCode = t_pCache->ReadData(strGameData, GameData::NumUpdates, &vNumUpdates);
     RETURN_ON_ERROR(iErrCode);
 
-    GameUpdateInformation guInfo = { vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
+    GameUpdateInformation guInfo = { (unsigned int)vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
     iErrCode = DeleteEmpireFromGame(iGameClass, iGameNumber, iEmpireKey, iKillerEmpire == NO_KEY ? EMPIRE_QUIT : EMPIRE_ADMIN_REMOVED, &guInfo);
     RETURN_ON_ERROR(iErrCode);
     
     // Get number of empires remaining
-    unsigned int iNumEmpires;
     GET_GAME_EMPIRES(strGameEmpires, iGameClass, iGameNumber);
 
-    iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &iNumEmpires);
+    unsigned int cEmpires;
+    iErrCode = t_pCache->GetNumCachedRows(strGameEmpires, &cEmpires);
     RETURN_ON_ERROR(iErrCode);
     
     bool bGameAlive = true;
-    switch (iNumEmpires) {
+    switch (cEmpires) {
         
     case 1:
 
@@ -840,19 +840,19 @@ int GameEngine::RemoveEmpireFromGame(int iGameClass, int iGameNumber, unsigned i
         {
             Variant* pvEmpireKey = NULL;
             AutoFreeData free(pvEmpireKey);
-            unsigned int iNumEmpires, i;
+            unsigned int cGameEmpires, i;
 
             iErrCode = t_pCache->ReadColumn(
                 strGameEmpires, 
                 GameEmpires::EmpireKey,
                 NULL,
                 &pvEmpireKey, 
-                &iNumEmpires
+                &cGameEmpires
                 );
 
             RETURN_ON_ERROR(iErrCode);
 
-            for (i = 0; i < iNumEmpires; i ++)
+            for (i = 0; i < cGameEmpires; i ++)
             {
                 if ((unsigned int) pvEmpireKey[i].GetInteger() != iEmpireKey) {
 
@@ -1444,7 +1444,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
         RETURN_ON_ERROR(iErrCode);
 
         // Delete surrendering empire from game
-        GameUpdateInformation guInfo = { vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
+        GameUpdateInformation guInfo = { (unsigned int)vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
 
         iErrCode = DeleteEmpireFromGame (iGameClass, iGameNumber, iEmpireKey, EMPIRE_SURRENDERED, &guInfo);
         RETURN_ON_ERROR(iErrCode);
@@ -1454,7 +1454,7 @@ int GameEngine::SurrenderEmpireFromGame (int iGameClass, int iGameNumber, int iE
     }
     else
     {
-        GameUpdateInformation guInfo = { vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
+        GameUpdateInformation guInfo = { (unsigned int)vNumUpdates.GetInteger(), 0, NULL, NULL, NULL};
         Assert(sType != NORMAL_SURRENDER);
 
         // Delete surrendering empire from game

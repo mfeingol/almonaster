@@ -474,7 +474,7 @@ int HtmlRenderer::WriteGameNextUpdateString()
         
         if (!(m_iGameState & STARTED)) {
             
-            int iNumNeeded, iTotal, 
+            int iNumNeeded, iTotal;
             
             iErrCode = GetNumEmpiresNeededForGame (m_iGameClass, &iNumNeeded);
             RETURN_ON_ERROR(iErrCode);
@@ -802,7 +802,6 @@ int HtmlRenderer::InitializeGame(PageId* ppageRedirect, bool* pbRedirected)
 
                 if (m_iGameOptions & REQUEST_DRAW)
                 {
-                    IHttpForm* pHttpForm;
                     if (m_pgPageId != OPTIONS || (pHttpForm = m_pHttpRequest->GetForm ("Draw")) == NULL || pHttpForm->GetIntValue() != 0)
                     {
                         AddMessage ("Your empire is requesting draw, so the game may end in a draw next update");
@@ -1035,7 +1034,7 @@ int HtmlRenderer::RedirectOnSubmit(PageId* ppageRedirect, bool* pbRedirected)
             if (sscanf(pszProfile, "ProfileLink.%d.%d.x", &iViewProfileEmpireKey, &iHash) == 2)
             {
                 unsigned int iResults;
-                int iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
+                iErrCode = CacheEmpire(iViewProfileEmpireKey, &iResults);
                 RETURN_ON_ERROR(iErrCode);
 
                 if (iResults > 0)

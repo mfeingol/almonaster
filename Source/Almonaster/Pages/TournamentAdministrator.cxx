@@ -106,7 +106,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
         switch (iTournamentAdminPageSubmit) {
 
         case 0:
-
+        {
             if (WasButtonPressed (BID_CREATENEWTOURNAMENT)) {
                 iTAdminPage = 1;
                 m_bRedirectTest = false;
@@ -161,6 +161,7 @@ int HtmlRenderer::Render_TournamentManager(unsigned int iOwnerKey)
             }
 
             break;
+        }
 
         case 1:
 
@@ -1519,7 +1520,7 @@ Redirection:
     case 7:
         {
 
-        int m_iGameNumber, iMaxNumEmpires, iGameClassOptions, iDipLevel;
+        int iMaxNumEmpires, iGameClassOptions, iDipLevel;
         unsigned int iNumEmpires;
 
         char pszGameClassName [MAX_FULL_GAME_CLASS_NAME_LENGTH];
@@ -1943,7 +1944,7 @@ case 16:
         int iLivePlanetAddress, iDeadPlanetAddress;
         int iGoodAg, iBadAg, iGoodMin, iBadMin, iGoodFuel, iBadFuel;
 
-        bool bStarted, bFalse;
+        bool bFalse;
 
         GET_GAME_MAP(pszGameMap, m_iGameClass, m_iGameNumber);
 

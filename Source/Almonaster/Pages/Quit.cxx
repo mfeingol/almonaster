@@ -40,7 +40,7 @@ bool bConfirm = (m_iSystemOptions & CONFIRM_IMPORTANT_CHOICES) != 0;
 
 if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
-    PageId pageRedirect = OPTIONS;
+    pageRedirect = OPTIONS;
 
     if (WasButtonPressed (BID_CANCEL))
     {
@@ -212,8 +212,6 @@ if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
 
 if (m_bRedirectTest)
 {
-    bool bRedirected;
-    PageId pageRedirect;
     iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
     RETURN_ON_ERROR(iErrCode);
     if (bRedirected)

@@ -60,7 +60,7 @@ Template::~Template() {
     }
 }
 
-bool Template::IsEqual (const TemplateDescription& ttTemplate) {
+bool Template::IsEqual (const FileTemplateDescription& ttTemplate) {
 
     unsigned int i;
 
@@ -121,9 +121,9 @@ bool Template::IsEqual (const TemplateDescription& ttTemplate) {
     return true;
 }
 
-int Template::GetDescription (TemplateDescription* pttTemplate) {
+int Template::GetDescription (FileTemplateDescription* pttTemplate) {
 
-    memcpy (pttTemplate, &TemplateData, sizeof (TemplateDescription));
+    memcpy (pttTemplate, &TemplateData, sizeof (FileTemplateDescription));
 
     return OK;
 }
@@ -375,7 +375,7 @@ Cleanup:
 }
 
 
-int Template::Create (const TemplateDescription& ttTemplate) {
+int Template::Create (const FileTemplateDescription& ttTemplate) {
 
     unsigned int i;
     size_t stSize = 0, stNameLen, stLen;
@@ -459,7 +459,7 @@ int Template::Create (const TemplateDescription& ttTemplate) {
     FileHeap* pTemplateHeap = m_pDatabase->GetTemplateFileHeap();
     Assert (pTemplateHeap != NULL);
 
-    m_oBaseOffset = pTemplateHeap->Allocate (stSize + sizeof (TemplateDescription));
+    m_oBaseOffset = pTemplateHeap->Allocate (stSize + sizeof (FileTemplateDescription));
     if (m_oBaseOffset == NO_OFFSET) {
         return ERROR_OUT_OF_MEMORY;
     }
@@ -521,7 +521,7 @@ int Template::Create (const TemplateDescription& ttTemplate) {
     return OK;
 }
 
-int Template::VerifyTemplate (const TemplateDescription& ttTemplate) {
+int Template::VerifyTemplate (const FileTemplateDescription& ttTemplate) {
 
     int iErrCode;
 
@@ -563,7 +563,7 @@ int Template::VerifyTemplate (const TemplateDescription& ttTemplate) {
     return OK;
 }
 
-int Template::VerifyIndices (const TemplateDescription& ttTemplate) {
+int Template::VerifyIndices (const FileTemplateDescription& ttTemplate) {
 
     unsigned int i, iNumIndexes = ttTemplate.NumIndexes;
 

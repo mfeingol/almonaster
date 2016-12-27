@@ -69,8 +69,6 @@ if (m_bOwnPost && !m_bRedirection) {
 
 if (m_bRedirectTest)
 {
-    bool bRedirected;
-    PageId pageRedirect;
     iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
     RETURN_ON_ERROR(iErrCode);
     if (bRedirected)

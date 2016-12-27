@@ -364,8 +364,6 @@ if (m_bOwnPost && !m_bRedirection) {
 Redirection:
 if (m_bRedirectTest)
 {
-    bool bRedirected;
-    PageId pageRedirect;
     iErrCode = RedirectOnSubmitGame(&pageRedirect, &bRedirected);
     RETURN_ON_ERROR(iErrCode);
     if (bRedirected)
@@ -547,7 +545,7 @@ case 1:
         // Render ships
         if (m_iGameOptions & SHIPS_ON_MAP_SCREEN)
         {
-            ShipsInMapScreen simShipsInMap = { iClickedPlanetKey, 0, 0 };
+            ShipsInMapScreen simShipsInMap = { (unsigned int)iClickedPlanetKey, 0, 0 };
 
             int iBR;
             float fMaintRatio, fNextMaintRatio;
@@ -593,7 +591,7 @@ case 1:
             %><tr><td></td><td align="center" colspan="10"><%
 
             // Render local map
-            PartialMapInfo pmiPartialMapInfo = { iClickedPlanetKey, 1, 1, true };
+            PartialMapInfo pmiPartialMapInfo = { (unsigned int)iClickedPlanetKey, 1, 1, true };
 
             iErrCode = RenderMap(m_iGameClass, m_iGameNumber, m_iEmpireKey, false, &pmiPartialMapInfo, false);
             RETURN_ON_ERROR(iErrCode);

@@ -169,8 +169,6 @@ if (bConfirmPage)
     else
     {
         // Update the open games
-        int iGameClass, iGameNumber;
-
         unsigned int* piSuperClassKey, iNumSuperClasses, j;
         AutoFreeKeys free_piSuperClassKey(piSuperClassKey);
         bool bDraw = false;
@@ -208,33 +206,33 @@ if (bConfirmPage)
 
             for (i = 0; i < (int)iNumOpenGames; i ++)
             {
-                iGameClass = ppvGame[i][0].GetInteger();
-                iGameNumber = ppvGame[i][1].GetInteger();
+                int iOpenGameClass = ppvGame[i][0].GetInteger();
+                int iOpenGameNumber = ppvGame[i][1].GetInteger();
 
                 // Check everything
-                iErrCode = CheckGameForUpdates(iGameClass, iGameNumber, &bFlag);
+                iErrCode = CheckGameForUpdates(iOpenGameClass, iOpenGameNumber, &bFlag);
                 RETURN_ON_ERROR(iErrCode);
                 
-                iErrCode = DoesGameExist(iGameClass, iGameNumber, &bFlag);
+                iErrCode = DoesGameExist(iOpenGameClass, iOpenGameNumber, &bFlag);
                 RETURN_ON_ERROR(iErrCode);
                 
                 if (bFlag)
                 {
-                    iErrCode = IsGameOpen (iGameClass, iGameNumber, &bFlag);
+                    iErrCode = IsGameOpen (iOpenGameClass, iOpenGameNumber, &bFlag);
                     RETURN_ON_ERROR(iErrCode);
                     
                     if (bFlag)
                     {
-                        iErrCode = IsEmpireInGame (iGameClass, iGameNumber, m_iEmpireKey, &bFlag);
+                        iErrCode = IsEmpireInGame (iOpenGameClass, iOpenGameNumber, m_iEmpireKey, &bFlag);
                         RETURN_ON_ERROR(iErrCode);
                         
                         if (!bFlag)
                         {
-                            iErrCode = GetGameClassSuperClassKey (iGameClass, &iSuperClassKey);
+                            iErrCode = GetGameClassSuperClassKey (iOpenGameClass, &iSuperClassKey);
                             RETURN_ON_ERROR(iErrCode);
 
                             GameAccessDeniedReason rReason;
-                            iErrCode = GameAccessCheck(iGameClass, iGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
+                            iErrCode = GameAccessCheck(iOpenGameClass, iOpenGameNumber, m_iEmpireKey, NULL, VIEW_GAME, &bFlag, &rReason);
                             RETURN_ON_ERROR(iErrCode);
 
                             if (!bFlag)
@@ -253,8 +251,8 @@ if (bConfirmPage)
                                         // We found a match, so write down the game in question
                                         ppiTable [j][ppiTable [j][iNumOpenGames]] = i;
 
-                                        ppiGameClass[j][ppiTable [j][iNumOpenGames]] = iGameClass;
-                                        ppiGameNumber[j][ppiTable [j][iNumOpenGames]] = iGameNumber;
+                                        ppiGameClass[j][ppiTable [j][iNumOpenGames]] = iOpenGameClass;
+                                        ppiGameNumber[j][ppiTable [j][iNumOpenGames]] = iOpenGameNumber;
 
                                         ppiTable [j][iNumOpenGames] ++;
                                         bDraw = true;
@@ -267,8 +265,8 @@ if (bConfirmPage)
                                     // No superclass was found, so it must be a personal game
                                     ppiTable [iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = i;
 
-                                    ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameClass;
-                                    ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iGameNumber;
+                                    ppiGameClass[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iOpenGameClass;
+                                    ppiGameNumber[iNumSuperClasses][ppiTable [iNumSuperClasses][iNumOpenGames]] = iOpenGameNumber;
 
                                     ppiTable [iNumSuperClasses][iNumOpenGames] ++;
                                     bDraw = true;
@@ -346,17 +344,17 @@ if (bConfirmPage)
 
                     for (j = 0; j < (unsigned int)ppiTable[iNumSuperClasses][iNumOpenGames]; j ++)
                     {
-                        iGameClass = ppiGameClass[iNumSuperClasses][j];
-                        iGameNumber = ppiGameNumber[iNumSuperClasses][j];
+                        int iOpenGameClass = ppiGameClass[iNumSuperClasses][j];
+                        int iOpenGameNumber = ppiGameNumber[iNumSuperClasses][j];
 
                         Variant* pvGameClassInfo = NULL;
                         AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                        iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                        iErrCode = GetGameClassData(iOpenGameClass, &pvGameClassInfo);
                         RETURN_ON_ERROR(iErrCode);
 
                         // Best effort
-                        iErrCode = WriteOpenGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                        iErrCode = WriteOpenGameListData(iOpenGameClass, iOpenGameNumber, pvGameClassInfo);
                         RETURN_ON_ERROR(iErrCode);
                     }
 
@@ -420,16 +418,16 @@ if (bConfirmPage)
 
                         for (j = 0; j < iNumGamesInSuperClass; j ++)
                         {
-                            iGameClass = ppiGameClass[i][j];
-                            iGameNumber = ppiGameNumber[i][j];
+                            int iOpenGameClass = ppiGameClass[i][j];
+                            int iOpenGameNumber = ppiGameNumber[i][j];
 
                             Variant* pvGameClassInfo = NULL;
                             AutoFreeData free_pvGameClassInfo(pvGameClassInfo);
 
-                            iErrCode = GetGameClassData(iGameClass, &pvGameClassInfo);
+                            iErrCode = GetGameClassData(iOpenGameClass, &pvGameClassInfo);
                             RETURN_ON_ERROR(iErrCode);
                             
-                            iErrCode = WriteOpenGameListData(iGameClass, iGameNumber, pvGameClassInfo);
+                            iErrCode = WriteOpenGameListData(iOpenGameClass, iOpenGameNumber, pvGameClassInfo);
                             RETURN_ON_ERROR(iErrCode);
                         }
 

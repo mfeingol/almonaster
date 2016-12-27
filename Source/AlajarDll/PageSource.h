@@ -36,7 +36,7 @@
 
 typedef int (*Fxn_CreateInstance) (const Uuid&, const Uuid&, void**);
 
-typedef enum HttpAuthenticationType {
+enum HttpAuthenticationType {
     AUTH_BASIC,
     AUTH_DIGEST,
     AUTH_NONE

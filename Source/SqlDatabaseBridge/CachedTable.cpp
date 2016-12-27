@@ -466,8 +466,7 @@ int CachedTable::ReadColumnsWhereEqual(const char* pszEqualColumn, const Variant
                 ppvData[index] = pvData + index * iNumReadColumns;
                 for (unsigned int column = 0; column < iNumReadColumns; column ++)
                 {
-                    System::Object^ value = row[columnNames[column]];
-                    Convert(value, ppvData[index] + column);
+                    Convert(row[columnNames[column]], ppvData[index] + column);
                 }
             }
 
