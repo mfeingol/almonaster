@@ -8,4 +8,4 @@ Source/Almonaster/Pages/*.cpp
 ipch/
 *.vcxproj.user
 *.VC.opendb
-*.VC.db
+*.VC.db*
