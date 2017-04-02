@@ -54,10 +54,10 @@ int SqlDatabaseBridge::Initialize(const char* pszConnString, ITraceLog* pTrace)
 
     m_sqlDatabase = gcnew SqlDatabase(gcnew System::String(pszConnString));
 
-    int iErrCode;
+    int iErrCode = OK;
     try
     {
-        iErrCode = m_sqlDatabase->CreateIfNecessary() ? WARNING : OK;
+        m_sqlDatabase->CreateIfNecessary();
     }
     catch (SqlDatabaseException^ e)
     {

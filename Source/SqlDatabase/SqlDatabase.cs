@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 
-using Microsoft.SqlServer.Management.Smo;
-
 namespace Almonaster.Database.Sql
 {
     public class SqlDatabase
@@ -16,7 +14,7 @@ namespace Almonaster.Database.Sql
             this.connString = connString;
         }
 
-        public bool CreateIfNecessary()
+        public void CreateIfNecessary()
         {
             SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.connString);
             string databaseName = builder.InitialCatalog;
@@ -24,7 +22,7 @@ namespace Almonaster.Database.Sql
 
             using (var cmd = CreateCommandManager(builder.ToString(), IsolationLevel.Unspecified))
             {
-                return cmd.CreateDatabaseIfNecessary(databaseName);
+                cmd.CreateDatabaseIfNecessary(databaseName);
             }
         }
 

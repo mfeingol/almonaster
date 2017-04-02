@@ -24,16 +24,6 @@ namespace Almonaster.Database.Sql
     {
         public string Name;
         public IEnumerable<ColumnDescription> Columns;
-        public IEnumerable<string> IndexColumns;
-        public IEnumerable<ForeignKeyDescription> ForeignKeys;
-    }
-
-    public struct ForeignKeyDescription
-    {
-        public string Name;
-        public string ReferencedTableName;
-        public string ColumnName;
-        public string ReferencedColumnName;
     }
 
     public struct InsertValue

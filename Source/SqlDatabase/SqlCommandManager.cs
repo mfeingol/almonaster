@@ -5,9 +5,6 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Text;
 
-using Microsoft.SqlServer.Management.Common;
-using Microsoft.SqlServer.Management.Smo;
-
 namespace Almonaster.Database.Sql
 {
     public class SqlCommandManager : IDisposable
@@ -77,20 +74,14 @@ namespace Almonaster.Database.Sql
             this.setComplete = true;
         }
 
-        internal bool CreateDatabaseIfNecessary(string databaseName)
+        internal void CreateDatabaseIfNecessary(string databaseName)
         {
-            ServerConnection serverConn = new ServerConnection(this.conn);
-            Server server = new Server(serverConn);
+            string cmdText = String.Format("IF NOT EXISTS(SELECT * FROM sys.sysdatabases where name='{0}') CREATE DATABASE {0}", databaseName);
 
-            // If this hangs, it's because the mixed debugger is attached. Choose managed or unmanaged (!)
-            if (!server.Databases.Contains(databaseName))
+            using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
             {
-                var database = new Microsoft.SqlServer.Management.Smo.Database(server, databaseName);
-                database.Create();
-                return true;
+                cmd.ExecuteNonQuery();
             }
-
-            return false;
         }
 
         public bool DoesTableExist(string tableName)
@@ -98,8 +89,7 @@ namespace Almonaster.Database.Sql
             string cmdText = String.Format("SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES WHERE [TABLE_NAME] = '{0}'", tableName);
 
             using (SqlCommand cmd = new SqlCommand(cmdText, this.conn, this.tx))
-            {
-                using (SqlDataReader reader = cmd.ExecuteReader())
+            {                using (SqlDataReader reader = cmd.ExecuteReader())
                 {
                     if (!reader.Read())
                     {
@@ -108,113 +98,64 @@ namespace Almonaster.Database.Sql
                     return (int)reader[0] != 0;
                 }
             }
-
-            //ServerConnection serverConn = new ServerConnection(this.conn);
-            //Server server = new Server(serverConn);
-
-            //var connString = new SqlConnectionStringBuilder(this.conn.ConnectionString);
-            //return server.Databases[connString.InitialCatalog].Tables.Contains(tableName);
         }
 
         public void CreateTable(TableDescription tableDesc)
         {
-            // TODO - 610 - Rewrite CreateTable to use TSQL, be transactional
-            SqlConnectionStringBuilder builder = new SqlConnectionStringBuilder(this.conn.ConnectionString);
-            ServerConnection serverConn = new ServerConnection(builder.DataSource);
+            StringBuilder sb = new StringBuilder(512);
+            StringBuilder sbIndexes = new StringBuilder();
 
-            Server server = new Server(serverConn);
-            var database = server.Databases[builder.InitialCatalog];
-
-            Table table = new Table(database, tableDesc.Name);
-
-            List<Index> indexes = new List<Index>();
             foreach (ColumnDescription colDesc in tableDesc.Columns)
             {
-                DataType dt = TypeMap.Convert(colDesc.Type, colDesc.Size);
-                Column col = new Column(table, colDesc.Name, dt)
+                if (sb.Length == 0)
                 {
-                    Identity = colDesc.IndexType == IndexType.PrimaryKey
-                };
+                    sb.AppendFormat("CREATE TABLE {0} (", tableDesc.Name);
+                }
+                else
+                {
+                    sb.Append(",");
+                    sb.AppendLine();
+                }
+                sb.AppendFormat("\"{0}\" {1}", colDesc.Name, colDesc.Type.ToString());
 
-                table.Columns.Add(col);
+                if (colDesc.Size != 0)
+                {
+                    if (colDesc.Size == Int32.MaxValue)
+                        sb.AppendFormat("(MAX)", colDesc.Size);
+                    else
+                        sb.AppendFormat("({0})", colDesc.Size);
+                }
 
-                Index index = null;
+                if (colDesc.IndexType == IndexType.PrimaryKey)
+                    sb.Append(" IDENTITY NOT NULL");
+            }
+
+            foreach (ColumnDescription colDesc in tableDesc.Columns)
+            {
                 switch (colDesc.IndexType)
                 {
-                    case IndexType.None:
+                    case IndexType.PrimaryKey:
+                        sb.AppendFormat(" CONSTRAINT [{0}_{1}_PK] PRIMARY KEY CLUSTERED ([{1}] ASC)", tableDesc.Name, colDesc.Name);
                         break;
 
                     case IndexType.Index:
-                        index = new Index(table, String.Format("{0}_{1}_idx", tableDesc.Name, colDesc.Name))
-                        {
-                            IndexKeyType = IndexKeyType.None,
-                            IsClustered = false,
-                            IsUnique = false,
-                        };
+                        sbIndexes.AppendFormat("; CREATE NONCLUSTERED INDEX [{0}_{1}_idx] ON [{0}]([{1}] ASC)", tableDesc.Name, colDesc.Name);
                         break;
 
                     case IndexType.IndexUnique:
-                        index = new Index(table, String.Format("{0}_{1}_idx_Unique", tableDesc.Name, colDesc.Name))
-                        {
-                            IndexKeyType = IndexKeyType.None,
-                            IsClustered = false,
-                            IsUnique = true,
-                        };
+                        sbIndexes.AppendFormat("; CREATE UNIQUE NONCLUSTERED INDEX [{0}_{1}_idx_Unique] ON [{0}]([{1}] ASC)", tableDesc.Name, colDesc.Name);
                         break;
-
-                    case IndexType.PrimaryKey:
-                        index = new Index(table, String.Format("{0}_{1}_PK", tableDesc.Name, colDesc.Name))
-                        {
-                            IndexKeyType = IndexKeyType.DriPrimaryKey,
-                            IsClustered = true,
-                            IsUnique = true,
-                        };
-                        break;
-
-                    default:
-                        throw new InvalidArgumentException();
-                }
-
-                if (index != null)
-                {
-                    index.IndexedColumns.Add(new IndexedColumn(index, colDesc.Name));
-                    indexes.Add(index);
                 }
             }
 
-            List<ForeignKey> fks = new List<ForeignKey>();
-            if (tableDesc.ForeignKeys != null)
+            sb.Append(")");
+
+            if (sbIndexes.Length > 0)
+                sb.Append(sbIndexes);
+
+            using (SqlCommand cmd = new SqlCommand(sb.ToString(), this.conn, this.tx))
             {
-                foreach (ForeignKeyDescription fkDesc in tableDesc.ForeignKeys)
-                {
-                    ForeignKey fk = new ForeignKey(table, fkDesc.Name)
-                    {
-                        ReferencedTable = fkDesc.ReferencedTableName,
-                    };
-
-                    ForeignKeyColumn fkc = new ForeignKeyColumn(fk, fkDesc.ColumnName, fkDesc.ReferencedColumnName);
-                    fk.Columns.Add(fkc);
-                    fks.Add(fk);
-                }
-            }
-
-            try
-            {
-                table.Create();
-
-                foreach (Index index in indexes)
-                {
-                    index.Create();
-                }
-
-                foreach (ForeignKey fk in fks)
-                {
-                    fk.Create();
-                }
-            }
-            catch (FailedOperationException e)
-            {
-                throw new SqlDatabaseException(e);
+                cmd.ExecuteNonQuery();
             }
         }
 
@@ -568,7 +509,7 @@ namespace Almonaster.Database.Sql
                                 break;
 
                             default:
-                                throw new InvalidArgumentException();
+                                throw new ArgumentException();
                         }
                     }
                 }
