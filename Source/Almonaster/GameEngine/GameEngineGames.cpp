@@ -1862,7 +1862,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
         else
         {
             // Someone's game
-            pszMessage = (char*)StackAlloc(sizeof(char) * (MAX_EMPIRE_NAME_LENGTH + strlen (vTemp.GetCharPtr()) + 128));;
+            pszMessage = (char*)StackAlloc(sizeof(char) * (MAX_EMPIRE_NAME_LENGTH + strlen (vTemp.GetCharPtr()) + 128));
 
             sprintf (
                 (char*) pszMessage,
