@@ -127,8 +127,8 @@ protected:
     // Index of planet chosen to be empire's homeworld
     unsigned int m_iChainHomeWorldIndex;
 
-	// Index of planet from existing map chosen to start off new chain (if any)
-	unsigned int m_iExistingPlanetLinkedToChain;
+    // Index of planet from existing map chosen to start off new chain (if any)
+    unsigned int m_iExistingPlanetLinkedToChain;
 
     // Index of planet from previous chain chosen to start off new chain (if any)
     unsigned int m_iLinkedPlanetInPreviousChainIndex;
@@ -201,4 +201,27 @@ public:
     void FreePlanetData(Variant** ppvNewPlanetData);
 
     static void AdvanceCoordinates (int iX, int iY, int* piX, int* piY, CardinalPoint cpDirection);
+};
+
+class AutoFreePlanetData
+{
+private:
+    IMapGenerator* m_mapGenerator;
+    Variant**& m_ppvNewPlanetData;
+
+public:
+    AutoFreePlanetData(IMapGenerator* mapGenerator, Variant**& ppvNewPlanetData)
+        :
+        m_mapGenerator(mapGenerator), m_ppvNewPlanetData(ppvNewPlanetData)
+    {
+    }
+
+    ~AutoFreePlanetData()
+    {
+        if (m_mapGenerator && m_ppvNewPlanetData)
+        {
+            m_mapGenerator->FreePlanetData(m_ppvNewPlanetData);
+            m_ppvNewPlanetData = NULL;
+        }
+    }
 };

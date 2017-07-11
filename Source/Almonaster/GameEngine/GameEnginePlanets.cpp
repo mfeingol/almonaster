@@ -164,7 +164,7 @@ void GameEngine::AdvanceCoordinates (int iX, int iY, int* piX, int* piY, int cpD
 
 int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKey, int iNumEmpires, GameFairnessOption gfoFairness)
 {
-    int iErrCode, i;
+    int iErrCode;
 
     GET_GAME_DATA (strGameData, iGameClass, iGameNumber);
     GET_GAME_MAP (strGameMap, iGameClass, iGameNumber);
@@ -173,7 +173,6 @@ int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKe
     AutoFreeData free1(pvGameClassData);
     AutoFreeData free2(pvGameData);
     AutoFreeData free3(ppvPlanetData);
-    AutoFreeData free4(ppvNewPlanetData);
 
     unsigned int* piPlanetKey = NULL, iNumPlanets = 0, iNumNewPlanets;
     AutoFreeKeys freeKeys(piPlanetKey);
@@ -203,77 +202,82 @@ int GameEngine::AddEmpiresToMap(int iGameClass, int iGameNumber, int* piEmpireKe
     // Wrap map generator in a fair map generator
     FairMapGenerator fair(pMapGen, gfoFairness);
 
-    // Get existing map
-    iErrCode = t_pCache->ReadColumns (
-        strGameMap,
-        GameMap::NumColumns,
-        GameMap::ColumnNames,
-        &piPlanetKey,
-        &ppvPlanetData,
-        &iNumPlanets
-        );
-    
-    if (iErrCode == ERROR_DATA_NOT_FOUND)
     {
-        iErrCode = OK;
-    }
-    RETURN_ON_ERROR(iErrCode);
+        // Scope to ensure this is desctructed before the map generators...
+        AutoFreePlanetData free4(&fair, ppvNewPlanetData);
 
-    // Call into the map generator to get new planets
-    iErrCode = fair.CreatePlanets(
-        iGameClass,
-        iGameNumber,
-        piEmpireKey,
-        iNumEmpires,
-        ppvPlanetData,
-        iNumPlanets,
-        pvGameClassData,
-        pvGameData,
-        &ppvNewPlanetData,
-        &iNumNewPlanets
-        );
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = CreateMapFromMapGeneratorData(
-        iGameClass,
-        iGameNumber,
-        piEmpireKey,
-        iNumEmpires,
-        pvGameClassData,
-        pvGameData,
-        ppvNewPlanetData,
-        iNumNewPlanets,
-        piPlanetKey,
-        ppvPlanetData,
-        iNumPlanets
+        // Get existing map
+        iErrCode = t_pCache->ReadColumns(
+            strGameMap,
+            GameMap::NumColumns,
+            GameMap::ColumnNames,
+            &piPlanetKey,
+            &ppvPlanetData,
+            &iNumPlanets
         );
 
-    RETURN_ON_ERROR(iErrCode);
-
-    // Handle 'next statistics'
-    for (i = 0; i < iNumEmpires; i ++)
-    {
-        GET_GAME_EMPIRE_DATA(pszEmpireData, iGameClass, iGameNumber, piEmpireKey[i]);
-        iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::TotalAg, &vTotalAg);
+        if (iErrCode == ERROR_DATA_NOT_FOUND)
+        {
+            iErrCode = OK;
+        }
         RETURN_ON_ERROR(iErrCode);
 
-        iErrCode = WriteNextStatistics(
-            iGameClass, 
-            iGameNumber, 
-            piEmpireKey[i],
-            vTotalAg.GetInteger(), 
-            0, // No trades or allies at beginning
-            pvGameClassData[SystemGameClassData::iMaxAgRatio].GetFloat()
-            );
+        // Call into the map generator to get new planets
+        iErrCode = fair.CreatePlanets(
+            iGameClass,
+            iGameNumber,
+            piEmpireKey,
+            iNumEmpires,
+            ppvPlanetData,
+            iNumPlanets,
+            pvGameClassData,
+            pvGameData,
+            &ppvNewPlanetData,
+            &iNumNewPlanets
+        );
+        RETURN_ON_ERROR(iErrCode);
+
+        iErrCode = CreateMapFromMapGeneratorData(
+            iGameClass,
+            iGameNumber,
+            piEmpireKey,
+            iNumEmpires,
+            pvGameClassData,
+            pvGameData,
+            ppvNewPlanetData,
+            iNumNewPlanets,
+            piPlanetKey,
+            ppvPlanetData,
+            iNumPlanets
+        );
 
         RETURN_ON_ERROR(iErrCode);
-    }
+
+        // Handle 'next statistics'
+        for (int i = 0; i < iNumEmpires; i++)
+        {
+            GET_GAME_EMPIRE_DATA(pszEmpireData, iGameClass, iGameNumber, piEmpireKey[i]);
+            iErrCode = t_pCache->ReadData(pszEmpireData, GameEmpireData::TotalAg, &vTotalAg);
+            RETURN_ON_ERROR(iErrCode);
+
+            iErrCode = WriteNextStatistics(
+                iGameClass,
+                iGameNumber,
+                piEmpireKey[i],
+                vTotalAg.GetInteger(),
+                0, // No trades or allies at beginning
+                pvGameClassData[SystemGameClassData::iMaxAgRatio].GetFloat()
+                );
+
+            RETURN_ON_ERROR(iErrCode);
+        }
 
 #ifdef _DEBUG
-    // Verify map
-    iErrCode = VerifyMap (iGameClass, iGameNumber);
-    RETURN_ON_ERROR(iErrCode);
+        // Verify map
+        iErrCode = VerifyMap(iGameClass, iGameNumber);
+        RETURN_ON_ERROR(iErrCode);
 #endif
+    }
 
     return iErrCode;    
 }
