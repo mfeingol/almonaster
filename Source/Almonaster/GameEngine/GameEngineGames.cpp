@@ -1907,7 +1907,7 @@ int GameEngine::EnterGame(int iGameClass, int iGameNumber, int iEmpireKey, const
             );
         RETURN_ON_ERROR(iErrCode);
         
-        if ((int) iNumActiveEmpires == vMinNumEmpires.GetInteger())
+        if ((int)iNumActiveEmpires >= vMinNumEmpires.GetInteger())
         {
             bStarted = true;
             
