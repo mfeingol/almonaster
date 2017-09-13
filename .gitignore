@@ -5,6 +5,7 @@ Release/
 Source/Drop/
 Source/Almonaster/Pages/*.cpp
 .suo
+.vs
 ipch/
 *.vcxproj.user
 *.VC.opendb
