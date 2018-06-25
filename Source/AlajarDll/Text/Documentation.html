@@ -85,6 +85,7 @@ used:<ul>
     <li><strong>HttpPort</strong>=80</li>
     <li><strong>EnableHttpsPort=1</strong></li>
     <li><strong>HttpsPort</strong>=443</li>
+    <li><strong>RedirectHttpToHttps</strong>=0</li>
     <li><strong>HttpsPublicKeyFile</strong>=server.cer</li>
     <li><strong>HttpsPrivateKeyFile</strong>=server.pfx</li>
     <li><strong>FileCache</strong>=1 </li>
@@ -93,38 +94,55 @@ used:<ul>
     <li><strong>InitNumThreads</strong>=5 </li>
     <li><strong>MaxNumThreads</strong>=30</li>
     <li><strong>DefaultThreadPriority</strong>=Normal </li>
-    <li><strong>CounterPath</strong>=Counters
-</li>
+    <li>
+        <strong>CounterPath</strong>=Counters
+    </li>
     <li><strong>LogPath</strong>=Logs </li>
     <li><strong>PageSourcePath</strong>=PageSources </li>
-    <li><strong>ConfigPath</strong>=Config
-</li>
+    <li>
+        <strong>ConfigPath</strong>=Config
+    </li>
     <li><strong>ReportPath</strong>=Reports </li>
-    <li><strong>StatisticsPath</strong>=Statistics The
-directories specified must exist on the computer running <em>Alájar</em>. Path names
-can be absolute or relative to the path of the<em> Alájar</em> executable.
-</li>
+    <li>
+        <strong>StatisticsPath</strong>=Statistics The
+        directories specified must exist on the computer running <em>Alájar</em>. Path names
+        can be absolute or relative to the path of the<em> Alájar</em> executable.
+    </li>
     <li><strong>EnableHttpPort </strong>is 1 if HTTP traffic should be enabled; 0 if not.</li>
     <li><strong>HttpPort </strong>is the TCP port to be used for HTTP traffic.</li>
     <li><strong>EnableHttpsPort </strong>is 1 if HTTPS traffic should be enabled; 0 if not.</li>
     <li><strong>HttpsPort </strong>is the TCP port to be used for HTTPS traffic.</li>
-    <li><strong>HttpsPublicKeyFile </strong>is the public key file for HTTPS traffic. On
+    <li><strong>RedirectHttpToHttps </strong>is 1 if HTTP traffic should be redirected to HTTPS; 0 if not.</li>
+    <li>
+        <strong>HttpsPublicKeyFile </strong>is the public key file for HTTPS traffic. On
         Windows, this should be a .cer file using DER encoding. If OpenSSL is used, this
-        should be an OpenSSL .pem file.</li>
-    <li><strong>HttpsPrivateKeyFile </strong>is the private key file for HTTPS traffic.
+        should be an OpenSSL .pem file.
+    </li>
+    <li>
+        <strong>HttpsPrivateKeyFile </strong>is the private key file for HTTPS traffic.
         On Windows, this should be a .pfx file using PCS12 encoding. If OpenSSL is used,
-        this should be an OpenSSL .key file.</li>
+        this should be an OpenSSL .key file.
+    </li>
     <li><strong>FileCache</strong> is 1 if the file cache is to be used; 0 if not</li>
-    <li><strong>ApproxNumFilesInFileCache</strong><strong> </strong>is a guess of the maximum
-        number of files that the file cache will contain at any one time.</li>
-    <li><strong>MemoryCache</strong> is 1 if internal memory caches are to be used by 
+    <li>
+        <strong>ApproxNumFilesInFileCache</strong><strong> </strong>is a guess of the maximum
+        number of files that the file cache will contain at any one time.
+    </li>
+    <li>
+        <strong>MemoryCache</strong> is 1 if internal memory caches are to be used by
         <em>Alájar</em>; 0 if not. In general, this option should only be disabled in order
-        to facilitate tracking down in-process memory leaks.</li>
-    <li><strong>InitNumThreads </strong>is the base number of worker threads that are used
-        by the thread pool.</li>
-    <li><strong>MaxNumThreads </strong>is the maximum number of worker threads that can
-        be used by the thread pool.</li>
-    <li><strong>DefaultThreadPriority </strong>is the default priority of thread pool threads.
+        to facilitate tracking down in-process memory leaks.
+    </li>
+    <li>
+        <strong>InitNumThreads </strong>is the base number of worker threads that are used
+        by the thread pool.
+    </li>
+    <li>
+        <strong>MaxNumThreads </strong>is the maximum number of worker threads that can
+        be used by the thread pool.
+    </li>
+    <li>
+        <strong>DefaultThreadPriority </strong>is the default priority of thread pool threads.
         It can be set to one of the following values:
         <ul>
             <li>Lowest</li>
@@ -134,14 +152,20 @@ can be absolute or relative to the path of the<em> Alájar</em> executable.
             <li>Highest</li>
         </ul>
     </li>
-    <li><strong>CounterPath </strong>is the directory in which the SSI counter files are
-        placed</li>
+    <li>
+        <strong>CounterPath </strong>is the directory in which the SSI counter files are
+        placed
+    </li>
     <li><strong>LogPath</strong> is the directory in which the logs are placed</li>
-    <li><strong>PageSourcePath </strong>is the directory in which page source DLL's are
-        placed</li>
-    <li><strong>ConfigPath </strong>is the directory in which page source configuration
+    <li>
+        <strong>PageSourcePath </strong>is the directory in which page source DLL's are
+        placed
+    </li>
+    <li>
+        <strong>ConfigPath </strong>is the directory in which page source configuration
         files are placed. A file called <em>Default.conf </em>must be present to specify
-        the properties of the default page source</li>
+        the properties of the default page source
+    </li>
     <li><strong>ReportPath</strong> is the directory in which report files are stored</li>
     <li><strong>StatisticsPath</strong> is the directory in which statistics files are stored</li>
 </ul>
