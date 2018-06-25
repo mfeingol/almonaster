@@ -387,6 +387,7 @@ public:
     virtual const char* GetBrowserName() = 0;
     virtual const char* GetClientIP() = 0;
     virtual const char* GetReferer() = 0;
+    virtual const char* GetHost() = 0;
 
     virtual unsigned int GetNumForms() = 0;
     virtual IHttpForm* GetForm (unsigned int iIndex) = 0;

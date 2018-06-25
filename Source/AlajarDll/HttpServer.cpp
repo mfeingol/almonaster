@@ -61,6 +61,7 @@ HttpServer::HttpServer() {
 
     m_siPort = 0;
     m_siSslPort = 0;
+    m_bRedirectHttpToHttps = false;
 
     m_reportTracelevel = TRACE_WARNING;
     Time::ZeroTime(&m_tReportTime);
@@ -299,8 +300,8 @@ int HttpServer::StartServer()
     char pszCertificateFile [OS::MaxFileNameLength];
     char pszPrivateKeyFile [OS::MaxFileNameLength];
 
-	char* pszPrivateKeyFilePassword = NULL;
-	Algorithm::AutoDelete<char> autoDeletePrivateKeyFilePassword(pszPrivateKeyFilePassword, true);
+    char* pszPrivateKeyFilePassword = NULL;
+    Algorithm::AutoDelete<char> autoDeletePrivateKeyFilePassword(pszPrivateKeyFilePassword, true);
 
     unsigned int iInitNumThreads, iMaxNumThreads;
     
@@ -493,6 +494,10 @@ int HttpServer::StartServer()
             goto ErrorExit;
         }
 
+        if (m_pConfigFile->GetParameter("RedirectHttpToHttps", &pszRhs) == OK && pszRhs != NULL) {
+            m_bRedirectHttpToHttps = (atoi(pszRhs) == 1);
+        }
+
         if (m_pConfigFile->GetParameter ("HttpsPublicKeyFile", &pszRhs) == OK && pszRhs != NULL) {
         
             if (File::ResolvePath (pszRhs, pszCertificateFile) != OK) {
@@ -521,14 +526,14 @@ int HttpServer::StartServer()
                 goto ErrorExit;
             }
 
-			if (m_pConfigFile->GetParameter ("HttpsPrivateKeyFilePassword", &pszRhs) == OK && pszRhs != NULL) {
-				pszPrivateKeyFilePassword = new char[strlen(pszRhs) + 1];
-				if (pszPrivateKeyFilePassword == NULL) {
-					ReportEvent ("The server is out of memory");
-			        goto ErrorExit;
-				}
-				strcpy(pszPrivateKeyFilePassword, pszRhs);
-			}
+            if (m_pConfigFile->GetParameter ("HttpsPrivateKeyFilePassword", &pszRhs) == OK && pszRhs != NULL) {
+                pszPrivateKeyFilePassword = new char[strlen(pszRhs) + 1];
+                if (pszPrivateKeyFilePassword == NULL) {
+                    ReportEvent ("The server is out of memory");
+                    goto ErrorExit;
+                }
+                strcpy(pszPrivateKeyFilePassword, pszRhs);
+            }
 
         } else {
             ReportEvent ("Error: Could not read the HttpsPrivateKeyFile from Alajar.conf");
@@ -978,7 +983,7 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         // Set socket pointers
         pHttpRequest->SetSocket (pSocket);
         pHttpResponse->SetSocket (pSocket);
-        
+
         // Parse the request
         iErrCode = pHttpRequest->ParseHeaders();
         
@@ -1005,6 +1010,34 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         default:
             pHttpResponse->SetStatusCode (HTTP_400);
             break;
+        }
+
+        if (m_bRedirectHttpToHttps && pSocket->GetPort() == m_siPort) {
+
+            const char* pszHost = pHttpRequest->GetHost();
+            if (pszHost != NULL)
+            {
+                char* pszHostCopy = NULL;
+                const char* pszColon = strstr(pszHost, ":");
+                if (pszColon != NULL)
+                {
+                    pszHostCopy = (char*)StackAlloc(strlen(pszHost) + 1);
+
+                    size_t cchLen = pszColon - pszHost;
+                    strncpy(pszHostCopy, pszHost, cchLen);
+                    pszHostCopy[cchLen] = '\0';
+
+                    pszHost = pszHostCopy;
+                }
+
+                char pszPort[20];
+                String location = (String)"https://" + pszHost + ":" + String::ItoA(m_siSslPort, pszPort, 10) + pHttpRequest->GetUri();
+                pHttpResponse->SetRedirect(location.GetCharPtr());
+            }
+            else
+            {
+                pHttpResponse->SetStatusCode(HTTP_400);
+            }
         }
 
         // Best effort response

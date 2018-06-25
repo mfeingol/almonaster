@@ -68,6 +68,7 @@ private:
     // Listener ports
     short m_siPort;
     short m_siSslPort;
+    bool m_bRedirectHttpToHttps;
 
     // Listener sockets
     Socket* m_pSocket;

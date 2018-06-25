@@ -224,6 +224,7 @@ public:
     const char* GetBrowserName();
     const char* GetClientIP();
     const char* GetReferer();
+    const char* GetHost();
 
     unsigned int GetNumForms();
     IHttpForm* GetForm (unsigned int iIndex);

@@ -869,134 +869,138 @@ int HttpResponse::RespondPrivate() {
     // Get time
     Time::GetTime (&m_tNow);
 
-    if (m_pPageSource != NULL) {
+    // Go through the normal response path if we haven't already set an error on the response
+    if (m_sStatus == HTTP_200) {
 
-        const char* pszPageSourceName = m_pPageSource->GetName();
-        m_stPageSourceNameLength = strlen (pszPageSourceName);
+        if (m_pPageSource != NULL) {
 
-        // Check for name without slash and no forms
-        const char* pszUri = m_pHttpRequest->GetUri();
-        const char* pszName = pszUri + 1;
+            const char* pszPageSourceName = m_pPageSource->GetName();
+            m_stPageSourceNameLength = strlen (pszPageSourceName);
 
-        if (_stricmp (pszName, pszPageSourceName) == 0) {
+            // Check for name without slash and no forms
+            const char* pszUri = m_pHttpRequest->GetUri();
+            const char* pszName = pszUri + 1;
 
-            const char* pszForms;
-            size_t stFormLen;
+            if (_stricmp (pszName, pszPageSourceName) == 0) {
 
-            if (m_pHttpRequest->ParsedUriForms()) {
-                pszForms = m_pHttpRequest->GetParsedUriForms();
-                stFormLen = strlen (pszForms) + 1;
-            } else {
-                pszForms = NULL;
-                stFormLen = 0;
-            }
+                const char* pszForms;
+                size_t stFormLen;
 
-            char* pszRedirect = new char [m_stPageSourceNameLength + stFormLen + 3];
-            if (pszRedirect == NULL) {
-                iErrCode = ERROR_OUT_OF_MEMORY;
-                return iErrCode;
-            }
-            pszRedirect[0] = '/';
-
-            strcpy (pszRedirect + 1, pszName);
-            strcat (pszRedirect, "/");
-
-            if (pszForms != NULL) {
-                strcat (pszRedirect, "?");
-                strcat (pszRedirect, pszForms);
-            }
-
-            SetRedirect (pszRedirect);
-
-            delete [] pszRedirect;
-        }
-        
-        // Check for restarting pagesource
-        else if (m_pPageSource->IsRestarting()) {
-            
-            // 503: page source is restarting
-            SetNoPageSource();
-            InternalSetStatusCode (HTTP_503);
-        }
-        
-        // Check for hosed pagesource
-        else if (!m_pPageSource->IsWorking()) {
-            
-            // 409: the page source is screwed up
-            SetNoPageSource();
-            InternalSetStatusCode (HTTP_409);
-        }
-        
-        // Does URI contain the following illegal string? ..
-        else if (strstr (pszUri, "..") != NULL) {
-            InternalSetStatusCode (HTTP_404);
-        }
-
-        // Is IP authorized?
-        else if (!m_pPageSource->IsIPAddressAllowedAccess (m_pHttpRequest->GetClientIP())) {
-            
-            // 403 - forbidden
-            InternalSetStatusCode (HTTP_403);
-            SetStatusCodeReason (HTTP_REASON_IPADDRESS_BLOCKED);
-        }
-
-        // Is user agent allowed?
-        else if (!m_pPageSource->IsUserAgentAllowedAccess (m_pHttpRequest->GetBrowserName())) {
-            
-            // 403 - forbidden
-            InternalSetStatusCode (HTTP_403);
-            SetStatusCodeReason (HTTP_REASON_USER_AGENT_BLOCKED);
-        }
-        
-        // Authentication?
-        else {
-            
-            bool bAuthenticated = false;
-
-            Assert (!m_bHeadersSent);
-
-            HttpAuthenticationType atAuth = m_pPageSource->GetAuthenticationType();
-            switch (atAuth) {
-
-            case AUTH_BASIC:
-                iErrCode = m_pPageSource->OnBasicAuthenticate (m_pHttpRequest, &bAuthenticated);
-                break;
-
-            case AUTH_DIGEST:
-
-                // Check the nonce before asking the page source to authenticate
-                bool bStale;
-                iErrCode = CheckDigestAuthenticationNonce (&bStale);
-                if (iErrCode == OK) {
-
-                    if (bStale) {
-                        // This codepath leaves bAuthenticated as false, so we return 401 with a hint
-                        m_rReason = HTTP_REASON_STALE_NONCE;
-                    } else {
-                        iErrCode = m_pPageSource->OnDigestAuthenticate (m_pHttpRequest, &bAuthenticated);
-                    }
+                if (m_pHttpRequest->ParsedUriForms()) {
+                    pszForms = m_pHttpRequest->GetParsedUriForms();
+                    stFormLen = strlen (pszForms) + 1;
+                } else {
+                    pszForms = NULL;
+                    stFormLen = 0;
                 }
-                break;
 
-            case AUTH_NONE:
-                iErrCode = OK;
-                bAuthenticated = true;
-                break;
+                char* pszRedirect = new char [m_stPageSourceNameLength + stFormLen + 3];
+                if (pszRedirect == NULL) {
+                    iErrCode = ERROR_OUT_OF_MEMORY;
+                    return iErrCode;
+                }
+                pszRedirect[0] = '/';
 
-            default:
-                iErrCode = ERROR_FAILURE;
-                Assert (false);
-                break;
+                strcpy (pszRedirect + 1, pszName);
+                strcat (pszRedirect, "/");
+
+                if (pszForms != NULL) {
+                    strcat (pszRedirect, "?");
+                    strcat (pszRedirect, pszForms);
+                }
+
+                SetRedirect (pszRedirect);
+
+                delete [] pszRedirect;
             }
-
-            if (iErrCode != OK) {
-                SetNoErrorCallback();
-                InternalSetStatusCode (HTTP_400);
-            }
+        
+            // Check for restarting pagesource
+            else if (m_pPageSource->IsRestarting()) {
             
-            else if (!bAuthenticated) {
-                SetNoErrorCallback();
-                InternalSetStatusCode (HTTP_401);
+                // 503: page source is restarting
+                SetNoPageSource();
+                InternalSetStatusCode (HTTP_503);
+            }
+        
+            // Check for hosed pagesource
+            else if (!m_pPageSource->IsWorking()) {
+            
+                // 409: the page source is screwed up
+                SetNoPageSource();
+                InternalSetStatusCode (HTTP_409);
+            }
+        
+            // Does URI contain the following illegal string? ..
+            else if (strstr (pszUri, "..") != NULL) {
+                InternalSetStatusCode (HTTP_404);
+            }
+
+            // Is IP authorized?
+            else if (!m_pPageSource->IsIPAddressAllowedAccess (m_pHttpRequest->GetClientIP())) {
+            
+                // 403 - forbidden
+                InternalSetStatusCode (HTTP_403);
+                SetStatusCodeReason (HTTP_REASON_IPADDRESS_BLOCKED);
+            }
+
+            // Is user agent allowed?
+            else if (!m_pPageSource->IsUserAgentAllowedAccess (m_pHttpRequest->GetBrowserName())) {
+            
+                // 403 - forbidden
+                InternalSetStatusCode (HTTP_403);
+                SetStatusCodeReason (HTTP_REASON_USER_AGENT_BLOCKED);
+            }
+        
+            // Authentication?
+            else {
+            
+                bool bAuthenticated = false;
+
+                Assert (!m_bHeadersSent);
+
+                HttpAuthenticationType atAuth = m_pPageSource->GetAuthenticationType();
+                switch (atAuth) {
+
+                case AUTH_BASIC:
+                    iErrCode = m_pPageSource->OnBasicAuthenticate (m_pHttpRequest, &bAuthenticated);
+                    break;
+
+                case AUTH_DIGEST:
+
+                    // Check the nonce before asking the page source to authenticate
+                    bool bStale;
+                    iErrCode = CheckDigestAuthenticationNonce (&bStale);
+                    if (iErrCode == OK) {
+
+                        if (bStale) {
+                            // This codepath leaves bAuthenticated as false, so we return 401 with a hint
+                            m_rReason = HTTP_REASON_STALE_NONCE;
+                        } else {
+                            iErrCode = m_pPageSource->OnDigestAuthenticate (m_pHttpRequest, &bAuthenticated);
+                        }
+                    }
+                    break;
+
+                case AUTH_NONE:
+                    iErrCode = OK;
+                    bAuthenticated = true;
+                    break;
+
+                default:
+                    iErrCode = ERROR_FAILURE;
+                    Assert (false);
+                    break;
+                }
+
+                if (iErrCode != OK) {
+                    SetNoErrorCallback();
+                    InternalSetStatusCode (HTTP_400);
+                }
+            
+                else if (!bAuthenticated) {
+                    SetNoErrorCallback();
+                    InternalSetStatusCode (HTTP_401);
+                }
             }
         }
     }
@@ -1059,7 +1063,7 @@ int HttpResponse::ProcessErrors() {
 
     // Short circuit for null page sources
     if (m_pPageSource == NULL) {
-        Assert (m_sStatus != HTTP_200 && m_sStatus != HTTP_301);
+        Assert (m_sStatus != HTTP_200);
         return OK;
     }
 
@@ -1135,7 +1139,7 @@ int HttpResponse::Send() {
     const char* pszAuthRealm, * pszAuthDomain;
     if (m_pPageSource != NULL) {
         pszAuthRealm = m_pPageSource->GetAuthenticationRealm (m_pHttpRequest);
-        pszAuthDomain = m_pPageSource->GetName();
+        pszAuthDomain = m_pPageSource->IsDefault() ? "" : m_pPageSource->GetName();
     } else {
         pszAuthRealm = NULL;
         pszAuthDomain = NULL;
@@ -1171,13 +1175,7 @@ int HttpResponse::Send() {
         Assert (m_pPageSource != NULL && m_pszRedirectUri != NULL);
 
         // Location
-        if (m_pHttpServer->IsDefaultPageSource (m_pPageSource)) {
-            strcat (pszBuffer, "\r\nLocation: /");
-            strcat (pszBuffer, m_pPageSource->GetName());
-        } else {
-            strcat (pszBuffer, "\r\nLocation: ");
-        }
-
+        strcat (pszBuffer, "\r\nLocation: ");
         strcat (pszBuffer, m_pszRedirectUri);
         break;
 

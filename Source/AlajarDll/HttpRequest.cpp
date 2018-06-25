@@ -269,6 +269,10 @@ const char* HttpRequest::GetReferer() {
     return m_strReferer.GetCharPtr();
 }
 
+const char* HttpRequest::GetHost() {
+    return m_strHostName.GetCharPtr();
+}
+
 bool HttpRequest::IsCached() const {
     return m_bCached;
 }

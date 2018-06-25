@@ -335,6 +335,7 @@ Socket* SslSocket::Accept() {
         return NULL;
     }
 
+    pSocket->m_siPort = m_siPort;
     return pSocket;
 }
 
