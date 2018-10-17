@@ -41,9 +41,8 @@ Cookie::Cookie () {
 
 Cookie::~Cookie() {
 
-    if (m_pszName != NULL) {
-        delete [] m_pszName;
-    }
+    OS::HeapFree(m_pszName);
+    OS::HeapFree(m_pszValue);
 
     if (m_iNumSubCookies != 0) {
 
@@ -54,28 +53,20 @@ Cookie::~Cookie() {
     }
 }
 
-int Cookie::Initialize (const char* pszName, const char* pszValue) {
+int Cookie::Initialize(const char* pszName, const char* pszValue) {
 
-    int iErrCode;
-
-    size_t stLen1 = strlen (pszName) + 1;
-    size_t stLen2 = strlen (pszValue) + 1;
-
-    m_pszName = new char [stLen1 + stLen2];
-    if (m_pszName == NULL) {
-        return ERROR_OUT_OF_MEMORY;
+    if (pszName)
+    {
+        m_pszName = String::StrDup(pszName);
+        if (m_pszName == NULL)
+            return ERROR_OUT_OF_MEMORY;
     }
 
-    m_pszValue = m_pszName + stLen1;
-
-    iErrCode = Algorithm::UnescapeString (pszName, m_pszName, stLen1);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
-    iErrCode = Algorithm::UnescapeString (pszValue, m_pszValue, stLen2);
-    if (iErrCode != OK) {
-        return iErrCode;
+    if (pszValue)
+    {
+        m_pszValue = String::StrDup(pszValue);
+        if (m_pszValue == NULL)
+            return ERROR_OUT_OF_MEMORY;
     }
 
     return OK;
@@ -83,7 +74,7 @@ int Cookie::Initialize (const char* pszName, const char* pszValue) {
 
 Cookie* Cookie::CreateInstance (const char* pszName, const char* pszValue) {
 
-    Cookie* pCookie = new Cookie ();
+    Cookie* pCookie = new Cookie();
     if (pCookie == NULL) {
         return NULL;
     }
