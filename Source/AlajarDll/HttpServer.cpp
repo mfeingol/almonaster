@@ -1012,7 +1012,8 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
             break;
         }
 
-        if (m_bRedirectHttpToHttps && pSocket->GetPort() == m_siPort) {
+        // Attempt redirect to HTTPS only if everything went well
+        if (pHttpResponse->GetStatusCode() == HTTP_200 && m_bRedirectHttpToHttps && pSocket->GetPort() == m_siPort) {
 
             const char* pszHost = pHttpRequest->GetHost();
             if (pszHost != NULL)
