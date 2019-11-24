@@ -1366,7 +1366,7 @@ ITraceLog* HttpServer::GetReport()
     UTCTime tNow;
     Time::GetTime(&tNow);
 
-    ITraceLog* pReturn;
+    ITraceLog* pReturn = NULL;
 
     m_reportMutex.Wait();
     if (HttpServer::DifferentDays(m_tReportTime, tNow))
@@ -1387,8 +1387,13 @@ ITraceLog* HttpServer::GetReport()
             }
         }
     }
-    pReturn = m_pReport;
-    pReturn->AddRef();
+
+    if (m_pReport)
+    {
+        pReturn = m_pReport;
+        pReturn->AddRef();
+    }
+
     m_reportMutex.Signal();
 
     return pReturn;
