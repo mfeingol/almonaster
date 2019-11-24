@@ -197,7 +197,7 @@ int SslContext::Initialize (const char* pszCertFile, const char* pszKeyFile, con
     sChannelCred.dwFlags = SCH_CRED_NO_SYSTEM_MAPPER;
     sChannelCred.cCreds = 1;
     sChannelCred.paCred = &phPrivateKey;
-    sChannelCred.grbitEnabledProtocols = SP_PROT_SSL3TLS1_X;
+    sChannelCred.grbitEnabledProtocols = SP_PROT_TLS1_2 | SP_PROT_TLS1_3;
 
     SECURITY_STATUS ss = AcquireCredentialsHandle(
         NULL,
