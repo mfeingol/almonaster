@@ -36,6 +36,9 @@
 #include "Osal/ObjectCache.h"
 #include "Osal/SslSocket.h"
 
+// Version
+#define ALAJAR_VERSION 1.8.6
+
 // Coalesce
 #define COALESCE_REQUESTS  25
 #define COALESCE_PERIOD_MS 30000

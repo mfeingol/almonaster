@@ -53,8 +53,8 @@ HttpServer::HttpServer() {
     m_pSslContext = NULL;
     m_pSslSocket = NULL;
 
-    m_pszServerName = "Alajar 1.8.6";
-    m_stServerNameLength = countof ("Alajar 1.8.6") - 1;
+    m_pszServerName = "Alajar " TOSTRING(ALAJAR_VERSION);
+    m_stServerNameLength = countof ("Alajar " TOSTRING(ALAJAR_VERSION)) - 1;
 
     m_bExit = false;
     m_bRestart = false;

@@ -19,6 +19,8 @@
 #include "GameEngine.h"
 #include "Global.h"
 
+#define ALMONASTER_VERSION 703
+
 int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
     int iErrCode;
@@ -319,7 +321,7 @@ int GameEngine::SetMapConfiguration (const MapConfiguration& mcConfig) {
 // Return the system version string
 const char* GameEngine::GetSystemVersion()
 {
-    return "Almonaster Build 703";
+    return "Almonaster Build " TOSTRING(ALMONASTER_VERSION);
 }
 
 int GameEngine::GetNewSessionId (int64* pi64SessionId)

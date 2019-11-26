@@ -181,6 +181,13 @@ typedef char Byte;
 #define ERROR_SMALL_BUFFER (-9)
 
 //
+// Misc
+//
+
+#define STRINGIFY(x) #x
+#define TOSTRING(x) STRINGIFY(x)
+
+//
 // Namespace
 //
 
