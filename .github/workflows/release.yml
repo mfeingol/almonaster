@@ -1,0 +1,49 @@
+name: Almonaster Release
+
+on:
+  push:
+    branches:
+    - release
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v1
+      with:
+        fetch-depth: 1
+
+    - name: Setup MSBuild.exe
+      uses: warrenbuckley/Setup-MSBuild@v1
+
+    - name: Build
+      run: msbuild -m .\Source\Almonaster.sln /p:Configuration=Release /p:Platform=x64 
+
+    - name: Create release directory
+      run: mkdir ./Release
+      shell: pwsh
+
+    - name: Zip binaries
+      run: Compress-Archive Admin.dll,Alajar.dll,Alajar.exe,AlajarSvc.exe,Almonaster.dll,Asfpp.exe,Osal.dll,SqlDatabase.dll,SqlDatabaseBridge.dll ../../../../../Release/almonaster-703-x64.zip
+      shell: pwsh
+      working-directory: ./Source/Drop/x64/Release/bin
+
+    - name: Zip symbols
+      run: Compress-Archive Admin.pdb,Alajar.pdb,AlajarDll.pdb,AlajarSvc.pdb,Almonaster.pdb,Asfpp.pdb,Osal.pdb,SqlDatabase.pdb,SqlDatabaseBridge.pdb ../../../../../Release/almonaster-703-x64-pdb.zip
+      shell: pwsh
+      working-directory: ./Source/Drop/x64/Release/bin
+
+    - name: Zip site
+      run: Compress-Archive * ../../Release/almonaster-703-site.zip
+      shell: pwsh
+      working-directory: ./Source/Release
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        # Artifact name
+        name: almonaster-703
+        # Directory containing files to upload
+        path: ./Release
