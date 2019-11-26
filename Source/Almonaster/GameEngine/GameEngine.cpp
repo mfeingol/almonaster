@@ -166,7 +166,6 @@ int GameEngine::SetGameConfiguration (const GameConfiguration& gcConfig) {
         gcConfig.fTroopshipInvasionFactor < 0 ||
         gcConfig.fTroopshipFailureFactor < 0 ||
         gcConfig.fTroopshipSuccessFactor < 0 ||
-        gcConfig.fTroopshipSuccessFactor < 0 ||
         gcConfig.fDoomsdayAnnihilationFactor < 0 ||
         gcConfig.fCarrierCost < 0 ||
         gcConfig.fBuilderMinBR < 0 ||

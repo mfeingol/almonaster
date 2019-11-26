@@ -1800,7 +1800,7 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
                     );
             }
 
-            pszText[printed] = '\0';
+            pszText[countof(pszText) - 1] = '\0';
                 
             unsigned int i, iNumCustomLogMessages;
             const char** ppszCustomLogMessages;
