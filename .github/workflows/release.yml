@@ -26,17 +26,17 @@ jobs:
       shell: pwsh
 
     - name: Zip binaries
-      run: Compress-Archive Admin.dll,Alajar.dll,Alajar.exe,AlajarSvc.exe,Almonaster.dll,Asfpp.exe,Osal.dll,SqlDatabase.dll,SqlDatabaseBridge.dll ../../../../../Release/almonaster-703-x64.zip
+      run: Compress-Archive Admin.dll,Alajar.dll,Alajar.exe,AlajarSvc.exe,Almonaster.dll,Asfpp.exe,Osal.dll,SqlDatabase.dll,SqlDatabaseBridge.dll ../../../../../Release/almonaster-7.0.3-x64.zip
       shell: pwsh
       working-directory: ./Source/Drop/x64/Release/bin
 
     - name: Zip symbols
-      run: Compress-Archive Admin.pdb,Alajar.pdb,AlajarDll.pdb,AlajarSvc.pdb,Almonaster.pdb,Asfpp.pdb,Osal.pdb,SqlDatabase.pdb,SqlDatabaseBridge.pdb ../../../../../Release/almonaster-703-x64-pdb.zip
+      run: Compress-Archive Admin.pdb,Alajar.pdb,AlajarDll.pdb,AlajarSvc.pdb,Almonaster.pdb,Asfpp.pdb,Osal.pdb,SqlDatabase.pdb,SqlDatabaseBridge.pdb ../../../../../Release/almonaster-7.0.3-x64-pdb.zip
       shell: pwsh
       working-directory: ./Source/Drop/x64/Release/bin
 
     - name: Zip site
-      run: Compress-Archive * ../../Release/almonaster-703-site.zip
+      run: Compress-Archive * ../../Release/almonaster-7.0.3-site.zip
       shell: pwsh
       working-directory: ./Source/Release
 
