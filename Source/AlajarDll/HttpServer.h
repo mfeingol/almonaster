@@ -227,6 +227,3 @@ public:
     IPageSourceEnumerator* EnumeratePageSources();
     IPageSourceControl* GetPageSourceByName (const char* pszName);
 };
-
-/*size_t AppendString (char** ppszBuffer, const char* pszNewString, size_t stTotalLength);
-char* EqualsToSlash (const char* pszInput);*/
