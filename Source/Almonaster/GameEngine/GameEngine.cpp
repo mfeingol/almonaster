@@ -19,7 +19,7 @@
 #include "GameEngine.h"
 #include "Global.h"
 
-#define ALMONASTER_VERSION 7.0.3
+#define ALMONASTER_VERSION 7.0.4
 
 int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
