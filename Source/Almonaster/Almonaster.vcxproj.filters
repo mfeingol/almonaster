@@ -27,9 +27,6 @@
     <Filter Include="PagesGenerated">
       <UniqueIdentifier>{33b796f7-1e7c-4b31-935b-b2e510e0dc7c}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Text">
-      <UniqueIdentifier>{236664fa-c14c-4654-80ae-547c97344d4f}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameEngine\GameEngine.cpp">
@@ -548,9 +545,6 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Text\Documentation.html">
-      <Filter>Text</Filter>
-    </None>
     <None Include="Default.conf" />
   </ItemGroup>
 </Project>

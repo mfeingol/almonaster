@@ -1493,7 +1493,6 @@ copy /y $(ProjectDir)Default.conf "%DropSite%\Config"</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="Default.conf" />
-    <None Include="Text\Documentation.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

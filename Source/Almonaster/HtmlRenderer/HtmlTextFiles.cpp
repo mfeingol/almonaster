@@ -23,9 +23,7 @@
 #include "Osal/File.h"
 
 void HtmlRenderer::WriteFaq() {
-    
-    OutputText ("<p>Printer-friendly documentation can be found <a href=\"" BASE_RESOURCE_DIR FAQ_FILE "\">here</a>.<p>");
-    
+
     char pszFileName[OS::MaxFileNameLength];
     sprintf(pszFileName, "%s/" FAQ_FILE, global.GetResourceDir());
     
@@ -37,9 +35,8 @@ void HtmlRenderer::WriteFaq() {
     }
     else
     {
-        OutputText ("<p></center>");
+        OutputText ("<p>");
         m_pHttpResponse->WriteTextFile(pcfFaq);
-        OutputText ("<center>");
     }
 }
 
