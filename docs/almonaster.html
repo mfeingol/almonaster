@@ -1,4 +1,4 @@
-<h2 align="center">Documentation for <em>Almonaster</em> Build 700</h2>
+<h2 align="center">Documentation for <em>Almonaster</em> Build 703</h2>
 <h3 align="center">Author: Max Feingold</h3>
 <h2><strong>Table of contents:</strong></h2>
 <ul>
@@ -1699,7 +1699,7 @@
 </ul>
 <p>To run <em>Al&aacute;jar</em> as a system service, open a command prompt with administrative permissions and run &ldquo;alajarsvc.exe -install&rdquo; to install the service. Then use the Services MMC to set the service to autostart, restart on failure, and depend on the relevant SQL Server service.</p>
 <p>After this, connecting to <a href="./">http://localhost/</a> or <a href="http://127.0.0.1/"> http://127.0.0.1/</a> in any web<br /> browser should display the <em>Almonaster</em> login screen. The server&rsquo;s port number can be changed in the site\config\Alajar.conf file.</p>
-<p>More detailed information on configuring <em>Al&aacute;jar</em> can be found on <a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation&amp;referringTitle=Documentation"> CodePlex</a>.</p>
+<p>More detailed information on configuring <em>Al&aacute;jar</em> <a href="alajar.html">is available</a>.</p>
 <p>The <em>Almonaster</em> page source contains the following specific parameters inside its page source configuration file:</p>
 <ul>
 <li><strong>DatabaseLibrary</strong> is the name of the binary that implements ISqlDatabase. This should always be SqlDatabaseBridge.dll</li>
@@ -1743,7 +1743,7 @@
 <h2><a name="Development"></a>7.0 Development</h2>
 <p>This section describes aspects of <em>Almonaster</em> useful to developers.</p>
 <h2><a name="Architecture"></a>7.1 System Architecture</h2>
-<p><em>Almonaster </em>is a page source plug-in for the <em><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation&amp;referringTitle=Documentation">Al&aacute;jar</a></em> web server. The <em>Almonaster</em> game code registers itself as the recipient of HTTP requests directed at specific URLs, and responds by supplying HTML code to return to the client.</p>
+<p><em>Almonaster </em>is a page source plug-in for the <em><a href="alajar.html">Al&aacute;jar</a></em> web server. The <em>Almonaster</em> game code registers itself as the recipient of HTTP requests directed at specific URLs, and responds by supplying HTML code to return to the client.</p>
 <p><em>Almonaster</em> itself is essentially a three-tier system. Its modular design incorporates the following components:</p>
 <ol>
 <li>The <em>page source</em> module implements <em>Al&aacute;jar</em>'s event-driven interface.</li>
@@ -1775,8 +1775,8 @@
 <p>The vast majority of the game code is platform independent, and platform specifics are well abstracted in various libraries. To encapsulate advanced functionality such as threading and synchronization, the codebase uses a library called OSAL (Operating System Abstraction Library). The database library used by <em>Almonaster </em>is written in managed C++ and depends directly on SQL Server.</p>
 <p>Because of this, ports to other operating systems should be relatively simple, since they only require a port of the Osal libraries and the SqlDatabase. While the source distribution also contains a partial Linux port contributed by Austin Che, it has not been maintained recently. If you are interested in improving the existing ports or working on new ones, please contact the current maintainer.</p>
 <h2><a name="Compilation"></a>7.3 Compilation</h2>
-<p>To build Almonaster for Windows, obtain the source code from CodePlex, open the Almonaster.sln solution and compile it.</p>
-<p>At the time of writing, <em>Almonaster</em> is compiled and tested with Visual C++.</p>
+<p>To build Almonaster for Windows, obtain the source code from <a href="https://github.com/mfeingol/almonaster">GitHub</a>, open the Almonaster.sln solution using Visual Studio and compile it.</p>
+<p>At the time of writing, <em>Almonaster</em> is compiled and tested with Visual C++ 2019.</p>
 <h2><a name="Graphics"></a>7.4 Graphics</h2>
 <p>It is possible to dynamically add new themes to an Almonaster installation. <em> Almonaster</em> graphics consist of a set of themes, enumerated in the resource directory. A theme contains some of the following elements:</p>
 <ul>
