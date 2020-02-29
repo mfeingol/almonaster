@@ -30,7 +30,7 @@ Binaries will be placed into .\Source\Drop\<platform>\<configuration>
 - Install SQL Server LocalDB
 - Use the `sqllocaldb` tool
 
-# Loading a database from a deployment backup
+# Copying a SQL Server backup to a LocalDB instance
 
 Create a new LocalDB instance. Run the following SQL, using the appropriate file names:
 
