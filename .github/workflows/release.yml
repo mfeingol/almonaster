@@ -11,12 +11,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@latest
+    - uses: actions/checkout@v2
       with:
         fetch-depth: 1
 
     - name: Setup MSBuild.exe
-      uses: microsoft/setup-msbuild@latest
+      uses: microsoft/setup-msbuild@v1.0.0
 
     - name: Build
       run: msbuild -m .\Source\Almonaster.sln /p:Configuration=Release /p:Platform=x64 
@@ -53,7 +53,7 @@ jobs:
 
     - name: Upload Release Asset
       id: upload-release-asset1
-      uses: actions/upload-release-asset@latest
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -64,7 +64,7 @@ jobs:
 
     - name: Upload Release Asset
       id: upload-release-asset2
-      uses: actions/upload-release-asset@latest
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -75,7 +75,7 @@ jobs:
 
     - name: Upload Release Asset
       id: upload-release-asset3
-      uses: actions/upload-release-asset@latest
+      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
