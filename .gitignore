@@ -1,7 +1,8 @@
 Win32/
 x64/
 Debug/
-Release/
+/x64/Release/
+/Win32/Release/
 Source/Drop/
 Source/Almonaster/Pages/*.cpp
 .suo
