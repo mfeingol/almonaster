@@ -17,7 +17,7 @@ jobs:
         
     - name: Get version from tag
       id: get_version
-      run: echo ::set-output name=version::${github.ref/refs\/tags\//}
+      run: echo ::set-output name=version::${GITHUB_REF/refs\/tags\//}
       shell: bash
 
     - name: Setup MSBuild.exe
