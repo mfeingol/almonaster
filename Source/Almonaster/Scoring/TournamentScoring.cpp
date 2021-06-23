@@ -41,6 +41,10 @@ TournamentScoring::TournamentScoring(GameEngine* pGameEngine)
     m_pGameEngine = pGameEngine;
 }
 
+TournamentScoring::~TournamentScoring()
+{
+}
+
 int TournamentScoring::IsTournamentGame (int iGameClass, int iGameNumber, unsigned int* piTournamentKey) {
 
     int iErrCode;

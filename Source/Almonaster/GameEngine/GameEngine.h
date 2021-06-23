@@ -332,6 +332,8 @@ class IScoringSystem
 {
 public:
 
+    virtual ~IScoringSystem() {}
+
     virtual bool HasTopList() = 0;
 
     virtual int OnNuke (int iGameClass, int iGameNumber, int iEmpireNuker, int iEmpireNuked, ScoringChanges* pscChanges) = 0;
@@ -386,6 +388,8 @@ public:
     // - Links must actually have a planet behind them
     // - Exactly one homeworld per empire must be selected
     // - etc.
+
+    virtual ~IMapGenerator() {}
 
     virtual int CreatePlanets (
         
