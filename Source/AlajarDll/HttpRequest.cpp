@@ -1216,7 +1216,14 @@ int HttpRequest::ParseHeaders() {
         return ERROR_OUT_OF_MEMORY;
     }
 
-    char pszBuffer [MAX_REQUEST_LENGTH + 1], pszLine [MAX_REQUEST_LENGTH + 1];
+    char* pszBuffer = new char[MAX_REQUEST_LENGTH + 1];
+    if (pszBuffer == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+    Algorithm::AutoDelete<char> auto_pszBuffer(pszBuffer, true);
+
+    char pszLine[MAX_REQUEST_LENGTH + 1];
     size_t stNumBytes, stBeginRecv = 0, stLineLength;
     bool bEndHeaders = false, bFirstLine = true;
 
@@ -1230,11 +1237,12 @@ int HttpRequest::ParseHeaders() {
         if (iErrCode != OK) {
             return iErrCode;
         }
+        stBeginRecv += stNumBytes;
 
-        pszBuffer[stBeginRecv + stNumBytes] = '\0';
+        pszBuffer[stBeginRecv] = '\0';
         pszBegin = pszBuffer;
         pszEnd = strstr (pszBuffer, "\r\n");
-        pszEndMarker = pszBuffer + stBeginRecv + stNumBytes;
+        pszEndMarker = pszBuffer + stBeginRecv;
 
         while (pszEnd != NULL) {
 
@@ -1291,7 +1299,7 @@ int HttpRequest::ParseHeaders() {
         // We reached the end of the recv, so save the extra line info, if any
         stBeginRecv = pszEndMarker - pszBegin;
         if (stBeginRecv > 0) {
-            memmove (pszBuffer, pszBegin, stBeginRecv);
+            memmove(pszBuffer, pszBegin, stBeginRecv);
         }
 
         pszBuffer[stBeginRecv] = '\0';
@@ -1309,7 +1317,33 @@ int HttpRequest::ParseHeaders() {
             return ERROR_MALFORMED_REQUEST;
         }
 
-        Assert (stBeginRecv != 0 || pszBuffer[0] == '\0');
+        // No more than 1MB, sorry
+        if (m_stContentLength > 1024 * 1024 * 1024)
+        {
+            return ERROR_MALFORMED_REQUEST;
+        }
+
+        // Reallocate the buffer if necessary
+        if (m_stContentLength > MAX_REQUEST_LENGTH + 1)
+        {
+            delete[] pszBuffer;
+            pszBuffer = new char[m_stContentLength + 1];
+            if (pszBuffer == NULL)
+            {
+                return ERROR_OUT_OF_MEMORY;
+            }
+        }
+
+        // Receive the rest of the data
+        while (m_stContentLength > stBeginRecv)
+        {
+            iErrCode = m_pSocket->Recv(pszBuffer + stBeginRecv, m_stContentLength - stBeginRecv, &stNumBytes);
+            if (iErrCode != OK) {
+                return iErrCode;
+            }
+            stBeginRecv += stNumBytes;
+            pszBuffer[stBeginRecv] = '\0';
+        }
 
         // What kind of forms?
         if (m_pszSeparator == NULL || m_pszSeparator[0] == '\0') {
