@@ -729,11 +729,13 @@ size_t SslSocket::SocketRecv (void* pData, size_t cbData) {
 
             // Need to recv more for the incomplete data to make sense
 
-            // Observed once in the wild. We were asserting on this and crashing the process
-            if (cbCypherText >= m_cbMaxChunkSize)
+            // Larger chunk sizes have been observed in the wild. Hopefully twice the max chunk size is good enough
+            const size_t cbMaxChunkSize = m_cbMaxChunkSize * 2;
+
+            if (cbCypherText >= cbMaxChunkSize)
                 return (size_t)SOCKET_ERROR;
 
-            BYTE* pbChunk = new BYTE[m_cbMaxChunkSize];
+            BYTE* pbChunk = new BYTE[cbMaxChunkSize];
             if (pbChunk == NULL)
                 return (size_t)SOCKET_ERROR;
 
@@ -741,7 +743,7 @@ size_t SslSocket::SocketRecv (void* pData, size_t cbData) {
                 memcpy(pbChunk, pbCypherText, cbCypherText);
 
             // Receive as large a chunk as possible
-            size_t cbRecvd = Socket::SocketRecv(pbChunk + cbCypherText, m_cbMaxChunkSize - cbCypherText);
+            size_t cbRecvd = Socket::SocketRecv(pbChunk + cbCypherText, cbMaxChunkSize - cbCypherText);
             if (cbRecvd == SOCKET_ERROR || cbRecvd == 0)
             {
                 delete [] pbChunk;
