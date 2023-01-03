@@ -37,7 +37,7 @@
 #include "Osal/SslSocket.h"
 
 // Version
-#define ALAJAR_VERSION 1.8.8
+#define ALAJAR_VERSION 1.8.9
 
 // Coalesce
 #define COALESCE_REQUESTS  25
