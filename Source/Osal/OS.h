@@ -179,6 +179,7 @@ typedef char Byte;
 #define ERROR_INVALID_ARGUMENT (-7)
 #define ERROR_ACCESS_DENIED (-8)
 #define ERROR_SMALL_BUFFER (-9)
+#define ERROR_SOCKET_CLOSED (-10)
 
 //
 // Misc

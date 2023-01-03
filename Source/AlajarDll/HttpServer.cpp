@@ -1006,6 +1006,11 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
             pHttpResponse->SetStatusCode (HTTP_503);
             break;
          
+        case ERROR_SOCKET_CLOSED:
+            // No reason to do anything further
+            pSocket->Close();
+            return iErrCode;
+
         case ERROR_MALFORMED_REQUEST:
         default:
             pHttpResponse->SetStatusCode (HTTP_400);

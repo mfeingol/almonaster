@@ -1235,7 +1235,7 @@ int HttpRequest::ParseHeaders() {
 
         iErrCode = m_pSocket->Recv (pszBuffer + stBeginRecv, MAX_REQUEST_LENGTH, &stNumBytes);
         if (iErrCode != OK) {
-            return iErrCode;
+            return ERROR_SOCKET_CLOSED;
         }
         stBeginRecv += stNumBytes;
 
@@ -1339,7 +1339,7 @@ int HttpRequest::ParseHeaders() {
         {
             iErrCode = m_pSocket->Recv(pszBuffer + stBeginRecv, m_stContentLength - stBeginRecv, &stNumBytes);
             if (iErrCode != OK) {
-                return iErrCode;
+                return ERROR_SOCKET_CLOSED;
             }
             stBeginRecv += stNumBytes;
             pszBuffer[stBeginRecv] = '\0';
