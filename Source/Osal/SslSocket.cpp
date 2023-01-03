@@ -512,6 +512,7 @@ int SslSocket::Negotiate() {
         FreeContextBuffer(outSecBuffer.pvBuffer);
     }
 
+    m_bNegotiated = true;
     m_bConnected = iErrCode == OK;
 
     return iErrCode;
@@ -1122,6 +1123,7 @@ int SslSocket::Negotiate() {
         return ERROR_FAILURE;
     }
 
+    m_bNegotiated = true;
     return OK;
 }
 

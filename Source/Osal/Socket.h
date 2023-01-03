@@ -61,6 +61,7 @@ protected:
     // Accounting
     size_t m_stNumBytesSent;
     size_t m_stNumBytesRecvd;
+    bool m_bNegotiated;
 
     int Accept (Socket* pSocket);
 
@@ -121,6 +122,7 @@ public:
 
     // Return true if the socket hasn't been closed yet
     bool IsConnected();
+    bool IsNegotiated();
 
     int SetKeepAlive (bool bKeepAlive);
     int SetRecvTimeOut (MilliSeconds iTimeOut);

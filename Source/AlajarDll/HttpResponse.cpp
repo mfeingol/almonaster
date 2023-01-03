@@ -87,7 +87,7 @@ HttpResponse::HttpResponse() {
     m_stResponseLength = 0;
     m_bNoBuffering = false;
     m_bHeadersSent = false;
-    m_bConnectionClosed = false;
+    m_bConnectionClosed = true;
 
     m_iResponseHttpVersion = HTTP11;
 
@@ -123,7 +123,7 @@ void HttpResponse::Recycle() {
     m_bNoBuffering = false;
     m_bHeadersSent = false;
     m_bNoErrorCallback = false;
-    m_bConnectionClosed = false;
+    m_bConnectionClosed = true;
 
     m_stCookieSpace = 0;
 
@@ -1346,11 +1346,11 @@ int HttpResponse::Send() {
         strcat (pszBuffer, "\r\nAccept-Ranges: none");
     }
 
-    // Connection - TODO - blocks HTTP 1.1 keep-alives
-    m_bConnectionClosed = true; //!m_pHttpRequest->GetKeepAlive();
+    // Connection
+    m_bConnectionClosed = !(m_pHttpRequest->GetKeepAlive() && m_pHttpServer->GetKeepAlive());
     if (!m_bConnectionClosed)
     {
-        strcat (pszBuffer, "\r\nConnection: Keep-Alive");
+        strcat (pszBuffer, "\r\nConnection: keep-alive");
     }
     else if (m_iResponseHttpVersion >= HTTP11)
     {

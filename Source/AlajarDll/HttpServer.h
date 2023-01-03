@@ -72,6 +72,7 @@ private:
     short m_siPort;
     short m_siSslPort;
     bool m_bRedirectHttpToHttps;
+    bool m_bKeepAlive;
 
     // Listener sockets
     Socket* m_pSocket;
@@ -199,6 +200,8 @@ public:
     const char* GetIPAddress();
     const char* GetServerName();
     const Uuid& GetUniqueIdentifier();
+
+    bool GetKeepAlive();
 
     unsigned int GetNumThreads();
 

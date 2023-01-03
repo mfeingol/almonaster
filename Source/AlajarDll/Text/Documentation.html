@@ -1,17 +1,17 @@
-<h2 align="center">Documentation for <em>Alájar</em> 1.8.9</h2>
+<h2 align="center">Documentation for <em>Alájar</em> 1.9.0</h2>
 <h3 align="center">Author: <a href="https://github.com/mfeingol">Max Feingold</a></h3>
 
 <h2>Table of Contents</h2>
 <ul>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Introduction">Introduction</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Features">Features</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Server">Server requirements</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Configuration">Configuration</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Compile">Compilation</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Implementation">Implementation details</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Development">Development</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Tools">Tools</a></li>
-    <li><a href="http://almonaster.codeplex.com/wikipage?title=Alajar%20Documentation#Administration">Administration</a></li>
+    <li><a href="#Introduction">Introduction</a></li>
+    <li><a href="#Features">Features</a></li>
+    <li><a href="#Server">Server requirements</a></li>
+    <li><a href="#Configuration">Configuration</a></li>
+    <li><a href="#Compile">Compilation</a></li>
+    <li><a href="#Implementation">Implementation details</a></li>
+    <li><a href="#Development">Development</a></li>
+    <li><a href="#Tools">Tools</a></li>
+    <li><a href="#Administration">Administration</a></li>
 </ul>
 
 <h2>
@@ -88,6 +88,7 @@ used:<ul>
     <li><strong>RedirectHttpToHttps</strong>=0</li>
     <li><strong>HttpsPublicKeyFile</strong>=server.cer</li>
     <li><strong>HttpsPrivateKeyFile</strong>=server.pfx</li>
+    <li><strong>KeepAlive</strong>0</li>
     <li><strong>FileCache</strong>=1 </li>
     <li><strong>ApproxNumFilesInFileCache</strong>=2000 </li>
     <li><strong>MemoryCache</strong>=1 </li>
@@ -123,6 +124,7 @@ used:<ul>
         On Windows, this should be a .pfx file using PCS12 encoding. If OpenSSL is used,
         this should be an OpenSSL .key file.
     </li>
+    <li><strong>KeepAlive</strong> is 1 if HTTP 1.1 connection keep-alives should be used; 0 if not. This feature is experimental.</li>
     <li><strong>FileCache</strong> is 1 if the file cache is to be used; 0 if not</li>
     <li>
         <strong>ApproxNumFilesInFileCache</strong><strong> </strong>is a guess of the maximum

@@ -66,6 +66,7 @@ Socket::Socket() {
 
     m_stNumBytesSent = 0;
     m_stNumBytesRecvd = 0;
+    m_bNegotiated = false;
 }
 
 Socket::~Socket() {
@@ -174,6 +175,7 @@ Socket* Socket::Accept() {
 }
 
 int Socket::Negotiate() {
+    m_bNegotiated = true;
     return OK;
 }
 
@@ -458,6 +460,10 @@ void Socket::ResetStatistics() {
 
 bool Socket::IsConnected() {
     return (m_Socket != INVALID_SOCKET);
+}
+
+bool Socket::IsNegotiated() {
+    return m_bNegotiated;
 }
 
 int Socket::SetBlockingMode() {

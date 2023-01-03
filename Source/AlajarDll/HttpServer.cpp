@@ -61,6 +61,7 @@ HttpServer::HttpServer() {
 
     m_siPort = 0;
     m_siSslPort = 0;
+    m_bKeepAlive = false;
     m_bRedirectHttpToHttps = false;
 
     m_reportTracelevel = TRACE_WARNING;
@@ -249,8 +250,11 @@ PageSource* HttpServer::GetPageSource (const char* pszPageSourceName) {
 void HttpServer::ReportEvent(const char* pszMessage)
 {
     ITraceLog* pReport = GetReport();
-    pReport->Write(TRACE_ALWAYS, pszMessage);
-    SafeRelease(pReport);
+    if (pReport)
+    {
+        pReport->Write(TRACE_ALWAYS, pszMessage);
+        SafeRelease(pReport);
+    }
 
     // Make STDIO hosts happy...
     printf("%s\n", pszMessage);
@@ -295,7 +299,7 @@ int HttpServer::StartServer()
     int iErrCode;
     char* pszRhs;
 
-    bool bFileCache, bMemoryCache;
+    bool bFileCache, bMemoryCache, bKeepAlive;
 
     char pszCertificateFile [OS::MaxFileNameLength];
     char pszPrivateKeyFile [OS::MaxFileNameLength];
@@ -550,6 +554,15 @@ int HttpServer::StartServer()
 
     ReadStatistics();
     
+    if (m_pConfigFile->GetParameter("KeepAlive", &pszRhs) == OK && pszRhs != NULL) {
+        bKeepAlive = (atoi(pszRhs) == 1);
+    }
+    else {
+        ReportEvent("Error: Could not read KeepAlive flag from Alajar.conf");
+        goto ErrorExit;
+    }
+    m_bKeepAlive = bKeepAlive;
+
     if (m_pConfigFile->GetParameter ("FileCache", &pszRhs) == OK && pszRhs != NULL) {
         bFileCache = (atoi (pszRhs) == 1);
     } else {
@@ -604,27 +617,30 @@ int HttpServer::StartServer()
     
     ReportEvent ((String) "The threadpool is using " + iInitNumThreads + " to " + iMaxNumThreads + 
         " server thread" + (iMaxNumThreads != 1 ? "s" : ""));
+
+    if (m_bKeepAlive)
+        ReportEvent("Keep-Alive support is enabled");
     
     if (m_pConfigFile->GetParameter ("DefaultThreadPriority", &pszRhs) == OK && pszRhs != NULL) {
         
         if (_stricmp ("Lowest", pszRhs) == 0) {
-            ReportEvent ("The server threads are running at the lowest priority");
+            ReportEvent ("Server threads are running at the lowest priority");
             m_iDefaultPriority = Thread::LowestPriority;
         }
         else if (_stricmp ("Lower", pszRhs) == 0) {
-            ReportEvent ("The server threads are running at a lower priority");
+            ReportEvent ("Server threads are running at a lower priority");
             m_iDefaultPriority = Thread::LowerPriority;
         }
         else if (_stricmp ("Normal", pszRhs) == 0) {
-            ReportEvent ("The server threads are running at normal priority");
+            ReportEvent ("Server threads are running at normal priority");
             m_iDefaultPriority = Thread::NormalPriority;
         }
         else if (_stricmp ("Higher", pszRhs) == 0) {
-            ReportEvent ("The server threads are running at a higher priority");
+            ReportEvent ("Server threads are running at a higher priority");
             m_iDefaultPriority = Thread::HigherPriority;
         }
         else if (_stricmp ("Highest", pszRhs) == 0) {
-            ReportEvent ("The server threads are running at the highest priority");
+            ReportEvent ("Server threads are running at the highest priority");
             m_iDefaultPriority = Thread::HighestPriority;
         }
         else {
@@ -952,21 +968,26 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
             break;
         }
 
-        // Best effort set the send and receive timeouts to 15 seconds
-        if (pSocket->SetRecvTimeOut (15000) != OK) {
-            ReportEvent ("Socket::SetRecvTimeOut failed");
-        }
+        printf("Handling socket %p\n", pSocket);
 
-        if (pSocket->SetSendTimeOut (15000) != OK) {
-            ReportEvent ("Socket::SetSendTimeOut failed");
-        }
+        if (!pSocket->IsNegotiated())
+        {
+            // Best effort set the send and receive timeouts to 15 seconds
+            if (pSocket->SetRecvTimeOut(15000) != OK) {
+                ReportEvent("Socket::SetRecvTimeOut failed");
+            }
 
-        // Negotiate the connection.  If this fails, we drop the connection and continue
-        iErrCode = pSocket->Negotiate();
-        if (iErrCode != OK) {
-            pSocket->Close();
-            Socket::FreeSocket (pSocket);
-            continue;
+            if (pSocket->SetSendTimeOut(15000) != OK) {
+                ReportEvent("Socket::SetSendTimeOut failed");
+            }
+
+            // Negotiate the connection.  If this fails, we drop the connection and continue
+            iErrCode = pSocket->Negotiate();
+            if (iErrCode != OK) {
+                pSocket->Close();
+                Socket::FreeSocket(pSocket);
+                continue;
+            }
         }
 
         // Get request, response objects
@@ -986,7 +1007,7 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
 
         // Parse the request
         iErrCode = pHttpRequest->ParseHeaders();
-        
+
         // Check for parsing errors
         switch (iErrCode) {
             
@@ -1005,13 +1026,16 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         case ERROR_OUT_OF_DISK_SPACE:
             pHttpResponse->SetStatusCode (HTTP_503);
             break;
-         
+
         case ERROR_SOCKET_CLOSED:
             // No reason to do anything further
             pSocket->Close();
             return iErrCode;
 
         case ERROR_MALFORMED_REQUEST:
+            pHttpResponse->SetStatusCode(HTTP_400);
+            break;
+
         default:
             pHttpResponse->SetStatusCode (HTTP_400);
             break;
@@ -1069,19 +1093,18 @@ void HttpServer::FinishRequest (HttpRequest* pHttpRequest, HttpResponse* pHttpRe
 
     StatisticsAndLog (pHttpRequest, pHttpResponse, pSocket, psThreadStats, iErrCode);
     
-    if (pHttpResponse->ConnectionClosed()) {
-        
+    if (pHttpResponse->ConnectionClosed())
+    {
         // Free socket
         pSocket->Close();
         Socket::FreeSocket (pSocket);
-
-    } else {
-        
+    }
+    else
+    {
         // Put the socket back onto the queue
         m_pThreadPool->QueueTask (pSocket);
     }
-    
-    // Give the objects back to the cache
+
     ReleaseHttpObjects (pHttpRequest, pHttpResponse);
 }
 
@@ -1324,6 +1347,11 @@ const char* HttpServer::GetServerName() {
 
 const Uuid& HttpServer::GetUniqueIdentifier() {
     return m_uuidUniqueIdentifier;
+}
+
+bool HttpServer::GetKeepAlive()
+{
+    return m_bKeepAlive;
 }
 
 unsigned int HttpServer::GetNumThreads() {
