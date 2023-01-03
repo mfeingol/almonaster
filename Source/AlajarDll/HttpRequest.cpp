@@ -1102,17 +1102,20 @@ int HttpRequest::ParseHeader (char* pszLine) {
     case 'I':
     case 'i':
 
-        if (m_bIfModifiedSinceHeaderParsed) {
-            iErrCode = ERROR_MALFORMED_REQUEST;
-            goto Cleanup;
-        }
-        m_bIfModifiedSinceHeaderParsed = true;
+        if (_stricmp(pszHeader, "If-Modified-Since:") == 0 && !String::IsBlank(pszValue)) {
 
-        // TODO - if the method is overridden, this might be a bit ambitious
-        if (_stricmp (pszHeader, "If-Modified-Since") == 0 && !String::IsBlank (pszValue)) {
-            m_bCached = !File::WasFileModifiedAfter (m_pszFileName, pszValue, &tLastModified);
+            if (m_bIfModifiedSinceHeaderParsed) {
+                iErrCode = ERROR_MALFORMED_REQUEST;
+                goto Cleanup;
+            }
+            m_bIfModifiedSinceHeaderParsed = true;
+
+            // TODO - if the method is overridden, this might be a bit ambitious
+            if (_stricmp(pszHeader, "If-Modified-Since") == 0 && !String::IsBlank(pszValue)) {
+                m_bCached = !File::WasFileModifiedAfter(m_pszFileName, pszValue, &tLastModified);
+            }
         }
-        
+
         break;
         
     // User-Agent
