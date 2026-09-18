@@ -1848,7 +1848,9 @@ void HttpServer::StatisticsAndLog (HttpRequest* pHttpRequest, HttpResponse* pHtt
 
         ITraceLog* pLog = pPageSource->GetLog();
         AutoRelease<ITraceLog> release_pLog(pLog);
-        pLog->Write(TRACE_ALWAYS, pszText);
+        if (pLog != NULL) {
+            pLog->Write(TRACE_ALWAYS, pszText);
+        }
     }
 }
 

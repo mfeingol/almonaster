@@ -64,6 +64,9 @@ ReportWrapper::ReportWrapper(PageSource* pPageSource)
 int ReportWrapper::Write(TraceInfoLevel level, const char* pszMessage)
 {
     ITraceLog* pLog = m_pPageSource->GetReportInternal();
+    if (!pLog) {
+        return ERROR_OUT_OF_MEMORY;
+    }
     AutoRelease<ITraceLog> release_pLog(pLog);
     return pLog->Write(level, pszMessage);
 }
@@ -71,6 +74,9 @@ int ReportWrapper::Write(TraceInfoLevel level, const char* pszMessage)
 int ReportWrapper::GetTail(char* pszBuffer, unsigned int cbSize)
 {
     ITraceLog* pLog = m_pPageSource->GetReportInternal();
+    if (!pLog) {
+        return ERROR_OUT_OF_MEMORY;
+    }
     AutoRelease<ITraceLog> release_pLog(pLog);
 
     ITraceLogReader* pReader;
@@ -463,8 +469,12 @@ ITraceLog* PageSource::GetReportInternal()
             }
         }
     }
+
     pReturn = m_pReport;
-    pReturn->AddRef();
+    if (pReturn != NULL) {
+        pReturn->AddRef();
+    }
+
     m_reportMutex.Signal();
 
     return pReturn;
@@ -497,7 +507,9 @@ ITraceLog* PageSource::GetLog()
         }
     }
     pReturn = m_pLog;
-    pReturn->AddRef();
+    if (pReturn != NULL) {
+        pReturn->AddRef();
+    }
     m_logMutex.Signal();
 
     return pReturn;
