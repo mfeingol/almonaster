@@ -1236,7 +1236,11 @@ int HttpRequest::ParseHeaders() {
     // This loop will terminate when the end of the headers is received
     while (true) {
 
-        iErrCode = m_pSocket->Recv (pszBuffer + stBeginRecv, MAX_REQUEST_LENGTH, &stNumBytes);
+        if (stBeginRecv >= MAX_REQUEST_LENGTH) {
+            return ERROR_MALFORMED_REQUEST;
+        }
+
+        iErrCode = m_pSocket->Recv (pszBuffer + stBeginRecv, MAX_REQUEST_LENGTH - stBeginRecv, &stNumBytes);
         if (iErrCode != OK) {
             return ERROR_SOCKET_CLOSED;
         }
