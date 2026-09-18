@@ -2335,9 +2335,12 @@ int HttpRequest::HandleMultiPartFormsInBuffer (size_t stNumBytes, char* pszBuffe
         // Leave pszEnd pointing to start of next form
         pszEnd = pszNext;
         *pszEnd = *m_pszSeparator;
-        
-        // Adjust buffer for next round
-        stBufferLength -= stTempLength;
+
+        // Adjust buffer for next round. Recompute directly from the pointers rather than
+        // subtracting stTempLength - that subtraction is only correct if the boundary we
+        // just consumed started at pszBuffer[0], which isn't guaranteed on the first pass
+        // (e.g. a MIME preamble, or malformed input, before the first boundary).
+        stBufferLength = pszEndMarker - pszEnd;
 
         memcpy (pszBuffer, pszEnd, stBufferLength);
         pszBuffer[stBufferLength] = '\0';
