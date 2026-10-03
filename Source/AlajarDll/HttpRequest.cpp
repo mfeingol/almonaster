@@ -592,11 +592,14 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
         stLen ++;
         
         delete [] m_pszUri;
+        m_stUriLength = 0;
+
         m_pszUri = new char [stLen];
         if (m_pszUri == NULL) {
             return ERROR_OUT_OF_MEMORY;
         }
-        
+        m_stUriLength = stLen;
+
         iErrCode = Algorithm::UnescapeString (pszUri, m_pszUri, stLen);
         if (iErrCode != OK) {
             return iErrCode;
@@ -647,6 +650,7 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
 
         // Build path
         strncpy (pszFilePath, m_pPageSource->GetBasePath(), OS::MaxFileNameLength);
+        pszFilePath [OS::MaxFileNameLength] = '\0';
 
         char* pszUseURI = m_pszUri;
         if (pszUseURI[0] == '/' || pszUseURI[0] == '\\') {
@@ -658,6 +662,7 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
 
         // Build path
         strncpy (pszFilePath, m_pPageSource->GetBasePath(), OS::MaxFileNameLength);
+        pszFilePath [OS::MaxFileNameLength] = '\0';
 
         if (pszNextSlash != NULL) {
             strncat (pszFilePath, pszNextSlash, OS::MaxFileNameLength - strlen (pszFilePath));
@@ -899,21 +904,23 @@ int HttpRequest::ParseHeader (char* pszLine) {
                     goto Cleanup;
                 }
 
-                m_stSeparatorLength = strlen (pszValue) + 1;
+                size_t cchBoundary = strlen (pszValue);
 
-                if (*pszValue == '\"' && pszValue[m_stSeparatorLength - 2] == '\"') {
-
-                    // Opera 3.50 puts quotes around the separator
-                    m_stSeparatorLength -= 2;
-                    strncpy (m_pszSeparator + 2, pszValue + 1, m_stSeparatorLength - 1);
-                    m_pszSeparator[m_stSeparatorLength + 1] = '\0';
-
-                } else {
-
-                    // Normal case: no quotes
-                    memcpy (m_pszSeparator + 2, pszValue, m_stSeparatorLength);
-                    m_stSeparatorLength ++;
+                // Opera 3.50 puts quotes around the separator
+                if (cchBoundary >= 2 && pszValue[0] == '\"' && pszValue[cchBoundary - 1] == '\"') {
+                    pszValue ++;
+                    cchBoundary -= 2;
                 }
+
+                if (cchBoundary == 0) {
+                    iErrCode = ERROR_MALFORMED_REQUEST;
+                    goto Cleanup;
+                }
+
+                // m_stSeparatorSpace is larger than the whole header value, so "--" + boundary + '\0' fits
+                memcpy (m_pszSeparator + 2, pszValue, cchBoundary);
+                m_pszSeparator[cchBoundary + 2] = '\0';
+                m_stSeparatorLength = cchBoundary + 2;
             }
         }
         else if (_stricmp (pszHeader, "Content-Length:") == 0) {
@@ -963,7 +970,9 @@ int HttpRequest::ParseHeader (char* pszLine) {
                 if (m_ppCookies != NULL) {
                     delete [] m_ppCookies;
                 }
-    
+                m_ppszCookieName = NULL;
+                m_stCookieSpace = 0;
+
                 m_ppCookies = new Cookie* [iNumSemicolons * 2];
                 if (m_ppCookies == NULL) {
                     iErrCode = ERROR_OUT_OF_MEMORY;
@@ -999,6 +1008,8 @@ int HttpRequest::ParseHeader (char* pszLine) {
 
                     m_phtCookieTable = new HashTable<const char*, Cookie*, RequestHashValue, RequestEquals> (NULL, NULL);
                     if (m_phtCookieTable == NULL || !m_phtCookieTable->Initialize (iNumCookies)) {
+                        delete m_phtCookieTable;
+                        m_phtCookieTable = NULL;
                         iErrCode = ERROR_OUT_OF_MEMORY;
                         if (iNumSemicolons > 100) {
                             delete [] ppszCookie;
@@ -1032,6 +1043,9 @@ int HttpRequest::ParseHeader (char* pszLine) {
                     pCookie = Cookie::CreateInstance (pszCookieName, pszCookieValue);
                     if (pCookie == NULL) {
                         iErrCode = ERROR_OUT_OF_MEMORY;
+                        if (iNumSemicolons > 100) {
+                            delete [] ppszCookie;
+                        }
                         goto Cleanup;
                     }
 
@@ -1330,15 +1344,18 @@ int HttpRequest::ParseHeaders() {
             return ERROR_MALFORMED_REQUEST;
         }
 
-        // Reallocate the buffer if necessary
-        if (m_stContentLength > MAX_REQUEST_LENGTH + 1)
+        // Reallocate the buffer if necessary, keeping any body bytes that arrived with the headers
+        if (m_stContentLength > MAX_REQUEST_LENGTH)
         {
-            delete[] pszBuffer;
-            pszBuffer = new char[m_stContentLength + 1];
-            if (pszBuffer == NULL)
+            char* pszNewBuffer = new char[m_stContentLength + 1];
+            if (pszNewBuffer == NULL)
             {
                 return ERROR_OUT_OF_MEMORY;
             }
+
+            memcpy(pszNewBuffer, pszBuffer, stBeginRecv);
+            delete[] pszBuffer;
+            pszBuffer = pszNewBuffer;
         }
 
         // Receive the rest of the data
@@ -1349,14 +1366,16 @@ int HttpRequest::ParseHeaders() {
                 return ERROR_SOCKET_CLOSED;
             }
             stBeginRecv += stNumBytes;
-            pszBuffer[stBeginRecv] = '\0';
         }
+
+        // The whole body is now in the buffer. Ignore anything the client sent past it
+        pszBuffer[m_stContentLength] = '\0';
 
         // What kind of forms?
         if (m_pszSeparator == NULL || m_pszSeparator[0] == '\0') {
-            iErrCode = HandleSimpleForms (pszBuffer, MAX_REQUEST_LENGTH, stBeginRecv);
+            iErrCode = HandleSimpleForms (pszBuffer);
         } else {
-            iErrCode = HandleMultipartForms (pszBuffer, stBeginRecv);
+            iErrCode = HandleMultipartForms (pszBuffer, m_stContentLength);
         }
 
         if (iErrCode != OK) {
@@ -1511,204 +1530,11 @@ IHttpForm* HttpRequest::GetFormBeginsWith (const char* pszName) {
 }
 
 
-int HttpRequest::HandleSimpleForms (char* pszBuffer, size_t stBufferSize, size_t stNumBytesInBuffer) {
+int HttpRequest::HandleSimpleForms (char* pszBuffer) {
 
-    int iErrCode = OK;
-    size_t stBytesParsed, stBytesIn, stCurrentPos, stTemp;
-
-    iErrCode = ParseForms (pszBuffer, &stBytesParsed, stNumBytesInBuffer >= m_stContentLength);
-    if (iErrCode != OK) {
-        return iErrCode;
-    }
-
-    Assert (stBytesParsed <= stNumBytesInBuffer);
-    stCurrentPos = stNumBytesInBuffer - stBytesParsed;
-
-    if (stCurrentPos > 0) {
-        memmove (pszBuffer, pszBuffer + stBytesParsed, stCurrentPos);
-    }
-
-    while (stBytesParsed < m_stContentLength) {
-
-        if (stCurrentPos == stBufferSize) {
-
-            // The input field is larger than our buffer - stick it in a temp file
-            iErrCode = HandleLargeSimpleForm (pszBuffer, stBufferSize, stBytesParsed, &stCurrentPos, &stTemp);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
-
-            stBytesParsed += stTemp;
-            continue;
-        }
-
-        iErrCode = m_pSocket->Recv (
-            pszBuffer + stCurrentPos, 
-            min (stBufferSize - stCurrentPos, m_stContentLength - stBytesParsed), 
-            &stBytesIn
-            );
-
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-
-        Assert (stCurrentPos + stBytesIn < stBufferSize + 1);
-        pszBuffer [stCurrentPos + stBytesIn] = '\0';
-
-        iErrCode = ParseForms (
-            pszBuffer, 
-            &stTemp, 
-            stBytesParsed + stCurrentPos + stBytesIn >= m_stContentLength
-            );
-
-        if (iErrCode != OK) {
-            return iErrCode;
-        }
-
-        stBytesParsed += stTemp;
-        stCurrentPos += stBytesIn - stTemp;
-
-        if (stCurrentPos > 0) {
-            memmove (pszBuffer, pszBuffer + stTemp, stCurrentPos);
-        }
-    }
-
-    return OK;
-}
-
-int HttpRequest::HandleLargeSimpleForm (char* pszBuffer, size_t stBufferSize, size_t stBytesParsed, 
-                                        size_t* pstCurrentPos, size_t* pstBytesParsed) {
-
-    // The format for what we're parsing is key=value[&]
-    //
-    // The algorithm is to recv and store in a temp file until we're given an & or we hit the content length
-
-    int iErrCode = OK;
-    size_t stBytesIn, stLargeBytesDownloaded = stBufferSize;
-    char* pszAmpersand = NULL, * pszFormName = NULL;
-
-    const size_t stNewBufferSize = 8191;
-
-    TempFile tTemp;
-
-    // Get the form name
-    pszFormName = strstr (pszBuffer, "=");
-    if (pszFormName == NULL) {
-        return ERROR_MALFORMED_REQUEST;
-    }
-
-    // Allocate a temp buffer
-    char* pszNewBuffer = new char [stNewBufferSize + 1];
-    if (pszNewBuffer == NULL) {
-        iErrCode = ERROR_OUT_OF_MEMORY;
-        goto Cleanup;
-    }
-
-    // Create a temp file
-    iErrCode = tTemp.Open();
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    // Output current data to temp file
-    iErrCode = tTemp.Write (pszFormName + 1, stBufferSize - (pszFormName + 1 - pszBuffer));
-    if (iErrCode != OK) {
-        goto Cleanup;
-    }
-
-    pszFormName[0] = '\0';
-    pszFormName = pszBuffer;
-
-    while (true) {
-
-        iErrCode = m_pSocket->Recv (
-            pszNewBuffer,
-            min (stNewBufferSize, m_stContentLength - stBytesParsed - stLargeBytesDownloaded), 
-            &stBytesIn
-            );
-
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-
-        pszNewBuffer [stBytesIn] = '\0';
-        stLargeBytesDownloaded += stBytesIn;
-
-        // Detect exit condition
-        if ((pszAmpersand = strstr (pszNewBuffer, "&")) != NULL ||
-            stBytesParsed + stLargeBytesDownloaded >= m_stContentLength) {
-
-            size_t stWrite;
-
-            // Flush the data
-            if (pszAmpersand != NULL) {
-
-                stWrite = pszAmpersand - pszNewBuffer;
-                *pstCurrentPos = stBytesIn - stWrite - 1;
-
-            } else {
-
-                stWrite = stBytesIn;
-                if (pszNewBuffer [stWrite - 2] == '\r' && 
-                    pszNewBuffer [stWrite - 1] == '\n') {
-                    stWrite -= 2;
-                }
-
-                *pstCurrentPos = 0;
-            }
-
-            iErrCode = tTemp.Write (pszNewBuffer, stWrite);
-            if (iErrCode != OK) {
-                goto Cleanup;
-            }
-
-            // Null cap the file
-            iErrCode = tTemp.Write ("", 1);
-            if (iErrCode != OK) {
-                goto Cleanup;
-            }
-
-            tTemp.Close();
-
-            iErrCode = AddHttpForm (LARGE_SIMPLE_FORM, pszFormName, tTemp.GetName(), NULL);
-            if (iErrCode != OK) {
-                goto Cleanup;
-            }
-
-            *pstBytesParsed = stLargeBytesDownloaded - *pstCurrentPos;
-
-            // Put extra data back into the provided buffer
-            if (pszAmpersand != NULL) {
-                memcpy (pszBuffer, pszNewBuffer + stWrite + 1, *pstCurrentPos);
-                pszBuffer [*pstCurrentPos] = '\0';
-            }
-
-            break;
-        }
-
-        // Still plugging - flush data and continue
-        iErrCode = tTemp.Write (pszNewBuffer, stBytesIn);
-        if (iErrCode != OK) {
-            goto Cleanup;
-        }
-    }
-
-Cleanup:
-
-    if (pszNewBuffer != NULL) {
-        delete [] pszNewBuffer;
-    }
-
-    if (iErrCode != OK) {
-
-        if (tTemp.IsOpen()) {
-            tTemp.Close();
-        }
-
-        tTemp.Delete();
-    }
-
-    return iErrCode;
+    // The entire body has already been received and null-terminated
+    size_t stParsed;
+    return ParseForms (pszBuffer, &stParsed, true);
 }
 
 
@@ -1723,11 +1549,11 @@ int HttpRequest::AddHttpForm (HttpFormType ftFormType, const char* pszHttpFormNa
     Assert (pszHttpFormName != NULL);
     Assert (ftFormType >= SIMPLE_FORM && ftFormType <= LARGE_SIMPLE_FORM);
 
-    if (pszHttpFormValue == NULL || pszHttpFormValue[0] == '\0') {
+    if (pszHttpFormValue != NULL && pszHttpFormValue[0] == '\0') {
         pszHttpFormValue = NULL;
     }
 
-    if (pszFileName == NULL || pszFileName[0] == '\0') {
+    if (pszFileName != NULL && pszFileName[0] == '\0') {
         pszFileName = NULL;
     }
 
@@ -1735,7 +1561,13 @@ int HttpRequest::AddHttpForm (HttpFormType ftFormType, const char* pszHttpFormNa
     if (m_phtHttpFormTable == NULL) {
         
         m_phtHttpFormTable = new HashTable<const char*, HttpForm*, RequestHashValue, RequestEquals> (NULL, NULL);
-        if (m_phtHttpFormTable == NULL || !m_phtHttpFormTable->Initialize (DEFAULT_NUM_FORMS)) {
+        if (m_phtHttpFormTable == NULL) {
+            return ERROR_OUT_OF_MEMORY;
+        }
+
+        if (!m_phtHttpFormTable->Initialize (DEFAULT_NUM_FORMS)) {
+            delete m_phtHttpFormTable;
+            m_phtHttpFormTable = NULL;
             return ERROR_OUT_OF_MEMORY;
         }
     }
@@ -1758,48 +1590,42 @@ int HttpRequest::AddHttpForm (HttpFormType ftFormType, const char* pszHttpFormNa
 
     } else {
 
-        // Insert a new master form
-        const char* pszSafeHttpFormName = pHttpForm->GetName();
-        
-        bRetVal = m_phtHttpFormTable->Insert (pszSafeHttpFormName, pHttpForm);
-        Assert (bRetVal);
-
-        // Resize?
+        // Resize? Do this before inserting into the table, so a failure can't leave a released form there
         if (m_iNumHttpFormsSpace == m_iNumHttpForms) {
 
-            if (m_iNumHttpForms == 0) {
-                
-                m_ppHttpForms = new HttpForm* [20];
-                if (m_ppHttpForms == NULL) {
-                    pHttpForm->Release();
-                    return ERROR_OUT_OF_MEMORY;
-                }
+            unsigned int iNumForms = m_iNumHttpForms == 0 ? 10 : m_iNumHttpForms * 2;
 
-                m_ppszHttpFormName = (const char**) m_ppHttpForms + 10;
-                m_iNumHttpFormsSpace = 10;
-            
-            } else {
-
-                unsigned int iNumForms = m_iNumHttpForms * 2;
-            
-                HttpForm** ppHttpForms = new HttpForm* [iNumForms * 2];
-                if (ppHttpForms == NULL) {
-                    pHttpForm->Release();
-                    return ERROR_OUT_OF_MEMORY;
-                }
-
-                const char** ppszHttpFormName = (const char**) ppHttpForms + iNumForms;
-
-                memcpy (ppHttpForms, m_ppHttpForms, iNumForms * sizeof (HttpForm*));
-                memcpy (ppszHttpFormName, ppszHttpFormName, iNumForms * sizeof (HttpForm*));
-
-                delete [] m_ppHttpForms;
-
-                m_ppHttpForms = ppHttpForms;
-                m_ppszHttpFormName = ppszHttpFormName;
-
-                m_iNumHttpFormsSpace = iNumForms;
+            // Forms in the first half, names in the second
+            HttpForm** ppHttpForms = new HttpForm* [iNumForms * 2];
+            if (ppHttpForms == NULL) {
+                pHttpForm->Release();
+                return ERROR_OUT_OF_MEMORY;
             }
+
+            const char** ppszHttpFormName = (const char**) ppHttpForms + iNumForms;
+
+            if (m_iNumHttpForms > 0) {
+                memcpy (ppHttpForms, m_ppHttpForms, m_iNumHttpForms * sizeof (HttpForm*));
+                memcpy (ppszHttpFormName, m_ppszHttpFormName, m_iNumHttpForms * sizeof (const char*));
+            }
+
+            if (m_ppHttpForms != NULL) {
+                delete [] m_ppHttpForms;
+            }
+
+            m_ppHttpForms = ppHttpForms;
+            m_ppszHttpFormName = ppszHttpFormName;
+
+            m_iNumHttpFormsSpace = iNumForms;
+        }
+
+        // Insert a new master form
+        const char* pszSafeHttpFormName = pHttpForm->GetName();
+
+        bRetVal = m_phtHttpFormTable->Insert (pszSafeHttpFormName, pHttpForm);
+        if (!bRetVal) {
+            pHttpForm->Release();
+            return ERROR_OUT_OF_MEMORY;
         }
 
         // Copy pointers
@@ -1854,7 +1680,8 @@ int HttpRequest::ParseForms (char* pszFormStart, size_t* pstParsed, bool bLastBy
                 stConsumed += pszValue - pszName + stLastValueLen;
 
                 // Some browsers send a \r\n at the end, just for kicks
-                if (pszValue [stLastValueLen - 2] == '\r' &&
+                if (stLastValueLen >= 2 &&
+                    pszValue [stLastValueLen - 2] == '\r' &&
                     pszValue [stLastValueLen - 1] == '\n') {
                     pszValue [stLastValueLen - 2] = '\0';
                 }
@@ -1888,414 +1715,124 @@ int HttpRequest::ParseForms (char* pszFormStart, size_t* pstParsed, bool bLastBy
 
 int HttpRequest::HandleMultipartForms (char* pszBuffer, size_t stNumBytes) {
 
-    int iErrCode;
-    size_t stNumProcessed = 0, stNumRemaining = 0, stNumBytesRecvd, stNumBytesGone = 0, stNetwork;
-
-    if (stNumBytes == m_stContentLength) {
-
-        // Handle the forms in here and we're done!
-        return HandleMultiPartFormsInBuffer (stNumBytes, pszBuffer, &stNumProcessed, &stNumRemaining);
-
-    } else {
-
-        // If we received some data in the buffer, try to get forms out of it
-        if (stNumBytes > 0) {
-            iErrCode = HandleMultiPartFormsInBuffer (stNumBytes, pszBuffer, &stNumProcessed, &stNumRemaining);
-        }
-
-        // At this point, we either have no data or incomplete data in the buffer,
-        // so we need to recv the remaining data
-        stNumBytesGone = stNumProcessed;
-        size_t stLimit = m_stContentLength - m_stSeparatorLength - 6;
-        
-        while (stNumBytesGone < stLimit) {
-            
-            stNetwork = m_stContentLength - stNumRemaining - stNumBytesGone;
-            if (stNetwork > 0) {
-                
-                iErrCode = m_pSocket->Recv (
-                    pszBuffer + stNumRemaining, 
-                    min (stNetwork, MAX_REQUEST_LENGTH - stNumRemaining), &stNumBytesRecvd
-                    );
-                
-                if (iErrCode != OK) {
-                    return iErrCode;
-                }
-                stNumRemaining += stNumBytesRecvd;
-            }
-
-            // Send the new data in to be processed
-            iErrCode = HandleMultiPartFormsInBuffer (stNumRemaining, pszBuffer, &stNumProcessed, &stNumRemaining);
-            if (iErrCode != OK) {
-                return iErrCode;
-            }
-
-            // If nothing happened, then we have a big form in our hands
-            if (stNumProcessed != 0) {
-
-                stNumBytesGone += stNumProcessed;
-
-            } else {
-
-                // Try to make sense of it
-                iErrCode = HandleBigMultiPartForm (stNumRemaining, pszBuffer, &stNumProcessed, &stNumRemaining);
-                if (iErrCode != OK) {
-                    return iErrCode;
-                }
-
-                if (stNumProcessed == 0) {
-                    return ERROR_FAILURE;
-                }
-
-                stNumBytesGone += stNumProcessed;
-                if (stNumBytesGone < m_stContentLength) {
-
-                    // Run the simple handler now and clean up the rest of the forms after the big one
-                    iErrCode = HandleMultiPartFormsInBuffer (stNumRemaining, pszBuffer, &stNumProcessed, &stNumRemaining);
-                    if (iErrCode != OK) {
-                        return iErrCode;
-                    }
-
-                    stNumBytesGone += stNumProcessed;
-
-                    // If the loop doesn't terminate now, we have another big one coming up
-                }
-            }
-
-        }   // End while loop
-
-        // At this point, we've processed all the data in the message
-    }
-
-    return OK;
-}
-
-
-int HttpRequest::HandleBigMultiPartForm (size_t stNumRemaining, char* pszBuffer, size_t* pstNumProcessed, 
-                                         size_t* pstNumRemaining) {
+    // The entire body has already been received and null-terminated at pszBuffer[stNumBytes].
+    // Each part looks like this:
+    //
+    // --separator\r\n
+    // Content-Disposition: form-data; name="XXX"[; filename="YYY"\r\nContent-Type: ZZZ]\r\n
+    // \r\n
+    // data\r\n
+    //
+    // and the last part is followed by --separator--\r\n
 
     int iErrCode;
-
-    HttpFormType ftFormType = UNSUPPORTED_FORM_TYPE;
-    size_t stNumBytesRecvd;
-
-    TempFile tfTempFile;
-    char* pszEndMarker = pszBuffer + stNumRemaining;
-
-    // Initialize return values
-    *pstNumProcessed = 0;
-    *pstNumRemaining = stNumRemaining;
-
-    // Find the start of the form name
-    char* pszName = strstr(pszBuffer + m_stSeparatorLength, "name=");
-    if (pszName == NULL) {
-        return ERROR_MALFORMED_REQUEST;
-    }
-
-    // Find the begin quote
-    char* pszBeginQuote = strstr(pszName, "\"");
-    if (pszBeginQuote == NULL) {
-        return ERROR_MALFORMED_REQUEST;
-    }
-
-    // Find the end quote and cap it with a null character
-    char* pszForm = pszBeginQuote + 1;
-    char* pszEndQuote = strstr(pszForm, "\"");
-    if (pszEndQuote == NULL) {
-        return ERROR_MALFORMED_REQUEST;
-    }
-    *pszEndQuote = '\0';
-    
-    // That's our form name
-    size_t stFormNameLen = strlen(pszForm) + 1;
-    char* pszFormName;
-    if (stFormNameLen > MAX_STACK_ALLOC)
-    {
-        pszFormName = new char [stFormNameLen];
-        if (pszFormName == NULL)
-        {
-            return ERROR_OUT_OF_MEMORY;
-        }
-    }
-    else
-    {
-        pszFormName = (char*) StackAlloc (stFormNameLen);
-    }
-    strcpy(pszFormName, pszForm);
-
-    char* pszFileName = NULL, * pszNext;
-    size_t stFileSize = 0;
-
-    // Determine form type
-    char* pszType = pszForm + stFormNameLen;
-    if (pszType[0] == ';') {
-
-        if (strncmp (pszType, "; filename=", 11) != 0) {
-            iErrCode = ERROR_MALFORMED_REQUEST;
-            goto Cleanup;
-        }
-        
-        // Jump over the semicolon space and filename
-        pszType += 12;
-        
-        // Find the end quote and cap it with a null character
-        char* pszBegin = strstr (pszType, "\"");
-        if (pszBegin == NULL) {
-            iErrCode = ERROR_MALFORMED_REQUEST;
-            goto Cleanup;
-        }
-        *pszBegin = '\0';
-        
-        // That's the file name
-        pszFileName = pszType;       
-        
-        // Find the beginning of the content-type
-        pszType += strlen (pszFileName) + 3;
-        
-        // Ignore the content-type and find the data
-        pszType = strstr (pszType, "\r\n");
-        if (pszType == NULL) {
-            iErrCode = ERROR_MALFORMED_REQUEST;
-            goto Cleanup;
-        }
-        pszType += 4;
-
-        // It's a file
-        ftFormType = FILE_FORM;
-        m_iNumFiles ++;
-    
-    } else {
-
-        if (strncmp (pszType, "\r\n\r\n", 4) != 0) {
-            iErrCode = ERROR_MALFORMED_REQUEST;
-            goto Cleanup;
-        }
-
-        pszType += 4;
-
-        // It's a large data form
-        ftFormType = SIMPLE_FORM;
-    }
-        
-    // Open a temporary file for the data itself
-    tfTempFile.Open();
-
-    // Do we have a closing separator?
-    pszNext = Algorithm::memstr(pszType, m_pszSeparator, stNumRemaining - (pszType - pszBuffer));
-    if (pszNext != NULL)
-    {
-        // Write the data minus the \r\n at the end of the file's data (and of course the last separator)       
-        tfTempFile.Write(pszType, pszNext - pszType);
-    }
-    else
-    {
-        // The file is too big for this buffer, so write the first chunk to disk
-        tfTempFile.Write(pszType, pszEndMarker - pszType);
-        *pstNumProcessed = stNumRemaining;
-        *pstNumRemaining = 0;
-        
-        // Recv until we have the whole thing
-        while (true)
-        {
-            iErrCode = m_pSocket->Recv (pszBuffer, MAX_REQUEST_LENGTH, &stNumBytesRecvd);
-            if (iErrCode != OK) {
-                tfTempFile.Close();
-                tfTempFile.Delete();
-                goto Cleanup;
-            }
-            
-            if (stNumBytesRecvd > 0) {
-                
-                pszNext = Algorithm::memstr (pszBuffer, m_pszSeparator, stNumBytesRecvd);
-                
-                if (pszNext == NULL) {
-                    
-                    // Another aimless bucketload of data
-                    tfTempFile.Write (pszBuffer, stNumBytesRecvd);
-                    (*pstNumProcessed) += stNumBytesRecvd;
-                    
-                } else {
-                    
-                    size_t stNumData = pszNext - pszBuffer - 2;
-                    
-                    // EOF found!
-                    iErrCode = tfTempFile.Write (pszBuffer, stNumData);
-                    if (iErrCode != OK) {
-                        tfTempFile.Close();
-                        tfTempFile.Delete();
-                        goto Cleanup;
-                    }
-
-                    // Fix the buffer
-                    (*pstNumProcessed) += stNumData;
-                    *pstNumRemaining = stNumBytesRecvd - stNumData;
-                    memcpy (pszBuffer, pszNext, *pstNumRemaining);
-                    pszBuffer[*pstNumRemaining] = '\0';
-                    break;
-                }
-            }
-        }   // End while
-    }   // End didn't find a closing token
-    
-    // Close the temp file
-    iErrCode = tfTempFile.GetSize (&stFileSize);
-    if (iErrCode != OK) {
-        tfTempFile.Close();
-        tfTempFile.Delete();
-        goto Cleanup;
-    }
-
-    m_stNumBytes += stFileSize; 
-
-    // Add form
-    if (ftFormType == FILE_FORM) {
-    
-        tfTempFile.Close();
-        iErrCode = AddHttpForm (FILE_FORM, pszFormName, tfTempFile.GetName(), pszFileName);
-    
-    } else {
-
-        // Add a terminating zero, just in case
-        iErrCode = tfTempFile.Write ("", 1);
-        if (iErrCode != OK) {
-            Assert (false);
-            tfTempFile.Close();
-            tfTempFile.Delete();
-            goto Cleanup;
-        }
-
-        tfTempFile.Close();
-
-        iErrCode = AddHttpForm (LARGE_SIMPLE_FORM, pszFormName, tfTempFile.GetName(), NULL);
-    }
-
-    if (iErrCode != OK) {
-        tfTempFile.Delete();
-        goto Cleanup;
-    }
-
-Cleanup:
-
-    if (stFormNameLen > MAX_STACK_ALLOC) {
-        delete [] pszFormName;
-    }
-
-    return iErrCode;
-}
-
-int HttpRequest::HandleMultiPartFormsInBuffer (size_t stNumBytes, char* pszBuffer, size_t* pstBytesProcessed, 
-                                                size_t* pstBytesRemaining) {
-
-    int iErrCode;
-
     TempFile tfTempFile;
 
-    size_t stFileSize = 0, stTempLength, stBufferLength = stNumBytes;
-    
-    HttpFormType ftFormType = UNSUPPORTED_FORM_TYPE;
+    const size_t cchDisposition = countof ("Content-Disposition: form-data; name=") - 1;
+    const size_t cchFileName = countof ("; filename=\"") - 1;
 
-    const char* pszFormValue;
-    char* pszFormName, * pszFileName, * pszEndMarker = pszBuffer + stNumBytes;
+    char* pszEndMarker = pszBuffer + stNumBytes;
+    char* pszEnd = Algorithm::memstr (pszBuffer, m_pszSeparator, stNumBytes);
 
-    char* pszNext, * pszBegin = pszBuffer;
-    char* pszEnd = Algorithm::memstr (pszBegin, m_pszSeparator, stBufferLength);
-
-    *pstBytesProcessed = 0;
-    *pstBytesRemaining = stNumBytes;
-    
     while (pszEnd != NULL) {
 
-        pszNext = pszEnd + m_stSeparatorLength + 2;
-        if (pszNext >= pszEndMarker) {
+        // Jump the separator and "\r\n"
+        if ((size_t) (pszEndMarker - pszEnd) <= m_stSeparatorLength + 2) {
             break;
         }
-        
-        pszNext = Algorithm::memstr (pszNext, m_pszSeparator, pszEndMarker - pszNext);
+        char* pszPart = pszEnd + m_stSeparatorLength + 2;
+
+        // Find the separator that terminates this part
+        char* pszNext = Algorithm::memstr (pszPart, m_pszSeparator, pszEndMarker - pszPart);
         if (pszNext == NULL) {
             break;
         }
 
-        // We have a form to parse, because there was another form terminating the one we discovered
-        stTempLength = pszNext - pszEnd;
-        pszEnd += m_stSeparatorLength + 2;  // Jump "\r\n"
-        
-        // Jump over the Content-Disposition: form-data; name="XXX"
-        pszEnd += 37;
-
-        if (pszEnd > pszEndMarker) {
-            break;
+        // The part's data is followed by "\r\n" before the next separator.
+        // Null-terminate the part there so nothing below can parse past it
+        if ((size_t) (pszNext - pszPart) < cchDisposition + 2) {
+            return ERROR_MALFORMED_REQUEST;
         }
+        char* pszPartEnd = pszNext - 2;
+        *pszPartEnd = '\0';
 
-        if (*pszEnd == '\"') {
-            pszEnd ++;
+        // Jump over the Content-Disposition: form-data; name=
+        char* pszCursor = pszPart + cchDisposition;
+        char* pszFormName, * pszFileName = NULL;
+        const char* pszFormValue = NULL;
+        HttpFormType ftFormType;
 
-            // Find the end quote
-            pszBegin = strstr (pszEnd, "\"");
-        
+        if (*pszCursor == '\"') {
+            pszCursor ++;
+            pszFormName = pszCursor;
+            pszCursor = strchr (pszCursor, '\"');
         } else {
-
-            // Some browsers like fucking Lynx don't use quotes
-            pszBegin = strstr (pszEnd, "\r\n");
+            // Some browsers like Lynx don't use quotes
+            pszFormName = pszCursor;
+            pszCursor = strstr (pszCursor, "\r\n");
         }
 
-        if (pszBegin == NULL) {
-            break;
+        if (pszCursor == NULL) {
+            return ERROR_MALFORMED_REQUEST;
         }
-        
-        *pszBegin = '\0';
-        
-        // That's our form name
-        pszFormName = pszEnd;
-        
+        *pszCursor = '\0';
+        pszCursor ++;
+
         // Determine form type
-        pszEnd += strlen (pszFormName) + 1;
+        if (*pszCursor == ';') {
 
-        if (pszEnd > pszEndMarker) {
-            break;
-        }
-        
-        if (*pszEnd == ';') {
-            
-            // It's a file (a short one)
             ftFormType = FILE_FORM;
-            
-            // Jump over the semicolon space and filename
-            pszEnd += 12;
-            
+
+            if (strncmp (pszCursor, "; filename=\"", cchFileName) != 0) {
+                return ERROR_MALFORMED_REQUEST;
+            }
+            pszCursor += cchFileName;
+
             // Find the end quote and cap it with a null character
-            pszBegin = strstr (pszEnd, "\"");
-            *pszBegin = '\0';
+            char* pszQuote = strchr (pszCursor, '\"');
+            if (pszQuote == NULL) {
+                return ERROR_MALFORMED_REQUEST;
+            }
+            *pszQuote = '\0';
 
             // That's the file name on the client side
-            pszFileName = pszEnd;
+            pszFileName = pszCursor;
 
             if (*pszFileName == '\0') {
 
                 pszFileName = NULL;
-                pszFormValue = NULL;
-            
+
             } else {
-                
+
                 // An upload!
                 m_iNumFiles ++;
 
-                // Find the beginning of the content-type
-                pszEnd += strlen (pszFileName) + 3;
-                
                 // Ignore the content-type and find the data
-                pszEnd = strstr (pszEnd, "\r\n");
-                pszEnd += 4;
-                
-                if (pszEnd < pszNext - 2) {
-                    
-                    // Open a temporary file for the data itself
-                    tfTempFile.Open();
-                    
-                    // Write the data minus the \r\n at the end of the buffer
-                    tfTempFile.Write (pszEnd, pszNext - pszEnd - 2);
-                    pszFormValue = tfTempFile.GetName();
+                char* pszData = strstr (pszQuote + 1, "\r\n\r\n");
+                if (pszData == NULL) {
+                    return ERROR_MALFORMED_REQUEST;
+                }
+                pszData += 4;
+
+                if (pszData < pszPartEnd) {
+
+                    // Write the data to a temporary file
+                    iErrCode = tfTempFile.Open();
+                    if (iErrCode != OK) {
+                        return iErrCode;
+                    }
+
+                    iErrCode = tfTempFile.Write (pszData, pszPartEnd - pszData);
                     tfTempFile.Close();
 
+                    if (iErrCode != OK) {
+                        tfTempFile.Delete();
+                        return iErrCode;
+                    }
+
+                    pszFormValue = tfTempFile.GetName();
+
+                    size_t stFileSize;
                     iErrCode = File::GetFileSize (pszFormValue, &stFileSize);
                     if (iErrCode != OK) {
                         File::DeleteFile (pszFormValue);
@@ -2303,52 +1840,28 @@ int HttpRequest::HandleMultiPartFormsInBuffer (size_t stNumBytes, char* pszBuffe
                     }
 
                     m_stNumBytes += stFileSize;
-
-                } else {
-
-                    pszFormValue = NULL;
                 }
             }
-            
+
         } else {
-            
-            // It's a regular form
+
+            // It's a regular form. Jump over the "\r\n\r\n"
             ftFormType = SIMPLE_FORM;
-            
-            // Jump over the \0\r\n
-            pszEnd += 4;
-            
-            // Get the form's value
-            *(pszNext - 2) = '\0';
-            pszFormValue = pszEnd;
-            
-            // NULL filename
-            pszFileName = NULL;
+
+            if (pszPartEnd - pszCursor < 4) {
+                return ERROR_MALFORMED_REQUEST;
+            }
+            pszFormValue = pszCursor + 4;
         }
-        
+
         // Add form to table
         iErrCode = AddHttpForm (ftFormType, pszFormName, pszFormValue, pszFileName);
         if (iErrCode != OK) {
             return iErrCode;
         }
 
-        // Leave pszEnd pointing to start of next form
+        // Move on to the next part
         pszEnd = pszNext;
-        *pszEnd = *m_pszSeparator;
-
-        // Adjust buffer for next round. Recompute directly from the pointers rather than
-        // subtracting stTempLength - that subtraction is only correct if the boundary we
-        // just consumed started at pszBuffer[0], which isn't guaranteed on the first pass
-        // (e.g. a MIME preamble, or malformed input, before the first boundary).
-        stBufferLength = pszEndMarker - pszEnd;
-
-        memcpy (pszBuffer, pszEnd, stBufferLength);
-        pszBuffer[stBufferLength] = '\0';
-        pszEndMarker = pszBuffer + stBufferLength;
-        
-        pszBegin = pszEnd = pszBuffer;
-        (*pstBytesProcessed) += stTempLength;
-        (*pstBytesRemaining) -= stTempLength;
     }
 
     return OK;

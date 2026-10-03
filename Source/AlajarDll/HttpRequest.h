@@ -165,16 +165,8 @@ private:
     int ParseRequestHeader (char* pszLine);
     int ParseHeader (char* pszLine);
 
-    int HandleSimpleForms (char* pszBuffer, size_t stBufferSize, size_t stNumBytesInBuffer);
-    int HandleLargeSimpleForm (char* pszBuffer, size_t stBufferSize, size_t stBytesParsed, size_t* pstCurrentPos, 
-        size_t* pstBytesParsed);
-
+    int HandleSimpleForms (char* pszBuffer);
     int HandleMultipartForms (char* pszBuffer, size_t stNumBytes);
-    
-    int HandleMultiPartFormsInBuffer (size_t iNumBytes, char* pszBuffer, size_t* pstBytesProcessed, 
-        size_t* pstBytesRemaining);
-    int HandleBigMultiPartForm (size_t stNumBytesRemaining, char* pszBuffer, size_t* pstNumBytesProcessed, 
-        size_t* pstBytesNumRemaining);
 
     int ParseForms (char* pszFormStart, size_t* pstParsed, bool bLastBytes);
 

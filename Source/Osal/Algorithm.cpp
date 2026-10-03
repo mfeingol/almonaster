@@ -184,7 +184,12 @@ int Algorithm::UnescapeString (const char* pszInput, char* pszAnsi, size_t cchLe
         
         stCurPos ++;
     }
-    
+
+    // Make sure there's room for the null terminator
+    if (stCurPos >= cchLength) {
+        return ERROR_SMALL_BUFFER;
+    }
+
     // Null cap, remove trailing CRLF
     if (stCurPos >= 2 && 
         pszAnsi[stCurPos - 2] == '\r' && 
