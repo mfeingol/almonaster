@@ -968,8 +968,6 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
             break;
         }
 
-        printf("Handling socket %p\n", pSocket);
-
         if (!pSocket->IsNegotiated())
         {
             // Best effort set the send and receive timeouts to 15 seconds
