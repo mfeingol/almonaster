@@ -1124,8 +1124,9 @@ int HttpRequest::ParseHeader (char* pszLine) {
             }
             m_bIfModifiedSinceHeaderParsed = true;
 
-            // TODO - if the method is overridden, this might be a bit ambitious
-            if (_stricmp(pszHeader, "If-Modified-Since") == 0 && !String::IsBlank(pszValue)) {
+            // Only static files can be served from the client's cache.
+            // Page sources that override GET generate their responses dynamically
+            if (m_pPageSource != NULL && !m_pPageSource->OverrideGet()) {
                 m_bCached = !File::WasFileModifiedAfter(m_pszFileName, pszValue, &tLastModified);
             }
         }
