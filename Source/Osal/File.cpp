@@ -872,22 +872,30 @@ bool File::DoesDirectoryExist (const char* pszDirName) {
 }
 
 bool File::WasFileModifiedAfter (const char* pszFileName, const char* pszGMTDate, UTCTime* ptLastModified) {
-    
+
+    // If anything goes wrong, err on the side of saying the file was modified
+
     struct _stat statBuf;
     if (_stat (pszFileName, &statBuf) != 0) {
-        return false;
+        return true;
     }
 
     // Save last modified date
     *ptLastModified = (UTCTime) statBuf.st_mtime;
     tm* ptmFileTime = gmtime (&statBuf.st_mtime);
+    if (ptmFileTime == NULL) {
+        return true;
+    }
 
-    // Compare to sent date
+    // Parse the sent date, e.g. "Sun, 06 Nov 1994 08:49:37 GMT".
+    // Use %d rather than %i so that "08" and "09" aren't parsed as octal
     int iYear, iDay, iHour, iMinute, iSecond;
     char pszMonth [20];
     char pszWeekDay [20];
-    sscanf (pszGMTDate, "%s %i %s %i %i:%i:%i", pszWeekDay, &iDay, pszMonth, &iYear, &iHour, &iMinute, &iSecond);
-    
+    if (sscanf (pszGMTDate, "%19s %d %19s %d %d:%d:%d", pszWeekDay, &iDay, pszMonth, &iYear, &iHour, &iMinute, &iSecond) != 7) {
+        return true;
+    }
+
     // Year
     if (ptmFileTime->tm_year + 1900 != iYear) {
         return (ptmFileTime->tm_year + 1900 > iYear);
@@ -968,11 +976,12 @@ bool File::WasFileModifiedAfter (const char* pszFileName, const char* pszGMTDate
     }
 
     if (iMonth == -1) {
-        return false;
+        return true;
     }
-    
-    if (ptmFileTime->tm_mon + 1 != iMonth) {
-        return (ptmFileTime->tm_mon + 1 > iMonth);
+
+    // Both are zero-based
+    if (ptmFileTime->tm_mon != iMonth) {
+        return (ptmFileTime->tm_mon > iMonth);
     }
     
     // Day
