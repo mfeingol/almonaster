@@ -608,6 +608,7 @@ public:
 
     // Password hashing
     int GetAutologonPasswordHash(int iEmpireKey, String* pstrHash);
+    int SetAutologonCookies(unsigned int iEmpireKey);
     int GetPagePasswordHash(PageId page, int iEmpireKey, const UTCTime& tSalt, String* pstrHash);
 
     void HashIPAddress (const char* pszIPAddress, char* pszHashedIPAddress);
@@ -1116,6 +1117,9 @@ public:
 #define LAST_EMPIRE_USED_COOKIE     "LastEmpireUsed"
 #define AUTOLOGON_EMPIREKEY_COOKIE  "AutoLogonEmpireKey"
 #define AUTOLOGON_PASSWORD_COOKIE   "AutoLogonPassword"
+
+// Autologon cookies are refreshed on every successful autologon
+#define AUTOLOGON_COOKIE_TTL        ONE_YEAR_IN_SECONDS
 
 // Error macros
 #define Check(FxnCall) iErrCode = ##FxnCall;                                        \

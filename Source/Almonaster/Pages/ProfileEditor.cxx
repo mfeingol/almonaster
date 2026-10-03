@@ -122,11 +122,7 @@ if (m_bOwnPost && !m_bRedirection) {
                             ICookie* pCookie = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
                             if (pCookie && pCookie->GetValue() && pCookie->GetUIntValue() == m_iEmpireKey)
                             {
-                                String strHash;
-                                iErrCode = GetAutologonPasswordHash(m_iEmpireKey, &strHash);
-                                RETURN_ON_ERROR(iErrCode);
-                                
-                                iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strHash, ONE_YEAR_IN_SECONDS, NULL);
+                                iErrCode = SetAutologonCookies(m_iEmpireKey);
                                 RETURN_ON_ERROR(iErrCode);
                             }
                         }
@@ -546,17 +542,7 @@ if (m_bOwnPost && !m_bRedirection) {
                     }
                     else
                     {
-                        // Set cookies (expire in a year)
-                        char pszText[128];
-                        String::UItoA(m_iEmpireKey, pszText, 10);
-                        iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_EMPIREKEY_COOKIE, pszText, ONE_MONTH_IN_SECONDS, NULL);
-                        RETURN_ON_ERROR(iErrCode);
-                        
-                        String strHash;
-                        iErrCode = GetAutologonPasswordHash(m_iEmpireKey, &strHash);
-                        RETURN_ON_ERROR(iErrCode);
-
-                        iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strHash, ONE_MONTH_IN_SECONDS, NULL);
+                        iErrCode = SetAutologonCookies(m_iEmpireKey);
                         RETURN_ON_ERROR(iErrCode);
 
                         AddMessage ("Autologon is now on for ");

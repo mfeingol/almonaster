@@ -71,6 +71,10 @@ if (m_pHttpRequest->GetMethod() == GET)
                         RETURN_ON_ERROR(iErrCode);
                         if (bInitialized)
                         {
+                            // Refresh autologon cookies so they don't expire while in use
+                            iErrCode = SetAutologonCookies(iAutoLogonKey);
+                            RETURN_ON_ERROR(iErrCode);
+
                             // Yay!
                             return Redirect(ACTIVE_GAME_LIST);
                         }

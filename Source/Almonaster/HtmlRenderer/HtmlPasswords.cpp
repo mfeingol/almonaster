@@ -372,13 +372,7 @@ int HtmlRenderer::GetAutologonPasswordHash(int iEmpireKey, String* pstrHash)
     iErrCode = hash.HashData(vPasswordHash.GetCharPtr(), strlen(vPasswordHash));
     RETURN_ON_ERROR(iErrCode);
 
-    // User agent
-    const char* pszBrowser = m_pHttpRequest->GetBrowserName();
-    if (pszBrowser)
-    {
-        iErrCode = hash.HashData(pszBrowser, strlen(pszBrowser));
-        RETURN_ON_ERROR(iErrCode);
-    }
+    // Don't hash the user agent: it changes with every browser update, which would silently break autologon
 
     // Empire's secret key
     Variant vSecretKey;
@@ -414,6 +408,26 @@ int HtmlRenderer::GetAutologonPasswordHash(int iEmpireKey, String* pstrHash)
     pstrHash->Clear();
     *pstrHash = pszBase64;
     Assert(pstrHash->GetCharPtr());
+
+    return iErrCode;
+}
+
+int HtmlRenderer::SetAutologonCookies(unsigned int iEmpireKey)
+{
+    int iErrCode;
+
+    char pszEmpireKey[128];
+    String::UItoA(iEmpireKey, pszEmpireKey, 10);
+
+    iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_EMPIREKEY_COOKIE, pszEmpireKey, AUTOLOGON_COOKIE_TTL, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    String strHash;
+    iErrCode = GetAutologonPasswordHash(iEmpireKey, &strHash);
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strHash, AUTOLOGON_COOKIE_TTL, NULL);
+    RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;
 }
