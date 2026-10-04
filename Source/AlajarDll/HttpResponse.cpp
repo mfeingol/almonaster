@@ -1052,8 +1052,8 @@ int HttpResponse::SendResponse() {
         Check(ProcessMethod());
     }
 
-    // Handle GET filtering
-    if (GetStatusCode() == HTTP_200 && m_iMethod == GET && m_rType == RESPONSE_FILE) {
+    // Handle GET filtering. HEAD is filtered too, since it's a GET without the body
+    if (GetStatusCode() == HTTP_200 && (m_iMethod == GET || m_iMethod == HEAD) && m_rType == RESPONSE_FILE) {
 
         if (!m_pHttpRequest->IsFileNameCanonical()) {
             InternalSetStatusCode (HTTP_404);
