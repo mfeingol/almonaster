@@ -127,6 +127,15 @@ void HttpResponse::Recycle() {
 
     m_stCookieSpace = 0;
 
+    unsigned int i;
+    for (i = 0; i < m_iNumCookiesSet; i ++) {
+        delete [] m_ppszCookieSetName[i];
+    }
+
+    for (i = 0; i < m_iNumCookiesDel; i ++) {
+        delete [] m_ppszCookieDelName[i];
+    }
+
     m_iNumCookiesSet = 0;
     m_iNumCookiesDel = 0;
     m_msResponseTime = 0;
@@ -709,10 +718,11 @@ int HttpResponse::CreateCookie (const char* pszCookieName, const char* pszCookie
     size_t stValue = strlen (pszCookieValue);
     size_t stPath = pszCookiePath != NULL ? strlen (pszCookiePath) : 0;
 
+    // Room for the name, value and path plus the fixed text, expiration date and page source path in Send
     Assert (m_stPageSourceNameLength > 0);
-    m_stCookieSpace += stName + stValue + stPath + 70 + m_stPageSourceNameLength;
+    m_stCookieSpace += stName + stValue + stPath + 128 + m_stPageSourceNameLength;
 
-    m_ppszCookieSetName[m_iNumCookiesSet] = new char [stName + stValue + 3];
+    m_ppszCookieSetName[m_iNumCookiesSet] = new char [stName + stValue + stPath + 3];
     if (m_ppszCookieSetName[m_iNumCookiesSet] == NULL) {
         return ERROR_OUT_OF_MEMORY;
     }
@@ -728,7 +738,7 @@ int HttpResponse::CreateCookie (const char* pszCookieName, const char* pszCookie
         m_ppszCookieSetPath[m_iNumCookiesSet] = NULL;
     } else {
         m_ppszCookieSetPath[m_iNumCookiesSet] = m_ppszCookieSetValue[m_iNumCookiesSet] + stValue + 1;
-        memcpy (m_ppszCookieSetPath[m_iNumCookiesSet], pszCookiePath, stPath);
+        memcpy (m_ppszCookieSetPath[m_iNumCookiesSet], pszCookiePath, stPath + 1);
     }
 
     m_iNumCookiesSet ++;
@@ -779,8 +789,9 @@ int HttpResponse::DeleteCookie (const char* pszCookieName, const char* pszCookie
     size_t stName = strlen (pszCookieName);
     size_t stPath = pszCookiePath != NULL ? strlen (pszCookiePath) : 0;
 
+    // Room for the name and path plus the fixed text, expiration date and page source path in Send
     Assert (m_stPageSourceNameLength > 0);
-    m_stCookieSpace += stName + 70 + stPath + m_stPageSourceNameLength;
+    m_stCookieSpace += stName + 128 + stPath + m_stPageSourceNameLength;
 
     m_ppszCookieDelName[m_iNumCookiesDel] = new char [stName + stPath + 2];
     if (m_ppszCookieDelName[m_iNumCookiesDel] == NULL) {
@@ -1146,9 +1157,22 @@ int HttpResponse::Send() {
     }
 
     char pszInt [32];
-    char* pszBuffer = (char*) StackAlloc (
-        4096 + m_stCookieSpace + m_stCustomHeaderLength + 
-        String::StrLen (pszAuthRealm) + String::StrLen (pszAuthDomain));
+
+    // 4096 bytes covers the fixed-size headers. Everything variable-length has to be added in,
+    // since some of it (e.g. the redirect location) is derived from the request
+    size_t stBufferSize = 4096 + m_stCookieSpace + m_stCustomHeaderLength +
+        String::StrLen (pszAuthRealm) + String::StrLen (pszAuthDomain) +
+        String::StrLen (m_pszRedirectUri) + String::StrLen (m_pszMimeType);
+
+    if (m_pCachedFile != NULL) {
+        stBufferSize += String::StrLen (m_pCachedFile->GetMimeType());
+    }
+
+    char* pszBuffer = new char [stBufferSize];
+    if (pszBuffer == NULL) {
+        return ERROR_OUT_OF_MEMORY;
+    }
+    Algorithm::AutoDelete<char> autoDeleteBuffer (pszBuffer, true);
 
     ///////////////////////////
     // Send response headers //
@@ -1753,6 +1777,12 @@ int HttpResponse::ProcessGetDirectory (const char* pszDirName) {
         // Build path to default file
         char pszFileName [OS::MaxFileNameLength];
 
+        // Directory + "/" + default file + '\0' must fit
+        if (strlen (pszDirName) + strlen (pszDefaultFile) + 2 > sizeof (pszFileName)) {
+            InternalSetStatusCode (HTTP_404);
+            return OK;
+        }
+
         strcpy (pszFileName, pszDirName);
         if (pszDirName[strlen (pszDirName) - 1] != '/') {
             strcat (pszFileName, "/");
@@ -1822,6 +1852,12 @@ int HttpResponse::BuildDirectoryIndex (const char* pszDirName, TempFile* ptfTemp
     // Build directory search path string
     char pszDirSearchName [OS::MaxFileNameLength];
 
+    // Directory + "/*.*" + '\0' must fit
+    size_t stDirNameLen = strlen (pszDirName);
+    if (stDirNameLen + countof ("/*.*") > sizeof (pszDirSearchName)) {
+        return ERROR_FAILURE;
+    }
+
     strcpy (pszDirSearchName, pszDirName);
     if (pszDirSearchName[strlen (pszDirSearchName) - 1] != '/') {
         strcat (pszDirSearchName, "/");
@@ -1887,6 +1923,11 @@ int HttpResponse::BuildDirectoryIndex (const char* pszDirName, TempFile* ptfTemp
     ptfTempFile->WriteEndLine();
 
     for (i = 0; i < iNumFiles; i ++) {
+
+        // Skip entries whose full path won't fit
+        if (stDirNameLen + 1 + strlen (ppszFileName[i]) + 1 > sizeof (pszDirSearchName)) {
+            continue;
+        }
 
         strcpy (pszDirSearchName, pszDirName);
         strcat (pszDirSearchName, "/");
@@ -2049,11 +2090,14 @@ int HttpResponse::AddHeader (const char* pszHeaderName, const char* pszHeaderVal
     }
 
     char* pszCustomHeaders = new char [m_stCustomHeaderLength + stTotalLen + 1];
-    if (m_pszCustomHeaders == NULL) {
+    if (pszCustomHeaders == NULL) {
         return ERROR_OUT_OF_MEMORY;
     }
 
     sprintf (pszCustomHeaders, "%s\r\n%s: %s", m_pszCustomHeaders, pszHeaderName, pszHeaderValue);
+
+    delete [] m_pszCustomHeaders;
+    m_pszCustomHeaders = pszCustomHeaders;
     m_stCustomHeaderLength += stTotalLen;
 
     return OK;
@@ -2072,7 +2116,7 @@ int HttpResponse::AddCustomLogMessage (const char* pszCustomLogMessage) {
 
         unsigned int iCustomLogMessageSpace = m_iCustomLogMessageSpace * 2;
 
-        char** ppszTemp = new char* [m_iCustomLogMessageSpace];
+        char** ppszTemp = new char* [iCustomLogMessageSpace];
         if (ppszTemp == NULL) {
             return ERROR_OUT_OF_MEMORY;
         }
@@ -2084,7 +2128,12 @@ int HttpResponse::AddCustomLogMessage (const char* pszCustomLogMessage) {
         m_iCustomLogMessageSpace = iCustomLogMessageSpace;
     }
 
-    m_ppszCustomLogMessages[m_iNumCustomLogMessages ++] = String::StrDup (pszCustomLogMessage);
+    char* pszCopy = String::StrDup (pszCustomLogMessage);
+    if (pszCopy == NULL) {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    m_ppszCustomLogMessages[m_iNumCustomLogMessages ++] = pszCopy;
 
     return OK;
 }
