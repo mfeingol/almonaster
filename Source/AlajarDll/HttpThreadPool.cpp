@@ -185,6 +185,7 @@ int HttpThreadPool::QueueTask (Socket* pSocket) {
 
             m_ppThreads[m_iNumThreads]->iThreadIndex = m_iNumThreads;
             m_ppThreads[m_iNumThreads]->pHttpServer = m_pHttpServer;
+            m_ppThreads[m_iNumThreads]->bTimingOut = false;
 
             unsigned int iNumThreads = m_iNumThreads ++;
             if (m_ppThreads[iNumThreads]->Start (ThreadExec, m_ppThreads[iNumThreads]) != OK) {
@@ -226,6 +227,11 @@ int HttpThreadPool::RunWorkerThread (HttpPoolThread* pThread) {
 
     m_ppThreads [iSelfThread] = m_ppThreads [iDefragThread];
     m_ppThreads [iSelfThread]->iThreadIndex = iSelfThread;
+
+    // Put our own thread object in the slot we just freed, so it can be restarted later.
+    // Otherwise two slots would point to the same running thread
+    m_ppThreads [iDefragThread] = pThread;
+    pThread->iThreadIndex = iDefragThread;
 
     // One thread less in the pool...
     m_iNumThreads --;
