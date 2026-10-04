@@ -89,6 +89,7 @@ used:<ul>
     <li><strong>HttpsPublicKeyFile</strong>=server.cer</li>
     <li><strong>HttpsPrivateKeyFile</strong>=server.pfx</li>
     <li><strong>KeepAlive</strong>0</li>
+    <li><strong>EnableTrace</strong>=0</li>
     <li><strong>FileCache</strong>=1 </li>
     <li><strong>ApproxNumFilesInFileCache</strong>=2000 </li>
     <li><strong>MemoryCache</strong>=1 </li>
@@ -125,6 +126,7 @@ used:<ul>
         this should be an OpenSSL .key file.
     </li>
     <li><strong>KeepAlive</strong> is 1 if HTTP 1.1 connection keep-alives should be used; 0 if not. This feature is experimental.</li>
+    <li><strong>EnableTrace</strong> is 1 if the HTTP TRACE method should be supported; 0 if not. TRACE echoes request headers, including cookies and credentials, back to the client. This parameter is optional and defaults to 0.</li>
     <li><strong>FileCache</strong> is 1 if the file cache is to be used; 0 if not</li>
     <li>
         <strong>ApproxNumFilesInFileCache</strong><strong> </strong>is a guess of the maximum

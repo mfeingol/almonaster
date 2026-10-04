@@ -73,6 +73,7 @@ private:
     short m_siSslPort;
     bool m_bRedirectHttpToHttps;
     bool m_bKeepAlive;
+    bool m_bEnableTrace;
 
     // Listener sockets
     Socket* m_pSocket;

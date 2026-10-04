@@ -63,6 +63,7 @@ HttpServer::HttpServer() {
     m_siSslPort = 0;
     m_bKeepAlive = false;
     m_bRedirectHttpToHttps = false;
+    m_bEnableTrace = false;
 
     m_reportTracelevel = TRACE_WARNING;
     Time::ZeroTime(&m_tReportTime);
@@ -563,6 +564,12 @@ int HttpServer::StartServer()
     }
     m_bKeepAlive = bKeepAlive;
 
+    // TRACE echoes request headers (including cookies and credentials) back to the client,
+    // so it stays off unless explicitly enabled
+    if (m_pConfigFile->GetParameter("EnableTrace", &pszRhs) == OK && pszRhs != NULL) {
+        m_bEnableTrace = (atoi(pszRhs) == 1);
+    }
+
     if (m_pConfigFile->GetParameter ("FileCache", &pszRhs) == OK && pszRhs != NULL) {
         bFileCache = (atoi (pszRhs) == 1);
     } else {
@@ -620,6 +627,9 @@ int HttpServer::StartServer()
 
     if (m_bKeepAlive)
         ReportEvent("Keep-Alive support is enabled");
+
+    if (m_bEnableTrace)
+        ReportEvent("TRACE support is enabled");
     
     if (m_pConfigFile->GetParameter ("DefaultThreadPriority", &pszRhs) == OK && pszRhs != NULL) {
         
@@ -1039,6 +1049,11 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
         default:
             pHttpResponse->SetStatusCode (HTTP_400);
             break;
+        }
+
+        // TRACE is only supported if it's enabled in Alajar.conf
+        if (pHttpResponse->GetStatusCode() == HTTP_200 && pHttpRequest->GetMethod() == TRACE && !m_bEnableTrace) {
+            pHttpResponse->SetStatusCode (HTTP_501);
         }
 
         // Attempt redirect to HTTPS only if everything went well

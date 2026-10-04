@@ -1028,8 +1028,8 @@ int HttpResponse::SendResponse() {
 
     int iErrCode;
 
-    // TRACE gets special treatment
-    if (m_iMethod == TRACE) {
+    // TRACE gets special treatment, but only if nothing has failed (e.g. TRACE is disabled)
+    if (m_iMethod == TRACE && m_sStatus == HTTP_200) {
         return RespondToTrace();
     }
 
