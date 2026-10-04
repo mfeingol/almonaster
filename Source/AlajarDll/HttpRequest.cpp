@@ -1339,8 +1339,8 @@ int HttpRequest::ParseHeaders() {
             return ERROR_MALFORMED_REQUEST;
         }
 
-        // No more than 1MB, sorry
-        if (m_stContentLength > 1024 * 1024 * 1024)
+        // No more than 10MB, sorry
+        if (m_stContentLength > 10 * 1024 * 1024)
         {
             return ERROR_MALFORMED_REQUEST;
         }
