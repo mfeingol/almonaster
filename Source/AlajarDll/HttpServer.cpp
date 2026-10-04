@@ -1026,9 +1026,11 @@ int HttpServer::WWWServe (HttpPoolThread* pSelf) {
             break;
 
         case ERROR_SOCKET_CLOSED:
-            // No reason to do anything further
+            // No reason to do anything further, but keep this thread serving requests
             pSocket->Close();
-            return iErrCode;
+            Socket::FreeSocket (pSocket);
+            ReleaseHttpObjects (pHttpRequest, pHttpResponse);
+            continue;
 
         case ERROR_MALFORMED_REQUEST:
             pHttpResponse->SetStatusCode(HTTP_400);
