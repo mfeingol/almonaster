@@ -176,6 +176,7 @@ void HttpRequest::Recycle() {
     }
 
     m_pszFileName[0] = '\0';
+    m_strRawUri.Clear();
     m_strBrowserName.Clear();
     m_strHeaders.Clear();
     m_strHostName.Clear();
@@ -301,6 +302,10 @@ const char* HttpRequest::GetAuthenticationNonce() {
     return m_strAuthNonce;
 }
 
+const char* HttpRequest::GetAuthenticationNonceCount() {
+    return m_strNonceCount;
+}
+
 int HttpRequest::BasicAuthenticate (const char* pszPassword, bool* pbAuthenticated) {
 
     Assert (pbAuthenticated != NULL);
@@ -350,6 +355,12 @@ int HttpRequest::DigestAuthenticate (const char* pszPassword, bool* pbAuthentica
         m_strQop.IsBlank())
 
         return ERROR_FAILURE;
+
+    // The digest only covers the uri attribute, so it must be the URI that was actually requested.
+    // Otherwise a captured Authorization header could be used for any other URI
+    const char* pszRawUri = m_strRawUri.GetCharPtr();
+    if (pszRawUri == NULL || strcmp (m_strAuthDigestUri.GetCharPtr(), pszRawUri) != 0)
+        return OK;
 
     // Compute A1 hash
     char pszA1Hash[DIGEST_HASH_TEXT_SIZE];
@@ -565,6 +576,12 @@ int HttpRequest::ParseRequestHeader (char* pszLine) {
     // Check Uri
     if (*pszUri != '/') {
         return ERROR_MALFORMED_REQUEST;
+    }
+
+    // Save the request target as sent, since that's what a digest authentication uri attribute must match
+    m_strRawUri = pszUri;
+    if (m_strRawUri.GetCharPtr() == NULL) {
+        return ERROR_OUT_OF_MEMORY;
     }
 
     // Handle Uri

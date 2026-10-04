@@ -987,7 +987,20 @@ int HttpResponse::RespondPrivate() {
                             // This codepath leaves bAuthenticated as false, so we return 401 with a hint
                             m_rReason = HTTP_REASON_STALE_NONCE;
                         } else {
+
                             iErrCode = m_pPageSource->OnDigestAuthenticate (m_pHttpRequest, &bAuthenticated);
+
+                            // Reject replays: each nonce count can only be used once with a nonce.
+                            // Answering with a stale nonce makes a legitimate client retry silently
+                            if (iErrCode == OK && bAuthenticated &&
+                                !m_pHttpServer->RecordDigestNonceCount (
+                                    m_pHttpRequest->GetAuthenticationNonce(),
+                                    m_pHttpRequest->GetAuthenticationNonceCount(),
+                                    m_pPageSource->GetDigestAuthenticationNonceLifetime())) {
+
+                                bAuthenticated = false;
+                                m_rReason = HTTP_REASON_STALE_NONCE;
+                            }
                         }
                     }
                     break;

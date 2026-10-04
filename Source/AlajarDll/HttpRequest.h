@@ -60,6 +60,9 @@ private:
     char* m_pszUri;
     size_t m_stUriLength;
 
+    // Request target exactly as sent (still escaped, with query string), for digest authentication
+    String m_strRawUri;
+
     // Uri as hard drive path
     char m_pszFileName [OS::MaxFileNameLength + 1];
     bool m_bCanonicalPath;
@@ -203,6 +206,8 @@ public:
     const char* GetParsedUriForms() const;
 
     void SetSocket (Socket* pSocket);
+
+    const char* GetAuthenticationNonceCount();
 
     // IHttpRequest
     IMPLEMENT_INTERFACE (IHttpRequest);

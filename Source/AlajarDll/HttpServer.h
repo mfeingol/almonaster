@@ -49,6 +49,20 @@ public:
     static void Delete (Socket* pSocket) { delete pSocket; }
 };
 
+// Maximum number of digest authentication nonces whose nonce counts are tracked at once
+#define MAX_TRACKED_DIGEST_NONCES 1024
+
+// Number of nonce counts below the highest one seen that are still accepted (out of order) for a nonce
+#define DIGEST_NONCE_COUNT_WINDOW 64
+
+struct DigestNonceUse {
+    char pszNonce [NONCE_SIZE];     // Empty if the slot is free
+    UTCTime tFirstUse;
+    Seconds iLifetime;
+    uint64 iMaxNonceCount;
+    uint64 iWindow;                 // Bit i is set if nonce count iMaxNonceCount - i has been used
+};
+
 class HttpServer : public IHttpServer
 {
 private:
@@ -107,6 +121,10 @@ private:
 
     // Nonces
     Uuid m_uuidUniqueIdentifier;
+
+    // Nonce counts used with each recent digest authentication nonce, to detect replays
+    DigestNonceUse* m_pDigestNonceUses;
+    Mutex m_mDigestNonceLock;
 
     // Paths
     char m_pszCounterPath [OS::MaxFileNameLength];
@@ -190,6 +208,8 @@ public:
     static bool DifferentDays (const UTCTime& tOldTime, const UTCTime& tNewTime);
 
     int WWWServe (HttpPoolThread* pThread);
+
+    bool RecordDigestNonceCount (const char* pszNonce, const char* pszNonceCount, Seconds iLifetime);
 
     // IHttpServer
     DECLARE_IOBJECT;

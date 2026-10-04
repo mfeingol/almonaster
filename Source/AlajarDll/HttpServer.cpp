@@ -70,11 +70,18 @@ HttpServer::HttpServer() {
     Time::ZeroTime(&m_tStatsTime);
     m_pReport = NULL;
     m_pszReportPath[0] = '\0';
+
+    m_pDigestNonceUses = NULL;
 }
 
 HttpServer::~HttpServer() {
 
     Clean();
+
+    if (m_pDigestNonceUses != NULL) {
+        delete [] m_pDigestNonceUses;
+        m_pDigestNonceUses = NULL;
+    }
 
     SafeRelease(m_pConfigFile);
 
@@ -229,7 +236,134 @@ int HttpServer::Init() {
         return iErrCode;
     }
 
+    iErrCode = m_mDigestNonceLock.Initialize();
+    if (iErrCode != OK) {
+        return iErrCode;
+    }
+
+    m_pDigestNonceUses = new DigestNonceUse [MAX_TRACKED_DIGEST_NONCES];
+    if (m_pDigestNonceUses == NULL) {
+        return ERROR_OUT_OF_MEMORY;
+    }
+    memset (m_pDigestNonceUses, 0, MAX_TRACKED_DIGEST_NONCES * sizeof (DigestNonceUse));
+
     return OK;
+}
+
+//
+// Record the use of a nonce count with a digest authentication nonce that has already been validated.
+// Returns false if the nonce count was already used with the nonce (i.e. the request is a replay),
+// is malformed, or can't be tracked; true if it's new.
+//
+bool HttpServer::RecordDigestNonceCount (const char* pszNonce, const char* pszNonceCount, Seconds iLifetime) {
+
+    unsigned int i;
+
+    if (pszNonce == NULL || pszNonceCount == NULL) {
+        return false;
+    }
+
+    size_t cchNonce = strlen (pszNonce);
+    if (cchNonce == 0 || cchNonce >= NONCE_SIZE) {
+        return false;
+    }
+
+    // The nonce count is exactly 8 hex digits and can't be zero
+    if (strlen (pszNonceCount) != 8) {
+        return false;
+    }
+
+    uint64 iNonceCount = 0;
+    for (i = 0; i < 8; i ++) {
+
+        char ch = pszNonceCount[i];
+        unsigned int iDigit;
+
+        if (ch >= '0' && ch <= '9') {
+            iDigit = ch - '0';
+        } else if (ch >= 'a' && ch <= 'f') {
+            iDigit = ch - 'a' + 10;
+        } else if (ch >= 'A' && ch <= 'F') {
+            iDigit = ch - 'A' + 10;
+        } else {
+            return false;
+        }
+
+        iNonceCount = iNonceCount * 16 + iDigit;
+    }
+
+    if (iNonceCount == 0) {
+        return false;
+    }
+
+    UTCTime tNow;
+    Time::GetTime (&tNow);
+
+    bool bFresh = false;
+    DigestNonceUse* pUse = NULL, * pFree = NULL;
+
+    m_mDigestNonceLock.Wait();
+
+    // Look for the nonce, freeing expired entries along the way
+    for (i = 0; i < MAX_TRACKED_DIGEST_NONCES; i ++) {
+
+        DigestNonceUse* pEntry = m_pDigestNonceUses + i;
+
+        if (pEntry->pszNonce[0] != '\0' && Time::GetSecondDifference (tNow, pEntry->tFirstUse) > pEntry->iLifetime) {
+            pEntry->pszNonce[0] = '\0';
+        }
+
+        if (pEntry->pszNonce[0] == '\0') {
+            if (pFree == NULL) {
+                pFree = pEntry;
+            }
+        } else if (strcmp (pEntry->pszNonce, pszNonce) == 0) {
+            pUse = pEntry;
+            break;
+        }
+    }
+
+    if (pUse != NULL) {
+
+        if (iNonceCount > pUse->iMaxNonceCount) {
+
+            // New highest nonce count: slide the window up
+            uint64 iShift = iNonceCount - pUse->iMaxNonceCount;
+            pUse->iWindow = iShift >= DIGEST_NONCE_COUNT_WINDOW ? 0 : pUse->iWindow << iShift;
+            pUse->iWindow |= 1;
+            pUse->iMaxNonceCount = iNonceCount;
+            bFresh = true;
+
+        } else {
+
+            // Accept an older nonce count only if it's inside the window and hasn't been used
+            uint64 iBack = pUse->iMaxNonceCount - iNonceCount;
+            if (iBack < DIGEST_NONCE_COUNT_WINDOW) {
+
+                uint64 iBit = (uint64) 1 << iBack;
+                if ((pUse->iWindow & iBit) == 0) {
+                    pUse->iWindow |= iBit;
+                    bFresh = true;
+                }
+            }
+        }
+
+    } else if (pFree != NULL) {
+
+        // First use of this nonce
+        memcpy (pFree->pszNonce, pszNonce, cchNonce + 1);
+        pFree->tFirstUse = tNow;
+        pFree->iLifetime = iLifetime;
+        pFree->iMaxNonceCount = iNonceCount;
+        pFree->iWindow = 1;
+        bFresh = true;
+    }
+
+    // Otherwise the table is full, so err on the side of rejecting the request
+
+    m_mDigestNonceLock.Signal();
+
+    return bFresh;
 }
 
 PageSource* HttpServer::GetPageSource (const char* pszPageSourceName) {
