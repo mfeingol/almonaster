@@ -306,6 +306,24 @@ const char* HttpRequest::GetAuthenticationNonceCount() {
     return m_strNonceCount;
 }
 
+// Compare a client-supplied string against a secret or expected value.
+// The running time doesn't depend on how many characters match, only on the length of pszExpected,
+// so it doesn't leak how close the client's guess was
+static bool ConstantTimeEquals (const char* pszActual, const char* pszExpected) {
+
+    size_t cchActual = strlen (pszActual);
+    size_t cchExpected = strlen (pszExpected);
+
+    volatile unsigned int iDiff = (cchActual != cchExpected) ? 1 : 0;
+
+    for (size_t i = 0; i < cchExpected; i ++) {
+        char chActual = i < cchActual ? pszActual[i] : 0;
+        iDiff |= (unsigned char) (chActual ^ pszExpected[i]);
+    }
+
+    return iDiff == 0;
+}
+
 int HttpRequest::BasicAuthenticate (const char* pszPassword, bool* pbAuthenticated) {
 
     Assert (pbAuthenticated != NULL);
@@ -325,7 +343,7 @@ int HttpRequest::BasicAuthenticate (const char* pszPassword, bool* pbAuthenticat
         
         return ERROR_FAILURE;
 
-    *pbAuthenticated = strcmp (m_strAuthPassword.GetCharPtr(), pszPassword) == 0;
+    *pbAuthenticated = ConstantTimeEquals (m_strAuthPassword.GetCharPtr(), pszPassword);
     return OK;
 }
 
@@ -362,6 +380,15 @@ int HttpRequest::DigestAuthenticate (const char* pszPassword, bool* pbAuthentica
     if (pszRawUri == NULL || strcmp (m_strAuthDigestUri.GetCharPtr(), pszRawUri) != 0)
         return OK;
 
+    // We only advertise qop="auth", so don't accept anything else (e.g. auth-int)
+    if (String::StriCmp (m_strQop.GetCharPtr(), "auth") != 0)
+        return OK;
+
+    // The realm must be the one we issued in the challenge
+    const char* pszRealm = m_pPageSource != NULL ? m_pPageSource->GetAuthenticationRealm (this) : NULL;
+    if (pszRealm == NULL || strcmp (m_strAuthRealm.GetCharPtr(), pszRealm) != 0)
+        return OK;
+
     // Compute A1 hash
     char pszA1Hash[DIGEST_HASH_TEXT_SIZE];
     iErrCode = ComputeA1Hash (pszPassword, pszA1Hash);
@@ -381,7 +408,7 @@ int HttpRequest::DigestAuthenticate (const char* pszPassword, bool* pbAuthentica
         return iErrCode;
 
     const char* pszRequestHash = m_strAuthRequestResponse.GetCharPtr();
-    *pbAuthenticated = strcmp (pszFinalHash, pszRequestHash) == 0;
+    *pbAuthenticated = ConstantTimeEquals (pszRequestHash, pszFinalHash);
 
     return OK;    
 }
