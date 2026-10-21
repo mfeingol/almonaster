@@ -223,11 +223,40 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
 
                 if (status == TOKEN_EXPIRED)
                 {
-                    AddMessage("Your session has timed out. Please log in again");
-                    return OK;
-                }
+                    // A valid autologon cookie for this empire stands in for a fresh autologon
+                    bool bAutoLogonValid;
+                    iErrCode = IsAutologonCookieValid(m_iEmpireKey, &bAutoLogonValid);
+                    RETURN_ON_ERROR(iErrCode);
 
-                if (status != TOKEN_VALID)
+                    if (!bAutoLogonValid)
+                    {
+                        AddMessage("Your session has timed out. Please log in again");
+                        return OK;
+                    }
+
+                    m_bAutoLogon = true;
+
+                    bool bLoggedIn;
+                    iErrCode = HtmlLoginEmpire(&bLoggedIn);
+                    RETURN_ON_ERROR(iErrCode);
+                    if (!bLoggedIn)
+                    {
+                        return OK;
+                    }
+
+                    // Refresh autologon cookies so they don't expire while in use
+                    iErrCode = SetAutologonCookies(m_iEmpireKey);
+                    RETURN_ON_ERROR(iErrCode);
+
+                    // Don't act on the submission. The browser sends the autologon cookie automatically, so this request
+                    // could have been forged by another site using an old token; only a live page token proves intent.
+                    // Rendering the page as if it had been redirected to stops pages and RedirectOnSubmit[Game] from
+                    // handling buttons, and clearing m_bOwnPost covers the Quit page, which also acts on redirects
+                    m_bRedirection = true;
+                    m_bOwnPost = false;
+                    AddMessage("Your session timed out, and you were automatically logged in. Your submitted actions were discarded.");
+                }
+                else if (status != TOKEN_VALID)
                 {
                     // The player didn't type a password, so don't say it was wrong. This also covers
                     // tokens invalidated by a password change
@@ -563,5 +592,27 @@ int HtmlRenderer::SetAutologonCookies(unsigned int iEmpireKey)
     iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strToken, AUTOLOGON_COOKIE_TTL, NULL);
     RETURN_ON_ERROR(iErrCode);
 
+    return iErrCode;
+}
+
+// Checks whether the request carries autologon cookies for the given empire, and that they hold a valid autologon token
+int HtmlRenderer::IsAutologonCookieValid(unsigned int iEmpireKey, bool* pbValid)
+{
+    *pbValid = false;
+
+    ICookie* pEmpireCookie = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
+    ICookie* pTokenCookie = m_pHttpRequest->GetCookie(AUTOLOGON_PASSWORD_COOKIE);
+
+    if (pEmpireCookie == NULL || pEmpireCookie->GetValue() == NULL || pTokenCookie == NULL ||
+        pEmpireCookie->GetUIntValue() != iEmpireKey)
+    {
+        return OK;
+    }
+
+    TokenStatus status;
+    int iErrCode = VerifyToken(AUTOLOGON_TOKEN, iEmpireKey, pTokenCookie->GetValue(), &status, NULL);
+    RETURN_ON_ERROR(iErrCode);
+
+    *pbValid = status == TOKEN_VALID;
     return iErrCode;
 }

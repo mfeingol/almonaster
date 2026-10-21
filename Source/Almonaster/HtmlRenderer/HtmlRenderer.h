@@ -629,6 +629,7 @@ public:
     int FormatToken(TokenKind kind, unsigned int iEmpireKey, int64 i64LoginTime, int64 i64Expires, String* pstrToken);
     int GetTokenSignature(TokenKind kind, unsigned int iEmpireKey, const char* pszPayload, String* pstrSignature);
     int SetAutologonCookies(unsigned int iEmpireKey);
+    int IsAutologonCookieValid(unsigned int iEmpireKey, bool* pbValid);
 
     void HashIPAddress (const char* pszIPAddress, char* pszHashedIPAddress);
 

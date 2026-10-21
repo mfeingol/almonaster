@@ -52,11 +52,11 @@ if (m_pHttpRequest->GetMethod() == GET)
             if (iResults > 0)
             {
                 // Authenticate
-                TokenStatus status;
-                iErrCode = VerifyToken(AUTOLOGON_TOKEN, iAutoLogonKey, pPasswordCookie->GetValue(), &status, NULL);
+                bool bValid;
+                iErrCode = IsAutologonCookieValid(iAutoLogonKey, &bValid);
                 RETURN_ON_ERROR(iErrCode);
 
-                if (status == TOKEN_VALID)
+                if (bValid)
                 {
                     m_iEmpireKey = iAutoLogonKey;
                     m_bAutoLogon = true;

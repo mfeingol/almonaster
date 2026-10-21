@@ -38,7 +38,9 @@ if (bRedirected)
 
 bool bConfirm = (m_iSystemOptions & CONFIRM_IMPORTANT_CHOICES) != 0;
 
-if ((m_bOwnPost && !m_bRedirection) || !bConfirm) {
+// Without confirmation, a redirect from another page's button is acted on directly. Either way, the request must have been
+// authenticated by a live page token (m_bOwnPost), not rescued by an autologon cookie
+if (m_bOwnPost && (!m_bRedirection || !bConfirm)) {
 
     pageRedirect = OPTIONS;
 
