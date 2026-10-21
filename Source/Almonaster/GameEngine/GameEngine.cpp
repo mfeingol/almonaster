@@ -21,7 +21,7 @@
 
 #include "Osal/Crypto.h"
 
-#define ALMONASTER_VERSION 7.0.5
+#define ALMONASTER_VERSION 7.0.6
 
 int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
 
