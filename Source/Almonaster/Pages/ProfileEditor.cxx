@@ -107,26 +107,44 @@ if (m_bOwnPost && !m_bRedirection) {
                 }
                 else if (String::StrCmp(pszNewValue, INVALID_PASSWORD_STRING) != 0)
                 {
-                    if (VerifyPassword (pszNewValue))
-                    {
-                        iErrCode = ChangeEmpirePassword(m_iEmpireKey, pszNewValue);
-                        if (iErrCode == ERROR_CANNOT_MODIFY_GUEST)
-                        {
-                            AddMessage (GUEST_NAME "'s password can only be changed by an administrator");
-                        }
-                        else
-                        {
-                            RETURN_ON_ERROR(iErrCode);
-                            AddMessage ("Your password was changed");
+                    // A page token alone isn't enough to change the password: whoever has one could otherwise lock
+                    // the owner out, since the change invalidates every other login
+                    const char* pszCurrent = NULL;
+                    if ((pHttpForm = m_pHttpRequest->GetForm ("CurrentPassword")) != NULL) {
+                        pszCurrent = pHttpForm->GetValue();
+                    }
 
-                            ICookie* pCookie = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
-                            if (pCookie && pCookie->GetValue() && pCookie->GetUIntValue() == m_iEmpireKey)
+                    iErrCode = String::IsBlank(pszCurrent) ? ERROR_PASSWORD : IsPasswordCorrect(m_iEmpireKey, pszCurrent);
+                    if (iErrCode == ERROR_PASSWORD)
+                    {
+                        AddMessage ("Your password was not changed because your current password was not entered correctly");
+                    }
+                    else
+                    {
+                        RETURN_ON_ERROR(iErrCode);
+
+                        if (VerifyPassword (pszNewValue))
+                        {
+                            iErrCode = ChangeEmpirePassword(m_iEmpireKey, pszNewValue);
+                            if (iErrCode == ERROR_CANNOT_MODIFY_GUEST)
                             {
-                                iErrCode = SetAutologonCookies(m_iEmpireKey);
+                                AddMessage (GUEST_NAME "'s password can only be changed by an administrator");
+                            }
+                            else
+                            {
                                 RETURN_ON_ERROR(iErrCode);
+                                AddMessage ("Your password was changed");
+
+                                ICookie* pCookie = m_pHttpRequest->GetCookie(AUTOLOGON_EMPIREKEY_COOKIE);
+                                if (pCookie && pCookie->GetValue() && pCookie->GetUIntValue() == m_iEmpireKey)
+                                {
+                                    iErrCode = SetAutologonCookies(m_iEmpireKey);
+                                    RETURN_ON_ERROR(iErrCode);
+                                }
                             }
                         }
                     }
+                    iErrCode = OK;
                 }
             }
 
@@ -2146,13 +2164,17 @@ case 0:
 
     if (m_iEmpireKey != global.GetGuestKey()) {
 
-        %><tr><td align="left">Password:</td><%
+        %><tr><td align="left">New password:</td><%
         %><td align="left"><input type="password" name="NewPassword" size="20" maxlength="<%
             Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" value="<% Write(INVALID_PASSWORD_STRING); %>"></td></tr><%
 
-        %><tr><td align="left">Verify password:</td><%
+        %><tr><td align="left">Verify new password:</td><%
         %><td align="left"><input type="password" name="VerifyPassword" size="20" maxlength="<% 
             Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" value="<% Write(INVALID_PASSWORD_STRING); %>"></td></tr><%
+
+        %><tr><td align="left">Current password (<em>needed to change your password</em>):</td><%
+        %><td align="left"><input type="password" name="CurrentPassword" size="20" maxlength="<%
+            Write(MAX_EMPIRE_PASSWORD_LENGTH); %>" autocomplete="current-password"></td></tr><%
     }
 
     HTMLFilter (pvEmpireData[SystemEmpireData::iRealName].GetCharPtr(), &strFilter, 0, false);
