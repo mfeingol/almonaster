@@ -386,9 +386,9 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
 // Tokens
 //
 // A token has the form <empire key>.<kind>.<login time>.<expiry>.<signature>. The signature is an HMAC keyed with the
-// server's TokenSigningKey over the rest of the token, the empire's password hash and, for page tokens, the client
-// attributes that the empire's logins are bound to. Covering the password hash means that changing an empire's password
-// invalidates all of its tokens. Nothing is stored server-side
+// server's TokenSigningKey over the rest of the token, the empire's password hash and, for page tokens, the browser's
+// user agent. Covering the password hash means that changing an empire's password invalidates all of its tokens.
+// Nothing is stored server-side
 //
 // Each page issues a fresh page token, so the expiry only limits idle time. The login time is carried forward from
 // token to token, and page tokens stop being accepted MAX_SESSION_LENGTH after it
@@ -436,24 +436,6 @@ int HtmlRenderer::GetTokenSignature(TokenKind kind, unsigned int iEmpireKey, con
         const char* pszBrowser = m_pHttpRequest->GetBrowserName();
         iErrCode = HashTokenField(hmac, pszBrowser, String::StrLen(pszBrowser));
         RETURN_ON_ERROR(iErrCode);
-
-        if (IsGamePage(m_pgPageId))
-        {
-            // IP Address
-            if (m_iSystemOptions & IP_ADDRESS_PASSWORD_HASHING)
-            {
-                const char* pszIPAddress = m_pHttpRequest->GetClientIP();
-                iErrCode = HashTokenField(hmac, pszIPAddress, String::StrLen(pszIPAddress));
-                RETURN_ON_ERROR(iErrCode);
-            }
-
-            // Session Id
-            if (m_iSystemOptions & SESSION_ID_PASSWORD_HASHING)
-            {
-                iErrCode = HashTokenField(hmac, &m_i64SessionId, sizeof(m_i64SessionId));
-                RETURN_ON_ERROR(iErrCode);
-            }
-        }
     }
 
     // Done

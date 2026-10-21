@@ -66,7 +66,7 @@ if (m_bOwnPost && !m_bRedirection) {
             const char* pszNewValue, * pszVerify;
             int iNewValue, iVerify, iValue;
 
-            bool bIPAddress, bSessionId, bValue, bValue2, bNewValue, bNewValue2;
+            bool bSessionId, bValue, bValue2, bNewValue, bNewValue2;
 
             // Handle empire name recasing
             if ((pHttpForm = m_pHttpRequest->GetForm ("RecasedEmpireName")) == NULL) {
@@ -1102,43 +1102,6 @@ if (m_bOwnPost && !m_bRedirection) {
                 AppendMessage (" on");
             }
 
-            // Password hashing
-            if ((pHttpForm = m_pHttpRequest->GetForm ("Hashing")) == NULL) {
-                goto Redirection;
-            }
-            iNewValue = pHttpForm->GetIntValue();
-
-            bIPAddress = (m_iSystemOptions & IP_ADDRESS_PASSWORD_HASHING) != 0;
-            bSessionId = (m_iSystemOptions & SESSION_ID_PASSWORD_HASHING) != 0;
-
-            if (bIPAddress != ((iNewValue & IP_ADDRESS_PASSWORD_HASHING) != 0)) {
-
-                iErrCode = SetEmpireOption (m_iEmpireKey, IP_ADDRESS_PASSWORD_HASHING, !bIPAddress);
-                RETURN_ON_ERROR(iErrCode);
-                AddMessage ("Game screen password hashing with IP address is now ");
-                AppendMessage (bIPAddress ? "off" : "on");
-
-                if (!bIPAddress) {
-                    m_iSystemOptions |= IP_ADDRESS_PASSWORD_HASHING;
-                } else {
-                    m_iSystemOptions &= ~IP_ADDRESS_PASSWORD_HASHING;
-                }
-            }
-
-            if (bSessionId != ((iNewValue & SESSION_ID_PASSWORD_HASHING) != 0)) {
-
-                iErrCode = SetEmpireOption (m_iEmpireKey, SESSION_ID_PASSWORD_HASHING, !bSessionId);
-                RETURN_ON_ERROR(iErrCode);
-                AddMessage ("Game screen password hashing with Session Id is now ");
-                AppendMessage (bIPAddress ? "off" : "on");
-
-                if (!bSessionId) {
-                    m_iSystemOptions |= SESSION_ID_PASSWORD_HASHING;
-                } else {
-                    m_iSystemOptions &= ~SESSION_ID_PASSWORD_HASHING;
-                }
-            }
-
             // AdvancedSearch
             if (m_iPrivilege >= PRIVILEGE_FOR_ADVANCED_SEARCH) {
 
@@ -2139,7 +2102,7 @@ case 0:
     AutoFreeData free_pvEmpireData(pvEmpireData);
 
     int iOptions, iValue, j, iMaxNumSystemMessages;
-    bool bIP, bID, bFlag;
+    bool bFlag;
     size_t stLen;
 
     unsigned int iNumTournamentsJoined, iNumSystemMessages;
@@ -2825,31 +2788,6 @@ case 0:
     } %> value="<% Write (RATIOS_DISPLAY_ALWAYS); %>">On all game screens by default</option><%
 
     %></select></td></tr><%
-
-
-    %><tr><td>Game screen password hashing:<br><%
-    %>(<em>IP address hashing can conflict with firewalls</em>)</td><%
-    %><td><select name="Hashing"><option<%
-
-    bIP = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & IP_ADDRESS_PASSWORD_HASHING) != 0;
-    bID = (pvEmpireData[SystemEmpireData::iOptions].GetInteger() & SESSION_ID_PASSWORD_HASHING) != 0;
-
-    if (bIP && bID) {
-        %> selected<%
-    } %> value="<% Write (IP_ADDRESS_PASSWORD_HASHING | SESSION_ID_PASSWORD_HASHING); %>"><%
-    %>Use both IP address and Session Id</option><option<%
-
-    if (bIP && !bID) {
-        %> selected<%
-    } %> value="<% Write (IP_ADDRESS_PASSWORD_HASHING); %>">Use only IP address</option><option<%
-
-    if (bID && !bIP) {
-        %> selected<%
-    } %> value="<% Write (SESSION_ID_PASSWORD_HASHING); %>">Use only Session Id</option><option<%
-
-    if (!bIP && !bID) {
-        %> selected<%
-    } %> value="0">Use neither (insecure)</option></select></td></tr><%
 
 
     %><tr><td align="center" colspan="2">&nbsp;</td></tr><%

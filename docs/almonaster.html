@@ -110,7 +110,7 @@
 <ul>
 <li><a href="#HTMLFiltering">4.5.1 HTML Filtering</a></li>
 <li><a href="#SessionIds">4.5.2 Session Ids</a></li>
-<li><a href="#PasswordHashing">4.5.3 Password hashing</a></li>
+<li><a href="#PasswordHashing">4.5.3 Passwords</a></li>
 <li><a href="#GameEntrySecurity">4.5.4 Game entry filtering</a></li>
 <li><a href="#InGameMessageFiltering">4.5.6 In-game message filtering</a></li>
 </ul>
@@ -510,7 +510,6 @@
 <li>Build menus in up-close <a href="#Map"> map</a> views or on the <a href="#Planets"> Planets</a> screen.</li>
 <li>Ship type descriptions in tech screens. This option can be useful for new players who are still unfamiliar with all the different ship types.</li>
 <li>Ratio lines in game screens.</li>
-<li>Game screen password hashing. See <a href="#PasswordHashing"> Section 4.5.2</a> for more details on this option.</li>
 </ul>
 <p>Gameplay:</p>
 <ul>
@@ -1429,11 +1428,12 @@
 <h2><a name="HTMLFiltering"></a>4.5.1 HTML filtering</h2>
 <p>When a screen is rendered for a player, strings provided by other players such as empire names or messages may be used to provide content. All such strings are filtered for HTML or script tags before being displayed. If a player is capable of injecting HTML or script into another player's screens, then it is a bug in the server.</p>
 <h2><a name="SessionIds"></a>4.5.2 Session Ids</h2>
-<p>Each empire on an Almonaster server is assigned a 64-bit integer called a Session Id, which is stored in the server's database in association with the empire's information. Session Ids are used for game screen <a href="#PasswordHashing"> password hashing</a> and for security measures involving the detection of multiple empires in the same game. A Session Id is also stored on a player's hard drive as a cookie, so it is common for multiple empires owned by one player to use the same Session Id. When the Session Id in the cookie conflicts with the Session Id stored in the database, the version stored in the cookie wins and overwrites the version stored in the database.</p>
+<p>Each empire on an Almonaster server is assigned a 64-bit integer called a Session Id, which is stored in the server's database in association with the empire's information. Session Ids are used for security measures involving the detection of multiple empires in the same game. A Session Id is also stored on a player's hard drive as a cookie, so it is common for multiple empires owned by one player to use the same Session Id. When the Session Id in the cookie conflicts with the Session Id stored in the database, the version stored in the cookie wins and overwrites the version stored in the database.</p>
 <p>If a player 'loans' an empire to another player by giving the latter its password, it is possible that the server might conclude that the empire in question really does belong to the second player. This can lead to situations where the second player's empires is denied access to games in which the shared empire is participating. In these cases, manual editing of cookies or administrative intervention are usually the only means of resolving the problem.</p>
 <h2><a name="PasswordHashing"></a>4.5.3 Passwords</h2>
 <p>Players often find themselves wanting to save game screens, especially maps, in order to document a game or show off their nuking prowess. In most versions of <em>Stellar Crisis</em>, it is necessary to remove the password field from the HTML text before making it public, because the value could be used by other players to hack into the empire used to generate the screen.</p>
-<p><em>Almonaster</em> solves this problem by using the player's IP address and <a href="#SessionIds"> Session Id</a> to provide uniqueness to the password hash stored in each game page. This additional security can be configured by selecting the respective options in the <a href="#ProfileEditor"> Profile Editor</a>. If an attacker wanted to use the password value stored in such a page, he would have to guess the empire's Session Id and the IP address from which the empire generated the posted screen. A further means of defense is accomplished by including a 'salt' value in the password hash that represents the time at which the hash was generated. Hashes with salt older than 24 hours are rejected by the server as timed out submissions, so the attacker would either have to be operating within a day of the page generation, or find a time in the last day for which the hash computation is identical. The former is impossible if the page is older than a day, and the latter is either impossible or computationally impractical.</p>
+<p><em>Almonaster</em> pages never contain an empire's password. Instead, each page carries a login token signed by the server, which cannot be forged or altered. A token is tied to the browser that requested the page, and stops working after a day, so a saved page cannot be used to get into an empire once it is a day old. Each new page carries a fresh token, but a login lasts at most 30 days, after which the player must log in again. Changing an empire's password in the <a href="#ProfileEditor"> Profile Editor</a> immediately invalidates all of that empire's tokens.</p>
+<p>A page saved within the last day could still be used to get into the empire, so players should wait a day before publishing saved pages, or change their password afterwards.</p>
 <h2><a name="GameEntrySecurity"></a>4.5.4 Game entry filtering</h2>
 <p>As described in <a href="#AdvancedOptions"> section 2.25</a>, the creators of a game can choose to exclude specific empires from entering that game. They can also block empires with duplicate Session Ids and IP addresses and filter empires by score.</p>
 <h2><a name="InGameMessageFiltering"></a>4.5.6 In-game message filtering</h2>

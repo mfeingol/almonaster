@@ -197,9 +197,6 @@ int GameEngine::CreateEmpire(const char* pszEmpireName, const char* pszPassword,
     // All empires get confirm on enter by default
     iOptions |= CONFIRM_IMPORTANT_CHOICES;
 
-    // All empires use both types of game page password hashing by default
-    iOptions |= SESSION_ID_PASSWORD_HASHING;
-
     // All empires have ships in up close map views turned on by default but not in planet views...
     iOptions |= SHIPS_ON_MAP_SCREEN;
 

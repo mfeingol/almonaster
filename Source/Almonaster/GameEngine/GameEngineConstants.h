@@ -263,8 +263,8 @@ enum NukeList { NUKER_LIST, NUKED_LIST, SYSTEM_LIST };
 #define CAN_BROADCAST                       (0x00000002)
 #define EMPIRE_MARKED_FOR_DELETION          (0x00000004)
 //#define GAME_REPEATED_BUTTONS             (0x00000008)
-#define IP_ADDRESS_PASSWORD_HASHING         (0x00000010)
-#define SESSION_ID_PASSWORD_HASHING         (0x00000020)
+//#define IP_ADDRESS_PASSWORD_HASHING       (0x00000010)    // Retired, but still set in existing rows: clear before reuse
+//#define SESSION_ID_PASSWORD_HASHING       (0x00000020)    // Retired, but still set in existing rows: clear before reuse
 #define CONFIRM_IMPORTANT_CHOICES           (0x00000040)
 //#define MAP_COLORING                      (0x00000080)
 #define FIXED_BACKGROUNDS                   (0x00000100)
