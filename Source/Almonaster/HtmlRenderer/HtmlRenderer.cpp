@@ -1023,12 +1023,24 @@ int HtmlRenderer::InitializeSessionId(bool* pbUpdateSessionId, bool* pbUpdateCoo
     // Now, see if the request brought a cookie with a session id
     ICookie* pCookie = m_pHttpRequest->GetCookie(SESSION_ID_COOKIE);
     int64 i64CookieSessionId = NO_SESSION_ID;
-    
+
     if (pCookie)
     {
         i64CookieSessionId = pCookie->GetInt64Value();
     }
-    
+
+    // Treat ids from the old sequential counter, or anything else that GetNewSessionId wouldn't have issued, as missing.
+    // That replaces old guessable ids as empires are used, and stops a cookie from claiming one
+    if (m_i64SessionId < MIN_RANDOM_SESSION_ID)
+    {
+        m_i64SessionId = NO_SESSION_ID;
+    }
+
+    if (i64CookieSessionId < MIN_RANDOM_SESSION_ID)
+    {
+        i64CookieSessionId = NO_SESSION_ID;
+    }
+
     if (i64CookieSessionId == NO_SESSION_ID)
     {
         if (m_i64SessionId == NO_SESSION_ID)

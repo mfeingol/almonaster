@@ -777,6 +777,10 @@ extern const char* const RESERVED_EMPIRE_NAMES[3];
 
 #define NO_SESSION_ID ((int64) 0)
 
+// Session ids are random values of at least this. Anything smaller came from the sequential counter used before,
+// which made ids guessable, so those are discarded and replaced
+#define MIN_RANDOM_SESSION_ID ((int64) 1 << 32)
+
 #define PARTIAL_MAP_UNLIMITED_RADIUS (-5)
 #define PARTIAL_MAP_NATURAL_CENTER (-5)
 

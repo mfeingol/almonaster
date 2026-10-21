@@ -1033,7 +1033,7 @@ int GameEngine::SetupDefaultSystemTables()
         iDefaultThemeKey, // DefaultUIIndependentPlanet
         10,             // MaxNumUpdatesBeforeClose
         3,              // DefaultNumUpdatesBeforeClose
-       (int64) Algorithm::GetRandomInteger(0x7fffffff) + 1000,    // SessionId
+       (int64) Algorithm::GetRandomInteger(0x7fffffff) + 1000,    // SessionId (no longer used: session ids are now random)
         2000,           // MaxResourcesPerPlanet
         1000,           // MaxResourcesPerPlanetPersonal
        (float) 200.0,  // MaxInitialTechLevel

@@ -19,6 +19,8 @@
 #include "GameEngine.h"
 #include "Global.h"
 
+#include "Osal/Crypto.h"
+
 #define ALMONASTER_VERSION 7.0.5
 
 int GameEngine::GetGameConfiguration(GameConfiguration* pgcConfig) {
@@ -323,14 +325,22 @@ const char* GameEngine::GetSystemVersion()
     return "Almonaster " TOSTRING(ALMONASTER_VERSION);
 }
 
+// Session ids are random, so that one empire's id can't be guessed from another's.
+// They're drawn from [MIN_RANDOM_SESSION_ID, 2^63)
 int GameEngine::GetNewSessionId (int64* pi64SessionId)
 {
-    Variant vSessionId;
-    int iErrCode = t_pCache->Increment(SYSTEM_DATA, SystemData::SessionId, (int64) 1, &vSessionId);
-    RETURN_ON_ERROR(iErrCode);
+    uint64 ui64SessionId;
+    do
+    {
+        int iErrCode = Crypto::GetRandomData(&ui64SessionId, sizeof(ui64SessionId));
+        RETURN_ON_ERROR(iErrCode);
 
-    *pi64SessionId = vSessionId.GetInteger64();
-    return iErrCode;
+        ui64SessionId &= 0x7fffffffffffffffULL;
+    }
+    while (ui64SessionId < (uint64) MIN_RANDOM_SESSION_ID);
+
+    *pi64SessionId = (int64) ui64SessionId;
+    return OK;
 }
 
 void InitGameOptions(GameOptions* pgoOptions)
