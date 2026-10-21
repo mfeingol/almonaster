@@ -306,24 +306,6 @@ const char* HttpRequest::GetAuthenticationNonceCount() {
     return m_strNonceCount;
 }
 
-// Compare a client-supplied string against a secret or expected value.
-// The running time doesn't depend on how many characters match, only on the length of pszExpected,
-// so it doesn't leak how close the client's guess was
-static bool ConstantTimeEquals (const char* pszActual, const char* pszExpected) {
-
-    size_t cchActual = strlen (pszActual);
-    size_t cchExpected = strlen (pszExpected);
-
-    volatile unsigned int iDiff = (cchActual != cchExpected) ? 1 : 0;
-
-    for (size_t i = 0; i < cchExpected; i ++) {
-        char chActual = i < cchActual ? pszActual[i] : 0;
-        iDiff |= (unsigned char) (chActual ^ pszExpected[i]);
-    }
-
-    return iDiff == 0;
-}
-
 int HttpRequest::BasicAuthenticate (const char* pszPassword, bool* pbAuthenticated) {
 
     Assert (pbAuthenticated != NULL);
@@ -343,7 +325,7 @@ int HttpRequest::BasicAuthenticate (const char* pszPassword, bool* pbAuthenticat
         
         return ERROR_FAILURE;
 
-    *pbAuthenticated = ConstantTimeEquals (m_strAuthPassword.GetCharPtr(), pszPassword);
+    *pbAuthenticated = Crypto::ConstantTimeEquals (m_strAuthPassword.GetCharPtr(), pszPassword);
     return OK;
 }
 
@@ -408,7 +390,7 @@ int HttpRequest::DigestAuthenticate (const char* pszPassword, bool* pbAuthentica
         return iErrCode;
 
     const char* pszRequestHash = m_strAuthRequestResponse.GetCharPtr();
-    *pbAuthenticated = ConstantTimeEquals (pszRequestHash, pszFinalHash);
+    *pbAuthenticated = Crypto::ConstantTimeEquals (pszRequestHash, pszFinalHash);
 
     return OK;    
 }

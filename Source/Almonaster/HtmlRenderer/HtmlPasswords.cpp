@@ -34,7 +34,17 @@ int HtmlRenderer::HtmlLoginEmpire(bool* pbLoggedIn)
 
     int iErrCode = OK;
     Variant vValue;
-    
+
+    // Password and autologon logins start a new session. Switching to an associated empire counts as a
+    // login for that empire, but it needs no password: it rides on the current session, so it keeps that
+    // session's login time. Otherwise switching back and forth would keep a session alive past MAX_SESSION_LENGTH
+    if (m_i64LoginTime == NO_LOGIN_TIME)
+    {
+        UTCTime tNow;
+        Time::GetTime(&tNow);
+        m_i64LoginTime = Time::GetUnixTime(tNow);
+    }
+
     if (m_vEmpireName.GetType() != V_STRING || String::IsBlank(m_vEmpireName))
     {
         iErrCode = GetEmpireName (m_iEmpireKey, &m_vEmpireName);
@@ -204,39 +214,24 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
             iErrCode = GetEmpireIPAddress(m_iEmpireKey, &m_vPreviousIPAddress);
             RETURN_ON_ERROR(iErrCode);
 
-            // Try to read a hashed password
-            if ((pHttpForm = m_pHttpRequest->GetForm("Password")) != NULL)
+            // Try to read a page token
+            if ((pHttpForm = m_pHttpRequest->GetForm("Token")) != NULL)
             {
-                const char* pszSubmittedPasswordHash = pHttpForm->GetValue();
+                TokenStatus status;
+                iErrCode = VerifyToken(PAGE_TOKEN, m_iEmpireKey, pHttpForm->GetValue(), &status, &m_i64LoginTime);
+                RETURN_ON_ERROR(iErrCode);
 
-                // Read salt
-                if ((pHttpForm = m_pHttpRequest->GetForm ("Salt")) == NULL)
-                {
-                    return ERROR_MISSING_FORM;
-                }
-                UTCTime tOldSalt = pHttpForm->GetUInt64Value();
-
-                // Make sure page hasn't timed out
-                UTCTime tNow;
-                Time::GetTime(&tNow);
-
-                if (Time::GetSecondDifference(tNow, tOldSalt) >= DAY_LENGTH_IN_SECONDS)
+                if (status == TOKEN_EXPIRED)
                 {
                     AddMessage("Your session has timed out. Please log in again");
                     return OK;
                 }
 
-                // Authenticate
-                String strActualPasswordHash;
-                iErrCode = GetPagePasswordHash(m_pgPageId, m_iEmpireKey, tOldSalt, &strActualPasswordHash);
-                RETURN_ON_ERROR(iErrCode);
-
-                if (String::StrCmp(pszSubmittedPasswordHash, strActualPasswordHash) != 0)
+                if (status != TOKEN_VALID)
                 {
-                    char pszBuffer [256 + MAX_EMPIRE_NAME_LENGTH];
-                    sprintf(pszBuffer, "That was the wrong password for the %s empire", m_vEmpireName.GetCharPtr());
-                    
-                    AddMessage (pszBuffer);
+                    // The player didn't type a password, so don't say it was wrong. This also covers
+                    // tokens invalidated by a password change
+                    AddMessage("Your session is no longer valid. Please log in again");
                     return OK;
                 }
             }
@@ -254,13 +249,16 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
                     }
                     RETURN_ON_ERROR(iErrCode);
                 }
+
+                // A password login starts a new session
+                UTCTime tNow;
+                Time::GetTime(&tNow);
+                m_i64LoginTime = Time::GetUnixTime(tNow);
             }
             else
             {
-                // No way to authenticate
-                char pszBuffer [256 + MAX_EMPIRE_NAME_LENGTH];
-                sprintf(pszBuffer, "That was the wrong password for the %s empire", m_vEmpireName.GetCharPtr());
-                AddMessage(pszBuffer);
+                // No way to authenticate. This includes pages rendered before tokens existed
+                AddMessage("Your session is no longer valid. Please log in again");
                 return OK;
             }
 
@@ -356,59 +354,191 @@ int HtmlRenderer::InitializeEmpire(bool bAutoLogon, bool* pbInitialized)
 }
 
 //
-// Hashing
+// Tokens
+//
+// A token has the form <empire key>.<kind>.<login time>.<expiry>.<signature>. The signature is an HMAC keyed with the
+// server's TokenSigningKey over the rest of the token, the empire's password hash and, for page tokens, the client
+// attributes that the empire's logins are bound to. Covering the password hash means that changing an empire's password
+// invalidates all of its tokens. Nothing is stored server-side
+//
+// Each page issues a fresh page token, so the expiry only limits idle time. The login time is carried forward from
+// token to token, and page tokens stop being accepted MAX_SESSION_LENGTH after it
 //
 
-int HtmlRenderer::GetAutologonPasswordHash(int iEmpireKey, String* pstrHash)
+static int HashTokenField(Crypto::HmacSHA256& hmac, const void* pbData, size_t cbData)
+{
+    // Length-prefix each field so that bytes can't be shifted from one field to the next
+    unsigned int cbField = (unsigned int)cbData;
+    int iErrCode = hmac.HashData(&cbField, sizeof(cbField));
+    RETURN_ON_ERROR(iErrCode);
+
+    if (cbData > 0)
+    {
+        iErrCode = hmac.HashData(pbData, cbData);
+        RETURN_ON_ERROR(iErrCode);
+    }
+    return iErrCode;
+}
+
+int HtmlRenderer::GetTokenSignature(TokenKind kind, unsigned int iEmpireKey, const char* pszPayload, String* pstrSignature)
 {
     int iErrCode;
-    Crypto::HashSHA256 hash;
+    Crypto::HmacSHA256 hmac;
 
-    // Password hash
+    iErrCode = hmac.Initialize(global.GetTokenKey(), global.GetTokenKeySize());
+    RETURN_ON_ERROR(iErrCode);
+
+    // Empire key, kind and expiry
+    iErrCode = HashTokenField(hmac, pszPayload, strlen(pszPayload));
+    RETURN_ON_ERROR(iErrCode);
+
+    // Password
     Variant vPasswordHash;
     iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::PasswordHash, &vPasswordHash);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = hash.HashData(vPasswordHash.GetCharPtr(), strlen(vPasswordHash));
+    const char* pszPasswordHash = vPasswordHash.GetCharPtr();
+    iErrCode = HashTokenField(hmac, pszPasswordHash, String::StrLen(pszPasswordHash));
     RETURN_ON_ERROR(iErrCode);
 
-    // Don't hash the user agent: it changes with every browser update, which would silently break autologon
+    if (kind == PAGE_TOKEN)
+    {
+        // Browser. Autologon tokens leave this out: it changes with every browser update, which would silently break autologon
+        const char* pszBrowser = m_pHttpRequest->GetBrowserName();
+        iErrCode = HashTokenField(hmac, pszBrowser, String::StrLen(pszBrowser));
+        RETURN_ON_ERROR(iErrCode);
 
-    // Empire's secret key
-    Variant vSecretKey;
-    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
-    RETURN_ON_ERROR(iErrCode);
+        if (IsGamePage(m_pgPageId))
+        {
+            // IP Address
+            if (m_iSystemOptions & IP_ADDRESS_PASSWORD_HASHING)
+            {
+                const char* pszIPAddress = m_pHttpRequest->GetClientIP();
+                iErrCode = HashTokenField(hmac, pszIPAddress, String::StrLen(pszIPAddress));
+                RETURN_ON_ERROR(iErrCode);
+            }
 
-    int64 i64SecretKey = vSecretKey.GetInteger64();
-    iErrCode = hash.HashData(&i64SecretKey, sizeof(i64SecretKey));
-    RETURN_ON_ERROR(iErrCode);
-
-    // Fixed server salt
-    Variant vFixedSalt;
-    iErrCode = GetSystemProperty(SystemData::FixedHashSalt, &vFixedSalt);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = hash.HashData(vFixedSalt, strlen(vFixedSalt));
-    RETURN_ON_ERROR(iErrCode);
+            // Session Id
+            if (m_iSystemOptions & SESSION_ID_PASSWORD_HASHING)
+            {
+                iErrCode = HashTokenField(hmac, &m_i64SessionId, sizeof(m_i64SessionId));
+                RETURN_ON_ERROR(iErrCode);
+            }
+        }
+    }
 
     // Done
-    size_t cbSize;
-    iErrCode = hash.GetHashSize(&cbSize);
+    unsigned char pbMac[HMAC_SHA256_SIZE];
+    iErrCode = hmac.GetHash(pbMac, sizeof(pbMac));
     RETURN_ON_ERROR(iErrCode);
 
-    void* pBuffer = StackAlloc(cbSize);
-    iErrCode = hash.GetHash(pBuffer, cbSize);
+    char pszBase64[64];
+    Assert(Algorithm::GetEncodeBase64Size(sizeof(pbMac)) <= sizeof(pszBase64));
+    iErrCode = Algorithm::EncodeBase64(pbMac, sizeof(pbMac), pszBase64, sizeof(pszBase64));
     RETURN_ON_ERROR(iErrCode);
 
-    size_t cch = Algorithm::GetEncodeBase64Size(cbSize);
-    char* pszBase64 = (char*)StackAlloc(cch);
-    iErrCode = Algorithm::EncodeBase64(pBuffer, cbSize, pszBase64, cch);
+    pstrSignature->Clear();
+    *pstrSignature = pszBase64;
+    if (pstrSignature->GetCharPtr() == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
+
+    return iErrCode;
+}
+
+int HtmlRenderer::FormatToken(TokenKind kind, unsigned int iEmpireKey, int64 i64LoginTime, int64 i64Expires, String* pstrToken)
+{
+    int iErrCode;
+
+    char pszPayload[128];
+    sprintf(pszPayload, "%u.%c.%lld.%lld", iEmpireKey, (char)kind, i64LoginTime, i64Expires);
+
+    String strSignature;
+    iErrCode = GetTokenSignature(kind, iEmpireKey, pszPayload, &strSignature);
     RETURN_ON_ERROR(iErrCode);
 
-    pstrHash->Clear();
-    *pstrHash = pszBase64;
-    Assert(pstrHash->GetCharPtr());
+    pstrToken->Clear();
+    *pstrToken = pszPayload;
+    *pstrToken += ".";
+    *pstrToken += strSignature;
+    if (pstrToken->GetCharPtr() == NULL)
+    {
+        return ERROR_OUT_OF_MEMORY;
+    }
 
+    return iErrCode;
+}
+
+int HtmlRenderer::CreateToken(TokenKind kind, unsigned int iEmpireKey, int64 i64LoginTime, Seconds sLifetime, String* pstrToken)
+{
+    if (i64LoginTime == NO_LOGIN_TIME)
+    {
+        // Don't silently start a new session
+        Assert(false);
+        return ERROR_FAILURE;
+    }
+
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    return FormatToken(kind, iEmpireKey, i64LoginTime, Time::GetUnixTime(tNow) + sLifetime, pstrToken);
+}
+
+int HtmlRenderer::VerifyToken(TokenKind kind, unsigned int iEmpireKey, const char* pszToken, TokenStatus* pStatus, int64* pi64LoginTime)
+{
+    int iErrCode = OK;
+    *pStatus = TOKEN_INVALID;
+
+    if (pszToken == NULL)
+    {
+        return iErrCode;
+    }
+
+    // Parse the payload. The token is re-created from these values and compared in full, so
+    // anything that isn't exactly what the server would have issued fails to verify
+    unsigned int iTokenEmpireKey;
+    char cKind;
+    int64 i64LoginTime, i64Expires;
+    if (sscanf(pszToken, "%u.%c.%lld.%lld.", &iTokenEmpireKey, &cKind, &i64LoginTime, &i64Expires) != 4 ||
+        iTokenEmpireKey != iEmpireKey ||
+        cKind != (char)kind)
+    {
+        return iErrCode;
+    }
+
+    String strExpected;
+    iErrCode = FormatToken(kind, iEmpireKey, i64LoginTime, i64Expires, &strExpected);
+    RETURN_ON_ERROR(iErrCode);
+
+    if (!Crypto::ConstantTimeEquals(pszToken, strExpected.GetCharPtr()))
+    {
+        return iErrCode;
+    }
+
+    // Only report expiry for tokens that the server actually issued
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+    int64 i64Now = Time::GetUnixTime(tNow);
+
+    if (i64Now >= i64Expires)
+    {
+        *pStatus = TOKEN_EXPIRED;
+        return iErrCode;
+    }
+
+    // Renewing page tokens can't keep a session alive forever
+    if (kind == PAGE_TOKEN && i64Now - i64LoginTime >= MAX_SESSION_LENGTH)
+    {
+        *pStatus = TOKEN_EXPIRED;
+        return iErrCode;
+    }
+
+    *pStatus = TOKEN_VALID;
+    if (pi64LoginTime != NULL)
+    {
+        *pi64LoginTime = i64LoginTime;
+    }
     return iErrCode;
 }
 
@@ -422,94 +552,16 @@ int HtmlRenderer::SetAutologonCookies(unsigned int iEmpireKey)
     iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_EMPIREKEY_COOKIE, pszEmpireKey, AUTOLOGON_COOKIE_TTL, NULL);
     RETURN_ON_ERROR(iErrCode);
 
-    String strHash;
-    iErrCode = GetAutologonPasswordHash(iEmpireKey, &strHash);
+    // Autologon tokens aren't part of a session: each autologon starts a new one
+    UTCTime tNow;
+    Time::GetTime(&tNow);
+
+    String strToken;
+    iErrCode = CreateToken(AUTOLOGON_TOKEN, iEmpireKey, Time::GetUnixTime(tNow), AUTOLOGON_COOKIE_TTL, &strToken);
     RETURN_ON_ERROR(iErrCode);
 
-    iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strHash, AUTOLOGON_COOKIE_TTL, NULL);
+    iErrCode = m_pHttpResponse->CreateCookie(AUTOLOGON_PASSWORD_COOKIE, strToken, AUTOLOGON_COOKIE_TTL, NULL);
     RETURN_ON_ERROR(iErrCode);
-
-    return iErrCode;
-}
-
-int HtmlRenderer::GetPagePasswordHash(PageId page, int iEmpireKey, const UTCTime& tSalt, String* pstrHash)
-{
-    int iErrCode;
-    Crypto::HashSHA256 hash;
-
-    // Password
-    Variant vPasswordHash;
-    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::PasswordHash, &vPasswordHash);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = hash.HashData(vPasswordHash.GetCharPtr(), strlen(vPasswordHash));
-    RETURN_ON_ERROR(iErrCode);
-
-    // Salt
-    Assert(tSalt != NULL_TIME);
-    iErrCode = hash.HashData (&tSalt, sizeof (tSalt));
-    RETURN_ON_ERROR(iErrCode);
-
-    // Browser
-    const char* pszBrowser  = m_pHttpRequest->GetBrowserName();
-    if (pszBrowser != NULL)
-    {
-        iErrCode = hash.HashData (pszBrowser, strlen (pszBrowser));
-        RETURN_ON_ERROR(iErrCode);
-    }
-
-    // Empire's secret key
-    Variant vSecretKey;
-    iErrCode = GetEmpireDataColumn(iEmpireKey, SystemEmpireData::SecretKey, &vSecretKey);
-    RETURN_ON_ERROR(iErrCode);
-
-    int64 i64SecretKey = vSecretKey.GetInteger64();
-    iErrCode = hash.HashData(&i64SecretKey, sizeof(i64SecretKey));
-    RETURN_ON_ERROR(iErrCode);
-
-    // Fixed server salt
-    Variant vFixedSalt;
-    iErrCode = GetSystemProperty(SystemData::FixedHashSalt, &vFixedSalt);
-    RETURN_ON_ERROR(iErrCode);
-
-    iErrCode = hash.HashData(vFixedSalt, strlen(vFixedSalt));
-    RETURN_ON_ERROR(iErrCode);
-
-    if (IsGamePage(page))
-    {
-        // IP Address
-        if (m_iSystemOptions & IP_ADDRESS_PASSWORD_HASHING)
-        {
-            const char* pszIPAddress = m_pHttpRequest->GetClientIP();
-            iErrCode = hash.HashData (pszIPAddress, strlen (pszIPAddress));
-            RETURN_ON_ERROR(iErrCode);
-        }
-
-        // Session Id
-        if (m_iSystemOptions & SESSION_ID_PASSWORD_HASHING)
-        {
-            iErrCode = hash.HashData (&m_i64SessionId, sizeof (m_i64SessionId));
-            RETURN_ON_ERROR(iErrCode);
-        }
-    }
-
-    // Done
-    size_t cbSize;
-    iErrCode = hash.GetHashSize(&cbSize);
-    RETURN_ON_ERROR(iErrCode);
-
-    void* pBuffer = StackAlloc(cbSize);
-    iErrCode = hash.GetHash(pBuffer, cbSize);
-    RETURN_ON_ERROR(iErrCode);
-
-    size_t cch = Algorithm::GetEncodeBase64Size(cbSize);
-    char* pszBase64 = (char*)StackAlloc(cch);
-    iErrCode = Algorithm::EncodeBase64(pBuffer, cbSize, pszBase64, cch);
-    RETURN_ON_ERROR(iErrCode);
-
-    pstrHash->Clear();
-    *pstrHash = pszBase64;
-    Assert(pstrHash->GetCharPtr());
 
     return iErrCode;
 }

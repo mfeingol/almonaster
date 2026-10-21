@@ -146,19 +146,14 @@ int HtmlRenderer::WriteSystemHeaders(bool bFileUpload)
 
 void HtmlRenderer::PostSystemPageInformation()
 {
-    UTCTime tNow;
-    Time::GetTime(&tNow);
-
-    String strPasswordHash;
-    int iErrCode = GetPagePasswordHash(m_pgPageId, m_iEmpireKey, tNow, &strPasswordHash);
+    String strToken;
+    int iErrCode = CreateToken(PAGE_TOKEN, m_iEmpireKey, m_i64LoginTime, PAGE_TOKEN_TTL, &strToken);
     Assert(iErrCode == OK);
 
     OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
     m_pHttpResponse->WriteText(m_iEmpireKey);
-    OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
-    m_pHttpResponse->WriteText(strPasswordHash.GetCharPtr());
-    OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
-    m_pHttpResponse->WriteText(tNow);
+    OutputText ("\"><input type=\"hidden\" name=\"Token\" value=\"");
+    m_pHttpResponse->WriteText(strToken.GetCharPtr());
     OutputText ("\">");
 }
 
@@ -580,19 +575,14 @@ int HtmlRenderer::WriteGameNextUpdateString()
 
 int HtmlRenderer::PostGamePageInformation()
 {
-    UTCTime tNow;
-    Time::GetTime(&tNow);
-
-    String strPasswordHash;
-    int iErrCode = GetPagePasswordHash(m_pgPageId, m_iEmpireKey, tNow, &strPasswordHash);
+    String strToken;
+    int iErrCode = CreateToken(PAGE_TOKEN, m_iEmpireKey, m_i64LoginTime, PAGE_TOKEN_TTL, &strToken);
     RETURN_ON_ERROR(iErrCode);
 
     OutputText ("<input type=\"hidden\" name=\"EmpireKey\" value=\"");
     m_pHttpResponse->WriteText(m_iEmpireKey);
-    OutputText ("\"><input type=\"hidden\" name=\"Password\" value=\"");
-    m_pHttpResponse->WriteText(strPasswordHash.GetCharPtr());
-    OutputText ("\"><input type=\"hidden\" name=\"Salt\" value=\"");
-    m_pHttpResponse->WriteText(tNow);
+    OutputText ("\"><input type=\"hidden\" name=\"Token\" value=\"");
+    m_pHttpResponse->WriteText(strToken.GetCharPtr());
     OutputText ("\"><input type=\"hidden\" name=\"GameClass\" value=\"");
     m_pHttpResponse->WriteText(m_iGameClass);
     OutputText ("\"><input type=\"hidden\" name=\"GameNumber\" value=\"");

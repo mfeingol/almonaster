@@ -16,6 +16,7 @@
 // along with this program; if not, write to the Free Software
 // Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
+#include "Osal/Crypto.h"
 #include "Osal/File.h"
 
 #include "Global.h"
@@ -50,6 +51,7 @@ Global::Global()
       m_iGuestKey(NO_KEY)
 {
     m_pszResourceDir[0] = '\0';
+    memset(m_pbTokenKey, 0, sizeof(m_pbTokenKey));
 }
 
 void Global::Close()
@@ -190,6 +192,9 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
         return ERROR_FAILURE;
     }
 
+    iErrCode = InitializeTokenKey();
+    RETURN_ON_ERROR(iErrCode);
+
     iErrCode = InitializeDatabase(pszDatabaseLibrary, uuidDatabaseClsid, pszDatabaseConnectionString);
     if (iErrCode != OK && iErrCode != WARNING)
     {
@@ -221,6 +226,44 @@ int Global::Initialize(IHttpServer* pHttpServer, IPageSourceControl* pPageSource
 
     // Initialize AsyncManager
     iErrCode = m_asyncManager.Initialize();
+    RETURN_ON_ERROR(iErrCode);
+
+    return iErrCode;
+}
+
+int Global::InitializeTokenKey()
+{
+    int iErrCode;
+    char* pszTemp;
+
+    ITraceLog* pReport = GetReport();
+    AutoRelease<ITraceLog> release_pReport(pReport);
+
+    // The signing key deliberately lives outside the database, so that a copy of the database isn't enough to forge tokens
+    iErrCode = m_pConfig->GetParameter("TokenSigningKey", &pszTemp);
+    if (iErrCode != OK || String::IsBlank(pszTemp))
+    {
+        // Fall back to a random key: tokens, including autologon cookies, will not survive a restart
+        pReport->Write(TRACE_WARNING, "Warning: No TokenSigningKey value was found in the configuration file. A temporary key will be used and all logins will be invalidated when the server restarts");
+        iErrCode = Crypto::GetRandomData(m_pbTokenKey, sizeof(m_pbTokenKey));
+        RETURN_ON_ERROR(iErrCode);
+        return iErrCode;
+    }
+
+    if (strlen(pszTemp) < MIN_TOKEN_SIGNING_KEY_LENGTH)
+    {
+        char pszError[256];
+        sprintf(pszError, "Error: The TokenSigningKey value from the configuration file must be at least %i characters long", MIN_TOKEN_SIGNING_KEY_LENGTH);
+        pReport->Write(TRACE_ERROR, pszError);
+        return ERROR_FAILURE;
+    }
+
+    // Normalize the configured key to a fixed size
+    Crypto::HashSHA256 hash;
+    iErrCode = hash.HashData(pszTemp, strlen(pszTemp));
+    RETURN_ON_ERROR(iErrCode);
+
+    iErrCode = hash.GetHash(m_pbTokenKey, sizeof(m_pbTokenKey));
     RETURN_ON_ERROR(iErrCode);
 
     return iErrCode;

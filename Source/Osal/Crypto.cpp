@@ -97,7 +97,10 @@ Crypto::HashMD5::HashMD5() : Hash (EVP_md5()) {}
 
 #ifdef __WIN32__
 
+#include <bcrypt.h>
+
 HCRYPTPROV g_hProv = NULL;
+BCRYPT_ALG_HANDLE g_hHmacSHA256 = NULL;
 
 class Win32AutoInit
 {
@@ -107,13 +110,21 @@ public:
     {
         BOOL f = CryptAcquireContext (&g_hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
         Assert (f);
+
+        NTSTATUS status = BCryptOpenAlgorithmProvider (&g_hHmacSHA256, BCRYPT_SHA256_ALGORITHM, NULL, BCRYPT_ALG_HANDLE_HMAC_FLAG);
+        Assert (BCRYPT_SUCCESS (status));
     }
 
     ~Win32AutoInit() {
-        
+
         if (g_hProv != NULL) {
             CryptReleaseContext (g_hProv, 0);
             g_hProv = NULL;
+        }
+
+        if (g_hHmacSHA256 != NULL) {
+            BCryptCloseAlgorithmProvider (g_hHmacSHA256, 0);
+            g_hHmacSHA256 = NULL;
         }
     }
 };
@@ -198,4 +209,88 @@ Crypto::HashMD5::HashMD5() : Hash (CALG_MD5) {}
 Crypto::HashSHA1::HashSHA1() : Hash (CALG_SHA1) {}
 Crypto::HashSHA256::HashSHA256() : Hash (CALG_SHA_256) {}
 
+//
+// HMAC
+//
+
+Crypto::HmacSHA256::HmacSHA256() {
+    m_hHash = NULL;
+}
+
+Crypto::HmacSHA256::~HmacSHA256() {
+
+    if (m_hHash != NULL) {
+        BCryptDestroyHash (m_hHash);
+    }
+}
+
+int Crypto::HmacSHA256::Initialize (const void* pbKey, size_t cbKey) {
+
+    if (g_hHmacSHA256 == NULL || m_hHash != NULL) {
+        return ERROR_FAILURE;
+    }
+
+    // CNG allocates the hash object itself, and keeps its own copy of the key
+    NTSTATUS status = BCryptCreateHash (g_hHmacSHA256, &m_hHash, NULL, 0, (PUCHAR) pbKey, (ULONG) cbKey, 0);
+    if (!BCRYPT_SUCCESS (status)) {
+        m_hHash = NULL;
+        return ERROR_FAILURE;
+    }
+    return OK;
+}
+
+int Crypto::HmacSHA256::HashData (const void* pbData, size_t cbData) {
+
+    if (m_hHash == NULL) {
+        return ERROR_FAILURE;
+    }
+
+    NTSTATUS status = BCryptHashData (m_hHash, (PUCHAR) pbData, (ULONG) cbData, 0);
+    return BCRYPT_SUCCESS (status) ? OK : ERROR_FAILURE;
+}
+
+int Crypto::HmacSHA256::GetHash (void* pbData, size_t stSize) {
+
+    if (m_hHash == NULL) {
+        return ERROR_FAILURE;
+    }
+
+    if (stSize < HMAC_SHA256_SIZE) {
+        return ERROR_SMALL_BUFFER;
+    }
+
+    NTSTATUS status = BCryptFinishHash (m_hHash, (PUCHAR) pbData, HMAC_SHA256_SIZE, 0);
+    return BCRYPT_SUCCESS (status) ? OK : ERROR_FAILURE;
+}
+
 #endif // __WIN32__
+
+// Accumulates the differences between pbActual and pbExpected over all cbExpected bytes. Bytes beyond the end
+// of pbActual compare as zero, so the running time depends only on cbExpected
+static unsigned int ConstantTimeDiff(const void* pbActual, size_t cbActual, const void* pbExpected, size_t cbExpected) {
+
+    const unsigned char* pb1 = (const unsigned char*)pbActual;
+    const unsigned char* pb2 = (const unsigned char*)pbExpected;
+
+    volatile unsigned int iDiff = 0;
+    for (size_t i = 0; i < cbExpected; i++) {
+        unsigned char bActual = i < cbActual ? pb1[i] : 0;
+        iDiff |= (unsigned char)(bActual ^ pb2[i]);
+    }
+    return iDiff;
+}
+
+bool Crypto::ConstantTimeEquals(const void* pbData1, const void* pbData2, size_t cbData) {
+    return ConstantTimeDiff(pbData1, cbData, pbData2, cbData) == 0;
+}
+
+bool Crypto::ConstantTimeEquals(const char* pszActual, const char* pszExpected) {
+
+    size_t cchActual = strlen(pszActual);
+    size_t cchExpected = strlen(pszExpected);
+
+    unsigned int iDiff = (cchActual != cchExpected) ? 1 : 0;
+    iDiff |= ConstantTimeDiff(pszActual, cchActual, pszExpected, cchExpected);
+
+    return iDiff == 0;
+}

@@ -38,6 +38,13 @@ namespace Crypto {
     //
     OSAL_EXPORT int GetRandomData (void* pbRand, size_t cbRand);
 
+    // Compares two buffers in time that depends only on their length
+    OSAL_EXPORT bool ConstantTimeEquals (const void* pbData1, const void* pbData2, size_t cbData);
+
+    // Compares a client-supplied string against a secret or expected value, in time that depends only on
+    // the length of pszExpected. This includes not revealing whether the two strings have the same length
+    OSAL_EXPORT bool ConstantTimeEquals (const char* pszActual, const char* pszExpected);
+
     //
     // Classes
     //
@@ -92,6 +99,22 @@ namespace Crypto {
     class OSAL_EXPORT HashSHA256 : public Hash {
     public:
         HashSHA256();
+    };
+
+    #define HMAC_SHA256_SIZE 32
+
+    // HMAC over SHA-256, implemented by CNG
+    class OSAL_EXPORT HmacSHA256 {
+    private:
+        void* m_hHash;  // BCRYPT_HASH_HANDLE
+
+    public:
+        HmacSHA256();
+        ~HmacSHA256();
+
+        int Initialize (const void* pbKey, size_t cbKey);
+        int HashData (const void* pbData, size_t cbData);
+        int GetHash (void* pbData, size_t stSize);
     };
 #endif
 };

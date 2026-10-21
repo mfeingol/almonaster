@@ -52,11 +52,11 @@ if (m_pHttpRequest->GetMethod() == GET)
             if (iResults > 0)
             {
                 // Authenticate
-                String strActualHash;
-                iErrCode = GetAutologonPasswordHash(iAutoLogonKey, &strActualHash);
+                TokenStatus status;
+                iErrCode = VerifyToken(AUTOLOGON_TOKEN, iAutoLogonKey, pPasswordCookie->GetValue(), &status, NULL);
                 RETURN_ON_ERROR(iErrCode);
-            
-                if (String::StrCmp(strActualHash, pPasswordCookie->GetValue()) == 0)
+
+                if (status == TOKEN_VALID)
                 {
                     m_iEmpireKey = iAutoLogonKey;
                     m_bAutoLogon = true;

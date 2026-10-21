@@ -115,6 +115,7 @@ HtmlRenderer::HtmlRenderer(PageId pgPageId, IHttpRequest* pHttpRequest, IHttpRes
     m_bNotifiedTournamentJoinRequest = false;
     
     m_i64SessionId = NO_SESSION_ID;
+    m_i64LoginTime = NO_LOGIN_TIME;
 
     m_iNumOldUpdates = 0;
 

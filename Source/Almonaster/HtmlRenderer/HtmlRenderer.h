@@ -77,7 +77,21 @@ enum PageId
     MAX_PAGE_ID = 43,
 };
 
-static GameRatioSetting g_pageGameRatioSetting[] = 
+// The kind is part of the signed token, so one kind can't be used in place of another
+enum TokenKind
+{
+    PAGE_TOKEN = 'p',
+    AUTOLOGON_TOKEN = 'a',
+};
+
+enum TokenStatus
+{
+    TOKEN_VALID,
+    TOKEN_EXPIRED,
+    TOKEN_INVALID,
+};
+
+static GameRatioSetting g_pageGameRatioSetting[] =
 {
     RATIOS_DISPLAY_NEVER, //MIN_PAGE_ID = 0,
     RATIOS_DISPLAY_NEVER, //ACTIVE_GAME_LIST = 1,
@@ -457,6 +471,9 @@ protected:
 
     int64 m_i64SessionId;
 
+    // Unix time of the password or autologon login that started this session. Page tokens carry it forward
+    int64 m_i64LoginTime;
+
     // Submission control
     int m_iNumOldUpdates;
     int m_iNumNewUpdates;
@@ -606,10 +623,12 @@ public:
 
     void SendWelcomeMessage (const char* pszEmpireName);
 
-    // Password hashing
-    int GetAutologonPasswordHash(int iEmpireKey, String* pstrHash);
+    // Authentication tokens
+    int CreateToken(TokenKind kind, unsigned int iEmpireKey, int64 i64LoginTime, Seconds sLifetime, String* pstrToken);
+    int VerifyToken(TokenKind kind, unsigned int iEmpireKey, const char* pszToken, TokenStatus* pStatus, int64* pi64LoginTime);
+    int FormatToken(TokenKind kind, unsigned int iEmpireKey, int64 i64LoginTime, int64 i64Expires, String* pstrToken);
+    int GetTokenSignature(TokenKind kind, unsigned int iEmpireKey, const char* pszPayload, String* pstrSignature);
     int SetAutologonCookies(unsigned int iEmpireKey);
-    int GetPagePasswordHash(PageId page, int iEmpireKey, const UTCTime& tSalt, String* pstrHash);
 
     void HashIPAddress (const char* pszIPAddress, char* pszHashedIPAddress);
 
@@ -1120,6 +1139,14 @@ public:
 
 // Autologon cookies are refreshed on every successful autologon
 #define AUTOLOGON_COOKIE_TTL        ONE_YEAR_IN_SECONDS
+
+// Page tokens are reissued on every page, so this only limits how long a page can sit idle
+#define PAGE_TOKEN_TTL              DAY_LENGTH_IN_SECONDS
+
+// Page tokens stop being accepted this long after the login that started the session, however active it is
+#define MAX_SESSION_LENGTH          (30 * DAY_LENGTH_IN_SECONDS)
+
+#define NO_LOGIN_TIME               ((int64) 0)
 
 // Error macros
 #define Check(FxnCall) iErrCode = ##FxnCall;                                        \

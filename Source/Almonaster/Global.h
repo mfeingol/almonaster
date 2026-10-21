@@ -27,6 +27,8 @@
 #include "AsyncManager.h"
 #include "GameEngineConstants.h"
 
+#define MIN_TOKEN_SIGNING_KEY_LENGTH 32
+
 class Global
 {
 private:
@@ -47,6 +49,10 @@ private:
     unsigned int m_iRootKey;
     unsigned int m_iGuestKey;
 
+    // Key used to sign authentication tokens
+    unsigned char m_pbTokenKey[32];
+
+    int InitializeTokenKey();
     int InitializeDatabase(const char* pszLibDatabase, const Uuid& uuidDatabaseClsid, const char* pszDatabaseConnectionString);
     int InitializeState();
     int InitializeChatroom();
@@ -82,6 +88,9 @@ public:
     const char* GetResourceDir() { return m_pszResourceDir; }
     unsigned int GetRootKey() { return m_iRootKey; }
     unsigned int GetGuestKey() { return m_iGuestKey; }
+
+    const void* GetTokenKey() { return m_pbTokenKey; }
+    size_t GetTokenKeySize() { return sizeof(m_pbTokenKey); }
 
     // Strong ref
     ITraceLog* GetReport() { return m_pPageSourceControl->GetReport(); }
